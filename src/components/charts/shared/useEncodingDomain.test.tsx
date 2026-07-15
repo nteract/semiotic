@@ -21,7 +21,7 @@ describe("useEncodingDomain", () => {
     it("derives [min, max] via a function accessor", () => {
       const data = [{ a: 2 }, { a: 7 }, { a: 4 }]
       const { result } = renderHook(
-        () => useEncodingDomain<any>({ accessor: (d: any) => d.a * 10, data, isPushMode: false }),
+        () => useEncodingDomain<{ a: number }>({ accessor: (d) => d.a * 10, data, isPushMode: false }),
         { wrapper },
       )
       expect(result.current.domain).toEqual([20, 70])

@@ -607,7 +607,7 @@ export const LineChart = forwardRef(
 
     // Single line - wrap in line object
     return [{ [lineDataAccessor]: chartData }]
-  }, [chartData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat, lineBy])
+  }, [isLineObjectFormat, effectiveGroupAccessor, lineDataAccessor, chartData, lineBy, needsCompoundGroup])
 
   // Apply gap strategy to line data
   //

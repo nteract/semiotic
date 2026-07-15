@@ -15,7 +15,7 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
   const store = new PhysicsPipelineStore(props.config)
   if (Array.isArray(props.initialSpawns) && props.initialSpawns.length > 0) {
     store.enqueue(
-      props.initialSpawns.map((spawn) => ({ ...spawn, spawnAt: undefined })) as any
+      props.initialSpawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
     )
   }
   const result = renderPhysicsSettledSVG(store, {
@@ -40,4 +40,3 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
 }
 
 // ── Public API ──────────────────────────────────────────────────────────
-

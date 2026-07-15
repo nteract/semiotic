@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -6,11 +8,11 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
 // Mock XYFrame to capture props
-let lastXYFrameProps: any = null
+let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
       lastXYFrameProps = props
       return <div className="stream-xy-frame"><svg /></div>
     })
@@ -27,7 +29,7 @@ describe("ConnectedScatterplot", () => {
   ]
 
   beforeEach(() => {
-    lastXYFrameProps = null
+    lastXYFrameProps = {} as CapturedXYFrameProps
   })
 
   it("handles empty data gracefully", () => {

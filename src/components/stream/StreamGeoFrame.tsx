@@ -300,13 +300,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       layoutConfig,
       onLayoutError,
       layoutMargin: margin
-    }), [
-      projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
-      lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, windowSize, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme,
-      frameRuntime,
-      customLayout, layoutConfig, onLayoutError, margin
-    ])
+    }), [projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor, lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, currentTheme, graticule, projectionTransform, windowSize, frameRuntime.now, decay, pulse, transition, introEnabled, annotations, pointIdAccessor, lineIdAccessor, customLayout, layoutConfig, onLayoutError, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See
@@ -491,6 +485,15 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // where `frame.hoverLeaveRef.current = ...` is set a few lines below.
     const { hoverHandlerRef, onPointerMove, onPointerLeave } = frame
 
+    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
+      hydrated,
+      wasHydratingFromSSR,
+      storeRef,
+      dirtyRef,
+      cleanup: () => tileCacheRef.current?.clear(),
+      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
+    })
+
     useEffect(() => {
       hoverHandlerRef.current = (e: HoverPointerCoords) => {
         if (!enableHover) return
@@ -575,7 +578,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           }
         }
       }
-    }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender])
+    }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender, hoverHandlerRef, canvasRef])
 
     // pointermove coalescing + onPointerLeave come from useFrame above.
     // Geo's family-specific leave behavior goes into hoverLeaveRef.current,
@@ -671,7 +674,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
-    }, [onPointerMove])
+    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
       lastPointerTypeRef.current = e.pointerType
@@ -831,7 +834,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         ctx.clip()
 
         const scene = store.scene
-        const scales = store.scales
+        const scales = store.scales!
         const layout = { width: adjustedWidth, height: adjustedHeight }
         paintSceneWithBackend({
           context: ctx,
@@ -985,15 +988,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         scheduleRender()
       }
     }
-
-    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
-      hydrated,
-      wasHydratingFromSSR,
-      storeRef,
-      dirtyRef,
-      cleanup: () => tileCacheRef.current?.clear(),
-      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
-    })
 
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 

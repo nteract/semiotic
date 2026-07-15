@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -12,11 +14,11 @@ const sampleData = [...STACKED_SAMPLE]
 const customData = [...GROUP_SERIES_CUSTOM]
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -25,7 +27,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
 
 describe("GroupedBarChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   // Guards against confusing null-deref failures when an early-return
@@ -36,7 +38,7 @@ describe("GroupedBarChart", () => {
       lastOrdinalFrameProps,
       "mocked StreamOrdinalFrame did not capture props — GroupedBarChart likely hit an early-return path"
     ).not.toBeNull()
-    return lastOrdinalFrameProps as Record<string, any>
+    return lastOrdinalFrameProps
   }
 
   it("forwards data + accessors and the group accessor to the frame", () => {

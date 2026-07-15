@@ -37,11 +37,11 @@ export function useAnnotationActivationOptions(
       options.onObservation?.(observation)
       pushObservation?.(observation)
     },
-    [options.onObservation, pushObservation]
+    [options, pushObservation]
   )
   return React.useMemo(
     () => ({ ...options, onObservation }),
-    [onObservation, options.chartId, options.chartType, options.onAnnotationActivate]
+    [onObservation, options]
   )
 }
 

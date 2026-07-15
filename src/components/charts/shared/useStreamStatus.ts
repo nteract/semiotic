@@ -93,6 +93,15 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
   const [status, setStatus] = useState<StreamStatus>("idle")
   const [lastPushTime, setLastPushTime] = useState<number | null>(null)
 
+  const markPushed = useCallback(() => {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    lastPushRef.current = now
+    setLastPushTime(now)
+    // Transition straight to active; the poll timer downgrades to
+    // stale once the threshold elapses.
+    setStatus((prev) => (prev === "active" ? prev : "active"))
+  }, [])
+
   // Wrapped ref exposed to the caller. Setting `current` on this
   // ref records the assignment for React's ref-forwarding and then
   // wraps the frame's push/pushMany so each call records its
@@ -164,16 +173,7 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
         }
       },
     } as React.MutableRefObject<THandle | null>
-  }, [])
-
-  const markPushed = useCallback(() => {
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    lastPushRef.current = now
-    setLastPushTime(now)
-    // Transition straight to active; the poll timer downgrades to
-    // stale once the threshold elapses.
-    setStatus((prev) => (prev === "active" ? prev : "active"))
-  }, [])
+  }, [markPushed])
 
   // Poll for staleness transitions. Cheap (one setInterval, one
   // ref read, one Math op per tick) and only runs while mounted.

@@ -1,4 +1,5 @@
-import type { GeoAreaSceneNode, GeoSceneNode } from "../geoTypes"
+import type { GeoAreaSceneNode, GeoScales, GeoSceneNode } from "../geoTypes"
+import type { StreamLayout } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { renderPathPulse } from "./renderPulse"
 
@@ -12,8 +13,8 @@ import { renderPathPulse } from "./renderPulse"
 export function geoCanvasRenderer(
   ctx: CanvasRenderingContext2D,
   nodes: GeoSceneNode[],
-  _scales: any,
-  _layout: any
+  _scales: GeoScales,
+  _layout: StreamLayout
 ): void {
   const geoAreas = nodes.filter(
     (n): n is GeoAreaSceneNode => n.type === "geoarea"

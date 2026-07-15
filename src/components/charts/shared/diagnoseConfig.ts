@@ -500,7 +500,7 @@ function checkAdjacentCategoryContrast(
   const colors = props.colorScheme
   if (!colors || !Array.isArray(colors) || colors.length < 2) return
 
-  const hexColors = colors.filter((c: any) => typeof c === "string" && c.startsWith("#"))
+  const hexColors = colors.filter((color): color is string => typeof color === "string" && color.startsWith("#"))
   if (hexColors.length < 2) return
 
   const lowDistinguishability: string[] = []

@@ -1036,36 +1036,15 @@
 }
 
 .sentence-challenge__diagram {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 190px;
-  padding-top: 132px;
-}
-
-.sentence-challenge__diagram span {
-  position: relative;
-  z-index: 1;
-  padding: 7px;
-  background: var(--surface-1);
+  margin: 0;
+  padding: clamp(30px, 6vw, 70px) clamp(24px, 4vw, 46px);
+  border-left: 5px solid var(--sentence-coral);
+  background: var(--sentence-paper);
   color: var(--text-primary);
-  font-size: clamp(0.72rem, 1.3vw, 0.95rem);
-  font-weight: 800;
-}
-
-.sentence-challenge__diagram svg {
-  position: absolute;
-  inset: 0 0 auto;
-  width: 100%;
-  height: 150px;
-  overflow: visible;
-}
-
-.sentence-challenge__diagram path {
-  fill: none;
-  stroke: var(--sentence-coral);
-  stroke-width: 5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 3vw, 2.35rem);
+  font-weight: 650;
+  line-height: 1.28;
 }
 
 .sentence-challenge > div:last-child > p:last-child {
@@ -1354,8 +1333,7 @@
   }
 
   .sentence-challenge__diagram {
-    min-height: 160px;
-    padding-top: 118px;
+    padding: 34px 26px;
   }
 }
 

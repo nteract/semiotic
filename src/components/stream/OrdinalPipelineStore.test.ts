@@ -598,7 +598,7 @@ describe("OrdinalPipelineStore", () => {
       store.computeScene({ width: 400, height: 300 })
 
       // Since data was just inserted, point nodes should have pulse intensity
-      const pulsed = store.scene.filter((n: any) => n._pulseIntensity && n._pulseIntensity > 0)
+    const pulsed = store.scene.filter((n) => n._pulseIntensity && n._pulseIntensity > 0)
       expect(pulsed.length).toBeGreaterThan(0)
     })
 

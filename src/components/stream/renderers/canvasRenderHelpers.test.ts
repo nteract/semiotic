@@ -8,9 +8,9 @@ import {
 import { createMockCanvasContext } from "../../../test-utils/canvasMock"
 
 describe("canvasRenderHelpers", () => {
-  let ctx: any
+  let ctx: CanvasRenderingContext2D
   beforeEach(() => {
-    ctx = createMockCanvasContext()
+    ctx = createMockCanvasContext() as object as CanvasRenderingContext2D
   })
 
   describe("resolveCurveFactory", () => {

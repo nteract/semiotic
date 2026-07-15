@@ -1,4 +1,5 @@
 import type { Datum } from "../../charts/shared/datumTypes"
+import type { CoercibleNumber } from "../accessorUtils"
 import type { AreaGradientConfig } from "./areaGradient"
 /**
  * XYSceneContext — shared context passed to all XY scene builder functions.
@@ -69,9 +70,9 @@ export interface XYSceneConfig {
   symbolMap?: Record<string, SymbolName>
 
   // Heatmap
-  xAccessor?: string | ((d: Datum) => any)
-  yAccessor?: string | ((d: Datum) => any)
-  valueAccessor?: string | ((d: Datum) => any)
+  xAccessor?: string | ((d: Datum) => CoercibleNumber)
+  yAccessor?: string | ((d: Datum) => CoercibleNumber)
+  valueAccessor?: string | ((d: Datum) => CoercibleNumber)
   heatmapAggregation?: "count" | "sum" | "mean"
   heatmapXBins?: number
   heatmapYBins?: number
@@ -105,7 +106,7 @@ export interface XYSceneConfig {
   candlestickRangeMode?: boolean
 
   // Bounds
-  boundsStyle?: Style | ((d: any, group: string) => Style)
-  lineStyle?: Style | ((d: any, group: string) => Style)
+  boundsStyle?: Style | ((d: Datum, group: string) => Style)
+  lineStyle?: Style | ((d: Datum, group: string) => Style)
   areaStyle?: (d: Datum) => Style
 }

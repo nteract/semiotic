@@ -492,8 +492,8 @@ export function createDefaultAnnotationRules(
         // - horizontal: xPixel from linear value scale on x (using
         //   `value`), yPixel from band-scale on y (using
         //   `categoryIndex`).
-        const sxAny = scaleX as unknown as (k: any) => number
-        const syAny = scaleY as unknown as (k: any) => number
+        const sxAny = scaleX as (key: string | number | Date) => number
+        const syAny = scaleY as (key: string | number | Date) => number
         let project: (regressionX: number, regressionY: number) => [number, number]
         if (isOrdinal) {
           if (isHoriz) {

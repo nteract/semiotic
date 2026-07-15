@@ -215,7 +215,7 @@ function useTweenedValue(
     // displayed intentionally excluded — including it would restart the
     // tween every animation frame. (No react-hooks/exhaustive-deps rule is
     // configured in eslint.config.mjs, so no disable directive is needed.)
-  }, [target, animate, reducedMotion])
+  }, [target, animate, reducedMotion, displayed])
 
   return displayed
 }

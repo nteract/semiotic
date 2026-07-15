@@ -4,6 +4,7 @@ import { waffleLayout } from "./waffle"
 import { calendarLayout } from "./calendar"
 import type { LayoutContext } from "../stream/customLayout"
 import type { RectSceneNode } from "../stream/types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeCtx<C extends object>(config: C, overrides?: Partial<LayoutContext<C>>): LayoutContext<C> {
   const x = scaleLinear().domain([0, 100]).range([0, 400])
@@ -115,8 +116,8 @@ describe("waffleLayout", () => {
       makeCtx(
         {
           rows: 10, columns: 10,
-          categoryAccessor: (d: any) => d.cat,
-          valueAccessor: (d: any) => d.v,
+      categoryAccessor: (d: Datum) => d.cat,
+      valueAccessor: (d: Datum) => d.v,
         },
         { data: [{ cat: "X", v: 100 }] }
       )
@@ -149,4 +150,3 @@ describe("calendarLayout", () => {
     expect(result.nodes).toHaveLength(366)
   })
 })
-

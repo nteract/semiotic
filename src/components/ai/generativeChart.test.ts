@@ -29,6 +29,37 @@ const GALTON_SAMPLES = [
   { id: "d", value: 4 }
 ]
 
+interface ComponentToolSchema {
+  required: string[]
+  properties: {
+    component: { enum: string[] }
+  }
+}
+
+function componentToolSchema(
+  schema: Record<string, unknown>
+): ComponentToolSchema {
+  const required = Reflect.get(schema, "required")
+  const properties = Reflect.get(schema, "properties")
+  const component =
+    properties && typeof properties === "object"
+      ? Reflect.get(properties, "component")
+      : null
+  const values =
+    component && typeof component === "object"
+      ? Reflect.get(component, "enum")
+      : null
+
+  if (!Array.isArray(required) || !Array.isArray(values)) {
+    throw new Error("Component tool schema is missing required component metadata")
+  }
+
+  return {
+    required: required.map(String),
+    properties: { component: { enum: values.map(String) } }
+  }
+}
+
 function evidence(partial: Partial<RenderEvidence>): RenderEvidence {
   return {
     component: "BarChart",
@@ -167,7 +198,7 @@ describe("chart tool definitions", () => {
   it("builds a JSON-Schema tool with a component enum from the registry", () => {
     const tool = chartGenerationTool()
     expect(tool.name).toBe("render_semiotic_chart")
-    const schema = tool.inputSchema as any
+    const schema = componentToolSchema(tool.inputSchema)
     expect(schema.required).toContain("component")
     expect(schema.properties.component.enum).toContain("BarChart")
     expect(schema.properties.component.enum).toContain("LineChart")
@@ -176,7 +207,7 @@ describe("chart tool definitions", () => {
   it("restricts the component enum to an allow-list", () => {
     const tool = chartGenerationTool({ components: ["BarChart", "LineChart"], name: "make_chart" })
     expect(tool.name).toBe("make_chart")
-    expect((tool.inputSchema as any).properties.component.enum).toEqual(["BarChart", "LineChart"])
+    expect(componentToolSchema(tool.inputSchema).properties.component.enum).toEqual(["BarChart", "LineChart"])
   })
 
   it("shapes for Anthropic and OpenAI without losing the schema", () => {

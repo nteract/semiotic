@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -5,11 +7,11 @@ import { BoxPlot } from "./BoxPlot"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -36,7 +38,7 @@ describe("BoxPlot", () => {
   ]
 
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   it("handles empty data gracefully", () => {
@@ -176,39 +178,39 @@ describe("BoxPlot", () => {
 
   describe("push API", () => {
     it("ref exposes push, pushMany, getData, and clear", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BoxPlot>>()
       render(
         <TooltipProvider>
           <BoxPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
       expect(ref.current).toBeTruthy()
-      expect(typeof ref.current.push).toBe("function")
-      expect(typeof ref.current.pushMany).toBe("function")
-      expect(typeof ref.current.getData).toBe("function")
-      expect(typeof ref.current.clear).toBe("function")
+      expect(typeof ref.current!.push).toBe("function")
+      expect(typeof ref.current!.pushMany).toBe("function")
+      expect(typeof ref.current!.getData).toBe("function")
+      expect(typeof ref.current!.clear).toBe("function")
     })
 
     it("push does not throw when frame ref is not connected", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BoxPlot>>()
       render(
         <TooltipProvider>
           <BoxPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
-      expect(() => ref.current.push({ category: "A", value: 10 })).not.toThrow()
-      expect(() => ref.current.pushMany([{ category: "B", value: 20 }])).not.toThrow()
-      expect(() => ref.current.clear()).not.toThrow()
+      expect(() => ref.current!.push({ category: "A", value: 10 })).not.toThrow()
+      expect(() => ref.current!.pushMany([{ category: "B", value: 20 }])).not.toThrow()
+      expect(() => ref.current!.clear()).not.toThrow()
     })
 
     it("getData returns empty array when frame ref is not connected", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BoxPlot>>()
       render(
         <TooltipProvider>
           <BoxPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
-      expect(ref.current.getData()).toEqual([])
+      expect(ref.current!.getData()).toEqual([])
     })
   })
 

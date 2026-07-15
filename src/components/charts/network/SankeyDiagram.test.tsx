@@ -1,15 +1,18 @@
+import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { SankeyDiagram } from "./SankeyDiagram"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock NetworkFrame to capture props
-let lastNetworkFrameProps: any = null
+let lastNetworkFrameProps = {} as CapturedNetworkFrameProps
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamNetworkFrameHandle>, CapturedNetworkFrameProps>((props, _ref) => {
       lastNetworkFrameProps = props
       return <div className="stream-network-frame"><svg /></div>
     })
@@ -18,7 +21,7 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
 
 describe("SankeyDiagram", () => {
   beforeEach(() => {
-    lastNetworkFrameProps = null
+    lastNetworkFrameProps = {} as CapturedNetworkFrameProps
   })
 
   const sampleEdges = [
@@ -255,7 +258,7 @@ describe("SankeyDiagram", () => {
   })
 
   it("forwards edgeSort", () => {
-    const sortFn = (a: any, b: any) => b.value - a.value
+    const sortFn = (a: Datum, b: Datum) => Number(b.value) - Number(a.value)
     render(
       <TooltipProvider>
         <SankeyDiagram edges={sampleEdges} edgeSort={sortFn} />
@@ -266,7 +269,7 @@ describe("SankeyDiagram", () => {
 
   describe("tooltip", () => {
     it("renders with tooltip prop without crashing", () => {
-      const customTooltip = (_d: any) => <div>custom tooltip</div>
+    const customTooltip = (_d: Datum) => <div>custom tooltip</div>
       const { container } = render(
         <TooltipProvider>
           <SankeyDiagram edges={sampleEdges} tooltip={customTooltip} />

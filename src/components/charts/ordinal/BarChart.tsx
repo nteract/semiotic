@@ -304,7 +304,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const sortedData = useSortedData(safeData, sort, valueAccessor)
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style — base fill, user overlay, primitive
   // props, and selection wrap all happen inside the shared hook.

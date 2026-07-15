@@ -80,7 +80,37 @@ export interface ObservedSceneAuditResult {
   manualATChecks: ObservedAuditFinding[]
 }
 
-type SceneNode = Record<string, any>
+interface SceneNode extends Datum {
+  pointId?: string | number
+  id?: string | number
+  _transitionKey?: string | number
+  accessibility?: { tableFields?: Datum[] }
+  accessibleDatum?: Datum | Datum[]
+  datum?: Datum | Datum[]
+  interactive?: boolean
+  x?: number
+  y?: number
+  w?: number
+  h?: number
+  r?: number
+  cx?: number
+  cy?: number
+  innerR?: number
+  outerR?: number
+  x1?: number
+  x2?: number
+  y1?: number
+  y2?: number
+  openY?: number
+  closeY?: number
+  highY?: number
+  lowY?: number
+  bodyWidth?: number
+  pathD?: string
+  path?: Array<[number, number]>
+  topPath?: Array<[number, number]>
+  bottomPath?: Array<[number, number]>
+}
 
 interface Bounds {
   x0: number

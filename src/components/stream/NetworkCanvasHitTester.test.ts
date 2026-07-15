@@ -25,7 +25,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([circle], [], 205, 150)
       expect(result).not.toBeNull()
       expect(result!.type).toBe("node")
-      expect(result!.datum.id).toBe("nodeA")
+      expect(result!.datum!.id).toBe("nodeA")
       expect(result!.x).toBe(200)
       expect(result!.y).toBe(150)
     })
@@ -60,7 +60,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       // Point at (120, 100): closer to c2
       const result = findNearestNetworkNode([c1, c2], [], 120, 100)
       expect(result).not.toBeNull()
-      expect(result!.datum.id).toBe("near")
+      expect(result!.datum!.id).toBe("near")
     })
   })
 
@@ -81,7 +81,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([rect], [], 60, 140)
       expect(result).not.toBeNull()
       expect(result!.type).toBe("node")
-      expect(result!.datum.id).toBe("sankeyNode")
+      expect(result!.datum!.id).toBe("sankeyNode")
       expect(result!.distance).toBe(0)
     })
 
@@ -114,7 +114,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       // Point inside both: should prefer smallest area
       const result = findNearestNetworkNode([big, small], [], 60, 60)
       expect(result).not.toBeNull()
-      expect(result!.datum.id).toBe("child")
+      expect(result!.datum!.id).toBe("child")
     })
   })
 
@@ -143,7 +143,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([arc], [], px, py)
       expect(result).not.toBeNull()
       expect(result!.type).toBe("node")
-      expect(result!.datum.id).toBe("chordGroup")
+      expect(result!.datum!.id).toBe("chordGroup")
     })
 
     it("misses inside the inner radius", () => {

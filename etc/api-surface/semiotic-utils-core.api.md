@@ -15,7 +15,7 @@ const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme>
 function MultiPointTooltip(): TooltipContentFn
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
-function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: any, index?: number, allTicks?: number[]) => string
+function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
@@ -47,7 +47,7 @@ function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: T
 function resolveThemePreset(name: string): SemioticTheme | undefined
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
-function smartTickFormat(value: any): string
+function smartTickFormat(value: string | number | Date | null | undefined): string
 function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToTokens(theme: SemioticTheme): Datum

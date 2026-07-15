@@ -209,7 +209,7 @@ export const processSankey: ChartConfig = {
           // look up in the scale built from the synthetic `_cat` rows.
           return getColor({ _cat: colorByFn(raw) }, "_cat", colorScale ?? undefined) as string
         }
-        return getColor(raw, colorBy, colorScale ?? undefined) as string
+        return getColor(raw, typeof colorBy === "string" ? colorBy : "id", colorScale ?? undefined) as string
       }
       const p = palette || fallbackPalette
       return p[idx % p.length]
@@ -364,4 +364,3 @@ export const circlePack: ChartConfig = {
     ...common,
   }),
 }
-

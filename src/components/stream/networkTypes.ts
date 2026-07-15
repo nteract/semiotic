@@ -1,9 +1,14 @@
 import type { ReactNode } from "react"
 import type { HoverData } from "../realtime/types"
+import type { Datum } from "../charts/shared/datumTypes"
+
+type NetworkDatumComparator = {
+  bivarianceHack(a: Datum, b: Datum): number
+}["bivarianceHack"]
+type NetworkGroupComparator = (a: number, b: number) => number
 import type { LegendGroup, LegendLayout } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
@@ -565,7 +570,7 @@ export interface NetworkPipelineConfig {
   nodeAlign?: "justify" | "left" | "right" | "center"
   nodePaddingRatio?: number
   nodeWidth?: number
-  edgeSort?: (a: unknown, b: unknown) => number
+  edgeSort?: NetworkDatumComparator
 
   // ── Force layout ─────────────────────────────────
   iterations?: number
@@ -576,7 +581,7 @@ export interface NetworkPipelineConfig {
   // ── Chord layout ─────────────────────────────────
   padAngle?: number
   groupWidth?: number
-  sortGroups?: (a: unknown, b: unknown) => number
+  sortGroups?: NetworkGroupComparator
 
   // ── Tree/hierarchy layout ────────────────────────
   treeOrientation?: "vertical" | "horizontal" | "radial"
@@ -716,8 +721,8 @@ export interface StreamNetworkFrameProps<T = Datum>
   onLayoutStateChange?: (state: "pending" | "ready" | "error") => void
   padAngle?: number
   groupWidth?: number
-  sortGroups?: (a: unknown, b: unknown) => number
-  edgeSort?: (a: unknown, b: unknown) => number
+  sortGroups?: NetworkGroupComparator
+  edgeSort?: NetworkDatumComparator
   /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   treeOrientation?: "vertical" | "horizontal" | "radial"

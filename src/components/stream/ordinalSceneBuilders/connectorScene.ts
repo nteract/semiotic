@@ -1,6 +1,7 @@
 import type { ConnectorSceneNode, OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { Style } from "../types"
 import type { OrdinalSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 export function buildConnectors(
   ctx: OrdinalSceneContext,
@@ -13,7 +14,7 @@ export function buildConnectors(
   const { projection } = scales
 
   // Group pieces by connector key
-  const groups = new Map<string, { x: number; y: number; datum: any; category: string }[]>()
+  const groups = new Map<string, { x: number; y: number; datum: Datum; category: string }[]>()
 
   for (const node of pieceNodes) {
     if (node.type !== "point" && node.type !== "rect") continue

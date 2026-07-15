@@ -4,6 +4,7 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type {
+  OrdinalSceneNode,
   OrdinalPipelineConfig,
   StreamOrdinalFrameProps
 } from "../stream/ordinalTypes"
@@ -270,7 +271,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
 
   // Check for bar-funnel dropoff bars — they need SVG hatch patterns
   const hasDropoffBars = store.scene.some(
-    (n: any) => n.type === "rect" && n.datum?.__barFunnelIsDropoff
+    (node: OrdinalSceneNode) => node.type === "rect" && node.datum?.__barFunnelIsDropoff
   )
   let hatchDefs: React.ReactNode = null
   if (hasDropoffBars) {

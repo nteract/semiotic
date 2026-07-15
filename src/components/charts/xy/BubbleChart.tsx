@@ -366,7 +366,6 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
         frameRef.current?.clear()
       },
     },
-    deps: [wrappedPush, wrappedPushMany, resetSizeDomain],
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)

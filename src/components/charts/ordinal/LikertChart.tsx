@@ -269,20 +269,21 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     showLegend,
     legendPosition: legendPositionProp,
   })
+  const { wrapPush, wrapPushMany } = streaming
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: Datum) => {
-      accumulatorRef.current.push(d)
+    (d: Datum) => wrapPush((next: Datum) => {
+      accumulatorRef.current.push(next)
       reAggregate(accumulatorRef.current)
-    }),
-    [streaming.wrapPush, reAggregate, accumulatorRef]
+    })(d),
+    [wrapPush, reAggregate, accumulatorRef]
   )
   const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => {
-      accumulatorRef.current.push(...d)
+    (d: Datum[]) => wrapPushMany((next: Datum[]) => {
+      accumulatorRef.current.push(...next)
       reAggregate(accumulatorRef.current)
-    }),
-    [streaming.wrapPushMany, reAggregate, accumulatorRef]
+    })(d),
+    [wrapPushMany, reAggregate, accumulatorRef]
   )
 
   useImperativeHandle(ref, () => ({
@@ -300,7 +301,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     // category order. The ordinal scale's domain is the source of truth
     // for how categories appear in the rendered output.
     getScales: () => frameRef.current?.getScales() ?? null
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories, accumulatorRef])
+  }), [wrappedPush, wrappedPushMany, accumulatorRef, streaming])
 
   // ── Chart setup ──────────────────────────────────────────────────────
   const setup = useChartSetup({

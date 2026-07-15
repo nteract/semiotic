@@ -37,6 +37,14 @@ import {
   physicsBodiesToXYSceneNodes,
   type PhysicsSettledSceneOptions
 } from "../stream/physics/PhysicsSettledScene"
+import type {
+  GifEncoder,
+  GifPalette,
+  GifencExports,
+  GifencRuntimeExports,
+  SharpFactory,
+  SharpModule
+} from "./optionalImageTypes"
 
  
 // ReactDOMServer imported at top of file via ESM
@@ -605,10 +613,10 @@ async function encodeSvgFramesToGif(
   // Load optional deps dynamically at call time. The variable specifiers
   // defeat static bundler resolution so these Node-only raster/encoding
   // packages stay out of edge/browser-oriented bundles until GIF export runs.
-  let sharp: any
+  let sharp: SharpFactory
   try {
     const sharpName = "sharp"
-    const sharpModule = await import(sharpName)
+    const sharpModule: SharpModule = await import(sharpName)
     sharp = sharpModule.default ?? sharpModule
   } catch {
     throw new Error(
@@ -616,22 +624,28 @@ async function encodeSvgFramesToGif(
     )
   }
 
-  let GIFEncoder: any, quantize: any, applyPalette: any
+  let GIFEncoder: () => GifEncoder
+  let quantize: (pixels: Uint8Array, maxColors: number) => GifPalette
+  let applyPalette: (pixels: Uint8Array, palette: GifPalette) => Uint8Array
   try {
     const gifencName = "gifenc"
-    const gifencModule = await import(gifencName)
-    GIFEncoder = gifencModule.GIFEncoder
-      ?? gifencModule.default?.GIFEncoder
-      ?? gifencModule.default?.default?.GIFEncoder
-    quantize = gifencModule.quantize
-      ?? gifencModule.default?.quantize
-      ?? gifencModule.default?.default?.quantize
-    applyPalette = gifencModule.applyPalette
-      ?? gifencModule.default?.applyPalette
-      ?? gifencModule.default?.default?.applyPalette
-  } catch {
+    const gifencModule: GifencExports = await import(gifencName)
+    const exports = [gifencModule, gifencModule.default].find(
+      (candidate): candidate is GifencRuntimeExports =>
+        typeof candidate?.GIFEncoder === "function" &&
+        typeof candidate.quantize === "function" &&
+        typeof candidate.applyPalette === "function"
+    )
+    if (!exports) {
+      throw new Error("gifenc did not expose its encoder functions")
+    }
+    GIFEncoder = exports.GIFEncoder
+    quantize = exports.quantize
+    applyPalette = exports.applyPalette
+  } catch (error) {
     throw new Error(
-      `Animated GIF export requires "gifenc". Install it:\n  npm install gifenc`
+      `Animated GIF export requires "gifenc". Install it:\n  npm install gifenc`,
+      { cause: error }
     )
   }
 

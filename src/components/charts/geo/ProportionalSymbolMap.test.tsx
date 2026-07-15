@@ -1,3 +1,5 @@
+import type { CapturedGeoFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamGeoFrameHandle } from "../../stream/geoTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -6,11 +8,11 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import type { AreasProp } from "../../geo/useReferenceAreas"
 
 // Mock StreamGeoFrame to capture props
-let lastGeoFrameProps: any = null
+let lastGeoFrameProps = {} as CapturedGeoFrameProps
 vi.mock("../../stream/StreamGeoFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamGeoFrameHandle>, CapturedGeoFrameProps>((props, _ref) => {
       lastGeoFrameProps = props
       return <div className="stream-geo-frame"><svg /></div>
     })
@@ -19,7 +21,7 @@ vi.mock("../../stream/StreamGeoFrame", () => {
 
 // Mock useReferenceAreas to return areas directly
 vi.mock("../../geo/useReferenceAreas", () => ({
-  useReferenceAreas: (areas: any) => areas
+  useReferenceAreas: (areas: AreasProp) => areas
 }))
 
 const samplePoints = [
@@ -38,7 +40,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("ProportionalSymbolMap", () => {
   beforeEach(() => {
-    lastGeoFrameProps = null
+    lastGeoFrameProps = {} as CapturedGeoFrameProps
   })
 
   // ── Hooks-before-early-return fix ─────────────────────────────────────

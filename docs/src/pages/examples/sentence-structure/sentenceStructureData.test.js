@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  CANONICAL_SENTENCE_BY_SUBJECT,
   CORPUS_OPTIONS,
   CORPUS_SENTENCES,
   SPECIMENS,
@@ -10,14 +11,19 @@ import {
   buildSelectionRelations,
   buildVariantGraph,
   buildWordTree,
+  createCorpusSpecimen,
+  enumerateWordTreePaths,
   filterCorpusSentences,
   getSpecimen,
   getStructuralSummary,
+  getSubjectOptionsForCorpus,
   phraseRelatedEntities,
   relatedEntityCount,
   recoverPhraseRelationshipSources,
   recoverWordTreeSources,
   resolveCorpusSelection,
+  resolveSubjectAnchor,
+  selectCanonicalSentence,
   selectSpecimenForFilters,
   tokenRelatedEntities,
 } from "./sentenceStructureData"
@@ -221,6 +227,74 @@ describe("sentence structure corpus transforms", () => {
     expect(backward.root.terminalCount).toBe(2)
   })
 
+  it("minimizes exact word-path suffixes without inventing contexts", () => {
+    const loveSentences = [
+      { id: "love-road-promise", text: "Love is not a road but a promise we keep." },
+      { id: "love-door-promise", text: "Love is not a door but a promise we keep." },
+      { id: "love-road-question", text: "Love is not a road but a question we ask." },
+      { id: "love-door-question", text: "Love is not a door yet a question we ask." },
+    ]
+    const options = {
+      sentences: loveSentences,
+      anchor: "Love",
+      direction: "forward",
+      amount: 10,
+      maxDepth: 12,
+    }
+    const first = buildWordTree(options)
+    expect(first).toEqual(buildWordTree(options))
+    const reordered = buildWordTree({ ...options, sentences: [...loveSentences].reverse() })
+    expect(reordered.nodes).toEqual(first.nodes)
+    expect(reordered.edges).toEqual(first.edges)
+    expect(reordered.metadata).toEqual(first.metadata)
+
+    let sharedPrefix = first.root
+    for (const normalized of ["is", "not", "a"]) {
+      sharedPrefix = sharedPrefix.children.find((child) => child.normalized === normalized)
+      expect(sharedPrefix).toBeTruthy()
+      expect(sharedPrefix.pathIds).toHaveLength(4)
+    }
+    expect(first.metadata.maxSharedPrefixDepth).toBeGreaterThanOrEqual(3)
+    expect(first.metadata.maxSharedDepth).toBeGreaterThanOrEqual(3)
+
+    const promise = first.nodes.find((node) => node.normalized === "promise")
+    expect(promise.indegree).toBeGreaterThanOrEqual(2)
+    expect(promise.suffixSpan).toBeGreaterThanOrEqual(2)
+    expect(first.metadata.convergenceCount).toBeGreaterThanOrEqual(2)
+    expect(first.metadata.maxConvergentSuffixSpan).toBeGreaterThanOrEqual(2)
+    expect(first.metadata.trieNodeCount).toBeGreaterThan(first.metadata.dagNodeCount)
+    expect(recoverWordTreeSources(first, promise.id).map((source) => source.id)).toEqual([
+      "love-road-promise",
+      "love-door-promise",
+    ])
+    expect(recoverWordTreeSources(first, first.root.id).map((source) => source.id)).toEqual(
+      loveSentences.map((sentence) => sentence.id),
+    )
+
+    const promiseTail = first.edges.find(
+      (edge) =>
+        edge.source === promise.id &&
+        first.nodes.find((node) => node.id === edge.target)?.normalized === "we",
+    )
+    expect(promiseTail.pathIds).toHaveLength(2)
+    expect(promiseTail.sourceIds).toHaveLength(2)
+
+    const enumerated = enumerateWordTreePaths(first)
+    expect(enumerated).toHaveLength(loveSentences.length)
+    expect(enumerated.map((path) => path.sourceId)).toEqual([
+      "love-door-promise",
+      "love-door-question",
+      "love-road-promise",
+      "love-road-question",
+    ])
+    expect(enumerated.map((path) => path.normalizedTokens.join(" "))).toEqual([
+      "love is not a door but a promise we keep",
+      "love is not a door yet a question we ask",
+      "love is not a road but a promise we keep",
+      "love is not a road but a question we ask",
+    ])
+  })
+
   it("extracts phrase-pattern edges with complete examples and source recovery", () => {
     const graph = buildPhraseRelationships({
       sentences: [
@@ -252,8 +326,53 @@ describe("sentence structure corpus transforms", () => {
       filterCorpusSentences({ corpus: "demonstration", subject: "love" }).length,
     ).toBeGreaterThan(3)
     expect(VIEW_OPTIONS).toHaveLength(9)
+    expect(VIEW_OPTIONS.some((option) => option.value === "reed-kellogg")).toBe(true)
     expect(SUBJECT_OPTIONS.some((option) => option.value === "love")).toBe(true)
     expect(CORPUS_OPTIONS.some((option) => option.value === "shakespeare")).toBe(true)
+    expect(CORPUS_OPTIONS.some((option) => option.value === "hamlet")).toBe(true)
+    expect(CORPUS_OPTIONS.some((option) => option.value === "romeo-and-juliet")).toBe(true)
+    expect(CORPUS_OPTIONS.some((option) => option.value === "demonstration")).toBe(false)
+    expect(
+      CORPUS_OPTIONS.some((option) =>
+        ["grammar-lab", "nineteenth-century-fiction"].includes(option.value),
+      ),
+    ).toBe(false)
+    expect(
+      CORPUS_SENTENCES.every((row) => ["shakespeare", "demonstration"].includes(row.corpus)),
+    ).toBe(true)
+    expect(
+      CORPUS_SENTENCES.filter((row) => row.corpus === "shakespeare").every(
+        (row) => row.source.author === "William Shakespeare",
+      ),
+    ).toBe(true)
+  })
+
+  it("filters Shakespeare by work and only offers represented, nonempty subjects", () => {
+    const hamlet = filterCorpusSentences({ corpus: "hamlet" })
+    expect(hamlet.length).toBeGreaterThanOrEqual(7)
+    expect(hamlet.every((row) => row.source.work === "Hamlet")).toBe(true)
+
+    for (const corpus of CORPUS_OPTIONS) {
+      const subjects = getSubjectOptionsForCorpus(corpus.value)
+      expect(subjects.length).toBeGreaterThan(0)
+      for (const subject of subjects) {
+        const selection = resolveCorpusSelection(
+          { corpus: corpus.value, subject: subject.value, amount: 100 },
+          { requestedAmount: 100 },
+        )
+        expect(selection.rows.length, `${corpus.value}/${subject.value}`).toBeGreaterThan(0)
+        const anchor = resolveSubjectAnchor(selection.rows, subject.value)
+        const wordTree = buildWordTree({
+          sentences: selection.rows,
+          anchor,
+          amount: selection.rows.length,
+        })
+        expect(
+          wordTree.matches.length,
+          `${corpus.value}/${subject.value}/${anchor}`,
+        ).toBeGreaterThan(0)
+      }
+    }
   })
 
   it("resolves the default title to twenty real love rows with a nonempty phrase net", () => {
@@ -265,7 +384,7 @@ describe("sentence structure corpus transforms", () => {
     })
     expect(selection.filters.amount).toBe(20)
     expect(selection.rows).toHaveLength(20)
-    expect(selection.availableCount).toBe(20)
+    expect(selection.availableCount).toBeGreaterThan(20)
     expect(
       selection.rows.every((row) => row.corpus === "shakespeare" && row.subjects.includes("love")),
     ).toBe(true)
@@ -279,17 +398,17 @@ describe("sentence structure corpus transforms", () => {
     expect(phraseNet.sources.length).toBeGreaterThan(0)
   })
 
-  it("clamps to exact intersections and never widens an empty selection", () => {
+  it("clamps exact corpus intersections without widening the selection", () => {
     const sparse = resolveCorpusSelection(
-      { amount: 20, subject: "rhetoric", corpus: "grammar-lab" },
+      { amount: 20, subject: "rhetoric", corpus: "demonstration" },
       { requestedAmount: 20 },
     )
-    expect(sparse.filters.amount).toBe(1)
-    expect(sparse.rows.map((row) => row.source.specimenId)).toEqual(["rhetorical-claim"])
-    expect(sparse.availableCount).toBe(1)
+    expect(sparse.filters.amount).toBe(2)
+    expect(sparse.rows[0].source.specimenId).toBe("rhetorical-claim")
+    expect(sparse.availableCount).toBe(2)
 
     const empty = resolveCorpusSelection(
-      { amount: 20, subject: "ambiguity", corpus: "shakespeare" },
+      { amount: 20, subject: "death", corpus: "king-lear" },
       { requestedAmount: 20 },
     )
     expect(empty.filters.amount).toBe(0)
@@ -299,45 +418,113 @@ describe("sentence structure corpus transforms", () => {
     expect(selectSpecimenForFilters(empty.filters, empty.rows)).toBeNull()
   })
 
-  it("selects authored plates deterministically from primary filter state", () => {
+  it("selects corpus-derived canonical sentences deterministically from primary filters", () => {
     const initial = resolveCorpusSelection({
       amount: 20,
       subject: "love",
       corpus: "shakespeare",
     })
-    expect(selectSpecimenForFilters(initial.filters, initial.rows).id).toBe("attachment-ambiguity")
+    const initialSpecimen = selectSpecimenForFilters(initial.filters, initial.rows)
+    expect(initialSpecimen.corpusSentenceId).toBe(CANONICAL_SENTENCE_BY_SUBJECT.love)
+    expect(initial.rows.some((row) => row.id === initialSpecimen.corpusSentenceId)).toBe(true)
+    expect(initialSpecimen.source.corpus).toBe("shakespeare")
 
     const fiveLoveRows = resolveCorpusSelection({
       amount: 5,
       subject: "love",
       corpus: "shakespeare",
     })
-    expect(selectSpecimenForFilters(fiveLoveRows.filters, fiveLoveRows.rows).id).toBe(
-      "gerund-ambiguity",
+    expect(selectSpecimenForFilters(fiveLoveRows.filters, fiveLoveRows.rows).corpusSentenceId).toBe(
+      CANONICAL_SENTENCE_BY_SUBJECT.love,
     )
 
     const rhetoric = resolveCorpusSelection({
       amount: 20,
       subject: "rhetoric",
-      corpus: "grammar-lab",
+      corpus: "shakespeare",
     })
-    expect(selectSpecimenForFilters(rhetoric.filters, rhetoric.rows).id).toBe("rhetorical-claim")
-
-    const manuallyChosenRhetoric = resolveCorpusSelection(
-      { amount: 1, subject: "power", corpus: "grammar-lab" },
-      { requestedAmount: 1, preferredSpecimenId: "rhetorical-claim" },
+    expect(selectSpecimenForFilters(rhetoric.filters, rhetoric.rows).corpusSentenceId).toBe(
+      CANONICAL_SENTENCE_BY_SUBJECT.rhetoric,
     )
-    expect(manuallyChosenRhetoric.rows).toHaveLength(1)
-    expect(manuallyChosenRhetoric.rows[0].source.specimenId).toBe("rhetorical-claim")
 
-    const fictionLove = resolveCorpusSelection({
+    const hamletLove = resolveCorpusSelection({
       amount: 20,
       subject: "love",
-      corpus: "nineteenth-century-fiction",
+      corpus: "hamlet",
     })
-    expect(selectSpecimenForFilters(fictionLove.filters, fictionLove.rows).id).toBe(
-      "gerund-ambiguity",
+    expect(hamletLove.rows.every((row) => row.source.work === "Hamlet")).toBe(true)
+    const hamletSpecimen = selectSpecimenForFilters(hamletLove.filters, hamletLove.rows)
+    expect(hamletSpecimen.source.work).toBe("Hamlet")
+    expect(hamletLove.rows.some((row) => row.id === hamletSpecimen.corpusSentenceId)).toBe(true)
+  })
+
+  it("gives every Shakespeare subject a complete shared structural specimen", () => {
+    for (const subject of SUBJECT_OPTIONS.filter((option) => option.value !== "all")) {
+      const selection = resolveCorpusSelection(
+        { amount: 100, subject: subject.value, corpus: "shakespeare" },
+        { requestedAmount: 100 },
+      )
+      const sentence = selectCanonicalSentence(selection.filters, selection.rows)
+      const specimen = createCorpusSpecimen(sentence)
+
+      expect(selection.rows.some((row) => row.id === sentence.id), subject.value).toBe(true)
+      expect(specimen.corpusSentenceId).toBe(sentence.id)
+      expect(specimen.source.corpus).toBe("shakespeare")
+      expect(specimen.tokens.length).toBeGreaterThan(0)
+      expect(specimen.sentenceDiagram.nodes.length).toBeGreaterThan(0)
+      expect(specimen.phrases.length).toBeGreaterThan(0)
+      expect(specimen.dependencies.length).toBeGreaterThan(0)
+      expect(specimen.alternateDependencies).toHaveLength(2)
+      expect(specimen.semantics.nodes.length).toBeGreaterThan(0)
+      expect(specimen.rhetoric.nodes.length).toBeGreaterThan(0)
+      expect(specimen.variants.length).toBeGreaterThan(0)
+    }
+  })
+
+  it("keeps the canonical love sentence's two clauses and nominal familiar distinct", () => {
+    const sentence = CORPUS_SENTENCES.find(
+      (row) => row.id === CANONICAL_SENTENCE_BY_SUBJECT.love,
     )
+    const specimen = createCorpusSpecimen(sentence)
+    const familiar = specimen.tokens.find((token) => token.lemma === "familiar")
+    const secondLove = specimen.tokens[5]
+    const secondIs = specimen.tokens[6]
+
+    expect(familiar.partOfSpeech).toBe("NOUN")
+    expect(specimen.dependencies).toContainEqual(
+      expect.objectContaining({
+        sourceTokenId: secondIs.id,
+        targetTokenId: secondLove.id,
+        relation: "nsubj",
+      }),
+    )
+    expect(specimen.alternateDependencies.map((parse) => parse.interpretation)).toEqual([
+      "second “love” attaches to second “is”.",
+      "second “love” attaches to first “is”, changing the grouping without changing the words.",
+    ])
+  })
+
+  it("uses Shakespeare formulae for a deep shared path and visible downstream convergence", () => {
+    const selection = resolveCorpusSelection(
+      { amount: 20, subject: "love", corpus: "shakespeare" },
+      { requestedAmount: 20 },
+    )
+    const graph = buildWordTree({
+      sentences: selection.rows,
+      anchor: "love",
+      direction: "forward",
+      amount: 20,
+      maxDepth: 8,
+    })
+    const is = graph.root.children.find((node) => node.normalized === "is")
+    const article = is.children.find((node) => node.normalized === "a")
+
+    expect(is.count).toBeGreaterThanOrEqual(5)
+    expect(article.count).toBeGreaterThanOrEqual(4)
+    expect(article.children.length).toBeGreaterThanOrEqual(4)
+    expect(graph.metadata.mergedNodeCount).toBeGreaterThan(0)
+    expect(graph.metadata.convergenceCount).toBeGreaterThan(0)
+    expect(graph.nodes.some((node) => node.indegree > 1)).toBe(true)
   })
 })
 
@@ -376,13 +563,31 @@ describe("sentence structure local rewrites", () => {
 })
 
 describe("sentence structure accessible summaries", () => {
-  it("describes every view with a title, text, and relationship list", () => {
+  it("describes every view from the same corpus-derived sentence", () => {
+    const selection = resolveCorpusSelection(
+      { amount: 20, subject: "love", corpus: "shakespeare" },
+      { requestedAmount: 20 },
+    )
+    const specimen = selectSpecimenForFilters(selection.filters, selection.rows)
+    const wordTree = buildWordTree({
+      sentences: selection.rows,
+      anchor: "love",
+      amount: 20,
+      maxDepth: 8,
+    })
+    const phraseNet = buildPhraseRelationships({
+      sentences: selection.rows,
+      pattern: "X and Y",
+      amount: 20,
+    })
     for (const view of VIEW_OPTIONS) {
-      const specimen = view.value === "rhetoric" ? "rhetorical-claim" : "attachment-ambiguity"
       const summary = getStructuralSummary(specimen, view.value, {
         anchor: "love",
         pattern: "X and Y",
+        wordTree,
+        phraseNet,
       })
+      expect(summary.specimenId).toBe(specimen.id)
       expect(summary.title).toBeTruthy()
       expect(summary.text.length).toBeGreaterThan(40)
       expect(Array.isArray(summary.items)).toBe(true)
@@ -433,9 +638,8 @@ describe("sentence structure accessible summaries", () => {
 
   it("counts canonical related entities without token or metadata duplication", () => {
     const related = tokenRelatedEntities("attachment-ambiguity:t6")
-    const expected = new Set(
-      related.allEntityIds.filter((id) => !related.tokenIds.includes(id)),
-    ).size
+    const expected = new Set(related.allEntityIds.filter((id) => !related.tokenIds.includes(id)))
+      .size
     expect(relatedEntityCount(related)).toBe(expected)
     expect(relatedEntityCount(null)).toBe(0)
   })

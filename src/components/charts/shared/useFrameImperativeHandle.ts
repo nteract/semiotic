@@ -21,7 +21,7 @@
  */
 "use client"
 import { useImperativeHandle } from "react"
-import type { Ref, RefObject, DependencyList } from "react"
+import type { Ref, RefObject } from "react"
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
@@ -93,7 +93,6 @@ interface Options {
   variant: FrameVariant
   frameRef: RefObject<unknown>
   overrides?: Partial<RealtimeFrameHandle>
-  deps?: DependencyList
 }
 
 /**
@@ -107,7 +106,7 @@ export function useFrameImperativeHandle(
   ref: Ref<RealtimeFrameHandle> | undefined,
   options: Options,
 ): void {
-  const { variant, frameRef, overrides, deps } = options
+  const { variant, frameRef, overrides } = options
   // Default deps to `[]` so the handle is referentially stable across
   // renders. The method bodies read `frameRef.current` at call time, so
   // a frozen closure still dispatches into the latest store. Without
@@ -129,7 +128,7 @@ export function useFrameImperativeHandle(
       const defaults = makeVariantDefaults(variant, frameRef)
       return { ...defaults, ...overrides } as RealtimeFrameHandle
     },
-    deps ?? [],
+    [frameRef, overrides, variant],
   )
 }
 

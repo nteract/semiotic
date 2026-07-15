@@ -381,18 +381,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [
-      chartType, windowSize, windowMode, extentPadding, projection,
-      effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
-      timeAccessor, valueAccessor,
-      rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
-      dynamicColumnWidth,
-      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
-      pieceStyle, summaryStyle, colorScheme, barColors,
-      decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
-      isStreaming, currentTheme,
-      customLayout, onLayoutError, layoutConfig, margin, frameRuntime,
-    ])
+    }), [chartType, isStreaming, windowSize, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See
@@ -668,17 +657,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       })
       dirtyRef.current = true
       scheduleRender()
-    }, [
-      adjustedHeight,
-      adjustedWidth,
-      chartType,
-      customClickBehavior,
-      margin,
-      effectiveOAccessor,
-      projection,
-      effectiveRAccessor,
-      scheduleRender,
-    ])
+    }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender])
 
     // pointermove coalescing (rAF-bounded hit testing) + onMouseLeave
     // come from useFrame above. Frame still owns the hoverHandlerRef
@@ -703,7 +682,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
-    }, [onPointerMove])
+    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -800,19 +779,18 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         ctx.translate(margin.left, margin.top)
       }
 
-      // Dispatch to renderers. When customLayout is provided, the user
-      // can emit any node type; use the "custom" renderer set (each
-      // renderer self-filters) regardless of the declared chartType.
+      // Custom layouts may emit any node type, so use the self-filtering custom set.
       const renderers = customLayout ? RENDERERS.custom : (RENDERERS[chartType] || [])
       const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
-      paintSceneWithBackend({
+      const scales = store.scales
+      if (scales) paintSceneWithBackend({
         context: ctx,
         nodes: store.scene,
         renderMode,
         pixelRatio: dpr,
         paintBuiltIn: (nodes) => {
           for (const renderer of renderers) {
-            renderer(ctx, nodes, store.scales, layout)
+            renderer(ctx, nodes, scales, layout)
           }
         }
       })

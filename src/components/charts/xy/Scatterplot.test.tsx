@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -8,11 +10,11 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 // Mock StreamXYFrame so we can inspect the props Scatterplot forwards —
 // particularly `pointStyle`, which is the output of the merge chain that
 // combines HOC color resolution + top-level primitive props.
-let lastXYFrameProps: any = null
+let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
       lastXYFrameProps = props
       // Match the real frame's DOM shape (canvas inside frame div) so the
       // pre-existing smoke tests that check for <canvas> continue to pass.
@@ -23,7 +25,7 @@ vi.mock("../../stream/StreamXYFrame", () => {
 
 describe("Scatterplot", () => {
   beforeEach(() => {
-    lastXYFrameProps = null
+    lastXYFrameProps = {} as CapturedXYFrameProps
   })
   const sampleData = [
     { x: 1, y: 10 },

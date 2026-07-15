@@ -224,8 +224,8 @@ describe("bandTooltipFields", () => {
 
   it("falls back to 'low'/'high' for function accessors", () => {
     const fields = bandTooltipFields({
-      y0Accessor: (d: any) => d.lo,
-      y1Accessor: (d: any) => d.hi,
+        y0Accessor: (d: Datum) => d.lo,
+        y1Accessor: (d: Datum) => d.hi,
     })
     expect(fields[0].label).toBe("low")
     expect(fields[1].label).toBe("high")
@@ -283,7 +283,7 @@ describe("bandTooltipFields", () => {
   it("applies the provided value format to band rows", () => {
     const fields = bandTooltipFields(
       { y0Accessor: "min", y1Accessor: "max" },
-      (v: any) => `$${v}`
+      (v: number) => `$${v}`
     )
     const fn = buildDefaultTooltip(fields)
     const node = fn(hover({ bands: [{ y0: 100, y1: 200 }] }))
@@ -415,7 +415,7 @@ describe("buildOrdinalTooltip", () => {
     const fn = buildOrdinalTooltip({
       categoryAccessor: "cat",
       valueAccessor: "val",
-      valueFormat: (v: any) => `$${(v / 1000).toFixed(0)}k`,
+      valueFormat: (v: number) => `$${(v / 1000).toFixed(0)}k`,
     })
     const node = fn({ data: { cat: "Product A", val: 450000 } })
     const { container } = render(<>{node}</>)
@@ -446,13 +446,13 @@ describe("buildDefaultTooltip format cascade", () => {
         label: "Month",
         accessor: "month",
         role: "x",
-        format: (v: any) => `M${v}`,
+        format: (v: number) => `M${v}`,
       },
       {
         label: "Revenue",
         accessor: "revenue",
         role: "y",
-        format: (v: any) => `$${v.toLocaleString()}`,
+        format: (v: number) => `$${v.toLocaleString()}`,
       },
     ])
     const node = fn(hover({ month: 3, revenue: 22000 }))
@@ -467,7 +467,7 @@ describe("buildDefaultTooltip format cascade", () => {
         label: "Name",
         accessor: "name",
         role: "title",
-        format: (v: any) => String(v).toUpperCase(),
+        format: (v: string) => v.toUpperCase(),
       },
     ])
     const node = fn(hover({ name: "alice" }))
@@ -493,7 +493,7 @@ describe("buildDefaultTooltip format cascade", () => {
       {
         label: "Val",
         accessor: "v",
-        format: (v: any) => <strong data-testid="rn">{v}×</strong>,
+        format: (v: number) => <strong data-testid="rn">{v}×</strong>,
       },
     ])
     const node = fn(hover({ v: 5 }))

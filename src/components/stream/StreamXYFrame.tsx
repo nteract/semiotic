@@ -459,21 +459,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [
-      chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent,
-      xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor,
-      xScaleType, yScaleType,
-      colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, categoryAccessor,
-      lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder,
-      boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, lineGradient, areaGroups,
-      openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, barStyle, colorScheme, barColors, annotations,
-      decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
-      heatmapAggregation, heatmapXBins, heatmapYBins,
-      showValues, heatmapValueFormat,
-      isStreaming, pointIdAccessor, curve, currentTheme,
-      customLayout, onLayoutError, layoutConfig, margin, frameRuntime
-    ])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this
@@ -841,14 +827,14 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
-    }, [onPointerMove])
+    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
 
     const onMouseMoveFallback = useCallback((e: React.MouseEvent) => {
       lastPointerTypeRef.current = "mouse"
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove({ clientX: e.clientX, clientY: e.clientY, pointerType: "mouse" })
-    }, [onPointerMove])
+    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
       lastPointerTypeRef.current = e.pointerType

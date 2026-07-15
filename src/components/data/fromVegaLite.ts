@@ -19,22 +19,30 @@ export interface VegaLiteEncoding {
   field?: string
   type?: "quantitative" | "nominal" | "ordinal" | "temporal"
   aggregate?: string
-  scale?: { scheme?: string; range?: any; domain?: any }
+  scale?: { scheme?: string; range?: Array<string | number>; domain?: Array<string | number | boolean | Date> }
   axis?: { title?: string; labelAngle?: number }
-  value?: any
+  value?: string | number | boolean | null
   bin?: boolean | { maxbins?: number }
   stack?: boolean | string | null
 }
 
 export interface VegaLiteSpec {
-  mark: string | { type: string; [key: string]: any }
-  data?: { values?: any[]; url?: string }
+  mark: string | ({ type: string } & Datum)
+  data?: { values?: Datum[]; url?: string }
   encoding?: Record<string, VegaLiteEncoding>
   width?: number
   height?: number
   title?: string | { text: string }
-  transform?: any[]
-  [key: string]: any
+  transform?: Datum[]
+  layer?: VegaLiteSpec[]
+  hconcat?: VegaLiteSpec[]
+  vconcat?: VegaLiteSpec[]
+  concat?: VegaLiteSpec[]
+  facet?: Datum
+  repeat?: Datum | string[]
+  params?: Datum[]
+  selection?: Datum
+  usermeta?: Datum & { idid?: Datum }
 }
 
 /** Strictness for the typed, experimental Vega-Lite import result. */
@@ -52,7 +60,7 @@ export type VegaLiteImportResult = PortabilityImportResult<ChartConfig>
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function normalizeMark(mark: string | { type: string; [key: string]: any } | undefined): {
+function normalizeMark(mark: string | ({ type: string } & Datum) | undefined): {
   type: string
   markProps: Datum
 } {
@@ -78,23 +86,12 @@ function isQuantitative(type?: string): boolean {
   return type === "quantitative" || type === "temporal"
 }
 
-type UnknownRecord = Record<string, unknown>
-
-function isRecord(value: unknown): value is UnknownRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
+function readIDIDMetadata(spec: VegaLiteSpec): Datum | undefined {
+  return spec.usermeta?.idid
 }
 
-function readIDIDMetadata(spec: VegaLiteSpec): UnknownRecord | undefined {
-  const usermeta = (spec as UnknownRecord).usermeta
-  if (!isRecord(usermeta) || !isRecord(usermeta.idid)) return undefined
-  return usermeta.idid
-}
-
-function isIDIDAnnotationLayer(layer: unknown): boolean {
-  if (!isRecord(layer) || !isRecord(layer.usermeta) || !isRecord(layer.usermeta.idid)) {
-    return false
-  }
-  return layer.usermeta.idid.role === "annotation-layer"
+function isIDIDAnnotationLayer(layer: VegaLiteSpec): boolean {
+  return layer.usermeta?.idid?.role === "annotation-layer"
 }
 
 /**
@@ -103,23 +100,20 @@ function isIDIDAnnotationLayer(layer: unknown): boolean {
  * unsupported and must not be guessed as a chart configuration.
  */
 export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec {
-  const record = spec as UnknownRecord
-  if (!readIDIDMetadata(spec) || !Array.isArray(record.layer)) return spec
+  if (!readIDIDMetadata(spec) || !Array.isArray(spec.layer)) return spec
 
-  const baseLayers = record.layer.filter(
-    (layer): layer is UnknownRecord => isRecord(layer) && !isIDIDAnnotationLayer(layer),
-  )
-  if (baseLayers.length !== 1 || baseLayers[0].mark === undefined) return spec
+  const baseLayers = spec.layer.filter((layer) => !isIDIDAnnotationLayer(layer))
+  if (baseLayers.length !== 1) return spec
 
-  const { layer: _layer, ...outer } = record
+  const { layer: _layer, ...outer } = spec
   const { usermeta: _baseUsermeta, ...base } = baseLayers[0]
-  return { ...outer, ...base } as VegaLiteSpec
+  return { ...outer, ...base }
 }
 
 function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
-  const original = spec as UnknownRecord
+  const original = spec
   const recovered = unwrapIDIDEnrichedVegaLiteSpec(spec)
-  const normalized = recovered as UnknownRecord
+  const normalized = recovered
   const diagnostics: PortabilityDiagnostic[] = []
 
   if (Array.isArray(original.layer) && recovered === spec) {
@@ -167,7 +161,7 @@ function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
       })
     }
   }
-  if (isRecord(normalized.data) && typeof normalized.data.url === "string") {
+  if (typeof normalized.data?.url === "string") {
     diagnostics.push({
       code: "UNSUPPORTED_DATA_URL",
       severity: "error",
@@ -240,7 +234,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   const opacity = enc.opacity
 
   // Data handling
-  let data: any[] | undefined
+  let data: Datum[] | undefined
   if (spec.data?.values) {
     data = spec.data.values
   } else if (spec.data?.url) {
@@ -548,7 +542,7 @@ function resolveBarComponent(
   y: VegaLiteEncoding | undefined,
   color: VegaLiteEncoding | undefined,
   props: Datum,
-  data: any[] | undefined,
+  data: Datum[] | undefined,
   xAgg?: string,
   yAgg?: string,
 ): string {

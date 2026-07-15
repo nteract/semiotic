@@ -2,7 +2,7 @@ import type React from "react"
 import type { PartialMargin } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
-import type { Datum } from "./datumTypes"
+import type { Datum, DatumValue } from "./datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { ResponsiveRule } from "./responsiveRules"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
@@ -199,7 +199,7 @@ export interface BaseChartProps {
 
   /** Callback when a data element is clicked. Receives the original datum and pixel coordinates.
    * For lines, receives the line data; for bars, the bar datum; for pie slices, the slice datum. */
-  onClick?: (datum: any, event: { x: number; y: number }) => void
+  onClick?: DatumClickHandler
 
   /** Dim non-hovered series when hovering a data mark. Requires `colorBy`. */
   hoverHighlight?: HoverHighlightMode
@@ -238,6 +238,10 @@ export interface BaseChartProps {
   axisExtent?: import("./axisExtent").AxisExtentMode
 }
 
+export type DatumClickHandler = {
+  bivarianceHack(datum: Datum, event: { x: number; y: number }): void
+}["bivarianceHack"]
+
 /**
  * Axis configuration props
  */
@@ -262,7 +266,7 @@ export type CategoryFormatFn = (label: string, index?: number) => string | React
  * Accessor type - can be a property name or a function
  * @deprecated Use DataAccessor from generalTypes for generic type safety
  */
-export type Accessor<T = any> = string | ((d: any, i?: number) => T)
+export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
 
 /**
  * Generic accessor type that provides autocomplete when TDatum is specified.

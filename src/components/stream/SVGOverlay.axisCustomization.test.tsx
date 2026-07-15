@@ -117,7 +117,7 @@ describe("tickAnchor: edges", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={{ x: makeStubScales().x, y: forwardYScale } as any}
+        scales={{ x: makeStubScales().x, y: forwardYScale } as StreamScales}
         showAxes={true}
         axes={[{ orient: "left", tickAnchor: "edges" }, { orient: "bottom" }]}
       />,
@@ -142,7 +142,7 @@ describe("tickAnchor: edges", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={{ x: reverseX, y: makeStubScales().y } as any}
+        scales={{ x: reverseX, y: makeStubScales().y } as StreamScales}
         showAxes={true}
         axes={[{ orient: "bottom", tickAnchor: "edges" }]}
       />,
@@ -233,7 +233,7 @@ describe("data-orient axis groups", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={{ ...makeStubScales(), yRight: yScaleRight } as any}
+        scales={{ ...makeStubScales(), yRight: yScaleRight } as StreamScales}
         showAxes={true}
         axes={[{ orient: "bottom" }, { orient: "right" }]}
       />,

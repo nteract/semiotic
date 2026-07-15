@@ -148,8 +148,8 @@ describe("buildLineScene", () => {
     const ctx = makeCtx({
       ribbons: [{
         kind: "bounds" as const,
-        getTop: (d: any) => d.y + d.bounds,
-        getBottom: (d: any) => d.y - d.bounds,
+      getTop: (d: Datum) => Number(d.y) + Number(d.bounds),
+      getBottom: (d: Datum) => Number(d.y) - Number(d.bounds),
         perSeries: true,
         interactive: false,
       }],

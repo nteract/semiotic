@@ -46,7 +46,7 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
   legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
-  edgeSort?: (a: any, b: any) => number
+  edgeSort?: (a: TEdge, b: TEdge) => number
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
 }

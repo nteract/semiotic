@@ -100,7 +100,7 @@ export interface PipelineConfig {
 
   // Bounds/uncertainty
   boundsAccessor?: string | ((d: Datum) => CoercibleNumber)
-  boundsStyle?: any
+  boundsStyle?: Style | ((d: Datum, group?: string) => Style)
 
   // Per-point area baseline (for band/ribbon charts like percentile bands)
   y0Accessor?: string | ((d: Datum) => CoercibleNumber)
@@ -119,7 +119,7 @@ export interface PipelineConfig {
   lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
 
   // Style
-  lineStyle?: any
+  lineStyle?: Style | ((d: Datum, group?: string) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   areaStyle?: (d: Datum) => Style
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }

@@ -43,15 +43,15 @@ export function contrastTextColor(bgColor: string): string {
 }
 
 export function resolveChildrenAccessor(
-  accessor: string | ((d: Datum) => any[]) | undefined
-): ((d: Datum) => any[]) | undefined {
+  accessor: string | ((d: Datum) => Datum[]) | undefined
+): ((d: Datum) => Datum[]) | undefined {
   if (!accessor) return undefined
   if (typeof accessor === "function") return accessor
   return (d: Datum) => d[accessor]
 }
 
 export function resolveNodeId(
-  d: any,
+  d: Datum,
   config: NetworkPipelineConfig,
   index: number
 ): string {

@@ -19,3 +19,14 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see file header
 export type Datum = Record<string, any>
+
+/** Values that can be returned by a chart accessor or stored in a datum field. */
+export type DatumValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | Datum
+  | Datum[]
+  | null
+  | undefined

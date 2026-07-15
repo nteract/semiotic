@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import type { Datum, DatumValue } from "./datumTypes"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
 
@@ -71,7 +72,7 @@ const LOADING_BAR_STYLE: React.CSSProperties = {
  * Returns null when data is present or emptyContent is `false`.
  */
 export function renderEmptyState(
-  data: any[] | undefined | null,
+  data: Datum[] | undefined | null,
   width: number,
   height: number,
   emptyContent?: React.ReactNode | false
@@ -170,9 +171,9 @@ export function renderLoadingState(
 /** Warn if a string accessor isn't found in the first data element */
 export function warnMissingField(
   componentName: string,
-  data: any[] | undefined,
+  data: Datum[] | undefined,
   accessorName: string,
-  accessorValue: any
+  accessorValue: DatumValue
 ): void {
   if (!IS_DEV) return
   if (!data || data.length === 0) return
@@ -191,7 +192,7 @@ export function warnMissingField(
 /** Warn if data looks like the wrong shape for this chart type */
 export function warnDataShape(
   componentName: string,
-  data: any[] | undefined,
+  data: Array<Datum | string | number | boolean | null | undefined> | undefined,
   expectedKeys: string[],
   hint: string
 ): void {

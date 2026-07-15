@@ -197,13 +197,13 @@ export function MarginalGraphics({
     const bins = binner(values)
     if (bins.length === 0) return null
 
-    const maxCount = getMax(bins.map((b: any) => b.length))
+    const maxCount = getMax(bins.map((b) => b.length))
     if (maxCount === 0) return null
 
     if (config.type === "histogram") {
       return (
         <g data-testid={`marginal-histogram-${orient}`}>
-          {bins.map((bin: any, i: number) => {
+          {bins.map((bin, i: number) => {
             if (bin.x0 == null || bin.x1 == null) return null
             const count = bin.length
             const barSize = (count / maxCount) * availableSize

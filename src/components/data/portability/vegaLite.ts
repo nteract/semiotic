@@ -14,6 +14,7 @@
  * Pure, dependency-free, no chart-family imports.
  */
 import type { ChartConfig } from "../../export/chartConfig"
+import type { Datum } from "../../charts/shared/datumTypes"
 import type { VegaLiteEncoding, VegaLiteSpec } from "../fromVegaLite"
 import type {
   PortableAnnotated,
@@ -29,7 +30,7 @@ import type {
 
 // ── toVegaLite ───────────────────────────────────────────────────────────────
 
-type AnyProps = Record<string, any>
+type AnyProps = Datum
 
 /** Options for the strict, typed outbound Vega-Lite adapter. */
 export interface ToVegaLiteOptions {

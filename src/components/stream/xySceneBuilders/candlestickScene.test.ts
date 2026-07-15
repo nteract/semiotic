@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { buildCandlestickScene } from "./candlestickScene"
 import type { XYSceneContext } from "./types"
 import type { CandlestickSceneNode } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -22,7 +23,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -36,8 +37,8 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
 
 const defaultLayout = { width: 400, height: 300, x: 0, y: 0 }
 
-function asCandlestick(node: any): CandlestickSceneNode {
-  return node as CandlestickSceneNode
+function asCandlestick(node: CandlestickSceneNode): CandlestickSceneNode {
+  return node
 }
 
 describe("buildCandlestickScene", () => {

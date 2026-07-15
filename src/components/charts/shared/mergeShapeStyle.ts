@@ -29,7 +29,8 @@ export interface PrimitiveStyleOverrides {
   opacity?: number
 }
 
-type StyleFnArg = (...args: any[]) => Datum
+type StyleArgument = Datum | string | number | boolean | Date | null | undefined
+type StyleFn<TArgs extends StyleArgument[]> = (...args: TArgs) => Datum
 
 /** Returns true when at least one override key has a non-undefined value. */
 export function hasPrimitiveOverrides(overrides: PrimitiveStyleOverrides): boolean {
@@ -49,15 +50,12 @@ export function hasPrimitiveOverrides(overrides: PrimitiveStyleOverrides): boole
  * keeps the memoization-stable identity path hot for the common case
  * where a designer has set nothing.
  */
-export function mergeShapeStyle<F extends StyleFnArg>(
-  styleFn: F | undefined,
+export function mergeShapeStyle<TArgs extends StyleArgument[] = []>(
+  styleFn: StyleFn<TArgs> | undefined,
   overrides: PrimitiveStyleOverrides
-): F {
+): StyleFn<TArgs> {
   if (!hasPrimitiveOverrides(overrides)) {
-    // No overrides: return the input function as-is. The cast keeps TS
-    // happy — returning `undefined` here would propagate the optional,
-    // but callers typically want a function back for direct invocation.
-    return (styleFn ?? ((() => ({})) as F)) as F
+    return styleFn ?? ((..._args: TArgs) => ({}))
   }
 
   // Build the patch object once; closed-over by the returned function.
@@ -67,11 +65,11 @@ export function mergeShapeStyle<F extends StyleFnArg>(
   if (overrides.opacity !== undefined) patch.opacity = overrides.opacity
 
   if (!styleFn) {
-    return ((..._args: Parameters<F>) => ({ ...patch })) as F
+    return (..._args: TArgs) => ({ ...patch })
   }
 
-  return ((...args: Parameters<F>) => {
+  return (...args: TArgs) => {
     const base = styleFn(...args) || {}
     return { ...base, ...patch }
-  }) as F
+  }
 }

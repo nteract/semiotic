@@ -23,8 +23,8 @@ export interface OrdinalSceneContext {
   getO: (d: Datum) => string
   multiScales: ScaleLinear<number, number>[]
   rAccessors: ((d: Datum) => number)[]
-  resolvePieceStyle: (d: any, category?: string) => Style
-  resolveSummaryStyle: (d: any, category?: string) => Style
+  resolvePieceStyle: (d: Datum | null, category?: string) => Style
+  resolveSummaryStyle: (d: Datum | null, category?: string) => Style
   /** For timeline: resolve rAccessor as [start, end] */
   getRawRange: (d: Datum) => [number, number] | null
 }

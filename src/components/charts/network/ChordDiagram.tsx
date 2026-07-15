@@ -34,7 +34,8 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
   edgeColorBy?: "source" | "target" | ((d: Datum) => string)
   padAngle?: number
   groupWidth?: number
-  sortGroups?: (a: any, b: any) => number
+  /** Compare D3 chord group indices to control their angular order. */
+  sortGroups?: (a: number, b: number) => number
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean

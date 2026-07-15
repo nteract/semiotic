@@ -111,7 +111,7 @@ export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: str
 // ── Aggregation ───────────────────────────────────────────────────────
 
 export function aggregateData(
-  data: any[],
+  data: Datum[],
   levels: string[],
   getCat: (d: Datum) => string,
   getScore: ((d: Datum) => number) | null,
@@ -235,7 +235,7 @@ export function orderForDiverging(rows: AggregatedRow[], levels: string[]): Aggr
 // ── Hook ──────────────────────────────────────────────────────────────
 
 interface UseLikertAggregationConfig {
-  data: any[] | undefined
+  data: Datum[] | undefined
   levels: string[]
   categoryAccessor?: string | ((d: Datum) => string)
   valueAccessor?: string | ((d: Datum) => number)
@@ -249,9 +249,9 @@ interface UseLikertAggregationResult {
   /** Pre-processed data for static mode */
   processedData: AggregatedRow[]
   /** Re-aggregate all accumulated data (call from push handlers) */
-  reAggregate: (rawData: any[]) => void
+  reAggregate: (rawData: Datum[]) => void
   /** Ref holding accumulated raw data for push mode */
-  accumulatorRef: MutableRefObject<any[]>
+  accumulatorRef: MutableRefObject<Datum[]>
 }
 
 /**
@@ -277,10 +277,10 @@ export function useLikertAggregation({
   const getLevel = useMemo(() => !isRawMode ? resolveAccessorFn<string>(levelAccessor, "level") : null, [isRawMode, levelAccessor])
   const getCount = useMemo(() => !isRawMode ? resolveAccessorFn<number>(countAccessor, "count") : null, [isRawMode, countAccessor])
 
-  const safeData = data || []
-  const accumulatorRef = useRef<any[]>([])
+  const accumulatorRef = useRef<Datum[]>([])
 
   const processedData = useMemo(() => {
+    const safeData = data || []
     if (safeData.length === 0) return []
     let agg = aggregateData(safeData, levels, getCat, getScore, getLevel, getCount)
     if (isDiverging) {
@@ -288,9 +288,9 @@ export function useLikertAggregation({
       agg = orderForDiverging(agg, levels)
     }
     return agg
-  }, [safeData, levels, getCat, getScore, getLevel, getCount, isDiverging])
+  }, [data, levels, getCat, getScore, getLevel, getCount, isDiverging])
 
-  const reAggregate = useCallback((rawData: any[]) => {
+  const reAggregate = useCallback((rawData: Datum[]) => {
     let agg = aggregateData(rawData, levels, getCat, getScore, getLevel, getCount)
     if (isDiverging) {
       agg = toDivergingValues(agg, levels)

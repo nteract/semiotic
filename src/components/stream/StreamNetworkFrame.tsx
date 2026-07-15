@@ -349,66 +349,7 @@ const StreamNetworkFrame = memo(forwardRef<
         layoutConfig,
         currentTheme
       }),
-    [
-      chartType,
-      nodeIDAccessor,
-      sourceAccessor,
-      targetAccessor,
-      valueAccessor,
-      childrenAccessor,
-      hierarchySum,
-      orientation,
-      nodeAlign,
-      nodePaddingRatio,
-      nodeWidth,
-      iterations,
-      forceStrength,
-      padAngle,
-      groupWidth,
-      sortGroups,
-      edgeSort,
-      treeOrientation,
-      edgeType,
-      padding,
-      paddingTop,
-      tensionConfig,
-      showParticles,
-      particleStyle,
-      nodeStyle,
-      edgeStyle,
-      nodeLabel,
-      showLabels,
-      labelMode,
-      colorBy,
-      colorScheme,
-      edgeColorBy,
-      edgeOpacity,
-      colorByDepth,
-      nodeSize,
-      nodeSizeRange,
-      decay,
-      pulse,
-      transition?.duration,
-      transition?.easing,
-      introEnabled,
-      staleness,
-      thresholds,
-      orbitMode,
-      orbitSize,
-      orbitSpeed,
-      orbitRevolution,
-      orbitRevolutionStyle,
-      orbitEccentricity,
-      orbitShowRings,
-      orbitAnimated,
-      randomProp,
-      seed,
-      frameRuntime,
-      currentTheme,
-      customNetworkLayout,
-      onLayoutError,
-      layoutConfig
-    ]
+    [chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
   )
 
   // Stabilize the config reference so inline-object / inline-array
@@ -488,7 +429,7 @@ const StreamNetworkFrame = memo(forwardRef<
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
   const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamNetworkFrame")
-  const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [])
+  const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [sceneRevisionDiagnosticsRef])
 
   const [hoverData, setHoverData] = useState<HoverData | null>(null)
   const [_layoutVersion, setLayoutVersion] = useState(0)
@@ -623,13 +564,7 @@ const StreamNetworkFrame = memo(forwardRef<
     })
     dirtyRef.current = true
     scheduleRender()
-  }, [
-    currentTheme,
-    adjustedWidth,
-    adjustedHeight,
-    buildSceneWithDiagnostics,
-    scheduleRender
-  ])
+  }, [currentTheme, adjustedWidth, adjustedHeight, buildSceneWithDiagnostics, scheduleRender, colorScheme])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -836,14 +771,7 @@ const StreamNetworkFrame = memo(forwardRef<
       relayout: forceRelayout,
       getTension: () => storeRef.current?.tension ?? 0
     }),
-    [
-      pushEdge,
-      pushManyEdges,
-      clearAll,
-      forceRelayout,
-      runLayout,
-      scheduleRender
-    ]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, nodeIDAccessor, runLayout, scheduleRender, edgeIdAccessor]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
@@ -1021,27 +949,7 @@ const StreamNetworkFrame = memo(forwardRef<
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, dimension, and palette changes
     // still re-ingest. See the `stableLayoutConfig` definition above.
-  }, [
-    safeNodes,
-    safeEdges,
-    nodesProp,
-    edgesProp,
-    dataProp,
-    hierarchyRoot,
-    isHierarchical,
-    adjustedWidth,
-    adjustedHeight,
-    stableLayoutConfig,
-    layoutExecution,
-    iterations,
-    wasHydratingFromSSR,
-    chartType,
-    customNetworkLayout,
-    randomProp,
-    scheduleRender,
-    clearAll,
-    colorScheme
-  ])
+  }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, colorScheme, buildSceneWithDiagnostics])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1050,7 +958,7 @@ const StreamNetworkFrame = memo(forwardRef<
       pushManyEdges(initialEdges)
     }
     // Only run on mount
-  }, [])
+  }, [initialEdges, pushManyEdges])
 
   // ── Observation wrappers ─────────────────────────────────────────────
 

@@ -180,11 +180,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
-  const rawData = (data || []) as Datum[]
-
   // Sort by orderAccessor if provided, and build a WeakMap of ordering
   // metadata so pointStyle can read the index directly without mutating user data.
   const { safeData, orderMap } = useMemo(() => {
+    const rawData = (data || []) as Datum[]
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor]
     let sorted = rawData
@@ -215,7 +214,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
       }
     }
     return { safeData: sorted, orderMap: map }
-  }, [rawData, orderAccessor, xAccessor, yAccessor])
+  }, [data, orderAccessor, xAccessor, yAccessor])
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("ConnectedScatterplot", safeData, "xAccessor", xAccessor)

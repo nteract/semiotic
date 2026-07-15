@@ -20,21 +20,21 @@ describe("RealtimeWaterfallChart", () => {
   })
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeWaterfallChart>>()
     render(<TooltipProvider><RealtimeWaterfallChart ref={ref} /></TooltipProvider>)
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   it("push and getData track data", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeWaterfallChart>>()
     render(<TooltipProvider><RealtimeWaterfallChart ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    act(() => { ref.current.pushMany([{ t: 1, v: 50 }, { t: 2, v: -30 }, { t: 3, v: 20 }]) })
-    expect(ref.current.getData().length).toBe(3)
-    act(() => { ref.current.clear() })
-    expect(ref.current.getData().length).toBe(0)
+    act(() => { ref.current!.pushMany([{ t: 1, v: 50 }, { t: 2, v: -30 }, { t: 3, v: 20 }]) })
+    expect(ref.current!.getData().length).toBe(3)
+    act(() => { ref.current!.clear() })
+    expect(ref.current!.getData().length).toBe(0)
   })
 
   it("accepts all waterfall-specific props without crashing", () => {

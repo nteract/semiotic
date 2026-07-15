@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -5,13 +7,14 @@ import { LikertChart } from "./LikertChart"
 import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { defaultDivergingScheme, NEUTRAL_NEG, NEUTRAL_POS } from "../shared/useLikertAggregation"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -20,7 +23,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
 
 describe("LikertChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   const levels5 = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
@@ -67,7 +70,7 @@ describe("LikertChart", () => {
     )
 
     const legendGroups = lastOrdinalFrameProps.legend.legendGroups
-    expect(legendGroups[0].items.map((i: any) => i.label)).toEqual(DEFAULT_LIKERT_LEVELS)
+    expect(legendGroups[0].items.map((i) => i.label)).toEqual(DEFAULT_LIKERT_LEVELS)
   })
 
   // ── Test 2: empty data renders nothing ────────────────────────────
@@ -279,7 +282,7 @@ describe("LikertChart", () => {
 
     const items = legendGroups[0].items
     expect(items).toHaveLength(5)
-    expect(items.map((i: any) => i.label)).toEqual(levels5)
+    expect(items.map((i) => i.label)).toEqual(levels5)
   })
 
   it("legend styleFn returns correct color for each level", () => {
@@ -457,7 +460,7 @@ describe("LikertChart", () => {
   })
 
   it("uses custom tooltip function when provided", () => {
-    const customTooltip = (_d: any) => <div>custom tooltip</div>
+    const customTooltip = (_d: Datum) => <div>custom tooltip</div>
     render(
       <TooltipProvider>
         <LikertChart data={rawData} valueAccessor="score" levels={levels5} tooltip={customTooltip} />
@@ -470,7 +473,7 @@ describe("LikertChart", () => {
   })
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof LikertChart>>()
     render(
       <TooltipProvider>
         <LikertChart ref={ref} levels={levels5} valueAccessor="score" />
@@ -478,10 +481,10 @@ describe("LikertChart", () => {
     )
 
     expect(ref.current).toBeTruthy()
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   it("forwards annotations to StreamOrdinalFrame", () => {
@@ -515,7 +518,7 @@ describe("LikertChart", () => {
     expect(lastOrdinalFrameProps.chartType).toBe("bar")
     const legendGroups = lastOrdinalFrameProps.legend.legendGroups
     expect(legendGroups[0].items).toHaveLength(4)
-    expect(legendGroups[0].items.map((i: any) => i.label)).toEqual(levels4)
+    expect(legendGroups[0].items.map((i) => i.label)).toEqual(levels4)
   })
 
   it("legend position defaults to 'bottom' from effectiveLegendProps fallback", () => {

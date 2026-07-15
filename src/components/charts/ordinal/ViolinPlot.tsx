@@ -167,7 +167,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated summary-style — same recipe as BoxPlot/Histogram/
   // RidgelinePlot. fillOpacity slightly lower than BoxPlot since the

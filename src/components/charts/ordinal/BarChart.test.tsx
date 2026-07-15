@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { act, render } from "@testing-library/react"
@@ -20,13 +22,13 @@ const coloredData = [...BAR_COLORED]
 const customData = [...NAMED_COUNT_DATA]
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, ref) => {
       lastOrdinalFrameProps = props
-      const dataRef = React.useRef<any[]>([])
+      const dataRef = React.useRef<Datum[]>([])
       const emitCategories = () => {
         const accessor = props.legendCategoryAccessor
         if (!props.onCategoriesChange || !accessor) return
@@ -54,7 +56,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
         remove: vi.fn((id) => {
           const ids = new Set(Array.isArray(id) ? id : [id])
           const accessor = props.dataIdAccessor
-          const removed: any[] = []
+          const removed: Datum[] = []
           dataRef.current = dataRef.current.filter((d) => {
             const dataId = typeof accessor === "function" ? accessor(d) : d[accessor]
             if (!ids.has(dataId)) return true
@@ -67,7 +69,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
         update: vi.fn((id, updater) => {
           const ids = new Set(Array.isArray(id) ? id : [id])
           const accessor = props.dataIdAccessor
-          const previous: any[] = []
+          const previous: Datum[] = []
           dataRef.current = dataRef.current.map((d) => {
             const dataId = typeof accessor === "function" ? accessor(d) : d[accessor]
             if (!ids.has(dataId)) return d
@@ -91,7 +93,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
 
 describe("BarChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   // Guards against confusing "Cannot read properties of null" failures
@@ -105,7 +107,7 @@ describe("BarChart", () => {
       lastOrdinalFrameProps,
       "mocked StreamOrdinalFrame did not capture props — BarChart likely hit an early-return path"
     ).not.toBeNull()
-    return lastOrdinalFrameProps as Record<string, any>
+    return lastOrdinalFrameProps
   }
 
   it("renders with minimal props and forwards data + accessors to the frame", () => {
@@ -261,7 +263,7 @@ describe("BarChart", () => {
     // single fallback fill.
     const items = frameProps().legend?.legendGroups?.[0]?.items ?? []
     expect(items.length).toBeGreaterThan(1)
-    const colors = new Set(items.map((i: { color: string }) => i.color))
+    const colors = new Set(items.map((i) => i.color))
     expect(colors.size).toBeGreaterThan(1)
   })
 
@@ -446,7 +448,7 @@ describe("BarChart", () => {
         ref.current!.push({ category: "B", value: 20 })
       })
 
-      const labels = frameProps().legend.legendGroups[0].items.map((item: { label: string }) => item.label)
+      const labels = frameProps().legend.legendGroups[0].items.map((item) => item.label)
       expect(labels).toEqual(["A", "B"])
       expect(frameProps().margin.right).toBeGreaterThanOrEqual(110)
     })
@@ -465,17 +467,17 @@ describe("BarChart", () => {
           { id: "b", category: "B", value: 20 },
         ])
       })
-      expect(frameProps().legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["A", "B"])
+      expect(frameProps().legend.legendGroups[0].items.map((item) => item.label)).toEqual(["A", "B"])
 
       await act(async () => {
         ref.current!.remove("b")
       })
-      expect(frameProps().legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["A"])
+      expect(frameProps().legend.legendGroups[0].items.map((item) => item.label)).toEqual(["A"])
 
       await act(async () => {
         ref.current!.update("a", (d) => ({ ...d, category: "C" }))
       })
-      expect(frameProps().legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["C"])
+      expect(frameProps().legend.legendGroups[0].items.map((item) => item.label)).toEqual(["C"])
 
       await act(async () => {
         ref.current!.clear()
@@ -494,7 +496,7 @@ describe("BarChart", () => {
       )
 
       expect(frameProps().enableHover).toBe(true)
-      expect(frameProps().pieceHoverAnnotation).toBeUndefined()
+      expect("pieceHoverAnnotation" in frameProps()).toBe(false)
     })
 
     it("disables enableHover when enableHover is false", () => {
@@ -565,22 +567,22 @@ describe("BarChart", () => {
 
   describe("push API", () => {
     it("ref exposes push, pushMany, getData, getScales, and clear", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BarChart>>()
       render(
         <TooltipProvider>
           <BarChart ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
       expect(ref.current).toBeTruthy()
-      expect(typeof ref.current.push).toBe("function")
-      expect(typeof ref.current.pushMany).toBe("function")
-      expect(typeof ref.current.getData).toBe("function")
-      expect(typeof ref.current.getScales).toBe("function")
-      expect(typeof ref.current.clear).toBe("function")
+      expect(typeof ref.current!.push).toBe("function")
+      expect(typeof ref.current!.pushMany).toBe("function")
+      expect(typeof ref.current!.getData).toBe("function")
+      expect(typeof ref.current!.getScales).toBe("function")
+      expect(typeof ref.current!.clear).toBe("function")
     })
 
     it("push methods remain safe through the streaming legend wrapper", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BarChart>>()
       render(
         <TooltipProvider>
           <BarChart ref={ref} categoryAccessor="category" valueAccessor="value" />
@@ -588,22 +590,22 @@ describe("BarChart", () => {
       )
       expect(() => {
         act(() => {
-          ref.current.push({ category: "A", value: 10 })
-          ref.current.pushMany([{ category: "B", value: 20 }])
-          ref.current.clear()
+          ref.current!.push({ category: "A", value: 10 })
+          ref.current!.pushMany([{ category: "B", value: 20 }])
+          ref.current!.clear()
         })
       }).not.toThrow()
     })
 
     it("getData and getScales delegate to the frame handle", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof BarChart>>()
       render(
         <TooltipProvider>
           <BarChart ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
-      expect(ref.current.getData()).toEqual([])
-      expect(ref.current.getScales()).toBeNull()
+      expect(ref.current!.getData()).toEqual([])
+      expect(ref.current!.getScales!()).toBeNull()
     })
   })
 

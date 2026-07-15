@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { buildPointScene } from "./pointScene"
 import type { XYSceneContext } from "./types"
-import type { PointSceneNode } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
+import type { PointSceneNode } from "../types"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -18,7 +18,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -166,7 +166,7 @@ describe("buildPointScene", () => {
       config: {
         chartType: "scatter",
         sizeRange: [4, 20] as [number, number],
-        pointStyle: (_d: any) => ({ fill: "red", r: 7 }),
+      pointStyle: (_d: Datum) => ({ fill: "red", r: 7 }),
       },
       getSize: (d) => d.size,
     })

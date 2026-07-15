@@ -245,7 +245,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style. SwimlaneChart uses per-category color
   // cycling so each lane gets its own scheme color when colorBy

@@ -291,7 +291,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
 }
 
 
-function defaultTickFormat(v: any, _index?: number, _allTicks?: number[]): string {
+function defaultTickFormat(v: string | number | Date, _index?: number, _allTicks?: number[]): string {
   if (v instanceof Date) {
     return `${v.toLocaleString("en", { month: "short" })} ${v.getDate()}`
   }

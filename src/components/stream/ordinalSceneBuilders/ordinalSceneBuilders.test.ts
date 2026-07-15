@@ -10,7 +10,7 @@ import { buildBarFunnelScene } from "./barFunnelScene"
 import { buildSwimlaneScene } from "./swimlaneScene"
 import type { OrdinalSceneContext } from "./types"
 import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig, WedgeSceneNode } from "../ordinalTypes"
-import type { Style } from "../types"
+import type { RectSceneNode, Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -251,7 +251,7 @@ describe("buildBarScene", () => {
     })
     const nodes = buildBarScene(ctx, layout)
     // Look up by datum.category — scene-builder emit order is an impl detail.
-    const byCat = new Map<string, any>()
+    const byCat = new Map<string, RectSceneNode>()
     for (const n of nodes) {
       if (n.type === "rect") byCat.set(n.datum!.category, n)
     }

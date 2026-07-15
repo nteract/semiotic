@@ -361,7 +361,7 @@ export function resolvePhysicsFrameSharedProps(
     onClick:
       props.onClick != null
         ? (datum, event) => {
-            props.onClick?.(datum, { x: event.x, y: event.y })
+            if (datum) props.onClick?.(datum, { x: event.x, y: event.y })
           }
         : frameProps?.onClick,
     onObservation: props.onObservation ?? frameProps?.onObservation,

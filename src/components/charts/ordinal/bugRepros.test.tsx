@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 /**
  * Bug repro tests for BR-1 through BR-5.
  * TDD: these should FAIL before fixes, PASS after.
@@ -10,18 +12,18 @@ import { Histogram } from "./Histogram"
 import { ThemeProvider } from "../../ThemeProvider"
 
 // Mock StreamOrdinalFrame to capture props
-let lastFrameProps: any = null
+let lastFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
   }
 })
 
-beforeEach(() => { lastFrameProps = null })
+beforeEach(() => { lastFrameProps = {} as CapturedOrdinalFrameProps })
 
 const barData = [
   { category: "A", value: 10 },

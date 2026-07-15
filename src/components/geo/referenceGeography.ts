@@ -27,8 +27,14 @@ export type ReferenceGeography =
 const cache = new Map<string, GeoJSON.Feature[]>()
 
 // Bundlers differ on JSON dynamic imports: some wrap in { default: ... }, others return the object directly.
-function unwrapModule(mod: any): Topology {
-  return (mod.default ?? mod) as Topology
+interface TopologyModuleShape {
+  type: string
+  objects: object
+  arcs: number[][][]
+}
+
+function unwrapModule(mod: TopologyModuleShape | { default: TopologyModuleShape }): Topology {
+  return ("default" in mod ? mod.default : mod) as Topology
 }
 
 const WORLD_ATLAS_INSTALL_HINT =

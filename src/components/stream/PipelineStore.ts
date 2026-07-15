@@ -26,7 +26,7 @@ import type {
   SceneNode,
   Style
 } from "./types"
-import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
 import { coerceDateLikeValue, parseDateLikeString } from "../charts/shared/temporalStrings"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -451,7 +451,7 @@ export class PipelineStore implements UpdateResultStore {
           const key = typeof rawAccessor === "string" ? rawAccessor : undefined
           this.getX = key
             ? (d: Datum) => coerceDateLikeValue(d[key])
-            : (d: Datum) => coerceDateLikeValue((rawAccessor as (d: Datum) => any)(d))
+            : (d: Datum) => coerceDateLikeValue((rawAccessor as (d: Datum) => CoercibleNumber)(d))
         }
       }
 

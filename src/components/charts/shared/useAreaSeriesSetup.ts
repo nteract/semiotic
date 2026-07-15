@@ -42,6 +42,7 @@ import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
 import { buildDefaultTooltip, accessorName, bandTooltipFields } from "./tooltipUtils"
 import type { HoverData } from "../../stream/types"
+import type { BandConfig } from "../../stream/types"
 
 export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Sparse-filtered data array (the HOC's `safeData`). */
@@ -95,7 +96,7 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   groupField?: Accessor<string> | ChartAccessor<TDatum, string>
   /** Optional band prop — when set, the default tooltip surfaces a
    *  pair of rows per band (low + high). Threaded through verbatim. */
-  band?: unknown
+  band?: BandConfig<TDatum> | Array<BandConfig<TDatum>>
 }
 
 export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {

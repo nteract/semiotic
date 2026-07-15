@@ -1,4 +1,4 @@
-import type { Datum } from "../charts/shared/datumTypes"
+import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 /**
  * Static annotation rendering for server-side SVG.
  *
@@ -19,8 +19,8 @@ function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
 }
 
 interface AnnotationScales {
-  x?: (v: any) => number
-  y?: (v: any) => number
+  x?: AnnotationScale
+  y?: AnnotationScale
   /** For ordinal charts: band scale */
   o?: { (v: string): number | undefined; bandwidth?: () => number }
   /** For ordinal charts: value scale */
@@ -32,6 +32,10 @@ interface AnnotationScales {
    */
   geoProjection?: (coords: [number, number]) => [number, number] | null
 }
+
+type AnnotationScale = {
+  bivarianceHack(value: DatumValue): number
+}["bivarianceHack"]
 
 interface AnnotationLayout {
   width: number

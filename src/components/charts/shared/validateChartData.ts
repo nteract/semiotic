@@ -10,11 +10,20 @@ import type { Datum } from "./datumTypes"
  * (wrong field names, missing data) without iterating the entire dataset.
  */
 
-type AccessorLike = string | ((...args: any[]) => any)
+type AccessorResult = string | number | boolean | Date | Datum | null | undefined
+type AccessorLike = string | ((datum: Datum, index?: number) => AccessorResult)
+type ChartDataInput =
+  | ReadonlyArray<Datum>
+  | Datum
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
 
 /** Pick a few representative rows to validate without scanning everything */
-function sampleRows(data: any[]): any[] {
-  if (data.length <= 3) return data
+function sampleRows(data: ReadonlyArray<Datum>): Datum[] {
+  if (data.length <= 3) return [...data]
   const mid = Math.floor(data.length / 2)
   return [data[0], data[mid], data[data.length - 1]]
 }
@@ -34,21 +43,21 @@ function suggestField(target: string, available: string[]): string | null {
 
 interface ArrayDataValidation {
   componentName: string
-  data: any
+  data: ChartDataInput
   accessors?: Record<string, AccessorLike | undefined>
   requiredProps?: Datum
 }
 
 interface ObjectDataValidation {
   componentName: string
-  data: any | undefined | null
+  data: ChartDataInput
   dataLabel?: string
 }
 
 interface NetworkDataValidation {
   componentName: string
-  nodes?: any[] | undefined | null
-  edges?: any[] | undefined | null
+  nodes?: ReadonlyArray<Datum> | null
+  edges?: ReadonlyArray<Datum> | null
   nodesRequired?: boolean
   edgesRequired?: boolean
   accessors?: Record<string, AccessorLike | undefined>

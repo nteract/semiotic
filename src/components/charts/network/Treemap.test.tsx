@@ -1,3 +1,5 @@
+import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -5,11 +7,11 @@ import { Treemap, type TreemapProps } from "./Treemap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
-let lastNetworkFrameProps: any = null
+let lastNetworkFrameProps = {} as CapturedNetworkFrameProps
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamNetworkFrameHandle>, CapturedNetworkFrameProps>((props, _ref) => {
       lastNetworkFrameProps = props
       return <div className="stream-network-frame"><svg /></div>
     })
@@ -18,7 +20,7 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
 
 describe("Treemap", () => {
   beforeEach(() => {
-    lastNetworkFrameProps = null
+    lastNetworkFrameProps = {} as CapturedNetworkFrameProps
   })
 
   const sampleData = {

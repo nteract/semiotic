@@ -67,16 +67,16 @@ export function makeGeoNumericAccessor(
 }
 
 export function makeLineDataAccessor(
-  acc: string | ((d: Datum) => any[]) | undefined
-): (d: Datum) => any[] {
+  acc: string | ((d: Datum) => Datum[]) | undefined
+): (d: Datum) => Datum[] {
   if (!acc) return (d: Datum) => d.coordinates || d.data || []
   if (typeof acc === "function") return acc
   return (d: Datum) => d[acc]
 }
 
-export function resolveGeoStyle(
-  styleProp: Style | ((d: Datum) => Style) | undefined,
-  datum: any,
+export function resolveGeoStyle<TDatum extends object>(
+  styleProp: Style | ((d: TDatum) => Style) | undefined,
+  datum: TDatum,
   defaults: Style
 ): Style {
   // Always return a fresh object. Transition / decay mutate `node.style.opacity`
@@ -257,8 +257,8 @@ export function buildOffsetGeoPath(
 export function buildOffsetPath(
   start: [number, number],
   end: [number, number],
-  _flow: any,
-  _allFlows: any[],
+  _flow: Datum,
+  _allFlows: Datum[],
   strokeWidth: number
 ): [number, number][] {
   const dx = end[0] - start[0]

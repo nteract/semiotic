@@ -478,8 +478,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)
-    ...(overlayGraphics && { foregroundGraphics: overlayGraphics })
+    // Preserve the prop contract before layout and replace it with the composed overlay afterward.
+    foregroundGraphics: overlayGraphics
   }
 
   return (

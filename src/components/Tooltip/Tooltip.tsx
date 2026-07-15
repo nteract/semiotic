@@ -525,6 +525,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
         typeof datum?.x1 === "number"
       const isEdgeWrapper =
         hoverData?.nodeOrEdge === "edge" && typeof datum?.sankeyWidth === "number"
+      if (!datum) return null
       if (
         (isNodeWrapper || isEdgeWrapper) &&
         datum.data &&
@@ -532,6 +533,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       ) {
         datum = datum.data
       }
+      if (!datum) return null
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (

@@ -28,7 +28,7 @@ import {
 interface GeoSceneBuildInput {
   config: GeoPipelineConfig
   projection: GeoProjection
-  path: GeoPath<any, GeoPermissibleObjects>
+  path: GeoPath<void, GeoPermissibleObjects>
   areas: GeoJSON.Feature[]
   points: Datum[]
   lines: Datum[]

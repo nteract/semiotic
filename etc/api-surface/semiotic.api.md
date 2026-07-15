@@ -81,7 +81,7 @@ function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: any, index?: number, allTicks?: number[]) => string
+function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
 function annotationStableId(annotation: Datum): string | undefined
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
@@ -109,7 +109,7 @@ function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: T
 function resolveThemePreset(name: string): SemioticTheme | undefined
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
-function smartTickFormat(value: any): string
+function smartTickFormat(value: string | number | Date | null | undefined): string
 function smartTooltipEntries(raw: Datum | null | undefined, options?: { maxEntries?: number; skipPositional?: boolean; } | undefined): SmartTooltipResult
 function summarizeIntentManifest(manifest: IntentManifest): string
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
@@ -308,7 +308,7 @@ interface ViolinPlotProps<TDatum extends Datum = Datum>
 interface VisualizationControlDefinition
 interface WaterfallStyle
 interface XYFrameAxisConfig
-type Accessor<T = any> = string | ((d: any, i?: number) => T)
+type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
 type Annotated<T> = T & {
     provenance?: AnnotationProvenance;
     lifecycle?: AnnotationLifecycle;

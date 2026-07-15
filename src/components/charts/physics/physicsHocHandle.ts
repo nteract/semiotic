@@ -283,6 +283,6 @@ export function usePhysicsHocHandle(
           frameRef.current?.popBodies(ids, popOptions) ?? []
       }
     },
-    [bodyIdsForSeed, frameRef, idAccessor, spawnDatum]
+    [frameRef, idAccessor, spawnDatum]
   )
 }

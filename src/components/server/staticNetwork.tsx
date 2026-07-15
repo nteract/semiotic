@@ -1,4 +1,4 @@
-import type { Datum } from "../charts/shared/datumTypes"
+import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
@@ -42,16 +42,16 @@ import {
 } from "./staticSVGChrome"
 
 export function resolveAccessor(
-  accessor: string | ((d: Datum) => any) | undefined,
+  accessor: string | ((d: Datum) => DatumValue) | undefined,
   defaultKey: string
-): (d: Datum) => any {
+): (d: Datum) => DatumValue {
   if (!accessor) return (d: Datum) => d[defaultKey]
   if (typeof accessor === "function") return accessor
   return (d: Datum) => d[accessor]
 }
 
 export function buildRealtimeNodes(
-  propsNodes: any[],
+  propsNodes: Datum[],
   config: NetworkPipelineConfig
 ): RealtimeNode[] {
   const nodeIDFn = resolveAccessor(config.nodeIDAccessor, "id")
@@ -65,7 +65,7 @@ export function buildRealtimeNodes(
 }
 
 export function buildRealtimeEdges(
-  propsEdges: any[],
+  propsEdges: Datum[],
   config: NetworkPipelineConfig
 ): RealtimeEdge[] {
   const sourceFn = resolveAccessor(config.sourceAccessor, "source")

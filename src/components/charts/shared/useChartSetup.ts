@@ -51,7 +51,7 @@ export interface ChartSetupInput {
   /** The data array used for color scale and category extraction */
   data: Array<Datum>
   /** The original data prop (may be undefined) — used for empty-state check */
-  rawData: unknown[] | undefined
+  rawData: Array<Datum | null | undefined> | undefined
   /** The color-by accessor (may be an "actual" colorBy derived from stackBy/groupBy/categoryAccessor) */
   colorBy: Accessor<string> | undefined
   /** Color scheme name or custom array — undefined lets useColorScale consult the theme */
@@ -81,7 +81,7 @@ export interface ChartSetupInput {
   /** Mode-resolved margin defaults */
   marginDefaults: { top: number; bottom: number; left: number; right: number }
   /** onClick callback */
-  onClick?: (datum: any, event: { x: number; y: number }) => void
+  onClick?: (datum: Datum, event: { x: number; y: number }) => void
   /** Dim non-hovered series on data mark hover */
   hoverHighlight?: HoverHighlightMode
   /** Touch-first interaction policy for phone-sized chart slots */

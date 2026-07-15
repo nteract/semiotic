@@ -4,6 +4,11 @@ import { render, act, waitFor } from "@testing-library/react"
 import { RealtimeHistogram, TemporalHistogram } from "./RealtimeHistogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import type { RealtimeFrameHandle } from "../../realtime/types"
+
+interface RealtimeHistogramTestHandle extends RealtimeFrameHandle {
+  getScales(): { y: { domain(): number[] } }
+}
 
 describe("RealtimeHistogram", () => {
   let cleanup: () => void
@@ -20,21 +25,21 @@ describe("RealtimeHistogram", () => {
   })
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeHistogramTestHandle>()
     render(<TooltipProvider><RealtimeHistogram ref={ref} binSize={100} /></TooltipProvider>)
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   it("push and getData track data", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeHistogramTestHandle>()
     render(<TooltipProvider><RealtimeHistogram ref={ref} binSize={100} /></TooltipProvider>)
-    act(() => { ref.current.pushMany([{ time: 1, value: 10 }, { time: 2, value: 20 }]) })
-    expect(ref.current.getData().length).toBe(2)
-    act(() => { ref.current.clear() })
-    expect(ref.current.getData().length).toBe(0)
+    act(() => { ref.current!.pushMany([{ time: 1, value: 10 }, { time: 2, value: 20 }]) })
+    expect(ref.current!.getData().length).toBe(2)
+    act(() => { ref.current!.clear() })
+    expect(ref.current!.getData().length).toBe(0)
   })
 
   it("accepts all histogram-specific props without crashing", () => {
@@ -73,7 +78,7 @@ describe("RealtimeHistogram", () => {
   })
 
   it("flips the value domain for downward controlled histograms", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeHistogramTestHandle>()
     render(
       <TooltipProvider>
         <RealtimeHistogram
@@ -98,13 +103,13 @@ describe("RealtimeHistogram", () => {
       expect(ref.current?.getScales()?.y).toBeTruthy()
     })
 
-    const domain = ref.current.getScales().y.domain()
+    const domain = ref.current!.getScales!()!.y.domain()
     expect(domain[0]).toBeCloseTo(13.2)
     expect(domain[1]).toBe(0)
   })
 
   it("stacks bars by category — a bin's height is the sum of its categories", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeHistogramTestHandle>()
     render(
       <TooltipProvider>
         <RealtimeHistogram
@@ -124,7 +129,7 @@ describe("RealtimeHistogram", () => {
     )
     await waitFor(() => expect(ref.current?.getScales()?.y).toBeTruthy())
     // bin [0,1000): a(5) + b(7) = 12 → the value domain reaches at least the sum.
-    expect(ref.current.getScales().y.domain()[1]).toBeGreaterThanOrEqual(12)
+    expect(ref.current!.getScales!()!.y.domain()[1]).toBeGreaterThanOrEqual(12)
   })
 
   it("renders the static TemporalHistogram sibling with bounded data", () => {

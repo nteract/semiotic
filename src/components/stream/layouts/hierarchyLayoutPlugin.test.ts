@@ -1,5 +1,6 @@
 import { hierarchyLayoutPlugin } from "./hierarchyLayoutPlugin"
 import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../networkTypes"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 type CirclePackPositionedNode = RealtimeNode & { __radius?: number }
 
@@ -44,7 +45,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("populates nodes and edges from hierarchy", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "tree",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -64,7 +65,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("sets correct depth on nodes", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "tree",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -85,7 +86,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("buildScene returns circle nodes and curved edges for tree", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "tree",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -115,7 +116,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("populates nodes with rect positions", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "treemap",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -140,7 +141,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("buildScene returns rect nodes for treemap", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "treemap",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -182,7 +183,7 @@ describe("hierarchyLayoutPlugin", () => {
       }
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "treemap",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -191,7 +192,7 @@ describe("hierarchyLayoutPlugin", () => {
         // Parent labels render in the paddingTop band, leaves centered.
         labelMode: "all",
         paddingTop: 18,
-        nodeLabel: (d: any) => d.label
+        nodeLabel: (d: Datum) => String(d.label)
       }
       const size: [number, number] = [600, 400]
 
@@ -212,7 +213,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("populates nodes with circle positions", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "circlepack",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -234,7 +235,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("buildScene returns circle nodes for circlepack", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "circlepack",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -259,7 +260,7 @@ describe("hierarchyLayoutPlugin", () => {
     it("applies depth-based colors in treemap buildScene", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []
-      const config: any = {
+      const config: NetworkPipelineConfig = {
         chartType: "treemap",
         childrenAccessor: "children",
         nodeIDAccessor: "name",
@@ -273,7 +274,7 @@ describe("hierarchyLayoutPlugin", () => {
       const scene = hierarchyLayoutPlugin.buildScene(nodes, edges, config, size)
 
       // Different depth nodes should have different fill colors
-      const fills = new Set(scene.sceneNodes.map((sn: any) => sn.style.fill))
+      const fills = new Set(scene.sceneNodes.map((sn) => sn.style.fill))
       expect(fills.size).toBeGreaterThan(1)
     })
   })

@@ -20,28 +20,28 @@ describe("RealtimeHeatmap", () => {
   })
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeHeatmap>>()
     render(<TooltipProvider><RealtimeHeatmap ref={ref} /></TooltipProvider>)
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   it("push and getData track data", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeHeatmap>>()
     render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    act(() => { ref.current.push({ t: 1, v: 5 }) })
-    act(() => { ref.current.push({ t: 2, v: 10 }) })
-    expect(ref.current.getData().length).toBe(2)
+    act(() => { ref.current!.push({ t: 1, v: 5 }) })
+    act(() => { ref.current!.push({ t: 2, v: 10 }) })
+    expect(ref.current!.getData().length).toBe(2)
   })
 
   it("clear empties the buffer", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeHeatmap>>()
     render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    act(() => { ref.current.push({ t: 1, v: 5 }) })
-    act(() => { ref.current.clear() })
-    expect(ref.current.getData().length).toBe(0)
+    act(() => { ref.current!.push({ t: 1, v: 5 }) })
+    act(() => { ref.current!.clear() })
+    expect(ref.current!.getData().length).toBe(0)
   })
 
   it("accepts all heatmap-specific props without crashing", () => {

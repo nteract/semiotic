@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import type { Datum } from "../shared/datumTypes"
 /**
  * Integration tests verifying HOC data transformation for chart patterns.
@@ -8,12 +10,12 @@ import { render } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 // Capture props passed to StreamXYFrame
-let capturedProps: Datum = {}
+let capturedProps = {} as CapturedXYFrameProps
 
 // Mock StreamXYFrame to capture props
 vi.mock("../../stream/StreamXYFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((props: any, _ref: any) => {
+  default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
     capturedProps = props
     return React.createElement("div", { "data-testid": "mock-frame" })
   })
@@ -56,7 +58,7 @@ const xAsDate = (d: Datum) => new Date(String(d.x))
 const CHART_COLORS = ["#9E8FFF", "#FF6BBC", "#30CBD5"]
 
 beforeEach(() => {
-  capturedProps = {}
+  capturedProps = {} as CapturedXYFrameProps
 })
 
 describe("LineChart HOC → StreamXYFrame prop verification", () => {
@@ -119,6 +121,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     for (const d of data) {
       const result = xAccessor(d)
       expect(result instanceof Date).toBe(true)
+      if (!(result instanceof Date)) throw new Error("Expected Date x accessor result")
       expect(isNaN(result.getTime())).toBe(false)
     }
 
@@ -229,8 +232,8 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     expect(capturedProps.axes).toBeDefined()
     expect(capturedProps.axes.length).toBeGreaterThanOrEqual(2)
 
-    const leftAxis = capturedProps.axes.find((a: any) => a.orient === "left")
-    const rightAxis = capturedProps.axes.find((a: any) => a.orient === "right")
+    const leftAxis = capturedProps.axes.find((a) => a.orient === "left")!
+    const rightAxis = capturedProps.axes.find((a) => a.orient === "right")!
 
     expect(leftAxis).toBeDefined()
     expect(rightAxis).toBeDefined()
@@ -238,8 +241,8 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     expect(typeof rightAxis.tickFormat).toBe("function")
 
     // tickFormat at 0 and 1 should return valid numbers (original scale bounds)
-    const leftAt0 = leftAxis.tickFormat(0)
-    const leftAt1 = leftAxis.tickFormat(1)
+    const leftAt0 = leftAxis.tickFormat!(0)
+    const leftAt1 = leftAxis.tickFormat!(1)
     expect(leftAt0).toBeTruthy()
     expect(leftAt1).toBeTruthy()
     // The values should be different (spanning original range)

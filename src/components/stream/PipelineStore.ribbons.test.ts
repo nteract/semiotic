@@ -7,6 +7,7 @@
 import { describe, it, expect } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import type { AreaSceneNode } from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeData() {
   return [
@@ -171,8 +172,8 @@ describe("PipelineStore — band prop", () => {
       xAccessor: "x",
       yAccessor: "y",
       band: {
-        y0Accessor: (d: any) => d.range[0],
-        y1Accessor: (d: any) => d.range[1],
+        y0Accessor: (d: Datum) => d.range[0],
+        y1Accessor: (d: Datum) => d.range[1],
       },
     })
     store.ingest({
@@ -343,7 +344,7 @@ describe("PipelineStore — boundsAccessor through the unified ribbon path", () 
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      boundsAccessor: (d: any) => d.offset,
+      boundsAccessor: (d: Datum) => d.offset,
     })
     store.ingest({
       inserts: [
@@ -368,7 +369,7 @@ describe("PipelineStore — boundsAccessor through the unified ribbon path", () 
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      boundsAccessor: (d: any) => d.offset,
+      boundsAccessor: (d: Datum) => d.offset,
     })
     store.ingest({
       inserts: [
@@ -396,7 +397,7 @@ describe("PipelineStore — boundsAccessor through the unified ribbon path", () 
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      boundsAccessor: (d: any) => d.offset,
+      boundsAccessor: (d: Datum) => d.offset,
     })
     store.ingest({
       inserts: [
@@ -426,7 +427,7 @@ describe("PipelineStore — boundsAccessor through the unified ribbon path", () 
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      boundsAccessor: (d: any) => d.offset,
+      boundsAccessor: (d: Datum) => d.offset,
       band: { y0Accessor: "lo", y1Accessor: "hi" },
     })
     store.ingest({
@@ -454,7 +455,7 @@ describe("PipelineStore — boundsAccessor through the unified ribbon path", () 
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      boundsAccessor: (d: any) => d.offset,
+      boundsAccessor: (d: Datum) => d.offset,
       band: { y0Accessor: "lo", y1Accessor: "hi" },
     })
     store.ingest({

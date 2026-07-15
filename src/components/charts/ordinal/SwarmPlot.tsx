@@ -186,7 +186,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
   }, [safeData, sizeBy])
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style. The size encoding (`r` from sizeBy)
   // is per-datum, so it flows through `baseStyleExtras` as a

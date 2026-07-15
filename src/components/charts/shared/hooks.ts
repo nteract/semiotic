@@ -185,7 +185,7 @@ export function resolveDefaultFill(
  * Resolve an accessor (string key or function) into a function.
  * Used across chart components to normalize `valueAccessor`, `categoryAccessor`, etc.
  */
-export function resolveAccessor<T = any>(
+export function resolveAccessor<T = string | number | boolean | Date | Datum | null | undefined>(
   accessor: string | ((d: Datum, i?: number) => T)
 ): (d: Datum) => T {
   return typeof accessor === "function"
@@ -200,7 +200,7 @@ export function resolveAccessor<T = any>(
  */
 export function useColorScale(
   data: Array<Datum>,
-  colorBy: string | ((d: any, i?: number) => any) | undefined,
+  colorBy: string | ((d: Datum, i?: number) => string | number) | undefined,
   colorScheme?: string | string[] | Record<string, string>
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()
@@ -303,7 +303,7 @@ export function useChartSelection({
   onObservation?: OnObservationCallback
   chartType?: string
   chartId?: string
-  onClick?: (datum: any, event: { x: number; y: number }) => void
+  onClick?: (datum: Datum, event: { x: number; y: number }) => void
   hoverHighlight?: HoverHighlightMode
   colorByField?: string
   mobileInteraction?: ResolvedMobileInteractionConfig
@@ -348,7 +348,7 @@ export function useChartSelection({
   })
 
   const pushObservation = useObservationSelector(
-    (state: any) => state.pushObservation
+    (state) => state.pushObservation
   ) as ((obs: ChartObservation) => void) | undefined
   const publishObservation = useCallback(
     (observation: ChartObservation) => {
@@ -860,7 +860,7 @@ interface ChartModeInput {
   categoryLabel?: string
   valueLabel?: string
   /** When truthy, enableHover is forced true regardless of mode (LinkedCharts needs hover) */
-  linkedHover?: any
+  linkedHover?: LinkedHoverProp
   /** Optional mobile interaction policy surfaced through useChartMode for custom wrappers. */
   mobileInteraction?: MobileInteractionProp
   /** Optional mobile semantic contract surfaced through useChartMode for custom wrappers. */

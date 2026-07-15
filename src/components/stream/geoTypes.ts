@@ -122,7 +122,7 @@ export type GeoSceneNode =
 
 export interface GeoScales {
   projection: GeoProjection
-  geoPath: GeoPath<any, GeoPermissibleObjects>
+  geoPath: GeoPath<void, GeoPermissibleObjects>
   projectedPoint: (lon: number, lat: number) => [number, number] | null
   invertedPoint: (px: number, py: number) => [number, number] | null
 }
@@ -147,7 +147,7 @@ export interface GeoPipelineConfig {
   /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
   flowStyle?: "basic" | "offset" | "arc"
 
-  areaStyle?: Style | ((d: Datum) => Style)
+  areaStyle?: Style | ((d: GeoJSON.Feature) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[] | Record<string, string>
@@ -275,7 +275,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Style ──
   /** Optional scene paint backend. Exact projected geometry remains interactive. */
   renderMode?: SceneRenderMode<GeoSceneNode>
-  areaStyle?: Style | ((d: Datum) => Style)
+  areaStyle?: Style | ((d: GeoJSON.Feature) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[] | Record<string, string>
@@ -379,7 +379,7 @@ export interface StreamGeoFrameHandle {
   getLines(): Datum[]
   clear(): void
   getProjection(): GeoProjection | null
-  getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null
+  getGeoPath(): GeoPath<void, GeoPermissibleObjects> | null
   /** Get cartogram layout info (center position, max cost, radius) */
   getCartogramLayout(): { cx: number; cy: number; maxCost: number; availableRadius: number } | null
   /** Get current zoom level (1 = default) */

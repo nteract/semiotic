@@ -1,3 +1,5 @@
+import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -8,11 +10,11 @@ import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../../st
 import type { Datum } from "../shared/datumTypes"
 
 // ── Mock StreamNetworkFrame to capture props ────────────────────────────
-let lastFrameProps: any = null
+let lastFrameProps = {} as CapturedNetworkFrameProps
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamNetworkFrameHandle>, CapturedNetworkFrameProps>((props, _ref) => {
       lastFrameProps = props
       return <div className="stream-network-frame"><svg /></div>
     })
@@ -32,7 +34,7 @@ const edges = [
 
 describe("SankeyDiagram label bug", () => {
   beforeEach(() => {
-    lastFrameProps = null
+    lastFrameProps = {} as CapturedNetworkFrameProps
   })
 
   // ── 1. HOC forwards nodeLabel and showLabels to StreamNetworkFrame ──

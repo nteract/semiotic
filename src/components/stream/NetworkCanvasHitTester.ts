@@ -13,10 +13,11 @@ import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Quadtree } from "d3-quadtree"
+import type { SceneDatum } from "./types"
 
 export interface NetworkHitResult {
   type: "node" | "edge"
-  datum: any
+  datum: SceneDatum
   x: number
   y: number
   distance: number
@@ -357,7 +358,7 @@ function hitTestBezierEdge(
 }
 
 function hitTestLineEdge(
-  edge: { type: "line"; x1: number; y1: number; x2: number; y2: number; datum: any },
+  edge: { type: "line"; x1: number; y1: number; x2: number; y2: number; datum: SceneDatum },
   px: number,
   py: number
 ): NetworkHitResult | null {
@@ -390,7 +391,7 @@ function hitTestLineEdge(
 }
 
 function hitTestPathEdge(
-  edge: { pathD: string; datum: any; _cachedPath2D?: Path2D; _cachedPath2DSource?: string },
+  edge: { pathD: string; datum: SceneDatum; _cachedPath2D?: Path2D; _cachedPath2DSource?: string },
   px: number,
   py: number
 ): NetworkHitResult | null {

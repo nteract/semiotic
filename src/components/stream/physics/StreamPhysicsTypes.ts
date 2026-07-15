@@ -223,7 +223,7 @@ export type StreamPhysicsBodyForce =
 export interface PhysicsHoverData {
   __semioticHoverData: true
   body: PhysicsBodyState
-  data: unknown
+  data: Datum | PhysicsBodyState
   id: string
   type: "body"
   x: number
@@ -338,10 +338,12 @@ export interface StreamPhysicsFrameProps {
    * Click on a body (or empty canvas when null). Prefer this over
    * `onBodyPointerDown` when you only need the Semiotic click contract.
    */
-  onClick?: (
-    datum: unknown | null,
-    event: { x: number; y: number; body: PhysicsBodyState | null }
-  ) => void
+  onClick?: {
+    bivarianceHack(
+      datum: Datum | null,
+      event: { x: number; y: number; body: PhysicsBodyState | null }
+    ): void
+  }["bivarianceHack"]
   onRegionEvent?: (event: StreamPhysicsRegionEvent) => void
   onSimulationExecutionChange?: (state: StreamPhysicsExecutionState) => void
   onBodyPointerDown?: (

@@ -40,6 +40,9 @@ export function useChartObserver(
   )
 
   const filtered = useMemo(() => {
+    // The store may retain the observations array identity while bumping
+    // its version, so this is an intentional recomputation dependency.
+    void version
     let result = allObservations
 
     if (types && types.length > 0) {

@@ -1,5 +1,5 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
-import type { PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
+import type { SceneDatum, PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
@@ -7,7 +7,7 @@ import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface OrdinalHitResult {
-  datum: any
+  datum: SceneDatum
   x: number
   y: number
   distance: number

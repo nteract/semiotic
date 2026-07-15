@@ -1,5 +1,8 @@
 
 import * as React from "react"
+import type { StreamXYFrameProps } from "../components/stream/types"
+import type { StreamOrdinalFrameProps } from "../components/stream/ordinalTypes"
+import type { StreamNetworkFrameProps } from "../components/stream/networkTypes"
 
 /**
  * Creates a vi.mock factory for a Stream Frame module that captures
@@ -15,12 +18,12 @@ import * as React from "react"
  *   - `getLastProps()` — returns the most recent props passed to the frame
  *   - `reset()` — clears captured props (call in beforeEach)
  */
-export function createFrameMock(className: string) {
-  let lastProps: any = null
+export function createFrameMock<TProps extends object>(className: string) {
+  let lastProps: TProps | null = null
 
   const factory = () => ({
     __esModule: true,
-    default: (props: any) => {
+    default: (props: TProps) => {
       lastProps = props
       return React.createElement("div", { className }, React.createElement("svg"))
     },
@@ -28,7 +31,10 @@ export function createFrameMock(className: string) {
 
   return {
     factory,
-    getLastProps: () => lastProps,
+    getLastProps: () => {
+      if (!lastProps) throw new Error(`No ${className} props have been captured`)
+      return lastProps
+    },
     reset: () => {
       lastProps = null
     },
@@ -52,14 +58,14 @@ export function createFrameMock(className: string) {
  * })
  * ```
  */
-export const ordinalFrameMock = createFrameMock("stream-ordinal-frame")
+export const ordinalFrameMock = createFrameMock<StreamOrdinalFrameProps>("stream-ordinal-frame")
 
 /**
  * Pre-built mock for StreamNetworkFrame.
  */
-export const networkFrameMock = createFrameMock("stream-network-frame")
+export const networkFrameMock = createFrameMock<StreamNetworkFrameProps>("stream-network-frame")
 
 /**
  * Pre-built mock for StreamXYFrame.
  */
-export const xyFrameMock = createFrameMock("stream-xy-frame")
+export const xyFrameMock = createFrameMock<StreamXYFrameProps>("stream-xy-frame")

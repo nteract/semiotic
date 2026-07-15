@@ -1,4 +1,4 @@
-import type { Datum } from "../charts/shared/datumTypes"
+import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 /**
  * Pulse encoding for XY pipeline scene nodes.
  *
@@ -33,7 +33,7 @@ export function applyPulse(
   nodes: SceneNode[],
   data: Datum[],
   timestampBuffer: RingBuffer<number>,
-  indexMap?: Map<any, number>,
+  indexMap?: Map<DatumValue, number>,
   now = typeof performance !== "undefined" ? performance.now() : Date.now()
 ): boolean {
   const pulseColor = pulse.color ?? "rgba(255,255,255,0.6)"
@@ -41,7 +41,7 @@ export function applyPulse(
   let changed = false
 
   const map = indexMap ?? (() => {
-    const m = new Map<any, number>()
+    const m = new Map<DatumValue, number>()
     for (let i = 0; i < data.length; i++) m.set(data[i], i)
     return m
   })()
