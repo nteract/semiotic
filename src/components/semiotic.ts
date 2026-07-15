@@ -451,6 +451,28 @@ export type { SerializedSelections, SerializedSelection, SerializedFieldSelectio
 
 export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
+// ── Declarative hatch fill (canvas + SVG) ──────────────────────────────
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"
+
+// ── Threshold-aware style rules (all families' `styleRules`) ───────────
+export {
+  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
+  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
+  styleRulesToPieceStyle, styleRulesToXYStyle, styleRulesToNodeStyle,
+} from "./charts/shared/styleRules"
+export type {
+  StyleRule,
+  StyleRuleStyle,
+  StyleRuleThreshold,
+  StyleRuleContext,
+  StyleRulePredicate,
+} from "./charts/shared/styleRules"
+
+// ── Shared annotation-label renderer (halo / box backdrops) ────────────
+export { AnnotationLabel, estimateLabelWidth } from "./charts/shared/AnnotationLabel"
+export type { AnnotationLabelBackground, AnnotationLabelBackgroundConfig, AnnotationLabelProps } from "./charts/shared/AnnotationLabel"
+
 // ── Format utilities ───────────────────────────────────────────────────
 
 export { smartTickFormat, adaptiveTimeTicks } from "./charts/shared/formatUtils"

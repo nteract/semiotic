@@ -22,6 +22,7 @@ import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
@@ -45,6 +46,15 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data or custom colors array @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware point styling. Ordered `{ when, style }`
+   * rules; the last applicable rule wins per property. `when` accepts a
+   * predicate `(datum, ctx) => boolean` (`ctx` = `{ value, x, y, category }`),
+   * a declarative threshold (`{ axis: "x"|"y", gt, lte, within, in, … }` —
+   * target either axis regardless of accessor field name), or `true`. A rule's
+   * `fill` may be a color or a HatchFill. Layers over the resolved base color.
+   */
+  styleRules?: StyleRule[]
   /** Field name or function to determine point size */
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */
@@ -192,6 +202,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     yScaleType,
     colorBy,
     colorScheme,
+    styleRules,
     sizeBy,
     sizeRange = [3, 15],
     symbolBy,
@@ -373,11 +384,20 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     [sizeBy, sizeRange, effectiveSizeDomain],
   )
 
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     pointRadius, fillOpacity: pointOpacity,
     radiusFn: sizedRadiusFn,
     stroke, strokeWidth, opacity,
+    styleRules, ruleContext,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

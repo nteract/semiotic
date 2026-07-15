@@ -13,6 +13,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["nodeIDAccessor", "sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       nodes: { type: "array", description: "Array of node objects" },
       edges: { type: "array", description: "Array of edge objects with source and target" },
       nodeIDAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
@@ -47,6 +48,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects (auto-derived from edges if omitted)" },
       sourceAccessor: { type: ["string", "function"], default: "source" },
@@ -130,6 +132,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects" },
       sourceAccessor: { type: ["string", "function"], default: "source" },

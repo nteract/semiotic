@@ -17,6 +17,7 @@ import {
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
+import type { StyleRule } from "../shared/styleRules"
 import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
@@ -68,6 +69,13 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   branchProbability?: number
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware ball styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. Rules resolve against each ball's datum;
+   * `ctx` = `{ value, category }` (category = the colorBy group). A rule `fill`
+   * may be a color or a HatchFill. Layers over the colorBy-derived fill.
+   */
+  styleRules?: StyleRule[]
   referenceLines?: GaltonBoardReferenceLine | GaltonBoardReferenceLine[]
   seed?: number
   showProjection?: boolean
@@ -258,6 +266,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   const {
     data,
     valueAccessor = "value" as ChartAccessor<TDatum, number>,
+    styleRules,
     bins = 21,
     ballRadius = 6,
     colorBy,
@@ -372,8 +381,11 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       ? ("side" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
   const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy),
-    [resolvedColorBy]
+    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+      styleRules,
+      valueAccessor: valueAccessor as string | ((d: Datum) => unknown),
+    }),
+    [resolvedColorBy, styleRules, valueAccessor]
   )
   const semanticItems = useMemo(
     () => projectionRowsToSemanticItems(layout.projectionRows, chartSize, "bin"),

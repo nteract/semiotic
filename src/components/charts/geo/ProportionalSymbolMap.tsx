@@ -12,6 +12,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -35,6 +36,12 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
   sizeRange?: [number, number]
   /** Field to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware symbol styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. `ctx` = `{ value, category }` (value =
+   * `sizeBy`, category = `colorBy`). A rule `fill` may be a color or HatchFill.
+   */
+  styleRules?: StyleRule[]
   /** Color scheme @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
   /** Geographic projection @default "equalEarth" */
@@ -160,6 +167,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     sizeBy,
     sizeRange = [3, 30],
     colorBy,
+    styleRules,
     colorScheme,
     projection = "equalEarth",
     graticule,
@@ -256,12 +264,20 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       strokeWidth: 0.5,
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
     })
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
+    const ruled = composeStyleRules(
+      base,
+      styleRules,
+      makeNodeRuleContext(
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        sizeBy as string | ((d: Datum) => unknown) | undefined,
+      ),
+    ) as (d: Datum) => Style & { r?: number }
+    const withPrimitives = mergeShapeStyle(ruled, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
     if (setup.effectiveSelectionHook) {
       return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, stroke, strokeWidth, opacity])
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, stroke, strokeWidth, opacity, styleRules])
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point

@@ -11,15 +11,25 @@ function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & Rea
 function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function StreamGeoFrame(: import("../../../dist/semiotic-geo").StreamGeoFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-geo").StreamGeoFrameHandle>): React.ReactNode
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
+function isHatchFill(fill: unknown): boolean
+function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mergeData<T extends Datum>(features: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], data: T[], options: { featureKey: string; dataKey: string; }): import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
 function resolveReferenceGeography(name: ReferenceGeography): Promise<import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]>
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 interface ChoroplethMapProps<TDatum extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
 interface DistanceCartogramConfig
@@ -37,6 +47,7 @@ interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
 interface GraticuleConfig
+interface HatchFill
 interface HitTargetPointProps
 interface ProportionalSymbolMapProps<TDatum extends Datum = Datum>
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
@@ -47,6 +58,10 @@ interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<s
 interface SceneAccessibilityMetadata
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps<T = Datum>
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 type AreasProp = GeoJSON.Feature[] | ReferenceGeography
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
@@ -56,4 +71,5 @@ type ProjectionName = "mercator" | "equalEarth" | "albersUsa" | "orthographic" |
 type ProjectionProp = GeoProjection | ProjectionName | ProjectionConfig
 type ReferenceGeography = "world-110m" | "world-50m" | "land-110m" | "land-50m"
 type ResponsiveOrientation = "portrait" | "landscape"
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

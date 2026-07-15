@@ -17,6 +17,7 @@ import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
@@ -104,6 +105,16 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * @default "category10"
    */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware line styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins per property. NOTE: line styles resolve
+   * per-SERIES against the series' first data point, so a rule's `ctx.x`/`ctx.y`
+   * reflect that sample, not every vertex (use it to recolor a whole series by
+   * a representative value). `when` accepts a predicate, a threshold
+   * (`{ axis: "x"|"y", … }`), or `true`. A rule `stroke`/`fill` may be a color
+   * or a HatchFill. Layers over the resolved series color.
+   */
+  styleRules?: StyleRule[]
 
   /**
    * Curve interpolation type
@@ -383,6 +394,7 @@ export const LineChart = forwardRef(
     lineDataAccessor = "coordinates",
     colorBy,
     colorScheme,
+    styleRules,
     curve = "linear",
     showPoints = false,
     pointRadius = 3,
@@ -811,6 +823,13 @@ export const LineChart = forwardRef(
   // When both are set, the top-level `strokeWidth` wins via the
   // hook's `mergeShapeStyle` pass — consistent with the "top-level
   // primitive > chart-specific" precedence elsewhere.
+  const lineRuleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
   const baseLineStyle = useXYLineStyle({
     lineWidth,
     // A line-object's color/group fields commonly live on the parent line.
@@ -826,6 +845,8 @@ export const LineChart = forwardRef(
     opacity,
     effectiveSelectionHook,
     resolvedSelection,
+    styleRules,
+    ruleContext: lineRuleContext,
   })
 
   // Lazy-load segment-aware styling — only loads module when forecast is set.

@@ -29,6 +29,16 @@ import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { resolveDefaultFill } from "./hooks"
+import { resolveStyleRules, type StyleRule } from "./styleRules"
+import type { HatchFill } from "./hatchFill"
+
+/**
+ * Values a resolved piece style may carry. Wider than the axis-style
+ * `string | number` because `fill` can be a declarative {@link HatchFill}
+ * descriptor or a raw `CanvasPattern`.
+ */
+type PieceStyleValue = string | number | HatchFill | CanvasPattern | undefined
+type PieceStyleObject = Record<string, PieceStyleValue>
 
 export interface OrdinalPieceStyleOptions {
   /** colorBy accessor — string field name or function */
@@ -99,6 +109,19 @@ export interface OrdinalPieceStyleOptions {
   effectiveSelectionHook: SelectionHookResult | null | undefined
   /** Resolved selection config (typically `setup.resolvedSelection`). */
   resolvedSelection: import("./types").SelectionConfig | undefined
+  /**
+   * Declarative, threshold-aware style rules. Evaluated per piece and merged
+   * on top of the resolved base fill (last-applicable rule wins per property).
+   * The user's `frameProps.pieceStyle` still overrides these, and top-level
+   * primitive props (`stroke`/`strokeWidth`/`opacity`) override everything.
+   */
+  styleRules?: ReadonlyArray<StyleRule>
+  /**
+   * Resolve the numeric value a threshold rule compares against for a datum
+   * (typically the chart's `valueAccessor` output). Lets `{ when: { gt: 10 } }`
+   * work with no `field` on the threshold.
+   */
+  resolveRuleValue?: (d: Datum) => number | undefined
 }
 
 /**
@@ -121,7 +144,7 @@ export interface OrdinalPieceStyleOptions {
  */
 export function useOrdinalPieceStyle(
   options: OrdinalPieceStyleOptions,
-): (d: Datum, category?: string) => Record<string, string | number | undefined> {
+): (d: Datum, category?: string) => PieceStyleObject {
   const {
     colorBy,
     colorScale,
@@ -138,6 +161,8 @@ export function useOrdinalPieceStyle(
     cycleByCategory = false,
     baseStyleExtras,
     linkStrokeToFill = false,
+    styleRules,
+    resolveRuleValue,
   } = options
 
   // 1 — base fill from colorBy or theme/scheme fallback. When
@@ -155,7 +180,7 @@ export function useOrdinalPieceStyle(
         typeof baseStyleExtras === "function"
           ? baseStyleExtras(d, category)
           : baseStyleExtras
-      const baseStyle: Record<string, string | number | undefined> = extras ? { ...extras } : {}
+      const baseStyle: PieceStyleObject = extras ? { ...extras } : {}
       // When extras already supplied a fill (LikertChart's
       // level-keyed palette, future charts with bespoke color
       // logic), respect it and skip the standard color resolution.
@@ -179,6 +204,17 @@ export function useOrdinalPieceStyle(
           )
         }
       }
+      // Declarative style rules merge ON TOP of the resolved base fill —
+      // last-applicable rule wins per property. Applied here (not after the
+      // user overlay) so an explicit `frameProps.pieceStyle` remains the
+      // imperative escape hatch that overrides rule output.
+      if (styleRules && styleRules.length > 0) {
+        const ruled = resolveStyleRules(d, styleRules, {
+          value: resolveRuleValue ? resolveRuleValue(d) : undefined,
+          category,
+        })
+        Object.assign(baseStyle, ruled)
+      }
       // Summary-style charts link the box outline to the fill so
       // stroke and fill come from the same resolved color.
       if (linkStrokeToFill && baseStyle.stroke === undefined && baseStyle.fill !== undefined) {
@@ -186,7 +222,7 @@ export function useOrdinalPieceStyle(
       }
       return baseStyle
     }
-  }, [colorBy, colorScale, color, themeCategorical, colorScheme, categoryIndexMap, cycleByCategory, baseStyleExtras, linkStrokeToFill])
+  }, [colorBy, colorScale, color, themeCategorical, colorScheme, categoryIndexMap, cycleByCategory, baseStyleExtras, linkStrokeToFill, styleRules, resolveRuleValue])
 
   // 2 — overlay user-supplied pieceStyle on top of base. Function form
   // composes (call both, spread); object form spreads directly.

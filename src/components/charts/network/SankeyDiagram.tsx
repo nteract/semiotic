@@ -15,6 +15,7 @@ import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -32,6 +33,13 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware node styling (see ForceDirectedGraph).
+   * Ordered `{ when, style }` rules; last applicable rule wins. Rules see the
+   * raw node object; `ctx` = `{ value, category }`. A rule `fill` may be a
+   * color or a HatchFill. Layers over the resolved node color.
+   */
+  styleRules?: StyleRule[]
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   orientation?: "horizontal" | "vertical"
   nodeAlign?: "justify" | "left" | "right" | "center"
@@ -146,6 +154,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     nodeIdAccessor = "id",
     colorBy,
     colorScheme,
+    styleRules,
     edgeColorBy = "source",
     orientation = "horizontal",
     nodeAlign = "justify",
@@ -227,10 +236,19 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     }
   }, [colorBy, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
+  // Declarative style rules layer over the base node color (raw node via .data).
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined, valueAccessor as string | ((d: Datum) => unknown)),
+    [colorBy, valueAccessor],
+  )
+
   // Overlay top-level primitive props onto nodeStyle.
   const nodeStyle = useMemo(
-    () => mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }),
-    [baseNodeStyle, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(
+      composeStyleRules<number>(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
+      { stroke, strokeWidth, opacity },
+    ),
+    [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
   )
 
   // Edge style function

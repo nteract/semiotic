@@ -35,6 +35,21 @@ export { darkenColor, lightenColor } from "./charts/shared/colorManipulation"
 export { createHatchPattern } from "./charts/shared/hatchPattern"
 export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
+// Declarative hatch-fill descriptor + threshold-aware style rules (pure).
+export { isHatchFill, hatchFillId, hatchFillKey } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"
+export {
+  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
+  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
+} from "./charts/shared/styleRules"
+export type {
+  StyleRule,
+  StyleRuleStyle,
+  StyleRuleThreshold,
+  StyleRuleContext,
+  StyleRulePredicate,
+} from "./charts/shared/styleRules"
+
 // ── Validation ───────────────────────────────────────────────────────────
 export { validateProps } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"

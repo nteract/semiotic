@@ -18,6 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
@@ -87,6 +88,26 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    * @default false
    */
   gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /**
+   * Declarative, threshold-aware bar styling. An ordered list of
+   * `{ when, style }` rules; every rule whose condition matches a bar
+   * contributes its style, merged in order so the **last applicable rule
+   * wins** per property. `when` accepts a predicate `(datum, ctx) => boolean`,
+   * a declarative threshold (`{ gt, lte, within, in, … }` — compares the
+   * bar's value unless `field` is set), or `true`/omitted (always applies).
+   * A rule's `fill` may be a color string or a declarative
+   * {@link HatchFill} for diagonal hatching (renders on canvas and SSR).
+   * Rules layer over the resolved base color; `frameProps.pieceStyle` and
+   * top-level `stroke`/`strokeWidth`/`opacity` still override them.
+   * @example
+   * ```tsx
+   * styleRules={[
+   *   { when: { gte: 10 }, style: { fill: "var(--semiotic-warning)" } },
+   *   { when: { gt: 15 }, style: { fill: { type: "hatch", background: "#e0a92a", stroke: "#fff" } } },
+   * ]}
+   * ```
+   */
+  styleRules?: StyleRule[]
   /** When true, adds padding below the 0 baseline. Default false (bars flush with axis). */
   baselinePadding?: boolean
   enableHover?: boolean
@@ -230,6 +251,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     sort = false,
     barPadding = 40, roundedTop,
     gradientFill = false,
+    styleRules,
     baselinePadding = false,
     tooltip,
     annotations,
@@ -306,14 +328,22 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
-  // Consolidated piece-style — base fill, user overlay, primitive
-  // props, and selection wrap all happen inside the shared hook.
+  // Value resolver for threshold-based style rules — reads the bar's value
+  // so `{ when: { gt: 10 } }` needs no `field`. Stable for string accessors.
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
+
+  // Consolidated piece-style — base fill, style rules, user overlay,
+  // primitive props, and selection wrap all happen inside the shared hook.
   // Each ordinal HOC drops ~25 lines of recipe by calling this.
   const pieceStyle = useOrdinalPieceStyle({
     colorBy, colorScale: setup.colorScale,
     color, themeCategorical, colorScheme, categoryIndexMap,
     userPieceStyle: frameProps?.pieceStyle,
     stroke, strokeWidth, opacity,
+    styleRules, resolveRuleValue,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

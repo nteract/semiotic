@@ -9,6 +9,7 @@ import {
   prepareConnectedScatterplotData,
   viridisColor,
 } from "./serverChartConfigShared"
+import { styleRulesToXYStyle } from "../charts/shared/styleRules"
 
 // ── XY Charts ──────────────────────────────────────────────────────────
 
@@ -43,6 +44,9 @@ export const lineChart: ChartConfig = {
     colorScheme,
     lineStyle: rest.lineStyle,
     ...common,
+    ...(rest.styleRules && {
+      lineStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.lineStyle || rest.lineStyle),
+    }),
   }),
 }
 
@@ -58,6 +62,9 @@ export const areaChart: ChartConfig = {
     colorAccessor: colorBy,
     colorScheme,
     ...common,
+    ...(rest.styleRules && {
+      lineStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.lineStyle),
+    }),
   }),
 }
 
@@ -203,6 +210,9 @@ export const scatterplot: ChartConfig = {
     sizeAccessor: rest.sizeBy,
     colorScheme,
     ...common,
+    ...(rest.styleRules && {
+      pointStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.pointStyle),
+    }),
   }),
 }
 

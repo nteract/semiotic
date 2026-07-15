@@ -1,5 +1,6 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, BoxplotSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 export const boxplotCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -19,10 +20,7 @@ export const boxplotCanvasRenderer = (
 
     // Preserve non-string fills (CanvasPattern/CanvasGradient) unchanged — only
     // string fills go through CSS-var resolution.
-    const userFill = node.style.fill
-    const fillColor: string | CanvasPattern | CanvasGradient = typeof userFill === "string"
-      ? (resolveCSSColor(ctx, userFill) || userFill)
-      : (userFill ?? themePrimary)
+    const fillColor: string | CanvasPattern | CanvasGradient = resolveCanvasFill(ctx, node.style.fill, themePrimary)
     const userStroke = node.style.stroke
     const strokeColor = typeof userStroke === "string"
       ? (resolveCSSColor(ctx, userStroke) || userStroke)

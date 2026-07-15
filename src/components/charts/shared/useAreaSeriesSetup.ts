@@ -43,6 +43,11 @@ import { DEFAULT_COLOR } from "./hooks"
 import { buildDefaultTooltip, accessorName, bandTooltipFields } from "./tooltipUtils"
 import type { HoverData } from "../../stream/types"
 import type { BandConfig } from "../../stream/types"
+import { resolveStyleRules, type StyleRule, type StyleRuleContext } from "./styleRules"
+import type { HatchFill } from "./hatchFill"
+
+/** Values a resolved area/line style may carry (`fill` can be a HatchFill). */
+type AreaStyleValue = string | number | HatchFill | CanvasPattern | undefined
 
 export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Sparse-filtered data array (the HOC's `safeData`). */
@@ -97,6 +102,14 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Optional band prop — when set, the default tooltip surfaces a
    *  pair of rows per band (low + high). Threaded through verbatim. */
   band?: BandConfig<TDatum> | Array<BandConfig<TDatum>>
+  /**
+   * Declarative style rules, merged on top of the resolved area fill/stroke
+   * (last-applicable rule wins). Per-series: resolves against the series'
+   * sample datum. A rule `fill` may be a color or a HatchFill.
+   */
+  styleRules?: ReadonlyArray<StyleRule>
+  /** Build the `StyleRuleContext` for a series sample datum. */
+  ruleContext?: (d: Datum) => StyleRuleContext
 }
 
 export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {
@@ -104,7 +117,7 @@ export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {
    *  when the HOC is in push mode (no `data` prop). */
   flattenedData: TDatum[]
   /** Selection-aware line/area style fn. */
-  lineStyle: (d: Datum) => Record<string, string | number>
+  lineStyle: (d: Datum) => Record<string, AreaStyleValue>
   /** Selection-aware point style fn — `undefined` when `showPoints`
    *  is false so the HOC can spread it conditionally. */
   pointStyle: ((d: Datum) => Record<string, string | number>) | undefined
@@ -147,6 +160,8 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     xFormat,
     yFormat,
     groupField,
+    styleRules,
+    ruleContext,
   } = options
 
   // 1 — detect pre-grouped area-object format
@@ -188,7 +203,7 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
   // 3 — base line/area style
   const baseLineStyle = useMemo(() => {
     return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {}
+      const baseStyle: Record<string, AreaStyleValue> = {}
 
       if (colorBy) {
         // Push-mode initial state — `colorBy` set but no scale yet.
@@ -214,9 +229,13 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
         }
       }
       baseStyle.fillOpacity = areaOpacity
+      // Declarative style rules merge on top of the resolved area fill/stroke.
+      if (styleRules && styleRules.length > 0) {
+        Object.assign(baseStyle, resolveStyleRules(d, styleRules, ruleContext ? ruleContext(d) : { value: undefined }))
+      }
       return baseStyle
     }
-  }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth])
+  }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth, styleRules, ruleContext])
 
   // 4 — primitive overlay + selection wrap
   const baseLineStyleWithPrimitives = useMemo(

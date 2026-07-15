@@ -13,6 +13,7 @@ import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -81,6 +82,16 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
   colorBy?: ChartAccessor<TNode, string>
   /** d3 scheme name or explicit color array; falls back to theme. */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware node styling. Ordered `{ when, style }`
+   * rules; the last applicable rule wins per property. `when` accepts a
+   * predicate `(node, ctx) => boolean` (rules see the raw node object; `ctx` =
+   * `{ value, category }` where `category` is the `colorBy` group), a
+   * declarative threshold (`{ field, gt, eq, in, … }`), or `true` — so you can
+   * style whole groups of nodes (`{ field: "type", eq: "db" }`). A rule's
+   * `fill` may be a color or a HatchFill. Layers over the resolved node color.
+   */
+  styleRules?: StyleRule[]
   /**
    * Constant pixel radius, or a function/field returning a numeric value
    * scaled into `nodeSizeRange`.
@@ -223,6 +234,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     nodeLabel,
     colorBy,
     colorScheme,
+    styleRules,
     nodeSize = 8,
     nodeSizeRange = [5, 20],
     edgeWidth = 1,
@@ -308,10 +320,24 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     }
   }, [colorBy, setup.colorScale, nodeSize, setup.themeCategorical, colorScheme, categoryIndexMap])
 
+  // Declarative style rules resolve against the raw node (unwrap the
+  // RealtimeNode's `.data`) and layer over the base color, before the
+  // top-level primitive overlay wins.
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+      typeof nodeSize === "number" ? undefined : (nodeSize as string | ((d: Datum) => unknown)),
+    ),
+    [colorBy, nodeSize],
+  )
+
   // Overlay top-level primitive props onto nodeStyle; top-level wins over base.
   const nodeStyle = useMemo(
-    () => mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }),
-    [baseNodeStyle, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(
+      composeStyleRules(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
+      { stroke, strokeWidth, opacity },
+    ),
+    [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
   )
 
   // Edge style function — d is a RealtimeEdge wrapper; user data lives on

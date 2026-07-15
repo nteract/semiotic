@@ -18,6 +18,7 @@
 import type { CurveType } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
+import { isHatchFill, resolveHatchCanvasPattern, type HatchFill } from "../../charts/shared/hatchFill"
 import {
   curveMonotoneX,
   curveMonotoneY,
@@ -88,12 +89,40 @@ export function resolveCurveFactory(curve: CurveType | undefined): CurveFactory 
  */
 export function resolveCanvasFill(
   ctx: CanvasRenderingContext2D,
-  fill: string | CanvasPattern | null | undefined,
+  fill: string | HatchFill | CanvasPattern | null | undefined,
   fallback: string,
 ): string | CanvasPattern {
   if (fill == null) return fallback
+  // Declarative hatch descriptor → CanvasPattern (cached). Fall back to the
+  // descriptor's background color if the environment can't build a pattern.
+  if (isHatchFill(fill)) {
+    const pattern = resolveHatchCanvasPattern(fill, ctx)
+    if (pattern) return pattern
+    return (fill.background && resolveCSSColor(ctx, fill.background)) || fallback
+  }
   if (typeof fill !== "string") return fill
   return resolveCSSColor(ctx, fill) || fallback
+}
+
+/**
+ * Narrow a possibly-`HatchFill` `style.fill` to the `string | CanvasPattern`
+ * a canvas `fillStyle` accepts, for the direct-assign sites that don't
+ * otherwise route through {@link resolveCanvasFill}. Returns `undefined` for a
+ * nullish (or unresolvable) fill so callers can apply their own fallback with
+ * `?? "…"`.
+ *
+ * Delegates to {@link resolveCanvasFill} so behavior stays consistent: string
+ * fills (including `var(--…)`) resolve through `resolveCSSColor` — a raw CSS
+ * variable written straight to `fillStyle` would silently paint black — and a
+ * `HatchFill` resolves to its `CanvasPattern` (or its resolved background).
+ */
+export function coerceCanvasFill(
+  ctx: CanvasRenderingContext2D,
+  fill: string | HatchFill | CanvasPattern | null | undefined,
+): string | CanvasPattern | undefined {
+  if (fill == null) return undefined
+  const resolved = resolveCanvasFill(ctx, fill, "")
+  return resolved === "" ? undefined : resolved
 }
 
 /**

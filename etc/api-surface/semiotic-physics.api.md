@@ -40,6 +40,7 @@ function compileDependencyMachine<TDatum extends Datum = Datum>(options: Compile
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function compilePhysicsEncoding<TDatum extends Datum = Datum>(options: CompilePhysicsEncodingOptions<TDatum>): PhysicsEncodingCompilation<TDatum>
 function composePhysicsControllers(controllers: readonly PhysicsController[] | null | undefined): ComposedPhysicsControllers | null
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDefaultPhysicsEngineAdapter(options?: PhysicsKernelOptions | undefined): PhysicsEngineAdapter
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
@@ -55,6 +56,11 @@ function evaluatePhysicsBodyBudget(input: PhysicsBodyBudgetInput): PhysicsBodyBu
 function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
 function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: readonly string[] | ReadonlySet<string>): { id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[]; }[]
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function isHatchFill(fill: unknown): boolean
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function membraneRegion(options: ProcessRegionBaseOptions & { cost: number; dampingScale?: number; energyScale?: number; color?: string; }): StreamPhysicsRegionEffect
 function normalizePhysicsAnnotations(annotations: Datum[] | undefined): Datum[] | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
@@ -78,8 +84,11 @@ function replayStateTransitions(events: readonly DependencyReplayEvent[], clock:
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function routeDependencyTracks<TDatum extends Datum = Datum>(machine: DependencyMachine<TDatum>, dimensions: DependencyTrackDimensions, options?: DependencyTrackOptions | undefined): DependencyTrackLayout
 function routeSurfaceRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; }): StreamPhysicsRegionEffect
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBakeOptions | undefined): SedimentBakeResult
 function sedimentHeightfield(bins: PhysicsSedimentBinSnapshot[], options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
 function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options?: SpawnFromTokensOptions<D> | undefined): PhysicsQueuedSpawn[]
@@ -147,6 +156,7 @@ interface GauntletPropertyDefinition
 interface GauntletPropertyForceContext<TDatum extends Datum = Datum>
 interface GauntletPropertyWorkPlan
 interface GauntletPropertyWorkPlanOptions
+interface HatchFill
 interface LogicalJoin
 interface LogicalJoinSnapshot
 interface MotionAccessibleEncoding<TDatum>
@@ -270,6 +280,10 @@ interface StreamPhysicsRegionEffect
 interface StreamPhysicsRegionEffectContext
 interface StreamPhysicsRegionEvent
 interface StreamPhysicsRegionVector
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {
     bandwidth?: () => number;
 }
@@ -410,4 +424,5 @@ type RegionCountMap = Record<string, RegionCountBucket>
 type ServiceLevelCaseState = "waiting" | "protected" | "unhappy" | "resolved" | "resolved-unhappy"
 type StreamPhysicsBodyForce = StreamPhysicsRegionVector | ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined)
 type StreamPhysicsRegionKind = "region" | "membrane" | "charge-gate" | "force-field" | "sink" | "source"
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

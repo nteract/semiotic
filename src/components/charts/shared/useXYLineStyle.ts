@@ -39,6 +39,7 @@ import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
+import { resolveStyleRules, type StyleRule, type StyleRuleContext } from "./styleRules"
 
 export interface XYLineStyleOptions {
   /**
@@ -86,6 +87,17 @@ export interface XYLineStyleOptions {
   effectiveSelectionHook?: SelectionHookResult | null
   /** Resolved selection style config (matched/unmatched style overrides). */
   resolvedSelection?: SelectionStyleConfig
+
+  // ── Style rules ───────────────────────────────────────────────────
+  /**
+   * Declarative style rules, merged on top of the resolved base stroke/fill
+   * (last-applicable rule wins). NOTE: line styles resolve per-SERIES against
+   * a representative sample datum (the series' first point), so a rule's
+   * `ctx.x`/`ctx.y` reflect that sample point, not every vertex.
+   */
+  styleRules?: ReadonlyArray<StyleRule>
+  /** Build the `StyleRuleContext` for a series' sample datum + group key. */
+  ruleContext?: (d: Datum, group?: string) => StyleRuleContext
 }
 
 /**
@@ -136,6 +148,8 @@ export function useXYLineStyle(
     opacity,
     effectiveSelectionHook,
     resolvedSelection,
+    styleRules,
+    ruleContext,
   } = options
 
   // Step 1+2+3 — base style with resolved stroke (and optional fill).
@@ -177,9 +191,15 @@ export function useXYLineStyle(
           style.fillOpacity = areaOpacity
         }
       }
+
+      // Declarative style rules merge on top (last-applicable rule wins).
+      // Per-series: `d` is the series sample datum.
+      if (styleRules && styleRules.length > 0) {
+        Object.assign(style, resolveStyleRules(d, styleRules, ruleContext ? ruleContext(d, group) : { value: undefined, category: group }))
+      }
       return style
     }
-  }, [lineWidth, colorBy, colorScale, color, resolveStroke, fillArea, areaOpacity])
+  }, [lineWidth, colorBy, colorScale, color, resolveStroke, fillArea, areaOpacity, styleRules, ruleContext])
 
   // Step 4 — top-level primitive overlay. `mergeShapeStyle` no-ops
   // when no overrides are set, so HOCs that don't pass these (e.g.

@@ -11,6 +11,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -47,6 +48,12 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   transition?: number
   /** Field to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware point styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. `ctx` = `{ value, category }`
+   * (category = `colorBy`). A rule `fill` may be a color or a HatchFill.
+   */
+  styleRules?: StyleRule[]
   /** Color scheme @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
   /** Point radius @default 5 */
@@ -179,6 +186,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     tileCacheSize,
     transition: transitionDuration,
     colorBy,
+    styleRules,
     colorScheme,
     pointRadius = 5,
     tooltip,
@@ -246,12 +254,17 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       strokeWidth: 1,
       r: pointRadius
     })
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
+    const ruled = composeStyleRules(
+      base,
+      styleRules,
+      makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),
+    ) as (d: Datum) => Style & { r?: number }
+    const withPrimitives = mergeShapeStyle(ruled, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
     if (setup.effectiveSelectionHook) {
       return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, pointRadius, stroke, strokeWidth, opacity])
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, pointRadius, stroke, strokeWidth, opacity, styleRules])
 
   // Build cartogram config
   const cartogramConfig: DistanceCartogramConfig = useMemo(() => ({

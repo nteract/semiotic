@@ -6,6 +6,7 @@ import type {
   NetworkCurvedEdge
 } from "../networkTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
@@ -77,7 +78,7 @@ function renderBezierEdge(
       ctx.fillStyle = gradient
       ctx.globalAlpha = baseAlpha
     } else {
-      ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
+      ctx.fillStyle = resolveCanvasFill(ctx, edge.style.fill, "#007bff")
       ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
     }
     ctx.fill(path)
@@ -148,7 +149,7 @@ function renderRibbonEdge(
   const path = getOrBuildEdgePath2D(edge)
 
   if (edge.style.fill && edge.style.fill !== "none") {
-    ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
+    ctx.fillStyle = resolveCanvasFill(ctx, edge.style.fill, "#007bff")
     ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
     ctx.fill(path)
   }
@@ -190,7 +191,7 @@ function renderCurvedEdge(
 
   // Fill if specified (usually not for tree edges)
   if (edge.style.fill && edge.style.fill !== "none") {
-    ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
+    ctx.fillStyle = resolveCanvasFill(ctx, edge.style.fill, "#007bff")
     ctx.globalAlpha = edge.style.fillOpacity ?? 0.1
     ctx.fill(path)
   }

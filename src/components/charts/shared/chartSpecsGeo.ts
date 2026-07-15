@@ -10,6 +10,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["valueAccessor"],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       areas: { type: ["array", "string"], description: "GeoJSON features or reference geography name" },
       valueAccessor: { type: ["string", "function"] },
       colorScheme: { type: ["string", "array"] },
@@ -39,6 +40,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       points: { type: "array" },
       xAccessor: { type: ["string", "function"], default: "lon" },
       yAccessor: { type: ["string", "function"], default: "lat" },
@@ -91,6 +93,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       points: { type: "array" },
       center: { type: "array" },
       costAccessor: { type: ["string", "function"] },

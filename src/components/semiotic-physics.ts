@@ -464,3 +464,9 @@ export type {
   MotionPoint,
   ResolvedMotionVector
 } from "./charts/shared/motionEncoding"
+
+// Declarative threshold-aware particle style rules (GaltonBoard/Pile/CollisionSwarm/EventDrop `styleRules`) + hatch fills.
+export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver, composeStyleRules } from "./charts/shared/styleRules"
+export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"

@@ -12,6 +12,8 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
+import { resolveSvgFill } from "../charts/shared/hatchFill"
 
 const TOP_LABEL_BASELINE = 16
 const TOP_THRESHOLD_LABEL_FLIP = 20
@@ -19,6 +21,27 @@ const TOP_THRESHOLD_LABEL_FLIP = 20
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
   return ann.color || theme.colors.annotation || theme.colors.text
+}
+
+/**
+ * Resolve an annotation's `labelBackground` into an {@link AnnotationLabel}
+ * `background` for the server path. Server SVG is standalone, so CSS vars
+ * won't resolve — bake the theme's resolved background color into the halo /
+ * box fill (unless the caller overrode `fill`). `defaultType` is the
+ * per-annotation-type default when `labelBackground` is unset.
+ */
+function ssrLabelBackground(
+  ann: Datum,
+  theme: SemioticTheme,
+  defaultType: "halo" | "none",
+): AnnotationLabelBackground {
+  const lb = ann.labelBackground as AnnotationLabelBackground | undefined
+  const bg = theme.colors.background
+  if (lb === undefined) return defaultType === "none" ? "none" : { type: "halo", fill: bg }
+  if (lb === false || lb === "none") return "none"
+  if (lb === true || lb === "halo") return { type: "halo", fill: bg }
+  if (lb === "box") return { type: "box", fill: bg }
+  return { fill: bg, ...lb }
 }
 
 interface AnnotationScales {
@@ -174,10 +197,9 @@ function renderAnnotation(
             <line x1={px} y1={0} x2={px} y2={layout.height}
               stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
             {label && (
-              <text x={px + 4} y={TOP_LABEL_BASELINE} textAnchor="start"
-                fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}>
-                {label}
-              </text>
+              <AnnotationLabel x={px + 4} y={TOP_LABEL_BASELINE} textAnchor="start"
+                fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}
+                text={label} background={ssrLabelBackground(ann, theme, "halo")} />
             )}
           </g>
         )
@@ -193,7 +215,7 @@ function renderAnnotation(
             stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
           />
           {label && (
-            <text
+            <AnnotationLabel
               x={labelPos === "left" ? 4 : labelPos === "center" ? layout.width / 2 : layout.width - 4}
               y={py < TOP_THRESHOLD_LABEL_FLIP
                 ? Math.min(layout.height - 4, py + TOP_LABEL_BASELINE)
@@ -202,9 +224,9 @@ function renderAnnotation(
               fontSize={theme.typography.tickSize}
               fill={color}
               fontFamily={theme.typography.fontFamily}
-            >
-              {label}
-            </text>
+              text={label}
+              background={ssrLabelBackground(ann, theme, "halo")}
+            />
           )}
         </g>
       )
@@ -227,19 +249,16 @@ function renderAnnotation(
             stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
           />
           {label && (
-            <text
+            <AnnotationLabel
               x={px > layout.width * 0.6 ? px - 4 : px + 4}
               y={labelPos === "bottom" ? layout.height - 4 : labelPos === "center" ? layout.height / 2 : TOP_LABEL_BASELINE}
               textAnchor={px > layout.width * 0.6 ? "end" : "start"}
               fontSize={theme.typography.tickSize}
               fill={color}
               fontFamily={theme.typography.fontFamily}
-              stroke={theme.colors.background}
-              strokeWidth={3}
-              paintOrder="stroke"
-            >
-              {label}
-            </text>
+              text={label}
+              background={ssrLabelBackground(ann, theme, "halo")}
+            />
           )}
         </g>
       )
@@ -251,30 +270,29 @@ function renderAnnotation(
       if (y0 == null || y1 == null) return null
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
-      const fill = ann.fill || resolveAnnotationColor(ann, theme)
+      // Region fill may be a declarative HatchFill → inline <pattern>.
+      const bandFill = resolveSvgFill(ann.fill || resolveAnnotationColor(ann, theme), `ssr-band-${index}`)
       // Base fill alpha from `fillOpacity` (matches the client renderer);
       // `opacity` is the group/decay alpha so freshness dimming composes.
       const fillOpacity = ann.fillOpacity ?? 0.1
       return (
         <g key={`ann-band-${index}`} opacity={ann.opacity}>
+          {bandFill.def && <defs>{bandFill.def}</defs>}
           <rect
             x={0} y={top} width={layout.width} height={height}
-            fill={fill} fillOpacity={fillOpacity}
+            fill={bandFill.fill} fillOpacity={fillOpacity}
           />
           {ann.label && (
-            <text
+            <AnnotationLabel
               x={layout.width - 4} y={Math.max(top, 0) + TOP_LABEL_BASELINE}
               textAnchor="end"
               fontSize={theme.typography.tickSize}
               fill={ann.color || resolveAnnotationColor(ann, theme)}
               fontFamily={theme.typography.fontFamily}
               fontWeight="bold"
-              stroke={theme.colors.background}
-              strokeWidth={3}
-              paintOrder="stroke"
-            >
-              {ann.label}
-            </text>
+              text={ann.label}
+              background={ssrLabelBackground(ann, theme, "halo")}
+            />
           )}
         </g>
       )
@@ -286,28 +304,26 @@ function renderAnnotation(
       if (x0 == null || x1 == null) return null
       const left = Math.min(x0, x1)
       const width = Math.abs(x1 - x0)
-      const fill = ann.fill || resolveAnnotationColor(ann, theme)
+      const xBandFill = resolveSvgFill(ann.fill || resolveAnnotationColor(ann, theme), `ssr-xband-${index}`)
       const fillOpacity = ann.fillOpacity ?? 0.1
       return (
         <g key={`ann-xband-${index}`} opacity={ann.opacity}>
+          {xBandFill.def && <defs>{xBandFill.def}</defs>}
           <rect
             x={left} y={0} width={width} height={layout.height}
-            fill={fill} fillOpacity={fillOpacity}
+            fill={xBandFill.fill} fillOpacity={fillOpacity}
           />
           {ann.label && (
-            <text
+            <AnnotationLabel
               x={left + 4} y={TOP_LABEL_BASELINE}
               textAnchor="start"
               fontSize={theme.typography.tickSize}
               fill={ann.color || resolveAnnotationColor(ann, theme)}
               fontFamily={theme.typography.fontFamily}
               fontWeight="bold"
-              stroke={theme.colors.background}
-              strokeWidth={3}
-              paintOrder="stroke"
-            >
-              {ann.label}
-            </text>
+              text={ann.label}
+              background={ssrLabelBackground(ann, theme, "halo")}
+            />
           )}
         </g>
       )
@@ -330,16 +346,16 @@ function renderAnnotation(
               fill={color} opacity={opacity}
             />
             {label && (
-              <text
+              <AnnotationLabel
                 x={12} y={oVal + bandwidth / 2}
                 dominantBaseline="middle"
                 fill={color}
                 fontSize={theme.typography.tickSize}
                 fontWeight="bold"
                 fontFamily={theme.typography.fontFamily}
-              >
-                {label}
-              </text>
+                text={label}
+                background={ssrLabelBackground(ann, theme, "none")}
+              />
             )}
           </g>
         )
@@ -351,16 +367,16 @@ function renderAnnotation(
             fill={color} opacity={opacity}
           />
           {label && (
-            <text
+            <AnnotationLabel
               x={oVal + bandwidth / 2} y={TOP_LABEL_BASELINE}
               textAnchor="middle"
               fill={color}
               fontSize={theme.typography.tickSize}
               fontWeight="bold"
               fontFamily={theme.typography.fontFamily}
-            >
-              {label}
-            </text>
+              text={label}
+              background={ssrLabelBackground(ann, theme, "none")}
+            />
           )}
         </g>
       )

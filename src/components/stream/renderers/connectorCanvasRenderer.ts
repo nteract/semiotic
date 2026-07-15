@@ -1,5 +1,6 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, ConnectorSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill, coerceCanvasFill } from "./canvasRenderHelpers"
 
 export const connectorCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -34,7 +35,7 @@ export const connectorCanvasRenderer = (
       ctx.closePath()
 
       ctx.globalAlpha = firstStyle.fillOpacity ?? firstStyle.opacity ?? 0.3
-      ctx.fillStyle = firstStyle.fill!
+      ctx.fillStyle = coerceCanvasFill(ctx, firstStyle.fill) ?? "#999"
       ctx.fill()
       ctx.globalAlpha = 1
     }
@@ -45,8 +46,11 @@ export const connectorCanvasRenderer = (
       ctx.moveTo(node.x1, node.y1)
       ctx.lineTo(node.x2, node.y2)
 
+      // Fall back to the fill for the stroke: resolveCanvasFill returns "" for
+      // an absent fill (falsy → next branch), a resolved color for a string,
+      // and the pattern for a hatch/CanvasPattern fill.
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke)
-        || (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
+        || resolveCanvasFill(ctx, node.style.fill, "")
         || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.globalAlpha = node.style.opacity ?? 0.5

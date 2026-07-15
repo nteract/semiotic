@@ -18,6 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface StackedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -36,6 +37,16 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   barPadding?: number
   /** Rounded top corner radius. Only the topmost stacked segment gets rounded. */
   roundedTop?: number
+  /**
+   * Declarative, threshold-aware segment styling. Ordered `{ when, style }`
+   * rules; the last applicable rule wins per property. `when` accepts a
+   * predicate `(datum, ctx) => boolean` (where `ctx.category` is the stack
+   * series key), a declarative threshold on the segment value
+   * (`{ gt, lte, within, in, … }`), or `true`. A rule's `fill` may be a color
+   * or a {@link HatchFill} for hatching a segment (e.g. a "fixed-rate" band).
+   * Layers over the resolved series color; `frameProps.pieceStyle` overrides.
+   */
+  styleRules?: StyleRule[]
   baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
@@ -116,7 +127,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, baselinePadding = false,
+    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, styleRules, baselinePadding = false,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -165,14 +176,20 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
+
   // Consolidated piece-style — same recipe as BarChart/PieChart
-  // (base fill, user overlay, primitive props, selection wrap).
+  // (base fill, style rules, user overlay, primitive props, selection wrap).
   const pieceStyle = useOrdinalPieceStyle({
     colorBy: effectiveColorBy,
     colorScale: setup.colorScale,
     color, themeCategorical, colorScheme, categoryIndexMap,
     userPieceStyle: frameProps?.pieceStyle,
     stroke, strokeWidth, opacity,
+    styleRules, resolveRuleValue,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

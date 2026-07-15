@@ -23,6 +23,7 @@ function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditR
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
 function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefined
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function computeArcBoundingBox(sweepDegrees?: number | undefined): ArcBoundingBox
 function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
@@ -40,13 +41,23 @@ function fromConfig(config: ChartConfig): { componentName: string; props: Datum;
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchFillKey(h: HatchFill): string
+function isHatchFill(fill: unknown): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
+function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
+function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveThemePreset(name: string): SemioticTheme | undefined
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function smartTickFormat(value: string | number | Date | null | undefined): string
 function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
@@ -74,6 +85,7 @@ interface ChartReaderGroundingOptions
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
+interface HatchFill
 interface HatchPatternOptions
 interface MobileVisualizationAuditResult
 interface MobileVisualizationContract
@@ -98,6 +110,10 @@ interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<st
 interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface SemioticTheme
 interface SerializedSelection
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 interface SweepAngles
 interface ToConfigOptions
 interface VegaLiteEncoding
@@ -120,5 +136,6 @@ type SerializedFieldSelection = {
     range: [number, number];
 }
 type SerializedSelections = Record<string, SerializedSelection>
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
 ```

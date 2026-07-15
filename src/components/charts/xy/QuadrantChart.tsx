@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
 
@@ -99,6 +100,12 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware point styling (see Scatterplot). Ordered
+   * `{ when, style }` rules; last applicable rule wins. Layers over the
+   * quadrant-derived base fill; `frameProps.pointStyle` still overrides.
+   */
+  styleRules?: StyleRule[]
   /** Field name or function to determine point size */
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */
@@ -204,6 +211,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     quadrantLabelSize = 12,
     colorBy,
     colorScheme,
+    styleRules,
     sizeBy,
     sizeRange = [3, 15],
     pointRadius = 5,
@@ -350,12 +358,21 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     [sizeBy, sizeRange, sizeDomain],
   )
 
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     pointRadius, fillOpacity: pointOpacity,
     radiusFn: sizedRadiusFn,
     fallbackFill: quadrantFallbackFill,
     stroke, strokeWidth, opacity,
+    styleRules, ruleContext,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

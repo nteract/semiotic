@@ -93,3 +93,9 @@ export type {
   ProcessSankeyEdge as ProcessSankeyValidatorEdge,
   ProcessSankeyIssue,
 } from "./charts/network/processSankey/algorithm"
+
+// Declarative threshold-aware node style rules (ForceDirectedGraph/Sankey/Chord `styleRules`) + hatch fills.
+export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver, makeNodeRuleContext, composeStyleRules } from "./charts/shared/styleRules"
+export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"

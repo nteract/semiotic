@@ -1,6 +1,7 @@
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type { Style } from "../../stream/types"
+import { resolveStyleRules, makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { PhysicsColliderSpec } from "../../stream/physics/PhysicsKernel"
 import type {
   PhysicsPipelineConfig,
@@ -54,10 +55,30 @@ export function hashStringColor(value: unknown): string {
   return palette[hash % palette.length]
 }
 
+export interface PhysicsStyleRuleOptions {
+  /** Declarative style rules, merged on top of the colorBy-derived body fill. */
+  styleRules?: ReadonlyArray<StyleRule>
+  /** Numeric field/accessor a threshold rule compares against (defaults to `value`). */
+  valueAccessor?: string | ((d: Datum) => unknown)
+}
+
+/**
+ * Build a per-body `bodyStyle` from a `colorBy` accessor. When `styleRules`
+ * are supplied, the merged rule style layers on top of the colorBy-derived
+ * fill (last-applicable rule wins) — the physics counterpart to the ordinal
+ * bar `styleRules`. Rules resolve against the body's original `datum`; `ctx` =
+ * `{ value, category }` where `category` is the colorBy group. Because every
+ * colorBy-driven physics HOC and its SSR config funnel through this helper,
+ * one call wires rules for all of them.
+ */
 export function styleFromColorAccessor<TDatum extends Datum>(
   colorBy: ChartAccessor<TDatum, string> | undefined,
-  fallback = "#4e79a7"
+  fallback = "#4e79a7",
+  opts?: PhysicsStyleRuleOptions
 ): (body: { datum?: unknown }) => Style {
+  const rules = opts?.styleRules
+  const hasRules = !!rules && rules.length > 0
+  const resolveValue = hasRules ? makeRuleValueResolver(opts?.valueAccessor) : undefined
   return (body) => {
     const datum = body.datum as TDatum | undefined
     const value =
@@ -66,12 +87,22 @@ export function styleFromColorAccessor<TDatum extends Datum>(
           ? colorBy(datum, 0)
           : datum[colorBy]
         : undefined
-    return {
+    const style: Style = {
       fill: value == null ? fallback : hashStringColor(value),
       stroke: "#111827",
       strokeWidth: 1,
       opacity: 0.9
     }
+    if (hasRules && datum) {
+      Object.assign(
+        style,
+        resolveStyleRules(datum as Datum, rules, {
+          value: resolveValue ? resolveValue(datum as Datum) : undefined,
+          category: value == null ? undefined : String(value),
+        }),
+      )
+    }
+    return style
   }
 }
 

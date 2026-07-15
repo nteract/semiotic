@@ -15,13 +15,23 @@ function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNetworkFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-network").StreamNetworkFrameHandle>): React.ReactNode
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function isHatchFill(fill: unknown): boolean
+function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
 function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number]): ProcessSankeyIssue[]
@@ -32,6 +42,7 @@ interface CustomLayoutSelection
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface GlyphDef
 interface GlyphPart
+interface HatchFill
 interface NetworkCustomChartProps<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface NetworkGlyphNode
 interface NetworkHitTargetCircleProps
@@ -55,6 +66,10 @@ interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = 
 interface SceneAccessibilityMetadata
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps<T = Datum>
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 interface ThresholdAlertConfig
 interface TreeDiagramProps<TNode extends Datum = Datum>
 interface TreemapProps<TNode extends Datum = Datum>
@@ -67,4 +82,5 @@ type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: Net
 type NetworkSceneEdge = NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
 type NetworkSceneNode = NetworkCircleNode | NetworkRectNode | NetworkArcNode | NetworkSymbolNode | NetworkGlyphNode
 type ResponsiveOrientation = "portrait" | "landscape"
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

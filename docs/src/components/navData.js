@@ -133,6 +133,7 @@ const navData = [
       { title: "Composition", path: "/features/composition" },
       { title: "Linked Charts", path: "/features/linked-charts" },
       { title: "Legends", path: "/features/legends" },
+      { title: "Style Rules & Labels", path: "/features/style-rules" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
       { title: "Motion Encodings", path: "/features/motion-encodings" },
       { title: "Physics Encoding", path: "/features/physics-encoding" },

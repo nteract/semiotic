@@ -5,6 +5,7 @@ import { formatProcessSankeyIssue } from "../charts/network/processSankey/algori
 import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
 import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { type ChartConfig } from "./serverChartConfigShared"
+import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 
 // ── Network Charts ─────────────────────────────────────────────────────
 
@@ -59,7 +60,12 @@ export const forceDirectedGraph: ChartConfig = {
       nodeLabel: rest.nodeLabel,
       nodeSize: rest.nodeSize,
       nodeSizeRange: rest.nodeSizeRange,
-      nodeStyle: rest.nodeStyle,
+      nodeStyle: styleRulesToNodeStyle(
+        rest.styleRules,
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        typeof rest.nodeSize === "number" ? undefined : rest.nodeSize,
+        rest.nodeStyle,
+      ) ?? rest.nodeStyle,
       edgeStyle,
       ...common,
     }
