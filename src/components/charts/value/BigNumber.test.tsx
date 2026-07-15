@@ -281,6 +281,31 @@ describe("BigNumber — target", () => {
       expect.stringContaining("75% of 1,000"),
     )
   })
+
+  it.each([Number.NaN, Infinity, -Infinity])(
+    "omits a non-finite target value (%s) from the visible and accessible output",
+    (value) => {
+      const { container } = render(
+        <BigNumber
+          value={750}
+          target={{ value, label: "Q3 plan" }}
+        />
+      )
+
+      const root = container.querySelector("[data-chart='BigNumber']")
+      expect(container.querySelector(".semiotic-bignumber__target")).toBeNull()
+      expect(root?.getAttribute("aria-label")).not.toMatch(/NaN|Infinity|∞|Q3 plan/)
+    }
+  )
+
+  it("keeps a zero target without a misleading percent", () => {
+    const { container } = render(<BigNumber value={750} target={{ value: 0 }} />)
+    const root = container.querySelector("[data-chart='BigNumber']")
+
+    expect(container.querySelector(".semiotic-bignumber__target-percent")).toBeEmptyDOMElement()
+    expect(root).toHaveAttribute("aria-label", expect.stringContaining("target 0"))
+    expect(root?.getAttribute("aria-label")).not.toContain("%")
+  })
 })
 
 describe("BigNumber — chart slots (no built-in renderer)", () => {

@@ -11,6 +11,7 @@ import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
+import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -25,11 +26,6 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
   cardinal: curveCardinal,
   catmullRom: curveCatmullRom,
 }
-
-// These labels sit inside the plot rather than the outer title margin. Leave
-// room for their bold face and white outline before the first mark/edge.
-const TOP_LABEL_BASELINE = 16
-const TOP_THRESHOLD_LABEL_FLIP = 20
 
 type AnnotationRule = (
   annotation: Datum,
@@ -213,10 +209,7 @@ export function createDefaultAnnotationRules(
           textX = (context.width || 0) - 4
           anchor = "end"
         }
-        const textY =
-          py < TOP_THRESHOLD_LABEL_FLIP
-            ? Math.min((context.height || 0) - 4, py + TOP_LABEL_BASELINE)
-            : py - 4
+        const textY = thresholdLabelY(py, context.height || 0)
 
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
@@ -583,10 +576,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={(context.width || 0) - 4}
-                // Inside the band's top edge (clamped into the plot) so the
-                // label can't render off-screen above the plot or collide with
-                // the chart title when the band exceeds the data's range.
-                y={Math.max(Math.min(y0px, y1px), 0) + TOP_LABEL_BASELINE}
+                y={bandLabelY(y0px, y1px)}
                 textAnchor="end"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}

@@ -26,6 +26,11 @@ export const MIN_TITLE_TOP_LEGEND_MARGIN = 58
 /** Baseline that leaves a calm outer-edge inset for the standard title face. */
 export const TITLE_BASELINE = 22
 
+/** Static SVG and GIF output only render text titles in their SVG chrome. */
+export function hasTextTitle(title: unknown): title is string {
+  return typeof title === "string" && title.length > 0
+}
+
 /**
  * Reserve the shared top chrome before any frame calculates plot geometry.
  * A raw StreamFrame can supply both a compact margin and a top legend, so the
@@ -33,12 +38,12 @@ export const TITLE_BASELINE = 22
  */
 export function reserveFrameChromeMargin<T extends TitleMargin>(
   margin: T,
-  title: unknown,
+  hasTitle: boolean,
   hasTopLegend = false,
 ): T {
   const minimumTop = hasTopLegend
-    ? title ? MIN_TITLE_TOP_LEGEND_MARGIN : MIN_TOP_LEGEND_MARGIN
-    : title ? MIN_TITLE_TOP_MARGIN : 0
+    ? hasTitle ? MIN_TITLE_TOP_LEGEND_MARGIN : MIN_TOP_LEGEND_MARGIN
+    : hasTitle ? MIN_TITLE_TOP_MARGIN : 0
   if (margin.top >= minimumTop) return margin
   return { ...margin, top: minimumTop } as T
 }
@@ -47,5 +52,5 @@ export function reserveTitleMargin<T extends TitleMargin>(
   margin: T,
   title: unknown,
 ): T {
-  return reserveFrameChromeMargin(margin, title)
+  return reserveFrameChromeMargin(margin, hasTextTitle(title))
 }

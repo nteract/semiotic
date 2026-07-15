@@ -26,6 +26,7 @@ import {
   decorate,
   formatSignedDelta
 } from "./formatting"
+import { useTargetPresentation } from "./targetPresentation"
 import { colorForLevel, resolveThreshold } from "./thresholdSparkline"
 import type {
   BigNumberHandle,
@@ -625,38 +626,16 @@ const BigNumberInner = (
       : null
 
   // ── Target ───────────────────────────────────────────────────────
-  const targetPercentFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale ?? "en-US", {
-        style: "percent",
-        maximumFractionDigits: 0
-      }),
-    [locale]
-  )
-  const targetPercent = useMemo(() => {
-    if (!target || !Number.isFinite(effectiveValue) || !target.value)
-      return null
-    const ratio = (effectiveValue as number) / target.value
-    return targetPercentFormatter.format(ratio)
-  }, [target, effectiveValue, targetPercentFormatter])
-  const targetFormatter = useMemo(
-    () =>
-      buildFormatter(target?.format ?? format ?? "number", {
-        locale,
-        currency,
-        precision
-    }),
-    [target?.format, format, locale, currency, precision]
-  )
-  const targetText = target
-    ? targetPercent
-      ? target.label
-        ? `${targetPercent} of ${target.label} (${targetFormatter(target.value)})`
-        : `${targetPercent} of ${targetFormatter(target.value)}`
-      : target.label
-        ? `target ${target.label} (${targetFormatter(target.value)})`
-        : `target ${targetFormatter(target.value)}`
-    : null
+  const targetPresentation = useTargetPresentation({
+    target,
+    value: effectiveValue,
+    format,
+    locale,
+    currency,
+    precision
+  })
+  const targetPercent = targetPresentation?.percent ?? null
+  const targetText = targetPresentation?.text ?? null
 
   // ── Staleness ────────────────────────────────────────────────────
   const stale = useStaleness(lastUpdate, stalenessThreshold)
@@ -968,7 +947,7 @@ const BigNumberInner = (
 
         {/* Delta + comparison + target */}
         {defaults.showDelta &&
-        (deltaFormatted || target || comparison) ? (
+        (deltaFormatted || targetPresentation || comparison) ? (
           <Block
             className={`semiotic-bignumber__delta semiotic-bignumber__delta--${sentimentSuffix}`}
             style={{
@@ -1020,7 +999,7 @@ const BigNumberInner = (
                     {comparison.label}
                   </span>
                 ) : null}
-                {target ? (
+                {targetPresentation ? (
                   <span
                     className="semiotic-bignumber__target"
                     style={{
@@ -1047,8 +1026,8 @@ const BigNumberInner = (
                       {targetPercent}
                     </span>
                     <span className="semiotic-bignumber__target-value">
-                      of {targetFormatter(target.value)}
-                      {target.label ? ` ${target.label}` : ""}
+                      of {targetPresentation.formattedValue}
+                      {targetPresentation.label ? ` ${targetPresentation.label}` : ""}
                     </span>
                   </span>
                 ) : null}
