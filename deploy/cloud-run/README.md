@@ -4,7 +4,7 @@ A thin wrapper that runs the published `semiotic-mcp` server in HTTP (Streamable
 mode as a public, remote MCP server — consumable by ChatGPT, Claude connectors, and any
 MCP client.
 
-This is the **stable release channel** (`semiotic-mcp`). It is the official endpoint
+This is the **stable release channel** (`semiotic-mcp-server` in `us-west1`). It is the official endpoint
 for public users, registries, documentation, and app directories. See
 [`../README.md`](../README.md) for the stable/nightly channel boundary.
 
@@ -62,9 +62,9 @@ fails until a fully resolved lockfile is present.
 
 ```sh
 cd deploy/cloud-run
-gcloud run deploy semiotic-mcp --source . --region us-central1 \
+gcloud run deploy semiotic-mcp-server --source . --region us-west1 \
   --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "MCP_ALLOWED_HOSTS=semiotic-mcp-481507046413.us-central1.run.app"
+  --set-env-vars "MCP_ALLOWED_HOSTS=semiotic-mcp-server-481507046413.us-west1.run.app"
 ```
 
 First run will prompt to enable the Cloud Run / Cloud Build / Artifact Registry APIs —
@@ -83,7 +83,7 @@ git status --short
 cd deploy/cloud-run
 npm ci --ignore-scripts
 npm pkg get dependencies.semiotic
-gcloud run deploy semiotic-mcp --source . --region us-central1 \
+gcloud run deploy semiotic-mcp-server --source . --region us-west1 \
   --allow-unauthenticated --memory 1Gi \
   --set-env-vars "MCP_ALLOWED_HOSTS=YOUR_STABLE_HOST"
 ```
@@ -111,13 +111,14 @@ add `--max-instances N` as a cost ceiling, or `--min-instances 1` to keep it alw
 
 ## Separate nightly deployment
 
-`semiotic-mcp-server` in `us-west1` is the separate **nightly** channel. It is not
-this wrapper and must not share this Buildpacks configuration. Nightly now builds the
+`semiotic-mcp-nightly` in `us-central1` is the separate **nightly** channel. It is not
+this wrapper and must not share this Buildpacks configuration. Nightly builds the
 checked-out repository root with the deterministic Dockerfile and Cloud Build YAML in
 [`../cloud-run-nightly`](../cloud-run-nightly), then updates only the image and
-deployment labels on its existing service.
+deployment labels on that new service. The existing `semiotic-mcp` service is
+legacy and remains untouched until the nightly service passes hosted smoke tests.
 
-The stable `semiotic-mcp` service remains manual/tagged-release only. Its deployment
+The stable `semiotic-mcp-server` service remains manual/tagged-release only. Its deployment
 path stays suitable for exact version parity between npm, the MCP Registry, the Cloud
 Run stable endpoint, the surface manifest, and GitHub Releases.
 
@@ -185,13 +186,13 @@ In the OpenAI domain verification dialog, use the Cloud Run origin as the Challe
 URL, not the MCP path:
 
 ```
-https://semiotic-mcp-481507046413.us-central1.run.app
+https://semiotic-mcp-server-481507046413.us-west1.run.app
 ```
 
 Then put the dialog's token into Cloud Run without committing it:
 
 ```sh
-gcloud run services update semiotic-mcp --region us-central1 \
+gcloud run services update semiotic-mcp-server --region us-west1 \
   --update-env-vars "OPENAI_APPS_CHALLENGE_TOKEN=PASTE_TOKEN_HERE"
 ```
 

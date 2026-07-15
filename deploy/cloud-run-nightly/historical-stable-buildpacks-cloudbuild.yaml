@@ -1,10 +1,10 @@
-# Exact inline-build rollback payload for the existing nightly trigger
-# `rmgpgab-semiotic-mcp-server-us-west1-nteract-semiotic--mafcz`.
+# HISTORICAL STABLE TRIGGER PAYLOAD — NEVER USE FOR NIGHTLY.
 #
-# This is not a stable deployment path. It is retained solely so an operator
-# can restore the trigger's prior generated Buildpacks behavior with
-# `gcloud builds triggers update github ... --inline-config=...` if the checked
-# in repository-built nightly configuration must be rolled back.
+# This archived generated Buildpacks configuration belongs to the stable
+# `semiotic-mcp-server` service in us-west1 and its former Cloud Build trigger.
+# It is kept only as historical evidence for the stable deployment owner. Do
+# not attach it to, use it to roll back, or otherwise apply it to the nightly
+# `semiotic-mcp-nightly` service in us-central1.
 steps:
   - id: Build
     name: gcr.io/k8s-skaffold/pack

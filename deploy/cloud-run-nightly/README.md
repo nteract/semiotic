@@ -1,14 +1,26 @@
 # Semiotic nightly Cloud Run deployment
 
-This directory is the repository-built **nightly** deployment path for
-`semiotic-mcp-server` in `us-west1`. It is separate from
-[`../cloud-run`](../cloud-run), which remains the stable release wrapper around
-an exact published `semiotic` npm package. Do not repurpose that stable wrapper
-to build repository source.
+This directory deploys the repository-built **nightly** MCP service:
 
-## Image build
+| Channel | Service | Region | Source |
+| --- | --- | --- | --- |
+| Official/stable | `semiotic-mcp-server` | `us-west1` | Exact published `semiotic` npm release via [`../cloud-run`](../cloud-run) |
+| Nightly | `semiotic-mcp-nightly` | `us-central1` | Checked-out repository `main` source |
+| Legacy | `semiotic-mcp` | Existing service | Leave untouched until nightly passes hosted smoke tests |
 
-The Node 22 Dockerfile uses the repository lockfile, then runs:
+Only `semiotic-mcp-nightly` is in scope for this configuration. Never update,
+attach a trigger to, delete, or copy settings from either existing service.
+
+## Image and source-build contract
+
+The expected nightly image is:
+
+```text
+us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA
+```
+
+The Node 22 Dockerfile builds from the repository root with an explicit source
+allow-list and runs:
 
 ```sh
 npm ci --include=dev
@@ -17,178 +29,153 @@ npm run dist:prod
 npm run build:mcp
 ```
 
-The MCP bundle externalizes `semiotic/server`, `semiotic/ai`, and
-`semiotic/geo`; it cannot render from a standalone MCP build. The surface
-check rejects stale generated MCP/widget metadata, and `verify-runtime.mjs`
-gates both the final image and Cloud Build before push.
-
-Docker always builds from the repository root through an explicit source
-allow-list, so local `node_modules`, prior output, and unrelated files cannot
-enter the image. It starts:
+The final image is runtime-verified before push. It starts the five-tool public
+MCP profile:
 
 ```sh
 node ai/dist/mcp-server.js --http --host 0.0.0.0 --port "${PORT:-8080}" --profile public
 ```
 
-No released `semiotic` package is installed as application implementation. The
-source-built image bakes `SEMIOTIC_DEPLOYMENT_CHANNEL`, `SEMIOTIC_GIT_SHA`,
-`SEMIOTIC_BUILD_ID`, and `SEMIOTIC_BUILD_TIME` into its environment.
+The immutable image bakes in the nightly build identity environment values:
+`SEMIOTIC_DEPLOYMENT_CHANNEL=nightly`, `SEMIOTIC_GIT_SHA`,
+`SEMIOTIC_BUILD_ID`, and `SEMIOTIC_BUILD_TIME`. Do not override those values
+as Cloud Run service environment variables, because later image-only updates
+must report the new commit and build identity.
 
-`cloudbuild.yaml` builds and pushes:
+## First deployment: safe two-stage service creation
 
-```text
-us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
-```
+`semiotic-mcp-nightly` is new. Its initial settings cannot be inherited from
+either existing service. Supply and review all of these values before the first
+build:
 
-This is the existing service convention: the generated trigger's former
-`$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME`
-expands to this same repository/image path. The nightly config makes it
-explicit because it must push before updating Cloud Run; there is no image-path
-deviation.
+- public unauthenticated invocation and `ingress=all`;
+- runtime service account (the account email is required, not guessed);
+- CPU `1`, memory `1Gi`, request timeout `300s`, concurrency `80`, minimum
+  instances `0`, and maximum instances `3` (change only through a reviewed
+  substitution); and
+- `MCP_ALLOWED_HOSTS`, which must contain the generated Cloud Run hostname.
 
-It updates only the nightly image and identity labels
-(`commit-sha`, `gcb-build-id`, `gcb-trigger-id`) plus
-`deployment-channel=nightly` and `deployment-source=repository-main`.
-It does not replace service environment variables, secrets, IAM, ingress,
-resources, scaling, concurrency, request timeout, or custom domains.
+The build solves the hostname bootstrap without ever serving a revision with
+host validation disabled:
 
-## Change the existing trigger after review
+1. It creates a no-traffic revision with
+   `MCP_ALLOWED_HOSTS=bootstrap.invalid`, public invocation, and the explicit
+   initial service settings.
+2. It reads the generated `status.url`, creates a second revision with that
+   hostname as `MCP_ALLOWED_HOSTS`, then sends traffic to that revision.
 
-| Field | Value |
-| --- | --- |
-| Trigger name | `rmgpgab-semiotic-mcp-server-us-west1-nteract-semiotic--mafcz` |
-| Trigger ID | `36c05cdd-221d-4c1b-a383-a8117cea4556` |
-| Location | `global` — omit `--region` |
-| Repository / branch | Existing GitHub `nteract/semiotic` connection, `^main$` |
-| Build service account | `projects/semiotic-mcp/serviceAccounts/481507046413-compute@developer.gserviceaccount.com` |
-| New config path | `deploy/cloud-run-nightly/cloudbuild.yaml` |
-
-The current trigger stores a generated inline **Buildpacks** build whose Pack
-step uses `--path=deploy/cloud-run`. Replace only that inline build with the
-checked-in YAML. Do not set `deploy/cloud-run-nightly` as a source directory:
-the YAML deliberately runs `docker build ... .` from the repository root.
+For a first manual build, work from the reviewed repository commit. Substitute
+the approved runtime service-account email; do not use either existing
+service's account without an IAM review.
 
 ```sh
 PROJECT_ID=semiotic-mcp
-TRIGGER_NAME=rmgpgab-semiotic-mcp-server-us-west1-nteract-semiotic--mafcz
-TRIGGER_ID=36c05cdd-221d-4c1b-a383-a8117cea4556
-BUILD_CONFIG=deploy/cloud-run-nightly/cloudbuild.yaml
+GIT_SHA="$(git rev-parse HEAD)"
+RUNTIME_SERVICE_ACCOUNT=APPROVED_RUNTIME_SERVICE_ACCOUNT
 
-gcloud builds triggers describe "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --format='yaml(name,id,github,serviceAccount,substitutions,filename,build)'
+gcloud builds submit . \
+  --project="$PROJECT_ID" \
+  --config=deploy/cloud-run-nightly/cloudbuild.yaml \
+  --substitutions="COMMIT_SHA=$GIT_SHA,_TRIGGER_ID=manual,_NIGHTLY_RUNTIME_SERVICE_ACCOUNT=$RUNTIME_SERVICE_ACCOUNT,_NIGHTLY_CPU=1,_NIGHTLY_MEMORY=1Gi,_NIGHTLY_TIMEOUT=300s,_NIGHTLY_CONCURRENCY=80,_NIGHTLY_MIN_INSTANCES=0,_NIGHTLY_MAX_INSTANCES=3,_NIGHTLY_BOOTSTRAP_HOST=bootstrap.invalid"
 ```
 
-The describe command confirms the exact existing build service account. Preserve
-that account, GitHub connection, `^main$` rule, and substitutions.
-
-To stage safely, pause only this nightly trigger with a non-matching branch:
+The create/update step in that build runs the following update for an existing
+nightly service; it changes only the image and nightly identity labels:
 
 ```sh
-gcloud builds triggers update github "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --branch-pattern='^__semiotic_nightly_paused__$'
+gcloud run services update semiotic-mcp-nightly \
+  --project=semiotic-mcp \
+  --region=us-central1 \
+  --image=us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA \
+  --update-labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=${_TRIGGER_ID},deployment-channel=nightly,deployment-source=repository-main \
+  --quiet
 ```
 
-After the reviewed repository files are on `main`, replace the generated
-Buildpacks configuration. `_TRIGGER_ID` already exists on the trigger; retain
-the actual UUID rather than the checked-in `manual` default:
+Do not run either command as part of this repository change.
+
+### Find and confirm the generated hostname
+
+After the first build succeeds, retrieve the URL and host explicitly:
 
 ```sh
-gcloud builds triggers update github "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --build-config="$BUILD_CONFIG" \
-  --branch-pattern='^__semiotic_nightly_paused__$' \
-  --update-substitutions="_TRIGGER_ID=$TRIGGER_ID"
-
-gcloud builds triggers describe "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --format='yaml(filename,github.push.branch,serviceAccount,substitutions)'
+NIGHTLY_URL="$(gcloud run services describe semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --format='value(status.url)')"
+NIGHTLY_HOST="${NIGHTLY_URL#https://}"
+printf '%s\n%s\n' "$NIGHTLY_URL" "$NIGHTLY_HOST"
 ```
 
-Do not pass `--repo-owner`, `--repo-name`, `--repository`,
-`--service-account`, `--clear-substitutions`, or Dockerfile/Buildpacks flags
-to that update: omitting them preserves the existing connection and unrelated
-settings.
-
-Run one manual test from the checked-out `main` while automatic matching is
-still paused. It uses the existing trigger service account and runs the
-post-deployment smoke test:
+The build already creates the host-validated revision. If a manual recovery is
+needed before traffic is enabled, use only the new service:
 
 ```sh
-gcloud builds triggers run "$TRIGGER_NAME" --project="$PROJECT_ID" --branch=main
-
-gcloud builds list --project="$PROJECT_ID" \
-  --filter="buildTriggerId=$TRIGGER_ID" --sort-by='~createTime' --limit=1
-
-gcloud run services describe semiotic-mcp-server --project="$PROJECT_ID" \
-  --region=us-west1 \
-  --format='yaml(status.latestReadyRevisionName,spec.template.spec.containers[0].image,spec.template.metadata.labels)'
+gcloud run services update semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 \
+  --update-env-vars="MCP_ALLOWED_HOSTS=$NIGHTLY_HOST"
+gcloud run services update-traffic semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --to-latest
 ```
 
-The image must end in the tested commit SHA. Labels must include
-`commit-sha`, `gcb-build-id`, `gcb-trigger-id`,
-`deployment-channel=nightly`, and `deployment-source=repository-main`.
-Use the hosted smoke script to inspect `/health`, `/healthz`, initialize
-metadata, and `semiotic://build-info`. Its default canonical `status.url`
-host must remain allowed by `MCP_ALLOWED_HOSTS`; for a future
-custom-domain-only allowlist, smoke an allowed public endpoint instead of
-changing that environment variable in this deployment.
+Never leave `MCP_ALLOWED_HOSTS` unset, and never set it to a stable or legacy
+service hostname.
 
-Re-enable only after the test is accepted:
+## Verify the manually deployed service
+
+The post-deployment smoke test exercises `/health`, `/healthz`, `GET /mcp`
+(405), `initialize`, `tools/list`, `resources/list`,
+`resources/read` for `semiotic://build-info`, and a `createChart` render:
 
 ```sh
-gcloud builds triggers update github "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --branch-pattern='^main$'
+node scripts/smoke-hosted-mcp.mjs \
+  --endpoint "$NIGHTLY_URL" \
+  --expected-channel nightly \
+  --expected-sha "$GIT_SHA" \
+  --expected-build-id CLOUD_BUILD_ID
 ```
 
-To disable nightly later, restore the no-match branch pattern above. It affects
-only this trigger, does not delete either service, and does not change stable
-traffic.
+Use the Cloud Build ID printed by the first-build output. The Cloud Build
+configuration runs this same smoke test automatically after every deployment.
+Do not enable automatic deployment until this manual smoke passes.
 
-## IAM, logging, and rollback
+## Enable automation only after validation
 
-Retrieve the trigger's build identity locally:
+Repository files do not establish whether a Cloud Build trigger already exists
+for `semiotic-mcp-nightly`. Before creating or updating one, inspect the
+following Google Cloud state read-only:
 
 ```sh
-BUILD_SERVICE_ACCOUNT="$(gcloud builds triggers describe "$TRIGGER_NAME" \
-  --project="$PROJECT_ID" --format='value(serviceAccount)')"
-printf '%s\n' "$BUILD_SERVICE_ACCOUNT"
+gcloud builds triggers list --project=semiotic-mcp \
+  --format='table(name,id,github.push.branch,filename,serviceAccount,disabled)'
+
+gcloud run services describe semiotic-mcp-nightly --project=semiotic-mcp \
+  --region=us-central1 \
+  --format='yaml(metadata.labels,status.url,spec.template.spec.serviceAccountName,spec.template.spec.containers[0].resources)'
+
+gcloud artifacts repositories describe cloud-run-source-deploy \
+  --project=semiotic-mcp --location=us-central1 \
+  --format='yaml(name,format,location)'
 ```
 
-For least privilege, give that account `roles/artifactregistry.writer` on the
-existing `us-west1` `cloud-run-source-deploy` repository (it also supplies the
-image-read permission), `roles/run.developer` on `semiotic-mcp-server`, and
-`roles/iam.serviceAccountUser` on the service's runtime identity. The developer
-role supplies the service update/read permissions used by deployment and smoke
-endpoint discovery. The Cloud Run service agent must retain Artifact Registry
-Reader access to the same repository (normally already present for a same-
-project service). `CLOUD_LOGGING_ONLY` also needs `roles/logging.logWriter`
-when it is not already supplied by the build role. `roles/run.admin` works but
-is broader than needed. The human making these changes needs the corresponding
-Cloud Build trigger-update/run permissions.
+Confirm the trigger's exact name/ID, location, GitHub connection and repository,
+`^main$` push rule, enabled state, repository-root config filename, build
+service account, substitutions, and approval/filter settings. Confirm that the
+build account can write the `us-central1` Artifact Registry repository, update
+only `semiotic-mcp-nightly`, impersonate the approved runtime service account,
+and write Cloud Logging.
 
-For a nightly rollback, prefer earlier revision traffic so its baked identity
-stays coherent:
+If no such trigger exists, create a new clearly named one for
+`semiotic-mcp-nightly` only after the manual smoke passes. It must use
+`deploy/cloud-run-nightly/cloudbuild.yaml`, pass its real trigger ID as
+`_TRIGGER_ID`, and supply the reviewed initial-service substitutions above.
+Do not repurpose a stable or legacy trigger.
 
-```sh
-gcloud run revisions list --service=semiotic-mcp-server --project="$PROJECT_ID" \
-  --region=us-west1 --sort-by='~metadata.creationTimestamp'
+## Rollback and legacy retirement
 
-gcloud run services update-traffic semiotic-mcp-server --project="$PROJECT_ID" \
-  --region=us-west1 --to-revisions=EARLIER_READY_REVISION=100
-```
+Roll back only `semiotic-mcp-nightly` in `us-central1`, either to a known-good
+revision or an immutable image digest with matching nightly labels. The archived
+[`historical-stable-buildpacks-cloudbuild.yaml`](./historical-stable-buildpacks-cloudbuild.yaml)
+targets the stable service and is never a nightly rollback option.
 
-If a new revision is required, retrieve the earlier immutable image digest, then
-use `gcloud run services update` with only `--image=IMAGE@sha256:...` and
-matching identity labels. Never use `--set-env-vars`, `--clear-env-vars`,
-`--clear-labels`, or resource flags for this rollback.
-
-`legacy-buildpacks-cloudbuild.yaml` is the exact prior generated Buildpacks
-configuration, retained only for trigger rollback. Restore it with:
-
-```sh
-gcloud builds triggers update github "$TRIGGER_NAME" --project="$PROJECT_ID" \
-  --inline-config=deploy/cloud-run-nightly/legacy-buildpacks-cloudbuild.yaml \
-  --branch-pattern='^main$' \
-  --update-substitutions="_TRIGGER_ID=$TRIGGER_ID"
-```
-
-That restores the old Pack Buildpacks path at `deploy/cloud-run`; it does not
-change the stable Cloud Run service.
+Leave `semiotic-mcp` running and untouched until `semiotic-mcp-nightly` passes
+the hosted smoke test and its public endpoint has been accepted. Deleting the
+legacy service, if desired, is a separate manual follow-up and is not part of
+this deployment or trigger workflow.
