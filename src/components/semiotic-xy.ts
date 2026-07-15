@@ -74,3 +74,9 @@ export type { QuadrantChartProps, QuadrantsConfig, QuadrantsConfigOverride, Quad
 export type { MultiAxisLineChartProps } from "./charts/xy/MultiAxisLineChart"
 export type { CandlestickChartProps } from "./charts/xy/CandlestickChart"
 export type { XYCustomChartProps } from "./charts/custom/XYCustomChart"
+
+// Declarative threshold-aware style rules (Scatterplot/LineChart/AreaChart… `styleRules`) + hatch fills.
+export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver, makeXYRuleContext, composeStyleRules } from "./charts/shared/styleRules"
+export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"

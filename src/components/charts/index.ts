@@ -371,3 +371,25 @@ export type {
 // Pattern fills for canvas charts
 export { createHatchPattern } from "./shared/hatchPattern"
 export type { HatchPatternOptions } from "./shared/hatchPattern"
+
+// Declarative hatch-fill descriptor — resolves to a CanvasPattern (canvas) or
+// an SVG <pattern> (SSR/overlay). Usable anywhere a `style.fill` is accepted.
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./shared/hatchFill"
+export type { HatchFill } from "./shared/hatchFill"
+
+// Declarative, threshold-aware style rules (all chart families' `styleRules`).
+export {
+  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
+  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
+} from "./shared/styleRules"
+export type {
+  StyleRule,
+  StyleRuleStyle,
+  StyleRuleThreshold,
+  StyleRuleContext,
+  StyleRulePredicate,
+} from "./shared/styleRules"
+
+// Shared annotation-label renderer (halo / semitransparent box backdrops).
+export { AnnotationLabel, estimateLabelWidth } from "./shared/AnnotationLabel"
+export type { AnnotationLabelBackground, AnnotationLabelBackgroundConfig, AnnotationLabelProps } from "./shared/AnnotationLabel"

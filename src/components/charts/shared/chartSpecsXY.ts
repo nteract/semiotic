@@ -16,6 +16,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x", description: "Key or accessor function for x-axis values" },
       yAccessor: { type: ["string", "function"], default: "y", description: "Key or accessor function for y-axis values" },
@@ -52,6 +53,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x", description: "Key for x-axis values" },
       yAccessor: { type: ["string", "function"], default: "y", description: "Key for y-axis values" },
@@ -123,6 +125,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x" },
       yAccessor: { type: ["string", "function"], default: "y" },
@@ -152,6 +155,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x" },
       yAccessor: { type: ["string", "function"], default: "y" },
@@ -186,6 +190,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       sizeBy: { type: ["string", "function"], description: "Key for bubble size (required)" },
       xAccessor: { type: ["string", "function"], default: "x" },
@@ -253,6 +258,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x" },
       yAccessor: { type: ["string", "function"], default: "y" },
@@ -340,6 +346,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x", description: "Key for x-axis values" },
       yAccessor: { type: ["string", "function"], default: "y", description: "Key for y-axis values" },

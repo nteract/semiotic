@@ -18,6 +18,7 @@ import {
   type EventDropProjectionMetadata,
   type EventDropWindowOptions
 } from "./physicsChartUtils"
+import type { StyleRule } from "../shared/styleRules"
 import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
@@ -48,6 +49,12 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   watermark?: { delay?: number; value?: number } | ((latestEventTime: number) => number)
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware drop styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. `ctx` = `{ value, category }` (value =
+   * the event time). A rule `fill` may be a color or a HatchFill.
+   */
+  styleRules?: StyleRule[]
   seed?: number
   timeExtent?: [number, number]
   timeScale?: number
@@ -325,6 +332,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
     ballRadius = 7,
     colorBy,
+    styleRules,
     data,
     emptyContent,
     frameProps,
@@ -421,9 +429,11 @@ export const EventDropChart = forwardRef(function EventDropChart<
   const bodyStyle = useMemo(
     () =>
       styleFromColorAccessor(
-        colorBy as ChartAccessor<Datum, string> | undefined
+        colorBy as ChartAccessor<Datum, string> | undefined,
+        "#4e79a7",
+        { styleRules, valueAccessor: timeAccessor as string | ((d: Datum) => unknown) }
       ),
-    [colorBy]
+    [colorBy, styleRules, timeAccessor]
   )
   const semanticItems = useMemo(
     () => eventDropSemanticItems(layout.projectionRows, metadata, chartSize),

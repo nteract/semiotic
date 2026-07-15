@@ -102,6 +102,7 @@ const ThemingPage = lazy(() => import("./pages/features/ThemingPage"))
 const ThemeExplorerPage = lazy(() => import("./pages/theming/ThemeExplorerPage"))
 const SemanticColorsPage = lazy(() => import("./pages/theming/SemanticColorsPage"))
 const LegendsPage = lazy(() => import("./pages/features/LegendsPage"))
+const StyleRulesPage = lazy(() => import("./pages/features/StyleRulesPage"))
 const RealtimeEncodingPage = lazy(() => import("./pages/features/RealtimeEncodingPage"))
 const MotionEncodingsPage = lazy(() => import("./pages/features/MotionEncodingsPage"))
 const PhysicsEncodingPage = lazy(() => import("./pages/features/PhysicsEncodingPage"))
@@ -655,6 +656,7 @@ export default function DocsApp() {
                 <Route path="small-multiples" element={<SmallMultiplesPage />} />
                 <Route path="linked-charts" element={<SmallMultiplesPage />} />
                 <Route path="legends" element={<LegendsPage />} />
+                <Route path="style-rules" element={<StyleRulesPage />} />
                 <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
                 <Route path="motion-encodings" element={<MotionEncodingsPage />} />
                 <Route path="physics-encoding" element={<PhysicsEncodingPage />} />

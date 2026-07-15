@@ -14,6 +14,7 @@ import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -31,6 +32,12 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware node styling (see ForceDirectedGraph).
+   * Ordered `{ when, style }` rules; last applicable rule wins. Rules see the
+   * raw node object. A rule `fill` may be a color or a HatchFill.
+   */
+  styleRules?: StyleRule[]
   edgeColorBy?: "source" | "target" | ((d: Datum) => string)
   padAngle?: number
   groupWidth?: number
@@ -123,6 +130,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     nodeIdAccessor = "id",
     colorBy,
     colorScheme,
+    styleRules,
     edgeColorBy = "source",
     padAngle = 0.01,
     groupWidth = 20,
@@ -206,10 +214,23 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     }
   }, [hasColorData, colorBy, setup.colorScale, colorScheme])
 
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),
+    [colorBy],
+  )
+
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) last.
+  // Declarative style rules layer over the base node color; when there's no
+  // color base but rules are set, they still apply (rules-only styling).
   const nodeStyle = useMemo(
-    () => baseNodeStyle ? mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }) : undefined,
-    [baseNodeStyle, stroke, strokeWidth, opacity]
+    () => {
+      if (!baseNodeStyle && !(styleRules && styleRules.length > 0)) return undefined
+      return mergeShapeStyle(
+        composeStyleRules(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
+        { stroke, strokeWidth, opacity },
+      )
+    },
+    [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
   )
 
   // Edge style function — d is a RealtimeEdge

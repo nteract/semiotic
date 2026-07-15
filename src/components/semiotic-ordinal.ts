@@ -55,6 +55,28 @@ export type { GlyphSceneNode, SceneAccessibilityMetadata } from "./stream/types"
 export { createHatchPattern } from "./charts/shared/hatchPattern"
 export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
+// Declarative hatch-fill descriptor (canvas + SVG) — usable as a `style.fill`
+// and as a bar `styleRules` fill.
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"
+
+// Declarative, threshold-aware style rules (BarChart/StackedBarChart/GroupedBarChart `styleRules`).
+export {
+  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
+  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
+} from "./charts/shared/styleRules"
+export type {
+  StyleRule,
+  StyleRuleStyle,
+  StyleRuleThreshold,
+  StyleRuleContext,
+  StyleRulePredicate,
+} from "./charts/shared/styleRules"
+
+// Shared annotation-label renderer (halo / semitransparent box backdrops).
+export { AnnotationLabel, estimateLabelWidth } from "./charts/shared/AnnotationLabel"
+export type { AnnotationLabelBackground, AnnotationLabelBackgroundConfig, AnnotationLabelProps } from "./charts/shared/AnnotationLabel"
+
 // Stream Frame types
 export type {
   StreamOrdinalFrameProps,

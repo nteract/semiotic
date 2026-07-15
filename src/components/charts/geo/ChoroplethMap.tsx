@@ -11,6 +11,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -49,6 +50,17 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
   valueAccessor: ChartAccessor<TDatum, number>
   /** Sequential color scheme @default "blues" */
   colorScheme?: string
+  /**
+   * Declarative, threshold-aware feature styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins per property. `when` accepts a predicate
+   * `(feature, ctx) => boolean` (`ctx.value` is the feature's `valueAccessor`
+   * value; rules see the feature with its `properties` flattened, so
+   * `{ field: "iso", eq: "USA" }` works), a declarative threshold
+   * (`{ gt, gte, within, in, … }`), or `true`. A rule's `fill` may be a color
+   * or a HatchFill (hatch flags a feature — e.g. "no data" / "under review").
+   * Layers over the sequential-scale base fill.
+   */
+  styleRules?: StyleRule[]
   /** Geographic projection @default "equalEarth" */
   projection?: ProjectionProp
   /** Show graticule grid lines */
@@ -184,6 +196,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   const {
     areas,
     valueAccessor,
+    styleRules,
     colorScheme: colorSchemeProp,
     projection = "equalEarth",
     graticule,
@@ -281,14 +294,22 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
         fillOpacity: areaOpacity
       }
     }
+    // Declarative style rules layer over the base fill. Rules resolve against
+    // the feature with its `properties` flattened so field thresholds work.
+    const ruled = composeStyleRules(
+      base,
+      styleRules,
+      (raw) => ({ value: valAcc(raw) }),
+      (f) => (f && typeof f === "object" && (f as Datum).properties ? { ...(f as Datum).properties, ...f } : f),
+    ) as (d: Datum) => Style
     // Overlay top-level primitive props before selection wrap so they apply
     // to every region regardless of selection state.
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
+    const withPrimitives = mergeShapeStyle(ruled, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
     if (activeSelectionHook) {
       return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style
     }
     return withPrimitives
-  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity])
+  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity, styleRules])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)

@@ -1,6 +1,7 @@
 import type { NetworkSceneNode, NetworkRectNode } from "../networkTypes"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Canvas painter for NetworkRectNode (sankey nodes, treemap cells, partition blocks).
@@ -23,7 +24,7 @@ export function networkRectRenderer(
 
     // Fill
     if (r.style.fill) {
-      ctx.fillStyle = typeof r.style.fill === "string" ? (resolveCSSColor(ctx, r.style.fill) || r.style.fill) : r.style.fill
+      ctx.fillStyle = resolveCanvasFill(ctx, r.style.fill, "#007bff")
       if (r.style.fillOpacity !== undefined) {
         ctx.globalAlpha = (r.style.opacity ?? 1) * r.style.fillOpacity
       }

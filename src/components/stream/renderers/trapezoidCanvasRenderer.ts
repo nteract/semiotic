@@ -1,5 +1,6 @@
 import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { coerceCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.
@@ -26,7 +27,7 @@ export const trapezoidCanvasRenderer = (
     }
     ctx.closePath()
 
-    ctx.fillStyle = node.style?.fill || "#999"
+    ctx.fillStyle = coerceCanvasFill(ctx, node.style?.fill) || "#999"
     ctx.fill()
 
     if (node.style?.stroke) {

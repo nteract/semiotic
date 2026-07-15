@@ -2,6 +2,7 @@ import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
 import { renderPathPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilder"
 
 /**
@@ -126,7 +127,7 @@ export const wedgeCanvasRenderer = (
     // _gradientBand with an empty colors array falls through to the normal
     // fill path so the wedge still paints something rather than disappearing.
 
-    ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
+    ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#007bff")
 
     if (node.roundedEnds) {
       // Per-end rounding opted in (gauge convention). The `roundedEnds`

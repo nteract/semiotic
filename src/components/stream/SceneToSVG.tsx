@@ -50,6 +50,7 @@ import type {
   NetworkCurvedEdge
 } from "./networkTypes"
 import { symbolPathString } from "./symbolPath"
+import { isHatchFill, hatchPatternDef, type HatchFill } from "../charts/shared/hatchFill"
 import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
 import type { GlyphDef } from "./glyphDef"
 
@@ -87,7 +88,11 @@ function parseHeatcellColor(color: string): [number, number, number] {
 
 // ── Fill helper (CanvasPattern → fallback for SVG) ─────────────────────
 
-function svgFill(fill: string | CanvasPattern | undefined, fallback = "#4e79a7"): string {
+function svgFill(fill: string | HatchFill | CanvasPattern | undefined, fallback = "#4e79a7"): string {
+  // A HatchFill descriptor is only rendered as an SVG <pattern> by the rect
+  // serializer (bars). Any other node degrades it to a solid color — the
+  // descriptor's background if present, else the fallback.
+  if (isHatchFill(fill)) return fill.background && fill.background !== "transparent" ? fill.background : fallback
   if (!fill || typeof fill !== "string") return fallback
   return fill
 }
@@ -317,6 +322,10 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
       const top = n.topPath.map(([x, y]) => `${x},${y}`).join("L")
       const bottom = [...n.bottomPath].reverse().map(([x, y]) => `${x},${y}`).join("L")
       const d = `M${top}L${bottom}Z`
+      // HatchFill → inline <pattern>, referenced instead of the flat fill.
+      const areaHatchId = `${idPrefix ? `${idPrefix}-` : ""}area-${i}-hatch`
+      const areaHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, areaHatchId) : undefined
+      const areaFill = areaHatch ? `url(#${areaHatchId})` : svgFill(n.style.fill)
       // User-supplied clipRect — hard-clips the area to a rect (used by
       // custom layouts for partial reveals, banding, highlight regions).
       // Inline the clipPath alongside the path so the SSR output is a
@@ -328,6 +337,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         return (
           <g key={`area-${i}`}>
             <defs>
+              {areaHatch}
               <clipPath id={cid}>
                 <rect
                   x={n.clipRect.x}
@@ -339,7 +349,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             </defs>
             <path
               d={d}
-              fill={svgFill(n.style.fill)}
+              fill={areaFill}
               fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
               stroke={n.style.stroke}
               strokeWidth={n.style.strokeWidth}
@@ -349,29 +359,36 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         )
       }
       return (
-        <path
-          key={`area-${i}`}
-          d={d}
-          fill={svgFill(n.style.fill)}
-          fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-        />
+        <React.Fragment key={`area-${i}`}>
+          {areaHatch && <defs>{areaHatch}</defs>}
+          <path
+            d={d}
+            fill={areaFill}
+            fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+          />
+        </React.Fragment>
       )
     }
     case "point": {
       const n = node as PointSceneNode
+      // A HatchFill descriptor becomes an inline <pattern> (SSR parity with canvas).
+      const pointHatchId = `${idPrefix ? `${idPrefix}-` : ""}point-${i}-hatch`
+      const pointHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, pointHatchId) : undefined
       return (
-        <circle
-          key={`point-${i}`}
-          cx={n.x}
-          cy={n.y}
-          r={n.r}
-          fill={svgFill(n.style.fill)}
-          opacity={n.style.opacity ?? 0.8}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-        />
+        <React.Fragment key={`point-${i}`}>
+          {pointHatch && <defs>{pointHatch}</defs>}
+          <circle
+            cx={n.x}
+            cy={n.y}
+            r={n.r}
+            fill={pointHatch ? `url(#${pointHatchId})` : svgFill(n.style.fill)}
+            opacity={n.style.opacity ?? 0.8}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+          />
+        </React.Fragment>
       )
     }
     case "symbol":
@@ -382,18 +399,23 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     }
     case "rect": {
       const n = node as RectSceneNode
+      // HatchFill (styleRules on physics bodies / custom XY rects) → <pattern>.
+      const rectHatchId = `${idPrefix ? `${idPrefix}-` : ""}xyrect-${i}-hatch`
+      const rectHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, rectHatchId) : undefined
       return (
-        <rect
-          key={`rect-${i}`}
-          x={n.x}
-          y={n.y}
-          width={n.w}
-          height={n.h}
-          fill={svgFill(n.style.fill)}
-          opacity={n.style.opacity}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-        />
+        <React.Fragment key={`rect-${i}`}>
+          {rectHatch && <defs>{rectHatch}</defs>}
+          <rect
+            x={n.x}
+            y={n.y}
+            width={n.w}
+            height={n.h}
+            fill={rectHatch ? `url(#${rectHatchId})` : svgFill(n.style.fill)}
+            opacity={n.style.opacity}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+          />
+        </React.Fragment>
       )
     }
     case "heatcell": {
@@ -466,28 +488,35 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
   switch (node.type) {
     case "circle": {
       const n = node as NetworkCircleNode
+      // HatchFill (e.g. from node styleRules) → inline <pattern> (SSR parity).
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-circle-${i}-hatch`) : undefined
       return (
-        <circle
-          key={`net-circle-${i}`}
-          cx={n.cx} cy={n.cy} r={n.r}
-          fill={svgFill(n.style.fill)}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n.style.opacity}
-        />
+        <React.Fragment key={`net-circle-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <circle
+            cx={n.cx} cy={n.cy} r={n.r}
+            fill={hatch ? `url(#net-circle-${i}-hatch)` : svgFill(n.style.fill)}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+            opacity={n.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "rect": {
       const n = node as NetworkRectNode
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-rect-${i}-hatch`) : undefined
       return (
-        <rect
-          key={`net-rect-${i}`}
-          x={n.x} y={n.y} width={n.w} height={n.h}
-          fill={svgFill(n.style.fill)}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n.style.opacity}
-        />
+        <React.Fragment key={`net-rect-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <rect
+            x={n.x} y={n.y} width={n.w} height={n.h}
+            fill={hatch ? `url(#net-rect-${i}-hatch)` : svgFill(n.style.fill)}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+            opacity={n.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "arc": {
@@ -499,16 +528,19 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
         .outerRadius(n.outerR)
         .startAngle(n.startAngle + Math.PI / 2)
         .endAngle(n.endAngle + Math.PI / 2)(ARC_NOOP) || ""
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-arc-${i}-hatch`) : undefined
       return (
-        <path
-          key={`net-arc-${i}`}
-          d={arcPath}
-          transform={`translate(${n.cx},${n.cy})`}
-          fill={svgFill(n.style.fill)}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n.style.opacity}
-        />
+        <React.Fragment key={`net-arc-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <path
+            d={arcPath}
+            transform={`translate(${n.cx},${n.cy})`}
+            fill={hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill)}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+            opacity={n.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "symbol": {
@@ -646,12 +678,27 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
       // produce invalid markup or break the url(#...) reference.
       const gradientId = `${safeSvgId(baseKey)}-grad`
       const gradientDefs = buildRectSVGGradient(n, gradientId)
-      const fillValue = gradientDefs ? `url(#${gradientId})` : svgFill(n.style.fill)
+      // A HatchFill descriptor becomes an inline `<pattern>` def referenced
+      // via url(#…) — the SVG counterpart to the canvas CanvasPattern, so a
+      // hatched bar reads identically in SSR. Gradient takes precedence when
+      // both are somehow set.
+      let hatchDefEl: React.ReactElement | undefined
+      let fillValue: string
+      if (gradientDefs) {
+        fillValue = `url(#${gradientId})`
+      } else if (isHatchFill(n.style.fill)) {
+        const hatchId = `${safeSvgId(baseKey)}-hatch`
+        hatchDefEl = hatchPatternDef(n.style.fill, hatchId)
+        fillValue = `url(#${hatchId})`
+      } else {
+        fillValue = svgFill(n.style.fill)
+      }
+      const rectDefs = gradientDefs || hatchDefEl ? <defs>{gradientDefs}{hatchDefEl}</defs> : null
       if (n.cornerRadii && hasAnyCornerRadius(n.cornerRadii)) {
         const d = perCornerSvgPath(n)
         return (
           <React.Fragment key={baseKey}>
-            {gradientDefs && <defs>{gradientDefs}</defs>}
+            {rectDefs}
             <path
               d={d}
               fill={fillValue}
@@ -681,7 +728,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
         }
         return (
           <React.Fragment key={baseKey}>
-            {gradientDefs && <defs>{gradientDefs}</defs>}
+            {rectDefs}
             <path
               d={d}
               fill={fillValue}
@@ -694,7 +741,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
       }
       return (
         <React.Fragment key={baseKey}>
-          {gradientDefs && <defs>{gradientDefs}</defs>}
+          {rectDefs}
           <rect
             x={n.x} y={n.y} width={n.w} height={n.h}
             fill={fillValue}
@@ -938,33 +985,41 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
     case "geoarea": {
       const n = node as GeoAreaSceneNode
       if (!n.pathData) return null
+      // A HatchFill descriptor becomes an inline <pattern> (SSR parity with the
+      // canvas backend, which resolves the same descriptor to a CanvasPattern).
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geoarea-${i}-hatch`) : undefined
       return (
-        <path
-          key={`geoarea-${i}`}
-          d={n.pathData}
-          fill={svgFill(n.style.fill, "#e0e0e0")}
-          fillOpacity={n.style.fillOpacity ?? 1}
-          stroke={n.style.stroke || "none"}
-          strokeWidth={n.style.strokeWidth || 0.5}
-          strokeDasharray={n.style.strokeDasharray}
-          opacity={n._decayOpacity ?? 1}
-        />
+        <React.Fragment key={`geoarea-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <path
+            d={n.pathData}
+            fill={hatch ? `url(#geoarea-${i}-hatch)` : svgFill(n.style.fill, "#e0e0e0")}
+            fillOpacity={n.style.fillOpacity ?? 1}
+            stroke={n.style.stroke || "none"}
+            strokeWidth={n.style.strokeWidth || 0.5}
+            strokeDasharray={n.style.strokeDasharray}
+            opacity={n._decayOpacity ?? 1}
+          />
+        </React.Fragment>
       )
     }
     case "point": {
       const n = node as PointSceneNode
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geopoint-${i}-hatch`) : undefined
       return (
-        <circle
-          key={`point-${i}`}
-          cx={n.x}
-          cy={n.y}
-          r={n.r}
-          fill={svgFill(n.style.fill)}
-          fillOpacity={n.style.fillOpacity ?? 0.8}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n._decayOpacity ?? (n.style.opacity ?? 1)}
-        />
+        <React.Fragment key={`point-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <circle
+            cx={n.x}
+            cy={n.y}
+            r={n.r}
+            fill={hatch ? `url(#geopoint-${i}-hatch)` : svgFill(n.style.fill)}
+            fillOpacity={n.style.fillOpacity ?? 0.8}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+            opacity={n._decayOpacity ?? (n.style.opacity ?? 1)}
+          />
+        </React.Fragment>
       )
     }
     case "line": {

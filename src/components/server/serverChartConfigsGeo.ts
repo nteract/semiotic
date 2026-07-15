@@ -1,39 +1,174 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { createColorScale, getColor } from "../charts/shared/colorUtils"
+import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
+import { DEFAULT_COLOR } from "../charts/shared/hooks"
+import { getMinMax } from "../charts/shared/minMax"
 import { type ChartConfig } from "./serverChartConfigShared"
+import { composeStyleRules, makeNodeRuleContext } from "../charts/shared/styleRules"
+import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
+import { scaleSequential } from "d3-scale"
+
+/**
+ * Build a geo symbol map's per-point base `pointStyle` (colorBy fill + sizeBy
+ * radius), mirroring the client `ProportionalSymbolMap`/`DistanceCartogram`
+ * exactly. The geo scene builder resolves point color/size only from a
+ * `pointStyle` — the frame has no `colorBy` path server-side — so without this
+ * SSR/`renderChart` symbol maps rendered every point in the default color/size
+ * (a true CSR/SSR mismatch). Handles string AND function `colorBy`.
+ */
+function buildGeoPointBaseStyle(
+  points: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: string | string[] | Record<string, string> | undefined,
+  opts: { sizeBy?: string | ((d: Datum) => number); sizeRange?: [number, number]; pointRadius?: number; fillOpacity: number; strokeWidth: number },
+): (d: Datum) => Datum {
+  const arr: Datum[] = Array.isArray(points) ? (points as Datum[]) : []
+  let colorScale: ((v: string) => string) | undefined
+  if (colorBy) {
+    // createColorScale keys off a string field; project a function accessor
+    // onto a synthetic field so getColor(d, fn, scale) still resolves.
+    const key = typeof colorBy === "string" ? colorBy : "__geoColorBy"
+    const scaleData = typeof colorBy === "string" ? arr : arr.map((p) => ({ ...p, __geoColorBy: (colorBy as (d: Datum) => unknown)(p) }))
+    colorScale = createColorScale(scaleData, key, colorScheme)
+  }
+  let sizeDomain: [number, number] | undefined
+  if (opts.sizeBy) {
+    const acc = typeof opts.sizeBy === "function" ? opts.sizeBy : (d: Datum) => d?.[opts.sizeBy as string]
+    const vals = arr.map(acc).filter((v): v is number => v != null && isFinite(v as number))
+    if (vals.length > 0) sizeDomain = getMinMax(vals)
+  }
+  return (d: Datum): Datum => ({
+    fill: colorBy && colorScale ? getColor(d, colorBy as string | ((x: Datum) => string), colorScale) : DEFAULT_COLOR,
+    fillOpacity: opts.fillOpacity,
+    stroke: "#fff",
+    strokeWidth: opts.strokeWidth,
+    r: opts.sizeBy ? getSize(d, opts.sizeBy, opts.sizeRange, sizeDomain) : (opts.pointRadius ?? 6),
+  })
+}
+
+/** Flatten a GeoJSON feature's `properties` up so field thresholds can read them. */
+function flattenFeature(f: Datum): Datum {
+  return f && typeof f === "object" && (f as Datum).properties ? { ...(f as Datum).properties, ...f } : f
+}
+
+/**
+ * Build the choropleth's per-feature base `areaStyle` — the sequential
+ * value→color fill — mirroring the client `ChoroplethMap` exactly so
+ * `renderChart`/SSR output matches the browser. Without this the server frame
+ * had no `valueAccessor`→color path and every feature fell back to gray (a true
+ * CSR/SSR mismatch). Returns `undefined` when areas aren't materialized (the
+ * server can't resolve a `"world-110m"` string synchronously — that path
+ * errors later in `renderGeoFrame`).
+ */
+function buildChoroplethAreaStyle(
+  areas: unknown,
+  valueAccessor: string | ((d: Datum) => number | undefined) | undefined,
+  colorScheme: string | undefined,
+  areaOpacity: number,
+): ((f: Datum) => Datum) | undefined {
+  if (!Array.isArray(areas)) return undefined
+  const valAcc = (d: Datum): number | undefined =>
+    typeof valueAccessor === "function"
+      ? valueAccessor(d)
+      : valueAccessor != null
+        ? (d?.properties?.[valueAccessor] ?? d?.[valueAccessor]) as number | undefined
+        : undefined
+  let min = Infinity
+  let max = -Infinity
+  for (const feature of areas as Datum[]) {
+    const v = valAcc(feature)
+    if (v == null || !isFinite(v)) continue
+    if (v < min) min = v
+    if (v > max) max = v
+  }
+  const scale = scaleSequential(getSequentialInterpolator(colorScheme)).domain([
+    Number.isFinite(min) ? min : 0,
+    Number.isFinite(max) ? max : 1,
+  ])
+  return (f: Datum): Datum => {
+    const v = valAcc(f)
+    return {
+      fill: v != null && isFinite(v) ? scale(v) : "#ccc",
+      stroke: "#999",
+      strokeWidth: 0.5,
+      fillOpacity: areaOpacity,
+    }
+  }
+}
 
 // ── Geo Charts ─────────────────────────────────────────────────────────
 
 export const choroplethMap: ChartConfig = {
   frameType: "geo",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    areas: rest.areas,
-    projection: rest.projection || "equalEarth",
-    areaStyle: rest.areaStyle,
-    valueAccessor: rest.valueAccessor,
-    colorScheme: colorScheme || "blues",
-    graticule: rest.graticule,
-    fitPadding: rest.fitPadding,
-    ...common,
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const scheme = typeof colorScheme === "string" ? colorScheme : "blues"
+    // Base sequential fill (CSR parity) — user `areaStyle` overrides it, matching
+    // the client where the built-in fill is used unless a style fn is supplied.
+    const baseAreaStyle =
+      rest.areaStyle ??
+      buildChoroplethAreaStyle(rest.areas, rest.valueAccessor, scheme, rest.areaOpacity ?? 1)
+    // Layer declarative style rules on top of the base fill (features flattened
+    // so field thresholds can read `properties`; `ctx.value` = the feature value).
+    const valAcc = (d: Datum): number | undefined =>
+      typeof rest.valueAccessor === "function"
+        ? rest.valueAccessor(d)
+        : rest.valueAccessor != null
+          ? (d?.properties?.[rest.valueAccessor] ?? d?.[rest.valueAccessor]) as number | undefined
+          : undefined
+    const areaStyle = rest.styleRules
+      ? composeStyleRules(baseAreaStyle, rest.styleRules, (raw: Datum) => ({ value: valAcc(raw) }), flattenFeature)
+      : baseAreaStyle
+    return {
+      areas: rest.areas,
+      projection: rest.projection || "equalEarth",
+      areaStyle,
+      valueAccessor: rest.valueAccessor,
+      colorScheme: scheme,
+      graticule: rest.graticule,
+      fitPadding: rest.fitPadding,
+      ...common,
+    }
+  },
 }
 
 export const proportionalSymbolMap: ChartConfig = {
   frameType: "geo",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    points: data || rest.points,
-    xAccessor: rest.xAccessor || "lon",
-    yAccessor: rest.yAccessor || "lat",
-    areas: rest.areas,
-    areaStyle: rest.areaStyle,
-    sizeBy: rest.sizeBy,
-    colorBy,
-    colorScheme,
-    projection: rest.projection || "equalEarth",
-    graticule: rest.graticule,
-    fitPadding: rest.fitPadding,
-    ...common,
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const points = data || rest.points
+    // Base per-point fill/size (CSR parity) — user `pointStyle` overrides it.
+    const basePointStyle =
+      rest.pointStyle ??
+      buildGeoPointBaseStyle(points, colorBy as string | ((d: Datum) => unknown) | undefined, colorScheme, {
+        sizeBy: rest.sizeBy,
+        sizeRange: rest.sizeRange || [3, 30],
+        fillOpacity: 0.7,
+        strokeWidth: 0.5,
+      })
+    const pointStyle = rest.styleRules
+      ? composeStyleRules(
+          basePointStyle,
+          rest.styleRules,
+          makeNodeRuleContext(
+            colorBy as string | ((d: Datum) => unknown) | undefined,
+            rest.sizeBy as string | ((d: Datum) => unknown) | undefined,
+          ),
+        )
+      : basePointStyle
+    return {
+      points,
+      xAccessor: rest.xAccessor || "lon",
+      yAccessor: rest.yAccessor || "lat",
+      areas: rest.areas,
+      areaStyle: rest.areaStyle,
+      pointStyle,
+      sizeBy: rest.sizeBy,
+      colorBy,
+      colorScheme,
+      projection: rest.projection || "equalEarth",
+      graticule: rest.graticule,
+      fitPadding: rest.fitPadding,
+      ...common,
+    }
+  },
 }
 
 /**

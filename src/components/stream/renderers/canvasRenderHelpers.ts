@@ -18,6 +18,7 @@
 import type { CurveType } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
+import { isHatchFill, resolveHatchCanvasPattern, type HatchFill } from "../../charts/shared/hatchFill"
 import {
   curveMonotoneX,
   curveMonotoneY,
@@ -88,12 +89,35 @@ export function resolveCurveFactory(curve: CurveType | undefined): CurveFactory 
  */
 export function resolveCanvasFill(
   ctx: CanvasRenderingContext2D,
-  fill: string | CanvasPattern | null | undefined,
+  fill: string | HatchFill | CanvasPattern | null | undefined,
   fallback: string,
 ): string | CanvasPattern {
   if (fill == null) return fallback
+  // Declarative hatch descriptor → CanvasPattern (cached). Fall back to the
+  // descriptor's background color if the environment can't build a pattern.
+  if (isHatchFill(fill)) {
+    const pattern = resolveHatchCanvasPattern(fill, ctx)
+    if (pattern) return pattern
+    return (fill.background && resolveCSSColor(ctx, fill.background)) || fallback
+  }
   if (typeof fill !== "string") return fill
   return resolveCSSColor(ctx, fill) || fallback
+}
+
+/**
+ * Narrow a possibly-`HatchFill` `style.fill` to the `string | CanvasPattern`
+ * a canvas `fillStyle` accepts, resolving a hatch descriptor to a
+ * `CanvasPattern` (falling back to its background color). Leaves plain string
+ * / CanvasPattern fills untouched — use it to guard the direct-assign sites
+ * that don't otherwise route through {@link resolveCanvasFill}, so a hatch
+ * fill works on any mark, not just bars.
+ */
+export function coerceCanvasFill(
+  ctx: CanvasRenderingContext2D,
+  fill: string | HatchFill | CanvasPattern | null | undefined,
+): string | CanvasPattern | undefined {
+  if (isHatchFill(fill)) return resolveHatchCanvasPattern(fill, ctx) ?? fill.background ?? undefined
+  return fill ?? undefined
 }
 
 /**

@@ -70,3 +70,9 @@ export type { ProportionalSymbolMapProps } from "./charts/geo/ProportionalSymbol
 export type { FlowMapProps } from "./charts/geo/FlowMap"
 export type { DistanceCartogramProps } from "./charts/geo/DistanceCartogram"
 export type { GeoCustomChartProps } from "./charts/custom/GeoCustomChart"
+
+// Declarative threshold-aware feature/point style rules (ChoroplethMap/ProportionalSymbolMap `styleRules`) + hatch fills.
+export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver, makeNodeRuleContext, composeStyleRules } from "./charts/shared/styleRules"
+export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
+export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export type { HatchFill } from "./charts/shared/hatchFill"

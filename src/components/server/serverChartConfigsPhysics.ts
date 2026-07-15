@@ -53,7 +53,9 @@ export const galtonBoardChart: ChartConfig = {
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
       bodyStyle: styleFromColorAccessor(
-        colorBy || rest.colorBy || (isMechanical ? "side" : undefined)
+        colorBy || rest.colorBy || (isMechanical ? "side" : undefined),
+        "#4e79a7",
+        { styleRules: rest.styleRules, valueAccessor: rest.valueAccessor || "value" }
       )
     }
   },
@@ -80,7 +82,10 @@ export const eventDropChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
-      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy)
+      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy, "#4e79a7", {
+        styleRules: rest.styleRules,
+        valueAccessor: rest.valueAccessor || rest.timeAccessor || "time",
+      })
     }
   },
 }
@@ -113,7 +118,9 @@ export const physicsPileChart: ChartConfig = {
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
       bodyStyle: styleFromColorAccessor(
-        colorBy || rest.colorBy || (isMechanical ? "category" : undefined)
+        colorBy || rest.colorBy || (isMechanical ? "category" : undefined),
+        "#4e79a7",
+        { styleRules: rest.styleRules, valueAccessor: rest.valueAccessor || "value" }
       )
     }
   },
@@ -141,7 +148,9 @@ export const collisionSwarmChart: ChartConfig = {
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
       bodyStyle: styleFromColorAccessor(
-        colorBy || rest.colorBy || rest.groupAccessor
+        colorBy || rest.colorBy || rest.groupAccessor,
+        "#4e79a7",
+        { styleRules: rest.styleRules, valueAccessor: rest.xAccessor || "x" }
       )
     }
   },

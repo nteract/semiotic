@@ -15,6 +15,7 @@ import type {
   AnnotationAnchorMode
 } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { HatchFill } from "../charts/shared/hatchFill"
 import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
@@ -137,8 +138,14 @@ export interface Style {
   strokeWidth?: number
   strokeDasharray?: string
   strokeLinecap?: "butt" | "round" | "square"
-  /** Fill color or CanvasPattern (e.g. from createHatchPattern) */
-  fill?: string | CanvasPattern
+  /**
+   * Fill for the mark. One of:
+   *  - a color string (or CSS var)
+   *  - a {@link HatchFill} descriptor (declarative hatch — resolves to a
+   *    CanvasPattern on canvas and an SVG `<pattern>` on the SSR/overlay path)
+   *  - a `CanvasPattern` (e.g. a hand-built `createHatchPattern` — canvas only)
+   */
+  fill?: string | HatchFill | CanvasPattern
   fillOpacity?: number
   opacity?: number
   /** For icon/isotype bars: an image to stamp instead of filling */

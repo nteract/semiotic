@@ -1,4 +1,5 @@
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
+import { styleRulesToPieceStyle } from "../charts/shared/styleRules"
 import { type ChartConfig } from "./serverChartConfigShared"
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
@@ -17,6 +18,11 @@ export const barChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    // Resolve declarative styleRules into a pieceStyle (bypassed the HOC hook
+    // on this path). Spread after `common` so it composes over any user pieceStyle.
+    ...(rest.styleRules && {
+      pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
+    }),
   }),
 }
 
@@ -36,6 +42,9 @@ export const stackedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    ...(rest.styleRules && {
+      pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
+    }),
   }),
 }
 
@@ -54,6 +63,9 @@ export const groupedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    ...(rest.styleRules && {
+      pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
+    }),
   }),
 }
 

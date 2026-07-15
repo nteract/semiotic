@@ -1,5 +1,6 @@
 import type { NetworkSceneNode, NetworkSymbolNode } from "../networkTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 import { symbolPathString } from "../symbolPath"
 
 /**
@@ -48,10 +49,7 @@ export function networkSymbolRenderer(
 
     if (s.style.fill) {
       ctx.globalAlpha = baseAlpha * nodeAlpha * (s.style.fillOpacity ?? 1)
-      ctx.fillStyle =
-        typeof s.style.fill === "string"
-          ? resolveCSSColor(ctx, s.style.fill) || s.style.fill
-          : s.style.fill
+      ctx.fillStyle = resolveCanvasFill(ctx, s.style.fill, "#007bff")
       ctx.fill(path)
     }
 

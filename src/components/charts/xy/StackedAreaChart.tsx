@@ -17,6 +17,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
 /**
  * StackedAreaChart component props
@@ -75,6 +76,12 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    * @default "category10"
    */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware styling for the stacked series. Ordered
+   * `{ when, style }` rules; last applicable rule wins. Per-SERIES. A rule
+   * `fill` may be a color or a HatchFill. Layers over the resolved series color.
+   */
+  styleRules?: StyleRule[]
 
   /**
    * Curve interpolation type
@@ -290,6 +297,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     lineDataAccessor = "coordinates",
     colorBy,
     colorScheme,
+    styleRules,
     curve = "monotoneX",
     areaOpacity = 0.7,
     showLine = true,
@@ -362,6 +370,13 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   // resolution since stacked areas without explicit colorBy still want
   // distinct per-series colors. `groupField` keeps the prior tooltip
   // label preference (`areaBy ?? colorBy`).
+  const areaRuleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
   const { flattenedData, lineStyle, pointStyle, defaultTooltipContent } = useAreaSeriesSetup({
     safeData, data,
     areaBy, lineDataAccessor,
@@ -372,6 +387,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     areaOpacity, showLine, lineWidth, showPoints, pointRadius,
     xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat,
     groupField: areaBy || colorBy,
+    styleRules,
+    ruleContext: areaRuleContext,
   })
 
   // Validate data (after all hooks)

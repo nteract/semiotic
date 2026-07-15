@@ -30,6 +30,12 @@ import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
+import { resolveStyleRules, type StyleRule, type StyleRuleContext } from "./styleRules"
+import type { HatchFill } from "./hatchFill"
+
+/** Values a resolved point style may carry (`fill` can be a HatchFill). */
+type PointStyleValue = string | number | HatchFill | CanvasPattern | undefined
+type PointStyleObject = Record<string, PointStyleValue>
 
 export interface XYPointStyleOptions {
   /** colorBy accessor — string field name or function. */
@@ -79,6 +85,18 @@ export interface XYPointStyleOptions {
   /** Resolved selection config (typically `setup.resolvedSelection`). */
   resolvedSelection: import("./types").SelectionConfig | undefined
   /**
+   * Declarative style rules, evaluated per point and merged on top of the
+   * resolved base fill (last-applicable rule wins). Same engine and precedence
+   * as the ordinal bar `styleRules`.
+   */
+  styleRules?: ReadonlyArray<StyleRule>
+  /**
+   * Build the `StyleRuleContext` for a point — populate `value`/`x`/`y` from
+   * the chart's accessors so thresholds can target either axis
+   * (`{ axis: "x", gt: 5 }`). Called only when `styleRules` is set.
+   */
+  ruleContext?: (d: Datum) => StyleRuleContext
+  /**
    * For ConnectedScatterplot-style charts whose color depends on the
    * point's position in an ordered sequence, the resolver may need
    * the point's parent line. Defaults to identity (`d => d`).
@@ -119,7 +137,7 @@ export interface XYPointStyleOptions {
  */
 export function useXYPointStyle(
   options: XYPointStyleOptions,
-): (d: Datum) => Record<string, string | number | undefined> {
+): (d: Datum) => PointStyleObject {
   const {
     colorBy,
     colorScale,
@@ -135,6 +153,8 @@ export function useXYPointStyle(
     effectiveSelectionHook,
     resolvedSelection,
     colorDatumAccessor,
+    styleRules,
+    ruleContext,
   } = options
 
   // 1 — base style (extras → fill resolution → r + fillOpacity)
@@ -143,7 +163,7 @@ export function useXYPointStyle(
       const extras = typeof baseStyleExtras === "function"
         ? baseStyleExtras(d)
         : baseStyleExtras
-      const baseStyle: Record<string, string | number | undefined> = extras ? { ...extras } : {}
+      const baseStyle: PointStyleObject = extras ? { ...extras } : {}
 
       // Default fillOpacity unless extras already set it.
       if (baseStyle.fillOpacity === undefined) baseStyle.fillOpacity = fillOpacity
@@ -169,9 +189,16 @@ export function useXYPointStyle(
       if (baseStyle.r === undefined) {
         baseStyle.r = radiusFn ? radiusFn(d) : pointRadius
       }
+
+      // Declarative style rules merge on top of the base fill (last-applicable
+      // rule wins). Points get the raw datum, so x+y thresholds resolve
+      // naturally via the chart-supplied ruleContext.
+      if (styleRules && styleRules.length > 0) {
+        Object.assign(baseStyle, resolveStyleRules(d, styleRules, ruleContext ? ruleContext(d) : { value: undefined }))
+      }
       return baseStyle
     }
-  }, [colorBy, colorScale, color, pointRadius, radiusFn, fillOpacity, fallbackFill, baseStyleExtras, colorDatumAccessor])
+  }, [colorBy, colorScale, color, pointRadius, radiusFn, fillOpacity, fallbackFill, baseStyleExtras, colorDatumAccessor, styleRules, ruleContext])
 
   // 2 — primitive overlay
   const baseWithPrimitives = useMemo(

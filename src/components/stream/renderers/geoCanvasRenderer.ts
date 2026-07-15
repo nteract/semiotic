@@ -1,6 +1,7 @@
 import type { GeoAreaSceneNode, GeoScales, GeoSceneNode } from "../geoTypes"
 import type { StreamLayout } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { coerceCanvasFill } from "./canvasRenderHelpers"
 import { renderPathPulse } from "./renderPulse"
 
 /**
@@ -33,7 +34,7 @@ export function geoCanvasRenderer(
     const path = node._cachedPath2D
 
     // Fill
-    const fillColor = node.style.fill || "#e0e0e0"
+    const fillColor = coerceCanvasFill(ctx, node.style.fill) || "#e0e0e0"
     if (fillColor !== "none") {
       ctx.fillStyle = fillColor
       ctx.globalAlpha = (node._decayOpacity ?? 1) * (node.style.fillOpacity ?? 1)

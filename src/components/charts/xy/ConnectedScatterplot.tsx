@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
@@ -41,6 +42,12 @@ export interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends
   orderAccessor?: string | ((d: TDatum) => number | Date)
   /** Label for the ordering metric in tooltips @default "Order" or the accessor field name */
   orderLabel?: string
+  /**
+   * Declarative, threshold-aware point styling (see Scatterplot). Ordered
+   * `{ when, style }` rules; last applicable rule wins. Layers over the
+   * order-derived base fill.
+   */
+  styleRules?: StyleRule[]
   /** Point radius @default 4 */
   pointRadius?: number
   /** Enable hover annotations @default true */
@@ -153,6 +160,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     yAccessor = "y",
     orderAccessor,
     orderLabel,
+    styleRules,
     pointRadius = 4,
     tooltip,
     pointIdAccessor,
@@ -362,10 +370,19 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     }
   }, [pointRadius, orderMap])
 
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+
   const pointStyle = useXYPointStyle({
     colorScale: undefined,
     baseStyleExtras: pointStyleExtras,
     stroke, strokeWidth, opacity,
+    styleRules, ruleContext,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

@@ -16,6 +16,7 @@ import {
   styleFromColorAccessor,
   type CollisionSwarmProjectionMetadata
 } from "./physicsChartUtils"
+import type { StyleRule } from "../shared/styleRules"
 import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
@@ -39,6 +40,12 @@ export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
   radiusAccessor?: ChartAccessor<TDatum, number>
   pointRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware dot styling. Ordered `{ when, style }` rules;
+   * last applicable rule wins. `ctx` = `{ value, category }` (value = the
+   * `xAccessor` position). A rule `fill` may be a color or a HatchFill.
+   */
+  styleRules?: StyleRule[]
   seed?: number
   xExtent?: [number, number]
   collisionIterations?: number
@@ -206,6 +213,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
 >(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     colorBy,
+    styleRules,
     collisionIterations,
     data,
     emptyContent,
@@ -316,8 +324,11 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
     (groupAccessor as ChartAccessor<Datum, string> | undefined)
   const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy),
-    [resolvedColorBy]
+    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+      styleRules,
+      valueAccessor: xAccessor as string | ((d: Datum) => unknown),
+    }),
+    [resolvedColorBy, styleRules, xAccessor]
   )
 
   const stateEl = renderPhysicsChartState({

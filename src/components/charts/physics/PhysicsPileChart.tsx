@@ -17,6 +17,7 @@ import {
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
+import type { StyleRule } from "../shared/styleRules"
 import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
@@ -54,6 +55,12 @@ export interface PhysicsPileChartProps<TDatum extends Datum = Datum>
   unitValue?: number
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware body styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. `ctx` = `{ value, category }`. A rule
+   * `fill` may be a color or a HatchFill. Layers over the colorBy-derived fill.
+   */
+  styleRules?: StyleRule[]
   seed?: number
   showProjection?: boolean
   sediment?: boolean
@@ -190,7 +197,8 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     responsiveWidth,
     seed = 1,
     unitValue = 1,
-    valueAccessor
+    valueAccessor,
+    styleRules
   } = props
   const layoutMode = usePhysicsChartMode(props, [700, 380], {
     hasSimulationMode: true
@@ -301,8 +309,11 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
       ? ("category" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
   const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy),
-    [resolvedColorBy]
+    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+      styleRules,
+      valueAccessor: valueAccessor as string | ((d: Datum) => unknown) | undefined,
+    }),
+    [resolvedColorBy, styleRules, valueAccessor]
   )
   const semanticItems = useMemo(
     () =>

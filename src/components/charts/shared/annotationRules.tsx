@@ -12,6 +12,8 @@ import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotation
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
 import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
+import { AnnotationLabel } from "./AnnotationLabel"
+import { resolveSvgFill } from "./hatchFill"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -168,19 +170,16 @@ export function createDefaultAnnotationRules(
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={textX}
                 y={textY}
+                text={ann.label}
                 textAnchor={anchor}
                 fill={color}
                 fontSize={12}
                 fontWeight="bold"
-                stroke="var(--semiotic-bg, #ffffff)"
-                strokeWidth={3}
-                paintOrder="stroke"
-              >
-                {ann.label}
-              </text>
+                background={ann.labelBackground ?? "halo"}
+              />
             )}
           </g>
         )
@@ -223,19 +222,16 @@ export function createDefaultAnnotationRules(
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={textX}
                 y={textY}
+                text={ann.label}
                 textAnchor={anchor}
                 fill={color}
                 fontSize={12}
                 fontWeight="bold"
-                stroke="var(--semiotic-bg, #ffffff)"
-                strokeWidth={3}
-                paintOrder="stroke"
-              >
-                {ann.label}
-              </text>
+                background={ann.labelBackground ?? "halo"}
+              />
             )}
           </g>
         )
@@ -269,15 +265,15 @@ export function createDefaultAnnotationRules(
               strokeDasharray="4,2"
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={enclosure.x}
                 y={enclosure.y - enclosure.r - padding - 4}
                 textAnchor="middle"
                 fill={ann.color || "var(--semiotic-text-secondary, #666)"}
                 fontSize={12}
-              >
-                {ann.label}
-              </text>
+                text={ann.label}
+                background={ann.labelBackground ?? "none"}
+              />
             )}
           </g>
         )
@@ -318,15 +314,15 @@ export function createDefaultAnnotationRules(
               strokeDasharray="4,2"
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={(minX + maxX) / 2}
                 y={minY - 4}
                 textAnchor="middle"
                 fill={ann.color || "var(--semiotic-text-secondary, #666)"}
                 fontSize={12}
-              >
-                {ann.label}
-              </text>
+                text={ann.label}
+                background={ann.labelBackground ?? "none"}
+              />
             )}
           </g>
         )
@@ -563,30 +559,30 @@ export function createDefaultAnnotationRules(
         const scaleY = context.scales?.y ?? context.scales?.value
         const y0px = scaleY?.(ann.y0) ?? 0
         const y1px = scaleY?.(ann.y1) ?? (context.height || 0)
+        // Region fill may be a declarative HatchFill → inline <pattern>.
+        const bandFill = resolveSvgFill(ann.fill, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
+            {bandFill.def && <defs>{bandFill.def}</defs>}
             <rect
               x={0}
               y={Math.min(y0px, y1px)}
               width={context.width || 0}
               height={Math.abs(y1px - y0px)}
-              fill={ann.fill || "var(--semiotic-primary, #6366f1)"}
+              fill={bandFill.fill}
               fillOpacity={ann.fillOpacity || 0.1}
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={(context.width || 0) - 4}
                 y={bandLabelY(y0px, y1px)}
                 textAnchor="end"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
                 fontWeight="bold"
-                stroke="var(--semiotic-bg, #ffffff)"
-                strokeWidth={3}
-                paintOrder="stroke"
-              >
-                {ann.label}
-              </text>
+                text={ann.label}
+                background={ann.labelBackground ?? "halo"}
+              />
             )}
           </g>
         )
@@ -598,30 +594,29 @@ export function createDefaultAnnotationRules(
         const x0px = ann.x0 != null && scaleX ? scaleX(ann.x0) : null
         const x1px = ann.x1 != null && scaleX ? scaleX(ann.x1) : null
         if (x0px == null || x1px == null) return null
+        const xBandFill = resolveSvgFill(ann.fill || ann.color, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
+            {xBandFill.def && <defs>{xBandFill.def}</defs>}
             <rect
               x={Math.min(x0px, x1px)}
               y={0}
               width={Math.abs(x1px - x0px)}
               height={context.height || 0}
-              fill={ann.fill || ann.color || "var(--semiotic-primary, #6366f1)"}
+              fill={xBandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
             />
             {ann.label && (
-              <text
+              <AnnotationLabel
                 x={Math.min(x0px, x1px) + 4}
                 y={TOP_LABEL_BASELINE}
                 textAnchor="start"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
                 fontWeight="bold"
-                stroke="var(--semiotic-bg, #ffffff)"
-                strokeWidth={3}
-                paintOrder="stroke"
-              >
-                {ann.label}
-              </text>
+                text={ann.label}
+                background={ann.labelBackground ?? "halo"}
+              />
             )}
           </g>
         )
@@ -1043,8 +1038,9 @@ export function createDefaultAnnotationRules(
               <rect x={pos} y={0} width={bandwidth} height={context.height || 0}
                     fill={color} fillOpacity={opacity} />
               {label && (
-                <text x={pos + bandwidth / 2} y={TOP_LABEL_BASELINE} textAnchor="middle"
-                      fill={color} fontSize={12} fontWeight="bold">{label}</text>
+                <AnnotationLabel x={pos + bandwidth / 2} y={TOP_LABEL_BASELINE} textAnchor="middle"
+                      fill={color} fontSize={12} fontWeight="bold" text={label}
+                      background={ann.labelBackground ?? "none"} />
               )}
             </g>
           )
@@ -1054,8 +1050,9 @@ export function createDefaultAnnotationRules(
               <rect x={0} y={pos} width={context.width || 0} height={bandwidth}
                     fill={color} fillOpacity={opacity} />
               {label && (
-                <text x={12} y={pos + bandwidth / 2} dominantBaseline="middle"
-                      fill={color} fontSize={12} fontWeight="bold">{label}</text>
+                <AnnotationLabel x={12} y={pos + bandwidth / 2} dominantBaseline="middle"
+                      fill={color} fontSize={12} fontWeight="bold" text={label}
+                      background={ann.labelBackground ?? "none"} />
               )}
             </g>
           )

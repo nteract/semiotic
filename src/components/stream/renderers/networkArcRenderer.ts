@@ -1,5 +1,6 @@
 import type { NetworkSceneNode, NetworkArcNode } from "../networkTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Canvas painter for NetworkArcNode (chord diagram arc segments).
@@ -26,7 +27,7 @@ export function networkArcRenderer(
 
     // Fill
     if (a.style.fill) {
-      ctx.fillStyle = typeof a.style.fill === "string" ? (resolveCSSColor(ctx, a.style.fill) || a.style.fill) : a.style.fill
+      ctx.fillStyle = resolveCanvasFill(ctx, a.style.fill, "#007bff")
       if (a.style.fillOpacity !== undefined) {
         ctx.globalAlpha = (a.style.opacity ?? 1) * a.style.fillOpacity
       }

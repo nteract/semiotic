@@ -1,6 +1,7 @@
 import type { NetworkSceneNode, NetworkCircleNode } from "../networkTypes"
 import { renderCirclePulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Canvas painter for NetworkCircleNode (force nodes, tree nodes, circlepack).
@@ -26,7 +27,7 @@ export function networkCircleRenderer(
 
     // Fill
     if (c.style.fill) {
-      ctx.fillStyle = typeof c.style.fill === "string" ? (resolveCSSColor(ctx, c.style.fill) || c.style.fill) : c.style.fill
+      ctx.fillStyle = resolveCanvasFill(ctx, c.style.fill, "#007bff")
       if (c.style.fillOpacity !== undefined) {
         ctx.globalAlpha = (c.style.opacity ?? 1) * c.style.fillOpacity
       }

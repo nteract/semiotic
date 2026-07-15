@@ -21,6 +21,7 @@ import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
@@ -80,6 +81,14 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    * @default "category10"
    */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware bubble styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins per property. `when` accepts a predicate
+   * (`ctx` = `{ value, x, y, size, category }`), a declarative threshold
+   * (`{ axis: "x"|"y", gt, … }`), or `true`. A rule's `fill` may be a color or
+   * a HatchFill. Layers over the resolved base color.
+   */
+  styleRules?: StyleRule[]
 
   /**
    * Bubble opacity
@@ -260,6 +269,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     sizeRange = [5, 40],
     colorBy,
     colorScheme,
+    styleRules,
     bubbleOpacity = 0.6,
     bubbleStrokeWidth = 1,
     bubbleStrokeColor = "white",
@@ -406,12 +416,21 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     [sizeBy, sizeRange, effectiveSizeDomain],
   )
 
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     fillOpacity: bubbleOpacity,
     radiusFn: bubbleRadiusFn,
     baseStyleExtras: bubbleBaseExtras,
     stroke, strokeWidth, opacity,
+    styleRules, ruleContext,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

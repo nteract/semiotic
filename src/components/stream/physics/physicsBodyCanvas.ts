@@ -5,6 +5,7 @@
 
 import type { Style } from "../types"
 import type { PhysicsBodyState } from "./PhysicsKernel"
+import { coerceCanvasFill } from "../renderers/canvasRenderHelpers"
 
 /**
  * Body mark kinds for process identity without custom renderBody.
@@ -58,7 +59,7 @@ export function drawBody(
   body: PhysicsBodyState,
   style: Style
 ): void {
-  const fill = style.fill ?? "#4e79a7"
+  const fill = coerceCanvasFill(ctx, style.fill) ?? "#4e79a7"
   const stroke = style.stroke
   const strokeWidth = style.strokeWidth ?? 0
   const opacity = style.opacity ?? 1

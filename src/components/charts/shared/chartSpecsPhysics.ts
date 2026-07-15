@@ -10,6 +10,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["valueAccessor"],
     propBags: ["physics"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       valueAccessor: { type: ["string", "function"], default: "value", description: "Numeric field used to assign bodies to Galton bins." },
       valueExtent: { type: "array", description: "Stable numeric [min, max] domain for binning and reference-line placement." },
       bins: { type: "number", default: 21, description: "Number of landing bins / histogram columns." },
@@ -42,6 +43,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["timeAccessor", "arrivalAccessor"],
     propBags: ["physics"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       timeAccessor: { type: ["string", "function"], default: "time", description: "Event-time field used to assign drops to windows." },
       arrivalAccessor: { type: ["string", "function"], default: "arrivalTime", description: "Arrival-time field used to pace event ingestion." },
       windows: { type: "object", description: "Windowing config, currently { size, gapPolicy? }." },
@@ -71,6 +73,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["categoryAccessor", "valueAccessor"],
     propBags: ["physics"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       categoryAccessor: { type: ["string", "function"], default: "category", description: "Categorical field that chooses the pile / bin." },
       valueAccessor: { type: ["string", "function"], default: "value", description: "Numeric field converted into repeated unit bodies." },
       mode: { type: "string", enum: ["sample", "mechanical"] as const, default: "sample", description: "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches." },
@@ -102,6 +105,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "groupAccessor", "radiusAccessor"],
     propBags: ["physics"],
     ownProps: {
+      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       xAccessor: { type: ["string", "function"], default: "x", description: "Quantitative field that anchors each body along the x-axis." },
       groupAccessor: { type: ["string", "function"], description: "Optional categorical field that creates separate swarm lanes." },
       radiusAccessor: { type: ["string", "function"], description: "Optional numeric field used as per-body radius in pixels." },

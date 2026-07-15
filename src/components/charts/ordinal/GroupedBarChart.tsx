@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -35,6 +36,16 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
   barPadding?: number
   /** Rounded corner radius on bar ends (away from baseline). */
   roundedTop?: number
+  /**
+   * Declarative, threshold-aware bar styling. Ordered `{ when, style }`
+   * rules; the last applicable rule wins per property. `when` accepts a
+   * predicate `(datum, ctx) => boolean` (where `ctx.category` is the group
+   * series key), a declarative threshold on the bar value
+   * (`{ gt, lte, within, in, … }`), or `true`. A rule's `fill` may be a color
+   * or a {@link HatchFill}. Layers over the resolved series color;
+   * `frameProps.pieceStyle` overrides.
+   */
+  styleRules?: StyleRule[]
   baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
@@ -115,7 +126,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", groupBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, sort = false, barPadding = 60, roundedTop, baselinePadding = false,
+    colorBy, colorScheme, sort = false, barPadding = 60, roundedTop, styleRules, baselinePadding = false,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -164,8 +175,13 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
+
   // Consolidated piece-style — same recipe as BarChart/StackedBarChart
-  // (base fill, user overlay, primitive props, selection wrap).
+  // (base fill, style rules, user overlay, primitive props, selection wrap).
   // GroupedBarChart previously had a stroke-only filter on
   // frameProps.pieceStyle (it ignored user-supplied fills); aligning
   // with the helper means users can override fill via
@@ -177,6 +193,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     color, themeCategorical, colorScheme, categoryIndexMap,
     userPieceStyle: frameProps.pieceStyle,
     stroke, strokeWidth, opacity,
+    styleRules, resolveRuleValue,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })

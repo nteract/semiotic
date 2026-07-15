@@ -17,6 +17,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
+import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 
@@ -123,6 +124,13 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * @default "category10"
    */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware area styling. Ordered `{ when, style }`
+   * rules; last applicable rule wins. Per-SERIES (resolves against the series'
+   * sample datum). A rule `fill` may be a color or a HatchFill — hatch an
+   * "uncertain"/"projected" series. Layers over the resolved series color.
+   */
+  styleRules?: StyleRule[]
 
   /**
    * Curve interpolation type
@@ -383,6 +391,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     lineDataAccessor = "coordinates",
     colorBy,
     colorScheme,
+    styleRules,
     curve = "monotoneX",
     areaOpacity = 0.7,
     lineGradient,
@@ -475,6 +484,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   // ── Area-series construction (data shaping, line/point style, tooltip) ─
   // Use featureEffectiveData when forecast is active so post-forecast
   // future points flow into the area pipeline; otherwise raw safeData.
+  const areaRuleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
   const { flattenedData, lineStyle, pointStyle, defaultTooltipContent } = useAreaSeriesSetup({
     safeData: featureEffectiveData as TDatum[], data,
     areaBy, lineDataAccessor,
@@ -486,6 +502,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat,
     groupField: areaBy || colorBy,
     band,
+    styleRules,
+    ruleContext: areaRuleContext,
   })
 
   // Validate data (after all hooks)
