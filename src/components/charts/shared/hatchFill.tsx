@@ -1,4 +1,8 @@
-"use client"
+// NOTE: intentionally no "use client" directive — this module is imported by
+// the server SVG path (semiotic/server via staticAnnotations + geo configs) and
+// must stay server-importable in RSC frameworks. It has no hooks or top-level
+// browser access; the only canvas API (resolveHatchCanvasPattern) runs at call
+// time, not module eval.
 /**
  * Declarative hatch-fill descriptor — a single value that renders as a
  * diagonal-line pattern on BOTH rendering backends.

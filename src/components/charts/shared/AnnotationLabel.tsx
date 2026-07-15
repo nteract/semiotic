@@ -1,4 +1,7 @@
-"use client"
+// NOTE: intentionally no "use client" directive — this component is rendered by
+// the server SVG serializer (semiotic/server via staticAnnotations) as well as
+// the client overlay, so it must stay server-importable in RSC frameworks. It
+// is a pure render function: no hooks, no browser APIs.
 /**
  * `<AnnotationLabel>` — the single, shared renderer for the text label of a
  * region-bounding annotation (threshold lines, bands, enclosures, category

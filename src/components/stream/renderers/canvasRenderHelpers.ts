@@ -106,18 +106,23 @@ export function resolveCanvasFill(
 
 /**
  * Narrow a possibly-`HatchFill` `style.fill` to the `string | CanvasPattern`
- * a canvas `fillStyle` accepts, resolving a hatch descriptor to a
- * `CanvasPattern` (falling back to its background color). Leaves plain string
- * / CanvasPattern fills untouched — use it to guard the direct-assign sites
- * that don't otherwise route through {@link resolveCanvasFill}, so a hatch
- * fill works on any mark, not just bars.
+ * a canvas `fillStyle` accepts, for the direct-assign sites that don't
+ * otherwise route through {@link resolveCanvasFill}. Returns `undefined` for a
+ * nullish (or unresolvable) fill so callers can apply their own fallback with
+ * `?? "…"`.
+ *
+ * Delegates to {@link resolveCanvasFill} so behavior stays consistent: string
+ * fills (including `var(--…)`) resolve through `resolveCSSColor` — a raw CSS
+ * variable written straight to `fillStyle` would silently paint black — and a
+ * `HatchFill` resolves to its `CanvasPattern` (or its resolved background).
  */
 export function coerceCanvasFill(
   ctx: CanvasRenderingContext2D,
   fill: string | HatchFill | CanvasPattern | null | undefined,
 ): string | CanvasPattern | undefined {
-  if (isHatchFill(fill)) return resolveHatchCanvasPattern(fill, ctx) ?? fill.background ?? undefined
-  return fill ?? undefined
+  if (fill == null) return undefined
+  const resolved = resolveCanvasFill(ctx, fill, "")
+  return resolved === "" ? undefined : resolved
 }
 
 /**

@@ -139,8 +139,8 @@ describe("styleRules across families (server / renderChart)", () => {
       colorScheme: { "Fast scaling": "#3fa34d", "Fixed-rate": "#f0b429", "Over max": "#d7263d" },
       valueExtent: [0, 20],
       styleRules: [
-        { when: (_d, ctx) => ctx.category === "Fixed-rate", style: { fill: { type: "hatch", background: "#f7d774", stroke: "#e0a92a" } } },
-        { when: (_d, ctx) => ctx.category === "Over max", style: { fill: { type: "hatch", background: "#f8b4b4", stroke: "#d7263d" } } },
+        { when: { field: "tier", eq: "Fixed-rate" }, style: { fill: { type: "hatch", background: "#f7d774", stroke: "#e0a92a" } } },
+        { when: { field: "tier", eq: "Over max" }, style: { fill: { type: "hatch", background: "#f8b4b4", stroke: "#d7263d" } } },
       ],
     })
     // Both hatch patterns present: yellow (within-limit) and red (over-max).

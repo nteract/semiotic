@@ -46,7 +46,7 @@ describe("renderChart — bar styleRules (server path)", () => {
       stackBy: "tier",
       valueAccessor: "v",
       styleRules: [
-        { when: (_d, ctx) => ctx.category === "burst", style: { fill: { type: "hatch", background: "#ffd166", stroke: "#fff" } } },
+        { when: { field: "tier", eq: "burst" }, style: { fill: { type: "hatch", background: "#ffd166", stroke: "#fff" } } },
       ],
     })
     expect(svg).toContain("<pattern")

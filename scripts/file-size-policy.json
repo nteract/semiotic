@@ -71,8 +71,8 @@
     },
     {
       "path": "src/components/charts/xy/LineChart.tsx",
-      "maxLines": 1081,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening."
+      "maxLines": 1102,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. Split plan: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800."
     },
     {
       "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
@@ -146,8 +146,8 @@
     },
     {
       "path": "src/components/stream/SceneToSVG.tsx",
-      "maxLines": 1002,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1057,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +55 (2026-07-15): HatchFill descriptors now emit inline SVG <pattern> defs across every styleRules-reachable mark (XY point/area/rect, network circle/rect/arc, geoarea/geopoint) for canvas/SSR hatch parity; each adds a Fragment+defs wrapper. Split plan: move geoSceneNodeToSVG and networkSceneNodeToSVG into sibling modules (SceneToSVGGeo/SceneToSVGNetwork) re-exported here, exporting the shared svgFill/glyph helpers — that alone drops this file ~250 lines, well under 800."
     },
     {
       "path": "src/components/stream/StreamGeoFrame.tsx",
