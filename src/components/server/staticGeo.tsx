@@ -18,6 +18,7 @@ import {
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
@@ -30,7 +31,8 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
-  const margin = { ...defaultMargin, ...props.margin }
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
+  const hasVisibleTitle = hasTextTitle(props.title)
   const areas = Array.isArray(props.areas) ? filterSparseArray(props.areas) : props.areas
   const points = filterSparseArray(props.points)
   const lines = filterSparseArray(props.lines)
@@ -59,7 +61,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       theme,
       position: legendPos || "right",
       size,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   } else if (props.showLegend && geoLegendCategories.length > 0) {
@@ -69,7 +71,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       theme,
       position: legendPos || "right",
       size,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   }
@@ -203,7 +205,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       totalWidth: size[0],
       totalHeight: size[1],
       margin,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   })() : null
@@ -216,7 +218,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
         position: props.legendPosition || "right",
         size,
         margin,
-        hasTitle: !!props.title,
+        hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
       }) || geoAutoLegend

@@ -59,8 +59,13 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
   showLegend?: boolean
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
-  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
-  fitPadding?: number
+  /**
+   * Finite projection-fit fraction in `[0, 0.5)`. `0.1` = 10% inset;
+   * nullish values use 0 and invalid values throw. An explicit
+   * `frameProps.projectionExtent` remains authoritative.
+   * @default 0
+   */
+  fitPadding?: number | null
   /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
   zoomable?: boolean
   /** [minZoom, maxZoom] @default [1, 8] */

@@ -4,7 +4,12 @@ import * as React from "react"
 import { useNavigationSync, type UseNavigationSyncResult } from "./useNavigationSync"
 import { buildNavigationTree, type NavTreeNode } from "./navigationTree"
 import { useSelection } from "../store/useSelection"
-import { ObservationProvider, useObservationSelector, type ObservationStoreState } from "../store/ObservationStore"
+import {
+  ObservationProvider,
+  useObservationSelector,
+  type ChartObservation,
+  type ObservationStoreState,
+} from "../store/ObservationStore"
 import { SelectionProvider } from "../store/SelectionStore"
 
 const tree = buildNavigationTree("LineChart", {
@@ -16,6 +21,13 @@ function findLeaf(node: NavTreeNode, pred: (n: NavTreeNode) => boolean): NavTree
   if (node.role === "datum" && pred(node)) return node
   for (const c of node.children ?? []) { const f = findLeaf(c, pred); if (f) return f }
   return null
+}
+
+function copyTree(node: NavTreeNode): NavTreeNode {
+  return {
+    ...node,
+    children: node.children?.map(copyTree),
+  }
 }
 const febLeaf = findLeaf(tree, (n) => n.label === "Feb: 250")!
 
@@ -107,6 +119,114 @@ describe("useNavigationSync — canvas → tree", () => {
     expect(api.sync.activeId).toBe(febLeaf.id)
   })
 
+  it("maps matching raw-frame observations through its onObservation callback", () => {
+    const { api, Harness } = makeHarness()
+    const marLeaf = findLeaf(tree, (n) => n.label === "Mar: 180")!
+    render(<Harness />)
+
+    const febHover: ChartObservation = {
+      type: "hover", datum: { month: "Feb", sales: 250 }, x: 0, y: 0,
+      timestamp: Date.now(), chartType: "line", chartId: "c1",
+    }
+    expect(api.sync.handleObservation).toBe(api.sync.onObservation)
+    act(() => api.sync.onObservation(febHover))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    // Raw events use the same chart/type filter as global observations.
+    act(() => api.sync.onObservation({ ...febHover, chartId: "other" }))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    act(() => api.sync.handleObservation({
+      type: "click", datum: { month: "Mar", sales: 180 }, x: 0, y: 0,
+      timestamp: Date.now(), chartType: "line", chartId: "c1",
+    }))
+    expect(api.sync.activeId).toBe(marLeaf.id)
+  })
+
+  it("unwraps network wrappers and follows keyboard focus/activation", () => {
+    const { api, Harness } = makeHarness()
+    const marLeaf = findLeaf(tree, (n) => n.label === "Mar: 180")!
+    render(<Harness />)
+
+    act(() => api.push({
+      type: "focus",
+      datum: {
+        source: "A",
+        target: "B",
+        y0: 0,
+        y1: 4,
+        sankeyWidth: 4,
+        value: 1,
+        data: { month: "Feb", sales: 250 },
+      },
+      inputType: "keyboard",
+      timestamp: Date.now(),
+      chartType: "network",
+      chartId: "c1",
+    }))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    act(() => api.sync.onObservation({
+      type: "activate",
+      datum: {
+        id: "node-c",
+        x0: 0,
+        x1: 12,
+        y0: 0,
+        y1: 12,
+        width: 12,
+        height: 12,
+        value: 1,
+        data: { month: "Mar", sales: 180 },
+      },
+      inputType: "keyboard",
+      timestamp: Date.now(),
+      chartType: "network",
+      chartId: "c1",
+    }))
+    expect(api.sync.activeId).toBe(marLeaf.id)
+  })
+
+  it("keeps the raw observation callback stable with the default observe list", () => {
+    const api = {} as Pick<NavigationHarnessApi, "sync">
+    const matchFields = ["month"]
+    function Inner() {
+      api.sync = useNavigationSync({ tree, chartId: "c1", matchFields, selectionName: "nav-stable" })
+      return null
+    }
+    const { rerender } = render(
+      <SelectionProvider><ObservationProvider><Inner /></ObservationProvider></SelectionProvider>
+    )
+    const onObservation = api.sync.onObservation
+
+    rerender(<SelectionProvider><ObservationProvider><Inner /></ObservationProvider></SelectionProvider>)
+    expect(api.sync.onObservation).toBe(onObservation)
+    expect(api.sync.handleObservation).toBe(onObservation)
+  })
+
+  it("de-duplicates a raw observation when its HOC also publishes it globally", () => {
+    const { api, Harness } = makeHarness()
+    const marLeaf = findLeaf(tree, (n) => n.label === "Mar: 180")!
+    render(<Harness />)
+
+    // Chart HOCs invoke their callback and push the very same event to the
+    // observation store. Handling it directly first must not block later,
+    // distinct observations from the store.
+    const febHover: ChartObservation = {
+      type: "hover", datum: { month: "Feb", sales: 250 }, x: 0, y: 0,
+      timestamp: Date.now(), chartType: "line", chartId: "c1",
+    }
+    act(() => api.sync.onObservation(febHover))
+    act(() => api.push(febHover))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    act(() => api.push({
+      type: "hover", datum: { month: "Mar", sales: 180 }, x: 0, y: 0,
+      timestamp: Date.now(), chartType: "line", chartId: "c1",
+    }))
+    expect(api.sync.activeId).toBe(marLeaf.id)
+  })
+
   it("does not jump when matchFields is empty (would otherwise collapse to the first leaf)", () => {
     const api = {} as Pick<NavigationHarnessApi, "sync" | "push">
     function Inner() {
@@ -122,7 +242,25 @@ describe("useNavigationSync — canvas → tree", () => {
     expect(api.sync.activeId).toBe(tree.id) // stayed at root, did not snap to first leaf
   })
 
-  it("resets the active node to root when the tree is rebuilt", () => {
+  it("keeps the active node when an equivalent rebuilt tree retains its id", () => {
+    const api = {} as Pick<NavigationHarnessApi, "sync">
+    function Inner({ t }: { t: NavTreeNode }) {
+      api.sync = useNavigationSync({ tree: t, chartId: "c1", matchFields: ["month"], selectionName: "nav-rebuild-stable" })
+      return null
+    }
+    const { rerender } = render(
+      <SelectionProvider><ObservationProvider><Inner t={tree} /></ObservationProvider></SelectionProvider>
+    )
+    act(() => api.sync.onActiveChange(febLeaf))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    rerender(
+      <SelectionProvider><ObservationProvider><Inner t={copyTree(tree)} /></ObservationProvider></SelectionProvider>
+    )
+    expect(api.sync.activeId).toBe(febLeaf.id)
+  })
+
+  it("resets the active node to root when a rebuilt tree removes it", () => {
     const api = {} as Pick<NavigationHarnessApi, "sync">
     function Inner({ t }: { t: NavTreeNode }) {
       api.sync = useNavigationSync({ tree: t, chartId: "c1", matchFields: ["month"], selectionName: "nav-rebuild" })
@@ -139,6 +277,35 @@ describe("useNavigationSync — canvas → tree", () => {
     })
     rerender(<SelectionProvider><ObservationProvider><Inner t={tree2} /></ObservationProvider></SelectionProvider>)
     expect(api.sync.activeId).toBe(tree2.id) // reset to the new tree's root
+  })
+
+  it("resets when a positional datum id is rebuilt for different data", () => {
+    const api = {} as Pick<NavigationHarnessApi, "sync" | "sel">
+    function Inner({ t }: { t: NavTreeNode }) {
+      api.sync = useNavigationSync({ tree: t, chartId: "c1", matchFields: ["month"], selectionName: "nav-rebuild-replaced" })
+      api.sel = useSelection({ name: "nav-rebuild-replaced", fields: ["month"] })
+      return null
+    }
+    const { rerender } = render(
+      <SelectionProvider><ObservationProvider><Inner t={tree} /></ObservationProvider></SelectionProvider>
+    )
+    act(() => api.sync.onActiveChange(febLeaf))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+    expect(api.sel.isActive).toBe(true)
+
+    // `buildNavigationTree` numbers leaves by position. This tree gives the
+    // old Feb id to May, so keeping the id alone would preserve a stale
+    // selection clause (month=Feb) against the wrong active leaf.
+    const replacedTree = buildNavigationTree("LineChart", {
+      data: [{ month: "Apr", sales: 90 }, { month: "May", sales: 170 }, { month: "Jun", sales: 210 }],
+      xAccessor: "month",
+      yAccessor: "sales",
+    })
+    rerender(
+      <SelectionProvider><ObservationProvider><Inner t={replacedTree} /></ObservationProvider></SelectionProvider>
+    )
+    expect(api.sync.activeId).toBe(replacedTree.id)
+    expect(api.sel.isActive).toBe(false)
   })
 
   it("ignores observations from other charts and stays put on hover-end", () => {

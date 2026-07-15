@@ -454,6 +454,19 @@ describe("adventure reducer", () => {
     expect(adventureReducer(projected, adventureActions.showSettledProjection())).toBe(projected)
   })
 
+  it("keeps the settled-projection choice one-shot for keyboard and programmatic actions", () => {
+    const vault = arriveAtVault()
+    const projected = adventureReducer(vault, adventureActions.choose("vault-read-projection"))
+
+    expect(projected.flags.settledProjectionRead).toBe(true)
+    expect(
+      projected.evidence.filter((artifact) => artifact.id === "settled-projection"),
+    ).toHaveLength(1)
+    expect(adventureReducer(projected, adventureActions.choose("vault-read-projection"))).toBe(
+      projected,
+    )
+  })
+
   it("records keyboard and navigation-tree investigation without duplicates", () => {
     const started = play([start])
     const inspected = play(

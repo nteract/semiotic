@@ -15,6 +15,7 @@ import {
 } from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
+import { TITLE_BASELINE } from "./titleLayout"
 
 interface OrdinalSVGOverlayProps {
   width: number
@@ -608,19 +609,23 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       </g>
 
       {/* Title */}
-      {title && (
+      {title && typeof title === "string" ? (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
           className="semiotic-chart-title"
           style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >
-          {typeof title === "string" ? title : null}
+          {title}
         </text>
-      )}
+      ) : title ? (
+        <foreignObject x={0} y={0} width={totalWidth} height={margin.top}>
+          {title}
+        </foreignObject>
+      ) : null}
 
       {/* Legend */}
       {renderLegendFromConfig({

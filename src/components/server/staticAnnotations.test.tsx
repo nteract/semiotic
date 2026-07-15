@@ -74,6 +74,14 @@ describe("renderStaticAnnotations", () => {
       })
       expect(svg).toBe("")
     })
+
+    it("places a top-edge threshold label below its rule", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "y-threshold", value: 100, label: "Ceiling" }],
+      })
+      expect(svg).toContain('y="16"')
+    })
   })
 
   describe("x-threshold", () => {
@@ -93,6 +101,14 @@ describe("renderStaticAnnotations", () => {
         annotations: [{ type: "x-threshold", value: 50 }],
       })
       expect(svg).toBe("")
+    })
+
+    it("keeps the default top label clear of the plot edge", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-threshold", value: 50, label: "Midpoint" }],
+      })
+      expect(svg).toContain('y="16"')
     })
   })
 
@@ -141,6 +157,14 @@ describe("renderStaticAnnotations", () => {
       })
       expect(svg).toContain('<rect x="120" y="0" width="160" height="300"')
       expect(svg).toContain("Phase")
+    })
+
+    it("keeps a top band label clear of the plot edge", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x0: 20, x1: 60, label: "Phase" }],
+      })
+      expect(svg).toContain('y="16"')
     })
 
     it("skips when x0 or x1 is missing", () => {
@@ -235,6 +259,20 @@ describe("renderStaticAnnotations", () => {
       })
       expect(svg).toContain("<rect")
       expect(svg).toContain("#ff6600")
+    })
+
+    it("renders a vertical highlight label below the plot edge", () => {
+      const bandScale = Object.assign(
+        (v: string) => v === "A" ? 50 : undefined,
+        { bandwidth: () => 80 },
+      )
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        scales: { o: bandScale },
+        annotations: [{ type: "category-highlight", category: "A", label: "Focus" }],
+      })
+      expect(svg).toContain("Focus")
+      expect(svg).toContain('y="16"')
     })
 
     it("skips when scale is missing", () => {

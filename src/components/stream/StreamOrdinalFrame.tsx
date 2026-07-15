@@ -222,6 +222,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       responsiveHeight,
       userMargin,
       marginDefault: DEFAULT_MARGIN,
+      title,
+      legend,
+      legendPosition,
       // foreground/background are resolved in this frame's body so a function
       // form can anchor to the resolved `{o, r, projection}` scales (below).
       animate,

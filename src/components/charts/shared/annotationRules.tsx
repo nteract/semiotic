@@ -11,6 +11,7 @@ import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
+import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -145,7 +146,7 @@ export function createDefaultAnnotationRules(
         } else if (labelPos === "center") {
           textY = (context.height || 0) / 2
         } else {
-          textY = 12
+          textY = TOP_LABEL_BASELINE
         }
 
         // A line near the right edge must label leftward, or the text runs off
@@ -208,6 +209,7 @@ export function createDefaultAnnotationRules(
           textX = (context.width || 0) - 4
           anchor = "end"
         }
+        const textY = thresholdLabelY(py, context.height || 0)
 
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
@@ -223,7 +225,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={textX}
-                y={py - 4}
+                y={textY}
                 textAnchor={anchor}
                 fill={color}
                 fontSize={12}
@@ -574,10 +576,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={(context.width || 0) - 4}
-                // Inside the band's top edge (clamped into the plot) so the
-                // label can't render off-screen above the plot or collide with
-                // the chart title when the band exceeds the data's range.
-                y={Math.max(Math.min(y0px, y1px), 0) + 13}
+                y={bandLabelY(y0px, y1px)}
                 textAnchor="end"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
@@ -612,7 +611,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={Math.min(x0px, x1px) + 4}
-                y={13}
+                y={TOP_LABEL_BASELINE}
                 textAnchor="start"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
@@ -1044,7 +1043,7 @@ export function createDefaultAnnotationRules(
               <rect x={pos} y={0} width={bandwidth} height={context.height || 0}
                     fill={color} fillOpacity={opacity} />
               {label && (
-                <text x={pos + bandwidth / 2} y={12} textAnchor="middle"
+                <text x={pos + bandwidth / 2} y={TOP_LABEL_BASELINE} textAnchor="middle"
                       fill={color} fontSize={12} fontWeight="bold">{label}</text>
               )}
             </g>

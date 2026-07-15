@@ -25,6 +25,7 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
+import { TITLE_BASELINE } from "./titleLayout"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 //
@@ -923,19 +924,23 @@ export function SVGOverlay(props: SVGOverlayProps) {
       </g>
 
       {/* Title */}
-      {title && (
+      {title && typeof title === "string" ? (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
           className="semiotic-chart-title"
           style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >
-          {typeof title === "string" ? title : null}
+          {title}
         </text>
-      )}
+      ) : title ? (
+        <foreignObject x={0} y={0} width={totalWidth} height={margin.top}>
+          {title}
+        </foreignObject>
+      ) : null}
 
       {/* Legend */}
       {renderLegendFromConfig({

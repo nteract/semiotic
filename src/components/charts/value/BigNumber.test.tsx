@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import React, { useRef, useEffect } from "react"
+import { renderToString } from "react-dom/server"
 import { render, screen, fireEvent, act } from "@testing-library/react"
 import { BigNumber } from "./BigNumber"
 import type { BigNumberHandle } from "./types"
@@ -88,6 +89,20 @@ describe("BigNumber — thresholds", () => {
     expect(root?.getAttribute("data-level")).toBe("success")
   })
 
+  it("adds the resolved threshold label to the generated accessible sentence", () => {
+    const { container } = render(
+      <BigNumber value={90} label="Throughput" thresholds={[
+        { at: -Infinity, level: "danger", label: "Below target" },
+        { at: 80, level: "success", label: "On target" },
+      ]} />,
+    )
+
+    expect(container.querySelector("[data-chart='BigNumber']")).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("On target"),
+    )
+  })
+
   it("colorForLevel falls through to var(--semiotic-text) for neutral", () => {
     expect(colorForLevel("neutral")).toMatch(/--semiotic-text/)
     expect(colorForLevel("success")).toMatch(/--semiotic-success/)
@@ -147,6 +162,106 @@ describe("BigNumber — comparison + delta + sentiment", () => {
   })
 })
 
+describe("BigNumber — animation", () => {
+  const scheduledFrames = new Map<number, FrameRequestCallback>()
+  let cancelledFrames: number[] = []
+  let nextFrameId = 0
+
+  function runNextFrame(now: number) {
+    const entry = scheduledFrames.entries().next().value as
+      | [number, FrameRequestCallback]
+      | undefined
+    if (!entry) throw new Error("Expected a scheduled animation frame")
+    const [id, callback] = entry
+    scheduledFrames.delete(id)
+    act(() => {
+      callback(now)
+    })
+  }
+
+  beforeEach(() => {
+    scheduledFrames.clear()
+    cancelledFrames = []
+    nextFrameId = 0
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const id = ++nextFrameId
+      scheduledFrames.set(id, callback)
+      return id
+    })
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+      cancelledFrames.push(id)
+      scheduledFrames.delete(id)
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("keeps its RAF loop alive across tween state updates", () => {
+    const animation = { duration: 100, easing: "linear" as const, intro: false }
+    const { rerender } = render(<BigNumber value={0} animate={false} />)
+
+    rerender(<BigNumber value={100} animate={animation} />)
+    expect(scheduledFrames.size).toBe(1)
+
+    const start = performance.now()
+    runNextFrame(start + 50)
+
+    // The first tick schedules its successor. A dependency on `displayed`
+    // would clean that successor up and begin a fresh tween on every frame.
+    expect(cancelledFrames).toEqual([])
+    expect(scheduledFrames.size).toBe(1)
+
+    runNextFrame(start + 1_000)
+    expect(screen.getByText("100")).toBeInTheDocument()
+    expect(scheduledFrames.size).toBe(0)
+  })
+
+  it("does not restart when an equivalent inline animation config is recreated", () => {
+    const { rerender } = render(
+      <BigNumber value={100} animate={{ duration: 100, easing: "linear" }} />,
+    )
+
+    expect(scheduledFrames.size).toBe(1)
+
+    rerender(
+      <BigNumber value={100} animate={{ duration: 100, easing: "linear" }} />,
+    )
+
+    expect(cancelledFrames).toEqual([])
+    expect(scheduledFrames.size).toBe(1)
+  })
+
+  it("animates into the initial value on a fresh CSR mount", () => {
+    const { container } = render(
+      <BigNumber value={100} animate={{ duration: 100, easing: "linear" }} />,
+    )
+    const valueText = container.querySelector(".semiotic-bignumber__value-text")
+
+    expect(valueText).toHaveTextContent("0")
+    expect(scheduledFrames.size).toBe(1)
+
+    runNextFrame(performance.now() + 1_000)
+    expect(valueText).toHaveTextContent("100")
+  })
+
+  it("settles immediately for a nonpositive animation duration", () => {
+    const { container } = render(
+      <BigNumber value={100} animate={{ duration: -1, easing: "linear" }} />,
+    )
+
+    expect(container.querySelector(".semiotic-bignumber__value-text")).toHaveTextContent("100")
+    expect(scheduledFrames.size).toBe(0)
+  })
+})
+
+describe("BigNumber — SSR", () => {
+  it("keeps the final value in server markup when intro animation is enabled", () => {
+    expect(renderToString(<BigNumber value={100} animate />)).toContain(">100<")
+  })
+})
+
 describe("BigNumber — target", () => {
   it("renders a percent-of-target string", () => {
     render(
@@ -157,6 +272,39 @@ describe("BigNumber — target", () => {
     )
     expect(screen.getByText(/75%/)).toBeInTheDocument()
     expect(screen.getByText(/of Q3 plan/)).toBeInTheDocument()
+  })
+
+  it("includes an unlabeled target in the generated accessible sentence", () => {
+    const { container } = render(<BigNumber value={750} target={{ value: 1000 }} />)
+    expect(container.querySelector("[data-chart='BigNumber']")).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("75% of 1,000"),
+    )
+  })
+
+  it.each([Number.NaN, Infinity, -Infinity])(
+    "omits a non-finite target value (%s) from the visible and accessible output",
+    (value) => {
+      const { container } = render(
+        <BigNumber
+          value={750}
+          target={{ value, label: "Q3 plan" }}
+        />
+      )
+
+      const root = container.querySelector("[data-chart='BigNumber']")
+      expect(container.querySelector(".semiotic-bignumber__target")).toBeNull()
+      expect(root?.getAttribute("aria-label")).not.toMatch(/NaN|Infinity|∞|Q3 plan/)
+    }
+  )
+
+  it("keeps a zero target without a misleading percent", () => {
+    const { container } = render(<BigNumber value={750} target={{ value: 0 }} />)
+    const root = container.querySelector("[data-chart='BigNumber']")
+
+    expect(container.querySelector(".semiotic-bignumber__target-percent")).toBeEmptyDOMElement()
+    expect(root).toHaveAttribute("aria-label", expect.stringContaining("target 0"))
+    expect(root?.getAttribute("aria-label")).not.toContain("%")
   })
 })
 

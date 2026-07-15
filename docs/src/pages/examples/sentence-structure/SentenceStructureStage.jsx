@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from "react"
 import { NetworkCustomChart, networkHitTarget } from "semiotic/network"
 import { XYCustomChart, hitTargetPoint } from "semiotic/xy"
+import { unwrapDatum } from "semiotic/utils"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
 import { surfaceText } from "./sentenceStructureData"
 
@@ -31,7 +32,7 @@ const COLORS = {
 }
 
 function raw(value) {
-  return value?.data ?? value
+  return unwrapDatum(value) ?? value
 }
 
 function tokenLabel(token) {
@@ -43,6 +44,55 @@ function tokenPositions(tokens, width, y) {
   const right = Math.min(74, Math.max(34, width * 0.08))
   const step = tokens.length > 1 ? (width - left - right) / (tokens.length - 1) : 0
   return new Map(tokens.map((token, index) => [token.id, { x: left + step * index, y, index }]))
+}
+
+function isReedKelloggModifier(token) {
+  return /modifier|determiner|case|adverb|instrument|possess/i.test(token.role ?? "")
+}
+
+/**
+ * The visible Reed–Kellogg plate and the NetworkCustomChart hit targets share
+ * this geometry. In particular, modifiers leave the baseline for their lower
+ * rails, so their keyboard focus and pointer target must move with them.
+ */
+export function reedKelloggGeometry(width, height, tokens = []) {
+  const baselineY = Math.max(190, height * 0.5)
+  const positions = tokenPositions(tokens, width, baselineY - 23)
+  const modifiers = tokens
+    .map((token, index) => ({ token, index }))
+    .filter(({ token }) => isReedKelloggModifier(token))
+    .map(({ token, index }, modifierIndex) => {
+      const position = positions.get(token.id) ?? { x: width / 2, y: baselineY - 23 }
+      const anchorIndex = Math.max(0, index - 1)
+      const anchor = positions.get(tokens[anchorIndex]?.id) ?? position
+      const lowerY = baselineY + 70 + (modifierIndex % 2) * 42
+      const lowerX = Math.max(
+        34,
+        Math.min(width - 34, (position.x + anchor.x) / 2 + (modifierIndex % 2 ? 16 : -16)),
+      )
+      return {
+        token,
+        index,
+        position,
+        anchor,
+        lowerX,
+        lowerY,
+        // The word sits just above the modifier rail; include its role label
+        // in the hit rectangle while keeping the focus ring on the word.
+        hitPosition: { x: lowerX + 4, y: lowerY - 8 },
+      }
+    })
+  const hitPositions = new Map(
+    tokens.map((token) => {
+      const position = positions.get(token.id) ?? { x: width / 2 }
+      return [token.id, { x: position.x, y: baselineY - 15 }]
+    }),
+  )
+  for (const modifier of modifiers) {
+    hitPositions.set(modifier.token.id, modifier.hitPosition)
+  }
+
+  return { baselineY, positions, modifiers, hitPositions }
 }
 
 function tokenIndexById(tokens) {
@@ -193,10 +243,8 @@ function DiagramLabel({ x = 18, y = 24, children, accent = COLORS.coral, align =
 }
 
 function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectToken }) {
-  const baselineY = Math.max(190, height * 0.5)
-  const positions = tokenPositions(tokens, width, baselineY - 23)
+  const { baselineY, positions, modifiers } = reedKelloggGeometry(width, height, tokens)
   const subjectIndices = tokens.map((token, index) => ({ token, index })).filter(({ token }) => /subject|agent/i.test(token.role ?? ""))
-  const modifierIndices = tokens.map((token, index) => ({ token, index })).filter(({ token }) => /modifier|determiner|case|adverb|instrument|possess/i.test(token.role ?? ""))
   const dividers = tokens
     .map((token, index) => ({
       index,
@@ -234,12 +282,7 @@ function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectT
         const position = positions.get(token.id)
         return <text key={token.id} x={position.x} y={baselineY - 40} textAnchor="middle" fill={COLORS.teal} fontSize="8" fontWeight="900">SUBJECT</text>
       })}
-      {modifierIndices.map(({ token, index }, modifierIndex) => {
-        const position = positions.get(token.id)
-        const anchorIndex = Math.max(0, index - 1)
-        const anchor = positions.get(tokens[anchorIndex]?.id) ?? position
-        const lowerY = baselineY + 70 + (modifierIndex % 2) * 42
-        const lowerX = Math.max(34, Math.min(width - 34, (position.x + anchor.x) / 2 + (modifierIndex % 2 ? 16 : -16)))
+      {modifiers.map(({ token, position, anchor, lowerY, lowerX }) => {
         const selected = selectedTokenIds.includes(token.id)
         return (
           <g key={`modifier-${token.id}`}>
@@ -251,7 +294,7 @@ function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectT
         )
       })}
       {tokens.map((token) => {
-        if (/^[.,;:!?]$/.test(token.text) || modifierIndices.some((candidate) => candidate.token.id === token.id)) return null
+        if (/^[.,;:!?]$/.test(token.text) || modifiers.some((candidate) => candidate.token.id === token.id)) return null
         const position = positions.get(token.id)
         const selected = selectedTokenIds.includes(token.id)
         return (
@@ -1185,6 +1228,132 @@ function variantTokenRows(specimen, tokens, rewrites) {
   return rows
 }
 
+const VARIANT_ALIGNMENT_MODES = new Set(["token", "lemma", "phrase", "meaning"])
+
+function normalizedVariantText(value) {
+  return String(value ?? "").toLocaleLowerCase("en-US").replaceAll("’", "'")
+}
+
+function variantAlignmentKey(token, alignment) {
+  if (alignment === "token") return normalizedVariantText(token.text)
+  if (alignment === "phrase") {
+    const role = normalizedVariantText(token.role)
+    if (role) return `role:${role}`
+    const partOfSpeech = normalizedVariantText(token.partOfSpeech ?? token.pos)
+    return `part-of-speech:${partOfSpeech}:${normalizedVariantText(token.lemma ?? token.text)}`
+  }
+  return normalizedVariantText(token.lemma ?? token.text)
+}
+
+function longestCommonTokenPairs(canonicalTokens, variantTokens, keyForToken) {
+  const lengths = Array.from({ length: canonicalTokens.length + 1 }, () =>
+    Array(variantTokens.length + 1).fill(0),
+  )
+  for (let canonicalIndex = canonicalTokens.length - 1; canonicalIndex >= 0; canonicalIndex -= 1) {
+    for (let variantIndex = variantTokens.length - 1; variantIndex >= 0; variantIndex -= 1) {
+      lengths[canonicalIndex][variantIndex] =
+        keyForToken(canonicalTokens[canonicalIndex]) === keyForToken(variantTokens[variantIndex])
+          ? 1 + lengths[canonicalIndex + 1][variantIndex + 1]
+          : Math.max(
+            lengths[canonicalIndex + 1][variantIndex],
+            lengths[canonicalIndex][variantIndex + 1],
+          )
+    }
+  }
+
+  const pairs = []
+  let canonicalIndex = 0
+  let variantIndex = 0
+  while (canonicalIndex < canonicalTokens.length && variantIndex < variantTokens.length) {
+    if (keyForToken(canonicalTokens[canonicalIndex]) === keyForToken(variantTokens[variantIndex])) {
+      pairs.push({ canonicalIndex, variantIndex })
+      canonicalIndex += 1
+      variantIndex += 1
+    } else if (lengths[canonicalIndex + 1][variantIndex] >= lengths[canonicalIndex][variantIndex + 1]) {
+      canonicalIndex += 1
+    } else {
+      variantIndex += 1
+    }
+  }
+  return pairs
+}
+
+/**
+ * Derive one stable set of canonical-to-variant links for both the drawn
+ * threads and the accessible NetworkCustomChart graph. The modes deliberately
+ * differ: token and lemma preserve shared wording, phrase preserves ordered
+ * grammatical roles, and meaning trusts the authored alignment map.
+ */
+export function variantAlignmentPairs(rows, requestedAlignment = "meaning") {
+  const alignment = VARIANT_ALIGNMENT_MODES.has(requestedAlignment)
+    ? requestedAlignment
+    : "meaning"
+  const canonicalRowIndex = rows.findIndex((row) => row.canonical)
+  const canonicalIndex = canonicalRowIndex >= 0 ? canonicalRowIndex : 0
+  const canonicalRow = rows[canonicalIndex]
+  if (!canonicalRow) return []
+  const canonicalTokenIndex = new Map(
+    canonicalRow.tokens.map((token, index) => [token.id, index]),
+  )
+  const pairs = []
+
+  rows.forEach((row, rowIndex) => {
+    if (rowIndex === canonicalIndex) return
+    const indexPairs = alignment === "meaning"
+      ? row.rewritten
+        ? row.tokens.flatMap((token, variantIndex) => {
+            const canonicalTokenIndexForId = canonicalTokenIndex.get(token.id)
+            return canonicalTokenIndexForId == null
+              ? []
+              : [{ canonicalIndex: canonicalTokenIndexForId, variantIndex }]
+          })
+        : (row.alignments ?? []).flatMap((entry) => {
+            const canonicalIndexForId = canonicalTokenIndex.get(entry.tokenId)
+            const variantIndex = row.tokens.findIndex(
+              (token) => token.id === entry.variantTokenId,
+            )
+            return canonicalIndexForId == null || variantIndex < 0
+              ? []
+              : [{ canonicalIndex: canonicalIndexForId, variantIndex }]
+          })
+      : longestCommonTokenPairs(
+          canonicalRow.tokens,
+          row.tokens,
+          (token) => variantAlignmentKey(token, alignment),
+        )
+
+    for (const { canonicalIndex: sourceTokenIndex, variantIndex: targetTokenIndex } of indexPairs) {
+      const sourceToken = canonicalRow.tokens[sourceTokenIndex]
+      const targetToken = row.tokens[targetTokenIndex]
+      if (!sourceToken || !targetToken) continue
+      pairs.push({
+        id: `variant-alignment:${alignment}:${canonicalRow.id}:${sourceToken.id}->${row.id}:${targetToken.id}`,
+        alignment,
+        sourceRowId: canonicalRow.id,
+        sourceRowIndex: canonicalIndex,
+        sourceTokenId: sourceToken.id,
+        sourceTokenIndex,
+        targetRowId: row.id,
+        targetRowIndex: rowIndex,
+        targetTokenId: targetToken.id,
+        targetTokenIndex,
+        canonicalTokenId: sourceToken.id,
+      })
+    }
+  })
+
+  return pairs
+}
+
+function canonicalTokenIdsByVariantToken(pairs) {
+  return new Map(
+    pairs.map((pair) => [
+      `${pair.targetRowId}\u0000${pair.targetTokenId}`,
+      pair.canonicalTokenId,
+    ]),
+  )
+}
+
 function variantRowPositions(width, height, rows) {
   const rowHeight = Math.max(56, (height - 62) / Math.max(1, rows.length))
   const usableWidth = width - 130
@@ -1198,29 +1367,37 @@ function variantRowPositions(width, height, rows) {
 function VariantsDiagram({ width, height, specimen, tokens, selectedTokenIds, rewrites, alignment, onSelectToken }) {
   const rows = variantTokenRows(specimen, tokens, rewrites)
   const { positionsByRow, rowHeight } = variantRowPositions(width, height, rows)
+  const pairs = variantAlignmentPairs(rows, alignment)
+  const canonicalTokenIdByVariantToken = canonicalTokenIdsByVariantToken(pairs)
   return (
     <g className="sentence-diagram sentence-diagram--variants">
       <DiagramDefs />
       <DiagramLabel accent={COLORS.violet}>TEXTUAL VARIANTS / ALIGNED BY {String(alignment).toUpperCase()}</DiagramLabel>
-      {rows.slice(0, -1).map((row, rowIndex) => {
-        const next = rows[rowIndex + 1]
-        const currentPositions = positionsByRow[rowIndex]
-        const nextPositions = positionsByRow[rowIndex + 1]
-        return row.tokens.map((token) => {
-          const current = currentPositions.get(token.id)
-          const same = next.tokens.find((candidate) => String(candidate.lemma ?? candidate.text).toLowerCase() === String(token.lemma ?? token.text).toLowerCase())
-          const target = same ? nextPositions.get(same.id) : null
-          return target ? <path key={`${row.id}-${token.id}-${next.id}`} d={`M${current.x} ${current.y + 12}C${current.x} ${current.y + rowHeight / 2} ${target.x} ${target.y - rowHeight / 2} ${target.x} ${target.y - 12}`} fill="none" stroke={COLORS.paperDeep} strokeWidth="2" /> : null
-        })
+      {pairs.map((pair) => {
+        const current = positionsByRow[pair.sourceRowIndex]?.get(pair.sourceTokenId)
+        const target = positionsByRow[pair.targetRowIndex]?.get(pair.targetTokenId)
+        if (!current || !target) return null
+        const controlY = Math.max(24, (target.y - current.y) / 2)
+        return (
+          <path
+            key={pair.id}
+            d={`M${current.x} ${current.y + 12}C${current.x} ${current.y + controlY} ${target.x} ${target.y - controlY} ${target.x} ${target.y - 12}`}
+            fill="none"
+            stroke={COLORS.paperDeep}
+            strokeWidth="2"
+          />
+        )
       })}
       {rows.map((row, rowIndex) => (
         <g key={row.id}>
           <text x="12" y={55 + rowIndex * rowHeight + 3} fill={row.color} fontSize="8" fontWeight="900">{String(row.label ?? row.id).toUpperCase()}</text>
           {row.tokens.map((token, tokenIndex) => {
             const position = positionsByRow[rowIndex].get(token.id)
-            const originalId = rowIndex === 0 ? token.id : row.alignments?.find((alignment) => alignment.variantTokenId === token.id)?.tokenId
-            const selected = originalId ? selectedTokenIds.includes(originalId) : false
-            const canSelect = rowIndex === 0
+            const canonicalTokenId = row.canonical
+              ? token.id
+              : canonicalTokenIdByVariantToken.get(`${row.id}\u0000${token.id}`)
+            const selected = canonicalTokenId ? selectedTokenIds.includes(canonicalTokenId) : false
+            const canSelect = Boolean(row.canonical)
             return (
               <g
                 key={`${row.id}-${token.id}-${tokenIndex}`}
@@ -1269,8 +1446,10 @@ function renderDiagram(props) {
   }
 }
 
-function variantStageGraph(specimen, tokens, rewrites) {
+function variantStageGraph(specimen, tokens, rewrites, alignment) {
   const rows = variantTokenRows(specimen, tokens, rewrites)
+  const pairs = variantAlignmentPairs(rows, alignment)
+  const canonicalTokenIdByVariantToken = canonicalTokenIdsByVariantToken(pairs)
   const nodes = []
   const edges = []
 
@@ -1278,9 +1457,9 @@ function variantStageGraph(specimen, tokens, rewrites) {
     let previousId = null
     row.tokens.forEach((token, tokenIndex) => {
       const id = `variant-stage:${row.id}:${tokenIndex}`
-      const canonicalTokenId = row.canonical || row.rewritten
+      const canonicalTokenId = row.canonical
         ? token.id
-        : row.alignments?.find((entry) => entry.variantTokenId === token.id)?.tokenId ?? null
+        : canonicalTokenIdByVariantToken.get(`${row.id}\u0000${token.id}`) ?? null
       nodes.push({
         ...token,
         id,
@@ -1311,10 +1490,22 @@ function variantStageGraph(specimen, tokens, rewrites) {
     })
   })
 
+  for (const pair of pairs) {
+    edges.push({
+      id: pair.id,
+      source: `variant-stage:${pair.sourceRowId}:${pair.sourceTokenIndex}`,
+      target: `variant-stage:${pair.targetRowId}:${pair.targetTokenIndex}`,
+      label: `${pair.alignment} alignment`,
+      relation: "alignment",
+      selectTokenId: pair.canonicalTokenId,
+      entityType: "variant-alignment",
+    })
+  }
+
   return { nodes, edges, rows }
 }
 
-function stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites) {
+function stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites, alignment) {
   if (view === "reed-kellogg") {
     return {
       nodes: (specimen?.sentenceDiagram?.nodes ?? []).map((node) => ({
@@ -1399,7 +1590,7 @@ function stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites) {
   if (view === "phrase-net") {
     return { nodes: phraseNet?.nodes ?? [], edges: phraseNet?.edges ?? [] }
   }
-  if (view === "variants") return variantStageGraph(specimen, tokens, rewrites)
+  if (view === "variants") return variantStageGraph(specimen, tokens, rewrites, alignment)
   return { nodes: tokens, edges: [] }
 }
 
@@ -1446,12 +1637,11 @@ function networkHitGeometry(view, width, nodes, node) {
 
 function networkNodePositions(view, width, height, nodes, common, edges = []) {
   if (view === "reed-kellogg") {
-    const baselineY = Math.max(190, height * 0.5) - 15
-    const tokenPositionById = tokenPositions(common.tokens, width, baselineY)
+    const { baselineY, hitPositions } = reedKelloggGeometry(width, height, common.tokens)
     return new Map(
       nodes.map((node) => [
         node.id,
-        tokenPositionById.get(node.tokenId) ?? { x: width / 2, y: baselineY },
+        hitPositions.get(node.tokenId) ?? { x: width / 2, y: baselineY - 15 },
       ]),
     )
   }
@@ -1535,7 +1725,7 @@ export default function SentenceStructureStage({
   )
   const graph = useMemo(
     () => {
-      const result = stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites)
+      const result = stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites, alignment)
       return {
         nodes: result.nodes.map((node, index) => ({
           ...node,
@@ -1544,7 +1734,7 @@ export default function SentenceStructureStage({
         edges: result.edges,
       }
     },
-    [phraseNet, rewrites, specimen, tokens, view, wordTree],
+    [alignment, phraseNet, rewrites, specimen, tokens, view, wordTree],
   )
   const networkLayout = useMemo(
     () => (ctx) => {

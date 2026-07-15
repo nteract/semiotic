@@ -13,6 +13,9 @@ import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/sh
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
+const TOP_LABEL_BASELINE = 16
+const TOP_THRESHOLD_LABEL_FLIP = 20
+
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
   return ann.color || theme.colors.annotation || theme.colors.text
@@ -171,7 +174,7 @@ function renderAnnotation(
             <line x1={px} y1={0} x2={px} y2={layout.height}
               stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
             {label && (
-              <text x={px + 4} y={12} textAnchor="start"
+              <text x={px + 4} y={TOP_LABEL_BASELINE} textAnchor="start"
                 fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}>
                 {label}
               </text>
@@ -192,7 +195,9 @@ function renderAnnotation(
           {label && (
             <text
               x={labelPos === "left" ? 4 : labelPos === "center" ? layout.width / 2 : layout.width - 4}
-              y={py - 6}
+              y={py < TOP_THRESHOLD_LABEL_FLIP
+                ? Math.min(layout.height - 4, py + TOP_LABEL_BASELINE)
+                : py - 6}
               textAnchor={labelPos === "left" ? "start" : labelPos === "center" ? "middle" : "end"}
               fontSize={theme.typography.tickSize}
               fill={color}
@@ -224,7 +229,7 @@ function renderAnnotation(
           {label && (
             <text
               x={px > layout.width * 0.6 ? px - 4 : px + 4}
-              y={labelPos === "bottom" ? layout.height - 4 : labelPos === "center" ? layout.height / 2 : 12}
+              y={labelPos === "bottom" ? layout.height - 4 : labelPos === "center" ? layout.height / 2 : TOP_LABEL_BASELINE}
               textAnchor={px > layout.width * 0.6 ? "end" : "start"}
               fontSize={theme.typography.tickSize}
               fill={color}
@@ -258,7 +263,7 @@ function renderAnnotation(
           />
           {ann.label && (
             <text
-              x={layout.width - 4} y={Math.max(top, 0) + 13}
+              x={layout.width - 4} y={Math.max(top, 0) + TOP_LABEL_BASELINE}
               textAnchor="end"
               fontSize={theme.typography.tickSize}
               fill={ann.color || resolveAnnotationColor(ann, theme)}
@@ -291,7 +296,7 @@ function renderAnnotation(
           />
           {ann.label && (
             <text
-              x={left + 4} y={13}
+              x={left + 4} y={TOP_LABEL_BASELINE}
               textAnchor="start"
               fontSize={theme.typography.tickSize}
               fill={ann.color || resolveAnnotationColor(ann, theme)}
@@ -309,28 +314,55 @@ function renderAnnotation(
     }
 
     case "category-highlight": {
-      if (!ann.category || !scales.o) return null
-      const oVal = scales.o(ann.category)
+      if (ann.category == null || !scales.o) return null
+      const oVal = scales.o(String(ann.category))
       if (oVal == null) return null
       const bandwidth = scales.o.bandwidth ? scales.o.bandwidth() : 40
       const color = resolveAnnotationColor(ann, theme)
       const opacity = ann.opacity ?? 0.1
+      const label = ann.label
       // Horizontal ordinal: highlight across Y band
       if (config.projection === "horizontal") {
         return (
-          <rect
-            key={`ann-cathighlight-${index}`}
-            x={0} y={oVal} width={layout.width} height={bandwidth}
-            fill={color} opacity={opacity}
-          />
+          <g key={`ann-cathighlight-${index}`}>
+            <rect
+              x={0} y={oVal} width={layout.width} height={bandwidth}
+              fill={color} opacity={opacity}
+            />
+            {label && (
+              <text
+                x={12} y={oVal + bandwidth / 2}
+                dominantBaseline="middle"
+                fill={color}
+                fontSize={theme.typography.tickSize}
+                fontWeight="bold"
+                fontFamily={theme.typography.fontFamily}
+              >
+                {label}
+              </text>
+            )}
+          </g>
         )
       }
       return (
-        <rect
-          key={`ann-cathighlight-${index}`}
-          x={oVal} y={0} width={bandwidth} height={layout.height}
-          fill={color} opacity={opacity}
-        />
+        <g key={`ann-cathighlight-${index}`}>
+          <rect
+            x={oVal} y={0} width={bandwidth} height={layout.height}
+            fill={color} opacity={opacity}
+          />
+          {label && (
+            <text
+              x={oVal + bandwidth / 2} y={TOP_LABEL_BASELINE}
+              textAnchor="middle"
+              fill={color}
+              fontSize={theme.typography.tickSize}
+              fontWeight="bold"
+              fontFamily={theme.typography.fontFamily}
+            >
+              {label}
+            </text>
+          )}
+        </g>
       )
     }
 

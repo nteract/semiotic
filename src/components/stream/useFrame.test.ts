@@ -13,6 +13,11 @@ import type { FrameMargin, FrameScheduler, UseFrameInput } from "./useFrame"
 import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
 import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
+import {
+  MIN_TITLE_TOP_MARGIN,
+  MIN_TITLE_TOP_LEGEND_MARGIN,
+  reserveTitleMargin,
+} from "./titleLayout"
 
 const DEFAULT_INPUT: UseFrameInput = {
   sizeProp: [800, 600],
@@ -61,6 +66,80 @@ describe("useFrame — margin merge", () => {
       { wrapper },
     )
     expect(result.current.margin).toEqual({ top: 100, right: 30, bottom: 40, left: 50 })
+  })
+
+  it("reserves a title strip before calculating plot geometry", () => {
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        title: "Compact frame title",
+        userMargin: { top: 12 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(MIN_TITLE_TOP_MARGIN)
+    expect(result.current.adjustedHeight).toBe(600 - MIN_TITLE_TOP_MARGIN - 40)
+  })
+
+  it("reserves a title strip for ReactNode title chrome", () => {
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        title: React.createElement("span", null, "Compact frame title"),
+        userMargin: { top: 12 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(MIN_TITLE_TOP_MARGIN)
+    expect(result.current.adjustedHeight).toBe(600 - MIN_TITLE_TOP_MARGIN - 40)
+  })
+
+  it("does not reserve static title space for non-text title content", () => {
+    expect(
+      reserveTitleMargin(
+        { top: 12, right: 30, bottom: 40, left: 50 },
+        "Chart title",
+      ).top,
+    ).toBe(MIN_TITLE_TOP_MARGIN)
+    expect(
+      reserveTitleMargin(
+        { top: 12, right: 30, bottom: 40, left: 50 },
+        React.createElement("span", null, "Chart title"),
+      ),
+    ).toEqual({ top: 12, right: 30, bottom: 40, left: 50 })
+    expect(
+      reserveTitleMargin(
+        { top: 12, right: 30, bottom: 40, left: 50 },
+        "",
+      ),
+    ).toEqual({ top: 12, right: 30, bottom: 40, left: 50 })
+  })
+
+  it("does not shrink an already spacious titled margin", () => {
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        title: "Spacious title",
+        userMargin: { top: 64 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(64)
+  })
+
+  it("reserves title and top-legend chrome before the plot", () => {
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        title: "Legend-bearing frame",
+        legend: React.createElement("g"),
+        legendPosition: "top",
+        userMargin: { top: 12 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(MIN_TITLE_TOP_LEGEND_MARGIN)
+    expect(result.current.adjustedHeight).toBe(600 - MIN_TITLE_TOP_LEGEND_MARGIN - 40)
   })
 
   it("returns the same margin object across renders when inputs are referentially stable", () => {

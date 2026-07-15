@@ -32,6 +32,7 @@ import {
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
@@ -99,7 +100,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     })
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
-  const margin = { ...defaultMargin, ...props.margin }
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
+  const hasVisibleTitle = hasTextTitle(props.title)
   const networkLegendCategories = props.showLegend ? (() => {
     const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
@@ -132,7 +134,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       theme,
       position: legendPos || "right",
       size,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   } else if (props.showLegend && networkLegendCategories.length > 0) {
@@ -142,7 +144,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       theme,
       position: legendPos || "right",
       size,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   }
@@ -421,7 +423,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       totalWidth: size[0],
       totalHeight: size[1],
       margin,
-      hasTitle: !!props.title,
+      hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
     })
   })() : null
@@ -436,7 +438,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         position: props.legendPosition || "right",
         size,
         margin,
-        hasTitle: !!props.title,
+        hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
       }) || networkLegend

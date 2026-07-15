@@ -88,6 +88,13 @@ type FrameCanvasHostInput<TStore extends object> = Omit<
 export function useCanvasFrameHost<TStore extends object>(
   input: UseCanvasFrameHostInput<TStore>,
 ): CanvasFrameHostResult {
+  const {
+    cancelRender,
+    dirtyRef,
+    frameRuntime,
+    manageFrameRuntime,
+    scheduleRender,
+  } = input
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
   const hasRunCanvasPaintInvalidationRef = useRef(false)
@@ -107,16 +114,22 @@ export function useCanvasFrameHost<TStore extends object>(
   // rebased logical time. This mirrors the contract tested across every frame
   // family while keeping their actual render closures local.
   useEffect(() => {
-    if (input.manageFrameRuntime === false) return
-    return input.frameRuntime.subscribe(() => {
-      if (!input.frameRuntime.isActive) {
-        input.cancelRender()
+    if (manageFrameRuntime === false) return
+    return frameRuntime.subscribe(() => {
+      if (!frameRuntime.isActive) {
+        cancelRender()
         return
       }
-      input.dirtyRef.current = true
-      input.scheduleRender()
+      dirtyRef.current = true
+      scheduleRender()
     })
-  }, [input, input.cancelRender, input.dirtyRef, input.frameRuntime, input.manageFrameRuntime, input.scheduleRender])
+  }, [
+    cancelRender,
+    dirtyRef,
+    frameRuntime,
+    manageFrameRuntime,
+    scheduleRender,
+  ])
 
   // Overlay/background changes can alter whether opaque canvas paint hides an
   // SVG underlay. Each family provides its own precise dependency list so the

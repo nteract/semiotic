@@ -13,6 +13,7 @@ import {
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { AnnotationContext } from "../realtime/types"
 import { symbolRadius } from "./symbolPath"
+import { TITLE_BASELINE } from "./titleLayout"
 import { glyphHitGeometry, type GlyphDef } from "./glyphDef"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import {
@@ -262,7 +263,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       {title && typeof title === "string" ? (
         <text
           x={totalWidth / 2}
-          y={16}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight={600}
           fill="currentColor"

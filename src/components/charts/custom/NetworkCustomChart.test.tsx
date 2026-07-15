@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { NetworkCustomChart } from "./NetworkCustomChart"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
 import { TooltipProvider } from "../../store/TooltipStore"
@@ -222,6 +222,38 @@ describe("NetworkCustomChart", () => {
       </TooltipProvider>
     )
     expect("annotations" in (lastNetworkFrameProps ?? {})).toBe(false)
+  })
+
+  it("uses the shared loading state without mounting a frame", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} edges={edges} layout={trivialLayout} loading />
+      </TooltipProvider>
+    )
+
+    expect(container.querySelectorAll(".semiotic-loading-bar")).toHaveLength(5)
+    expect(lastNetworkFrameProps).toBeNull()
+  })
+
+  it("uses the shared empty state only when supplied node and edge data are both empty", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={[]} edges={[]} layout={trivialLayout} />
+      </TooltipProvider>
+    )
+
+    expect(screen.getByText("No data available")).toBeInTheDocument()
+    expect(lastNetworkFrameProps).toBeNull()
+  })
+
+  it("allows a node-only custom layout without showing an empty state", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} edges={[]} layout={trivialLayout} />
+      </TooltipProvider>
+    )
+
+    expect(lastNetworkFrameProps?.nodes).toEqual(nodes)
   })
 })
 

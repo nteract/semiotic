@@ -514,6 +514,107 @@ describe("GeoPipelineStore", () => {
     })
   })
 
+  describe("fitPadding", () => {
+    it("normalizes nullish values to zero at construction and update", () => {
+      const store = new GeoPipelineStore(makeConfig({ fitPadding: null }))
+      expect(store.config.fitPadding).toBe(0)
+
+      const undefinedPadding = new GeoPipelineStore(makeConfig({
+        fitPadding: undefined
+      }))
+      expect(undefinedPadding.config.fitPadding).toBe(0)
+
+      store.updateConfig({ fitPadding: 0.2 })
+      expect(store.config.fitPadding).toBe(0.2)
+
+      store.updateConfig({ fitPadding: undefined })
+      expect(store.config.fitPadding).toBe(0)
+    })
+
+    it.each([-0.01, 0.5, 1, Number.NaN, Infinity, -Infinity])(
+      "rejects invalid value %p at construction",
+      (fitPadding) => {
+        expect(() => new GeoPipelineStore(makeConfig({ fitPadding }))).toThrow(RangeError)
+      }
+    )
+
+    it("rejects invalid updates atomically", () => {
+      const store = new GeoPipelineStore(makeConfig({
+        fitPadding: 0.1,
+        windowSize: 3
+      }))
+      store.initStreaming()
+      store.pushPoint(cities[0])
+      store.pushPoint(cities[1])
+      store.pushPoint(cities[2])
+
+      const configBefore = store.config
+      const versionBefore = store.version
+      const resultBefore = store.getUpdateSnapshot()
+      const pointsBefore = store.getPoints()
+
+      expect(() => store.updateConfig({ fitPadding: 0.5, windowSize: 1 })).toThrow(RangeError)
+
+      expect(store.config).toBe(configBefore)
+      expect(store.config.fitPadding).toBe(0.1)
+      expect(store.config.windowSize).toBe(3)
+      expect(store.version).toBe(versionBefore)
+      expect(store.getUpdateSnapshot()).toBe(resultBefore)
+      expect(store.getPoints()).toEqual(pointsBefore)
+    })
+
+    it("keeps automatic and orthographic fits finite just below the upper bound", () => {
+      const normal = new GeoPipelineStore(makeConfig({ fitPadding: 0.499_999 }))
+      normal.setPoints(cities)
+      normal.computeScene({ width: 600, height: 400 })
+      const normalPoint = normal.scales!.projectedPoint(-122.4, 37.8)
+      expect(normalPoint).not.toBeNull()
+      expect(Number.isFinite(normal.scales!.projection.scale())).toBe(true)
+      expect(Number.isFinite(normalPoint![0])).toBe(true)
+      expect(Number.isFinite(normalPoint![1])).toBe(true)
+
+      const orthographic = new GeoPipelineStore(makeConfig({
+        projection: "orthographic",
+        fitPadding: 0.499_999
+      }))
+      orthographic.setPoints([{ lon: 0, lat: 0 }])
+      orthographic.computeScene({ width: 600, height: 400 })
+      const globePoint = orthographic.scales!.projectedPoint(0, 0)
+      expect(globePoint).not.toBeNull()
+      expect(orthographic.scales!.projection.scale()).toBeGreaterThan(0)
+      expect(orthographic.scales!.projection.scale()).toBeCloseTo(
+        400 * (0.5 - 0.499_999),
+        10
+      )
+      expect(Number.isFinite(globePoint![0])).toBe(true)
+      expect(Number.isFinite(globePoint![1])).toBe(true)
+    })
+
+    it("leaves a projectionExtent fit authoritative over padding", () => {
+      const projectionExtent: [[number, number], [number, number]] = [
+        [-125, 25],
+        [-65, 50]
+      ]
+      const unpadded = new GeoPipelineStore(makeConfig({ projectionExtent }))
+      const padded = new GeoPipelineStore(makeConfig({
+        projectionExtent,
+        fitPadding: 0.25
+      }))
+
+      for (const store of [unpadded, padded]) {
+        store.setPoints(cities)
+        store.computeScene({ width: 600, height: 400 })
+      }
+
+      expect(padded.scales!.projection.scale()).toBeCloseTo(
+        unpadded.scales!.projection.scale()
+      )
+      expect(padded.scales!.projection.translate()).toEqual(
+        unpadded.scales!.projection.translate()
+      )
+    })
+  })
+
   // ── Line ingest snapshot semantics ─────────────────────────────────
   // pushLine / pushManyLines mutate `lineData` in place for
   // performance; setLines and getLines must defensive-copy on the

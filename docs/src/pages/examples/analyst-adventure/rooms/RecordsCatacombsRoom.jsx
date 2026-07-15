@@ -144,6 +144,7 @@ export default function RecordsCatacombsRoom({
           onInspect: inspect,
           onObservation,
           onAnnotationActivate,
+          activeSelection,
         }) => (
           <div className="analyst-adventure__chart-with-controls">
             <div
@@ -179,12 +180,16 @@ export default function RecordsCatacombsRoom({
               margin={{ top: 18, right: 54, bottom: 48, left: chartWidth < 430 ? 118 : 152 }}
               barPadding={0.3}
               background="#071014"
-              pieceStyle={(datum) => ({
-                fill: datum.id === "corporate-archaeology" ? "#ff4fd8" : "#55f6ff",
-                stroke: "#f7fbff",
-                strokeWidth: 2,
-                opacity: 0.82,
-              })}
+              pieceStyle={(datum) => {
+                const selected =
+                  !activeSelection?.isActive || activeSelection.predicate(datum)
+                return {
+                  fill: datum.id === "corporate-archaeology" ? "#ff4fd8" : "#55f6ff",
+                  stroke: selected && activeSelection?.isActive ? "#ffd166" : "#f7fbff",
+                  strokeWidth: selected && activeSelection?.isActive ? 3 : 2,
+                  opacity: selected ? 0.82 : 0.2,
+                }
+              }}
               renderMode={roughBars}
               categoryLabel="DEPARTMENT"
               valueLabel={metric === "count" ? "CANCELLATIONS" : "CANCELLATIONS / EMPLOYEE"}
@@ -210,15 +215,15 @@ export default function RecordsCatacombsRoom({
                   </div>
                 )
               }}
-              customHoverBehavior={(hover) => {
+              customHoverBehavior={(hover, context) => {
                 const datum = datumFromHover(hover)
-                if (datum?.id) inspect?.(String(datum.id), "pointer")
+                if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
               }}
-              customClickBehavior={(hover) => {
+              customClickBehavior={(hover, context) => {
                 const datum = datumFromHover(hover)
-                if (datum?.id) inspect?.(String(datum.id), "activate")
+                if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
               }}
-              chartId="analyst-adventure-records"
+              chartId={`analyst-adventure-${room.id}`}
               onObservation={onObservation}
               onAnnotationActivate={onAnnotationActivate}
               annotations={mergedAnnotations}

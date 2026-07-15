@@ -91,6 +91,20 @@ describe("renderOrdinalToStaticSVG", () => {
     expect(svg).toContain("Sales by Region")
   })
 
+  it("renders category-highlight annotations with their label", () => {
+    const svg = renderOrdinalToStaticSVG({
+      chartType: "bar",
+      data: barData,
+      oAccessor: "category",
+      rAccessor: "value",
+      annotations: [{ type: "category-highlight", category: "A", label: "Focus category" }],
+    })
+
+    expect(svg).toContain("semiotic-annotations")
+    expect(svg).toContain("Focus category")
+    expect(svg).toContain('y="16"')
+  })
+
   it("renders with background", () => {
     const svg = renderOrdinalToStaticSVG({
       chartType: "bar",

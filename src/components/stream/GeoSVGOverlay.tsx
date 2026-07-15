@@ -23,6 +23,7 @@ import {
   type AutoPlaceAnnotations
 } from "../recipes/annotationLayout"
 import { renderLegendFromConfig } from "./legendRenderer"
+import { TITLE_BASELINE } from "./titleLayout"
 
 interface GeoSVGOverlayProps {
   width: number
@@ -176,10 +177,10 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
         {foregroundGraphics}
       </g>
 
-      {title && (
+      {title && typeof title === "string" ? (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
@@ -189,9 +190,13 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
             fontSize: "var(--semiotic-title-font-size, 14px)"
           }}
         >
-          {typeof title === "string" ? title : null}
+          {title}
         </text>
-      )}
+      ) : title ? (
+        <foreignObject x={0} y={0} width={totalWidth} height={margin.top}>
+          {title}
+        </foreignObject>
+      ) : null}
 
       {renderLegendFromConfig({
         legend,

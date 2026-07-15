@@ -10,7 +10,11 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { NetworkCustomLayout, NetworkLayoutSelection } from "../../stream/networkCustomLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { SafeRender } from "../shared/withChartWrapper"
+import {
+  renderEmptyState,
+  renderLoadingState,
+  SafeRender,
+} from "../shared/withChartWrapper"
 import { useChartSelection, resolveMobileInteraction } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -141,8 +145,17 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     responsiveRules: props.responsiveRules,
   })
 
-  const safeNodes = useMemo(() => filterSparseArray(nodes ?? []), [nodes])
-  const safeEdges = useMemo(() => filterSparseArray(edges ?? []), [edges])
+  // `filterSparseArray(undefined)` returns the shared empty singleton, so
+  // push-mode renders keep stable inputs instead of allocating a fresh [] on
+  // every parent render. Keep the undefined-vs-empty distinction below: an
+  // omitted pair is push mode, while explicitly supplied empty arrays deserve
+  // the same empty-state treatment as the other chart HOCs.
+  const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
+  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
+  const boundedRows = useMemo(
+    () => (nodes === undefined && edges === undefined ? undefined : [...safeNodes, ...safeEdges]),
+    [edges, nodes, safeEdges, safeNodes],
+  )
   const resolvedMobileInteraction = resolveMobileInteraction(props.mobileInteraction, {
     mode: props.mode,
     width: resolved.width,
@@ -181,6 +194,12 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
   )
 
   const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
+  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
+  const emptyEl = loadingEl
+    ? null
+    : renderEmptyState(boundedRows, width, height, props.emptyContent)
+
+  if (loadingEl || emptyEl) return loadingEl || emptyEl
 
   const streamProps: StreamNetworkFrameProps = {
     chartType: "force",

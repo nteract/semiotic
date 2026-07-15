@@ -22,6 +22,7 @@ import {
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
 import * as React from "react"
+import { TITLE_BASELINE } from "../stream/titleLayout"
 
 export type FrameType = RenderEvidence["frameType"]
 
@@ -314,7 +315,7 @@ export function wrapSVG(
       {titleText && (
         <text
           id={`${pfx}chart-title`}
-          x={opts.width / 2} y={16}
+          x={opts.width / 2} y={TITLE_BASELINE}
           textAnchor="middle"
           fontSize={s.titleSize}
           fontWeight="bold"

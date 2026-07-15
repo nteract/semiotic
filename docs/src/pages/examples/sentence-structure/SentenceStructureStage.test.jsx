@@ -3,7 +3,9 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { getSpecimen } from "./sentenceStructureData"
 import SentenceStructureStage, {
+  reedKelloggGeometry,
   selectWordTreeGraph,
+  variantAlignmentPairs,
   wordTreePositions,
 } from "./SentenceStructureStage"
 
@@ -61,6 +63,64 @@ describe("SentenceStructureStage", () => {
       "data-description",
       expect.stringContaining("deterministic corpus-derived Reed–Kellogg"),
     )
+  })
+
+  it("moves Reed–Kellogg modifier hit targets onto their visible lower rails", () => {
+    const specimen = getSpecimen("attachment-ambiguity")
+    const geometry = reedKelloggGeometry(800, 500, specimen.tokens)
+    const modifier = specimen.tokens.find((token) => token.text === "the")
+    const predicate = specimen.tokens.find((token) => token.text === "saw")
+
+    expect(geometry.modifiers.map((entry) => entry.token.id)).toContain(modifier.id)
+    expect(geometry.hitPositions.get(modifier.id)?.y).toBeGreaterThan(geometry.baselineY)
+    expect(geometry.hitPositions.get(predicate.id)).toEqual(
+      expect.objectContaining({ y: geometry.baselineY - 15 }),
+    )
+  })
+
+  it("uses authored meaning links and distinct lexical/phrase rules for variants", () => {
+    const specimen = getSpecimen("attachment-ambiguity")
+    const variant = specimen.variants.find((entry) => entry.id.endsWith(":variant:followed"))
+    const rows = [
+      { id: "surface", canonical: true, tokens: specimen.tokens },
+      variant,
+    ]
+    const followed = variant.tokens.find((token) => token.text === "followed")
+    const saw = specimen.tokens.find((token) => token.text === "saw")
+    const canonicalTokenFor = (pairs) =>
+      pairs.find((pair) => pair.targetTokenId === followed.id)?.canonicalTokenId
+
+    expect(canonicalTokenFor(variantAlignmentPairs(rows, "meaning"))).toBe(saw.id)
+    expect(canonicalTokenFor(variantAlignmentPairs(rows, "phrase"))).toBe(saw.id)
+    expect(canonicalTokenFor(variantAlignmentPairs(rows, "token"))).toBeUndefined()
+    expect(canonicalTokenFor(variantAlignmentPairs(rows, "lemma"))).toBeUndefined()
+  })
+
+  it("includes visible variant alignments in the NetworkCustomChart graph", () => {
+    const specimen = getSpecimen("attachment-ambiguity")
+    const sequentialPathCount =
+      specimen.tokens.length - 1 +
+      specimen.variants.reduce((total, variant) => total + variant.tokens.length - 1, 0)
+
+    render(
+      <SentenceStructureStage
+        view="variants"
+        specimen={specimen}
+        tokens={specimen.tokens}
+        selectedTokenIds={[]}
+        interpretationId="default"
+        direction="forward"
+        alignment="meaning"
+        rewrites={{}}
+        reducedMotion
+        onSelectToken={vi.fn()}
+        onSelectInterpretation={vi.fn()}
+        onSelectSource={vi.fn()}
+      />,
+    )
+
+    expect(Number(screen.getByTestId("network-custom-chart").getAttribute("data-edge-count")))
+      .toBeGreaterThan(sequentialPathCount)
   })
 
   it("selects several deep root branches and keeps split/rejoin edges within budget", () => {

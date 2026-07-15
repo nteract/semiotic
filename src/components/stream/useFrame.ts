@@ -50,6 +50,7 @@ import type { TransitionConfig } from "./types"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import type { HoverPointerCoords } from "./hoverUtils"
 import { FrameRuntime, type FrameClock, type FrameRandom } from "./FrameRuntime"
+import { reserveFrameChromeMargin } from "./titleLayout"
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -128,6 +129,16 @@ export interface UseFrameInput {
   userMargin: Partial<FrameMargin> | undefined
   /** Frame's family-default margin. Shallow-merged with `userMargin`. */
   marginDefault: FrameMargin
+  /**
+   * Visual title rendered by the frame's SVG chrome. A title reserves a small
+   * top strip before plot geometry is calculated so compact caller margins do
+   * not place marks directly beneath the title.
+   */
+  title?: ReactNode
+  /** Optional legend; a top-positioned legend reserves its first row. */
+  legend?: unknown
+  /** Legend placement used for shared top-chrome clearance. */
+  legendPosition?: "right" | "left" | "top" | "bottom"
   /** Frame's `foregroundGraphics` prop. */
   foregroundGraphics?: FrameGraphicsProp
   /** Frame's `backgroundGraphics` prop. */
@@ -278,9 +289,15 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
 
   // ── Margin merge + adjusted dimensions ────────────────────────────────
   // Memoized so frames using `margin` as a useMemo dependency don't loop.
+  const hasTitle = Boolean(input.title)
+  const hasTopLegend = Boolean(input.legend) && input.legendPosition === "top"
   const margin = useMemo<FrameMargin>(
-    () => ({ ...input.marginDefault, ...input.userMargin }),
-    [input.marginDefault, input.userMargin],
+    () => reserveFrameChromeMargin(
+      { ...input.marginDefault, ...input.userMargin },
+      hasTitle,
+      hasTopLegend,
+    ),
+    [input.marginDefault, input.userMargin, hasTitle, hasTopLegend],
   )
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom

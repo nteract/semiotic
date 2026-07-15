@@ -258,9 +258,9 @@ export default function ForecastVaultRoom({
       maxSubsteps: 8,
       settleStepLimit: 2400,
       timeScale: 1.1,
-      observation: { chartId: "analyst-adventure-vault", chartType: "StreamPhysicsFrame" },
+      observation: { chartId: `analyst-adventure-${room.id}`, chartType: "StreamPhysicsFrame" },
     }),
-    [chartHeight, chartWidth],
+    [chartHeight, chartWidth, room.id],
   )
   const chartProps = useMemo(
     () => ({
@@ -332,6 +332,7 @@ export default function ForecastVaultRoom({
           onInspect: inspect,
           onObservation,
           onAnnotationActivate,
+          activeSelection,
         }) => (
           <div className="analyst-adventure__chart-with-controls">
             <div className="analyst-adventure__physics-controls">
@@ -342,7 +343,10 @@ export default function ForecastVaultRoom({
               >
                 {settledShown ? "SETTLED PROJECTION SHOWN" : "SHOW SETTLED PROJECTION"}
               </button>
-              <span>{reducedMotion ? "REDUCED MOTION: FINAL STATE" : "SEED 1984"}</span>
+              <span>
+                PROJECT ORACLE // {" "}
+                <span>{reducedMotion ? "REDUCED MOTION: FINAL STATE" : "SEED 1984"}</span>
+              </span>
             </div>
             <StreamPhysicsFrame
               key={`${settledShown ? "settled" : "falling"}-${chartWidth}`}
@@ -354,13 +358,26 @@ export default function ForecastVaultRoom({
               suspendWhenHidden
               background="#071014"
               backgroundGraphics={() => processChrome(chartWidth, chartHeight)}
-              bodyStyle={(body) => ({
-                fill: body.datum?.kind === "ceo" ? "#ffd166" : "#55f6ff",
-                stroke: body.datum?.kind === "ceo" ? "#fff4b8" : "#083d46",
-                strokeWidth: body.datum?.kind === "ceo" ? 3 : 1.25,
-                opacity: 0.94,
-              })}
+              bodyStyle={(body) => {
+                const selected =
+                  !activeSelection?.isActive ||
+                  activeSelection.predicate(body.datum ?? {})
+                return {
+                  fill: body.datum?.kind === "ceo" ? "#ffd166" : "#55f6ff",
+                  stroke: body.datum?.kind === "ceo" ? "#fff4b8" : "#083d46",
+                  strokeWidth: body.datum?.kind === "ceo" ? 3 : 1.25,
+                  opacity: selected ? 0.94 : 0.2,
+                }
+              }}
               selectedBodyStyle={{ fill: "#ff4fd8", stroke: "#f7fbff", strokeWidth: 3 }}
+              selection={
+                activeSelection?.isActive
+                  ? {
+                      isActive: true,
+                      predicate: (body) => activeSelection.predicate(body.datum ?? {}),
+                    }
+                  : null
+              }
               enableHover
               hoverRadius={20}
               tooltipContent={(hover) => (
@@ -391,12 +408,11 @@ export default function ForecastVaultRoom({
                   onActivateAnnotation("vault-janitor")
                 }
               }}
-              chartId="analyst-adventure-vault"
+              chartId={`analyst-adventure-${room.id}`}
               onObservation={onObservation}
               onAnnotationActivate={onAnnotationActivate}
               annotations={mergedAnnotations}
               accessibleTable
-              title="PROJECT ORACLE // SETTLEMENT APPARATUS"
               description={chartProps.description}
               summary={chartProps.summary}
             />
