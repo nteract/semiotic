@@ -91,7 +91,7 @@ export interface BigNumberThreshold {
   level: BigNumberLevel
   /** Explicit colour override; otherwise `var(--semiotic-{level})`. */
   color?: string
-  /** Optional label surfaced in tooltips, the ARIA sentence, and capability output. */
+  /** Optional label appended to the generated ARIA sentence. */
   label?: string
 }
 
@@ -306,11 +306,10 @@ export interface BigNumberProps<_TDatum extends Datum = Datum> {
    *  full-width and stacks the chart at full card width under the delta
    *  row. */
   trendSlot?: BigNumberSlot
-  /** **Square** chart embedded beside the value — e.g. a `DonutChart` /
-   *  `PieChart` / `Scatterplot` / `Treemap`. When set, the card splits
-   *  into a left column (header + value + delta) and a right column
-   *  (the square chart). Compose with `trendSlot` to get both
-   *  (square chart on the right, wide trend along the bottom). */
+  /** **Square** chart anchored as a top-right card decoration — e.g. a
+   *  `DonutChart` / `PieChart` / `Scatterplot` / `Treemap`. The header
+   *  reserves its corner; choose `chartSize` to leave room for large values
+   *  or compose with `trendSlot` for a wide chart along the bottom. */
   chartSlot?: BigNumberSlot
   /** Reserved pixel size (square) for `chartSlot`. Defaults are
    *  mode-keyed for sparkline scale — 44 px for `tile`, 80 px for

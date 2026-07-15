@@ -170,6 +170,7 @@ export default function ExecutiveSuiteRoom({
           onInspect: inspect,
           onObservation,
           onAnnotationActivate,
+          activeSelection,
         }) => (
           <StreamXYFrame
             chartType="line"
@@ -211,17 +212,22 @@ export default function ExecutiveSuiteRoom({
               if (!scales?.x || !scales?.y) return null
               return (
                 <g aria-hidden="true">
-                  {data.map((row) => (
-                    <circle
-                      key={row.id}
-                      cx={scales.x(row.timestamp)}
-                      cy={scales.y(row.floor)}
-                      r={row.id === roof?.id ? 6 : 4}
-                      fill={row.source === "badge" ? COLORS.badge : COLORS.elevator}
-                      stroke={row.trusted ? "#071014" : COLORS.danger}
-                      strokeWidth={row.trusted ? 1.5 : 3}
-                    />
-                  ))}
+                  {data.map((row) => {
+                    const selected =
+                      !activeSelection?.isActive || activeSelection.predicate(row)
+                    return (
+                      <circle
+                        key={row.id}
+                        cx={scales.x(row.timestamp)}
+                        cy={scales.y(row.floor)}
+                        r={row.id === roof?.id ? 6 : 4}
+                        fill={row.source === "badge" ? COLORS.badge : COLORS.elevator}
+                        stroke={selected ? (row.trusted ? "#071014" : COLORS.danger) : "#24424b"}
+                        strokeWidth={selected ? (row.trusted ? 1.5 : 3) : 1}
+                        opacity={selected ? 1 : 0.2}
+                      />
+                    )
+                  })}
                 </g>
               )
             }}
@@ -241,15 +247,15 @@ export default function ExecutiveSuiteRoom({
                 </div>
               )
             }}
-            customHoverBehavior={(hover) => {
+            customHoverBehavior={(hover, context) => {
               const datum = datumFromHover(hover)
-              if (datum?.id) inspect?.(String(datum.id), "pointer")
+              if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
             }}
-            customClickBehavior={(hover) => {
+            customClickBehavior={(hover, context) => {
               const datum = datumFromHover(hover)
-              if (datum?.id) inspect?.(String(datum.id), "activate")
+              if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
             }}
-            chartId="analyst-adventure-executive"
+            chartId={`analyst-adventure-${room.id}`}
             onObservation={onObservation}
             onAnnotationActivate={onAnnotationActivate}
             annotations={mergedAnnotations}

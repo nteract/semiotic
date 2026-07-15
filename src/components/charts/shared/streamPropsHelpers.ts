@@ -23,6 +23,10 @@
 "use client"
 import type { ReactNode } from "react"
 import type { Datum } from "./datumTypes"
+import type {
+  SemanticClickBehavior,
+  SemanticHoverBehavior
+} from "./semanticInteractions"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
 import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig, ResolvedMobileInteractionConfig } from "./types"
@@ -127,8 +131,8 @@ export function buildCustomBehaviorProps(input: {
   forceHoverBehavior?: boolean
   forceClickBehavior?: boolean
   mobileInteraction?: ResolvedMobileInteractionConfig
-  customHoverBehavior: (d: Datum | null) => void
-  customClickBehavior?: (d: Datum | null) => void
+  customHoverBehavior: SemanticHoverBehavior
+  customClickBehavior?: SemanticClickBehavior
   /**
    * Whether `linkedHover` participates in the click predicate. Most
    * XY / ordinal HOCs say yes — `linkedHover` cross-chart selection
@@ -139,8 +143,8 @@ export function buildCustomBehaviorProps(input: {
    */
   linkedHoverInClickPredicate?: boolean
 }): {
-  customHoverBehavior?: (d: Datum | null) => void
-  customClickBehavior?: (d: Datum | null) => void
+  customHoverBehavior?: SemanticHoverBehavior
+  customClickBehavior?: SemanticClickBehavior
   annotationObservationCallback?: OnObservationCallback
   hoverRadius?: number
 } {
@@ -159,8 +163,8 @@ export function buildCustomBehaviorProps(input: {
     linkedHoverInClickPredicate = true,
   } = input
   const out: {
-    customHoverBehavior?: (d: Datum | null) => void
-    customClickBehavior?: (d: Datum | null) => void
+    customHoverBehavior?: SemanticHoverBehavior
+    customClickBehavior?: SemanticClickBehavior
     annotationObservationCallback?: OnObservationCallback
     hoverRadius?: number
   } = {}

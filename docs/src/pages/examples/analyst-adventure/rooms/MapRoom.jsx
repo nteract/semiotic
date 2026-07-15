@@ -187,6 +187,7 @@ export default function MapRoom({
           onInspect: inspect,
           onObservation,
           onAnnotationActivate,
+          activeSelection,
         }) => (
           <div className="analyst-adventure__chart-with-controls">
             <div
@@ -236,12 +237,16 @@ export default function MapRoom({
                 strokeWidth: 2,
                 r: datum.kind === "relay" ? 7 : 6,
               })}
-              lineStyle={(datum) => ({
-                stroke: datum.id === "cafeteria-heartbeat" ? "#83939a" : "#ff4fd8",
-                strokeWidth: 1.5 + Number(datum.packets ?? 1) / 4,
-                strokeDasharray: datum.id === "cafeteria-heartbeat" ? "3 5" : undefined,
-                opacity: datum.id === "cafeteria-heartbeat" ? 0.55 : 0.9,
-              })}
+              lineStyle={(datum) => {
+                const selected =
+                  !activeSelection?.isActive || activeSelection.predicate(datum)
+                return {
+                  stroke: datum.id === "cafeteria-heartbeat" ? "#83939a" : "#ff4fd8",
+                  strokeWidth: 1.5 + Number(datum.packets ?? 1) / 4,
+                  strokeDasharray: datum.id === "cafeteria-heartbeat" ? "3 5" : undefined,
+                  opacity: selected ? (datum.id === "cafeteria-heartbeat" ? 0.55 : 0.9) : 0.16,
+                }
+              }}
               showParticles={!reducedMotion}
               particleStyle={{
                 radius: 2.5,
@@ -274,15 +279,15 @@ export default function MapRoom({
                   </div>
                 )
               }}
-              customHoverBehavior={(hover) => {
+              customHoverBehavior={(hover, context) => {
                 const datum = datumFromHover(hover)
-                if (datum?.id) inspect?.(String(datum.id), "pointer")
+                if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
               }}
-              customClickBehavior={(hover) => {
+              customClickBehavior={(hover, context) => {
                 const datum = datumFromHover(hover)
-                if (datum?.id) inspect?.(String(datum.id), "activate")
+                if (datum?.id) inspect?.(String(datum.id), context?.inputType ?? "pointer")
               }}
-              chartId="analyst-adventure-map"
+              chartId={`analyst-adventure-${room.id}`}
               onObservation={onObservation}
               onAnnotationActivate={onAnnotationActivate}
               annotations={mergedAnnotations}

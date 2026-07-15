@@ -23,6 +23,7 @@ import {
   type AutoPlaceAnnotations
 } from "../recipes/annotationLayout"
 import { renderLegendFromConfig } from "./legendRenderer"
+import { TITLE_BASELINE } from "./titleLayout"
 
 interface GeoSVGOverlayProps {
   width: number
@@ -179,7 +180,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
       {title && (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"

@@ -18,6 +18,7 @@ import {
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
+import { reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
@@ -32,7 +33,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 300]
-  const margin = { ...defaultMargin, ...props.margin }
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const data = filterSparseArray(props.data)
   const xyLegendCategories = props.showLegend
     ? extractCategories(data, props.colorAccessor || props.groupAccessor)
@@ -282,4 +283,3 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 }
 
 // ── Helper functions for building RealtimeNodes/Edges from props ────────
-

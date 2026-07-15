@@ -258,7 +258,10 @@ describe("generateFrameSVGs", () => {
         title: "Revenue Trend",
       }, { stepSize: 20, transitionFrames: 0 })
 
-      frames.forEach(f => expect(f).toContain("Revenue Trend"))
+      frames.forEach(f => {
+        expect(f).toContain("Revenue Trend")
+        expect(f).toContain('transform="translate(40,36)"')
+      })
     })
 
     it("applies background color", () => {

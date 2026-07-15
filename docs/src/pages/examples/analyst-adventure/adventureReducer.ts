@@ -13,6 +13,7 @@ import {
   getAvailableChoices,
   getAvailableDestinations,
   getEvidenceTemplate,
+  isAdventureChoiceDisabled,
   roomRegistry,
 } from "./roomRegistry"
 import {
@@ -329,7 +330,7 @@ export function adventureReducer(
       const choice = getAvailableChoices(state).find(
         (candidate) => candidate.id === action.choiceId,
       )
-      if (!choice) return state
+      if (!choice || isAdventureChoiceDisabled(state, choice.id)) return state
       const effect = resolveOutcome(choice.outcomes, state)
       if (!effect) return state
       return commit(state, action, applyChoiceEffect(state, effect))

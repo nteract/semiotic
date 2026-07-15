@@ -15,6 +15,7 @@ import {
   getAvailableDestinations,
   getEnding,
   getRoom,
+  isAdventureChoiceDisabled,
 } from "./roomRegistry"
 import { hintFlagForRoom, storySeed1984 } from "./storySeed1984"
 import AnalystStatus from "./components/AnalystStatus"
@@ -240,7 +241,7 @@ export default function AnalystAdventureGame() {
   const choose = useCallback(
     (choiceOrId) => {
       const choiceId = typeof choiceOrId === "string" ? choiceOrId : choiceOrId.id
-      if (!choiceId) return
+      if (!choiceId || isAdventureChoiceDisabled(state, choiceId)) return
       dispatch(adventureActions.choose(choiceId))
       setAnnouncement(`Selected ${choiceId.replaceAll("-", " ")}.`)
       record({
@@ -251,7 +252,7 @@ export default function AnalystAdventureGame() {
         meta: { choiceId },
       })
     },
-    [record, room.frameFamily, room.id],
+    [record, room.frameFamily, room.id, state],
   )
 
   const navigate = useCallback((roomId) => {
@@ -306,6 +307,9 @@ export default function AnalystAdventureGame() {
   const useHint = useCallback(
     (roomId) => {
       dispatch(adventureActions.useHint(roomId))
+      // A token is a one-shot request for the currently mounted room. Clear
+      // it after delivery so a later room mount cannot replay the same hint.
+      setHintRequestToken(0)
     },
     [],
   )
@@ -369,7 +373,7 @@ export default function AnalystAdventureGame() {
   const choiceItems = choices.map((choice) => ({
     ...choice,
     tone: choice.kind === "correct" ? "cyan" : choice.kind === "secret" ? "magenta" : "default",
-    disabled: choice.id === "vault-read-projection" && state.flags.settledProjectionRead,
+    disabled: isAdventureChoiceDisabled(state, choice.id),
   }))
 
   const headerAction = (

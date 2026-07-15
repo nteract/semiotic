@@ -100,6 +100,13 @@ test.describe("Analyst Adventure authored source interactions", () => {
     )
     await expect(page.getByRole("button", { name: /Hidden Forecast Vault/i })).toHaveCount(0)
     await hoverFirstExecutiveTelemetryMark(page)
+    await openDetailsWithKeyboard(page, "ACCESSIBILITY CONSOLE")
+    const navigationTree = page.getByRole("tree", {
+      name: "The Calendar That Lies structured chart navigation",
+    })
+    await expect(
+      navigationTree.locator('[role="treeitem"][aria-selected="true"]'),
+    ).toHaveAttribute("aria-level", "3")
     await page.waitForTimeout(250)
     expect(maximumDepthErrors).toEqual([])
 
@@ -125,6 +132,13 @@ test.describe("Analyst Adventure authored source interactions", () => {
     await expectAnalyticalResolution(page, /stale|cached|observed/i)
     await enterDestination(page, /^Records Catacombs/)
     await expect(page.getByText("Records Catacombs · StreamOrdinalFrame", { exact: true })).toBeVisible()
+    // The executive hint request is one-shot. A new room must not consume its
+    // own hint merely because it mounted after the request was handled.
+    await page.waitForTimeout(100)
+    await openDetailsWithKeyboard(page, "ZORKBOT-2000 · LOCAL HINT TERMINAL")
+    await expect(
+      page.getByRole("button", { name: "What should I compare?", exact: true }),
+    ).toBeEnabled()
     const recordsFrame = page.locator(".stream-ordinal-frame")
     await expect(
       recordsFrame.locator("text.semiotic-axis-tick").filter({ hasText: "Sales" }),

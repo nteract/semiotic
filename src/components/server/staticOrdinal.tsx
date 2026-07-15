@@ -17,6 +17,7 @@ import { ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
 import { renderSceneWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { reserveTitleMargin } from "../stream/titleLayout"
 import {
   renderStaticLegend,
   extractCategories
@@ -141,7 +142,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 400]
-  const margin = { ...defaultMargin, ...props.margin }
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const data = filterSparseArray(props.data)
   const ordinalLegendCategories = props.showLegend
     ? extractCategories(data, props.colorAccessor || props.stackBy || props.groupBy)
@@ -324,6 +325,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
     scales: {
+      o: store.scales.o,
       r: store.scales.r,
       y: store.scales.projection === "vertical" ? store.scales.r : undefined,
     },

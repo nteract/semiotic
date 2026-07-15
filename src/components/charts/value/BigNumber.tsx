@@ -20,6 +20,7 @@ import {
 
 import { SafeRender } from "../shared/withChartWrapper"
 import { useReducedMotion } from "../../stream/useMediaPreferences"
+import { useWasHydratingFromSSR } from "../../stream/useHydration"
 import {
   buildFormatter,
   decorate,
@@ -156,12 +157,25 @@ function renderSlot(
 function useTweenedValue(
   target: number,
   animate: BigNumberProps["animate"],
-  reducedMotion: boolean
+  reducedMotion: boolean,
+  initialValue = target
 ): number {
-  const [displayed, setDisplayed] = useState<number>(target)
+  const [displayed, setDisplayed] = useState<number>(() => initialValue)
+  const displayedRef = useRef<number>(initialValue)
   const rafRef = useRef<number | null>(null)
   const fromRef = useRef<number>(target)
   const startRef = useRef<number>(0)
+  const animationEnabled = Boolean(animate)
+  const configuredDuration =
+    typeof animate === "object" ? animate.duration : undefined
+  const duration =
+    typeof configuredDuration === "number" && Number.isFinite(configuredDuration)
+      ? Math.max(0, configuredDuration)
+      : 300
+  const easing: "linear" | "ease-out" =
+    typeof animate === "object" && animate.easing === "linear"
+      ? "linear"
+      : "ease-out"
   // Track the latest target without re-creating the RAF callback on every
   // setDisplayed re-render — the tween reads tweenTargetRef.current to
   // know where to land. A new target re-arms the animation via the
@@ -169,22 +183,25 @@ function useTweenedValue(
   const tweenTargetRef = useRef<number>(target)
 
   useEffect(() => {
-    if (!Number.isFinite(target)) {
-      setDisplayed(target)
-      return
+    const updateDisplayed = (next: number) => {
+      displayedRef.current = next
+      setDisplayed(next)
     }
-    if (!animate || reducedMotion) {
-      setDisplayed(target)
-      return
-    }
-    const duration =
-      typeof animate === "object" && animate.duration ? animate.duration : 300
-    const easing: "linear" | "ease-out" =
-      typeof animate === "object" && animate.easing === "linear"
-        ? "linear"
-        : "ease-out"
 
-    fromRef.current = displayed
+    if (!Number.isFinite(target)) {
+      updateDisplayed(target)
+      return
+    }
+    if (!animationEnabled || reducedMotion) {
+      updateDisplayed(target)
+      return
+    }
+    if (duration === 0) {
+      updateDisplayed(target)
+      return
+    }
+
+    fromRef.current = displayedRef.current
     tweenTargetRef.current = target
     startRef.current =
       typeof performance !== "undefined" ? performance.now() : Date.now()
@@ -199,12 +216,12 @@ function useTweenedValue(
       const eased = ease(t)
       const next =
         fromRef.current + (tweenTargetRef.current - fromRef.current) * eased
-      setDisplayed(next)
+      updateDisplayed(next)
       if (t < 1) {
         rafRef.current = requestAnimationFrame(tick)
       } else {
         rafRef.current = null
-        setDisplayed(tweenTargetRef.current)
+        updateDisplayed(tweenTargetRef.current)
       }
     }
     rafRef.current = requestAnimationFrame(tick)
@@ -212,10 +229,9 @@ function useTweenedValue(
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
       rafRef.current = null
     }
-    // displayed intentionally excluded — including it would restart the
-    // tween every animation frame. (No react-hooks/exhaustive-deps rule is
-    // configured in eslint.config.mjs, so no disable directive is needed.)
-  }, [target, animate, reducedMotion, displayed])
+    // The current display value lives in a ref so a tween frame can update
+    // React state without restarting this effect.
+  }, [animationEnabled, duration, easing, reducedMotion, target])
 
   return displayed
 }
@@ -288,8 +304,8 @@ function buildAriaSentence(args: {
   delta?: number | null
   deltaFormatted?: string | null
   deltaPercent?: string | null
-  targetLabel?: string
-  targetPercent?: string | null
+  targetText?: string | null
+  thresholdLabel?: string
   stale: boolean
   staleLabel?: string
 }): string {
@@ -316,9 +332,8 @@ function buildAriaSentence(args: {
     const comp = args.comparisonLabel ? ` from ${args.comparisonLabel}` : ""
     parts.push(`${dirWord} ${args.deltaFormatted}${pct}${comp}`)
   }
-  if (args.targetPercent && args.targetLabel) {
-    parts.push(`${args.targetPercent} of ${args.targetLabel}`)
-  }
+  if (args.targetText) parts.push(args.targetText)
+  if (args.thresholdLabel) parts.push(args.thresholdLabel)
   if (args.stale) parts.push(args.staleLabel ?? "stale")
   return parts.join(", ")
 }
@@ -390,6 +405,7 @@ const BigNumberInner = (
   const width = widthProp ?? defaults.width
   const height = heightProp ?? defaults.height
   const reducedMotion = useReducedMotion()
+  const wasHydratingFromSSR = useWasHydratingFromSSR()
 
   // ── Push API + buffer ────────────────────────────────────────────
   //
@@ -491,9 +507,8 @@ const BigNumberInner = (
         (Number.isFinite(propValueRef.current)
           ? (propValueRef.current as number)
           : null),
-      // Defensive copy — consumers receive a frozen snapshot of the
-      // ring buffer, not the live ref, so they can't mutate component
-      // state by writing back into the array.
+      // Defensive copy — consumers receive a snapshot rather than the live
+      // ref, so they can't mutate component state by writing into the array.
       getData: () => pushBufferRef.current.slice()
     }),
     [ingest, ingestBatch]
@@ -536,15 +551,20 @@ const BigNumberInner = (
     typeof animateOpt === "object" && animateOpt.intro === false
       ? false
       : Boolean(animateOpt)
-  const initialValueRef = useRef<number>(
-    introEnabled ? 0 : Number.isFinite(propValue) ? (propValue as number) : 0
+  const tweenTarget = Number.isFinite(effectiveValue)
+    ? (effectiveValue as number)
+    : 0
+  // Preserve the final value in SSR and on the first hydration render so the
+  // client markup matches the server. Fresh CSR mounts can visibly animate
+  // into the focal value when intro is enabled.
+  const initialTweenValueRef = useRef<number>(
+    introEnabled && !reducedMotion && !wasHydratingFromSSR ? 0 : tweenTarget
   )
   const tweened = useTweenedValue(
-    Number.isFinite(effectiveValue)
-      ? (effectiveValue as number)
-      : initialValueRef.current,
+    tweenTarget,
     animateOpt,
-    reducedMotion
+    reducedMotion,
+    initialTweenValueRef.current
   )
   const displayedValue = animateOpt
     ? tweened
@@ -625,18 +645,18 @@ const BigNumberInner = (
         locale,
         currency,
         precision
-      }),
+    }),
     [target?.format, format, locale, currency, precision]
   )
-  const comparisonFormatter = useMemo(
-    () =>
-      buildFormatter(comparison?.format ?? format ?? "number", {
-        locale,
-        currency,
-        precision
-      }),
-    [comparison?.format, format, locale, currency, precision]
-  )
+  const targetText = target
+    ? targetPercent
+      ? target.label
+        ? `${targetPercent} of ${target.label} (${targetFormatter(target.value)})`
+        : `${targetPercent} of ${targetFormatter(target.value)}`
+      : target.label
+        ? `target ${target.label} (${targetFormatter(target.value)})`
+        : `target ${targetFormatter(target.value)}`
+    : null
 
   // ── Staleness ────────────────────────────────────────────────────
   const stale = useStaleness(lastUpdate, stalenessThreshold)
@@ -678,8 +698,8 @@ const BigNumberInner = (
       delta: computedDelta,
       deltaFormatted,
       deltaPercent,
-      targetLabel: target?.label,
-      targetPercent,
+      targetText,
+      thresholdLabel: matchedThreshold?.label,
       stale,
       staleLabel
     })
@@ -1119,19 +1139,6 @@ const BigNumberInner = (
             {summary}
           </span>
         ) : null}
-
-        {/* Hidden accessible representation — sr-only sentence, used by
-            screen readers in addition to the aria-label on the group. */}
-        <span
-          aria-hidden="true"
-          // Comparison value is in the visible delta + sentence; we don't
-          // re-render the underlying comparison number redundantly.
-          style={{ display: "none" }}
-        >
-          {comparisonValue != null
-            ? comparisonFormatter(comparisonValue)
-            : null}
-        </span>
       </Block>
     </SafeRender>
   )

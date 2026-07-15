@@ -15,6 +15,7 @@ import {
 } from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
+import { TITLE_BASELINE } from "./titleLayout"
 
 interface OrdinalSVGOverlayProps {
   width: number
@@ -611,7 +612,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       {title && (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"

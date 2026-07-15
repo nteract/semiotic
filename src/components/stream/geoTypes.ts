@@ -133,12 +133,13 @@ export interface GeoPipelineConfig {
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
   /**
-   * Auto-fit padding as a **fraction** of the plot (0–0.5), not pixels.
-   * `0.1` insets the fitted geography 10% from each edge. A value `>= 1` is
-   * almost always a pixel mistake and collapses the projection off-canvas.
+   * Projection-fit padding as a finite fraction of the plot, not pixels.
+   * Valid values are in `[0, 0.5)`; `0.1` insets automatic fitting 10% from
+   * each edge. `null` and `undefined` use `0`; other values throw `RangeError`
+   * at the config boundary. Ignored when `projectionExtent` is supplied.
    * @default 0
    */
-  fitPadding?: number
+  fitPadding?: number | null
 
   xAccessor?: string | ((d: Datum) => number)
   yAccessor?: string | ((d: Datum) => number)
@@ -198,12 +199,13 @@ export interface StreamGeoFrameProps<T = Datum> {
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
   /**
-   * Auto-fit padding as a **fraction** of the plot (0–0.5), not pixels.
-   * `0.1` insets the fitted geography 10% from each edge. A value `>= 1` is
-   * almost always a pixel mistake and collapses the projection off-canvas.
+   * Projection-fit padding as a finite fraction of the plot, not pixels.
+   * Valid values are in `[0, 0.5)`; `0.1` insets automatic fitting 10% from
+   * each edge. `null` and `undefined` use `0`; other values throw `RangeError`
+   * at the config boundary. Ignored when `projectionExtent` is supplied.
    * @default 0
    */
-  fitPadding?: number
+  fitPadding?: number | null
 
   // ── Data ──
   areas?: GeoJSON.Feature[]

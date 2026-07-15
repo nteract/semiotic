@@ -32,6 +32,7 @@ import {
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
@@ -99,7 +100,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     })
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
-  const margin = { ...defaultMargin, ...props.margin }
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const networkLegendCategories = props.showLegend ? (() => {
     const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"

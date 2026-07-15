@@ -865,3 +865,15 @@ export function getAvailableChoices(state: AnalystAdventureState): AdventureChoi
   if (state.completedRoomIds.includes(state.currentRoomId)) return []
   return roomRegistry[state.currentRoomId].choices
 }
+
+/**
+ * Choices remain visible after being disabled so the room can explain its
+ * resolved state, but reducers and keyboard shortcuts must share the same
+ * one-shot rule as the rendered button.
+ */
+export function isAdventureChoiceDisabled(
+  state: Pick<AnalystAdventureState, "flags">,
+  choiceId: string,
+): boolean {
+  return choiceId === "vault-read-projection" && Boolean(state.flags.settledProjectionRead)
+}

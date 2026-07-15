@@ -6,6 +6,7 @@ import {
   suggestCharts,
   useChartInterrogation,
   useNavigationSync,
+  useSelection,
 } from "semiotic/ai"
 import {
   auditAccessibility,
@@ -257,6 +258,20 @@ export default function AnalyticalRoom({
     matchFields: ["id"],
     annotations: semanticAnnotations,
   })
+  // The authored rooms use raw Stream Frames rather than HOCs, so consume the
+  // navigation selection here and thread its resolved predicate into their
+  // bespoke mark styles. HOCs already perform this bridge internally.
+  const navigationSelection = useSelection({
+    name: navigation.selection.name,
+    fields: ["id"],
+  })
+  const activeSelection = useMemo(
+    () =>
+      navigationSelection.isActive
+        ? { isActive: true, predicate: navigationSelection.predicate }
+        : null,
+    [navigationSelection.isActive, navigationSelection.predicate],
+  )
 
   const resolver = useCallback(
     async (question) => {
@@ -363,13 +378,18 @@ export default function AnalyticalRoom({
 
   const onChartObservation = useCallback(
     (event) => {
-      if (!event || event.type === "hover-end" || event.type === "click-end") return
+      if (!event) return
+      // Raw Stream Frames invoke their callback directly rather than using
+      // HOC observation publishing, so bridge their events into the shared
+      // navigation sync before applying the adventure-specific inspection.
+      navigation.onObservation(event)
+      if (event.type === "hover-end" || event.type === "click-end") return
       const datum = event.datum?.data ?? event.datum ?? event.data
       const datumId = datum?.id ?? event.bodyId
       if (!datumId) return
       onInspect?.(String(datumId), event.inputType ?? "pointer")
     },
-    [onInspect],
+    [navigation.onObservation, onInspect],
   )
 
   const onChartAnnotationActivate = useCallback(
@@ -400,7 +420,7 @@ export default function AnalyticalRoom({
           onInspect,
           onObservation: onChartObservation,
           onAnnotationActivate: onChartAnnotationActivate,
-          selection: navigation.selection,
+          activeSelection,
         })}
       </ChartContainer>
 

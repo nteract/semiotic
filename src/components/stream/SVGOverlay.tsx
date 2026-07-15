@@ -25,6 +25,7 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
+import { TITLE_BASELINE } from "./titleLayout"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 //
@@ -926,7 +927,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {title && (
         <text
           x={totalWidth / 2}
-          y={20}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"

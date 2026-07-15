@@ -53,3 +53,23 @@ describe("band annotations", () => {
     expect(node).toBeNull()
   })
 })
+
+describe("top annotation label clearance", () => {
+  it("keeps threshold and band labels clear of the plot edge", () => {
+    const xThreshold = renderToStaticMarkup(
+      rules({ type: "x-threshold", value: 20, label: "Start" }, 0, context) as React.ReactElement,
+    )
+    const xBand = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 20, x1: 60, label: "Phase" }, 0, context) as React.ReactElement,
+    )
+    const topYThreshold = renderToStaticMarkup(
+      rules({ type: "y-threshold", value: 100, label: "Ceiling" }, 0, context) as React.ReactElement,
+    )
+
+    expect(xThreshold).toContain('y="16"')
+    expect(xBand).toContain('y="16"')
+    // A threshold on the top plot edge labels below its rule rather than
+    // escaping upward into title chrome.
+    expect(topYThreshold).toContain('y="16"')
+  })
+})

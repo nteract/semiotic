@@ -26,6 +26,11 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
   catmullRom: curveCatmullRom,
 }
 
+// These labels sit inside the plot rather than the outer title margin. Leave
+// room for their bold face and white outline before the first mark/edge.
+const TOP_LABEL_BASELINE = 16
+const TOP_THRESHOLD_LABEL_FLIP = 20
+
 type AnnotationRule = (
   annotation: Datum,
   index: number,
@@ -145,7 +150,7 @@ export function createDefaultAnnotationRules(
         } else if (labelPos === "center") {
           textY = (context.height || 0) / 2
         } else {
-          textY = 12
+          textY = TOP_LABEL_BASELINE
         }
 
         // A line near the right edge must label leftward, or the text runs off
@@ -208,6 +213,10 @@ export function createDefaultAnnotationRules(
           textX = (context.width || 0) - 4
           anchor = "end"
         }
+        const textY =
+          py < TOP_THRESHOLD_LABEL_FLIP
+            ? Math.min((context.height || 0) - 4, py + TOP_LABEL_BASELINE)
+            : py - 4
 
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
@@ -223,7 +232,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={textX}
-                y={py - 4}
+                y={textY}
                 textAnchor={anchor}
                 fill={color}
                 fontSize={12}
@@ -577,7 +586,7 @@ export function createDefaultAnnotationRules(
                 // Inside the band's top edge (clamped into the plot) so the
                 // label can't render off-screen above the plot or collide with
                 // the chart title when the band exceeds the data's range.
-                y={Math.max(Math.min(y0px, y1px), 0) + 13}
+                y={Math.max(Math.min(y0px, y1px), 0) + TOP_LABEL_BASELINE}
                 textAnchor="end"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
@@ -612,7 +621,7 @@ export function createDefaultAnnotationRules(
             {ann.label && (
               <text
                 x={Math.min(x0px, x1px) + 4}
-                y={13}
+                y={TOP_LABEL_BASELINE}
                 textAnchor="start"
                 fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
@@ -1044,7 +1053,7 @@ export function createDefaultAnnotationRules(
               <rect x={pos} y={0} width={bandwidth} height={context.height || 0}
                     fill={color} fillOpacity={opacity} />
               {label && (
-                <text x={pos + bandwidth / 2} y={12} textAnchor="middle"
+                <text x={pos + bandwidth / 2} y={TOP_LABEL_BASELINE} textAnchor="middle"
                       fill={color} fontSize={12} fontWeight="bold">{label}</text>
               )}
             </g>

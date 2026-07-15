@@ -26,6 +26,7 @@ import type { SceneNode, SceneRenderMode } from "../stream/types"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
+import { reserveTitleMargin, TITLE_BASELINE } from "../stream/titleLayout"
 import { renderChart } from "./renderToStaticSVG"
 import {
   PhysicsPipelineStore,
@@ -167,7 +168,10 @@ export function generateFrameSVGs(
   const isOrdinal = ORDINAL_TYPES.has(chartType)
 
   // Compute inner dimensions from merged margin — same as frame renderers use
-  const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
+  const margin = reserveTitleMargin(
+    { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
+    props.title,
+  )
   const innerW = width - margin.left - margin.right
   const innerH = height - margin.top - margin.bottom
 
@@ -439,7 +443,7 @@ function renderFrameAnnotations(
           {ann.label && (
             <text
               x={labelPos === "left" ? 4 : labelPos === "center" ? innerWidth / 2 : innerWidth - 4}
-              y={py - 5}
+              y={py < 20 ? Math.min(innerHeight - 4, py + 16) : py - 5}
               textAnchor={labelPos === "left" ? "start" : labelPos === "center" ? "middle" : "end"}
               fontSize={s.tickSize} fill={color} fontFamily={s.fontFamily}>
               {ann.label}
@@ -462,7 +466,10 @@ function renderXYFrameSVG(
   storeScales?: { y?: (v: number) => number }
 ): string {
   const s = themeStyles(theme)
-  const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
+  const margin = reserveTitleMargin(
+    { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
+    props.title,
+  )
   const innerW = width - margin.left - margin.right
   const innerH = height - margin.top - margin.bottom
   const bg = resolveBackground(props, theme)
@@ -495,7 +502,7 @@ function renderXYFrameSVG(
         {dataMarks}
       </g>
       {titleText && (
-        <text x={width / 2} y={16} textAnchor="middle" fontSize={s.titleSize}
+        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleSize}
           fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
           {titleText}
         </text>
@@ -514,7 +521,10 @@ function renderOrdinalFrameSVG(
   props: Datum
 ): string {
   const s = themeStyles(theme)
-  const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
+  const margin = reserveTitleMargin(
+    { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
+    props.title,
+  )
   const isRadial = props.projection === "radial"
   const tx = isRadial ? margin.left + (width - margin.left - margin.right) / 2 : margin.left
   const ty = isRadial ? margin.top + (height - margin.top - margin.bottom) / 2 : margin.top
@@ -544,7 +554,7 @@ function renderOrdinalFrameSVG(
         {dataMarks}
       </g>
       {titleText && (
-        <text x={width / 2} y={16} textAnchor="middle" fontSize={s.titleSize}
+        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleSize}
           fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
           {titleText}
         </text>

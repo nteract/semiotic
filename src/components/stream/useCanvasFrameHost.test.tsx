@@ -84,6 +84,17 @@ describe("useCanvasFrameHost", () => {
     expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
   })
 
+  it("does not resubscribe when a caller recreates an equivalent input object", () => {
+    const fixture = createInput()
+    const subscribe = vi.spyOn(fixture.frameRuntime, "subscribe")
+    const { rerender } = renderHook(() => useCanvasFrameHost({ ...fixture.input }))
+
+    expect(subscribe).toHaveBeenCalledTimes(1)
+
+    rerender()
+    expect(subscribe).toHaveBeenCalledTimes(1)
+  })
+
   it("uses family-selected canvas dependencies for overlay paint invalidation", () => {
     const fixture = createInput({ canvasPaintDependencies: ["first"] })
     const { rerender } = renderHook(

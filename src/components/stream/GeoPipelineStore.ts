@@ -57,6 +57,45 @@ import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
 const DEFAULT_STREAM_WINDOW_SIZE = 500
+const MAX_FIT_PADDING = 0.5
+
+/**
+ * `fitPadding` is applied to both sides of the plot, so 0.5 would leave a
+ * zero-sized extent (and a clipped globe with radius zero). Normalize nullish
+ * values at the public config boundary, and reject invalid values before they
+ * can reach d3 with a negative or non-finite projection extent.
+ */
+function normalizeFitPadding(value: unknown): number {
+  if (value == null) return 0
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value < MAX_FIT_PADDING
+  ) {
+    return value
+  }
+  throw new RangeError(
+    `[semiotic] fitPadding must be a finite fraction in [0, ${MAX_FIT_PADDING}); received ${String(value)}.`,
+  )
+}
+
+function normalizeInitialConfig(config: GeoPipelineConfig): GeoPipelineConfig {
+  return {
+    ...config,
+    fitPadding: normalizeFitPadding(config.fitPadding)
+  }
+}
+
+function normalizeConfigUpdate(
+  config: Partial<GeoPipelineConfig>
+): Partial<GeoPipelineConfig> {
+  if (!("fitPadding" in config)) return config
+  return {
+    ...config,
+    fitPadding: normalizeFitPadding(config.fitPadding)
+  }
+}
 
 export class GeoPipelineStore implements UpdateResultStore {
   declare getLastUpdateResult: () => UpdateResult
@@ -135,7 +174,7 @@ export class GeoPipelineStore implements UpdateResultStore {
   private _hasRenderedOnce = false
 
   constructor(config: GeoPipelineConfig) {
-    this.config = config
+    this.config = normalizeInitialConfig(config)
   }
 
   /** Keep Geo transitions and pulse lifecycle on the host's logical clock
@@ -184,13 +223,17 @@ export class GeoPipelineStore implements UpdateResultStore {
   }
 
   updateConfig(config: Partial<GeoPipelineConfig>): void {
+    // Normalize before observing or changing any store state so an invalid
+    // update is atomic: no config, retained data, version, or update result
+    // changes if validation throws.
+    const normalizedConfig = normalizeConfigUpdate(config)
     const previous = this.config
     const previousWindowSize = this.getConfiguredWindowSize()
-    const changedConfigKeys = Object.keys(config).filter(
-      (key) => (config as unknown as Record<string, unknown>)[key] !==
+    const changedConfigKeys = Object.keys(normalizedConfig).filter(
+      (key) => (normalizedConfig as unknown as Record<string, unknown>)[key] !==
         (previous as unknown as Record<string, unknown>)[key]
     )
-    this.config = { ...this.config, ...config }
+    this.config = { ...this.config, ...normalizedConfig }
     const nextWindowSize = this.getConfiguredWindowSize()
     const resizedRetainedData = this.streaming && nextWindowSize !== previousWindowSize
     if (resizedRetainedData) {
@@ -200,7 +243,7 @@ export class GeoPipelineStore implements UpdateResultStore {
     // An explicit removal dismisses the old failure rather than surfacing an
     // error for a callback the caller no longer uses. The next built-in scene
     // build clears the remaining custom-layout output.
-    if ("customLayout" in config && !config.customLayout) {
+    if ("customLayout" in normalizedConfig && !normalizedConfig.customLayout) {
       this.lastCustomLayoutFailure = null
     }
     this.updateResults.recordConfig(changedConfigKeys, {
@@ -651,13 +694,6 @@ export class GeoPipelineStore implements UpdateResultStore {
         features: allFeatures
       }
       const pad = config.fitPadding ?? 0
-      if (pad >= 1 && typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
-         
-        console.warn(
-          `[semiotic] fitPadding=${pad} looks like pixels, but it's a fraction of the plot (0–0.5). ` +
-            `A value >= 1 collapses the projection off-canvas — use e.g. 0.06.`
-        )
-      }
       const px = layout.width * pad
       const py = layout.height * pad
       proj.fitExtent(

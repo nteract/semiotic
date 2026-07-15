@@ -149,6 +149,7 @@ export default function ServerCathedralRoom({
           onInspect: inspect,
           onObservation,
           onAnnotationActivate,
+          activeSelection,
         }) => (
           <StreamNetworkFrame
             chartType="sankey"
@@ -178,16 +179,27 @@ export default function ServerCathedralRoom({
               strokeWidth: datum.id === "PresentationDaemon" ? 2.5 : 1.5,
               opacity: datum.id === "PresentationDaemon" ? 0.78 : 0.92,
             })}
-            edgeStyle={(datum) => ({
-              stroke: datum.legitimate ? "#55f6ff" : "#ff4fd8",
-              strokeWidth: datum.legitimate ? 1.5 : 2,
-              strokeDasharray: datum.legitimate ? undefined : "5 4",
-              opacity: datum.id === "daemon-projector" ? 0.82 : datum.legitimate ? 0.55 : 0.42,
-            })}
+            edgeStyle={(datum) => {
+              const flow = datum.data ?? datum
+              const selected =
+                !activeSelection?.isActive || activeSelection.predicate(flow)
+              return {
+                stroke: flow.legitimate ? "#55f6ff" : "#ff4fd8",
+                strokeWidth: flow.legitimate ? 1.5 : 2,
+                strokeDasharray: flow.legitimate ? undefined : "5 4",
+                opacity: selected
+                  ? flow.id === "daemon-projector"
+                    ? 0.82
+                    : flow.legitimate
+                      ? 0.55
+                      : 0.42
+                  : 0.12,
+              }
+            }}
             edgeColorBy={(edge) => (edge.data?.legitimate === false ? "#ff4fd8" : "#55f6ff")}
             edgeOpacity={0.58}
             renderMode={roughLineage}
-            nodeLabel="label"
+            nodeLabel={(node) => node.data?.label ?? node.id}
             showLabels
             showParticles={!reducedMotion}
             particleStyle={{
@@ -217,19 +229,19 @@ export default function ServerCathedralRoom({
                 </div>
               )
             }}
-            customHoverBehavior={(hover) => {
+            customHoverBehavior={(hover, context) => {
               const datum = hoverDatum(hover)
               const id = datum?.data?.id ?? datum?.id
-              if (id) inspect?.(String(id), "pointer")
+              if (id) inspect?.(String(id), context?.inputType ?? "pointer")
             }}
-            customClickBehavior={(hover) => {
+            customClickBehavior={(hover, context) => {
               const datum = hoverDatum(hover)
               const id = datum?.data?.id ?? datum?.id
-              if (id) inspect?.(String(id), "activate")
+              if (id) inspect?.(String(id), context?.inputType ?? "pointer")
             }}
             onObservation={onObservation}
             onAnnotationActivate={onAnnotationActivate}
-            chartId="analyst-adventure-server"
+            chartId={`analyst-adventure-${room.id}`}
             annotations={mergedAnnotations}
             accessibleTable
             title="PRESENTATION LINEAGE // CONFIDENCE UNITS"
