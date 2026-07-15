@@ -6,8 +6,9 @@ provenance and compatibility expectations.
 
 | Channel | Cloud Run service | Source | Deployment trigger | Intended users |
 | --- | --- | --- | --- | --- |
-| Stable | `semiotic-mcp` | Exact published npm release | Manual/tagged release | Public users and registries |
-| Nightly | `semiotic-mcp-server` | Repository `main` commit | Automatic after merge | Maintainers and live validation |
+| Stable | `semiotic-mcp-server` (`us-west1`) | Exact published npm release | Manual/tagged release | Public users and registries |
+| Nightly | `semiotic-mcp-nightly` (`us-central1`) | Repository `main` commit | Automatic after merge, after manual smoke approval | Maintainers and live validation |
+| Legacy | `semiotic-mcp` | Existing deployment | None in this workflow | Leave untouched until nightly verification completes |
 
 The stable implementation is [`cloud-run`](./cloud-run/). It is a thin,
 release-oriented wrapper: it installs an exact published `semiotic` npm
@@ -125,14 +126,15 @@ application-level substitute.
 
 To roll back **nightly**, either send all nightly traffic to a previously known
 good revision, or update only the nightly service image to a previously known
-Artifact Registry digest. These actions do not alter `semiotic-mcp`:
+Artifact Registry digest. These actions do not alter the stable
+`semiotic-mcp-server` service:
 
 ```sh
-gcloud run revisions list --project semiotic-mcp --region us-west1 \
-  --service semiotic-mcp-server
+gcloud run revisions list --project semiotic-mcp --region us-central1 \
+  --service semiotic-mcp-nightly
 
-gcloud run services update-traffic semiotic-mcp-server \
-  --project semiotic-mcp --region us-west1 \
+gcloud run services update-traffic semiotic-mcp-nightly \
+  --project semiotic-mcp --region us-central1 \
   --to-revisions=KNOWN_GOOD_REVISION=100
 ```
 
@@ -144,7 +146,7 @@ nightly deployment README has the exact image path and trigger procedure.
 To promote a validated nightly commit, make a normal stable patch release from
 that commit: tag and publish the exact npm package, update the exact
 `semiotic` version and lockfile in `deploy/cloud-run`, run the release checks,
-then manually deploy `semiotic-mcp`. Update the registry/surface manifest and
+then manually deploy `semiotic-mcp-server`. Update the registry/surface manifest and
 GitHub Release as the same release operation. Promotion is never an image copy
 from nightly and never changes stable traffic automatically.
 

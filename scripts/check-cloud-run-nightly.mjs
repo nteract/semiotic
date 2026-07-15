@@ -16,7 +16,9 @@ try {
     dockerfile: read("deploy/cloud-run-nightly/Dockerfile"),
     cloudbuild: read("deploy/cloud-run-nightly/cloudbuild.yaml"),
     verifier: read("deploy/cloud-run-nightly/verify-runtime.mjs"),
-    legacyBuildpacks: read("deploy/cloud-run-nightly/legacy-buildpacks-cloudbuild.yaml"),
+    historicalStableBuildpacks: read(
+      "deploy/cloud-run-nightly/historical-stable-buildpacks-cloudbuild.yaml"
+    )
   })
 
   if (report.errors.length > 0) {
@@ -24,7 +26,9 @@ try {
     process.exitCode = 1
   } else {
     console.log("✓ Nightly Cloud Run deployment configuration passed")
-    console.log(`  service: ${report.manifest.service} (${report.manifest.region})`)
+    console.log(
+      `  service: ${report.manifest.service} (${report.manifest.region})`
+    )
     console.log(`  image: ${report.manifest.image}`)
   }
 } catch (error) {

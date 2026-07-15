@@ -1,12 +1,24 @@
-# Repository-built nightly deployment for the existing us-west1 Cloud Run
-# service. The trigger must use this file with the repository root as its build
-# context; do not point it at deploy/cloud-run-nightly.
+# Repository-built nightly deployment for the us-central1 Cloud Run service
+# `semiotic-mcp-nightly`. The trigger must use this file with the repository
+# root as its build context; do not point it at deploy/cloud-run-nightly.
 #
-# The stable published-release wrapper deliberately remains at deploy/cloud-run.
+# The stable published-release wrapper at deploy/cloud-run targets the separate
+# `semiotic-mcp-server` service in us-west1 and must not use this configuration.
+# The existing `semiotic-mcp` service is legacy and must not use it either.
 substitutions:
-  # The existing trigger supplies its actual identifier here. Keeping a safe
-  # manual default makes an intentional local/manual build label truthful.
+  # A provisioned nightly trigger supplies its actual identifier here. Keeping
+  # a safe manual default makes an intentional local/manual build label truthful.
   _TRIGGER_ID: manual
+  # These service-creation settings must be supplied deliberately for a new
+  # nightly service. Existing service updates do not change them.
+  _NIGHTLY_RUNTIME_SERVICE_ACCOUNT: REQUIRED
+  _NIGHTLY_CPU: "1"
+  _NIGHTLY_MEMORY: 1Gi
+  _NIGHTLY_TIMEOUT: 300s
+  _NIGHTLY_CONCURRENCY: "80"
+  _NIGHTLY_MIN_INSTANCES: "0"
+  _NIGHTLY_MAX_INSTANCES: "3"
+  _NIGHTLY_BOOTSTRAP_HOST: bootstrap.invalid
 
 steps:
   - id: build-nightly-image
@@ -18,7 +30,7 @@ steps:
         build_time="$$(date -u +%Y-%m-%dT%H:%M:%SZ)"
         docker build \
           --file deploy/cloud-run-nightly/Dockerfile \
-          --tag us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA \
+          --tag us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA \
           --build-arg SEMIOTIC_DEPLOYMENT_CHANNEL=nightly \
           --build-arg SEMIOTIC_GIT_SHA=$COMMIT_SHA \
           --build-arg SEMIOTIC_BUILD_ID=$BUILD_ID \
@@ -35,7 +47,7 @@ steps:
       - --rm
       - --entrypoint
       - node
-      - us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
+      - us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA
       - deploy/cloud-run-nightly/verify-runtime.mjs
       - --require-nightly-build-info
 
@@ -43,24 +55,67 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - push
-      - us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
+      - us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA
 
-  # `services update` changes only the image and explicitly named labels. It
-  # does not use --set-env-vars, --clear-labels, or service-shaping flags, so
-  # existing MCP_ALLOWED_HOSTS, secrets, IAM, ingress, scaling, resources,
-  # concurrency, timeout, and custom-domain configuration remain intact.
-  - id: deploy-nightly-revision
+  # Existing services receive only an image/label update. On first creation,
+  # a no-traffic revision keeps host validation enabled with a non-routable
+  # bootstrap host; a second revision adds the generated run.app hostname
+  # before traffic is enabled.
+  - id: create-or-update-nightly-revision
     name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
     args:
-      - run
-      - services
-      - update
-      - semiotic-mcp-server
-      - --project=semiotic-mcp
-      - --region=us-west1
-      - --image=us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
-      - --update-labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=${_TRIGGER_ID},deployment-channel=nightly,deployment-source=repository-main
-      - --quiet
+      - -ceu
+      - |
+        service=semiotic-mcp-nightly
+        region=us-central1
+        image=us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA
+        labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=${_TRIGGER_ID},deployment-channel=nightly,deployment-source=repository-main
+
+        if gcloud run services describe "$$service" --project=semiotic-mcp --region="$$region" >/dev/null 2>&1; then
+          gcloud run services update "$$service" \
+            --project=semiotic-mcp \
+            --region="$$region" \
+            --image="$$image" \
+            --update-labels="$$labels" \
+            --quiet
+          exit 0
+        fi
+
+        test "${_NIGHTLY_RUNTIME_SERVICE_ACCOUNT}" != REQUIRED
+        gcloud run deploy "$$service" \
+          --project=semiotic-mcp \
+          --region="$$region" \
+          --image="$$image" \
+          --service-account="${_NIGHTLY_RUNTIME_SERVICE_ACCOUNT}" \
+          --allow-unauthenticated \
+          --ingress=all \
+          --cpu="${_NIGHTLY_CPU}" \
+          --memory="${_NIGHTLY_MEMORY}" \
+          --timeout="${_NIGHTLY_TIMEOUT}" \
+          --concurrency="${_NIGHTLY_CONCURRENCY}" \
+          --min-instances="${_NIGHTLY_MIN_INSTANCES}" \
+          --max-instances="${_NIGHTLY_MAX_INSTANCES}" \
+          --set-env-vars="MCP_ALLOWED_HOSTS=${_NIGHTLY_BOOTSTRAP_HOST}" \
+          --update-labels="$$labels" \
+          --no-traffic \
+          --quiet
+
+        endpoint="$$(gcloud run services describe "$$service" \
+          --project=semiotic-mcp --region="$$region" --format='value(status.url)')"
+        hostname="$${endpoint#https://}"
+        test -n "$$hostname"
+        gcloud run services update "$$service" \
+          --project=semiotic-mcp \
+          --region="$$region" \
+          --update-env-vars="MCP_ALLOWED_HOSTS=$$hostname" \
+          --update-labels="$$labels" \
+          --quiet
+        gcloud run services update-traffic "$$service" \
+          --project=semiotic-mcp \
+          --region="$$region" \
+          --to-latest \
+          --quiet
 
   # Resolve the configured service URL without echoing configuration values.
   # /workspace persists across Cloud Build steps but is discarded afterward.
@@ -70,9 +125,9 @@ steps:
     args:
       - -ceu
       - |
-        gcloud run services describe semiotic-mcp-server \
+        gcloud run services describe semiotic-mcp-nightly \
           --project=semiotic-mcp \
-          --region=us-west1 \
+          --region=us-central1 \
           --format='value(status.url)' > /workspace/semiotic-nightly-endpoint
         test -s /workspace/semiotic-nightly-endpoint
 
