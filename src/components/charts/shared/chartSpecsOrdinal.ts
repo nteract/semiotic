@@ -30,6 +30,9 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // expose `valueExtent`; the rest still need registry entries.
       valueExtent: { type: "array", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules, last-applicable rule wins per property. A rule's fill may be a color or a HatchFill descriptor." },
+      // Same schema-baseline treatment as `roundedTop`/`valueExtent` — supported
+      // (client + SSR) but not yet re-baselined into the canonical schema.
+      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each bar; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
       regression: {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale.",
@@ -63,6 +66,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware segment styling: ordered { when, style } rules (ctx.category is the stack key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
+      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each segment; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
@@ -93,6 +97,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 60 },
       roundedTop: { type: "number", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules (ctx.category is the group key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
+      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each bar; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },

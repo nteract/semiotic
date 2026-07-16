@@ -195,6 +195,7 @@ export const swimlaneChart: ChartConfig = {
     colorScheme,
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
   }),
 }
 

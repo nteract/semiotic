@@ -314,6 +314,28 @@ describe("SSR feature parity: foregroundGraphics", () => {
   })
 })
 
+// Regression coverage for the 3.4.2 near-miss referenced in the file header:
+// `renderOrdinalToStaticSVG` silently dropped `gradientFill` before it ever
+// reached the ordinal pipeline config, so bar gradients never appeared in SSR
+// output despite working on canvas. (Boolean shorthand is an HOC-level
+// convenience normalized by BarChart/renderChart, not a frame-level prop —
+// that path is covered separately in serverFeatures.test.tsx.)
+describe("SSR feature parity: ordinal gradientFill", () => {
+  it("emits a <linearGradient> for object-form gradientFill", () => {
+    const svg = FRAME_RENDERERS.ordinal({
+      gradientFill: { topOpacity: 0.9, bottomOpacity: 0.1 },
+    })
+    expect(svg).toContain("<linearGradient")
+  })
+
+  it("emits a <linearGradient> for colorStops gradientFill", () => {
+    const svg = FRAME_RENDERERS.ordinal({
+      gradientFill: { colorStops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] },
+    })
+    expect(svg).toContain("<linearGradient")
+  })
+})
+
 describe("SSR feature parity: geo customLayout", () => {
   it("serializes custom geo nodes and overlays", () => {
     const svg = renderGeoToStaticSVG({

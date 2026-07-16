@@ -214,6 +214,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     dynamicColumnWidth: props.dynamicColumnWidth,
     pieceStyle: props.pieceStyle,
     summaryStyle: props.summaryStyle,
+    gradientFill: props.gradientFill,
     colorScheme: effectiveColorScheme,
     themeCategorical: theme.colors.categorical,
     themeSemantic: resolveThemeSemanticColors(theme),
