@@ -98,7 +98,6 @@ const SAFE_ROUTES = new Set([
   "/",
   "/mcp",
   "/health",
-  "/healthz",
   "/.well-known/openai-apps-challenge",
 ])
 

@@ -46,9 +46,16 @@ export function validateNightlyCloudRunDeployment({
   dockerfile,
   cloudbuild,
   verifier,
-  historicalStableBuildpacks
+  historicalStableBuildpacks,
+  activeHealthAliasReferences = []
 }) {
   const errors = []
+
+  if (activeHealthAliasReferences.length > 0) {
+    errors.push(
+      `unsupported legacy health endpoint references: ${activeHealthAliasReferences.join(", ")}`
+    )
+  }
 
   if (typeof dockerfile !== "string") {
     errors.push("deploy/cloud-run-nightly/Dockerfile must be readable")

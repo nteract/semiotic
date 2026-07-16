@@ -129,7 +129,7 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `/` , `/mcp` | POST | MCP Streamable HTTP (JSON-RPC). `/mcp` is the canonical URL to give clients; `POST /` is a compatibility alias. Returns a JSON response. Bodies or nested tool arguments over their configured limits get 413. |
 | `/mcp` | GET | **405** (`Allow: POST`). Per the Streamable HTTP spec, a stateless server with no SSE stream rejects GET on the transport endpoint. |
 | `/` | GET | 200 JSON info blob (human/service info — outside the MCP transport contract). |
-| `/healthz`, `/health` | GET | 200 health JSON (for uptime checks). |
+| `/health` | GET | 200 health JSON and deployment identity (for uptime checks). |
 | `/.well-known/openai-apps-challenge` | GET | 200 plain-text OpenAI Apps domain verification token when `OPENAI_APPS_CHALLENGE_TOKEN` is set. |
 | anything else (`/favicon.ico`, other `/.well-known/*` probes) | any | 404. The 404 on `/.well-known/oauth-protected-resource` is the correct signal that this is an unauthenticated server. |
 

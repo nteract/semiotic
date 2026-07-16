@@ -32,8 +32,9 @@ function Body() {
       </p>
       <p>
         HTTP mode also picks up production hygiene: <code>/mcp</code> as the
-        canonical endpoint, <code>/healthz</code> and <code>/health</code> for
-        probes, clean 404s for non-MCP paths, and optional{" "}
+        canonical endpoint, <code>/health</code> for probes (the secondary
+        health alias mentioned at release has since been retired), clean 404s
+        for non-MCP paths, and optional{" "}
         <code>MCP_ALLOWED_HOSTS</code> host-header allowlisting for DNS
         rebinding protection.
       </p>

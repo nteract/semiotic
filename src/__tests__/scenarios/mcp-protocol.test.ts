@@ -1276,9 +1276,8 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
   })
 
-  it("serves /healthz as an exact /health alias outside the MCP transport", async () => {
+  it("serves /health outside the MCP transport", async () => {
     const health = await requestHTTP(port, "/health")
-    const healthz = await requestHTTP(port, "/healthz")
     // Deliberately send headers that would cause a POST MCP request to be
     // rejected. Successful health responses prove these routes return before
     // the MCP transport's Accept and protocol-version request gates.
@@ -1289,29 +1288,16 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
         Authorization: "Bearer not-the-server-token",
       },
     })
-    const healthzWithQuery = await requestHTTP(port, "/healthz?probe=1", {
-      headers: {
-        Accept: "text/plain",
-        "MCP-Protocol-Version": "unsupported-probe-version",
-        Authorization: "Bearer not-the-server-token",
-      },
-    })
     const healthBody = health.body as Record<string, unknown>
 
     expect(health.status).toBe(200)
-    expect(healthz.status).toBe(200)
     expect(healthWithQuery.status).toBe(200)
-    expect(healthzWithQuery.status).toBe(200)
-    expect(health.body).toEqual(healthz.body)
     expect(healthWithQuery.body).toEqual(health.body)
-    expect(healthzWithQuery.body).toEqual(health.body)
-    expect(health.headers["content-type"]).toBe(healthz.headers["content-type"])
-    expect(health.headers["access-control-allow-origin"]).toBe(healthz.headers["access-control-allow-origin"])
-    expect(health.headers["mcp-protocol-version"]).toBe(healthz.headers["mcp-protocol-version"])
+    expect(health.headers["content-type"]).toContain("application/json")
+    expect(health.headers["access-control-allow-origin"]).toBe("*")
+    expect(health.headers["mcp-protocol-version"]).toBeDefined()
     expect(health.headers["mcp-session-id"]).toBeUndefined()
-    expect(healthz.headers["mcp-session-id"]).toBeUndefined()
     expect(healthWithQuery.headers["mcp-session-id"]).toBeUndefined()
-    expect(healthzWithQuery.headers["mcp-session-id"]).toBeUndefined()
     expect(healthBody).toMatchObject({
       status: "ok",
       name: "semiotic-mcp",
@@ -1319,10 +1305,6 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
       mode: "stateless",
     })
     expect(String(healthBody.version)).toMatch(/^\d+\.\d+\.\d+/)
-
-    const mcpGet = await requestHTTP(port, "/mcp")
-    expect(mcpGet.status).toBe(405)
-    expect(mcpGet.headers.allow).toBe("POST, OPTIONS")
 
     const info = await requestHTTP(port, "/")
     const infoBody = info.body as Record<string, unknown>
@@ -1516,13 +1498,13 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     proc = server.proc
     port = server.port
 
-    const rejected = await requestHTTP(port, "/healthz")
+    const rejected = await requestHTTP(port, "/health")
     expect(rejected.status).toBe(403)
     expect(rejected.body).toMatchObject({
       error: { message: "Forbidden host" },
     })
 
-    const accepted = await requestHTTP(port, "/healthz", { host: "allowed.example:443" })
+    const accepted = await requestHTTP(port, "/health", { host: "allowed.example:443" })
     expect(accepted.status).toBe(200)
     expect(accepted.body).toMatchObject({ status: "ok" })
   })

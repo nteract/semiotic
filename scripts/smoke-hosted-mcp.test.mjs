@@ -73,7 +73,7 @@ async function createFixture(options = {}) {
   const server = http.createServer(async (req, res) => {
     const pathname = new URL(req.url || "/", "http://fixture.invalid").pathname
 
-    if (req.method === "GET" && (pathname === "/health" || pathname === "/healthz")) {
+    if (req.method === "GET" && pathname === "/health") {
       healthRequests += 1
       if (options.healthStatus) {
         json(res, options.healthStatus, { error: "fixture health unavailable" })

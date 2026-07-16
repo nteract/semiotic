@@ -2888,9 +2888,6 @@ async function main() {
         ...(buildInfo.buildId ? { buildId: buildInfo.buildId } : {}),
         ...(buildInfo.builtAt ? { builtAt: buildInfo.builtAt } : {}),
       })
-    // Keep the platform-compatible /healthz endpoint as a true alias rather
-    // than a second response implementation. This is intentionally used for
-    // both probe paths so their status, headers, and body cannot drift.
     const writeHealthResponse = (res: import("http").ServerResponse) => {
       res.writeHead(200, { "Content-Type": "application/json" })
       res.end(healthBody())
@@ -2971,7 +2968,7 @@ async function main() {
       }
 
       // Dedicated health endpoint for platform probes (Cloud Run, uptime checks).
-      if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
+      if (req.method === "GET" && pathname === "/health") {
         writeHealthResponse(res)
         return
       }

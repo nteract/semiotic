@@ -51,7 +51,7 @@ request misrepresent the server that actually executed it.
 
 ## Inspect a deployment
 
-Both services retain `GET /health` and `GET /healthz`. A repository-built
+`GET /health` returns server health and deployment identity. A repository-built
 nightly response has this shape (the values are illustrative):
 
 ```json

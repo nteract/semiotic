@@ -451,11 +451,6 @@ export async function runHostedMcpSmoke(options) {
   const health = await waitForReadyHealth(options, deadline)
   checks.push("health")
 
-  const healthz = await request(options, "healthz", "/healthz", {}, deadline)
-  requireStatus("healthz", healthz.response, 200)
-  assertBuildIdentity("healthz", healthz.body, options)
-  checks.push("healthz")
-
   const mcpGet = await request(options, "mcp GET", "/mcp", {}, deadline)
   requireStatus("mcp GET", mcpGet.response, 405)
   const allowedMethods = (mcpGet.response.headers.get("allow") || "")

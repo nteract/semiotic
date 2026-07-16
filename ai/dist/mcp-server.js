@@ -32475,7 +32475,6 @@ var SAFE_ROUTES = /* @__PURE__ */ new Set([
   "/",
   "/mcp",
   "/health",
-  "/healthz",
   "/.well-known/openai-apps-challenge"
 ]);
 function boundedPositiveInteger(value, fallback, min, max) {
@@ -35371,7 +35370,7 @@ async function main() {
           return;
         }
       }
-      if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
+      if (req.method === "GET" && pathname === "/health") {
         writeHealthResponse(res);
         return;
       }

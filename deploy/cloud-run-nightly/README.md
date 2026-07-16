@@ -166,9 +166,10 @@ service hostname.
 
 ## Verify the manually deployed service
 
-The post-deployment smoke test exercises `/health`, `/healthz`, `GET /mcp`
-(405), `initialize`, `tools/list`, `resources/list`,
-`resources/read` for `semiotic://build-info`, and a `createChart` render:
+The post-deployment smoke test uses `/health` as the canonical Cloud Run health
+endpoint, then exercises `GET /mcp` (405), `initialize`, `tools/list`,
+`resources/list`, `resources/read` for `semiotic://build-info`, and a
+`createChart` render:
 
 ```sh
 node scripts/smoke-hosted-mcp.mjs \

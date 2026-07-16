@@ -148,11 +148,8 @@ describe.skipIf(!SERVER_DEPS_READY)("hosted MCP build identity", () => {
     proc = server.proc
 
     const health = await json(server.port, "/health?probe=1")
-    const healthz = await json(server.port, "/healthz?probe=1")
     expect(health.response.status).toBe(200)
-    expect(healthz.response.status).toBe(200)
-    expect(healthz.body).toEqual(health.body)
-    expect(healthz.response.headers.get("content-type")).toBe(health.response.headers.get("content-type"))
+    expect(health.response.headers.get("content-type")).toContain("application/json")
     expect(health.body).toMatchObject({
       channel: "stable",
       packageVersion: PACKAGE_VERSION,
@@ -185,11 +182,8 @@ describe.skipIf(!SERVER_DEPS_READY)("hosted MCP build identity", () => {
     proc = server.proc
 
     const health = await json(server.port, "/health?probe=1")
-    const healthz = await json(server.port, "/healthz?probe=1")
     expect(health.response.status).toBe(200)
-    expect(healthz.response.status).toBe(200)
-    expect(healthz.body).toEqual(health.body)
-    expect(healthz.response.headers.get("content-type")).toBe(health.response.headers.get("content-type"))
+    expect(health.response.headers.get("content-type")).toContain("application/json")
     expect(health.body).toMatchObject({
       channel: "nightly",
       packageVersion: PACKAGE_VERSION,

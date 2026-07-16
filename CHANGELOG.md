@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **MCP HTTP health endpoint.** `GET /health` is the supported health and
+  deployment-identity endpoint; the unnecessary `/healthz` alias was removed.
+
 ## [3.8.0] - 2026-07-11
 
 ### Added

@@ -168,4 +168,15 @@ describe("nightly Cloud Run deployment configuration", () => {
       true
     )
   })
+
+  it("rejects active references to the retired health alias", () => {
+    const retiredHealthPath = "/health" + "z"
+    const report = validateNightlyCloudRunDeployment(deployment({
+      activeHealthAliasReferences: [`src/example.ts:1 (${retiredHealthPath})`]
+    }))
+    assert.equal(
+      report.errors.some((error) => error.includes("unsupported legacy health endpoint")),
+      true
+    )
+  })
 })
