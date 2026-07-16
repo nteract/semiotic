@@ -93,6 +93,7 @@ export function validateCloudRunManifest({
   gcloudignore,
   lockfile = null,
   requireLockfile = false,
+  requireRootVersion = false,
 }) {
   const errors = []
   const warnings = []
@@ -133,7 +134,11 @@ export function validateCloudRunManifest({
     if (dependencies.react !== dependencies["react-dom"]) {
       errors.push("react and react-dom must use the same exact version")
     }
-    if (dependencies.semiotic !== rootManifest.version) {
+    // The stable Cloud Run wrapper intentionally consumes an already-published
+    // release. During pre-publish CI the root package version is therefore
+    // expected to be newer than the deployed wrapper. Deployment preparation
+    // can opt into this stricter same-release assertion after publication.
+    if (requireRootVersion && dependencies.semiotic !== rootManifest.version) {
       errors.push(`Cloud Run semiotic version must equal the root package version (${JSON.stringify(rootManifest.version)})`)
     }
   }

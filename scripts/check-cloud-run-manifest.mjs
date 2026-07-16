@@ -21,6 +21,7 @@ function main() {
     gcloudignore: readFileSync(join(deployRoot, ".gcloudignore"), "utf8"),
     lockfile: existsSync(lockfilePath) ? readJson(lockfilePath) : null,
     requireLockfile: args.has("--require-lockfile"),
+    requireRootVersion: args.has("--require-root-version"),
   })
 
   if (args.has("--json")) {

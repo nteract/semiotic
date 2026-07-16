@@ -78,4 +78,20 @@ describe("Cloud Run deployment manifest", () => {
     assert.equal(missing.lockfile.state, "missing")
     assert.equal(missing.errors.some((error) => error.includes("package-lock.json is present")), true)
   })
+
+  it("only requires the stable wrapper to match root when preparing that release for deployment", () => {
+    const mismatchedRoot = { ...rootManifest, version: "0.0.0" }
+    const ordinary = validate({ rootManifest: mismatchedRoot, lockfile: validLockfile() })
+    const deployment = validate({
+      rootManifest: mismatchedRoot,
+      lockfile: validLockfile(),
+      requireRootVersion: true,
+    })
+
+    assert.deepEqual(ordinary.errors, [])
+    assert.equal(
+      deployment.errors.some((error) => error.includes("must equal the root package version")),
+      true,
+    )
+  })
 })

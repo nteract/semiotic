@@ -54,9 +54,12 @@ npm run check:cloud-run-lock
 The local verifier proves dependency and build-context intent. Retain Cloud Build evidence for the
 actual deployed revision to prove that its source upload and image used the committed lockfile.
 
-From the repository root, `npm run check:cloud-run-manifest` always verifies the public-host,
-port, profile, exact dependency, and build-context contract; `check:cloud-run-lock` additionally
-fails until a fully resolved lockfile is present.
+From the repository root, `npm run check:cloud-run-manifest` verifies the public-host, port,
+profile, exact published dependency, and build-context contract for the currently deployed stable
+wrapper. It intentionally does not require that pin to match an unpublished root version, so
+pre-publish CI can validate the last deployed release. `check:cloud-run-lock` additionally fails
+until a fully resolved lockfile is present; run `check:cloud-run-release` after publication when
+preparing the wrapper to deploy the new root release.
 
 ## Deploy
 
