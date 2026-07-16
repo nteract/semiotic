@@ -14,6 +14,7 @@ import type {
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
 import type { Datum } from "../shared/datumTypes"
+import type { StyleRule } from "../shared/styleRules"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildPhysicalFlowPhysics,
@@ -65,6 +66,12 @@ export interface PhysicalFlowChartProps<
   showNodeLabels?: boolean
   showSensors?: boolean
   colorBy?: ChartAccessor<TLink, string>
+  /**
+   * Declarative, threshold-aware particle styling. Ordered `{ when, style }`
+   * rules layer over the `colorBy` fill; last applicable rule wins. `ctx` =
+   * `{ value, category }`, where value is throughput and category is colorBy.
+   */
+  styleRules?: StyleRule[]
   seed?: number
   tooltip?: TooltipProp
   paused?: boolean
@@ -522,6 +529,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     showSensors = false,
     showStaticFlow = true,
     sourceAccessor = "source" as ChartAccessor<TLink, string>,
+    styleRules,
     targetAccessor = "target" as ChartAccessor<TLink, string>,
     throughputAccessor = "value" as ChartAccessor<TLink, number>
   } = props
@@ -659,8 +667,13 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
     ("source" as ChartAccessor<Datum, string>)
   const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy, "#2563eb"),
-    [resolvedColorBy]
+    () =>
+      styleFromColorAccessor(resolvedColorBy, "#2563eb", {
+        styleRules,
+        valueAccessor: throughputAccessor as
+          string | ((datum: Datum) => unknown) | undefined
+      }),
+    [resolvedColorBy, styleRules, throughputAccessor]
   )
   const observedConfig = useMemo(
     () => withPhysicalFlowObservation(layout.config, chartId, onObservation),
