@@ -16,16 +16,14 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.0
+## What's New in 3.8.1
 
-3.8.0 makes chart status, layout, and review workflows more explicit:
+3.8.1 makes the hosted MCP rendering path release-ready:
 
-- `ChartContainer` notifications add a non-intrusive bell/popover for chart-level findings.
-- ForceDirectedGraph can run expensive layouts in a Web Worker with synchronous SSR/hydration parity.
-- `x-band` annotations, minimum-width interval lanes, and custom-layout readback make dense,
-  time-oriented charts easier to inspect.
-- The DataPitfalls bridge and GoFish DisplayList adapter remain experimental and are exposed from
-  `semiotic/experimental` with `unstable_` names.
+- Stateless HTTP requests no longer cancel rendering after a completed request body.
+- Hosted `createChart` now has verified SVG and render evidence with `render-proven` status.
+- `GET /health` is the sole supported MCP health endpoint; nightly remains `main`-based while
+  stable deployments are pinned to published releases.
 
 ```jsx
 import { LineChart } from "semiotic/xy"

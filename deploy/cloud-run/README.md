@@ -38,7 +38,7 @@ arbitrary commits from `main`.
 
 ### Lockfile status
 
-The wrapper pins the published `semiotic@3.8.0` release and includes a generated
+The wrapper pins the published `semiotic@3.8.1` release and includes a generated
 `package-lock.json`. Cloud Buildpacks receives that lockfile because `.gcloudignore` excludes
 only `node_modules`.
 
@@ -90,7 +90,7 @@ gcloud run deploy semiotic-mcp-server --source . --region us-west1 \
 
 `git status --short` must be empty, and `npm pkg get dependencies.semiotic` must
 print the exact published release version represented by the tag (for example,
-`"3.8.0"`, never a range). If deploying from a reviewed release commit instead
+`"3.8.1"`, never a range). If deploying from a reviewed release commit instead
 of a tag, substitute that full commit SHA for `vX.Y.Z` only after confirming
 that the wrapper's exact dependency and lockfile match the intended published
 npm artifact. This keeps npm, the stable Cloud Run revision, registry metadata,

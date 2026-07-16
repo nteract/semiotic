@@ -58,7 +58,7 @@ describe("Cloud Run deployment manifest", () => {
 
   it("rejects loose dependencies and a gcloudignore that drops the future lockfile", () => {
     const invalidManifest = structuredClone(wrapperManifest)
-    invalidManifest.dependencies.semiotic = "^3.8.0"
+    invalidManifest.dependencies.semiotic = "^3.8.1"
 
     const report = validate({
       wrapperManifest: invalidManifest,
