@@ -339,6 +339,8 @@ Interface for proposing/scoring variants beyond `capability.variants`. The built
 
 These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `semiotic-ai --doctor`, MCP resources, and docs checks.
 
+- **Accessible chart text uses direct chart props** (`accessibility.description-props`): High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.
+  Agent action: Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.
 - **Data required by usage mode** (`props.data-required-by-usage-mode`): Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.
   Agent action: Pass usageMode="push" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode="static" or omit it for renderChart/MCP/static configs where data must be present.
 - **Categorical color precedence** (`color.category-precedence`): When colorBy is set, CategoryColorProvider/LinkedCharts category maps win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback.

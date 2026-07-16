@@ -25,6 +25,7 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP } from "./validateProps"
+import { assessAccessibilityText, isNonEmptyString } from "./auditAccessibilityText"
 import { contrastRatio } from "./colorContrast"
 import {
   annotationDrawsConnector,
@@ -146,10 +147,6 @@ const REFERENCE =
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
-
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0
-}
 
 function annotationConfidence(a: Datum): number | null {
   const c = a?.provenance?.confidence
@@ -331,15 +328,9 @@ export function auditAccessibility(
 
   const isValue = VALUE.has(component)
   const isHierarchy = HIERARCHY.has(component)
-  const declaredProps = VALIDATION_MAP[component]?.props
-  const supportsAccessibilityProp = (name: "title" | "description" | "summary") =>
-    !!declaredProps?.[name]
-  const unsupportedAccessibilityText = (["title", "description", "summary"] as const)
-    .filter((name) => isNonEmptyString(props[name]) && !supportsAccessibilityProp(name))
+  const { hasTitle, hasDescription, hasSummary, unsupportedFinding } =
+    assessAccessibilityText(component, props)
   const tableEnabled = props.accessibleTable !== false && !isValue
-  const hasTitle = supportsAccessibilityProp("title") && isNonEmptyString(props.title)
-  const hasDescription = supportsAccessibilityProp("description") && isNonEmptyString(props.description)
-  const hasSummary = supportsAccessibilityProp("summary") && isNonEmptyString(props.summary)
   const hasAnyText = hasTitle || hasDescription || hasSummary
   const interactive = isInteractive(props)
   const pauseControl = hasPauseControl(props)
@@ -363,17 +354,7 @@ export function auditAccessibility(
     ? ""
     : ` (unrecognized component "${component}" — verify manually that the built-in applies)`
 
-  if (unsupportedAccessibilityText.length > 0) {
-    f.push({
-      id: "understandable.unsupported-description-prop",
-      principle: "understandable",
-      heuristic: "Descriptive text is connected to the rendered chart",
-      critical: true,
-      status: "warn",
-      message: `Useful ${unsupportedAccessibilityText.join(" and ")} text was supplied, but ${unsupportedAccessibilityText.length === 1 ? "that prop is" : "those props are"} not supported by ${component}'s declared chart API and cannot be credited as rendered accessibility text.`,
-      fix: "Use the component's declared title, description, and summary props when available; for richer generated description or navigation, use ChartContainer with chartConfig plus describe and/or navigable.",
-    })
-  }
+  if (unsupportedFinding) f.push(unsupportedFinding)
 
   // ── PERCEIVABLE ────────────────────────────────────────────────────────
   f.push(checkContrast(props))
