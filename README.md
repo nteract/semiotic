@@ -16,14 +16,15 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.1
+## What's New in 3.8.2
 
-3.8.1 makes the hosted MCP rendering path release-ready:
+3.8.2 makes the hosted MCP accessibility contract internally consistent:
 
-- Stateless HTTP requests no longer cancel rendering after a completed request body.
-- Hosted `createChart` now has verified SVG and render evidence with `render-proven` status.
-- `GET /health` is the sole supported MCP health endpoint; nightly remains `main`-based while
-  stable deployments are pinned to published releases.
+- Chart schemas, validation, repair guidance, and audits consistently expose `title`,
+  `description`, `summary`, and `accessibleTable`.
+- Hosted `getChartSchema` returns structured output for component lists, schemas, and errors,
+  including direct and `ChartContainer` accessibility guidance.
+- The public MCP profile remains a focused five-tool surface with render-proven `createChart` output.
 
 ```jsx
 import { LineChart } from "semiotic/xy"

@@ -4,6 +4,17 @@ import { type ChartConfig } from "./serverChartConfigShared"
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
 
+// `gradientFill === true` is the HOC's shorthand for the default top/bottom
+// opacity stops; the scene builders only accept the object form, so we
+// normalize it the same way the client frame (and staticXY.tsx) do.
+function normalizeBarGradientFill(gradientFill: unknown): unknown {
+  return gradientFill === true
+    ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+    : gradientFill === false
+      ? undefined
+      : gradientFill
+}
+
 export const barChart: ChartConfig = {
   frameType: "ordinal",
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
@@ -18,6 +29,7 @@ export const barChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     // Resolve declarative styleRules into a pieceStyle (bypassed the HOC hook
     // on this path). Spread after `common` so it composes over any user pieceStyle.
     ...(rest.styleRules && {
@@ -42,6 +54,7 @@ export const stackedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     ...(rest.styleRules && {
       pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
     }),
@@ -63,6 +76,7 @@ export const groupedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     ...(rest.styleRules && {
       pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
     }),
