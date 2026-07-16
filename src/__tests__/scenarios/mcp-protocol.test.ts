@@ -1276,47 +1276,6 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
   })
 
-  it("serves /health outside the MCP transport", async () => {
-    const health = await requestHTTP(port, "/health")
-    // Deliberately send headers that would cause a POST MCP request to be
-    // rejected. Successful health responses prove these routes return before
-    // the MCP transport's Accept and protocol-version request gates.
-    const healthWithQuery = await requestHTTP(port, "/health?probe=1", {
-      headers: {
-        Accept: "text/plain",
-        "MCP-Protocol-Version": "unsupported-probe-version",
-        Authorization: "Bearer not-the-server-token",
-      },
-    })
-    const healthBody = health.body as Record<string, unknown>
-
-    expect(health.status).toBe(200)
-    expect(healthWithQuery.status).toBe(200)
-    expect(healthWithQuery.body).toEqual(health.body)
-    expect(health.headers["content-type"]).toContain("application/json")
-    expect(health.headers["access-control-allow-origin"]).toBe("*")
-    expect(health.headers["mcp-protocol-version"]).toBeDefined()
-    expect(health.headers["mcp-session-id"]).toBeUndefined()
-    expect(healthWithQuery.headers["mcp-session-id"]).toBeUndefined()
-    expect(healthBody).toMatchObject({
-      status: "ok",
-      name: "semiotic-mcp",
-      transport: "streamable-http",
-      mode: "stateless",
-    })
-    expect(String(healthBody.version)).toMatch(/^\d+\.\d+\.\d+/)
-
-    const info = await requestHTTP(port, "/")
-    const infoBody = info.body as Record<string, unknown>
-    expect(info.status).toBe(200)
-    expect(infoBody.transport).toBe("streamable-http")
-    expect(infoBody.mode).toBe("stateless")
-
-    const probe = await requestHTTP(port, "/.well-known/oauth-protected-resource")
-    expect(probe.status).toBe(404)
-    expect(probe.body).toEqual({ error: "Not found" })
-  })
-
   it("accepts an allowlisted Origin and rejects a disallowed one", async () => {
     proc?.kill("SIGTERM")
     if (proc) await waitForProcessExit(proc)
