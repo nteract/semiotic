@@ -1164,6 +1164,109 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
     }
   })
 
+  it("returns schema-shaped structured content for every getChartSchema outcome", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-schema-test", version: "1.0.0" },
+      }, "public-schema-initialize")
+
+      const list = await sendRequest(publicProc, "tools/call", {
+        name: "getChartSchema",
+        arguments: {},
+      }, "public-schema-list")
+      expect(list.result.isError).not.toBe(true)
+      expect(list.result.structuredContent).toMatchObject({
+        status: "component-list",
+        surfaceVersion: expect.any(String),
+        availableComponents: expect.arrayContaining([
+          expect.objectContaining({ name: "BarChart", renderable: true }),
+        ]),
+      })
+
+      const component = await sendRequest(publicProc, "tools/call", {
+        name: "getChartSchema",
+        arguments: { component: "BarChart" },
+      }, "public-schema-component")
+      expect(component.result.isError).not.toBe(true)
+      expect(component.result.structuredContent).toMatchObject({
+        status: "component-schema",
+        component: "BarChart",
+        renderable: true,
+        surfaceVersion: expect.any(String),
+        accessibility: {
+          directProps: expect.objectContaining({
+            title: expect.any(Object),
+            description: expect.any(Object),
+            summary: expect.any(Object),
+            accessibleTable: expect.any(Object),
+          }),
+          chartContainer: expect.objectContaining({
+            component: "ChartContainer",
+            describeProp: "describe",
+            navigableProp: "navigable",
+          }),
+        },
+      })
+
+      const unknown = await sendRequest(publicProc, "tools/call", {
+        name: "getChartSchema",
+        arguments: { component: "UnknownChart" },
+      }, "public-schema-unknown")
+      expect(unknown.result.isError).toBe(true)
+      expect(unknown.result.structuredContent).toMatchObject({
+        status: "unknown-component",
+        component: "UnknownChart",
+        surfaceVersion: expect.any(String),
+        availableComponents: expect.any(Array),
+      })
+    } finally {
+      publicProc.kill()
+    }
+  })
+
+  it("keeps improveChart repairs schema-valid and returns accessibility prose separately", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-improve-test", version: "1.0.0" },
+      }, "public-improve-initialize")
+      const result = await sendRequest(publicProc, "tools/call", {
+        name: "improveChart",
+        arguments: {
+          component: "BarChart",
+          props: {
+            data: [
+              { quarter: "Q1", revenue: 12 },
+              { quarter: "Q2", revenue: 18 },
+              { quarter: "Q3", revenue: 15 },
+              { quarter: "Q4", revenue: 24 },
+            ],
+            categoryAccessor: "quarter",
+            valueAccessor: "revenue",
+          },
+          intent: "compare quarterly revenue and clearly communicate that Q4 is highest",
+        },
+      }, "public-improve-chart")
+      expect(result.result.isError).not.toBe(true)
+      expect(result.result.structuredContent.repair).not.toHaveProperty("summary")
+      expect(result.result.structuredContent.repair).not.toHaveProperty("description")
+      expect(result.result.structuredContent.accessibilityRecommendation).toMatchObject({
+        location: "direct-component-props",
+        props: {
+          description: "BarChart comparing revenue by quarter.",
+          summary: "Q4 is highest at 24. Use arrow keys to move between chart marks.",
+        },
+      })
+    } finally {
+      publicProc.kill()
+    }
+  })
+
   it("creates only renderable charts without echoing bulk data", async () => {
     const publicProc = spawnServer(["--profile", "public"])
     try {

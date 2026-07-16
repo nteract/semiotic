@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.2] - 2026-07-16
+
+### Fixed
+
+- **MCP accessibility contract.** Chart schemas, validation, repair guidance,
+  accessibility audits, and `getChartSchema` now consistently expose the
+  direct `title`, `description`, `summary`, and `accessibleTable` props.
+  `improveChart` returns suggested accessibility prose separately with its
+  canonical location, while `auditChart` no longer credits unsupported text.
+- **Public `getChartSchema` output.** The hosted five-tool profile now declares
+  and returns structured results for component lists, component schemas, and
+  unknown-component errors, including direct and `ChartContainer` accessibility
+  guidance.
+
 ## [3.8.1] - 2026-07-15
 
 ### Fixed

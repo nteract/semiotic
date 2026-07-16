@@ -454,13 +454,16 @@ const ACCESSOR_PROPS = [
 ]
 
 function checkMissingDescription(
-  _component: string,
+  component: string,
   props: Datum,
   out: Diagnosis[]
 ): void {
-  const hasTitle = typeof props.title === "string" && props.title.trim().length > 0
-  const hasDescription = typeof props.description === "string" && props.description.trim().length > 0
-  const hasSummary = typeof props.summary === "string" && props.summary.trim().length > 0
+  const declaredProps = VALIDATION_MAP[component]?.props
+  const hasSupportedText = (name: "title" | "description" | "summary") =>
+    !!declaredProps?.[name] && typeof props[name] === "string" && props[name].trim().length > 0
+  const hasTitle = hasSupportedText("title")
+  const hasDescription = hasSupportedText("description")
+  const hasSummary = hasSupportedText("summary")
 
   if (!hasTitle && !hasDescription && !hasSummary) {
     out.push({

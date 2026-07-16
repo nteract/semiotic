@@ -7560,6 +7560,15 @@ var require_behaviorContracts = __commonJS({
     var STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema();
     var BEHAVIOR_CONTRACTS2 = [
       {
+        id: "accessibility.description-props",
+        category: "accessibility",
+        title: "Accessible chart text uses direct chart props",
+        severity: "warning",
+        appliesTo: {},
+        summary: "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
+        agentAction: "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1\u2013L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields."
+      },
+      {
         id: "props.data-required-by-usage-mode",
         category: "required-props",
         title: "Data required by usage mode",
@@ -33769,12 +33778,60 @@ function buildInfoForProfile(profile) {
 function profileResult(result) {
   return { ...result, surfaceVersion: SURFACE_VERSION };
 }
+function schemaAccessibilityGuidance(entry) {
+  const properties = entry?.parameters?.properties ?? {};
+  const directProps = Object.fromEntries(
+    ["title", "description", "summary", "accessibleTable"].filter((name) => properties[name]).map((name) => [name, properties[name]])
+  );
+  return {
+    directProps,
+    chartContainer: {
+      component: "ChartContainer",
+      requires: ["chartConfig"],
+      titleProp: "title",
+      subtitleProp: "subtitle",
+      describeProp: "describe",
+      navigableProp: "navigable",
+      description: "Use ChartContainer with chartConfig plus describe for a generated L1\u2013L3 description and navigable for a screen-reader navigation tree."
+    }
+  };
+}
+function accessibilityRecommendation(component, props, data) {
+  const directProps = schemaAccessibilityGuidance(schemaByComponent[component]).directProps;
+  const recommendation = {};
+  const categoryAccessor = typeof props.categoryAccessor === "string" ? props.categoryAccessor : void 0;
+  const valueAccessor = typeof props.valueAccessor === "string" ? props.valueAccessor : void 0;
+  if (directProps.description && typeof props.description !== "string") {
+    recommendation.description = categoryAccessor && valueAccessor ? `${component} comparing ${valueAccessor} by ${categoryAccessor}.` : `${component} chart.`;
+  }
+  if (directProps.summary && typeof props.summary !== "string") {
+    const numericRows = categoryAccessor && valueAccessor ? data.map((row) => ({ category: row[categoryAccessor], value: row[valueAccessor] })).filter((row) => typeof row.value === "number" && Number.isFinite(row.value)) : [];
+    const highest = numericRows.reduce(
+      (current, row) => !current || row.value > current.value ? row : current,
+      void 0
+    );
+    recommendation.summary = highest ? `${String(highest.category)} is highest at ${highest.value}. Use arrow keys to move between chart marks.` : "Use arrow keys to move between chart marks.";
+  }
+  return Object.keys(recommendation).length > 0 ? {
+    location: "direct-component-props",
+    props: recommendation,
+    chartContainer: schemaAccessibilityGuidance(schemaByComponent[component]).chartContainer
+  } : void 0;
+}
 async function getSchemaHandler(args) {
   const component = args.component;
+  const availableComponents = allComponentNames.map((name) => ({
+    name,
+    renderable: metadataForComponent(name).renderable
+  }));
   if (!component) {
-    const list = allComponentNames.map((name) => metadataForComponent(name).renderable ? `${name} [renderable]` : name);
+    const list = availableComponents.map(
+      ({ name, renderable: renderable2 }) => renderable2 ? `${name} [renderable]` : name
+    );
     return {
-      content: [{ type: "text", text: `Available components (${allComponentNames.length}):
+      content: [{
+        type: "text",
+        text: `Available components (${allComponentNames.length}):
 ${list.join(", ")}
 
 Components marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.
@@ -33783,27 +33840,55 @@ For full agent context, read MCP resources: semiotic://schema, semiotic://compon
 
 All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.
 
-Pass { component: '<name>' } to get the prop schema for a specific component.` }]
+Pass { component: '<name>' } to get the prop schema for a specific component.`
+      }],
+      structuredContent: profileResult({
+        status: "component-list",
+        availableComponents
+      })
     };
   }
   const entry = schemaByComponent[component];
   if (!entry) {
     const available = Object.keys(schemaByComponent).sort();
     return {
-      content: [{ type: "text", text: `Unknown component "${component}". Available: ${available.join(", ")}` }],
+      content: [{
+        type: "text",
+        text: `Unknown component "${component}". Available: ${available.join(", ")}`
+      }],
+      structuredContent: profileResult({
+        status: "unknown-component",
+        component,
+        availableComponents
+      }),
       isError: true
     };
   }
-  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
-  const contracts = behaviorContractsFor({ component, props: {} });
+  const renderable = metadataForComponent(component).renderable;
+  const renderableNote = renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
+  const contracts = behaviorContractsFor({
+    component,
+    props: {}
+  });
   const contractText = contracts.length > 0 ? `
 
 Behavior contracts:
 ${JSON.stringify(contracts, null, 2)}` : "";
   return {
-    content: [{ type: "text", text: `${renderableNote}
+    content: [{
+      type: "text",
+      text: `${renderableNote}
 
-${JSON.stringify(entry, null, 2)}${contractText}` }]
+${JSON.stringify(entry, null, 2)}${contractText}`
+    }],
+    structuredContent: profileResult({
+      status: "component-schema",
+      component,
+      renderable,
+      schema: entry,
+      accessibility: schemaAccessibilityGuidance(entry),
+      behaviorContracts: contracts
+    })
   };
 }
 var SUGGEST_INTENT_ALIASES = {
@@ -34645,9 +34730,17 @@ async function improveChartHandler(args) {
   const repair = (0, import_ai3.repairChartConfig)(args.component, data, { intent });
   const capability = (0, import_ai3.getCapability)(args.component);
   const variants = capability ? (0, import_ai3.proposeVariant)(args.component, capability, { profile: (0, import_ai3.profileData)(data), intent }) : [];
+  const accessibility = accessibilityRecommendation(args.component, args.props, data);
   return {
     content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
-    structuredContent: profileResult({ status: repair.status === "ok" ? "reviewed" : "repair-needed", component: args.component, diagnostics: diagnosis.diagnoses, repair, variants })
+    structuredContent: profileResult({
+      status: repair.status === "ok" ? "reviewed" : "repair-needed",
+      component: args.component,
+      diagnostics: diagnosis.diagnoses,
+      repair,
+      variants,
+      ...accessibility ? { accessibilityRecommendation: accessibility } : {}
+    })
   };
 }
 async function explainChartHandler(args) {
@@ -34659,8 +34752,8 @@ async function explainChartHandler(args) {
 }
 async function auditChartHandler(args) {
   const diagnosis = (0, import_ai3.diagnoseConfig)(args.component, args.props);
-  const accessibility = (0, import_ai3.auditAccessibility)(args.component, args.props, { inChartContainer: true, describe: true, navigable: true });
-  const mobile = (0, import_ai3.auditMobileVisualization)(args.component, args.props, { viewportWidth: args.viewportWidth, inChartContainer: true });
+  const accessibility = (0, import_ai3.auditAccessibility)(args.component, args.props);
+  const mobile = (0, import_ai3.auditMobileVisualization)(args.component, args.props, { viewportWidth: args.viewportWidth });
   const blocking = diagnosis.diagnoses.some((item) => item.severity === "error") || !accessibility.ok || !mobile.ok;
   return {
     content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
@@ -34859,7 +34952,19 @@ function createServer2(profile = "developer", options = {}) {
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
       inputSchema: { component: external_exports3.string(), props: external_exports3.record(external_exports3.string(), external_exports3.unknown()), data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional(), intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional() },
-      outputSchema: { status: external_exports3.enum(["reviewed", "repair-needed"]), component: external_exports3.string(), surfaceVersion: external_exports3.string() },
+      outputSchema: {
+        status: external_exports3.enum(["reviewed", "repair-needed"]),
+        component: external_exports3.string(),
+        diagnostics: external_exports3.array(external_exports3.unknown()),
+        repair: external_exports3.record(external_exports3.string(), external_exports3.unknown()),
+        variants: external_exports3.array(external_exports3.unknown()),
+        accessibilityRecommendation: external_exports3.object({
+          location: external_exports3.literal("direct-component-props"),
+          props: external_exports3.record(external_exports3.string(), external_exports3.string()),
+          chartContainer: external_exports3.record(external_exports3.string(), external_exports3.unknown())
+        }).optional(),
+        surfaceVersion: external_exports3.string()
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     }, improveChartHandler);
     srv.registerTool("explainChart", {
@@ -34879,7 +34984,31 @@ function createServer2(profile = "developer", options = {}) {
     srv.registerTool("getChartSchema", {
       title: "Get a chart schema",
       description: "Return canonical Semiotic prop-schema guidance for code editing and advanced configuration.",
-      inputSchema: { component: external_exports3.string().optional() },
+      inputSchema: {
+        component: external_exports3.string().optional()
+      },
+      outputSchema: {
+        status: external_exports3.enum([
+          "component-list",
+          "component-schema",
+          "unknown-component"
+        ]),
+        component: external_exports3.string().optional(),
+        renderable: external_exports3.boolean().optional(),
+        availableComponents: external_exports3.array(
+          external_exports3.object({
+            name: external_exports3.string(),
+            renderable: external_exports3.boolean()
+          })
+        ).optional(),
+        schema: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional(),
+        accessibility: external_exports3.object({
+          directProps: external_exports3.record(external_exports3.string(), external_exports3.unknown()),
+          chartContainer: external_exports3.record(external_exports3.string(), external_exports3.unknown())
+        }).optional(),
+        behaviorContracts: external_exports3.array(external_exports3.unknown()).optional(),
+        surfaceVersion: external_exports3.string()
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     }, getSchemaHandler);
     return srv;
