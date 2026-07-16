@@ -129,7 +129,8 @@ const LENS_PANEL_COPY = Object.freeze({
       eyebrow: "Service balance",
       title: "Is nature still keeping up?",
       note: "Each mark compares the condition of nature with whether the service is keeping up for people.",
-      footnote: "Mark size shows how many people or livelihoods are exposed. Color shows the alert level.",
+      footnote:
+        "Mark size shows how many people or livelihoods are exposed. Color shows the alert level.",
     },
     pulse: {
       code: "WHAT CHANGED / 03",
@@ -150,7 +151,8 @@ const LENS_PANEL_COPY = Object.freeze({
       eyebrow: "Policy field",
       title: "Where should support go next?",
       note: "The four regions translate condition and adequacy into a decision posture. Exposure makes the reach visible without creating a global priority score.",
-      footnote: "Point area is exposed reach. Outline weight is human supplementation. The tail shows the recent condition direction.",
+      footnote:
+        "Point area is exposed reach. Outline weight is human supplementation. The tail shows the recent condition direction.",
     },
     pulse: {
       code: "DECISION HORIZON / 03",
@@ -171,7 +173,8 @@ const LENS_PANEL_COPY = Object.freeze({
       eyebrow: "Condition–adequacy evidence",
       title: "What does the evidence support?",
       note: "Confidence-scaled whiskers show condition uncertainty and tails show recent movement. Non-comparable services remain explicitly non-comparable.",
-      footnote: "Whisker width reflects confidence, not a formal confidence interval. Symbols identify the evidence type behind the active signal.",
+      footnote:
+        "Whisker width reflects confidence, not a formal confidence interval. Symbols identify the evidence type behind the active signal.",
     },
     pulse: {
       code: "EVIDENCE TRAJECTORY / 03",
@@ -440,7 +443,7 @@ export function LivingLedgerObservatory() {
         : "The claims that currently need attention"
   const alertDeskNote =
     audience === "policy"
-      ? `${attentionCount} service systems are at Watch or higher. Each signal carries a next step, not a claim of outcome.`
+      ? `${attentionCount} service systems are at Watch or higher. Each signal carries a next step.`
       : audience === "science"
         ? `${attentionCount} service systems are at Watch or higher. Evidence freshness and confidence remain visible.`
         : `${attentionCount} service systems are at Watch or higher. Data-quality alerts stay separate.`
@@ -699,7 +702,7 @@ export function LivingLedgerObservatory() {
                     {audience === "policy"
                       ? policyAction(system)
                       : audience === "science"
-                        ? system.risk?.confidence ?? system.confidence ?? "low confidence"
+                        ? (system.risk?.confidence ?? system.confidence ?? "low confidence")
                         : ALERT_META[systemLevel]?.label}
                   </b>
                 </button>
@@ -800,11 +803,7 @@ export function LivingLedgerObservatory() {
           title={panelCopy.pipeline.title}
           note={panelCopy.pipeline.note}
         >
-          <ObservationPipeline
-            events={currentEvents}
-            audience={audience}
-            selectedId={selectedId}
-          />
+          <ObservationPipeline events={currentEvents} audience={audience} selectedId={selectedId} />
           <details className="ll-event-log" open={audience === "science"}>
             <summary>
               {audience === "science"
@@ -994,7 +993,10 @@ function AudienceBrief({ audience, system, sources, thresholds }) {
 
   if (audience === "science") {
     return (
-      <section className="ll-lens-brief ll-lens-brief--science" aria-label="Scientific evidence brief">
+      <section
+        className="ll-lens-brief ll-lens-brief--science"
+        aria-label="Scientific evidence brief"
+      >
         <div>
           <span>Science lens</span>
           <h3>Inspect the estimate before extending the claim</h3>
@@ -1006,7 +1008,9 @@ function AudienceBrief({ audience, system, sources, thresholds }) {
         <dl>
           <div>
             <dt>Evidence</dt>
-            <dd>{confidence} confidence · {freshness}</dd>
+            <dd>
+              {confidence} confidence · {freshness}
+            </dd>
           </div>
           <div>
             <dt>Sources</dt>
