@@ -430,10 +430,10 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **113.6 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **164.7 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **165.1 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **79.9 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **165.1 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **413.7 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **165.5 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **413.8 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **31.0 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **104.1 KiB** |
