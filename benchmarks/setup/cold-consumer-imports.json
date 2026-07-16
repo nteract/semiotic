@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "semiotic",
-    "version": "3.8.1"
+    "version": "3.8.2"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -160,8 +160,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 1422332,
-      "gzipBytes": 423284,
+      "rawBytes": 1426719,
+      "gzipBytes": 423669,
       "packedPackageInputFiles": 3
     },
     {
@@ -169,8 +169,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 153638,
-      "gzipBytes": 31360,
+      "rawBytes": 158024,
+      "gzipBytes": 31755,
       "packedPackageInputFiles": 1
     },
     {
@@ -232,8 +232,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 72157,
-      "gzipBytes": 8123,
+      "rawBytes": 75642,
+      "gzipBytes": 8175,
       "packedPackageInputFiles": 1
     },
     {
@@ -242,7 +242,7 @@
       "symbol": "smartTickFormat",
       "platform": "browser",
       "rawBytes": 5245,
-      "gzipBytes": 2199,
+      "gzipBytes": 2200,
       "packedPackageInputFiles": 1
     },
     {
