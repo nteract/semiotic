@@ -35313,9 +35313,12 @@ async function main() {
       ...buildInfo.buildId ? { buildId: buildInfo.buildId } : {},
       ...buildInfo.builtAt ? { builtAt: buildInfo.builtAt } : {}
     });
+    const writeHealthResponse = (res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(healthBody());
+    };
     const httpServer = http.createServer(async (req, res) => {
       const requestStartedAt = Date.now();
-      const requestAbortSignal = createMcpRequestCancellationSignal(req, res);
       const pathname = (() => {
         try {
           return new URL(req.url || "/", "http://localhost").pathname;
@@ -35369,8 +35372,7 @@ async function main() {
         }
       }
       if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(healthBody());
+        writeHealthResponse(res);
         return;
       }
       if (req.method === "GET" && pathname === "/.well-known/openai-apps-challenge" && openaiAppsChallengeToken) {
@@ -35392,8 +35394,7 @@ async function main() {
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed (stateless server offers no SSE stream)" }, id: null }));
           return;
         }
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(healthBody());
+        writeHealthResponse(res);
         return;
       }
       if (req.method !== "POST") {
@@ -35401,6 +35402,7 @@ async function main() {
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed" }, id: null }));
         return;
       }
+      const requestAbortSignal = createMcpRequestCancellationSignal(req, res);
       if (!hasSupportedAccept(String(req.headers.accept || ""))) {
         mcpLogger.warn("request_rejected", {
           reason: "unsupported_accept",

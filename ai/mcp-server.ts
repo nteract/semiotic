@@ -2888,10 +2888,16 @@ async function main() {
         ...(buildInfo.buildId ? { buildId: buildInfo.buildId } : {}),
         ...(buildInfo.builtAt ? { builtAt: buildInfo.builtAt } : {}),
       })
+    // Keep the platform-compatible /healthz endpoint as a true alias rather
+    // than a second response implementation. This is intentionally used for
+    // both probe paths so their status, headers, and body cannot drift.
+    const writeHealthResponse = (res: import("http").ServerResponse) => {
+      res.writeHead(200, { "Content-Type": "application/json" })
+      res.end(healthBody())
+    }
 
     const httpServer = http.createServer(async (req, res) => {
       const requestStartedAt = Date.now()
-      const requestAbortSignal = createMcpRequestCancellationSignal(req, res)
 
       // Route extraction deliberately excludes the query string. The logging
       // boundary further reduces it to a fixed route enum before serialization.
@@ -2966,8 +2972,7 @@ async function main() {
 
       // Dedicated health endpoint for platform probes (Cloud Run, uptime checks).
       if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
-        res.writeHead(200, { "Content-Type": "application/json" })
-        res.end(healthBody())
+        writeHealthResponse(res)
         return
       }
 
@@ -3009,8 +3014,7 @@ async function main() {
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed (stateless server offers no SSE stream)" }, id: null }))
           return
         }
-        res.writeHead(200, { "Content-Type": "application/json" })
-        res.end(healthBody())
+        writeHealthResponse(res)
         return
       }
 
@@ -3019,6 +3023,11 @@ async function main() {
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed" }, id: null }))
         return
       }
+
+      // Health and other non-MCP GET routes have already returned above, so
+      // only a request that can reach the MCP transport receives cancellation
+      // wiring or a per-request server/transport instance.
+      const requestAbortSignal = createMcpRequestCancellationSignal(req, res)
 
       if (!hasSupportedAccept(String(req.headers.accept || ""))) {
         mcpLogger.warn("request_rejected", {
