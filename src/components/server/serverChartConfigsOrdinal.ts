@@ -162,6 +162,11 @@ export const swarmPlot: ChartConfig = {
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
     colorAccessor: colorBy,
+    // symbolBy → symbolAccessor is the HOC-level rename (mirrors SwarmPlot.tsx):
+    // the field whose values become glyph shapes. Without this the SSR path
+    // drops symbolBy and every point renders as a circle.
+    ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
+    ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
     colorScheme,
     ...common,
   }),
@@ -194,6 +199,9 @@ export const swimlaneChart: ChartConfig = {
     subcategoryAccessor: rest.subcategoryAccessor,
     colorScheme,
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+    // trackFill paints the lane background behind each swimlane (mirrors
+    // SwimlaneChart.tsx). Dropped by the SSR path before this mapping.
+    ...(rest.trackFill != null && { trackFill: rest.trackFill }),
     ...common,
     gradientFill: normalizeBarGradientFill(common.gradientFill),
   }),
@@ -242,6 +250,10 @@ export const funnelChart: ChartConfig = {
       projection: isVertical ? "vertical" : "horizontal",
       connectorAccessor: rest.connectorAccessor,
       connectorStyle: rest.connectorStyle,
+      // connectorOpacity styles the horizontal funnel's between-step connectors
+      // (mirrors FunnelChart.tsx, which only forwards it for horizontal funnels;
+      // the vertical bar-funnel has no connectors). Dropped by SSR before this.
+      ...(!isVertical && rest.connectorOpacity != null && { connectorOpacity: rest.connectorOpacity }),
       barPadding: isVertical ? 40 : 0,
       showAxes: isVertical,
       showGrid: isVertical,

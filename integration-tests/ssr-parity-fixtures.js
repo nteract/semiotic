@@ -598,6 +598,29 @@ function makeGeoIsotypeLayout(React) {
   }
 }
 
+// ── SSR-fix regression fixtures data ───────────────────────────────────
+// Non-round maxima (47) so axisExtent "nice" vs "exact" produce a visibly
+// different domain + tick set.
+const axisExactBarData = [
+  { region: "AMER", value: 47 },
+  { region: "EMEA", value: 23 },
+  { region: "APAC", value: 31 },
+]
+const axisExactLineData = [
+  { x: 3, y: 47 },
+  { x: 17, y: 23 },
+  { x: 29, y: 31 },
+]
+// symbolBy datasets carry a categorical field distinct enough to yield
+// multiple glyph shapes.
+const symbolScatterData = [
+  { x: 1, y: 4, kind: "Civil" },
+  { x: 2, y: 7, kind: "Weather" },
+  { x: 3, y: 5, kind: "Civil" },
+  { x: 4, y: 9, kind: "Comms" },
+  { x: 5, y: 6, kind: "Weather" },
+]
+
 function makeSsrParityCases(React) {
   return [
     {
@@ -671,6 +694,23 @@ function makeSsrParityCases(React) {
       id: "bar",
       component: "BarChart",
       props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 400, height: 200 },
+    },
+    {
+      // Regression coverage for the SSR gradientFill gap (2026-07): SSR
+      // silently dropped `gradientFill` before it reached the scene
+      // builder, so the SSR baseline rendered flat bars while CSR showed
+      // the gradient. Baselining both sides here means any future
+      // regression on either pipeline shows up as a screenshot diff.
+      id: "bar-gradient",
+      component: "BarChart",
+      props: {
+        data: categoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        gradientFill: true,
+        width: 400,
+        height: 200,
+      },
     },
     {
       id: "grouped-bar",
@@ -1073,6 +1113,98 @@ function makeSsrParityCases(React) {
         annotations: geoAnnotations,
         width: 460,
         height: 300,
+      },
+    },
+
+    // ── SSR-fix regression fixtures ────────────────────────────────────
+    // Each locks in a prop that used to be silently dropped on the SSR
+    // (renderChart) path. Structural SSR assertions live in
+    // assertSsrFixEvidence() in the spec; the screenshots guard CSR/SSR
+    // parity. See project memory: SSR gradientFill/axisExtent/HOC-prop gaps.
+    {
+      // Ordinal axisExtent:"exact" — value-axis domain + ticks pin to data max.
+      id: "bar-axis-exact",
+      component: "BarChart",
+      props: {
+        data: axisExactBarData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        axisExtent: "exact",
+        showGrid: true,
+        width: 400,
+        height: 220,
+      },
+    },
+    {
+      // XY axisExtent:"exact" — y-domain + ticks pin to data min/max.
+      id: "line-axis-exact",
+      component: "LineChart",
+      props: {
+        data: axisExactLineData,
+        xAccessor: "x",
+        yAccessor: "y",
+        axisExtent: "exact",
+        showGrid: true,
+        width: 400,
+        height: 220,
+      },
+    },
+    {
+      // Ordinal symbolBy → glyph shapes (mirrors SwarmPlot.tsx HOC rename).
+      id: "swarm-symbol",
+      component: "SwarmPlot",
+      props: {
+        data: statisticalData,
+        categoryAccessor: "category",
+        valueAccessor: "value",
+        colorBy: "category",
+        symbolBy: "category",
+        width: 420,
+        height: 260,
+      },
+    },
+    {
+      // XY symbolBy → glyph shapes; symbolMap pins explicit shapes.
+      id: "scatter-symbol",
+      component: "Scatterplot",
+      props: {
+        data: symbolScatterData,
+        xAccessor: "x",
+        yAccessor: "y",
+        colorBy: "kind",
+        symbolBy: "kind",
+        symbolMap: { Civil: "star", Weather: "triangle", Comms: "cross" },
+        pointRadius: 8,
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      // FunnelChart connectorOpacity styles the horizontal step connectors.
+      id: "funnel-connector-opacity",
+      component: "FunnelChart",
+      props: {
+        data: funnelData,
+        stepAccessor: "step",
+        valueAccessor: "value",
+        connectorOpacity: 0.66,
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      // SwimlaneChart trackFill paints the lane background.
+      id: "swimlane-track",
+      component: "SwimlaneChart",
+      props: {
+        data: swimlaneData,
+        categoryAccessor: "lane",
+        subcategoryAccessor: "phase",
+        valueAccessor: "value",
+        colorBy: "phase",
+        trackFill: "#c9d6ea",
+        width: 460,
+        height: 260,
       },
     },
   ]

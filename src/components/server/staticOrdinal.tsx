@@ -1,5 +1,6 @@
 import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { ticksForMode } from "../charts/shared/axisExtent"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
@@ -62,7 +63,10 @@ export function generateOrdinalAxesSVG(
     label: (catFormat || String)(col.name)
   }))
 
-  const rTicks = scales.r.ticks(5).map(v => ({
+  // ticksForMode mirrors the client OrdinalSVGOverlay: "exact" pins the
+  // value-axis ticks to the data min/max (the axisExtent headline behavior);
+  // "nice"/undefined falls through to scale.ticks — byte-identical to before.
+  const rTicks = ticksForMode(scales.r, 5, props.axisExtent).map(v => ({
     pixel: scales.r(v),
     label: (valFormat || defaultTickFormat)(v)
   }))
@@ -197,6 +201,11 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     timeAccessor: props.timeAccessor,
     rExtent: props.rExtent,
     oExtent: props.oExtent,
+    // axisExtent ("nice"|"exact") pins the value-axis first/last tick to
+    // the data min/max via domain resolution. Client parity: StreamOrdinalFrame
+    // passes it into its pipeline config; without it here `axisExtent: "exact"`
+    // silently no-ops in SSR (same class of bug as gradientFill).
+    axisExtent: props.axisExtent,
     barPadding: props.barPadding,
     roundedTop: props.roundedTop,
     innerRadius: props.innerRadius,
@@ -215,6 +224,21 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     pieceStyle: props.pieceStyle,
     summaryStyle: props.summaryStyle,
     gradientFill: props.gradientFill,
+    // Frame-level props the ordinal scene builders/store read but that this
+    // hand-maintained config previously omitted — so the low-level
+    // renderOrdinalToStaticSVG path silently dropped them (the same class as
+    // the gradientFill gap). Each is a safe passthrough: undefined for callers
+    // that don't set it, matching prior behavior. symbolAccessor/symbolMap →
+    // SwarmPlot/DotPlot glyph shapes; trackFill → SwimlaneChart lane track;
+    // connectorOpacity/showLabels → FunnelChart; multiAxis/baselinePadding →
+    // multi-series value axis + baseline domain.
+    symbolAccessor: props.symbolAccessor,
+    symbolMap: props.symbolMap,
+    multiAxis: props.multiAxis,
+    baselinePadding: props.baselinePadding,
+    trackFill: props.trackFill,
+    connectorOpacity: props.connectorOpacity,
+    showLabels: props.showLabels,
     colorScheme: effectiveColorScheme,
     themeCategorical: theme.colors.categorical,
     themeSemantic: resolveThemeSemanticColors(theme),
@@ -270,7 +294,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
-  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx) : null
+  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent) : null
 
   // Check for bar-funnel dropoff bars — they need SVG hatch patterns
   const hasDropoffBars = store.scene.some(

@@ -428,6 +428,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: HORIZONTAL_VERTICAL_ENUM, default: "horizontal", description: "Horizontal renders lanes as rows; vertical as columns." },
       barPadding: { type: "number", default: 40, description: "Padding between lanes in pixels" },
       roundedTop: { type: "number", description: "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
+      trackFill: { type: ["string", "object"], omitFromSchema: true, description: "Lane background fill painted behind each swimlane. A color string, or { color, opacity? } for a translucent track." },
       brush: { type: "boolean", description: "Enable value-axis brush selection" },
       onBrush: { type: "function", description: "Callback with { r: [min, max] } or null when brush clears" },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush integration name" },

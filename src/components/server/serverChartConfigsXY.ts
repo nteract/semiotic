@@ -208,6 +208,11 @@ export const scatterplot: ChartConfig = {
     yAccessor: rest.yAccessor || "y",
     colorAccessor: colorBy,
     sizeAccessor: rest.sizeBy,
+    // symbolBy → symbolAccessor is the HOC-level rename (mirrors Scatterplot.tsx):
+    // the categorical field whose values become d3-shape glyphs. Without this
+    // the SSR path drops symbolBy and every mark renders as a circle.
+    ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
+    ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
     colorScheme,
     ...common,
     ...(rest.styleRules && {

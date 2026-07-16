@@ -84,11 +84,21 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     valueAccessor: props.valueAccessor,
     colorAccessor: props.colorAccessor,
     sizeAccessor: props.sizeAccessor,
+    // symbolAccessor/symbolMap drive the Scatterplot symbolBy glyph-shape
+    // channel (store.getSymbol → "symbol" scene nodes). The client frame
+    // passes them through; without them here symbolBy no-ops in SSR.
+    symbolAccessor: props.symbolAccessor,
+    symbolMap: props.symbolMap,
     groupAccessor: props.groupAccessor,
     categoryAccessor: props.categoryAccessor,
     lineDataAccessor: props.lineDataAccessor,
     xExtent: props.xExtent,
     yExtent: props.yExtent,
+    // axisExtent ("nice"|"exact") pins the first/last tick to the data
+    // min/max via domain resolution. The client frame passes it through
+    // StreamXYFrame's pipeline config; SSR must too or `axisExtent: "exact"`
+    // silently no-ops in server output (same class of bug as gradientFill).
+    axisExtent: props.axisExtent,
     sizeRange: props.sizeRange,
     xScaleType: props.xScaleType,
     yScaleType: props.yScaleType,
@@ -184,7 +194,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
-  const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx) : null
+  const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent) : null
 
   const dataMarks = store.scene
     .map((node, i) => renderSceneWithBackend({

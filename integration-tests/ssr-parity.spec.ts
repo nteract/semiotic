@@ -101,6 +101,34 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("Projected geo glyphs")
     expect(svg).toContain("<clipPath")
   }
+  // Regression checks for props that used to be silently dropped on the SSR
+  // (renderChart) path. These assert the prop actually reached the SSR SVG /
+  // scene, not just that the screenshot looks plausible — a stale/blank
+  // baseline can otherwise "pass" a screenshot diff if it was bootstrapped
+  // from the same broken output.
+  if (id === "bar-gradient") {
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toMatch(/fill="url\(#/)
+  }
+  // axisExtent:"exact" pins the value axis to the data max (47); the padded
+  // "nice" default never emits that tick label.
+  if (id === "bar-axis-exact" || id === "line-axis-exact") {
+    expect(svg).toContain(">47<")
+  }
+  // symbolBy makes each mark a d3-shape glyph (scene "symbol" node) instead
+  // of a plain circle/point.
+  if (id === "swarm-symbol" || id === "scatter-symbol") {
+    expect(evidence.markCountByType.symbol).toBeGreaterThan(0)
+    expect(evidence.markCountByType.point ?? 0).toBe(0)
+  }
+  // connectorOpacity reaches the horizontal funnel's between-step connectors.
+  if (id === "funnel-connector-opacity") {
+    expect(svg).toContain("0.66")
+  }
+  // trackFill paints the lane background behind each swimlane.
+  if (id === "swimlane-track") {
+    expect(svg).toContain("#c9d6ea")
+  }
 }
 
 test.describe("SSR / CSR parity", () => {
