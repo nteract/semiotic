@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.1] - 2026-07-15
+
+### Fixed
+
+- **Stateless MCP HTTP rendering.** A normally completed request body no longer
+  cancels render work; hosted `createChart` rendering is verified to return
+  `status: "render-proven"` with SVG and render evidence.
+
 ### Changed
 
 - **MCP HTTP health endpoint.** `GET /health` is the supported health and
   deployment-identity endpoint; the unnecessary `/healthz` alias was removed.
+- **Hosted release channels.** Nightly continues to validate `main`; stable
+  deployments remain separately release-pinned to the published npm package.
 
 ## [3.8.0] - 2026-07-11
 

@@ -98,10 +98,10 @@
       "method": "npm pack --ignore-scripts followed by tar -xzf inspection",
       "package": {
         "name": "semiotic",
-        "version": "3.8.0"
+        "version": "3.8.1"
       },
       "archive": {
-        "fileName": "semiotic-3.8.0.tgz",
+        "fileName": "semiotic-3.8.1.tgz",
         "bytes": 5750594,
         "sha1": "0ed7ad81c74e74380a5059be2bbae5ae697b9789",
         "integrity": "sha512-E/bAZOlZTl+7bhYsWcVyAFsm070BnQMsGEfUKzqVSOVBrfHZLDYDpxhgUkyzgEJvxAgXQT8fGNPWT8L5quGy4w=="

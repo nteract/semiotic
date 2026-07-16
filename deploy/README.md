@@ -44,7 +44,7 @@ same public tool names:
 
 The MCP initialize response makes this distinction machine-visible: stable
 uses the `semiotic` server name and its exact package version; nightly uses
-`semiotic-nightly` and a version such as `3.8.0-nightly+00db062`. No `channel`
+`semiotic-nightly` and a version such as `3.8.1-nightly+00db062`. No `channel`
 argument is added to `tools/call`: server selection is transport-level
 identity, and making a tool argument choose a channel would let an individual
 request misrepresent the server that actually executed it.
@@ -58,12 +58,12 @@ nightly response has this shape (the values are illustrative):
 {
   "status": "ok",
   "name": "semiotic-mcp",
-  "version": "3.8.0",
+  "version": "3.8.1",
   "transport": "streamable-http",
   "mode": "stateless",
   "channel": "nightly",
-  "packageVersion": "3.8.0",
-  "surfaceVersion": "3.8.0-ai",
+  "packageVersion": "3.8.1",
+  "surfaceVersion": "3.8.1-ai",
   "commitSha": "00db062e9ed42be02a9c4f59dbf8396ebd1712cd",
   "buildId": "CLOUD_BUILD_ID",
   "builtAt": "2026-07-13T12:34:56Z"
@@ -76,8 +76,8 @@ corresponding structured identity:
 ```json
 {
   "channel": "nightly",
-  "packageVersion": "3.8.0",
-  "surfaceVersion": "3.8.0-ai",
+  "packageVersion": "3.8.1",
+  "surfaceVersion": "3.8.1-ai",
   "commitSha": "00db062e9ed42be02a9c4f59dbf8396ebd1712cd",
   "shortCommitSha": "00db062",
   "buildId": "CLOUD_BUILD_ID",
