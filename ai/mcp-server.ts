@@ -992,32 +992,78 @@ function profileResult<T extends Record<string, unknown>>(result: T): T & { surf
   return { ...result, surfaceVersion: SURFACE_VERSION }
 }
 
-async function getSchemaHandler(args: { component?: string }): Promise<ToolResult> {
+async function getSchemaHandler(args: {
+  component?: string
+}): Promise<ToolResult> {
   const component = args.component
 
+  const availableComponents = allComponentNames.map(name => ({
+    name,
+    renderable: metadataForComponent(name).renderable,
+  }))
+
   if (!component) {
-    const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
+    const list = availableComponents.map(({ name, renderable }) =>
+      renderable ? `${name} [renderable]` : name
+    )
+
     return {
-      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{
+        type: "text" as const,
+        text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.`,
+      }],
+      structuredContent: profileResult({
+        status: "component-list",
+        availableComponents,
+      }),
     }
   }
 
   const entry = schemaByComponent[component]
+
   if (!entry) {
     const available = Object.keys(schemaByComponent).sort()
+
     return {
-      content: [{ type: "text" as const, text: `Unknown component "${component}". Available: ${available.join(", ")}` }],
+      content: [{
+        type: "text" as const,
+        text: `Unknown component "${component}". Available: ${available.join(", ")}`,
+      }],
+      structuredContent: profileResult({
+        status: "unknown-component",
+        component,
+        availableComponents,
+      }),
       isError: true,
     }
   }
 
-  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
-  const contracts = behaviorContractsFor({ component, props: {} })
+  const renderable = metadataForComponent(component).renderable
+  const renderableNote = renderable
+    ? "This component can be rendered to SVG via renderChart."
+    : "This component requires a browser environment and cannot be rendered via renderChart."
+
+  const contracts = behaviorContractsFor({
+    component,
+    props: {},
+  })
+
   const contractText = contracts.length > 0
     ? `\n\nBehavior contracts:\n${JSON.stringify(contracts, null, 2)}`
     : ""
+
   return {
-    content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}${contractText}` }],
+    content: [{
+      type: "text" as const,
+      text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}${contractText}`,
+    }],
+    structuredContent: profileResult({
+      status: "component-schema",
+      component,
+      renderable,
+      schema: entry,
+      behaviorContracts: contracts,
+    }),
   }
 }
 
@@ -2330,7 +2376,27 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
     srv.registerTool("getChartSchema", {
       title: "Get a chart schema",
       description: "Return canonical Semiotic prop-schema guidance for code editing and advanced configuration.",
-      inputSchema: { component: z.string().optional() },
+      inputSchema: {
+        component: z.string().optional(),
+      },
+      outputSchema: {
+        status: z.enum([
+          "component-list",
+          "component-schema",
+          "unknown-component",
+        ]),
+        component: z.string().optional(),
+        renderable: z.boolean().optional(),
+        availableComponents: z.array(
+          z.object({
+            name: z.string(),
+            renderable: z.boolean(),
+          }),
+        ).optional(),
+        schema: z.record(z.string(), z.unknown()).optional(),
+        behaviorContracts: z.array(z.unknown()).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
     }, getSchemaHandler)
     return srv
