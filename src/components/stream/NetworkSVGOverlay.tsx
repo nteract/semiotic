@@ -230,7 +230,11 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       }}
     >
       <title>{typeof title === "string" ? title : "Network Chart"}</title>
-      <desc>{typeof title === "string" ? `${title} — network data visualization` : "Network data visualization"}</desc>
+      <desc>
+        {typeof title === "string"
+          ? `${title} (network data visualization)`
+          : "Network data visualization"}
+      </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Labels */}
         {labels.map((label, i) => (

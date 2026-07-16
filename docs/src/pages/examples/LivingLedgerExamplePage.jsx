@@ -23,11 +23,15 @@ import {
   ExposureLabel,
   LivingLedgerMatrix,
   ObservationPipeline,
+  PolicySignalBand,
   ServicePulse,
   ServiceSystemTable,
+  ServiceFlowerBand,
   ServiceWeatherMap,
+  ScienceEvidenceBand,
   StatusGlyph,
   TriageField,
+  policyAction,
   serviceSystemId,
   systemLabel,
   systemRiskLevel,
@@ -106,15 +110,81 @@ const AUDIENCE_COPY = Object.freeze({
     selectedEyebrow: "What changed",
     methodLabel: "Why the warning exists",
   },
-  operator: {
-    label: "Operator",
-    selectedEyebrow: "Active service system",
-    methodLabel: "Triage basis",
+  policy: {
+    label: "Policy",
+    selectedEyebrow: "Decision brief",
+    methodLabel: "Decision basis",
   },
-  scientist: {
-    label: "Scientist",
+  science: {
+    label: "Science",
     selectedEyebrow: "Selected serviceSystemId",
     methodLabel: "Evidence and threshold basis",
+  },
+})
+
+const LENS_PANEL_COPY = Object.freeze({
+  public: {
+    triage: {
+      code: "AT A GLANCE / 02",
+      eyebrow: "Service balance",
+      title: "Is nature still keeping up?",
+      note: "Each mark compares the condition of nature with whether the service is keeping up for people.",
+      footnote: "Mark size shows how many people or livelihoods are exposed. Color shows the alert level.",
+    },
+    pulse: {
+      code: "WHAT CHANGED / 03",
+      eyebrow: "Service story",
+      title: "What has changed over time?",
+      note: "Recorded values tell a clearer story than a single score. The alert line is a rule, not proof that the whole service has failed.",
+    },
+    pipeline: {
+      code: "BEFORE A CLAIM / 06",
+      eyebrow: "A careful evidence journey",
+      title: "How a signal earns a claim",
+      note: "A reading is checked before it can inform an indicator. Any unresolved record keeps the statement limited.",
+    },
+  },
+  policy: {
+    triage: {
+      code: "DECISION POSTURE / 02",
+      eyebrow: "Policy field",
+      title: "Where should support go next?",
+      note: "The four regions translate condition and adequacy into a decision posture. Exposure makes the reach visible without creating a global priority score.",
+      footnote: "Point area is exposed reach. Outline weight is human supplementation. The tail shows the recent condition direction.",
+    },
+    pulse: {
+      code: "DECISION HORIZON / 03",
+      eyebrow: "Recorded signal and forecast",
+      title: "What could require action next?",
+      note: "Keep recorded values distinct from the forecast. The forecast can inform preparation, but it does not count as an observed outcome.",
+    },
+    pipeline: {
+      code: "EVIDENCE OPERATIONS / 06",
+      eyebrow: "Exception queue",
+      title: "What needs attention before a decision?",
+      note: "The queue separates records ready for an indicator from review, data-quality, and freshness work.",
+    },
+  },
+  science: {
+    triage: {
+      code: "DIAGNOSTIC / 02",
+      eyebrow: "Condition–adequacy evidence",
+      title: "What does the evidence support?",
+      note: "Confidence-scaled whiskers show condition uncertainty and tails show recent movement. Non-comparable services remain explicitly non-comparable.",
+      footnote: "Whisker width reflects confidence, not a formal confidence interval. Symbols identify the evidence type behind the active signal.",
+    },
+    pulse: {
+      code: "EVIDENCE TRAJECTORY / 03",
+      eyebrow: "Observations, models, and gaps",
+      title: "What does the indicator actually show?",
+      note: "Observations, modeled values, forecasts, uncertainty, reference ranges, and stale periods stay separated so their roles can be inspected.",
+    },
+    pipeline: {
+      code: "RECORD PROVENANCE / 06",
+      eyebrow: "Selected-service event trace",
+      title: "Which records support this claim?",
+      note: "Each row traces one record through its actual gates, preserving source, unit, timing, and any review or failure.",
+    },
   },
 })
 
@@ -139,9 +209,11 @@ export function LivingLedgerObservatory() {
     clampDay(Number(searchParams.get("day") ?? LAST_DAY)),
   )
   const [selectedId, setSelectedId] = useState(initialSystemId)
-  const [audience, setAudience] = useState(() =>
-    AUDIENCE_COPY[searchParams.get("audience")] ? searchParams.get("audience") : "public",
-  )
+  const [audience, setAudience] = useState(() => {
+    const requestedAudience = searchParams.get("audience")
+    if (requestedAudience === "operator") return "policy"
+    return AUDIENCE_COPY[requestedAudience] ? requestedAudience : "public"
+  })
   const [networkMode, setNetworkMode] = useState(() =>
     searchParams.get("web") === "evidence" ? "evidence" : "dependency",
   )
@@ -344,6 +416,13 @@ export function LivingLedgerObservatory() {
     })
   }, [])
 
+  const selectAudience = useCallback((nextAudience) => {
+    setAudience(nextAudience)
+    if (nextAudience === "policy") setNetworkMode("dependency")
+    if (nextAudience === "science") setNetworkMode("evidence")
+    setAnnouncement(`${AUDIENCE_COPY[nextAudience].label} lens selected.`)
+  }, [])
+
   if (!selectedSystem) {
     return <p role="alert">The bundled Living Ledger replay could not be read.</p>
   }
@@ -352,6 +431,19 @@ export function LivingLedgerObservatory() {
   const alertMeta = ALERT_META[level] ?? ALERT_META.unknown
   const progress = Math.round(((dayIndex + 1) / REPLAY_LENGTH) * 100)
   const networkTitle = networkMode === "evidence" ? "How do we know?" : "What depends on this?"
+  const panelCopy = LENS_PANEL_COPY[audience]
+  const alertDeskTitle =
+    audience === "policy"
+      ? "The decisions that need an owner"
+      : audience === "science"
+        ? "The active claims to inspect"
+        : "The claims that currently need attention"
+  const alertDeskNote =
+    audience === "policy"
+      ? `${attentionCount} service systems are at Watch or higher. Each signal carries a next step, not a claim of outcome.`
+      : audience === "science"
+        ? `${attentionCount} service systems are at Watch or higher. Evidence freshness and confidence remain visible.`
+        : `${attentionCount} service systems are at Watch or higher. Data-quality alerts stay separate.`
 
   return (
     <div
@@ -381,67 +473,104 @@ export function LivingLedgerObservatory() {
         </div>
       </header>
 
-      <section className="ll-thesis" aria-label="Governing principle">
-        <span>One rule</span>
-        <p>
-          Do not tell people Earth is “63% healthy.” Tell them which service is changing, where, for
-          whom, against which baseline, how quickly, and how sure we are.
-        </p>
-      </section>
-
-      <section className="ll-control-deck" aria-label="Observatory controls">
-        <div className="ll-transport">
-          <button type="button" onClick={playing ? () => setPlaying(false) : startReplay}>
-            {playing
-              ? "Pause replay"
-              : reducedMotion
-                ? "Show end state"
-                : dayIndex >= LAST_DAY
-                  ? "Replay 180 days"
-                  : "Continue replay"}
-          </button>
-          <button
-            type="button"
-            className="is-quiet"
-            onClick={() => {
-              setPlaying(false)
-              setDayIndex(LAST_DAY)
-              setSceneIndex(-1)
-            }}
-          >
-            End state
-          </button>
-        </div>
-        <label className="ll-scrubber">
-          <span>
-            Day {dayIndex + 1} / {REPLAY_LENGTH}
-          </span>
-          <input
-            type="range"
-            min="0"
-            max={LAST_DAY}
-            value={dayIndex}
-            onChange={(event) => {
-              setPlaying(false)
-              setSceneIndex(-1)
-              setDayIndex(Number(event.target.value))
-            }}
+      <div className="ll-sticky-deck">
+        {audience === "public" ? (
+          <ServiceFlowerBand
+            systems={visibleSystems}
+            selectedId={selectedId}
+            onSelect={selectSystem}
           />
-          <output>{formatReplayDate(currentDate)}</output>
-        </label>
-        <div className="ll-audience" role="group" aria-label="Audience mode">
-          {Object.entries(AUDIENCE_COPY).map(([id, copy]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={audience === id}
-              onClick={() => setAudience(id)}
-            >
-              {copy.label}
+        ) : audience === "policy" ? (
+          <PolicySignalBand
+            systems={visibleSystems}
+            selectedId={selectedId}
+            onSelect={selectSystem}
+          />
+        ) : (
+          <ScienceEvidenceBand
+            systems={visibleSystems}
+            selectedId={selectedId}
+            onSelect={selectSystem}
+          />
+        )}
+        <section className="ll-control-deck" aria-label="Observatory controls">
+          <div className="ll-transport">
+            <button type="button" onClick={playing ? () => setPlaying(false) : startReplay}>
+              {playing
+                ? "Pause replay"
+                : reducedMotion
+                  ? "Show end state"
+                  : dayIndex >= LAST_DAY
+                    ? "Replay 180 days"
+                    : "Continue replay"}
             </button>
-          ))}
-        </div>
-      </section>
+            <button
+              type="button"
+              className="is-quiet"
+              onClick={() => {
+                setPlaying(false)
+                setDayIndex(LAST_DAY)
+                setSceneIndex(-1)
+              }}
+            >
+              End state
+            </button>
+          </div>
+          <label className="ll-scrubber">
+            <span>
+              Day {dayIndex + 1} / {REPLAY_LENGTH}
+            </span>
+            <input
+              type="range"
+              min="0"
+              max={LAST_DAY}
+              value={dayIndex}
+              onChange={(event) => {
+                setPlaying(false)
+                setSceneIndex(-1)
+                setDayIndex(Number(event.target.value))
+              }}
+            />
+            <output>{formatReplayDate(currentDate)}</output>
+          </label>
+          <div className="ll-audience" role="group" aria-label="Audience mode">
+            {Object.entries(AUDIENCE_COPY).map(([id, copy]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={audience === id}
+                onClick={() => selectAudience(id)}
+              >
+                {copy.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <LedgerPanel className="ll-panel--map" header={false}>
+        {mapError ? (
+          <p role="alert" className="ll-map-error">
+            The reference coastline did not load. The service-system table below still carries the
+            same evidence.
+          </p>
+        ) : null}
+        <ServiceWeatherMap
+          areas={worldAreas}
+          systems={visibleSystems}
+          selectedId={selectedId}
+          onSelect={selectSystem}
+          audience={audience}
+        />
+        <MapLegend />
+      </LedgerPanel>
+
+      <AudienceBrief
+        audience={audience}
+        system={selectedSystem}
+        sources={selectedSources}
+        thresholds={selectedThresholds}
+      />
 
       <div className="ll-sentence-dock">
         <span className="ll-sentence-label">Service sentence</span>
@@ -544,11 +673,8 @@ export function LivingLedgerObservatory() {
       <section className="ll-alert-desk" aria-labelledby="ll-alert-desk-title">
         <header>
           <span>Alert desk</span>
-          <h3 id="ll-alert-desk-title">The claims that currently need attention</h3>
-          <p>
-            {attentionCount} service systems are at Watch or higher. Data-quality alerts stay
-            separate.
-          </p>
+          <h3 id="ll-alert-desk-title">{alertDeskTitle}</h3>
+          <p>{alertDeskNote}</p>
         </header>
         <div className="ll-alert-list">
           {visibleSystems
@@ -569,7 +695,13 @@ export function LivingLedgerObservatory() {
                     <strong>{systemLabel(system)}</strong>
                     <small>{system.bioregionName ?? system.regionName ?? system.bioregion}</small>
                   </span>
-                  <b>{ALERT_META[systemLevel]?.label}</b>
+                  <b>
+                    {audience === "policy"
+                      ? policyAction(system)
+                      : audience === "science"
+                        ? system.risk?.confidence ?? system.confidence ?? "low confidence"
+                        : ALERT_META[systemLevel]?.label}
+                  </b>
                 </button>
               )
             })}
@@ -581,53 +713,32 @@ export function LivingLedgerObservatory() {
 
       <div className="ll-hero-grid">
         <LedgerPanel
-          className="ll-panel--map"
-          code="WHERE / 01"
-          eyebrow="World Service Weather"
-          title="Where is the service changing?"
-          note="Gray means we do not know—not that nothing is wrong. Color identifies the service family; shape carries status."
+          className="ll-panel--triage"
+          code={panelCopy.triage.code}
+          eyebrow={panelCopy.triage.eyebrow}
+          title={panelCopy.triage.title}
+          note={panelCopy.triage.note}
         >
-          {mapError ? (
-            <p role="alert" className="ll-map-error">
-              The reference coastline did not load. The service-system table below still carries the
-              same evidence.
-            </p>
-          ) : null}
-          <ServiceWeatherMap
-            areas={worldAreas}
+          <TriageField
             systems={visibleSystems}
             selectedId={selectedId}
             onSelect={selectSystem}
             audience={audience}
           />
-          <MapLegend />
-        </LedgerPanel>
-
-        <LedgerPanel
-          className="ll-panel--triage"
-          code="CONDITION × ADEQUACY / 02"
-          eyebrow="Triage Field"
-          title="An intact ecosystem can still be overdrawn"
-          note="The horizontal axis asks how the ecosystem is doing. The vertical axis asks whether the service is keeping up. They are not the same question."
-        >
-          <TriageField systems={visibleSystems} selectedId={selectedId} onSelect={selectSystem} />
-          <p className="ll-chart-footnote">
-            Point area is exposure. Outline weight is human supplementation. Shape is evidence type;
-            the tail is 30-day movement.
-          </p>
+          <p className="ll-chart-footnote">{panelCopy.triage.footnote}</p>
         </LedgerPanel>
       </div>
 
       <div className="ll-detail-grid">
         <LedgerPanel
           className="ll-panel--pulse"
-          code="TIME / 03"
-          eyebrow="Service Pulse"
-          title="An unusual value is not automatically a crisis"
-          note="Observations, forecasts, gaps, and thresholds stay visibly different. Every warning line keeps its owner."
+          code={panelCopy.pulse.code}
+          eyebrow={panelCopy.pulse.eyebrow}
+          title={panelCopy.pulse.title}
+          note={panelCopy.pulse.note}
         >
           <ServicePulse system={selectedSystem} pulse={selectedPulse} audience={audience} />
-          <PulseKey />
+          <PulseKey audience={audience} />
         </LedgerPanel>
 
         <LedgerPanel
@@ -684,19 +795,29 @@ export function LivingLedgerObservatory() {
 
         <LedgerPanel
           className="ll-panel--pipeline"
-          code="BEFORE THE ALERT / 06"
-          eyebrow="Observation Stream"
-          title="An observation has to earn its way onto the map"
-          note="A stale record waits. A conflicting one goes to review. A failed unit check does not quietly become a dot."
+          code={panelCopy.pipeline.code}
+          eyebrow={panelCopy.pipeline.eyebrow}
+          title={panelCopy.pipeline.title}
+          note={panelCopy.pipeline.note}
         >
           <ObservationPipeline
             events={currentEvents}
-            reducedMotion={reducedMotion}
             audience={audience}
+            selectedId={selectedId}
           />
-          <details className="ll-event-log">
-            <summary>Read the latest pipeline events</summary>
-            <EvidenceLog events={currentEvents} />
+          <details className="ll-event-log" open={audience === "science"}>
+            <summary>
+              {audience === "science"
+                ? "Read the selected-service records"
+                : "Read the latest pipeline events"}
+            </summary>
+            <EvidenceLog
+              events={
+                audience === "science"
+                  ? currentEvents.filter((event) => event.serviceSystemId === selectedId)
+                  : currentEvents
+              }
+            />
           </details>
         </LedgerPanel>
       </div>
@@ -735,7 +856,7 @@ export function LivingLedgerObservatory() {
       </section>
 
       <section className="ll-method-grid">
-        <details className="ll-provenance" open={audience === "scientist"}>
+        <details className="ll-provenance" open={audience === "science"}>
           <summary>Inspect the claim</summary>
           <div className="ll-provenance-body">
             <div>
@@ -794,18 +915,29 @@ export function LivingLedgerObservatory() {
   )
 }
 
-function LedgerPanel({ code, eyebrow, title, note, actions, className = "", children }) {
+function LedgerPanel({
+  code,
+  eyebrow,
+  title,
+  note,
+  actions,
+  className = "",
+  children,
+  header = true,
+}) {
   return (
     <section className={`ll-panel ${className}`.trim()}>
-      <header className="ll-panel-header">
-        <div>
-          <span>{code}</span>
-          <p>{eyebrow}</p>
-          <h3>{title}</h3>
-          <small>{note}</small>
-        </div>
-        {actions}
-      </header>
+      {header ? (
+        <header className="ll-panel-header">
+          <div>
+            <span>{code}</span>
+            <p>{eyebrow}</p>
+            <h3>{title}</h3>
+            <small>{note}</small>
+          </div>
+          {actions}
+        </header>
+      ) : null}
       <div className="ll-panel-body">{children}</div>
     </section>
   )
@@ -822,6 +954,100 @@ function CaseCard({ number, kind, title, body, active, onClick }) {
         <b>Inspect this claim →</b>
       </button>
     </article>
+  )
+}
+
+function AudienceBrief({ audience, system, sources, thresholds }) {
+  const level = systemRiskLevel(system)
+  const confidence = system.risk?.confidence ?? system.confidence ?? "low"
+  const freshness = system.freshness ?? system.risk?.freshness ?? "unknown"
+  if (audience === "policy") {
+    return (
+      <section className="ll-lens-brief ll-lens-brief--policy" aria-label="Policy decision brief">
+        <div>
+          <span>Policy lens</span>
+          <h3>Move from warning to a named decision</h3>
+          <p>
+            The signal is a prioritization aid. It does not turn a pressure or a model into a
+            confirmed outcome.
+          </p>
+        </div>
+        <dl>
+          <div>
+            <dt>Next step</dt>
+            <dd>{policyAction(system)}</dd>
+          </div>
+          <div>
+            <dt>Priority</dt>
+            <dd>{ALERT_META[level]?.label ?? level}</dd>
+          </div>
+          <div>
+            <dt>Reach</dt>
+            <dd>
+              <ExposureLabel system={system} />
+            </dd>
+          </div>
+        </dl>
+      </section>
+    )
+  }
+
+  if (audience === "science") {
+    return (
+      <section className="ll-lens-brief ll-lens-brief--science" aria-label="Scientific evidence brief">
+        <div>
+          <span>Science lens</span>
+          <h3>Inspect the estimate before extending the claim</h3>
+          <p>
+            The compact profile above shows the condition estimate and its uncertainty range;
+            inspect the evidence chain before treating an alert as a service failure.
+          </p>
+        </div>
+        <dl>
+          <div>
+            <dt>Evidence</dt>
+            <dd>{confidence} confidence · {freshness}</dd>
+          </div>
+          <div>
+            <dt>Sources</dt>
+            <dd>{sources.length} in scope</dd>
+          </div>
+          <div>
+            <dt>Thresholds</dt>
+            <dd>{thresholds.length || "None"} registered</dd>
+          </div>
+        </dl>
+      </section>
+    )
+  }
+
+  return (
+    <section className="ll-lens-brief ll-lens-brief--public" aria-label="Public reading guide">
+      <div>
+        <span>Public lens</span>
+        <h3>Start with the service people rely on</h3>
+        <p>
+          The flowers are service stations, not a score for nature. Choose one to see what is
+          changing, where it matters, and how sure the evidence is.
+        </p>
+      </div>
+      <dl>
+        <div>
+          <dt>Selected</dt>
+          <dd>{systemLabel(system)}</dd>
+        </div>
+        <div>
+          <dt>Who is affected</dt>
+          <dd>
+            <ExposureLabel system={system} />
+          </dd>
+        </div>
+        <div>
+          <dt>How sure</dt>
+          <dd>{confidence}</dd>
+        </div>
+      </dl>
+    </section>
   )
 }
 
@@ -860,29 +1086,34 @@ function MapLegend() {
   )
 }
 
-function PulseKey() {
+function PulseKey({ audience = "public" }) {
+  const items =
+    audience === "science"
+      ? [
+          ["is-observed", "observed"],
+          ["is-modeled", "modeled"],
+          ["is-forecast", "forecast"],
+          ["is-reference", "reference envelope"],
+          ["is-gap", "gap / stale"],
+        ]
+      : audience === "policy"
+        ? [
+            ["is-observed", "recorded signal"],
+            ["is-forecast", "planning forecast"],
+            ["is-threshold", "decision rule"],
+          ]
+        : [
+            ["is-observed", "recorded change"],
+            ["is-threshold", "alert rule"],
+          ]
   return (
     <div className="ll-pulse-key" aria-label="Service Pulse legend">
-      <span>
-        <i className="is-observed" />
-        observed
-      </span>
-      <span>
-        <i className="is-modeled" />
-        modeled
-      </span>
-      <span>
-        <i className="is-forecast" />
-        forecast
-      </span>
-      <span>
-        <i className="is-reference" />
-        reference envelope
-      </span>
-      <span>
-        <i className="is-gap" />
-        gap / stale
-      </span>
+      {items.map(([className, label]) => (
+        <span key={className}>
+          <i className={className} />
+          {label}
+        </span>
+      ))}
     </div>
   )
 }
@@ -1110,16 +1341,16 @@ function sourcesForSystem(system) {
 
 function claimForAudience(system, audience) {
   const claim = system.alert?.claim ?? system.claim ?? system.explanation
-  if (audience === "scientist") {
+  if (audience === "science") {
     return (
-      system.scientistClaim ?? claim ?? "The claim is bounded by the evidence roles shown below."
+      system.scientistClaim ??
+      `${claim ?? "The claim is bounded by the evidence roles shown below."} ${system.alert?.serviceFailure ? "The claimed failure is directly observed." : "The claimed outcome remains bounded by the available evidence."}`
     )
   }
-  if (audience === "operator") {
+  if (audience === "policy") {
     return (
-      system.operatorClaim ??
-      claim ??
-      "Inspect persistence, exposure, and source freshness before acting."
+      system.policyClaim ??
+      `${policyAction(system)}. ${claim ?? "Inspect persistence, exposure, and source freshness before acting."}`
     )
   }
   return (

@@ -403,7 +403,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       }}
     >
       <title>{typeof title === "string" ? title : "Ordinal Chart"}</title>
-      <desc>{typeof title === "string" ? `${title} — ordinal data visualization` : "Ordinal data visualization"}</desc>
+      <desc>
+        {typeof title === "string"
+          ? `${title} (ordinal data visualization)`
+          : "Ordinal data visualization"}
+      </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in OrdinalSVGUnderlay) */}
         {showGrid && scales && !isRadial && rendersUnderlayAboveCanvas && (

@@ -7,6 +7,7 @@ import {
   StatusGlyph,
   serviceSystemId,
   systemRiskLevel,
+  triageExposureRadius,
 } from "./LivingLedgerViews"
 
 const canonicalSystem = {
@@ -56,5 +57,11 @@ describe("Living Ledger view adapters", () => {
   it("gives a titled status glyph an accessible name", () => {
     render(<StatusGlyph level="action" title="Action alert" />)
     expect(screen.getByRole("img", { name: "Action alert" })).toBeInTheDocument()
+  })
+
+  it("keeps exposure marks small while preserving proportional area", () => {
+    expect(triageExposureRadius(0, 4000000)).toBe(3)
+    expect(triageExposureRadius(1000000, 4000000)).toBe(4)
+    expect(triageExposureRadius(4000000, 4000000)).toBe(8)
   })
 })

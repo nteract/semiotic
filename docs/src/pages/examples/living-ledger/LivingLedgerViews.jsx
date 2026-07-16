@@ -3,7 +3,6 @@ import { LineChart, QuadrantChart } from "semiotic/xy"
 import { GeoCustomChart, geoHitTarget } from "semiotic/geo"
 import { OrdinalCustomChart } from "semiotic/ordinal"
 import { StreamNetworkFrame } from "semiotic/network"
-import { PhysicalFlowChart } from "semiotic/physics"
 import { hitTargetRect, unwrapDatum } from "semiotic/recipes"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
 
@@ -54,7 +53,7 @@ const PUBLIC_LEDGER_LABELS = Object.freeze({
   relationalValue: ["What the place means", "Relational value"],
 })
 
-const SCIENTIST_LEDGER_LABELS = Object.freeze({
+const SCIENCE_LEDGER_LABELS = Object.freeze({
   ecologicalSupply: ["Ecological supply", "EESV / capacity"],
   anthropogenicContribution: ["Anthropogenic contribution", "EESV / contribution"],
   demand: ["Demand", "EESV / demand"],
@@ -76,33 +75,7 @@ const PIPELINE_NODES = Object.freeze([
   { id: "quarantine", label: "Quarantine", x: 0.41, y: 0.14 },
 ])
 
-const PIPELINE_STYLE_RULES = Object.freeze([
-  {
-    id: "accepted",
-    when: { field: "outcome", eq: "accepted" },
-    style: { fill: "#57c7b7", stroke: "#f0e7cf", strokeWidth: 1 },
-  },
-  {
-    id: "queued",
-    when: { field: "outcome", eq: "queued" },
-    style: { fill: "#76a6bd", stroke: "#f0e7cf", strokeWidth: 1 },
-  },
-  {
-    id: "review",
-    when: { field: "outcome", eq: "review" },
-    style: { fill: "#d6a758", stroke: "#f0e7cf", strokeWidth: 1 },
-  },
-  {
-    id: "quarantine",
-    when: { field: "outcome", eq: "quarantine" },
-    style: { fill: "#c95c50", stroke: "#f0e7cf", strokeWidth: 1 },
-  },
-  {
-    id: "stale",
-    when: { field: "outcome", eq: "stale" },
-    style: { fill: "#91a59e", stroke: "#f0e7cf", strokeWidth: 1 },
-  },
-])
+const PIPELINE_GATES = PIPELINE_NODES.slice(0, 8)
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -224,8 +197,8 @@ export function StatusGlyph({ level = "observe", size = 18, color, className = "
 }
 
 export function ServiceWeatherMap({ areas, systems, selectedId, onSelect, audience = "public" }) {
-  const [width, hostRef] = useResponsiveWidth(280, 720)
-  const height = Math.max(280, Math.min(430, Math.round(width * 0.58)))
+  const [width, hostRef] = useResponsiveWidth(280, 1160)
+  const height = Math.max(280, Math.min(520, Math.round(width * 0.46)))
   const selected = systems.find((system) => serviceSystemId(system) === selectedId)
 
   return (
@@ -235,7 +208,7 @@ export function ServiceWeatherMap({ areas, systems, selectedId, onSelect, audien
           chartId="living-ledger-service-weather"
           areas={areas}
           points={systems}
-          projection="equalEarth"
+          projection="equirectangular"
           layout={serviceWeatherLayout}
           layoutConfig={{ selectedId, audience }}
           width={width}
@@ -286,6 +259,185 @@ export function ServiceWeatherMap({ areas, systems, selectedId, onSelect, audien
         </div>
       )}
     </div>
+  )
+}
+
+export function ServiceFlowerBand({ systems, selectedId, onSelect }) {
+  return (
+    <div className="ll-flower-band" role="group" aria-label="Service-system flower stations">
+      {systems.map((system, index) => {
+        const id = serviceSystemId(system)
+        const patternId = `ll-flower-band-stale-${index}`
+        return (
+          <button
+            key={id}
+            type="button"
+            aria-label={`Select ${systemLabel(system)} from the flower stations`}
+            aria-pressed={id === selectedId}
+            title={systemLabel(system)}
+            onClick={() => onSelect(id, "flower stations")}
+          >
+            <span>{system.stationId ?? `Station ${String(index + 1).padStart(2, "0")}`}</span>
+            <svg viewBox="-34 -34 68 68" aria-hidden="true">
+              <defs>
+                <pattern
+                  id={patternId}
+                  width="5"
+                  height="5"
+                  patternUnits="userSpaceOnUse"
+                  patternTransform="rotate(45)"
+                >
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="5"
+                    stroke="#a0b4ac"
+                    strokeWidth="1"
+                    opacity="0.65"
+                  />
+                </pattern>
+              </defs>
+              <ServiceFlower
+                system={system}
+                color={familyColor(system)}
+                missingFill={`url(#${patternId})`}
+              />
+            </svg>
+            <small>{system.shortName ?? system.serviceName ?? systemLabel(system)}</small>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export function policyAction(system) {
+  const level = systemRiskLevel(system)
+  if (level === "unknown") return "Verify evidence"
+  if (level === "critical" || level === "action") return "Prepare response"
+  if (level === "warning") return "Review intervention"
+  if (level === "watch") return "Assign a watch"
+  return "Maintain watch"
+}
+
+export function PolicySignalBand({ systems, selectedId, onSelect }) {
+  const maxExposure = Math.max(
+    1,
+    ...systems.map((system) => estimateValue(system.risk?.exposure ?? system.exposure, 0)),
+  )
+  return (
+    <div className="ll-policy-band" role="group" aria-label="Policy decision signals">
+      {systems.map((system) => {
+        const id = serviceSystemId(system)
+        const action = policyAction(system)
+        return (
+          <button
+            key={id}
+            type="button"
+            aria-label={`Review ${systemLabel(system)}: ${action}`}
+            aria-pressed={id === selectedId}
+            title={`${systemLabel(system)} — ${action}`}
+            onClick={() => onSelect(id, "policy signals")}
+          >
+            <span>{system.stationId ?? systemLabel(system)}</span>
+            <PolicySignalGlyph system={system} maxExposure={maxExposure} />
+            <small>{action}</small>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function PolicySignalGlyph({ system, maxExposure }) {
+  const level = systemRiskLevel(system)
+  const color = (ALERT_META[level] ?? ALERT_META.unknown).color
+  const condition = Math.max(0, Math.min(4, Number(system.risk?.ecologicalSeverity ?? 0)))
+  const deficit = Math.max(0, Math.min(4, Number(system.risk?.serviceDeficit ?? 0)))
+  const exposure = estimateValue(system.risk?.exposure ?? system.exposure, 0)
+  const radius = 2.5 + 4.5 * Math.sqrt(Math.max(0, exposure) / maxExposure)
+  return (
+    <svg className="ll-policy-signal" viewBox="0 0 64 38" aria-hidden="true">
+      <path d="M4 9H43 M4 23H43" stroke="#46675f" strokeWidth="1" />
+      {[0, 1, 2, 3].map((index) => (
+        <rect
+          key={`condition-${index}`}
+          x={4 + index * 10}
+          y="5"
+          width="7"
+          height="8"
+          rx="1"
+          fill={index < condition ? color : "#18352f"}
+          fillOpacity={index < condition ? 0.88 : 1}
+        />
+      ))}
+      {[0, 1, 2, 3].map((index) => (
+        <rect
+          key={`deficit-${index}`}
+          x={4 + index * 10}
+          y="19"
+          width="7"
+          height="8"
+          rx="1"
+          fill={index < deficit ? color : "#18352f"}
+          fillOpacity={index < deficit ? 0.88 : 1}
+        />
+      ))}
+      <circle cx="54" cy="19" r={radius} fill={color} fillOpacity="0.24" stroke={color} />
+      <path d="M54 7V31" stroke={color} strokeOpacity="0.55" strokeDasharray="2 2" />
+    </svg>
+  )
+}
+
+export function ScienceEvidenceBand({ systems, selectedId, onSelect }) {
+  return (
+    <div className="ll-science-band" role="group" aria-label="Scientific evidence profiles">
+      {systems.map((system) => {
+        const id = serviceSystemId(system)
+        const freshness = system.freshness ?? system.risk?.freshness ?? "unknown"
+        const confidence = system.risk?.confidence ?? system.confidence ?? "low"
+        return (
+          <button
+            key={id}
+            type="button"
+            aria-label={`Inspect evidence for ${systemLabel(system)}: ${confidence} confidence, ${freshness}`}
+            aria-pressed={id === selectedId}
+            title={`${systemLabel(system)} — ${confidence} confidence, ${freshness}`}
+            onClick={() => onSelect(id, "scientific evidence profiles")}
+          >
+            <span>{system.stationId ?? systemLabel(system)}</span>
+            <ScienceEvidenceGlyph system={system} />
+            <small>{`${confidence} · ${freshness}`}</small>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function ScienceEvidenceGlyph({ system }) {
+  const level = systemRiskLevel(system)
+  const color = (ALERT_META[level] ?? ALERT_META.unknown).color
+  const estimate = system.ecosystemCondition ?? {}
+  const value = Math.max(0, Math.min(100, estimateValue(estimate, 50)))
+  const confidence = system.risk?.confidence ?? estimate.confidence ?? "low"
+  const spread = confidence === "high" ? 7 : confidence === "medium" ? 13 : 21
+  const lower = Math.max(0, Number.isFinite(estimate.lower) ? estimate.lower : value - spread)
+  const upper = Math.min(100, Number.isFinite(estimate.upper) ? estimate.upper : value + spread)
+  const x = (number) => 4 + (56 * number) / 100
+  const velocity = estimateValue(system.risk?.velocity, 0)
+  const trendY = Math.max(8, Math.min(29, 20 - velocity * 8))
+  return (
+    <svg className="ll-science-signal" viewBox="0 0 64 38" aria-hidden="true">
+      <path d="M4 29H60" stroke="#46675f" strokeWidth="1" />
+      <path d="M4 19H60" stroke="#36574f" strokeWidth="1" strokeDasharray="2 2" />
+      <line x1={x(lower)} x2={x(upper)} y1="19" y2="19" stroke={color} strokeWidth="2" />
+      <line x1={x(lower)} x2={x(lower)} y1="15" y2="23" stroke={color} />
+      <line x1={x(upper)} x2={x(upper)} y1="15" y2="23" stroke={color} />
+      <circle cx={x(value)} cy="19" r="3.2" fill="#071816" stroke={color} strokeWidth="1.5" />
+      <path d={`M4 28 L20 24 L36 ${trendY} L60 ${Math.max(8, trendY - velocity * 4)}`} fill="none" stroke={color} strokeOpacity="0.72" strokeWidth="1.4" />
+    </svg>
   )
 }
 
@@ -441,7 +593,7 @@ function MapStatusMark({ level, color, stale }) {
   )
 }
 
-function ServiceFlower({ system, color }) {
+function ServiceFlower({ system, color, missingFill = "url(#ll-map-stale)" }) {
   const estimates = LEDGER_DIMENSIONS.map((key) => system.eesv?.[key])
   return (
     <g className="ll-service-flower">
@@ -467,7 +619,7 @@ function ServiceFlower({ system, color }) {
             key={LEDGER_DIMENSIONS[index]}
             d={`M0 -5 C5 -9 6 -${length - 3} 0 -${length} C-6 -${length - 3} -5 -9 0 -5 Z`}
             transform={`rotate(${angle})`}
-            fill={missing ? "url(#ll-map-stale)" : color}
+            fill={missing ? missingFill : color}
             fillOpacity={missing ? 0.65 : 0.22 + index * 0.06}
             stroke={missing ? "#9cb0a8" : color}
             strokeWidth="1"
@@ -485,9 +637,9 @@ function ServiceFlower({ system, color }) {
   )
 }
 
-export function TriageField({ systems, selectedId, onSelect }) {
-  const [width, hostRef] = useResponsiveWidth(280, 560)
-  const height = Math.max(310, Math.min(430, Math.round(width * 0.76)))
+export function TriageField({ systems, selectedId, onSelect, audience = "public" }) {
+  const [width, hostRef] = useResponsiveWidth(280, 1160)
+  const height = Math.max(310, Math.min(500, Math.round(width * 0.46)))
   const data = useMemo(
     () =>
       systems.map((system) => {
@@ -528,14 +680,25 @@ export function TriageField({ systems, selectedId, onSelect }) {
             system.anthropogenicSupplementation ??
             system.anthropogenicShare ??
             0,
+          confidence: system.risk?.confidence ?? system.confidence ?? "low",
           family: serviceFamily(system),
         }
       }),
     [systems],
   )
+  const maxExposure = useMemo(
+    () => Math.max(1, ...data.map((system) => Number(system.exposed ?? 0))),
+    [data],
+  )
+
+  const lens = triageLens(audience)
 
   return (
-    <div ref={hostRef} className="ll-chart-host ll-triage-host">
+    <div
+      ref={hostRef}
+      className={`ll-chart-host ll-triage-host ll-triage-host--${audience}`}
+      data-lens={audience}
+    >
       <QuadrantChart
         chartId="living-ledger-triage"
         data={data}
@@ -543,26 +706,21 @@ export function TriageField({ systems, selectedId, onSelect }) {
         yAccessor="adequacy"
         xCenter={70}
         yCenter={100}
-        quadrants={{
-          topRight: { label: "RESILIENT", color: "#4cb7a3", opacity: 0.045 },
-          topLeft: { label: "SUBSIDIZED", color: "#8e9fc9", opacity: 0.055 },
-          bottomRight: { label: "OVERDRAWN", color: "#d2ab57", opacity: 0.055 },
-          bottomLeft: { label: "FAILING", color: "#d2644e", opacity: 0.06 },
-        }}
+        quadrants={lens.quadrants}
         centerlineStyle={{ stroke: "#789087", strokeWidth: 1, strokeDasharray: [4, 6] }}
         quadrantLabelSize={10}
         colorBy="family"
         colorScheme={SERVICE_COLORS}
         sizeBy="exposed"
-        sizeRange={[5, 15]}
+        sizeRange={lens.sizeRange}
         pointIdAccessor="serviceSystemId"
         width={width}
         height={height}
         showAxes
         showGrid
         showLegend={false}
-        xLabel="Ecosystem condition →"
-        yLabel="Service adequacy →"
+        xLabel={lens.xLabel}
+        yLabel={lens.yLabel}
         xFormat={(value) => `${Math.round(value)}`}
         yFormat={(value) => `${Math.round(value)}`}
         accessibleTable
@@ -571,10 +729,7 @@ export function TriageField({ systems, selectedId, onSelect }) {
           return (
             <div className="ll-tooltip">
               <strong>{systemLabel(system)}</strong>
-              <span>
-                condition {Math.round(system.condition)} / adequacy{" "}
-                {system.adequacyComparable ? `${Math.round(system.adequacy)}%` : "not comparable"}
-              </span>
+              <span>{triageTooltipSummary(system, audience)}</span>
               <span>
                 {ALERT_META[systemRiskLevel(system)]?.label} ·{" "}
                 {system.warningKindLabel ??
@@ -582,11 +737,7 @@ export function TriageField({ systems, selectedId, onSelect }) {
                   system.warningKind ??
                   "observed change"}
               </span>
-              <small>
-                {system.anthropogenicShare
-                  ? `${Math.round(system.anthropogenicShare * 100)}% human supplementation`
-                  : "No quantified supplementation"}
-              </small>
+              <small>{triageTooltipDetail(system, audience)}</small>
             </div>
           )
         }}
@@ -594,37 +745,128 @@ export function TriageField({ systems, selectedId, onSelect }) {
           const id = serviceSystemId(datumFrom(datum))
           if (id) onSelect(id, "triage")
         }}
-        description="Service Triage Field comparing ecosystem condition with whether service delivery is keeping up with demand."
-        summary={`${data.length} service systems. The four regions are Resilient, Subsidized, Overdrawn, and Failing; this chart does not calculate a combined score.`}
+        description={lens.description}
+        summary={lens.summary(data.length)}
         frameProps={{
           background: "transparent",
-          xExtent: [0, 100],
-          yExtent: [50, 130],
+          xExtent: [45, 95],
+          yExtent: [80, 145],
           scalePadding: 12,
           symbolAccessor: "evidenceShape",
           symbolMap: EVIDENCE_SYMBOLS,
-          foregroundGraphics: ({ scales }) => (
-            <TriageTails data={data} scales={scales} selectedId={selectedId} />
-          ),
+          foregroundGraphics: ({ scales }) =>
+            audience === "public" ? null : (
+              <>
+                <TriageTails data={data} scales={scales} selectedId={selectedId} />
+                {audience === "science" ? <TriageEvidenceRanges data={data} scales={scales} /> : null}
+              </>
+            ),
           pointStyle: (datum) => {
             const system = datumFrom(datum)
             const active = serviceSystemId(system) === selectedId
-            const exposure = Math.max(1, Number(system.exposed ?? 1))
-            const radius = Math.max(5, Math.min(15, 4 + Math.log10(exposure + 1) * 1.7))
+            const radius = triageExposureRadius(system.exposed, maxExposure)
+            const alertColor = (ALERT_META[systemRiskLevel(system)] ?? ALERT_META.unknown).color
             return {
-              fill: familyColor(system),
-              fillOpacity: active ? 0.95 : 0.7,
+              fill: audience === "public" ? alertColor : familyColor(system),
+              fillOpacity: active ? 0.95 : audience === "science" ? 0.62 : 0.7,
               stroke: active
                 ? "#f5efda"
-                : (ALERT_META[systemRiskLevel(system)] ?? ALERT_META.unknown).color,
-              strokeWidth: active ? 3.5 : 1.4 + Number(system.anthropogenicShare ?? 0) * 4,
-              r: active ? radius + 2 : radius,
+                : audience === "science"
+                  ? confidenceColor(system.confidence)
+                  : alertColor,
+              strokeWidth:
+                active ? 2.5 : audience === "public" ? 1.8 : 1.1 + Number(system.anthropogenicShare ?? 0) * 2.4,
+              r: active ? radius + 1.5 : audience === "science" ? Math.max(3.5, radius - 1) : radius,
             }
           },
         }}
       />
     </div>
   )
+}
+
+function triageLens(audience) {
+  if (audience === "policy") {
+    return {
+      quadrants: {
+        topRight: { label: "MAINTAIN", color: "#4cb7a3", opacity: 0.045 },
+        topLeft: { label: "SUBSIDIZE", color: "#8e9fc9", opacity: 0.055 },
+        bottomRight: { label: "TARGET SUPPORT", color: "#d2ab57", opacity: 0.055 },
+        bottomLeft: { label: "ESCALATE", color: "#d2644e", opacity: 0.07 },
+      },
+      sizeRange: [3, 8],
+      xLabel: "Ecosystem condition →",
+      yLabel: "Service adequacy →",
+      description: "Policy decision field comparing ecosystem condition with whether delivery is keeping up with demand.",
+      summary: (count) => `${count} service systems arranged by decision posture. Point area is the exposed reach, not a combined score.`,
+    }
+  }
+  if (audience === "science") {
+    return {
+      quadrants: {
+        topRight: { label: "HIGH / ADEQUATE", color: "#4cb7a3", opacity: 0.035 },
+        topLeft: { label: "LOW / ADEQUATE", color: "#8e9fc9", opacity: 0.045 },
+        bottomRight: { label: "HIGH / DEFICIT", color: "#d2ab57", opacity: 0.045 },
+        bottomLeft: { label: "LOW / DEFICIT", color: "#d2644e", opacity: 0.055 },
+      },
+      sizeRange: [3, 7],
+      xLabel: "Condition index (0–100) →",
+      yLabel: "Adequacy estimate (%) →",
+      description: "Condition–adequacy diagnostic. Horizontal whiskers show confidence-scaled condition uncertainty and tails show recent movement.",
+      summary: (count) => `${count} service systems. This diagnostic preserves non-comparable systems and does not infer a global score.`,
+    }
+  }
+  return {
+    quadrants: {
+      topRight: { label: "KEEPING UP", color: "#4cb7a3", opacity: 0.045 },
+      topLeft: { label: "PEOPLE FILLING THE GAP", color: "#8e9fc9", opacity: 0.055 },
+      bottomRight: { label: "NEEDS ATTENTION", color: "#d2ab57", opacity: 0.055 },
+      bottomLeft: { label: "SERVICE AT RISK", color: "#d2644e", opacity: 0.06 },
+    },
+    sizeRange: [4, 9],
+    xLabel: "Nature's condition →",
+    yLabel: "Service keeping up →",
+    description: "A plain-language view of whether ecosystems are in condition to keep providing the service people rely on.",
+    summary: (count) => `${count} service systems. The four areas help compare the condition of nature with whether the service is keeping up.`,
+  }
+}
+
+function triageTooltipSummary(system, audience) {
+  const adequacy = system.adequacyComparable ? `${Math.round(system.adequacy)}%` : "not comparable"
+  if (audience === "policy") return `decision posture: ${policyAction(system).toLowerCase()} · reach ${formatExposure(system.exposed)}`
+  if (audience === "science") return `condition ${Math.round(system.condition)} · adequacy ${adequacy} · ${system.confidence} confidence`
+  return `nature ${Math.round(system.condition)} / service ${adequacy}`
+}
+
+function triageTooltipDetail(system, audience) {
+  if (audience === "science") {
+    return system.adequacyComparable
+      ? "Whisker width reflects evidence confidence; the tail is the prior 30-day condition estimate."
+      : "Adequacy is not comparable for this service; its position is a diagnostic placeholder."
+  }
+  if (audience === "policy") {
+    return system.anthropogenicShare
+      ? `${Math.round(system.anthropogenicShare * 100)}% human supplementation · point area is exposed reach`
+      : "No quantified supplementation · point area is exposed reach"
+  }
+  return system.anthropogenicShare
+    ? `${Math.round(system.anthropogenicShare * 100)}% of delivery is human supplementation.`
+    : "No quantified human supplementation."
+}
+
+function formatExposure(value) {
+  const number = Math.max(0, Number(value) || 0)
+  return number >= 1_000_000 ? `${(number / 1_000_000).toFixed(1)}M` : number >= 1000 ? `${Math.round(number / 1000)}K` : String(Math.round(number))
+}
+
+function confidenceColor(confidence) {
+  return confidence === "high" ? "#d4e7df" : confidence === "medium" ? "#9ab7c8" : "#8b9c97"
+}
+
+export function triageExposureRadius(exposure, maxExposure) {
+  const value = Math.max(0, Number(exposure) || 0)
+  const maximum = Math.max(1, Number(maxExposure) || 1)
+  return Math.max(3, Math.min(8, 8 * Math.sqrt(value / maximum)))
 }
 
 function TriageTails({ data, scales, selectedId }) {
@@ -665,6 +907,28 @@ function TriageTails({ data, scales, selectedId }) {
   )
 }
 
+function TriageEvidenceRanges({ data, scales }) {
+  if (!scales?.x || !scales?.y) return null
+  return (
+    <g aria-hidden="true" pointerEvents="none">
+      {data.map((system) => {
+        const spread = system.confidence === "high" ? 2.5 : system.confidence === "medium" ? 5 : 8
+        const x1 = scales.x(Math.max(0, system.condition - spread))
+        const x2 = scales.x(Math.min(100, system.condition + spread))
+        const y = scales.y(system.adequacy)
+        const color = confidenceColor(system.confidence)
+        return (
+          <g key={`evidence-range-${serviceSystemId(system)}`}>
+            <line x1={x1} x2={x2} y1={y} y2={y} stroke={color} strokeOpacity="0.58" />
+            <line x1={x1} x2={x1} y1={y - 2.5} y2={y + 2.5} stroke={color} strokeOpacity="0.58" />
+            <line x1={x2} x2={x2} y1={y - 2.5} y2={y + 2.5} stroke={color} strokeOpacity="0.58" />
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 export function ServicePulse({ system, pulse, audience = "public" }) {
   const [width, hostRef] = useResponsiveWidth(280, 720)
   const height = Math.max(300, Math.min(430, Math.round(width * 0.58)))
@@ -673,7 +937,12 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
   const alertEvents = pulse?.alertEvents ?? []
   const unit = pulse?.unit ?? "local reference"
   const normalized = useMemo(() => normalizePulseRows(rows), [rows])
-  const finiteValues = normalized
+  const lens = pulseLens(audience)
+  const displayedRows = useMemo(() => {
+    const filtered = normalized.filter((row) => lens.include(row))
+    return filtered.length ? filtered : normalized
+  }, [lens, normalized])
+  const finiteValues = displayedRows
     .flatMap((row) => [row.value, row.referenceLow, row.referenceHigh, row.lower, row.upper])
     .filter(Number.isFinite)
   const thresholdValues = thresholds.flatMap((threshold) =>
@@ -686,10 +955,14 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
   const yExtent = [Math.max(0, min - padding), max + padding]
 
   return (
-    <div ref={hostRef} className="ll-chart-host ll-pulse-host">
+    <div
+      ref={hostRef}
+      className={`ll-chart-host ll-pulse-host ll-pulse-host--${audience}`}
+      data-lens={audience}
+    >
       <LineChart
         chartId="living-ledger-service-pulse"
-        data={normalized}
+        data={displayedRows}
         xAccessor="dayIndex"
         yAccessor="value"
         lineBy="series"
@@ -697,19 +970,19 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
         colorScheme={{ Observed: familyColor(system), Modeled: "#9ab7c8", Forecast: "#d9b269" }}
         width={width}
         height={height}
-        xExtent={[0, Math.max(179, ...normalized.map((row) => row.dayIndex))]}
+        xExtent={[0, Math.max(179, ...displayedRows.map((row) => row.dayIndex))]}
         yExtent={yExtent}
         curve="monotoneX"
         gapStrategy="break"
-        lineWidth={2.2}
-        showPoints
-        pointRadius={2.5}
-        showGrid
-        showLegend={audience !== "public"}
+        lineWidth={lens.lineWidth}
+        showPoints={lens.showPoints}
+        pointRadius={lens.pointRadius}
+        showGrid={lens.showGrid}
+        showLegend={lens.showLegend}
         legendPosition="top"
-        xLabel="Curated replay"
-        yLabel={`${pulse?.label ?? "Indicator"} (${unit})`}
-        xFormat={(value) => pulseDateLabel(normalized, value)}
+        xLabel={lens.xLabel}
+        yLabel={lens.yLabel(pulse?.label ?? "Indicator", unit)}
+        xFormat={(value) => pulseDateLabel(displayedRows, value)}
         yFormat={(value) => formatPulseValue(value)}
         accessibleTable
         tooltip={(datum) => {
@@ -737,11 +1010,8 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
             </div>
           )
         }}
-        description={`Service Pulse for ${systemLabel(system)}. Observations, models, forecasts, reference ranges, and registered thresholds remain separate.`}
-        summary={
-          system?.pulseSummary ??
-          `${normalized.length} values are visible for ${systemLabel(system)}. A statistically unusual value is not automatically a crisis.`
-        }
+        description={lens.description(system)}
+        summary={lens.summary(system, displayedRows.length)}
         frameProps={{
           background: "transparent",
           lineStyle: (_datum, group) => ({
@@ -751,9 +1021,9 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
                 : group === "Forecast"
                   ? "#d9b269"
                   : "#9ab7c8",
-            strokeWidth: group === "Observed" ? 2.6 : 1.8,
+            strokeWidth: group === "Observed" ? lens.observedWidth : lens.secondaryWidth,
             strokeDasharray: group === "Forecast" ? "5 4" : group === "Modeled" ? "2 3" : undefined,
-            opacity: group === "Observed" ? 1 : 0.85,
+            opacity: group === "Observed" ? 1 : lens.secondaryOpacity,
           }),
           pointStyle: (datum) => ({
             fill: datum.series === "Observed" ? familyColor(system) : "#071816",
@@ -763,21 +1033,74 @@ export function ServicePulse({ system, pulse, audience = "public" }) {
                 : datum.series === "Modeled"
                   ? "#9ab7c8"
                   : familyColor(system),
-            strokeWidth: 1.2,
-            r: datum.series === "Observed" ? 2.7 : 2.2,
+            strokeWidth: audience === "science" ? 1.2 : 1.6,
+            r: datum.series === "Observed" ? lens.pointRadius + 0.2 : lens.pointRadius,
           }),
           foregroundGraphics: ({ scales }) => (
             <PulseOverlay
-              rows={normalized}
+              rows={displayedRows}
               thresholds={thresholds}
               alertEvents={alertEvents}
               scales={scales}
+              audience={audience}
             />
           ),
         }}
       />
     </div>
   )
+}
+
+function pulseLens(audience) {
+  if (audience === "policy") {
+    return {
+      include: (row) => row.series === "Observed" || row.series === "Forecast",
+      lineWidth: 2.6,
+      observedWidth: 2.8,
+      secondaryWidth: 2.4,
+      secondaryOpacity: 1,
+      showPoints: true,
+      pointRadius: 2.6,
+      showGrid: true,
+      showLegend: true,
+      xLabel: "Replay and decision horizon",
+      yLabel: (label, unit) => `${label} (${unit})`,
+      description: (system) => `Decision horizon for ${systemLabel(system)}. Recorded values and the near-term forecast are shown alongside the registered action lines.`,
+      summary: (system, count) => `${count} recorded or forecast values for ${systemLabel(system)}. Forecasts are planning signals, not observed outcomes.`,
+    }
+  }
+  if (audience === "science") {
+    return {
+      include: () => true,
+      lineWidth: 2.2,
+      observedWidth: 2.6,
+      secondaryWidth: 1.8,
+      secondaryOpacity: 0.85,
+      showPoints: true,
+      pointRadius: 2.4,
+      showGrid: true,
+      showLegend: true,
+      xLabel: "Days since replay start",
+      yLabel: (label, unit) => `${label} (${unit})`,
+      description: (system) => `Evidence pulse for ${systemLabel(system)}. Observations, models, forecasts, reference ranges, uncertainty intervals, and data gaps remain distinct.`,
+      summary: (system, count) => `${count} evidence values for ${systemLabel(system)}. The chart retains uncertainty and freshness rather than smoothing them into one trajectory.`,
+    }
+  }
+  return {
+    include: (row) => row.series === "Observed",
+    lineWidth: 3,
+    observedWidth: 3,
+    secondaryWidth: 0,
+    secondaryOpacity: 0,
+    showPoints: false,
+    pointRadius: 2.4,
+    showGrid: false,
+    showLegend: false,
+    xLabel: "Six-month replay",
+    yLabel: (label) => label,
+    description: (system) => `Plain-language service change for ${systemLabel(system)}. The chart shows recorded values and the alert line, not a blended score.`,
+    summary: (system, count) => `${count} recorded values for ${systemLabel(system)}. The alert line marks a rule; it does not prove the whole service has failed.`,
+  }
 }
 
 function normalizePulseRows(rows = []) {
@@ -832,15 +1155,22 @@ function formatPulseValue(value, unit = "") {
   return unit ? `${formatted} ${unit}` : formatted
 }
 
-function PulseOverlay({ rows, thresholds, alertEvents = [], scales }) {
+function PulseOverlay({ rows, thresholds, alertEvents = [], scales, audience = "public" }) {
   if (!scales?.x || !scales?.y || rows.length === 0) return null
-  const referenceRows = rows.filter(
-    (row) => Number.isFinite(row.referenceLow) && Number.isFinite(row.referenceHigh),
-  )
-  const intervalRows = rows.filter(
-    (row) => row.series !== "Observed" && Number.isFinite(row.lower) && Number.isFinite(row.upper),
-  )
-  const gapRuns = contiguousRuns(rows, (row) => row.gap || row.freshness === "stale")
+  const referenceRows =
+    audience === "public"
+      ? []
+      : rows.filter(
+          (row) => Number.isFinite(row.referenceLow) && Number.isFinite(row.referenceHigh),
+        )
+  const intervalRows =
+    audience === "science"
+      ? rows.filter(
+          (row) =>
+            row.series !== "Observed" && Number.isFinite(row.lower) && Number.isFinite(row.upper),
+        )
+      : []
+  const gapRuns = audience === "science" ? contiguousRuns(rows, (row) => row.gap || row.freshness === "stale") : []
   const width = Math.max(...rows.map((row) => scales.x(row.dayIndex)), 0)
   const height = Math.max(
     ...rows.flatMap((row) => [
@@ -1057,7 +1387,7 @@ function livingLedgerLayout(ctx) {
 }
 
 function LivingLedgerOverlay({ cells, audience }) {
-  const labels = audience === "scientist" ? SCIENTIST_LEDGER_LABELS : PUBLIC_LEDGER_LABELS
+  const labels = audience === "science" ? SCIENCE_LEDGER_LABELS : PUBLIC_LEDGER_LABELS
   return (
     <g className="ll-ledger-overlay" aria-hidden="true" pointerEvents="none">
       <defs>
@@ -1269,68 +1599,32 @@ export function DependencyEvidenceWeb({ graph, mode, reducedMotion = false }) {
   )
 }
 
-export function ObservationPipeline({ events = [], reducedMotion = false, audience = "public" }) {
-  const [width, hostRef] = useResponsiveWidth(280, 720)
-  const height = Math.max(300, Math.min(410, Math.round(width * 0.52)))
-  const { links, counts } = useMemo(() => pipelineLinks(events), [events])
+export function ObservationPipeline({ events = [], audience = "public", selectedId }) {
+  const selectedEvents = useMemo(
+    () => events.filter((event) => !selectedId || event.serviceSystemId === selectedId),
+    [events, selectedId],
+  )
+
   return (
-    <div ref={hostRef} className="ll-chart-host ll-pipeline-host">
-      <PhysicalFlowChart
-        key={`${events.length}-${width < 500 ? "compact" : "wide"}`}
-        chartId="living-ledger-observation-stream"
-        nodes={PIPELINE_NODES}
-        links={links}
-        coordinateMode="normalized"
-        colorBy="outcome"
-        styleRules={PIPELINE_STYLE_RULES}
-        particleRate={0.28}
-        maxParticles={72}
-        particleRadius={3.5}
-        flowSpeed={88}
-        reducedMotion={reducedMotion}
-        paused={reducedMotion}
-        showStaticFlow
-        showNodeLabels
-        showSensors={audience === "scientist"}
-        width={width}
-        height={height}
-        size={[width, height]}
-        accessibleTable
-        tooltip={(datum) => {
-          const edge = datumFrom(datum)
-          return (
-            <div className="ll-tooltip">
-              <strong>{edge.label ?? `${edge.source} → ${edge.target}`}</strong>
-              <span>{edge.value} replay observations</span>
-              <small>{edge.note ?? "Deterministic pipeline route"}</small>
-            </div>
-          )
-        }}
-        description="Observation particles move through location, unit normalization, validation, freshness, corroboration, indicator update, and threshold evaluation. Conflicts divert to review and failures to quarantine."
-        summary={`${events.length} observations have arrived: ${counts.accepted} accepted, ${counts.queued} queued, ${counts.review} sent to review, ${counts.quarantine} quarantined, and ${counts.stale} marked stale.`}
-        seed={20260712}
-        frameProps={{
-          background: "transparent",
-          suspendWhenHidden: true,
-          config: {
-            kernel: {
-              seed: 20260712,
-              gravity: { x: 0, y: 0 },
-              velocityDamping: 0.994,
-              maxVelocity: 170,
-            },
-          },
-        }}
-      />
+    <div className={`ll-pipeline-host ll-pipeline-host--${audience}`} data-lens={audience}>
+      {audience === "policy" ? (
+        <PolicyExceptionQueue events={events} />
+      ) : audience === "science" ? (
+        <ScienceEventTrace events={selectedEvents} />
+      ) : (
+        <PublicClaimJourney events={selectedEvents} />
+      )}
     </div>
   )
 }
 
-function pipelineLinks(events) {
+function pipelineCounts(events) {
   const counts = events.reduce(
     (acc, event) => {
       const outcome = event.outcome ?? event.status ?? (event.stale ? "stale" : "accepted")
-      if (event.pipelineStatus === "processing") acc.queued += 1
+      if (event.pipelineStatus === "processing" || event.pipelineStatus === "queued") {
+        acc.queued += 1
+      }
       else if (outcome === "review" || outcome === "conflict") acc.review += 1
       else if (outcome === "quarantine" || outcome === "failed") acc.quarantine += 1
       else {
@@ -1341,50 +1635,168 @@ function pipelineLinks(events) {
     },
     { accepted: 0, queued: 0, review: 0, quarantine: 0, stale: 0 },
   )
-  const accepted = Math.max(1, counts.accepted)
-  const main = [
-    ["receive", "geolocate"],
-    ["geolocate", "normalize"],
-    ["normalize", "validate"],
-    ["validate", "freshness"],
-    ["freshness", "corroborate"],
-    ["corroborate", "indicator"],
-    ["indicator", "threshold"],
-  ].map(([source, target], index) => ({
-    id: `${source}-${target}`,
-    source,
-    target,
-    value: accepted,
-    outcome: index >= 4 && counts.stale ? "stale" : "accepted",
-    label: `${source} → ${target}`,
-  }))
-  const branches = [
+  return counts
+}
+
+function PublicClaimJourney({ events }) {
+  const counts = pipelineCounts(events)
+  const needsCheck = counts.queued + counts.review + counts.quarantine + counts.stale
+  const claimState = needsCheck
+    ? "Some records still need attention, so the claim stays limited."
+    : "The checked records can inform an indicator, not a promise about the whole service."
+  return (
+    <section className="ll-public-journey" aria-label="How a reading earns a careful claim">
+      <header>
+        <span>How a reading earns a careful claim</span>
+        <p>One selected service system · {events.length} replay records</p>
+      </header>
+      <ol>
+        <li className="is-received">
+          <b>1</b>
+          <div>
+            <strong>A reading arrives</strong>
+            <p>{events.length} record{events.length === 1 ? "" : "s"} from this service system entered the replay.</p>
+          </div>
+        </li>
+        <li className={needsCheck ? "is-checking" : "is-checked"}>
+          <b>2</b>
+          <div>
+            <strong>We check it before using it</strong>
+            <p>{publicCheckSummary(counts)}</p>
+          </div>
+        </li>
+        <li className={needsCheck ? "is-limited" : "is-ready"}>
+          <b>3</b>
+          <div>
+            <strong>Then we make a limited statement</strong>
+            <p>{claimState}</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  )
+}
+
+function publicCheckSummary(counts) {
+  const exceptions = [
+    counts.queued ? `${counts.queued} still moving through checks` : null,
+    counts.review ? `${counts.review} in review` : null,
+    counts.quarantine ? `${counts.quarantine} stopped for data quality` : null,
+    counts.stale ? `${counts.stale} stale` : null,
+  ].filter(Boolean)
+  return exceptions.length
+    ? `${counts.accepted} checked; ${exceptions.join(" · ")}.`
+    : `${counts.accepted} record${counts.accepted === 1 ? " has" : "s have"} passed the checks in this replay.`
+}
+
+function PolicyExceptionQueue({ events }) {
+  const counts = pipelineCounts(events)
+  const queue = [
     {
-      id: "validate-quarantine",
-      source: "validate",
-      target: "quarantine",
-      value: Math.max(0.2, counts.quarantine),
-      outcome: "quarantine",
-      note: "Unit or schema validation failed.",
+      key: "ready",
+      count: counts.accepted,
+      label: "Ready for indicator",
+      note: "Checked records can inform the monitored indicator.",
     },
     {
-      id: "freshness-review",
-      source: "freshness",
-      target: "review",
-      value: Math.max(0.2, counts.review + counts.queued + counts.stale),
-      outcome: counts.review ? "review" : counts.queued ? "queued" : "stale",
-      note: "Late or contradictory evidence waits here.",
+      key: "review",
+      count: counts.review + counts.queued,
+      label: "Needs review",
+      note: "Late or conflicting records need a decision before they inform policy.",
     },
     {
-      id: "review-corroborate",
-      source: "review",
-      target: "corroborate",
-      value: Math.max(0.2, Math.floor(counts.review * 0.6)),
-      outcome: "review",
-      note: "Reviewed evidence can rejoin the claim.",
+      key: "quarantine",
+      count: counts.quarantine,
+      label: "Data-quality stop",
+      note: "Failed validation stays outside the indicator until corrected.",
+    },
+    {
+      key: "stale",
+      count: counts.stale,
+      label: "Refresh evidence",
+      note: "The last accepted reading has aged past its freshness window.",
     },
   ]
-  return { links: [...main, ...branches], counts }
+  return (
+    <section className="ll-policy-queue" aria-label="Evidence exception queue">
+      <header>
+        <div>
+          <span>Evidence exception queue</span>
+          <h4>What needs attention before a decision?</h4>
+        </div>
+        <p>{events.length} records across the current service scope</p>
+      </header>
+      <ol>
+        {queue.map((item) => (
+          <li key={item.key} className={`is-${item.key}`}>
+            <strong>{item.count}</strong>
+            <div>
+              <b>{item.label}</b>
+              <small>{item.note}</small>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+function ScienceEventTrace({ events }) {
+  const records = [...events].slice(-6).reverse()
+  return (
+    <section className="ll-science-trace" aria-label="Selected-service observation record trace">
+      <header>
+        <div>
+          <span>Selected-service record trace</span>
+          <h4>Each mark is one replay record, not an aggregate particle.</h4>
+        </div>
+        <p>{events.length} records in scope</p>
+      </header>
+      <div className="ll-science-trace-scroll">
+        <div className="ll-science-trace-gates" aria-hidden="true">
+          <span>Record</span>
+          {PIPELINE_GATES.map((gate) => (
+            <span key={gate.id}>{gate.label}</span>
+          ))}
+          <span>Source / unit</span>
+        </div>
+        <ol>
+          {records.map((event) => (
+            <li key={event.id}>
+              <div className="ll-science-trace-record">
+                <strong>{event.label ?? event.id}</strong>
+                <small>{event.observedAt ? DATE_FORMAT.format(new Date(event.observedAt)) : "date unknown"}</small>
+              </div>
+              <div className="ll-science-trace-steps" aria-label={`Processing steps for ${event.label ?? event.id}`}>
+                {PIPELINE_GATES.map((gate) => {
+                  const state = traceGateState(event, gate.id)
+                  return <i key={gate.id} className={`is-${state}`} title={`${gate.label}: ${state}`} />
+                })}
+              </div>
+              <small className="ll-science-trace-source">
+                {event.sourceType ?? event.sourceId ?? "source unknown"} · {formatPulseValue(event.value, event.unit)}
+              </small>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <p className="ll-science-trace-key">
+        <i className="is-passed" /> passed <i className="is-current" /> current / late <i className="is-review" /> review <i className="is-failed" /> failed <i className="is-pending" /> not reached
+      </p>
+    </section>
+  )
+}
+
+function traceGateState(event, gateId) {
+  const steps = event.completedJourney ?? event.journey ?? []
+  const gateSteps = steps.filter((step) => step.gateId === gateId)
+  const latest = gateSteps.at(-1)
+  if (gateSteps.some((step) => step.status === "failed")) return "failed"
+  if (gateSteps.some((step) => step.status === "review")) return "review"
+  if (gateSteps.some((step) => step.status === "late")) return "late"
+  if (event.currentGateId === gateId && event.pipelineStatus !== "settled") return "current"
+  if (latest?.status === "passed" || latest?.status === "resolved") return "passed"
+  return "pending"
 }
 
 export function ServiceSystemTable({ systems, selectedId, onSelect }) {
@@ -1414,7 +1826,9 @@ export function ServiceSystemTable({ systems, selectedId, onSelect }) {
                     {systemLabel(system)}
                   </button>
                 </th>
-                <td>{system.bioregionName ?? system.regionName ?? system.bioregion ?? "—"}</td>
+                <td>
+                  {system.bioregionName ?? system.regionName ?? system.bioregion ?? "Not recorded"}
+                </td>
                 <td>
                   {Math.round(system.conditionScore ?? estimateValue(system.ecosystemCondition, 0))}
                 </td>

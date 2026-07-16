@@ -567,7 +567,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
       }}
     >
       <title>{typeof title === "string" ? title : "XY Chart"}</title>
-      <desc>{typeof title === "string" ? `${title} — XY data visualization` : "XY data visualization"}</desc>
+      <desc>
+        {typeof title === "string"
+          ? `${title} (XY data visualization)`
+          : "XY data visualization"}
+      </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines.
          *

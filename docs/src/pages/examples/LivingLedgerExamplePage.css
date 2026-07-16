@@ -154,7 +154,6 @@
 
 .ll-kicker,
 .ll-field-plate span,
-.ll-thesis > span,
 .ll-sentence-label,
 .ll-scene-rail-heading span,
 .ll-selected-copy > span,
@@ -291,38 +290,18 @@
   line-height: 1.5;
 }
 
-.ll-thesis {
-  display: grid;
-  grid-template-columns: minmax(95px, 0.18fr) minmax(0, 1fr);
-  gap: clamp(20px, 4vw, 62px);
-  align-items: baseline;
-  margin: 0;
-  padding: clamp(24px, 4vw, 46px) 0;
-  border-bottom: 1px solid var(--ll-rule);
-}
-
-.ll-thesis > span {
-  color: var(--ll-vermilion);
-}
-
-.ll-thesis p {
-  max-width: 940px;
-  margin: 0;
-  color: var(--ll-bone);
-  font-family: var(--ll-serif);
-  font-size: clamp(1.35rem, 3vw, 2.35rem);
-  line-height: 1.25;
-}
-
-.ll-control-deck {
+.ll-sticky-deck {
   position: sticky;
   top: var(--examples-sticky-offset, 76px);
   z-index: 42;
+  margin: 24px 0;
+}
+
+.ll-control-deck {
   display: grid;
   grid-template-columns: auto minmax(260px, 1fr) auto;
   gap: 20px;
   align-items: center;
-  margin: 24px 0 0;
   padding: 12px;
   border: 1px solid rgba(126, 174, 160, 0.36);
   background: rgba(6, 23, 20, 0.94);
@@ -567,6 +546,93 @@
   font-size: 0.64rem;
   letter-spacing: 0.04em;
   white-space: nowrap;
+}
+
+.ll-lens-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(330px, 0.85fr);
+  gap: 24px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 19px 21px;
+  border: 1px solid var(--ll-rule);
+  background: rgba(8, 30, 27, 0.7);
+}
+
+.ll-lens-brief--policy {
+  border-color: rgba(223, 111, 82, 0.46);
+  background: linear-gradient(90deg, rgba(223, 111, 82, 0.1), transparent 52%), rgba(25, 33, 29, 0.82);
+}
+
+.ll-lens-brief--science {
+  border-color: rgba(124, 168, 190, 0.48);
+  background: linear-gradient(90deg, rgba(124, 168, 190, 0.1), transparent 52%), rgba(8, 28, 30, 0.84);
+}
+
+.ll-lens-brief > div > span {
+  color: var(--ll-teal);
+  font-family: var(--ll-mono);
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ll-lens-brief--policy > div > span {
+  color: var(--ll-vermilion);
+}
+
+.ll-lens-brief--science > div > span {
+  color: var(--ll-blue);
+}
+
+.ll-lens-brief h3 {
+  margin: 4px 0 6px;
+  color: var(--ll-bone);
+  font-family: var(--ll-serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.16;
+}
+
+.ll-lens-brief p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--ll-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.ll-lens-brief dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.ll-lens-brief dl > div {
+  min-width: 0;
+  padding: 10px;
+  border-left: 1px solid var(--ll-rule);
+  background: rgba(4, 19, 17, 0.28);
+}
+
+.ll-lens-brief dt {
+  margin-bottom: 4px;
+  color: var(--ll-dim);
+  font-family: var(--ll-mono);
+  font-size: 0.53rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.ll-lens-brief dd {
+  margin: 0;
+  color: var(--ll-bone-soft);
+  font-family: var(--ll-serif);
+  font-size: 0.73rem;
+  line-height: 1.25;
 }
 
 .ll-scene-rail {
@@ -881,7 +947,7 @@
 }
 
 .ll-hero-grid {
-  grid-template-columns: minmax(0, 1.34fr) minmax(330px, 0.82fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .ll-detail-grid {
@@ -914,6 +980,7 @@
 
 .ll-panel--map {
   --ll-panel-accent: var(--ll-teal);
+  margin-top: clamp(18px, 2.5vw, 32px);
 }
 
 .ll-panel--triage {
@@ -1115,6 +1182,181 @@
   line-height: 1.45;
 }
 
+.ll-flower-band {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid var(--ll-rule);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 55px, rgba(132, 169, 158, 0.045) 55px 56px),
+    rgba(6, 23, 20, 0.68);
+  scrollbar-color: #55796f transparent;
+  scrollbar-width: thin;
+}
+
+.ll-flower-band > button {
+  display: grid;
+  flex: 1 0 84px;
+  grid-template-rows: auto 42px auto;
+  gap: 1px;
+  place-items: center;
+  min-width: 0;
+  min-height: 78px;
+  padding: 5px 6px 6px;
+  overflow: hidden;
+  border: 0;
+  border-right: 1px solid var(--ll-rule);
+  text-align: center;
+}
+
+.ll-flower-band > button:last-child {
+  border-right: 0;
+}
+
+.ll-flower-band > button:hover,
+.ll-flower-band > button:focus-visible,
+.ll-flower-band > button[aria-pressed="true"] {
+  background: rgba(88, 187, 170, 0.1);
+  box-shadow: inset 0 -3px 0 var(--ll-teal);
+}
+
+.ll-flower-band > button > span {
+  width: 100%;
+  overflow: hidden;
+  color: var(--ll-dim);
+  font-family: var(--ll-mono);
+  font-size: 0.48rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ll-flower-band > button[aria-pressed="true"] > span {
+  color: var(--ll-teal);
+}
+
+.ll-flower-band svg {
+  width: 42px;
+  height: 42px;
+  overflow: visible;
+}
+
+.ll-flower-band small {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--ll-muted);
+  font-family: var(--ll-serif);
+  font-size: 0.56rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ll-policy-band,
+.ll-science-band {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--ll-rule);
+  scrollbar-color: #55796f transparent;
+  scrollbar-width: thin;
+}
+
+.ll-policy-band {
+  background:
+    linear-gradient(90deg, rgba(223, 111, 82, 0.08), transparent 48%),
+    rgba(18, 38, 32, 0.88);
+}
+
+.ll-science-band {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 55px, rgba(124, 168, 190, 0.08) 55px 56px),
+    rgba(9, 28, 29, 0.92);
+}
+
+.ll-policy-band > button,
+.ll-science-band > button {
+  display: grid;
+  flex: 1 0 104px;
+  grid-template-rows: auto 38px auto;
+  gap: 1px;
+  place-items: center;
+  min-width: 0;
+  min-height: 78px;
+  padding: 5px 6px 6px;
+  overflow: hidden;
+  border: 0;
+  border-right: 1px solid var(--ll-rule);
+  text-align: center;
+}
+
+.ll-policy-band > button:last-child,
+.ll-science-band > button:last-child {
+  border-right: 0;
+}
+
+.ll-policy-band > button:hover,
+.ll-policy-band > button:focus-visible,
+.ll-policy-band > button[aria-pressed="true"] {
+  background: rgba(223, 111, 82, 0.14);
+  box-shadow: inset 0 -3px 0 var(--ll-vermilion);
+}
+
+.ll-science-band > button:hover,
+.ll-science-band > button:focus-visible,
+.ll-science-band > button[aria-pressed="true"] {
+  background: rgba(124, 168, 190, 0.14);
+  box-shadow: inset 0 -3px 0 var(--ll-blue);
+}
+
+.ll-policy-band > button > span,
+.ll-science-band > button > span {
+  width: 100%;
+  overflow: hidden;
+  color: var(--ll-dim);
+  font-family: var(--ll-mono);
+  font-size: 0.48rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ll-policy-band > button[aria-pressed="true"] > span {
+  color: var(--ll-vermilion);
+}
+
+.ll-science-band > button[aria-pressed="true"] > span {
+  color: var(--ll-blue);
+}
+
+.ll-policy-band small,
+.ll-science-band small {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--ll-muted);
+  font-family: var(--ll-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.035em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ll-policy-signal,
+.ll-science-signal {
+  width: 64px;
+  height: 38px;
+  overflow: visible;
+}
+
 .ll-map-host {
   min-height: 280px;
   background:
@@ -1266,6 +1508,11 @@
   background: radial-gradient(circle, currentColor 0 1px, transparent 1.3px) 0 0 / 4px 4px;
 }
 
+.ll-pulse-key i.is-threshold {
+  color: var(--ll-vermilion);
+  background: linear-gradient(90deg, transparent 0 35%, currentColor 36% 64%, transparent 65%);
+}
+
 .ll-pulse-key i.is-reference {
   color: #8db2ab;
   background: repeating-linear-gradient(45deg, transparent 0 3px, currentColor 3px 4px);
@@ -1373,6 +1620,343 @@
   font-family: var(--ll-mono);
   font-size: 8px;
   letter-spacing: 0.01em;
+}
+
+.ll-pipeline-host {
+  min-height: 0;
+}
+
+.ll-public-journey,
+.ll-policy-queue,
+.ll-science-trace {
+  min-width: 0;
+  border: 1px solid var(--ll-rule);
+  background: rgba(5, 24, 21, 0.54);
+}
+
+.ll-public-journey > header,
+.ll-policy-queue > header,
+.ll-science-trace > header {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--ll-rule);
+}
+
+.ll-public-journey > header > span,
+.ll-policy-queue > header span,
+.ll-science-trace > header span {
+  color: var(--ll-teal);
+  font-family: var(--ll-mono);
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.ll-public-journey > header p,
+.ll-policy-queue > header p,
+.ll-science-trace > header p {
+  margin: 0;
+  color: var(--ll-muted);
+  font-family: var(--ll-mono);
+  font-size: 0.61rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.ll-public-journey ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--ll-rule);
+}
+
+.ll-public-journey li {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  min-height: 122px;
+  padding: 15px;
+  background: #0a211e;
+}
+
+.ll-public-journey li:not(:last-child)::after {
+  position: absolute;
+  top: calc(50% - 1px);
+  right: -7px;
+  z-index: 1;
+  width: 13px;
+  height: 2px;
+  background: var(--ll-teal);
+  content: "";
+}
+
+.ll-public-journey li > b {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid var(--ll-teal);
+  border-radius: 50%;
+  color: var(--ll-teal);
+  font-family: var(--ll-mono);
+  font-size: 0.65rem;
+}
+
+.ll-public-journey li.is-checking > b,
+.ll-public-journey li.is-limited > b {
+  border-color: var(--ll-ochre);
+  color: var(--ll-ochre);
+}
+
+.ll-public-journey li > div {
+  min-width: 0;
+}
+
+.ll-public-journey li strong {
+  display: block;
+  color: var(--ll-bone);
+  font-family: var(--ll-serif);
+  font-size: 0.89rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.ll-public-journey li p {
+  margin: 6px 0 0;
+  color: var(--ll-muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+.ll-policy-queue {
+  border-color: rgba(223, 111, 82, 0.42);
+  background: linear-gradient(90deg, rgba(223, 111, 82, 0.08), transparent 52%), rgba(26, 33, 29, 0.76);
+}
+
+.ll-policy-queue > header h4,
+.ll-science-trace > header h4 {
+  margin: 3px 0 0;
+  color: var(--ll-bone);
+  font-family: var(--ll-serif);
+  font-size: 1.02rem;
+  font-weight: 500;
+}
+
+.ll-policy-queue > header span {
+  color: var(--ll-vermilion);
+}
+
+.ll-policy-queue ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--ll-rule);
+}
+
+.ll-policy-queue li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  min-height: 104px;
+  padding: 14px;
+  background: rgba(8, 28, 25, 0.9);
+}
+
+.ll-policy-queue li > strong {
+  color: var(--ll-teal);
+  font-family: var(--ll-serif);
+  font-size: 1.7rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.ll-policy-queue li.is-review > strong {
+  color: var(--ll-ochre);
+}
+
+.ll-policy-queue li.is-quarantine > strong {
+  color: var(--ll-vermilion);
+}
+
+.ll-policy-queue li.is-stale > strong {
+  color: var(--ll-muted);
+}
+
+.ll-policy-queue li b,
+.ll-policy-queue li small {
+  display: block;
+}
+
+.ll-policy-queue li b {
+  color: var(--ll-bone-soft);
+  font-family: var(--ll-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.045em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.ll-policy-queue li small {
+  margin-top: 5px;
+  color: var(--ll-muted);
+  font-size: 0.65rem;
+  line-height: 1.34;
+}
+
+.ll-science-trace {
+  border-color: rgba(124, 168, 190, 0.44);
+  background: linear-gradient(90deg, rgba(124, 168, 190, 0.08), transparent 52%), rgba(8, 28, 30, 0.82);
+}
+
+.ll-science-trace > header span {
+  color: var(--ll-blue);
+}
+
+.ll-science-trace-scroll {
+  overflow-x: auto;
+  scrollbar-color: #55796f transparent;
+  scrollbar-width: thin;
+}
+
+.ll-science-trace-gates,
+.ll-science-trace li {
+  display: grid;
+  grid-template-columns: minmax(125px, 1.4fr) repeat(8, minmax(34px, 0.45fr)) minmax(130px, 1.15fr);
+  min-width: 690px;
+}
+
+.ll-science-trace-gates {
+  border-bottom: 1px solid var(--ll-rule);
+  color: var(--ll-dim);
+  font-family: var(--ll-mono);
+  font-size: 0.49rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ll-science-trace-gates > span {
+  display: grid;
+  min-height: 34px;
+  align-items: center;
+  padding: 4px;
+  border-right: 1px solid rgba(139, 178, 165, 0.14);
+}
+
+.ll-science-trace ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ll-science-trace li {
+  min-height: 48px;
+  border-bottom: 1px solid rgba(139, 178, 165, 0.16);
+}
+
+.ll-science-trace li:last-child {
+  border-bottom: 0;
+}
+
+.ll-science-trace-record,
+.ll-science-trace-source {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  padding: 6px 10px;
+}
+
+.ll-science-trace-record strong {
+  overflow: hidden;
+  color: var(--ll-bone-soft);
+  font-size: 0.67rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ll-science-trace-record small,
+.ll-science-trace-source {
+  color: var(--ll-muted);
+  font-family: var(--ll-mono);
+  font-size: 0.54rem;
+  line-height: 1.3;
+}
+
+.ll-science-trace-steps {
+  display: contents;
+}
+
+.ll-science-trace-steps i {
+  position: relative;
+  display: block;
+  margin: auto;
+  width: 11px;
+  height: 11px;
+  border: 1px solid #46675f;
+  border-radius: 50%;
+  background: #102824;
+}
+
+.ll-science-trace-steps i.is-passed,
+.ll-science-trace-key i.is-passed {
+  border-color: var(--ll-teal);
+  background: var(--ll-teal);
+}
+
+.ll-science-trace-steps i.is-current,
+.ll-science-trace-key i.is-current,
+.ll-science-trace-steps i.is-late {
+  border-color: var(--ll-ochre);
+  background: rgba(210, 171, 87, 0.22);
+}
+
+.ll-science-trace-steps i.is-review,
+.ll-science-trace-key i.is-review {
+  border-color: var(--ll-ochre);
+  background: var(--ll-ochre);
+}
+
+.ll-science-trace-steps i.is-failed,
+.ll-science-trace-key i.is-failed {
+  border-color: var(--ll-vermilion);
+  background: var(--ll-vermilion);
+}
+
+.ll-science-trace-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 11px;
+  align-items: center;
+  margin: 0;
+  padding: 10px 13px;
+  border-top: 1px solid var(--ll-rule);
+  color: var(--ll-muted);
+  font-family: var(--ll-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.ll-science-trace-key i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: -4px;
+  border: 1px solid #46675f;
+  border-radius: 50%;
+  background: #102824;
 }
 
 .ll-event-log,
@@ -1938,6 +2522,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .ll-lens-brief {
+    grid-template-columns: 1fr;
+  }
+
   .ll-panel-header {
     min-height: 0;
   }
@@ -1989,22 +2577,17 @@
     min-height: 142px;
   }
 
-  .ll-thesis {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .ll-thesis p {
-    font-size: clamp(1.3rem, 6vw, 1.85rem);
-  }
-
   .ll-control-deck {
-    position: relative;
-    top: auto;
     grid-template-columns: 1fr;
     gap: 9px;
     padding: 10px;
     backdrop-filter: none;
+  }
+
+  .ll-sticky-deck {
+    position: relative;
+    top: auto;
+    margin: 18px 0 24px;
   }
 
   .ll-transport {
@@ -2035,8 +2618,46 @@
     padding: 15px 13px;
   }
 
+  .ll-lens-brief {
+    gap: 14px;
+    padding: 16px 13px;
+  }
+
+  .ll-lens-brief dl {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
   .ll-sentence-dock > p {
     white-space: normal;
+  }
+
+  .ll-public-journey > header,
+  .ll-policy-queue > header,
+  .ll-science-trace > header {
+    display: grid;
+    gap: 5px;
+    align-items: start;
+  }
+
+  .ll-public-journey > header p,
+  .ll-policy-queue > header p,
+  .ll-science-trace > header p {
+    text-align: left;
+  }
+
+  .ll-public-journey ol,
+  .ll-policy-queue ol {
+    grid-template-columns: 1fr;
+  }
+
+  .ll-public-journey li,
+  .ll-policy-queue li {
+    min-height: 0;
+  }
+
+  .ll-public-journey li:not(:last-child)::after {
+    display: none;
   }
 
   .ll-scene-rail {
