@@ -19,5 +19,11 @@
         "type": "stdio"
       }
     }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp"
+    }
   ]
 }
