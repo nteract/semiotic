@@ -58,9 +58,9 @@ steps:
       - us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA
 
   # Existing services receive only an image/label update. On first creation,
-  # a no-traffic revision keeps host validation enabled with a non-routable
-  # bootstrap host; a second revision adds the generated run.app hostname
-  # before traffic is enabled.
+  # Cloud Run creates a private bootstrap revision with a non-routable host.
+  # A second revision adds the generated run.app hostname before traffic and
+  # public invocation are enabled.
   - id: create-or-update-nightly-revision
     name: gcr.io/cloud-builders/gcloud
     entrypoint: bash
@@ -88,7 +88,6 @@ steps:
           --region="$$region" \
           --image="$$image" \
           --service-account="${_NIGHTLY_RUNTIME_SERVICE_ACCOUNT}" \
-          --allow-unauthenticated \
           --ingress=all \
           --cpu="${_NIGHTLY_CPU}" \
           --memory="${_NIGHTLY_MEMORY}" \
@@ -98,13 +97,19 @@ steps:
           --max-instances="${_NIGHTLY_MAX_INSTANCES}" \
           --set-env-vars="MCP_ALLOWED_HOSTS=${_NIGHTLY_BOOTSTRAP_HOST}" \
           --update-labels="$$labels" \
-          --no-traffic \
           --quiet
 
         endpoint="$$(gcloud run services describe "$$service" \
           --project=semiotic-mcp --region="$$region" --format='value(status.url)')"
+        case "$$endpoint" in
+          https://*.run.app) ;;
+          *) echo "Cloud Run did not return a generated HTTPS run.app URL" >&2; exit 1 ;;
+        esac
         hostname="$${endpoint#https://}"
-        test -n "$$hostname"
+        case "$$hostname" in
+          "" | .* | *. | *[!A-Za-z0-9.-]*) echo "Cloud Run returned an invalid hostname" >&2; exit 1 ;;
+          *) ;;
+        esac
         gcloud run services update "$$service" \
           --project=semiotic-mcp \
           --region="$$region" \
@@ -115,6 +120,11 @@ steps:
           --project=semiotic-mcp \
           --region="$$region" \
           --to-latest \
+          --quiet
+        gcloud run services update "$$service" \
+          --project=semiotic-mcp \
+          --region="$$region" \
+          --no-invoker-iam-check \
           --quiet
 
   # Resolve the configured service URL without echoing configuration values.

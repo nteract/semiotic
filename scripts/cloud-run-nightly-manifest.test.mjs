@@ -70,6 +70,55 @@ describe("nightly Cloud Run deployment configuration", () => {
     )
   })
 
+  it("rejects --no-traffic in the new-service bootstrap branch", () => {
+    const cloudbuild = deployment().cloudbuild.replace(
+      "--ingress=all",
+      "--no-traffic --ingress=all"
+    )
+    const report = validateNightlyCloudRunDeployment(deployment({ cloudbuild }))
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes("new-service bootstrap must not use --no-traffic")
+      ),
+      true
+    )
+  })
+
+  it("rejects enabling public access before the host-valid revision is routed", () => {
+    const cloudbuild = deployment()
+      .cloudbuild.replace(
+        "--no-invoker-iam-check",
+        "--public-access-before-host-validation"
+      )
+      .replace(
+        'gcloud run deploy "$$service"',
+        'gcloud run deploy "$$service" --no-invoker-iam-check'
+      )
+    const report = validateNightlyCloudRunDeployment(deployment({ cloudbuild }))
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes(
+          "route the host-valid revision, then enable public access"
+        )
+      ),
+      true
+    )
+  })
+
+  it("rejects a bootstrap that does not validate the generated hostname", () => {
+    const cloudbuild = deployment().cloudbuild.replace(
+      "https://*.run.app)",
+      "https://bootstrap.invalid)"
+    )
+    const report = validateNightlyCloudRunDeployment(deployment({ cloudbuild }))
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes("validate generated hostname")
+      ),
+      true
+    )
+  })
+
   it("rejects replacing all service labels instead of updating provenance labels", () => {
     const cloudbuild = deployment().cloudbuild.replace(
       '--update-labels="$$labels"',

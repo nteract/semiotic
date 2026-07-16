@@ -179,14 +179,15 @@ export function validateNightlyCloudRunDeployment({
       'gcloud run services update "$$service"',
       'gcloud run deploy "$$service"',
       '--service-account="${_NIGHTLY_RUNTIME_SERVICE_ACCOUNT}"',
-      "--allow-unauthenticated",
       "--ingress=all",
       '--set-env-vars="MCP_ALLOWED_HOSTS=${_NIGHTLY_BOOTSTRAP_HOST}"',
-      "--no-traffic",
+      'case "$$endpoint" in',
+      "https://*.run.app)",
       'hostname="$${endpoint#https://}"',
       '--update-env-vars="MCP_ALLOWED_HOSTS=$$hostname"',
       'gcloud run services update-traffic "$$service"',
       "--to-latest",
+      "--no-invoker-iam-check",
       "labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=${_TRIGGER_ID},deployment-channel=nightly,deployment-source=repository-main",
       '--update-labels="$$labels"',
       "node scripts/smoke-hosted-mcp.mjs",
@@ -250,6 +251,50 @@ export function validateNightlyCloudRunDeployment({
             `nightly existing-service update must preserve settings and may not use ${forbidden}`
           )
         }
+      }
+    }
+    const newServiceBootstrap = between(
+      cloudbuild,
+      'test "${_NIGHTLY_RUNTIME_SERVICE_ACCOUNT}" != REQUIRED',
+      "\n\n  # Resolve the configured service URL"
+    )
+    if (!newServiceBootstrap) {
+      errors.push(
+        "nightly Cloud Build must retain a private new-service bootstrap branch"
+      )
+    } else {
+      for (const forbidden of ["--no-traffic", "--allow-unauthenticated"]) {
+        if (has(newServiceBootstrap, forbidden)) {
+          errors.push(`nightly new-service bootstrap must not use ${forbidden}`)
+        }
+      }
+      if (
+        !inOrder(newServiceBootstrap, [
+          'gcloud run deploy "$$service"',
+          '--set-env-vars="MCP_ALLOWED_HOSTS=${_NIGHTLY_BOOTSTRAP_HOST}"',
+          'case "$$endpoint" in',
+          'hostname="$${endpoint#https://}"',
+          '--update-env-vars="MCP_ALLOWED_HOSTS=$$hostname"',
+          'gcloud run services update-traffic "$$service"',
+          "--to-latest",
+          "--no-invoker-iam-check"
+        ])
+      ) {
+        errors.push(
+          "nightly new-service bootstrap must validate the generated hostname, route the host-valid revision, then enable public access"
+        )
+      }
+      for (const fragment of [
+        "https://*.run.app)",
+        '"" | .* | *. | *[!A-Za-z0-9.-]*)',
+        "Cloud Run returned an invalid hostname"
+      ]) {
+        requireFragment(
+          errors,
+          newServiceBootstrap,
+          fragment,
+          `nightly new-service bootstrap must validate generated hostname: ${fragment}`
+        )
       }
     }
     if (has(cloudbuild, "service=semiotic-mcp-server")) {

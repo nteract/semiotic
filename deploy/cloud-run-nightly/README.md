@@ -48,21 +48,28 @@ must report the new commit and build identity.
 either existing service. Supply and review all of these values before the first
 build:
 
-- public unauthenticated invocation and `ingress=all`;
+- `ingress=all`, followed by public unauthenticated invocation only after the
+  host-valid revision is ready;
 - runtime service account (the account email is required, not guessed);
 - CPU `1`, memory `1Gi`, request timeout `300s`, concurrency `80`, minimum
   instances `0`, and maximum instances `3` (change only through a reviewed
   substitution); and
 - `MCP_ALLOWED_HOSTS`, which must contain the generated Cloud Run hostname.
 
-The build solves the hostname bootstrap without ever serving a revision with
-host validation disabled:
+The build solves the hostname bootstrap without ever serving a public revision
+with host validation disabled:
 
-1. It creates a no-traffic revision with
-   `MCP_ALLOWED_HOSTS=bootstrap.invalid`, public invocation, and the explicit
-   initial service settings.
-2. It reads the generated `status.url`, creates a second revision with that
-   hostname as `MCP_ALLOWED_HOSTS`, then sends traffic to that revision.
+1. It creates the service privately with `MCP_ALLOWED_HOSTS=bootstrap.invalid`
+   and the explicit initial service settings. Cloud Run does not support
+   `--no-traffic` when creating a service, so this command deliberately omits
+   both `--no-traffic` and `--allow-unauthenticated`.
+2. It reads `status.url`, requires an HTTPS `*.run.app` URL, and validates the
+   extracted hostname.
+3. It creates a host-valid revision with that exact hostname in
+   `MCP_ALLOWED_HOSTS`.
+4. It routes traffic to that latest host-valid revision.
+5. Only then it enables public invocation with `--no-invoker-iam-check`.
+6. It resolves the endpoint and runs the hosted smoke test.
 
 For a first manual build, work from the reviewed repository commit. Substitute
 the approved runtime service-account email; do not use either existing
@@ -93,6 +100,42 @@ gcloud run services update semiotic-mcp-nightly \
 
 Do not run either command as part of this repository change.
 
+For clarity, the first-create branch inside that build is this exact sequence;
+it is private until the final command:
+
+```sh
+gcloud run deploy semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 \
+  --image=us-central1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-nightly:$COMMIT_SHA \
+  --service-account="$RUNTIME_SERVICE_ACCOUNT" \
+  --ingress=all --cpu=1 --memory=1Gi --timeout=300s --concurrency=80 \
+  --min-instances=0 --max-instances=3 \
+  --set-env-vars="MCP_ALLOWED_HOSTS=bootstrap.invalid" \
+  --update-labels="commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=manual,deployment-channel=nightly,deployment-source=repository-main" \
+  --quiet
+
+NIGHTLY_URL="$(gcloud run services describe semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --format='value(status.url)')"
+NIGHTLY_HOST="${NIGHTLY_URL#https://}"
+case "$NIGHTLY_URL" in
+  https://*.run.app) ;;
+  *) echo "Cloud Run did not return a generated HTTPS run.app URL" >&2; exit 1 ;;
+esac
+case "$NIGHTLY_HOST" in
+  "" | .* | *. | *[!A-Za-z0-9.-]*) echo "Cloud Run returned an invalid hostname" >&2; exit 1 ;;
+esac
+
+gcloud run services update semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 \
+  --update-env-vars="MCP_ALLOWED_HOSTS=$NIGHTLY_HOST" \
+  --update-labels="commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=manual,deployment-channel=nightly,deployment-source=repository-main" \
+  --quiet
+gcloud run services update-traffic semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --to-latest --quiet
+gcloud run services update semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --no-invoker-iam-check --quiet
+```
+
 ### Find and confirm the generated hostname
 
 After the first build succeeds, retrieve the URL and host explicitly:
@@ -104,8 +147,9 @@ NIGHTLY_HOST="${NIGHTLY_URL#https://}"
 printf '%s\n%s\n' "$NIGHTLY_URL" "$NIGHTLY_HOST"
 ```
 
-The build already creates the host-validated revision. If a manual recovery is
-needed before traffic is enabled, use only the new service:
+The build already creates the host-valid revision, routes traffic to it, and
+only then enables public invocation. If a manual recovery is needed before
+public access is enabled, use only the new service:
 
 ```sh
 gcloud run services update semiotic-mcp-nightly \
@@ -113,6 +157,8 @@ gcloud run services update semiotic-mcp-nightly \
   --update-env-vars="MCP_ALLOWED_HOSTS=$NIGHTLY_HOST"
 gcloud run services update-traffic semiotic-mcp-nightly \
   --project=semiotic-mcp --region=us-central1 --to-latest
+gcloud run services update semiotic-mcp-nightly \
+  --project=semiotic-mcp --region=us-central1 --no-invoker-iam-check --quiet
 ```
 
 Never leave `MCP_ALLOWED_HOSTS` unset, and never set it to a stable or legacy
