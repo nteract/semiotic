@@ -11,9 +11,12 @@ const PREVIEW_COMPONENTS = {
   watermarks: MiniWatermarksPreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
   "merge-pressure": MiniMergePressurePreview,
+  "release-machine": MiniReleaseMachinePreview,
+  yellowstone: MiniYellowstonePreview,
   nimby: MiniNimbyPreview,
   combined: () => <MiniRadialPreview combined />,
   climate: MiniClimatePreview,
+  "miles-lie": MiniMilesLiePreview,
   "lake-isotype": MiniLakeIsotypePreview,
   "hotdog-variations": MiniHotDogPreview,
   "data-centers-isotype": MiniDataCentersIsotypePreview,
@@ -284,6 +287,90 @@ function FilterOption({ label, count, selected, onClick }) {
     >
       {label} <span aria-hidden="true">{count}</span>
     </button>
+  )
+}
+
+function MiniReleaseMachinePreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} role="img" aria-label="Release Machine preview">
+      <rect width="242" height="96" rx="6" fill="#f5f0e5" />
+      {[18, 38, 58, 78].map((y, i) => (
+        <rect key={y} x="14" y={y} width={40 + i * 18} height="10" rx="2" fill={i === 1 ? "#b45143" : "#4f7767"} opacity={i === 1 ? 1 : 0.55} />
+      ))}
+      <circle cx="150" cy="28" r="5" fill="#c5963d" />
+      <circle cx="168" cy="48" r="5" fill="#c5963d" />
+      <circle cx="188" cy="68" r="5" fill="#b45143" />
+      <path d="M150 28 L168 48 L188 68" fill="none" stroke="#7a817b" strokeWidth="1.5" />
+      <text x="210" y="72" fill="#b45143" fontSize="9" fontWeight="700">
+        9×
+      </text>
+    </svg>
+  )
+}
+
+function MiniYellowstonePreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} role="img" aria-label="Yellowstone Mobile preview">
+      <rect width="242" height="96" rx="6" fill="#f3ecd8" />
+      <path d="M140 8 C170 30 165 60 230 90" fill="none" stroke="#3f7f87" strokeWidth="10" opacity="0.35" />
+      {[
+        [40, 28, "#9d4f3d"],
+        [90, 36, "#b77b37"],
+        [140, 36, "#668447"],
+        [180, 58, "#3f7f87"],
+      ].map(([x, y, fill], i) => (
+        <g key={i}>
+          <rect x={x - 16} y={y - 12} width="32" height="24" rx="4" fill="#fbf5e5" stroke={fill} />
+          <circle cx={x - 6} cy={y + 4} r="3" fill={fill} />
+          <circle cx={x + 4} cy={y + 4} r="3" fill={fill} opacity="0.7" />
+        </g>
+      ))}
+      <path d="M56 28 L74 36 M106 36 L124 36 M156 42 L168 52" fill="none" stroke="#a24e3e" strokeWidth="1.5" />
+      <text x="12" y="86" fill="#a24e3e" fontSize="8" fontWeight="700">
+        no wolf→river
+      </text>
+    </svg>
+  )
+}
+
+function MiniMilesLiePreview() {
+  // Rubber-sheet atlas: geographic ring + cost-warped destinations.
+  const geo = [
+    [121, 48],
+    [148, 40],
+    [168, 52],
+    [150, 68],
+    [122, 72],
+    [100, 58],
+  ]
+  const cost = [
+    [121, 48],
+    [170, 28],
+    [198, 50],
+    [165, 78],
+    [110, 84],
+    [78, 55],
+  ]
+  const poly = (pts) => pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0]} ${p[1]}`).join(" ") + "Z"
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} role="img" aria-label="Miles Are a Lie preview">
+      <rect width="242" height="96" rx="6" fill="#f3eee1" />
+      <path d={poly(geo)} fill="none" stroke="#5f6d66" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.7" />
+      <path d={poly(cost)} fill="rgba(179,58,43,0.12)" stroke="#b33a2b" strokeWidth="1.6" />
+      <circle cx="121" cy="48" r="4" fill="#1c2a26" />
+      {[
+        [170, 28, "#2f6f7e"],
+        [198, 50, "#8b3a3a"],
+        [165, 78, "#5c4d7a"],
+        [110, 84, "#8a6a2f"],
+        [78, 55, "#3d6b4f"],
+      ].map(([x, y, fill], i) => (
+        <circle key={i} cx={x} cy={y} r="3.2" fill={fill} stroke="#f3eee1" strokeWidth="0.8" />
+      ))}
+      <text x="12" y="18" fill="#5f6d66" fontSize="8" fontFamily="Georgia, serif">
+        cost ≠ miles
+      </text>
+    </svg>
   )
 }
 

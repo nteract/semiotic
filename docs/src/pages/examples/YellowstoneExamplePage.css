@@ -1,180 +1,374 @@
 .yellowstone {
   --ys-paper: #f3ecd8;
-  --ys-ink: #203128;
+  --ys-paper-deep: #e7dcc0;
+  --ys-ink: #1c2a22;
+  --ys-muted: #5f6d64;
   --ys-pine: #345847;
-  --ys-water: #4e8f97;
-  --ys-ochre: #bd9134;
   --ys-rust: #a24e3e;
+  --ys-moss: #52734d;
+  --ys-water: #3f7f87;
+  --ys-line: rgba(28, 42, 34, 0.14);
   color: var(--ys-ink);
-  padding-bottom: 72px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(63, 127, 135, 0.1), transparent 30%),
+    linear-gradient(180deg, var(--ys-paper), var(--ys-paper-deep));
+  border: 1px solid var(--ys-line);
+  border-radius: 18px;
+  padding: 24px 24px 32px;
+  margin: 8px 0 28px;
 }
 
-.yellowstone h2,
-.yellowstone h3 { font-family: Georgia, "Times New Roman", serif; }
+[data-theme="dark"] .yellowstone,
+.theme-dark .yellowstone {
+  --ys-paper: #121a16;
+  --ys-paper-deep: #1a2620;
+  --ys-ink: #e6efe8;
+  --ys-muted: #9aada3;
+  --ys-line: rgba(230, 239, 232, 0.12);
+}
 
 .yellowstone__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 250px 220px;
-  gap: 24px;
-  align-items: start;
-  padding: 20px 0 30px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ys-pine) 28%, transparent);
-}
-
-.yellowstone__hero p {
-  max-width: 720px;
-  margin: 8px 0 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.08rem, 2vw, 1.45rem);
-  line-height: 1.55;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.7fr);
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .yellowstone__kicker {
-  color: var(--ys-rust);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ys-muted);
+  margin-bottom: 8px;
 }
 
-.yellowstone__legend-note {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid var(--ys-ochre);
-  background: color-mix(in srgb, var(--ys-paper) 82%, transparent);
-  box-shadow: 5px 5px 0 color-mix(in srgb, var(--ys-ochre) 22%, transparent);
+.yellowstone__hero h2 {
+  margin: 0 0 10px;
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-size: clamp(1.55rem, 2.5vw, 2.15rem);
+  line-height: 1.15;
 }
 
-.yellowstone__legend-note strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.yellowstone__legend-note span { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.45; }
-
-.yellowstone__chapter {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 24px;
-  padding: 32px 0 22px;
+.yellowstone__hero p {
+  margin: 0;
+  color: var(--ys-muted);
+  line-height: 1.55;
+  max-width: 46rem;
 }
 
-.yellowstone__chapter > span {
+.yellowstone__thesis {
+  border: 1px solid var(--ys-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--ys-rust) 8%, var(--ys-paper));
+}
+
+.yellowstone__thesis strong {
+  display: block;
+  margin-bottom: 6px;
   color: var(--ys-rust);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.78rem;
-  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.yellowstone__chapter h2 { margin: 0 0 4px; font-size: clamp(1.8rem, 4vw, 3.1rem); line-height: 1; }
-.yellowstone__chapter strong { color: var(--ys-pine); }
-.yellowstone__chapter p { max-width: 760px; margin: 8px 0 0; color: var(--text-secondary); line-height: 1.6; }
+.yellowstone__thesis p {
+  margin: 0;
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
 
 .yellowstone__controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 10px;
-  background: color-mix(in srgb, var(--ys-pine) 8%, var(--surface-1));
-  border: 1px solid color-mix(in srgb, var(--ys-pine) 20%, transparent);
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.yellowstone__controls button,
-.yellowstone__tables button {
-  border: 1px solid color-mix(in srgb, var(--ys-pine) 44%, transparent);
-  border-radius: 3px;
-  background: var(--surface-1);
-  color: var(--text-primary);
+.yellowstone__chapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yellowstone__chapters button,
+.yellowstone__segmented button {
+  border: 1px solid var(--ys-line);
+  background: var(--ys-paper);
+  color: var(--ys-ink);
+  border-radius: 10px;
+  padding: 8px 12px;
   cursor: pointer;
-  font: 700 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: inherit;
 }
 
-.yellowstone__controls button { min-height: 36px; padding: 7px 11px; }
-.yellowstone__controls button:hover,
-.yellowstone__controls button:focus-visible,
-.yellowstone__controls button.is-active { border-color: var(--ys-rust); background: var(--ys-rust); color: #fffaf0; }
-.yellowstone__controls button:disabled { cursor: not-allowed; opacity: 0.38; }
-
-.yellowstone__segmented { display: inline-flex; gap: 2px; padding: 2px; background: var(--ys-pine); }
-
-.yellowstone__chart-host {
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--ys-pine) 35%, transparent);
-  background: radial-gradient(circle at 12% 8%, rgb(255 255 255 / 58%), transparent 24%), var(--ys-paper);
-  box-shadow: 9px 10px 0 color-mix(in srgb, var(--ys-pine) 13%, transparent);
-}
-
-.yellowstone__chart-host canvas { filter: saturate(0.92) contrast(1.03); }
-.yellowstone__container-controls { display: inline-flex; gap: 10px; align-items: center; color: var(--text-secondary); font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace; }
-.yellowstone__container-controls b { color: var(--ys-rust); }
-.yellowstone__tooltip { display: grid; max-width: 260px; gap: 4px; }
-.yellowstone__tooltip small { margin-top: 4px; line-height: 1.35; }
-
-.yellowstone__inspector,
-.yellowstone__method {
+.yellowstone__chapters button {
   display: grid;
-  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.4fr);
-  gap: 32px;
-  margin-top: 28px;
-  padding: 26px;
-  border-left: 7px solid var(--ys-rust);
-  background: color-mix(in srgb, var(--ys-paper) 72%, var(--surface-1));
+  gap: 2px;
+  min-width: 88px;
+  text-align: left;
 }
 
-.yellowstone__inspector h2,
-.yellowstone__method h2,
-.yellowstone__reading h2,
-.yellowstone__tables h2 { margin: 5px 0 0; font-size: clamp(1.55rem, 3vw, 2.5rem); line-height: 1.08; }
-.yellowstone__evidence-panel > strong { display: block; margin-bottom: 12px; font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; }
-.yellowstone__evidence-panel dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
-.yellowstone__evidence-panel dl div { display: grid; gap: 3px; padding: 9px; background: rgb(255 255 255 / 42%); }
-.yellowstone__evidence-panel dt { color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-.yellowstone__evidence-panel dd { margin: 0; font-weight: 750; }
-.yellowstone__evidence-panel p { margin: 12px 0 5px; }
-.yellowstone__evidence-panel small { color: var(--text-secondary); line-height: 1.4; }
+.yellowstone__chapters button span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ys-muted);
+}
 
-.yellowstone__reading,
-.yellowstone__tables { margin-top: 52px; }
-.yellowstone__reading-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 20px; background: color-mix(in srgb, var(--ys-pine) 28%, transparent); border: 1px solid color-mix(in srgb, var(--ys-pine) 28%, transparent); }
-.yellowstone__reading-grid article { min-height: 150px; padding: 20px; background: var(--surface-1); }
-.yellowstone__reading-grid strong { color: var(--ys-rust); font: 800 0.76rem ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
-.yellowstone__reading-grid p { line-height: 1.5; }
+.yellowstone__chapters button strong {
+  font-size: 0.92rem;
+}
 
-.yellowstone__tables details { margin-top: 14px; border: 1px solid var(--surface-3); background: var(--surface-1); }
-.yellowstone__tables summary { cursor: pointer; padding: 14px 16px; color: var(--ys-pine); font-weight: 800; }
-.yellowstone__table-scroll { overflow-x: auto; }
-.yellowstone__tables table { width: 100%; min-width: 780px; border-collapse: collapse; font-size: 0.78rem; }
-.yellowstone__tables th,
-.yellowstone__tables td { padding: 10px 12px; border-top: 1px solid var(--surface-3); text-align: left; vertical-align: top; }
-.yellowstone__tables thead th { color: var(--text-secondary); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.yellowstone__tables button { padding: 4px 6px; }
-.yellowstone__method { margin-top: 52px; border-left-color: var(--ys-pine); }
-.yellowstone__method p { line-height: 1.6; }
+.yellowstone__chapters button.is-active,
+.yellowstone__segmented button.is-active {
+  background: var(--ys-ink);
+  color: var(--ys-paper);
+  border-color: var(--ys-ink);
+}
+
+.yellowstone__chapters button.is-active span {
+  color: color-mix(in srgb, var(--ys-paper) 75%, transparent);
+}
+
+.yellowstone__segmented {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.yellowstone__claim {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--ys-pine);
+  background: color-mix(in srgb, var(--ys-pine) 7%, var(--ys-paper));
+  line-height: 1.5;
+}
+
+.yellowstone__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.75fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.yellowstone__chart-host,
+.yellowstone__side,
+.yellowstone__inspect,
+.yellowstone__path-chart {
+  min-width: 0;
+}
+
+.yellowstone__side {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.yellowstone__inspect,
+.yellowstone__path-chart {
+  border: 1px solid var(--ys-line);
+  border-radius: 12px;
+  background: var(--ys-paper);
+  padding: 14px;
+}
+
+.yellowstone__inspect h3,
+.yellowstone__path-chart h3 {
+  margin: 0 0 8px;
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.yellowstone__inspect dl {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.yellowstone__inspect dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.yellowstone__inspect dt {
+  color: var(--ys-muted);
+}
+
+.yellowstone__inspect dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.yellowstone__inspect p,
+.yellowstone__path-chart p {
+  margin: 0 0 8px;
+  color: var(--ys-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.yellowstone__inspect small {
+  color: var(--ys-muted);
+  font-size: 0.82rem;
+}
+
+.yellowstone__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--ys-muted);
+}
+
+.yellowstone__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yellowstone__legend i {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.yellowstone__dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #668447;
+}
+
+.yellowstone__missing {
+  color: var(--ys-rust);
+  font-weight: 700;
+}
+
+.yellowstone__reading {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--ys-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ys-paper) 80%, white);
+}
+
+[data-theme="dark"] .yellowstone__reading,
+.theme-dark .yellowstone__reading {
+  background: color-mix(in srgb, var(--ys-paper-deep) 80%, black);
+}
+
+.yellowstone__reading h3 {
+  margin: 0 0 12px;
+  font-family: Georgia, serif;
+}
+
+.yellowstone__reading-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.yellowstone__reading-grid article {
+  border: 1px solid var(--ys-line);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--ys-paper);
+}
+
+.yellowstone__reading-grid strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ys-pine);
+}
+
+.yellowstone__reading-grid p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ys-muted);
+  line-height: 1.4;
+}
+
+.yellowstone__method {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid var(--ys-line);
+  border-radius: 12px;
+  background: var(--ys-paper);
+}
+
+.yellowstone__method h3 {
+  margin: 0 0 8px;
+  font-family: Georgia, serif;
+}
+
+.yellowstone__method p {
+  margin: 0 0 12px;
+  color: var(--ys-muted);
+  line-height: 1.5;
+}
+
+.yellowstone__spine {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--ys-line);
+  background: color-mix(in srgb, var(--ys-paper-deep) 85%, var(--ys-ink) 15%);
+  color: var(--ys-ink);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  overflow: auto;
+}
+
+.yellowstone-band-label {
+  fill: var(--ys-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.yellowstone-sign {
+  fill: currentColor;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: Georgia, serif;
+}
+
+.yellowstone-plate-label {
+  fill: var(--ys-ink);
+  font-size: 9px;
+  font-family: Georgia, serif;
+}
+
+.yellowstone-plate-value {
+  fill: var(--ys-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.yellowstone-external-tag {
+  fill: var(--ys-rust);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
 @media (max-width: 900px) {
-  .yellowstone__hero { grid-template-columns: 1fr 1fr; }
-  .yellowstone__hero > :first-child { grid-column: 1 / -1; }
-  .yellowstone__reading-grid { grid-template-columns: 1fr 1fr; }
-}
-
-@media (max-width: 640px) {
   .yellowstone__hero,
-  .yellowstone__chapter,
-  .yellowstone__inspector,
-  .yellowstone__method { grid-template-columns: 1fr; }
-  .yellowstone__hero { gap: 14px; }
-  .yellowstone__chapter { gap: 7px; }
-  .yellowstone__controls { display: grid; grid-template-columns: 1fr 1fr; }
-  .yellowstone__segmented { grid-column: 1 / -1; }
-  .yellowstone__segmented button { flex: 1; }
-  .yellowstone__reading-grid { grid-template-columns: 1fr; }
-  .yellowstone__evidence-panel dl { grid-template-columns: 1fr; }
-  .yellowstone__inspector,
-  .yellowstone__method { padding: 20px; }
-}
+  .yellowstone__grid,
+  .yellowstone__reading-grid {
+    grid-template-columns: 1fr;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  .yellowstone *,
-  .yellowstone *::before,
-  .yellowstone *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  .yellowstone__segmented {
+    margin-left: 0;
+  }
 }

@@ -1,0 +1,405 @@
+.miles-page {
+  --miles-paper: #f3eee1;
+  --miles-paper-deep: #e4dcc8;
+  --miles-ink: #1c2a26;
+  --miles-muted: #5f6d66;
+  --miles-thread: #b33a2b;
+  --miles-cyan: #2f6f7e;
+  --miles-amber: #a67c2d;
+  --miles-line: rgba(28, 42, 38, 0.14);
+  --miles-shadow: 0 18px 40px rgba(28, 42, 38, 0.08);
+  color: var(--miles-ink);
+}
+
+[data-theme="dark"] .miles-page,
+.theme-dark .miles-page {
+  --miles-paper: #121a18;
+  --miles-paper-deep: #1b2824;
+  --miles-ink: #e6efe9;
+  --miles-muted: #9aada4;
+  --miles-thread: #ff7a62;
+  --miles-cyan: #5eb6c8;
+  --miles-amber: #e0b45a;
+  --miles-line: rgba(230, 239, 233, 0.12);
+  --miles-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.miles-page {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(47, 111, 126, 0.08), transparent 28%),
+    radial-gradient(circle at 88% 0%, rgba(179, 58, 43, 0.06), transparent 24%),
+    linear-gradient(180deg, var(--miles-paper) 0%, var(--miles-paper-deep) 100%);
+  border: 1px solid var(--miles-line);
+  border-radius: 18px;
+  box-shadow: var(--miles-shadow);
+  padding: 28px 28px 36px;
+  margin: 8px 0 32px;
+}
+
+.miles-hero {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 22px;
+  max-width: 62rem;
+}
+
+.miles-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--miles-muted);
+  font-weight: 700;
+}
+
+.miles-hero h2 {
+  margin: 0;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.miles-hero p {
+  margin: 0;
+  color: var(--miles-muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  max-width: 48rem;
+}
+
+.miles-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: end;
+  padding: 14px 16px;
+  border: 1px solid var(--miles-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--miles-paper) 70%, white);
+  margin-bottom: 18px;
+}
+
+[data-theme="dark"] .miles-controls,
+.theme-dark .miles-controls {
+  background: color-mix(in srgb, var(--miles-paper-deep) 80%, black);
+}
+
+.miles-control {
+  display: grid;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.miles-control label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--miles-muted);
+  font-weight: 700;
+}
+
+.miles-control select,
+.miles-control input[type="range"] {
+  accent-color: var(--miles-thread);
+}
+
+.miles-control select {
+  border: 1px solid var(--miles-line);
+  border-radius: 8px;
+  background: var(--miles-paper);
+  color: var(--miles-ink);
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.miles-control-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--miles-ink);
+}
+
+.miles-control-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.miles-button {
+  border: 1px solid var(--miles-line);
+  background: var(--miles-paper);
+  color: var(--miles-ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.miles-button:hover,
+.miles-button:focus-visible {
+  border-color: var(--miles-cyan);
+  outline: 2px solid color-mix(in srgb, var(--miles-cyan) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.miles-button--primary {
+  background: var(--miles-ink);
+  color: var(--miles-paper);
+  border-color: var(--miles-ink);
+}
+
+.miles-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.miles-status {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--miles-line);
+  background: color-mix(in srgb, var(--miles-cyan) 8%, var(--miles-paper));
+  margin-bottom: 18px;
+}
+
+.miles-status[data-kind="snapshot"] {
+  background: color-mix(in srgb, var(--miles-amber) 10%, var(--miles-paper));
+}
+
+.miles-status[data-kind="error"] {
+  background: color-mix(in srgb, var(--miles-thread) 10%, var(--miles-paper));
+}
+
+.miles-status strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.miles-status span {
+  color: var(--miles-muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.miles-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.miles-tile {
+  border: 1px solid var(--miles-line);
+  border-radius: 12px;
+  background: var(--miles-paper);
+  padding: 4px;
+  min-height: 108px;
+}
+
+.miles-sentence {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--miles-thread);
+  background: color-mix(in srgb, var(--miles-thread) 6%, var(--miles-paper));
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.miles-sentence strong {
+  color: var(--miles-thread);
+}
+
+.miles-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.miles-panel {
+  border: 1px solid var(--miles-line);
+  border-radius: 14px;
+  background: var(--miles-paper);
+  padding: 14px 14px 10px;
+  min-width: 0;
+}
+
+.miles-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.miles-panel__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+.miles-panel__header p,
+.miles-panel__note {
+  margin: 0;
+  color: var(--miles-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.miles-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.miles-factor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.miles-factor-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--miles-line);
+  font-size: 0.9rem;
+}
+
+.miles-factor-list small {
+  grid-column: 1 / -1;
+  color: var(--miles-muted);
+}
+
+.miles-alert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.miles-alert-list li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--miles-line);
+  font-size: 0.9rem;
+}
+
+.miles-alert-list li[data-freshness="aging"] {
+  opacity: 0.75;
+}
+
+.miles-alert-list li[data-freshness="stale"] {
+  opacity: 0.55;
+  border-style: dotted;
+}
+
+.miles-alert-list li[data-freshness="expired"] {
+  opacity: 0.35;
+}
+
+.miles-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--miles-muted);
+}
+
+.miles-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.miles-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--miles-ink) 25%, transparent);
+}
+
+.miles-methods {
+  margin-top: 8px;
+  color: var(--miles-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.miles-methods code {
+  font-size: 0.84em;
+}
+
+.miles-engine {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--miles-line);
+  background: color-mix(in srgb, var(--miles-cyan) 6%, var(--miles-paper));
+  color: var(--miles-ink);
+}
+
+.miles-engine h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--miles-ink);
+}
+
+.miles-engine pre {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid var(--miles-line);
+  /* Theme-aware code panel: paper-deep in light, ink-tinted surface in dark */
+  background: color-mix(in srgb, var(--miles-paper-deep) 88%, var(--miles-ink) 12%);
+  color: var(--miles-ink);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .miles-engine pre,
+.theme-dark .miles-engine pre {
+  background: color-mix(in srgb, var(--miles-paper-deep) 70%, #000 30%);
+  color: var(--miles-ink);
+  border-color: var(--miles-line);
+}
+
+@media (max-width: 960px) {
+  .miles-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .miles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .miles-control-actions {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .miles-page {
+    padding: 18px 14px 24px;
+    border-radius: 12px;
+  }
+
+  .miles-controls {
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .miles-page * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

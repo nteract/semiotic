@@ -431,23 +431,20 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
 ): DependencyTrackLayout {
   const width = Math.max(240, dimensions.width)
   const height = Math.max(220, dimensions.height)
-  const paddingX = dimensions.paddingX ?? 48
-  const paddingTop = dimensions.paddingTop ?? 48
-  const paddingBottom = dimensions.paddingBottom ?? 44
+  // Leave room for lane labels, sockets above cards, and a quiet bottom margin.
+  // ChartContainer clips overflow, so every placed rect must stay inside the plot.
+  const paddingX = dimensions.paddingX ?? 56
+  const paddingTop = dimensions.paddingTop ?? 72
+  const paddingBottom = dimensions.paddingBottom ?? 56
   const laneCount = Math.max(1, machine.lanes.length)
   const laneWidth = Math.max(70, (width - paddingX * 2) / laneCount)
   const levelCount = Math.max(1, machine.maxLevel + 1)
-  const levelStep = Math.max(
-    76,
-    (height - paddingTop - paddingBottom) / levelCount
-  )
-  const taskWidth = Math.min(
-    options.taskWidth ?? 112,
-    Math.max(58, laneWidth * 0.78)
-  )
-  const taskHeight = Math.min(options.taskHeight ?? 58, levelStep * 0.64)
   const socketRadius = options.socketRadius ?? 5
   const gutterCount = Math.max(1, Math.round(options.gutterCount ?? 3))
+  const stackGap = 10
+  const interLevelGap = 28
+
+  // Group by (lane, level) for packing co-located tasks.
   const grouped = new Map<string, DependencyMachineNode<TDatum>[]>()
   for (const node of machine.nodes) {
     const key = `${node.laneIndex}:${node.level}`
@@ -457,20 +454,62 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
   }
   for (const group of grouped.values()) group.sort((a, b) => compareText(a.id, b.id))
 
+  // Per-level stack height = tallest lane stack at that dependency depth.
+  // Previous code only offset co-located cards by ~15px while cards were ~50px
+  // tall, so multiple tasks at the same lane+level drew on top of each other.
+  const maxStackByLevel: number[] = Array.from({ length: levelCount }, () => 1)
+  for (const [key, group] of grouped) {
+    const level = Number(key.split(":")[1])
+    if (Number.isFinite(level) && level >= 0 && level < levelCount) {
+      maxStackByLevel[level] = Math.max(maxStackByLevel[level], group.length)
+    }
+  }
+
+  const availableHeight = Math.max(120, height - paddingTop - paddingBottom)
+  const totalStackSlots = maxStackByLevel.reduce((sum, n) => sum + n, 0)
+  // Budget vertical space: stack slots + gaps between stacks within a level +
+  // gaps between dependency levels.
+  const structuralGaps =
+    maxStackByLevel.reduce((sum, n) => sum + Math.max(0, n - 1) * stackGap, 0) +
+    Math.max(0, levelCount - 1) * interLevelGap
+  const taskHeight = Math.min(
+    options.taskHeight ?? 52,
+    Math.max(
+      36,
+      (availableHeight - structuralGaps) / Math.max(1, totalStackSlots),
+    ),
+  )
+  const taskWidth = Math.min(
+    options.taskWidth ?? 120,
+    Math.max(64, laneWidth * 0.82),
+  )
+
+  // Cumulative y origin for each dependency level (top of that level's band).
+  const levelTop: number[] = []
+  let yCursor = paddingTop
+  for (let level = 0; level < levelCount; level += 1) {
+    levelTop[level] = yCursor
+    const band =
+      maxStackByLevel[level] * taskHeight +
+      Math.max(0, maxStackByLevel[level] - 1) * stackGap
+    yCursor += band + interLevelGap
+  }
+
   const tasks: DependencyTaskPlacement[] = machine.nodes.map((node) => {
     const group = grouped.get(`${node.laneIndex}:${node.level}`) ?? [node]
     const slot = Math.max(0, group.findIndex((candidate) => candidate.id === node.id))
-    const centeredSlot = slot - (group.length - 1) / 2
-    const slotOffset = centeredSlot * Math.min(18, taskHeight * 0.3)
+    // Stack fully (no partial overlap): each slot gets its own card height.
+    const stackTop = levelTop[node.level] ?? paddingTop
+    const y = stackTop + slot * (taskHeight + stackGap) + taskHeight / 2
     return {
       taskID: node.id,
       lane: node.lane,
       laneIndex: node.laneIndex,
       level: node.level,
       x: paddingX + laneWidth * (node.laneIndex + 0.5),
-      y: paddingTop + levelStep * (node.level + 0.5) + slotOffset,
+      y,
       width: taskWidth,
-      height: taskHeight
+      height: taskHeight,
     }
   })
   const taskByID = new Map(tasks.map((task) => [task.taskID, task]))
@@ -482,11 +521,21 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
     const target = taskByID.get(edge.targetID)
     if (!source || !target) return
     const targetIncoming = machine.incoming.get(edge.targetID) ?? []
-    const socketSpan = Math.min(target.width * 0.72, Math.max(1, targetIncoming.length - 1) * 14)
-    const socketX = targetIncoming.length <= 1
-      ? target.x
-      : target.x - socketSpan / 2 + (socketSpan * edge.socketIndex) / (targetIncoming.length - 1)
-    const socketY = target.y - target.height / 2 - socketRadius - 2
+    const socketSpan = Math.min(
+      target.width * 0.7,
+      Math.max(1, targetIncoming.length - 1) * 16,
+    )
+    const socketX =
+      targetIncoming.length <= 1
+        ? target.x
+        : target.x -
+          socketSpan / 2 +
+          (socketSpan * edge.socketIndex) / Math.max(1, targetIncoming.length - 1)
+    // Socket sits in the inter-level gap above the target card.
+    const socketY = Math.max(
+      source.y + source.height / 2 + 8,
+      target.y - target.height / 2 - socketRadius - 6,
+    )
     const socket: DependencySocketPlacement = {
       id: edge.socketID,
       edgeID: edge.id,
@@ -494,15 +543,16 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
       index: edge.socketIndex,
       x: socketX,
       y: socketY,
-      radius: socketRadius
+      radius: socketRadius,
     }
     sockets.push(socket)
-    const start = { x: source.x, y: source.y + source.height / 2 + 3 }
-    const availableGap = Math.max(18, socketY - start.y)
-    const gutterOffset = ((edgeIndex % gutterCount) - (gutterCount - 1) / 2) * 7
+    const start = { x: source.x, y: source.y + source.height / 2 + 2 }
+    const availableGap = Math.max(12, socketY - start.y)
+    const gutterOffset =
+      ((edgeIndex % gutterCount) - (gutterCount - 1) / 2) * 6
     const transferY = Math.min(
-      socketY - 10,
-      start.y + availableGap * 0.48 + gutterOffset
+      socketY - 8,
+      start.y + availableGap * 0.55 + gutterOffset,
     )
     routes.push({
       edgeID: edge.id,
@@ -513,8 +563,8 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
         start,
         { x: start.x, y: transferY },
         { x: socketX, y: transferY },
-        { x: socketX, y: socketY }
-      ])
+        { x: socketX, y: socketY },
+      ]),
     })
   })
 

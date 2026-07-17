@@ -178,11 +178,14 @@ const SentenceStructureExamplePage = lazy(
   () => import("./pages/examples/SentenceStructureExamplePage"),
 )
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
+const MilesAreALieExamplePage = lazy(() => import("./pages/examples/MilesAreALieExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
 const StakeholderJourneyExamplePage = lazy(
   () => import("./pages/examples/StakeholderJourneyExamplePage"),
 )
 const MergePressureExamplePage = lazy(() => import("./pages/examples/MergePressureExamplePage"))
+const ChainReactionExamplePage = lazy(() => import("./pages/examples/ChainReactionExamplePage"))
+const YellowstoneExamplePage = lazy(() => import("./pages/examples/YellowstoneExamplePage"))
 const NimbyExamplePage = lazy(() => import("./pages/examples/NimbyExamplePage"))
 const ClimateRadialWeatherExamplePage = lazy(
   () => import("./pages/examples/ClimateRadialWeatherExamplePage"),
@@ -255,6 +258,8 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "WatermarksExamplePage.jsx": WatermarksExamplePage,
   "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
   "MergePressureExamplePage.jsx": MergePressureExamplePage,
+  "ChainReactionExamplePage.jsx": ChainReactionExamplePage,
+  "YellowstoneExamplePage.jsx": YellowstoneExamplePage,
   "NimbyExamplePage.jsx": NimbyExamplePage,
   "ClimateRadialWeatherExamplePage.jsx": ClimateRadialWeatherExamplePage,
   "LakeTravisIsotypeExamplePage.jsx": LakeTravisIsotypeExamplePage,
@@ -279,6 +284,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "SemioticArchitectureExamplePage.jsx": SemioticArchitectureExamplePage,
   "OctopusMetaphorExamplePage.jsx": OctopusMetaphorExamplePage,
   "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,
+  "MilesAreALieExamplePage.jsx": MilesAreALieExamplePage,
   "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
   "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
   "NetworkVizExamplePage.jsx": NetworkVizExamplePage,

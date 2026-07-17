@@ -171,6 +171,32 @@ export type {
   ActiveCountOptions,
 } from "./recipes/intervals"
 
+// Lived-distance / cost-cartogram kit — haversine, friction composition,
+// stretch summaries, threshold styleRules, and alert→annotation stamping.
+// Flagship consumer: the "Miles Are a Lie" high-touch example.
+export {
+  haversineKm,
+  greatCircleMinutes,
+  composeCost,
+  stretchIndex,
+  costPointsFromCenter,
+  summarizeStretch,
+  weatherFrictionFactor,
+  alertFrictionFactor,
+  stretchStyleRules,
+  alertToAnnotation,
+} from "./recipes/livedDistance"
+export type {
+  CostFactor,
+  CostedPoint,
+  CostPointInput,
+  StretchSummary,
+  WeatherFrictionInput,
+  AlertSeverity,
+  StretchStyleThresholds,
+  AlertAnnotationInput,
+} from "./recipes/livedDistance"
+
 // Radial coordinate kit — angle ⟂ radius primitives for bespoke radial charts.
 export { polarToXY, xyToAngle, angleScale, radiusScale, ringArcPath, TAU } from "./recipes/radialCoords"
 export type { Point, PolarOptions, AngleScaleOptions, RingArcOptions } from "./recipes/radialCoords"

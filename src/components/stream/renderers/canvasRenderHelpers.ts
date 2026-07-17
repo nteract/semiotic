@@ -96,8 +96,13 @@ export function resolveCanvasFill(
   // Declarative hatch descriptor → CanvasPattern (cached). Fall back to the
   // descriptor's background color if the environment can't build a pattern.
   if (isHatchFill(fill)) {
-    const pattern = resolveHatchCanvasPattern(fill, ctx)
-    if (pattern) return pattern
+    try {
+      const pattern = resolveHatchCanvasPattern(fill, ctx)
+      if (pattern) return pattern
+    } catch {
+      // createPattern can still throw on some engines with a 0×0 chart canvas;
+      // fall through to solid background so the mark still paints.
+    }
     return (fill.background && resolveCSSColor(ctx, fill.background)) || fallback
   }
   if (typeof fill !== "string") return fill

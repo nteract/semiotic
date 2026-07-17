@@ -126,7 +126,9 @@ export function resolveHatchCanvasPattern(
     },
     ctx,
   )
-  _canvasPatternCache.set(key, pattern)
+  // Only cache successful patterns. A transient null (0×0 chart canvas on
+  // first paint) must not permanently disable hatch for that key.
+  if (pattern) _canvasPatternCache.set(key, pattern)
   return pattern
 }
 

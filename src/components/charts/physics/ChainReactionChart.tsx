@@ -141,7 +141,16 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     ]
   )
   const layout = useMemo(
-    () => routeDependencyTracks(machine, { width, height }),
+    () =>
+      routeDependencyTracks(machine, {
+        width,
+        height,
+        // Explicit inset so first/last dependency levels are not clipped by
+        // ChartContainer's overflow:hidden chart body.
+        paddingTop: 88,
+        paddingBottom: 100,
+        paddingX: 56,
+      }),
     [machine, width, height]
   )
   const [runtime, setRuntime] = useState<RuntimeState>(() =>
@@ -559,7 +568,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         initialSpawns={EMPTY_SPAWNS}
         bodyForces={dependencyBodyForce}
         bodyStyle={{
-          fill: "var(--semiotic-accent, #f0a329)",
+          fill: "var(--semiotic-warning, #f0a329)",
           stroke: "var(--semiotic-text, #243039)",
           strokeWidth: 1.25
         }}
@@ -567,6 +576,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         semanticItems={semanticItems}
         onSemanticItemActivate={(item) => item.id && selectTask(item.id)}
         foregroundGraphics={() => overlay}
+        background="var(--semiotic-bg, transparent)"
         paused={reduced}
         continuous={runtime.inFlight.size > 0}
         onTick={handleTick as never}

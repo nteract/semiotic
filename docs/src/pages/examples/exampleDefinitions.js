@@ -534,6 +534,28 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["process", "ai"],
   },
   {
+    title: "The Release Machine",
+    path: "/examples/release-machine",
+    eyebrow: "ChainReactionChart · blocker amplification",
+    description:
+      "Two 90% blockers look the same on a schedule. The release machine re-plots the same rows by dependency depth so you see which one freezes nine tasks across four lanes.",
+    preview: "release-machine",
+    badges: ["ChainReactionChart", "intervalLanesLayout", "Blocker amplification"],
+    frames: ["stream-physics", "ordinal", "custom"],
+    topics: ["process", "ai"],
+  },
+  {
+    title: "The Yellowstone Mobile",
+    path: "/examples/yellowstone-mobile",
+    eyebrow: "Signed cascade · no wolf→river edge",
+    description:
+      "Scrub the wolf reintroduction story as a multi-hop topology: plates hold ecological indices, edges are signed and lagged, and the river never gets a direct wire from wolves.",
+    preview: "yellowstone",
+    badges: ["NetworkCustomChart", "unitize", "Cascade literacy"],
+    frames: ["network", "ordinal", "custom"],
+    topics: ["climate", "history", "design"],
+  },
+  {
     title: "Not in MY Backyard",
     path: "/examples/not-in-my-backyard",
     eyebrow: "GauntletChart · compound process physics",
@@ -791,6 +813,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["history", "geography", "design"],
   },
   {
+    title: "Miles Are a Lie",
+    path: "/examples/miles-are-a-lie",
+    eyebrow: "DistanceCartogram · lived cost",
+    description:
+      "Center a metro on you, warp destinations by weather and alert friction, and watch stretch thresholds hatch into view. Euclidean miles stay precise; lived minutes get honest.",
+    preview: "miles-lie",
+    badges: ["DistanceCartogram", "styleRules", "Live weather", "Recipes kit"],
+    frames: ["geo", "xy", "ordinal"],
+    topics: ["geography", "climate", "realtime", "design", "accessibility"],
+  },
+  {
     title: "Point Climate Anomaly",
     path: "/examples/climate-anomaly",
     eyebrow: "Difference chart + uncertainty band",
@@ -848,6 +881,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
   "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
+  "/examples/miles-are-a-lie": "MilesAreALieExamplePage.jsx",
   "/examples/climate-anomaly": "ClimateAnomalyExamplePage.jsx",
   "/examples/climate-radial-weather": "ClimateRadialWeatherExamplePage.jsx",
   "/examples/creative-contours": "CreativeContoursExamplePage.jsx",
@@ -859,6 +893,8 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/hot-dog-contest-variations": "HotDogContestVariationsExamplePage.jsx",
   "/examples/insight-forge": "InsightForgeExamplePage.jsx",
   "/examples/lake-travis-isotype": "LakeTravisIsotypeExamplePage.jsx",
+  "/examples/release-machine": "ChainReactionExamplePage.jsx",
+  "/examples/yellowstone-mobile": "YellowstoneExamplePage.jsx",
   "/examples/not-in-my-backyard": "NimbyExamplePage.jsx",
   "/examples/local-government-explorer": "LocalGovernmentExplorerExamplePage.jsx",
   "/examples/mobile-data-visualization": "MobileDataVisualizationExamplePage.jsx",

@@ -1151,7 +1151,7 @@ export const ChartContainer = React.forwardRef<
                   </svg>
                 </button>
               )}
-              {status && (
+              {status && STATUS_COLORS[status] && (
                 <div
                   className="semiotic-chart-status"
                   aria-live="polite"

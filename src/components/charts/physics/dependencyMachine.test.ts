@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   calculateBlockerAmplification,
-  compileDependencyMachine
+  compileDependencyMachine,
+  routeDependencyTracks,
 } from "./dependencyMachine"
 
 // Rows: a task depends on the ids in `deps`, so each dep is drawn as a
@@ -73,5 +74,43 @@ describe("calculateBlockerAmplification", () => {
 
   it("reports no amplification for a leaf blocker", () => {
     expect(calculateBlockerAmplification(machine, "c").downstreamTaskCount).toBe(0)
+  })
+})
+
+describe("routeDependencyTracks", () => {
+  it("does not stack co-located tasks on top of each other", () => {
+    // Three tasks in the same lane at different depths plus two siblings that
+    // share a lane+level after a join — the old slotOffset of ~15px put cards
+    // on top of one another.
+    const machine = machineFrom([
+      { id: "a", label: "A", lane: "L1", deps: [] },
+      { id: "b1", label: "B1", lane: "L1", deps: ["a"] },
+      { id: "b2", label: "B2", lane: "L1", deps: ["a"] },
+      { id: "c", label: "C", lane: "L2", deps: ["b1", "b2"] },
+    ])
+    const layout = routeDependencyTracks(machine, { width: 800, height: 700 })
+    const rects = layout.tasks.map((t) => ({
+      id: t.taskID,
+      top: t.y - t.height / 2,
+      bottom: t.y + t.height / 2,
+      left: t.x - t.width / 2,
+      right: t.x + t.width / 2,
+    }))
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const a = rects[i]
+        const b = rects[j]
+        const overlapX = a.left < b.right && a.right > b.left
+        const overlapY = a.top < b.bottom && a.bottom > b.top
+        expect(
+          overlapX && overlapY,
+          `${a.id} overlaps ${b.id}`,
+        ).toBe(false)
+      }
+    }
+    // Sibling b1/b2 share a lane and level — must be vertically separated by a gap.
+    const b1 = layout.taskByID.get("b1")!
+    const b2 = layout.taskByID.get("b2")!
+    expect(Math.abs(b1.y - b2.y)).toBeGreaterThanOrEqual(b1.height)
   })
 })
