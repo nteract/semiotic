@@ -1154,7 +1154,7 @@ describe("renderChart", () => {
     })
     expect(svg).toContain('fill="#1f77b4"')
     // The IQR follows the vertical violin's value axis: a constant x.
-    expect(svg).toMatch(/<line x1="([^\"]+)" y1="[^\"]+" x2="\1" y2="[^\"]+" stroke="#1f77b4"/)
+    expect(svg).toMatch(/<line x1="([^"]+)" y1="[^"]+" x2="\1" y2="[^"]+" stroke="#1f77b4"/)
   })
 
   // ── Network Charts ─────────────────────────────────────────────────

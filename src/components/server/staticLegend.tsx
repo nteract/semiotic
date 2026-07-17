@@ -143,7 +143,6 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
     theme,
     position = "right",
     totalWidth,
-    totalHeight,
     margin,
     legendLayout,
   } = config
@@ -152,7 +151,6 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
   const swatchRadius = 0
   const isHorizontal = position === "top" || position === "bottom"
   const plotWidth = Math.max(swatchSize, totalWidth - margin.left - margin.right)
-  const plotHeight = Math.max(rowHeight, totalHeight - margin.top - margin.bottom)
   const widths = categories.map((category) => itemWidth(category, swatchSize, labelGap, theme))
 
   if (isHorizontal) {
@@ -224,8 +222,8 @@ export function measureStaticLegend(config: StaticLegendConfig): Omit<StaticLege
 }
 
 function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): StaticLegendGroupMetrics {
-  const { legendGroups, theme, position = "right", totalWidth, totalHeight, margin, legendLayout } = config
-  const { swatchSize, labelGap, itemGap, rowHeight } = resolveLegendMetrics(legendLayout)
+  const { legendGroups, theme, position = "right", totalWidth, margin, legendLayout } = config
+  const { swatchSize, labelGap, rowHeight } = resolveLegendMetrics(legendLayout)
   const labelOffset = swatchSize + labelGap
   const swatchRadius = 0
   const groupLabelSize = Math.max(12, legendFontSize(theme))
@@ -233,7 +231,6 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
   const separatorGap = 12
   const isHorizontal = position === "top" || position === "bottom"
   const plotWidth = Math.max(swatchSize, totalWidth - margin.left - margin.right)
-  const plotHeight = Math.max(rowHeight, totalHeight - margin.top - margin.bottom)
 
   if (isHorizontal) {
     const maxWidth = Math.max(swatchSize, legendLayout?.maxWidth ?? plotWidth)

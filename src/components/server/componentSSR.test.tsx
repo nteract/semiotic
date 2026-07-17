@@ -416,7 +416,7 @@ describe("Component SSR — XY Charts", () => {
     // The curve must reach the scene serializer: d3's monotone output emits
     // cubic Bézier commands whereas the linear path contains only segments.
     expect(smooth).not.toBe(linear)
-    expect(smooth).toMatch(/<path[^>]*d="M[^\"]*C/)
+    expect(smooth).toMatch(/<path[^>]*d="M[^"]*C/)
   })
 
   it("uses StackedAreaChart's monotoneX default when curve is omitted", () => {
@@ -431,7 +431,7 @@ describe("Component SSR — XY Charts", () => {
       width: 400,
       height: 300,
     })
-    expect(svg).toMatch(/<path[^>]*d="M[^\"]*C/)
+    expect(svg).toMatch(/<path[^>]*d="M[^"]*C/)
     expect(svg).toContain(">A<")
     expect(svg).toContain(">B<")
   })

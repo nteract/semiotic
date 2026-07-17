@@ -593,7 +593,7 @@ export const gaugeChart: ChartConfig = {
     const arcWidth = rest.arcWidth ?? 0.3
     const showNeedle = rest.showNeedle !== false
     const fillZones = rest.fillZones !== false
-    const { sweepRad, startAngleDeg } = sweepToAngles(sweep)
+    const { startAngleDeg } = sweepToAngles(sweep)
 
     const thresholds = rest.thresholds || [{ value: gMax, color: rest.color || "#4e79a7" }]
     const gradientFillValue = common.gradientFill as unknown

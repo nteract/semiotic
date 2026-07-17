@@ -552,7 +552,7 @@ export const circlePack: ChartConfig = {
       // CirclePack's client style deliberately uses currentColor for the
       // subtle dark outline; hierarchy's generic fallback uses the theme
       // surface (white), which made SSR visibly diverge.
-      nodeStyle: common.nodeStyle || ((d: Datum) => ({
+      nodeStyle: common.nodeStyle || (() => ({
         fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
         fillOpacity: rest.circleOpacity ?? 0.7,
         stroke: "currentColor",
