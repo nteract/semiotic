@@ -16,14 +16,11 @@ import { waitForChartReady } from "./helpers"
  *      live HOC component in the browser fixture. This is the path
  *      auto-hydrating consumers see after the SSR → canvas swap.
  *
- * For each chart in the matrix we baseline both: the SSR SVG and the
- * CSR canvas. The pair of baselines isn't a strict pixel comparison
- * (SVG and canvas pipelines render with subtly different anti-aliasing
- * and won't match byte-for-byte), but their per-side baselines mean
- * any drift in either pipeline shows up as a snapshot diff and lands
- * in front of a maintainer for review. Together they catch the
- * regression class where one path's output diverges from what users
- * historically saw on hydration.
+ * For each chart in the matrix we baseline one side-by-side sheet: the SSR
+ * SVG beside the CSR canvas. This is intentionally not a strict pixel
+ * comparison — SVG and canvas have subtly different anti-aliasing — but one
+ * composite baseline makes fidelity gaps visible during normal snapshot
+ * review instead of requiring a maintainer to open two independent files.
  *
  * Update baselines after intentional rendering changes:
  *   npx playwright test integration-tests/ssr-parity.spec.ts --update-snapshots
@@ -110,6 +107,18 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("<linearGradient")
     expect(svg).toMatch(/fill="url\(#/)
   }
+  // Gauge gradients are arc-length sampled into colored radial slices (not a
+  // linear SVG gradient). Assert multiple painted colors plus the unfilled
+  // band before taking the side-by-side sheet, so the fixture cannot silently
+  // regress to a flat/threshold-only SSR gauge while retaining valid marks.
+  if (id === "gauge-gradient") {
+    const fills = new Set<string>()
+    for (const match of svg.matchAll(/<path\b[^>]*fill="([^"]+)"/g)) {
+      fills.add(match[1])
+    }
+    expect(svg).toContain("#d1d5db")
+    expect(fills.size).toBeGreaterThan(3)
+  }
   // axisExtent:"exact" pins the value axis to the data max (47); the padded
   // "nice" default never emits that tick label.
   if (id === "bar-axis-exact" || id === "line-axis-exact") {
@@ -133,34 +142,58 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
 
 test.describe("SSR / CSR parity", () => {
   for (const c of cases) {
-    test(`CSR baseline — ${c.id}`, async ({ page }) => {
-      await page.goto("/ssr-parity-examples/")
-      await waitForChartReady(page, `csr-${c.id}`)
-      const target = page.locator(`[data-testid="csr-${c.id}"]`)
-      await expect(target).toHaveScreenshot(`csr-${c.id}.png`, { maxDiffPixels: 250 })
-    })
-
-    test(`SSR baseline — ${c.id}`, async ({ page }) => {
+    test(`SSR / CSR sheet — ${c.id}`, async ({ page }) => {
       const ssrProps = c.theme ? { ...c.props, theme: c.theme } : c.props
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
-      // Inject directly. White background + tight padding match the
-      // CSR fixture so the screenshots are framed comparably even
-      // though we don't pixel-compare them directly.
-      await page.setContent(`
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8"><title>SSR ${c.id}</title></head>
-          <body style="margin:0;padding:16px;background:white;font-family:sans-serif;">
-            <div data-testid="ssr-target" style="display:inline-block;background:white;">
-              ${ssrSvg}
-            </div>
-          </body>
-        </html>
-      `)
-      const target = page.locator('[data-testid="ssr-target"]')
-      await target.waitFor({ state: "visible" })
-      await expect(target).toHaveScreenshot(`ssr-${c.id}.png`, { maxDiffPixels: 250 })
+
+      // Render only this fixture's CSR chart. Mounting the full matrix for
+      // every screenshot multiplies browser startup work by 52 and makes
+      // visual-review runs needlessly slow.
+      await page.goto(`/ssr-parity-examples/?case=${encodeURIComponent(c.id)}`)
+      await waitForChartReady(page, `csr-${c.id}`)
+
+      // Keep the live CSR chart exactly as it rendered in the browser, then
+      // place the standalone server SVG beside it. Moving the CSR fixture
+      // node (rather than recreating it) retains its settled canvas pixels.
+      await page.evaluate(({ id, component, svg }) => {
+        const csrCase = document.querySelector<HTMLElement>(`[data-testid="csr-${id}"]`)
+        if (!csrCase) throw new Error(`Missing CSR fixture for ${id}`)
+
+        csrCase.querySelector("h2")?.remove()
+        const sheet = document.createElement("section")
+        sheet.className = "ssr-csr-sheet"
+        sheet.dataset.testid = `ssr-csr-${id}`
+
+        const title = document.createElement("h1")
+        title.textContent = `${component} — ${id}`
+        sheet.append(title)
+
+        const columns = document.createElement("div")
+        columns.className = "ssr-csr-columns"
+        for (const [label, content] of [["SSR", null], ["CSR", csrCase]] as const) {
+          const panel = document.createElement("article")
+          panel.className = "ssr-csr-panel"
+          const heading = document.createElement("h2")
+          heading.textContent = label
+          panel.append(heading)
+
+          if (label === "SSR") {
+            const ssrCase = document.createElement("div")
+            ssrCase.className = "test-case"
+            ssrCase.innerHTML = svg
+            panel.append(ssrCase)
+          } else if (content) {
+            panel.append(content)
+          }
+          columns.append(panel)
+        }
+        sheet.append(columns)
+        document.body.append(sheet)
+      }, { id: c.id, component: c.component, svg: ssrSvg })
+
+      const target = page.locator(`[data-testid="ssr-csr-${c.id}"]`)
+      await expect(target).toHaveScreenshot(`ssr-csr-${c.id}.png`, { maxDiffPixels: 250 })
     })
   }
 })

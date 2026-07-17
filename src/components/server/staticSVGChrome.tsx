@@ -80,6 +80,43 @@ export interface ThemeAwareProps {
   legendLayout?: LegendLayout
   /** Prefix for SVG element IDs — used by renderDashboard to avoid collisions */
   _idPrefix?: string
+  /** Internal HOC-level legend/margin contract metadata. */
+  __explicitMargin?: unknown
+  __autoLegendMargin?: boolean
+}
+
+type LegendPosition = "right" | "left" | "top" | "bottom"
+
+const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
+  right: 110,
+  left: 110,
+  top: 50,
+  bottom: 80,
+}
+
+/**
+ * The client HOCs reserve a stable legend gutter before layout. The static
+ * frame API still uses content measurement by default, but renderChart()
+ * marks HOC requests so both paths share that contract. An explicitly set
+ * side remains fully caller-controlled.
+ */
+export function hocLegendMarginMinimum(
+  props: ThemeAwareProps,
+  position: LegendPosition,
+): number | undefined {
+  if (!props.__autoLegendMargin) return undefined
+  if (hasExplicitLegendMargin(props, position)) return undefined
+  return HOC_LEGEND_MARGIN[position]
+}
+
+/** Whether the caller, rather than the HOC default, owns a legend side. */
+export function hasExplicitLegendMargin(
+  props: ThemeAwareProps,
+  position: LegendPosition,
+): boolean {
+  const explicit = props.__explicitMargin
+  return typeof explicit === "number" ||
+    Boolean(explicit && typeof explicit === "object" && typeof (explicit as Record<string, unknown>)[position] === "number")
 }
 
 export function reserveStaticLegendMargin(
@@ -92,9 +129,12 @@ export function reserveStaticLegendMargin(
     size: [number, number]
     hasTitle?: boolean
     legendLayout?: LegendLayout
+    minimumMargin?: number
+    preserveExplicitMargin?: boolean
   }
 ): void {
   if (options.categories.length === 0) return
+  if (options.preserveExplicitMargin) return
   const position = options.position || "right"
   const metrics = measureStaticLegend({
     categories: options.categories,
@@ -109,13 +149,13 @@ export function reserveStaticLegendMargin(
   })
 
   if (position === "right") {
-    margin.right = Math.max(margin.right, metrics.width + 14)
+    margin.right = Math.max(margin.right, metrics.width + 14, options.minimumMargin ?? 0)
   } else if (position === "left") {
-    margin.left = Math.max(margin.left, metrics.width + 14)
+    margin.left = Math.max(margin.left, metrics.width + 14, options.minimumMargin ?? 0)
   } else if (position === "top") {
-    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4)
+    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4, options.minimumMargin ?? 0)
   } else {
-    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4)
+    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4, options.minimumMargin ?? 0)
   }
 }
 
@@ -128,8 +168,11 @@ export function reserveLegendConfigMargin(
     size: [number, number]
     hasTitle?: boolean
     legendLayout?: LegendLayout
+    minimumMargin?: number
+    preserveExplicitMargin?: boolean
   }
 ): void {
+  if (options.preserveExplicitMargin) return
   const position = options.position || "right"
   const base = {
     theme: options.theme,
@@ -148,13 +191,13 @@ export function reserveLegendConfigMargin(
   if (!metrics) return
 
   if (position === "right") {
-    margin.right = Math.max(margin.right, metrics.width + 14)
+    margin.right = Math.max(margin.right, metrics.width + 14, options.minimumMargin ?? 0)
   } else if (position === "left") {
-    margin.left = Math.max(margin.left, metrics.width + 14)
+    margin.left = Math.max(margin.left, metrics.width + 14, options.minimumMargin ?? 0)
   } else if (position === "top") {
-    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4)
+    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4, options.minimumMargin ?? 0)
   } else {
-    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4)
+    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4, options.minimumMargin ?? 0)
   }
 }
 
@@ -168,6 +211,7 @@ export function renderLegendConfig(
     hasTitle?: boolean
     legendLayout?: LegendLayout
     idPrefix?: string
+    reservedWidth?: number
   }
 ): React.ReactNode {
   const base = {
@@ -179,6 +223,7 @@ export function renderLegendConfig(
     hasTitle: options.hasTitle,
     legendLayout: options.legendLayout,
     idPrefix: options.idPrefix,
+    reservedWidth: options.reservedWidth,
   }
   if (isLegendConfig(legend)) {
     return renderStaticLegendGroups({ ...base, legendGroups: legend.legendGroups })
@@ -206,8 +251,14 @@ export function renderGridSVG(
   // Grid lines share the axis tick positions (ticksForMode) so they align
   // under axisExtent:"exact" — matching the client SVGOverlay, which draws
   // grid from the same tick arrays as the axis.
-  const xTicks = ticksForMode(scales.x, 5, axisExtent)
-  const yTicks = ticksForMode(scales.y, 5, axisExtent)
+  const xTickCount = axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
+  const yTickCount = axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
+  const xTicks = ticksForMode(scales.x, xTickCount, axisExtent)
+  const yTicks = ticksForMode(scales.y, yTickCount, axisExtent)
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
@@ -243,7 +294,10 @@ export function renderOrdinalGridSVG(
   const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
   // Match the axis ticks (and the client) under axisExtent:"exact".
-  const rTicks = ticksForMode(scales.r, 5, axisExtent)
+  const rTickCount = axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor((isVertical ? layout.height : layout.width) / (isVertical ? 30 : 70))))
+  const rTicks = ticksForMode(scales.r, rTickCount, axisExtent)
 
   if (isVertical) {
     return (
@@ -351,12 +405,21 @@ export function generateAxesSVG(
   // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
   // ticks inclusive of the data min/max (the axisExtent headline behavior);
   // "nice"/undefined falls through to scale.ticks — byte-identical to before.
-  const xTicks = ticksForMode(scales.x, 5, props.axisExtent).map(v => ({
+  // Match SVGOverlay's responsive tick budget. d3's `ticks(5)` can emit
+  // seven "nice" values on a short plot while the browser deliberately
+  // requests fewer labels to keep the axis legible.
+  const xTickCount = props.axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
+  const yTickCount = props.axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
+  const xTicks = ticksForMode(scales.x, xTickCount, props.axisExtent).map(v => ({
     pixel: scales.x(v),
     label: (props.xFormat || props.tickFormatTime || defaultTickFormat)(v)
   }))
 
-  const yTicks = ticksForMode(scales.y, 5, props.axisExtent).map(v => ({
+  const yTicks = ticksForMode(scales.y, yTickCount, props.axisExtent).map(v => ({
     pixel: scales.y(v),
     label: (props.yFormat || props.tickFormatValue || defaultTickFormat)(v)
   }))

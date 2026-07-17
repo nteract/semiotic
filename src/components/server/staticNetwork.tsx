@@ -37,6 +37,8 @@ import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
   reserveLegendConfigMargin,
+  hocLegendMarginMinimum,
+  hasExplicitLegendMargin,
   renderLegendConfig,
   wrapSVG,
   edgeEndpointId
@@ -128,24 +130,30 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // Match the XY frame: reserve legend space BEFORE computing inner dims so
   // the layout doesn't draw under the legend.
   const legendPos = props.legendPosition
+  const legendPosition = legendPos || "right"
+  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
   if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
     reserveLegendConfigMargin(margin, {
       legend: props.legend,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   } else if (props.showLegend && networkLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: networkLegendCategories,
       colorScheme: props.colorScheme,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   }
   const innerWidth = size[0] - margin.left - margin.right
@@ -425,6 +433,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       margin,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
     })
   })() : null
 
@@ -441,6 +450,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
+        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
       }) || networkLegend
 
   const content = (

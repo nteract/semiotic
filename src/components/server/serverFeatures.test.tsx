@@ -71,6 +71,96 @@ const networkEdges = [
   { source: "Product", target: "Profit", value: 60 },
 ]
 
+describe("DifferenceChart server layout", () => {
+  const data = [
+    { x: 0, a: 10, b: 12 },
+    { x: 1, a: 16, b: 14 },
+  ]
+
+  it("reserves the client legend gutter when no margin side was supplied", () => {
+    const svg = renderChart("DifferenceChart", {
+      data,
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      width: 420,
+      height: 240,
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(320,50)"')
+  })
+
+  it("does not overwrite an explicit legend-side margin", () => {
+    const svg = renderChart("DifferenceChart", {
+      data,
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      width: 420,
+      height: 240,
+      margin: { right: 64 },
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(366,50)"')
+  })
+})
+
+describe("Shared HOC rendering contracts", () => {
+  it("carries legend, funnel-label, and geo-margin defaults through static rendering", () => {
+    const dotPlot = renderChart("DotPlot", {
+      data: [
+        { category: "A", value: 1, group: "X" },
+        { category: "B", value: 2, group: "Y" },
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "group",
+      width: 420,
+      height: 260,
+    })
+    const funnel = renderChart("FunnelChart", {
+      data: [{ step: "Visited", value: 100 }, { step: "Signed up", value: 60 }],
+      stepAccessor: "step",
+      valueAccessor: "value",
+      width: 420,
+      height: 240,
+    })
+    const flowMap = renderChart("FlowMap", {
+      nodes: [{ city: "A", lon: 0, lat: 0 }, { city: "B", lon: 10, lat: 10 }],
+      flows: [{ source: "A", target: "B", value: 1 }],
+      nodeIdAccessor: "city",
+      xAccessor: "lon",
+      yAccessor: "lat",
+      width: 460,
+      height: 300,
+    })
+
+    expect(dotPlot).toContain("semiotic-legend")
+    expect(dotPlot).toContain(">X<")
+    expect(funnel).toContain(">Visited<")
+    expect(funnel).toContain(">Signed up<")
+    // FlowMap shares the HOC's compact geo margin, not the primary XY margin.
+    expect(flowMap).toContain('transform="translate(10,10)"')
+  })
+
+  it("uses the HOC's right-side Likert legend placement", () => {
+    const svg = renderChart("LikertChart", {
+      data: [
+        { question: "Support", level: "Disagree", value: 2 },
+        { question: "Support", level: "Agree", value: 3 },
+      ],
+      categoryAccessor: "question",
+      levelAccessor: "level",
+      countAccessor: "value",
+      levels: ["Disagree", "Agree"],
+      width: 460,
+      height: 260,
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(360,50)"')
+  })
+})
+
 // ═══════════════════════════════════════════════════════════════════════
 // Theme Inlining
 // ═══════════════════════════════════════════════════════════════════════
@@ -516,7 +606,7 @@ describe("Legend rendering", () => {
     } as StaticXYProps)
 
     const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
-    expect(svg).toContain('transform="translate(0,20)"')
+    expect(svg).toContain('transform="translate(40,8)"')
     expect(dataAreaTop).toBeGreaterThan(40)
   })
 })
@@ -616,6 +706,38 @@ describe("renderChart", () => {
     expect(svg).toContain("<circle")
   })
 
+  it("mirrors Scatterplot's categorical point and legend defaults", () => {
+    const svg = renderChart("Scatterplot", {
+      data: scatterData.map((d, index) => ({ ...d, color: index === 1 ? "legend-beta" : "legend-alpha" })),
+      xAccessor: "x",
+      yAccessor: "y",
+      colorBy: "color",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("legend-alpha")
+    expect(svg).toContain("legend-beta")
+    expect(svg).toContain('fill="#1f77b4"')
+    expect(svg).toContain('fill="#ff7f0e"')
+    expect(svg).toContain('r="5"')
+  })
+
+  it("mirrors QuadrantChart's categorical point and legend defaults", () => {
+    const svg = renderChart("QuadrantChart", {
+      data: scatterData.map((d, index) => ({ ...d, color: index === 1 ? "quadrant-beta" : "quadrant-alpha" })),
+      xAccessor: "x",
+      yAccessor: "y",
+      colorBy: "color",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("quadrant-alpha")
+    expect(svg).toContain("quadrant-beta")
+    expect(svg).toContain('fill="#1f77b4"')
+    expect(svg).toContain('fill="#ff7f0e"')
+    expect(svg).toContain('r="5"')
+  })
+
   it("renders ConnectedScatterplot with both connectors and points", () => {
     const svg = renderChart("ConnectedScatterplot", {
       data: scatterData,
@@ -625,7 +747,10 @@ describe("renderChart", () => {
       width: 400,
       height: 300,
     })
-    expect(svg).toContain("<path")
+    // ConnectedScatterplot renders its connectors as individually colored
+    // SVG line segments (not a single uniform LineChart path).
+    expect(svg).toContain("<line")
+    expect(svg).toContain('stroke="#440154"')
     expect(countMatches(svg, /<circle/g)).toBeGreaterThan(0)
   })
 
@@ -643,6 +768,25 @@ describe("renderChart", () => {
       height: 300,
     })
     expect(svg).toContain("<rect")
+  })
+
+  it("renders Heatmap cell labels when showValues is enabled", () => {
+    const svg = renderChart("Heatmap", {
+      data: [
+        { x: 0, y: 0, value: 10 },
+        { x: 1, y: 0, value: 20 },
+        { x: 0, y: 1, value: 15 },
+        { x: 1, y: 1, value: 25 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+      showValues: true,
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain(">10<")
+    expect(svg).toContain(">25<")
   })
 
   // ── Ordinal Charts ─────────────────────────────────────────────────
@@ -717,6 +861,18 @@ describe("renderChart", () => {
     expect(svg).toContain("<rect")
   })
 
+  it("uses GroupedBarChart's automatic legend when groupBy is set", () => {
+    const svg = renderChart("GroupedBarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      groupBy: "group",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("semiotic-legend")
+  })
+
   it("renders PieChart", () => {
     const svg = renderChart("PieChart", {
       data: pieData,
@@ -727,6 +883,33 @@ describe("renderChart", () => {
     })
     expect(svg).toContain("<path")
     expect(countMatches(svg, /<path /g)).toBeGreaterThanOrEqual(3)
+  })
+
+  it("uses PieChart's category legend by default", () => {
+    const svg = renderChart("PieChart", {
+      data: pieData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 400,
+    })
+    expect(svg).toContain("semiotic-legend")
+  })
+
+  it("preprocesses Likert data into the HOC's diverging layout", () => {
+    const svg = renderChart("LikertChart", {
+      data: [
+        { question: "Support", score: 1 },
+        { question: "Support", score: 3 },
+        { question: "Support", score: 5 },
+      ],
+      levels: ["Disagree", "Neutral", "Agree"],
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("semiotic-legend")
+    expect(svg).toContain(">Disagree<")
+    expect(svg).toContain(">Agree<")
   })
 
   it("renders DonutChart", () => {
@@ -763,6 +946,42 @@ describe("renderChart", () => {
     }
     expect(svg).toContain("#d1d5db")
     expect(fills.size).toBeGreaterThan(3)
+  })
+
+  it("matches GaugeChart's partial-arc layout and value content in SSR", () => {
+    const svg = renderChart("GaugeChart", {
+      value: 70,
+      min: 0,
+      max: 100,
+      sweep: 180,
+      showNeedle: false,
+      width: 400,
+      height: 300,
+    })
+
+    // The scene center is offset so the *visible* half arc is centered in the
+    // widget, rather than treating its hub as a full-circle chart center.
+    expect(svg).toContain('transform="translate(200,244)"')
+    expect(svg).toContain("<foreignObject")
+    expect(svg).toContain(">70<")
+    expect(svg).not.toContain("stroke-linecap=\"round\"")
+  })
+
+  it("renders GaugeChart threshold tick lines and labels", () => {
+    const svg = renderChart("GaugeChart", {
+      value: 50,
+      min: 0,
+      max: 100,
+      thresholds: [
+        { value: 25, color: "#f59e0b", label: "Low" },
+        { value: 75, color: "#22c55e", label: "High" },
+      ],
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain(">Low<")
+    expect(svg).toContain(">High<")
+    expect(svg).toContain('stroke-linecap="round"')
   })
 
   it("matches FunnelChart axis defaults by orientation", () => {
@@ -834,6 +1053,42 @@ describe("renderChart", () => {
     expect(svg).toContain("<circle")
   })
 
+  it("mirrors ordinal chart default orientations, colors, and legends", () => {
+    const data = [
+      { category: "one", value: 2, group: "legend-alpha" },
+      { category: "two", value: 4, group: "legend-beta" },
+      { category: "three", value: 3, group: "legend-alpha" },
+    ]
+    const swarm = renderChart("SwarmPlot", { data, categoryAccessor: "category", valueAccessor: "value", colorBy: "group", width: 400, height: 300 })
+    const stacked = renderChart("StackedBarChart", { data, categoryAccessor: "category", valueAccessor: "value", stackBy: "group", width: 400, height: 300 })
+    const swimlane = renderChart("SwimlaneChart", { data, categoryAccessor: "category", subcategoryAccessor: "group", valueAccessor: "value", width: 400, height: 300 })
+    const ridgeline = renderChart("RidgelinePlot", { data, categoryAccessor: "group", valueAccessor: "value", width: 400, height: 300 })
+
+    for (const svg of [swarm, stacked, swimlane]) {
+      expect(svg).toContain("legend-alpha")
+      expect(svg).toContain("legend-beta")
+      expect(svg).toContain('fill="#1f77b4"')
+      expect(svg).toContain('fill="#ff7f0e"')
+    }
+    // RidgelinePlot defaults to horizontal: categories occupy the vertical
+    // ordinal axis, so its category ticks have x=0 rather than y=0.
+    expect(ridgeline).toMatch(/<text x="-8"[^>]*>legend-alpha<\/text>/)
+  })
+
+  it("mirrors ViolinPlot's vertical IQR and default summary style", () => {
+    const data = [1, 2, 3, 5, 8, 13].map(value => ({ category: "distribution", value }))
+    const svg = renderChart("ViolinPlot", {
+      data,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain('fill="#1f77b4"')
+    // The IQR follows the vertical violin's value axis: a constant x.
+    expect(svg).toMatch(/<line x1="([^\"]+)" y1="[^\"]+" x2="\1" y2="[^\"]+" stroke="#1f77b4"/)
+  })
+
   // ── Network Charts ─────────────────────────────────────────────────
 
   it("renders ForceDirectedGraph", () => {
@@ -855,6 +1110,72 @@ describe("renderChart", () => {
     })
     expect(svg).toContain("<rect") // nodes
     expect(svg).toContain("<path") // edges
+  })
+
+  it("mirrors ProcessSankey's chart-owned categorical legend and margin contract", () => {
+    const props = {
+      nodes: [
+        { id: "intake", phase: "Intake", xExtent: [0, 20] },
+        { id: "review", phase: "Review", xExtent: [20, 50] },
+      ],
+      edges: [{ source: "intake", target: "review", value: 4, startTime: 0, endTime: 50 }],
+      domain: [0, 50],
+      nodeIdAccessor: "id",
+      colorBy: "phase",
+      width: 400,
+      height: 300,
+    }
+    const svg = renderChart("ProcessSankey", props)
+    const explicitRight = renderChart("ProcessSankey", { ...props, margin: { right: 30 } })
+
+    // The HOC owns this specific legend rather than the frame auto-legend.
+    // Its default right gutter is 140px; an explicit caller margin remains
+    // authoritative for external legend layouts.
+    expect(svg).toContain(">Intake<")
+    expect(svg).toContain(">Review<")
+    expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
+    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(380,30)"')
+  })
+
+  it("uses Sankey and TreeDiagram's HOC-level monocolor/black-outline defaults", () => {
+    const sankey = renderChart("SankeyDiagram", {
+      edges: networkEdges,
+      width: 500,
+      height: 300,
+    })
+    const tree = renderChart("TreeDiagram", {
+      data: { id: "root", children: [{ id: "left" }, { id: "right" }] },
+      childrenAccessor: "children",
+      width: 500,
+      height: 300,
+    })
+    expect(sankey).toContain('fill="#1f77b4"')
+    expect(sankey).not.toContain('fill="#ff7f0e"')
+    expect(tree).toContain('stroke="black"')
+  })
+
+  it("preserves Treemap's HOC node-border token", () => {
+    const svg = renderChart("Treemap", {
+      data: { id: "root", children: [{ id: "A", value: 3 }, { id: "B", value: 2 }] },
+      childrenAccessor: "children",
+      valueAccessor: "value",
+      width: 500,
+      height: 300,
+    })
+    expect(svg).toContain('stroke="var(--semiotic-cell-border, var(--semiotic-border, #fff))"')
+  })
+
+  it("uses XYCustomChart's automatic categorical legend", () => {
+    const svg = renderChart("XYCustomChart", {
+      data: [{ x: 1, y: 1, category: "custom-alpha" }, { x: 2, y: 2, category: "custom-beta" }],
+      colorBy: "category",
+      layout: () => ({ nodes: [{ type: "rect", x: 0, y: 0, w: 1, h: 1, style: { fill: "#007bff" }, datum: null }] }),
+      width: 400,
+      height: 240,
+    })
+    expect(svg).toContain("semiotic-legend")
+    expect(svg).toContain("custom-alpha")
+    expect(svg).toContain("custom-beta")
   })
 
   // ── With features ─────────────────────────────────────────────────

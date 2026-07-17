@@ -31,6 +31,8 @@ import {
   chartUID,
   reserveStaticLegendMargin,
   reserveLegendConfigMargin,
+  hocLegendMarginMinimum,
+  hasExplicitLegendMargin,
   renderLegendConfig,
   defaultTickFormat,
   renderOrdinalGridSVG,
@@ -66,7 +68,10 @@ export function generateOrdinalAxesSVG(
   // ticksForMode mirrors the client OrdinalSVGOverlay: "exact" pins the
   // value-axis ticks to the data min/max (the axisExtent headline behavior);
   // "nice"/undefined falls through to scale.ticks — byte-identical to before.
-  const rTicks = ticksForMode(scales.r, 5, props.axisExtent).map(v => ({
+  const rTickCount = props.axisExtent === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor((isVertical ? layout.height : layout.width) / (isVertical ? 30 : 70))))
+  const rTicks = ticksForMode(scales.r, rTickCount, props.axisExtent).map(v => ({
     pixel: scales.r(v),
     label: (valFormat || defaultTickFormat)(v)
   }))
@@ -155,24 +160,30 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
+  const legendPosition = legendPos || "right"
+  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
   if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
     reserveLegendConfigMargin(margin, {
       legend: props.legend,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   } else if (props.showLegend && ordinalLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: ordinalLegendCategories,
       colorScheme: props.colorScheme,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   }
 
@@ -377,6 +388,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       margin,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
     })
   })() : null
   const legend = React.isValidElement(props.legend)
@@ -389,10 +401,24 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
+        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
       }) || ordinalAutoLegend
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top
+
+  // StreamOrdinalFrame places donut center content as an HTML overlay. A
+  // standalone SVG has no surrounding positioned container, so preserve the
+  // same slot with a foreignObject centered over the radial plot area.
+  const centerContent = isRadial && props.centerContent ? (
+    <foreignObject x={margin.left} y={margin.top} width={width} height={height} pointerEvents="none">
+      <div
+        style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}
+      >
+        {props.centerContent}
+      </div>
+    </foreignObject>
+  ) : null
 
   const content = (
     <>
@@ -415,7 +441,8 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       innerWidth: width, innerHeight: height,
       legend,
       defs: hatchDefs,
-        idPrefix: props._idPrefix,
+      outerElements: centerContent,
+      idPrefix: props._idPrefix,
     })
   )
 }

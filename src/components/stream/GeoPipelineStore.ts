@@ -666,12 +666,15 @@ export class GeoPipelineStore implements UpdateResultStore {
     // Use projectionExtent override or auto-fit
     if (config.projectionExtent) {
       const [[lonMin, latMin], [lonMax, latMax]] = config.projectionExtent
+      // Exterior rings must be counter-clockwise (RFC 7946 / d3-geo). A
+      // clockwise ring is interpreted as the complement of the box — i.e. the
+      // whole globe — so fitExtent collapses to world scale.
       const syntheticFeature: GeoJSON.Feature = {
         type: "Feature",
         properties: {},
         geometry: {
           type: "Polygon",
-          coordinates: [[[lonMin, latMin], [lonMax, latMin], [lonMax, latMax], [lonMin, latMax], [lonMin, latMin]]]
+          coordinates: [[[lonMin, latMin], [lonMin, latMax], [lonMax, latMax], [lonMax, latMin], [lonMin, latMin]]]
         }
       }
       proj.fitExtent(

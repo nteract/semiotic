@@ -38,6 +38,8 @@ const PREVIEW_COMPONENTS = {
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
   oregontrail: MiniOregonTrailPreview,
+  earthquakes: MiniEarthquakesPreview,
+  "europa-languages": MiniEuropaLanguagesPreview,
   maup: MiniMaupPreview,
 }
 
@@ -656,6 +658,124 @@ function MiniLakeIsotypePreview() {
         stroke="#d72f3f"
         strokeWidth="3"
       />
+    </svg>
+  )
+}
+
+function MiniEarthquakesPreview() {
+  const dots = [
+    [48, 42, 3.2, "#f0c4a0"],
+    [56, 50, 2.4, "#e89a6a"],
+    [62, 38, 4.1, "#e07060"],
+    [70, 55, 2.8, "#f0c4a0"],
+    [78, 46, 3.5, "#9b6bb0"],
+    [52, 60, 2.2, "#e89a6a"],
+    [88, 40, 2.6, "#f0c4a0"],
+    [94, 52, 3.8, "#e07060"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f7f7f7" />
+      <circle cx="52" cy="48" r="34" fill="#fff" stroke="#d0d0d0" strokeWidth="1" />
+      <ellipse cx="52" cy="48" rx="34" ry="12" fill="none" stroke="#e0e0e0" strokeWidth="0.6" />
+      <ellipse cx="52" cy="48" rx="12" ry="34" fill="none" stroke="#e0e0e0" strokeWidth="0.6" />
+      <path
+        d="M28,40 C34,28 48,24 62,30 C70,34 76,44 72,54 C66,66 48,70 36,60 C28,54 24,46 28,40Z"
+        fill="none"
+        stroke="#222"
+        strokeWidth="1.1"
+      />
+      {dots.map(([x, y, r, fill], i) => (
+        <circle key={i} cx={x} cy={y} r={r} fill={fill} opacity="0.9" />
+      ))}
+      <rect x="104" y="14" width="42" height="22" fill="#fff" stroke="#e0e0e0" />
+      <text x="110" y="24" fill="#222" fontSize="8" fontWeight="700">
+        172
+      </text>
+      <text x="110" y="32" fill="#777" fontSize="5">
+        facing
+      </text>
+      <rect x="152" y="14" width="42" height="22" fill="#fff" stroke="#e0e0e0" />
+      <text x="158" y="24" fill="#222" fontSize="8" fontWeight="700">
+        M 8.1
+      </text>
+      <text x="158" y="32" fill="#777" fontSize="5">
+        strongest
+      </text>
+      <rect x="200" y="14" width="34" height="22" fill="#fff" stroke="#e0e0e0" />
+      <text x="204" y="24" fill="#222" fontSize="7" fontWeight="700">
+        623
+      </text>
+      <text x="204" y="32" fill="#777" fontSize="5">
+        km
+      </text>
+      <rect x="104" y="46" width="88" height="8" fill="#f0c4a0" />
+      <rect x="104" y="58" width="42" height="8" fill="#e89a6a" />
+      <rect x="104" y="70" width="18" height="8" fill="#e07060" />
+      <rect x="104" y="82" width="14" height="8" fill="#9b6bb0" />
+      <path
+        d="M198,78 C204,62 212,56 220,52 C228,48 234,54 232,64 C230,72 224,78 218,80"
+        fill="none"
+        stroke="#4a7fd4"
+        strokeWidth="1.6"
+      />
+    </svg>
+  )
+}
+
+function MiniEuropaLanguagesPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f6f0e4" />
+      <rect x="8" y="10" width="52" height="76" fill="#ebe3d2" stroke="#c8bba4" />
+      {[
+        [14, 18, "#c45a78"],
+        [14, 28, "#e8a0b4"],
+        [14, 38, "#8fd4bc"],
+        [14, 48, "#d8b86a"],
+        [14, 58, "#5a6fa8"],
+        [14, 68, "#2a2a2a"],
+      ].map(([x, y, fill], i) => (
+        <g key={i}>
+          <rect x={x} y={y} width="10" height="6" fill={fill} stroke="#2a2218" strokeWidth="0.4" />
+          <path
+            d={`M${x + 14},${y + 3}h28`}
+            stroke="#6a5a48"
+            strokeWidth="0.8"
+            strokeDasharray="2 1.5"
+          />
+        </g>
+      ))}
+      <path
+        d="M78,22 C90,14 120,12 145,20 C168,28 188,24 210,30 C220,34 226,48 218,62 C208,78 170,84 140,78 C110,72 88,70 78,58 C70,48 70,30 78,22Z"
+        fill="#d8b86a"
+        fillOpacity="0.85"
+        stroke="#2a2218"
+        strokeWidth="1"
+      />
+      <path
+        d="M120,28 C140,22 165,26 175,40 C182,52 170,66 148,68 C128,70 112,58 112,44 C112,34 114,30 120,28Z"
+        fill="#c45a78"
+        fillOpacity="0.9"
+        stroke="#2a2218"
+        strokeWidth="0.9"
+      />
+      <path
+        d="M175,30 C195,26 215,34 218,48 C220,58 205,68 188,66 C176,64 168,52 170,40 C171,34 173,31 175,30Z"
+        fill="#8fd4bc"
+        fillOpacity="0.9"
+        stroke="#2a2218"
+        strokeWidth="0.9"
+      />
+      <path
+        d="M95,48 C108,46 118,52 120,62 C122,72 108,78 96,74 C86,70 88,52 95,48Z"
+        fill="#e8d8a0"
+        stroke="#2a2218"
+        strokeWidth="0.8"
+      />
+      <text x="200" y="88" fill="#2a2218" fontSize="9" fontStyle="italic" fontFamily="Georgia, serif">
+        Europa
+      </text>
     </svg>
   )
 }

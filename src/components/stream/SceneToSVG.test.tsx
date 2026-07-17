@@ -58,6 +58,18 @@ describe("xySceneNodeToSVG — line", () => {
     const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('stroke-dasharray="5,3"')
   })
+
+  it("serializes a configured curve instead of flattening it to line segments", () => {
+    const node = {
+      type: "line",
+      path: [[0, 0], [50, 80], [100, 20]],
+      curve: "monotoneX",
+      style: {}
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    expect(html).toContain('d="M0,0C')
+    expect(html).not.toContain('d="M0,0L50,80L100,20"')
+  })
 })
 
 describe("xySceneNodeToSVG — point", () => {
@@ -502,6 +514,54 @@ describe("xySceneNodeToSVG — area", () => {
     }
     const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill-opacity="0.7"')
+  })
+
+  it("serializes configured curves on both edges of an area", () => {
+    const node = {
+      type: "area",
+      topPath: [[0, 10], [50, 5], [100, 15]],
+      bottomPath: [[0, 50], [50, 50], [100, 50]],
+      curve: "monotoneX",
+      style: {}
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    expect(html).toContain('d="M0,10C')
+    expect(html).toContain("Z")
+  })
+
+  it("emits a vertical SVG gradient for area fillGradient", () => {
+    const node = {
+      type: "area",
+      topPath: [[0, 10], [50, 5], [100, 15]],
+      bottomPath: [[0, 50], [50, 50], [100, 50]],
+      style: { fill: "#3366cc", fillOpacity: 0.2 },
+      fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    expect(html).toContain("<linearGradient")
+    expect(html).toContain('gradientUnits="userSpaceOnUse"')
+    expect(html).toContain('y1="5"')
+    expect(html).toContain('y2="50"')
+    expect(html).toContain('stop-color="#3366cc"')
+    expect(html).toContain('stop-opacity="0.8"')
+    expect(html).toContain('stop-opacity="0.05"')
+    expect(html).toContain('fill="url(#')
+    expect(html).not.toContain('fill-opacity="0.2"')
+  })
+
+  it("strokes only an area's top edge, not its closed fill outline", () => {
+    const node = {
+      type: "area",
+      topPath: [[0, 10], [50, 5], [100, 15]],
+      bottomPath: [[0, 50], [50, 50], [100, 50]],
+      style: { fill: "#007bff", stroke: "#007bff", strokeWidth: 2 },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    const closedFill = html.match(/<path[^>]*d="[^"]*Z"[^>]*>/)?.[0]
+
+    expect(closedFill).toContain('stroke="none"')
+    expect(html).toContain('d="M0,10L50,5L100,15"')
+    expect(html).toContain('stroke="#007bff"')
   })
 })
 

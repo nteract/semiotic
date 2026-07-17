@@ -132,6 +132,21 @@ describe("Component SSR — XY Charts", () => {
     expect(countOccurrences(html, "text")).toBeGreaterThan(0)
   })
 
+  it("renderChart('LineChart', …) uses LineChart's HOC default margin", () => {
+    const svg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 200,
+    })
+
+    // Primary-mode LineChart starts its plot at x=70/y=50. The former
+    // static-frame fallback (40/20) made the standalone SSR mark larger and
+    // shifted up/left relative to the equivalent CSR HOC.
+    expect(svg).toContain('transform="translate(70,50)"')
+  })
+
   it("AreaChart renders area path with fill", () => {
     const html = renderComponent(
       <AreaChart data={xyData} xAccessor="x" yAccessor="y" width={400} height={300} />
@@ -141,6 +156,64 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
     // Area paths have fill (not just stroke)
     expect(html).toMatch(/fill="[^n]/) // fill is not "none"
+  })
+
+  it("AreaChart SSR preserves gradientFill", () => {
+    const html = renderComponent(
+      <AreaChart
+        data={xyData}
+        xAccessor="x"
+        yAccessor="y"
+        gradientFill={{ topOpacity: 0.8, bottomOpacity: 0.05 }}
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).toContain("<linearGradient")
+    expect(html).toContain('fill="url(#')
+    expect(html).toContain('stop-opacity="0.8"')
+    expect(html).toContain('stop-opacity="0.05"')
+  })
+
+  it("renderChart('AreaChart', …) preserves gradientFill", () => {
+    const svg = renderChart("AreaChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      gradientFill: {
+        colorStops: [
+          { offset: 0, color: "#22c55e" },
+          { offset: 1, color: "#14532d" },
+        ],
+      },
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toContain('stop-color="#22c55e"')
+    expect(svg).toContain('stop-color="#14532d"')
+    expect(svg).toContain('fill="url(#')
+  })
+
+  it("renderChart('AreaChart', …) matches the HOC's base blue and top-only stroke", () => {
+    const svg = renderChart("AreaChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      gradientFill: true,
+      width: 400,
+      height: 300,
+    })
+    const closedArea = svg.match(/<path[^>]*d="[^"]*Z"[^>]*>/)?.[0]
+
+    // AreaChart's HOC defaults to DEFAULT_COLOR (#007bff), not the
+    // frame palette. The closed fill has no outline; its top edge is a
+    // separate path, exactly like the canvas renderer.
+    expect(svg).toContain('stop-color="#007bff"')
+    expect(closedArea).toContain('stroke="none"')
+    expect((svg.match(/stroke="#007bff"/g) || []).length).toBe(1)
   })
 
   it("DifferenceChart React SSR renders filled crossover segments, not just two lines", () => {
@@ -247,6 +320,45 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
   })
 
+  it.each([
+    ["LineChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
+    ["AreaChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
+    ["StackedAreaChart", {
+      data: xyData.flatMap(d => [
+        { ...d, group: "A" },
+        { x: d.x, y: d.y * 0.6, group: "B" },
+      ]),
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "group",
+    }],
+  ] as const)("renderChart('%s', …) preserves curve interpolation in SSR", (component, chartProps) => {
+    const linear = renderChart(component, { ...chartProps, curve: "linear", width: 400, height: 300 })
+    const smooth = renderChart(component, { ...chartProps, curve: "monotoneX", width: 400, height: 300 })
+
+    // The curve must reach the scene serializer: d3's monotone output emits
+    // cubic Bézier commands whereas the linear path contains only segments.
+    expect(smooth).not.toBe(linear)
+    expect(smooth).toMatch(/<path[^>]*d="M[^\"]*C/)
+  })
+
+  it("uses StackedAreaChart's monotoneX default when curve is omitted", () => {
+    const svg = renderChart("StackedAreaChart", {
+      data: [
+        { x: 0, y: 2, group: "A" }, { x: 1, y: 6, group: "A" }, { x: 2, y: 3, group: "A" },
+        { x: 0, y: 1, group: "B" }, { x: 1, y: 2, group: "B" }, { x: 2, y: 4, group: "B" },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "group",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toMatch(/<path[^>]*d="M[^\"]*C/)
+    expect(svg).toContain(">A<")
+    expect(svg).toContain(">B<")
+  })
+
   it("renderChart('StackedAreaChart', …) honors areaOpacity", () => {
     const svg = renderChart("StackedAreaChart", {
       data: [
@@ -315,6 +427,21 @@ describe("Component SSR — Ordinal Charts", () => {
     expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(3)
   })
 
+  it("renderChart('BarChart', …) keeps uncoloured bars monocolor", () => {
+    const svg = renderChart("BarChart", {
+      data: categoryData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      color: "#9E8FFF",
+      width: 400,
+      height: 300,
+    })
+
+    // Without colorBy, BarChart's HOC resolves one shared fill. The
+    // frame-level palette fallback used to color these by category on SSR.
+    expect((svg.match(/fill="#9E8FFF"/g) || [])).toHaveLength(3)
+  })
+
   it("StackedBarChart renders stacked rect elements", () => {
     const html = renderComponent(
       <StackedBarChart
@@ -363,6 +490,26 @@ describe("Component SSR — Ordinal Charts", () => {
     expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(3)
   })
 
+  it("renderChart('DonutChart', …) matches HOC margins and renders centerContent", () => {
+    const svg = renderChart("DonutChart", {
+      data: categoryData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      innerRadius: 80,
+      centerContent: <span>Total: 100</span>,
+      width: 600,
+      height: 400,
+    })
+
+    // HOC primary margins are 70/50/40/60, placing the radial center at
+    // (70 + 490 / 2, 50 + 290 / 2) rather than staticOrdinal's generic center.
+    expect(svg).toContain('transform="translate(315,195)"')
+    expect(svg).toContain("<foreignObject")
+    expect(svg).toContain("Total: 100")
+    // The explicit hole size is still reflected in the d3 arc command.
+    expect(svg).toContain("A80,80")
+  })
+
   it("BoxPlot renders boxplot elements (lines + rects)", () => {
     const html = renderComponent(
       <BoxPlot
@@ -378,6 +525,22 @@ describe("Component SSR — Ordinal Charts", () => {
     // Boxplots have whisker lines and box rects
     expect(countOccurrences(html, "line")).toBeGreaterThan(0)
     expect(countOccurrences(html, "rect")).toBeGreaterThan(0)
+  })
+
+  it("renderChart('BoxPlot', …) uses the HOC's default categorical blue", () => {
+    const svg = renderChart("BoxPlot", {
+      data: boxData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 300,
+    })
+
+    // LIGHT_THEME.categorical[0], which is what BoxPlot resolves through
+    // useOrdinalPieceStyle on the client.
+    expect(svg).toContain('fill="#1f77b4"')
+    expect(svg).toContain('stroke="#1f77b4"')
+    expect(svg).toContain('fill-opacity="0.8"')
   })
 
   it("DotPlot renders circle elements", () => {
@@ -660,6 +823,20 @@ describe("Component SSR — Network Charts", () => {
     expect(svg).toContain("<path")
     expect(svg).toContain("opacity=\"0.35\"")
     expect(svg).toContain("fill-opacity=\"0.86\"")
+  })
+
+  it("renderChart('ProcessSankey', …) preserves temporal axis chrome", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [{ id: "Queue" }, { id: "Done" }],
+      edges: [{ source: "Queue", target: "Done", value: 4, startTime: 1, endTime: 3 }],
+      domain: [0, 4],
+      axisTicks: [{ date: 1, label: "Start" }, { date: 3, label: "Finish" }],
+      width: 500,
+      height: 280,
+    })
+    expect(svg).toContain(">Start<")
+    expect(svg).toContain(">Finish<")
+    expect(svg).toContain('stroke="#94a3b8"')
   })
 
   it("TreeDiagram renders nodes and edges", () => {

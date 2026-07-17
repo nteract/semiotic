@@ -87,11 +87,8 @@ const ssrParityRegistryCharts = sortedSet(
   [...ssrParityCharts].filter((chart) => !SSR_PARITY_NON_REGISTRY_CHARTS.has(chart))
 )
 
-if (!/toHaveScreenshot\(`csr-\$\{c\.id\}\.png`/.test(ssrParitySource)) {
-  note(`${ssrParitySpecPath} no longer appears to snapshot CSR parity cases.`)
-}
-if (!/toHaveScreenshot\(`ssr-\$\{c\.id\}\.png`/.test(ssrParitySource)) {
-  note(`${ssrParitySpecPath} no longer appears to snapshot SSR parity cases.`)
+if (!/toHaveScreenshot\(`ssr-csr-\$\{c\.id\}\.png`/.test(ssrParitySource)) {
+  note(`${ssrParitySpecPath} no longer appears to snapshot side-by-side SSR/CSR parity sheets.`)
 }
 
 for (const chart of ssrParityCharts) {

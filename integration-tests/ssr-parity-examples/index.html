@@ -39,15 +39,43 @@
       font-weight: 500;
       color: #555;
     }
+    .ssr-csr-sheet {
+      width: max-content;
+      margin: 24px 0 40px;
+      padding: 20px;
+      background: #f8f8f8;
+      border: 1px solid #d4d4d4;
+    }
+    .ssr-csr-sheet > h1 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      color: #222;
+    }
+    .ssr-csr-columns {
+      display: grid;
+      grid-template-columns: max-content max-content;
+      gap: 28px;
+      align-items: start;
+    }
+    .ssr-csr-panel > h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #666;
+    }
+    .ssr-csr-panel .test-case {
+      margin: 0;
+      border: 1px solid #d4d4d4;
+      border-radius: 0;
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
   <h1 style="margin:0 0 16px;font-size:18px;">SSR / CSR parity fixtures</h1>
   <p style="margin:0 0 24px;color:#777;font-size:13px;">
-    Each test case below is the CSR-side rendering for the SSR/CSR parity matrix.
-    The matching SSR-side rendering is generated at test time via <code>renderChart</code>
-    from <code>semiotic/server</code> and snapshotted from a <code>page.setContent</code>
-    payload — no fixture file needed for the SSR side.
+    Each test case below supplies the live CSR half of an SSR/CSR comparison sheet.
+    Playwright generates the matching SSR half at test time via <code>renderChart</code>
+    from <code>semiotic/server</code>, then snapshots both paths side-by-side.
   </p>
   <div id="root" class="test-grid"></div>
   <script type="module" src="./index.js"></script>

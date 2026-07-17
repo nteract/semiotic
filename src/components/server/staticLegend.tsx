@@ -13,10 +13,12 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
 
-const SWATCH = 14
-const ROW_HEIGHT = 20
+// Keep static SVG legends on the same metric grid as the interactive
+// <Legend> component used by Stream frames.
+const SWATCH = 16
+const ROW_HEIGHT = 22
 const LABEL_GAP = 6
-const ITEM_GAP = 8
+const ITEM_GAP = 10
 
 interface LegendItemLayout {
   category: string
@@ -67,12 +69,16 @@ export interface StaticLegendConfig {
   hasTitle?: boolean
   /** SSR legend layout controls */
   legendLayout?: LegendLayout
+  /** Client <Legend> uses a stable 100px vertical placement box. */
+  reservedWidth?: number
   /** Optional id namespace used for generated SVG ids */
   idPrefix?: string
 }
 
 export interface StaticLegendGroupsConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
   legendGroups: LegendGroup[]
+  /** Client <Legend> uses a stable 100px vertical placement box. */
+  reservedWidth?: number
 }
 
 export interface StaticGradientLegendConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
@@ -126,7 +132,7 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
   const itemGap = Math.max(0, legendLayout?.itemGap ?? ITEM_GAP)
   const rowHeight = Math.max(swatchSize, legendLayout?.rowHeight ?? ROW_HEIGHT)
   const labelOffset = swatchSize + labelGap
-  const swatchRadius = Math.min(2, swatchSize / 2)
+  const swatchRadius = 0
   const isHorizontal = position === "top" || position === "bottom"
   const plotWidth = Math.max(swatchSize, totalWidth - margin.left - margin.right)
   const plotHeight = Math.max(rowHeight, totalHeight - margin.top - margin.bottom)
@@ -211,7 +217,7 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
   const itemGap = Math.max(0, legendLayout?.itemGap ?? ITEM_GAP)
   const rowHeight = Math.max(swatchSize, legendLayout?.rowHeight ?? ROW_HEIGHT)
   const labelOffset = swatchSize + labelGap
-  const swatchRadius = Math.min(2, swatchSize / 2)
+  const swatchRadius = 0
   const groupLabelSize = Math.max(12, legendFontSize(theme))
   const labelPadding = 8
   const separatorGap = 12
@@ -383,19 +389,19 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   const isHorizontal = position === "top" || position === "bottom"
   const metrics = computeStaticLegendLayout(config)
 
-  // Compute position — keep legend within SVG bounds
+  // Match `renderLegendFromConfig`: vertical legends use the component's
+  // stable 100px layout box and positions are derived directly from the
+  // resolved margin. In particular, do not clamp an explicit caller margin;
+  // the client allows that layout for externally managed legends as well.
   let tx: number, ty: number
   if (position === "left") {
-    tx = Math.max(4, margin.left - metrics.width - 10); ty = margin.top
+    tx = Math.max(4, margin.left - (config.reservedWidth ?? 100) - 10); ty = margin.top
   } else if (position === "top") {
     tx = margin.left; ty = hasTitle ? 32 : 8
   } else if (position === "bottom") {
-    // Place below the axes in the reserved bottom margin area.
-    // Axes use ~35px; legend goes after that. Clamp to stay within SVG bounds.
-    tx = margin.left; ty = Math.min(totalHeight - margin.bottom + 38, totalHeight - metrics.height - 2)
+    tx = margin.left; ty = totalHeight - margin.bottom + 38
   } else {
-    // right (default)
-    tx = Math.min(totalWidth - metrics.width - 4, totalWidth - margin.right + 10); ty = margin.top
+    tx = totalWidth - margin.right + 10; ty = margin.top
   }
 
   if (isHorizontal) {
@@ -445,13 +451,13 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = Math.max(4, config.margin.left - metrics.width - 10); ty = config.margin.top
+    tx = Math.max(4, config.margin.left - (config.reservedWidth ?? 100) - 10); ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.hasTitle ? 32 : 8
   } else if (config.position === "bottom") {
-    tx = config.margin.left; ty = Math.min(config.totalHeight - config.margin.bottom + 38, config.totalHeight - metrics.height - 2)
+    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + 38
   } else {
-    tx = Math.min(config.totalWidth - metrics.width - 4, config.totalWidth - config.margin.right + 10); ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + 10; ty = config.margin.top
   }
 
   const items = metrics.groups.flatMap((groupLayout, groupIndex) => {
@@ -554,13 +560,13 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = Math.max(4, config.margin.left - metrics.width - 10); ty = config.margin.top
+    tx = Math.max(4, config.margin.left - 100 - 10); ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.hasTitle ? 32 : 8
   } else if (config.position === "bottom") {
-    tx = config.margin.left; ty = Math.min(config.totalHeight - config.margin.bottom + 38, config.totalHeight - metrics.height - 2)
+    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + 38
   } else {
-    tx = Math.min(config.totalWidth - metrics.width - 4, config.totalWidth - config.margin.right + 10); ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + 10; ty = config.margin.top
   }
 
   const stops = Array.from({ length: 17 }, (_, i) => {

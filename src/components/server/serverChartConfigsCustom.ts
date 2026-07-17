@@ -15,6 +15,10 @@ export const xyCustomChart: ChartConfig = {
     layoutConfig: rest.layoutConfig,
     ...common,
     showAxes: common.showAxes ?? false,
+    // useCustomChartSetup delegates the default legend decision to
+    // useChartSetup; categorical custom layouts therefore gain a legend when
+    // colorBy is supplied unless callers explicitly disable it.
+    showLegend: common.showLegend ?? Boolean(colorBy),
   }),
 }
 
@@ -70,4 +74,3 @@ export const geoCustomChart: ChartConfig = {
     ...common,
   }),
 }
-

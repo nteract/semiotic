@@ -631,7 +631,18 @@ function makeSsrParityCases(React) {
     {
       id: "area",
       component: "AreaChart",
-      props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 220 },
+      // A single high-signal fixture covers both scene-to-SVG curve
+      // serialization and area-gradient defs. Each once silently degraded to
+      // straight/flat SSR marks while the canvas CSR path was correct.
+      props: {
+        data: xyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        curve: "monotoneX",
+        gradientFill: true,
+        width: 400,
+        height: 220,
+      },
     },
     {
       id: "stacked-area",
@@ -746,7 +757,18 @@ function makeSsrParityCases(React) {
     {
       id: "donut",
       component: "DonutChart",
-      props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 320, height: 320 },
+      // Explicitly exercise the inner-radius and center-content slots — both
+      // are visual SSR/CSR fidelity contracts, not just valid markup.
+      props: {
+        data: categoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        innerRadius: 80,
+        centerContent: React.createElement("strong", null, "126 total"),
+        showLegend: false,
+        width: 320,
+        height: 320,
+      },
     },
     {
       id: "funnel",
@@ -765,6 +787,35 @@ function makeSsrParityCases(React) {
           { value: 80, color: "#f59e0b" },
           { value: 100, color: "#16a34a" },
         ],
+        // A half gauge exposes full-circle centering errors and makes the
+        // default value readout easy to review beside its CSR counterpart.
+        sweep: 180,
+        width: 320,
+        height: 260,
+      },
+    },
+    {
+      // The gradient band is intentionally a separate parity sheet: it
+      // follows a different scene/rendering path from threshold zones, and
+      // must preserve its arc-length color stops in both SSR and CSR.
+      id: "gauge-gradient",
+      component: "GaugeChart",
+      props: {
+        value: 70,
+        min: 0,
+        max: 100,
+        sweep: 180,
+        fillZones: true,
+        showNeedle: false,
+        backgroundColor: "#d1d5db",
+        cornerRadius: 14,
+        gradientFill: {
+          colorStops: [
+            { offset: 0, color: "#ef4444" },
+            { offset: 0.5, color: "#f59e0b" },
+            { offset: 1, color: "#3b82f6" },
+          ],
+        },
         width: 320,
         height: 260,
       },

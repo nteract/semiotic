@@ -155,4 +155,20 @@ describe("GeoSVGOverlay parity", () => {
     fireEvent.mouseLeave(alpha!)
     expect(legendHoverBehavior).toHaveBeenLastCalledWith(null)
   })
+
+  it("projects geographic-coordinate annotations before applying callout rules", () => {
+    const { container } = render(
+      <GeoSVGOverlay
+        width={220}
+        height={120}
+        totalWidth={276}
+        totalHeight={160}
+        margin={margin}
+        annotations={[{ type: "callout", coordinates: [20, 55], label: "Projected" }]}
+        geoProjection={(lon, lat) => [lon * 2, lat]}
+      />
+    )
+
+    expect(container.textContent).toContain("Projected")
+  })
 })

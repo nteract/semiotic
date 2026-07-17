@@ -842,6 +842,28 @@ const EXAMPLE_REGISTRY_METADATA = [
     frames: ["geo", "custom"],
     topics: ["history", "geography", "accessibility"],
   },
+  {
+    title: "Earthquakes",
+    path: "/examples/earthquakes",
+    eyebrow: "Spin the globe to filter · M6+ 2021–2025",
+    description:
+      "An orthographic ProportionalSymbolMap drives a small dashboard: drag-rotate the globe and the KPI tiles, magnitude bars, regional ranks, and quarterly line recount only the events facing you.",
+    preview: "earthquakes",
+    badges: ["ProportionalSymbolMap", "dragRotate", "Linked summary"],
+    frames: ["geo", "xy"],
+    topics: ["geography", "climate", "design"],
+  },
+  {
+    title: "Europa nach den lebenden Sprachen",
+    path: "/examples/europa-languages",
+    eyebrow: "Rough hachure · Ausfeld 1840",
+    description:
+      "A hand-tinted remake of Karl von Ausfeld's living-languages plate of Europe. Exact Natural Earth geoareas keep hit testing and accessibility; createRoughRenderMode paints only the ink.",
+    preview: "europa-languages",
+    badges: ["semiotic/rough", "StreamGeoFrame", "Historical plate"],
+    frames: ["geo"],
+    topics: ["geography", "history", "culture", "design"],
+  },
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
@@ -877,6 +899,8 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/what-the-machine-sees": "WhatTheMachineSeesExamplePage.jsx",
   "/examples/wikipedia-realtime": "WikipediaRealtimeExamplePage.jsx",
   "/examples/world-of-funnels": "WorldOfFunnelsExamplePage.jsx",
+  "/examples/earthquakes": "EarthquakesExamplePage.jsx",
+  "/examples/europa-languages": "EuropaLanguagesExamplePage.jsx",
 })
 
 const PILOT_EXAMPLE_DEFINITIONS_BY_PATH = new Map(

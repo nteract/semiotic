@@ -247,6 +247,10 @@ const MobileDataVisualizationExamplePage = lazy(
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
+const EarthquakesExamplePage = lazy(() => import("./pages/examples/EarthquakesExamplePage"))
+const EuropaLanguagesExamplePage = lazy(
+  () => import("./pages/examples/EuropaLanguagesExamplePage"),
+)
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
@@ -283,6 +287,8 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
   "NetworkVizExamplePage.jsx": NetworkVizExamplePage,
   "OregonTrailExamplePage.jsx": OregonTrailExamplePage,
+  "EarthquakesExamplePage.jsx": EarthquakesExamplePage,
+  "EuropaLanguagesExamplePage.jsx": EuropaLanguagesExamplePage,
 })
 
 // ExampleDefinition owns route paths and source-file identity. The lazy

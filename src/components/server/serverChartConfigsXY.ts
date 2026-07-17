@@ -1,6 +1,9 @@
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
-import { createColorScale, getColor } from "../charts/shared/colorUtils"
+import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
+import { DEFAULT_COLOR } from "../charts/shared/hooks"
+import { getMinMax } from "../charts/shared/minMax"
+import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, styleRulesToXYStyle, type StyleRule } from "../charts/shared/styleRules"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
   type ChartConfig,
@@ -9,9 +12,152 @@ import {
   prepareConnectedScatterplotData,
   viridisColor,
 } from "./serverChartConfigShared"
-import { styleRulesToXYStyle } from "../charts/shared/styleRules"
+import { resolveTheme } from "./themeResolver"
 
 // ── XY Charts ──────────────────────────────────────────────────────────
+
+/** Mirror AreaChart's HOC-level fill/top-line style on the server path. */
+function buildAreaLineStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+): (d: Datum, group?: string) => Datum {
+  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
+  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
+  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrAreaColorBy"
+  const colorRows = typeof colorBy === "function"
+    ? rows.map(d => ({ ...d, __ssrAreaColorBy: colorBy(d) }))
+    : rows
+  const colorScale = colorBy
+    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
+    : undefined
+  const showLine = rest.showLine !== false
+  const lineWidth = typeof rest.lineWidth === "number" ? rest.lineWidth : 2
+  const areaOpacity = typeof rest.areaOpacity === "number" ? rest.areaOpacity : 0.7
+  const resolveValue = makeRuleValueResolver(rest.yAccessor as string | ((d: Datum) => unknown) | undefined)
+  const rules = rest.styleRules as StyleRule[] | undefined
+
+  return (d, group) => {
+    const color = colorBy && colorScale
+      ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
+      : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR
+    const style: Datum = {
+      fill: color,
+      fillOpacity: areaOpacity,
+      stroke: showLine ? color : "none",
+      ...(showLine && { strokeWidth: lineWidth }),
+    }
+    if (rules?.length) {
+      Object.assign(style, resolveStyleRules(d, rules, { value: resolveValue(d), category: group }))
+    }
+    if (rest.stroke !== undefined) style.stroke = rest.stroke
+    if (rest.strokeWidth !== undefined) style.strokeWidth = rest.strokeWidth
+    if (rest.opacity !== undefined) style.opacity = rest.opacity
+    return style
+  }
+}
+
+function buildBubblePointStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+): (d: Datum) => Datum {
+  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
+  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
+  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrBubbleColorBy"
+  const colorRows = typeof colorBy === "function"
+    ? rows.map(d => ({ ...d, __ssrBubbleColorBy: colorBy(d) }))
+    : rows
+  const colorScale = colorBy
+    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
+    : undefined
+  const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
+  const sizeRange = Array.isArray(rest.sizeRange) ? rest.sizeRange as [number, number] : [5, 40] as [number, number]
+  const sizeValues = sizeBy
+    ? rows.map(d => typeof sizeBy === "function" ? sizeBy(d) : Number(d[sizeBy])).filter(Number.isFinite)
+    : []
+  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
+
+  return (d) => ({
+    fill: colorBy && colorScale
+      ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
+      : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR,
+    fillOpacity: typeof rest.bubbleOpacity === "number" ? rest.bubbleOpacity : 0.6,
+    r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : sizeRange[0],
+    stroke: rest.stroke ?? rest.bubbleStrokeColor ?? "white",
+    strokeWidth: rest.strokeWidth ?? rest.bubbleStrokeWidth ?? 1,
+    ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+  })
+}
+
+/** Resolve Scatterplot/QuadrantChart's HOC-level point encoding for SSR. */
+function buildScatterPointStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+): (d: Datum) => Datum {
+  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
+  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
+  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrScatterColorBy"
+  const colorRows = typeof colorBy === "function"
+    ? rows.map(d => ({ ...d, __ssrScatterColorBy: colorBy(d) }))
+    : rows
+  const colorScale = colorBy
+    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
+    : undefined
+  const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
+  const sizeRange = Array.isArray(rest.sizeRange) ? rest.sizeRange as [number, number] : [3, 15] as [number, number]
+  const sizeValues = sizeBy
+    ? rows.map(d => typeof sizeBy === "function" ? sizeBy(d) : Number(d[sizeBy])).filter(Number.isFinite)
+    : []
+  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
+  const ruleContext = makeXYRuleContext(
+    rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
+    rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
+  )
+  const rules = rest.styleRules as StyleRule[] | undefined
+
+  return (d) => {
+    const style: Datum = {
+      fill: colorBy && colorScale
+        ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
+        : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR,
+      fillOpacity: typeof rest.pointOpacity === "number" ? rest.pointOpacity : 0.8,
+      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : (typeof rest.pointRadius === "number" ? rest.pointRadius : 5),
+    }
+    if (rules?.length) Object.assign(style, resolveStyleRules(d, rules, ruleContext(d)))
+    if (rest.stroke !== undefined) style.stroke = rest.stroke
+    if (rest.strokeWidth !== undefined) style.strokeWidth = rest.strokeWidth
+    if (rest.opacity !== undefined) style.opacity = rest.opacity
+    return style
+  }
+}
+
+export const bubbleChart: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    chartType: "scatter",
+    data,
+    xAccessor: rest.xAccessor || "x",
+    yAccessor: rest.yAccessor || "y",
+    colorAccessor: colorBy,
+    sizeAccessor: rest.sizeBy,
+    sizeRange: rest.sizeRange || [5, 40],
+    colorScheme,
+    ...common,
+    pointStyle: common.pointStyle || buildBubblePointStyle(data, colorBy, colorScheme, common, rest),
+    showLegend: common.showLegend ?? Boolean(colorBy),
+  }),
+}
 
 export const sparkline: ChartConfig = {
   frameType: "xy",
@@ -44,6 +190,9 @@ export const lineChart: ChartConfig = {
     colorScheme,
     lineStyle: rest.lineStyle,
     ...common,
+    // LineChart delegates its default legend decision to useChartSetup:
+    // a grouping/color accessor gets a legend unless the caller disables it.
+    showLegend: common.showLegend ?? Boolean(colorBy),
     ...(rest.styleRules && {
       lineStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.lineStyle || rest.lineStyle),
     }),
@@ -52,20 +201,23 @@ export const lineChart: ChartConfig = {
 
 export const areaChart: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "area",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    y0Accessor: rest.y0Accessor,
-    groupAccessor: rest.areaBy || colorBy,
-    colorAccessor: colorBy,
-    colorScheme,
-    ...common,
-    ...(rest.styleRules && {
-      lineStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.lineStyle),
-    }),
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const effectiveColorBy = colorBy || rest.areaBy
+    return {
+      chartType: "area",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      y0Accessor: rest.y0Accessor,
+      groupAccessor: rest.areaBy || undefined,
+      colorAccessor: effectiveColorBy,
+      colorScheme,
+      ...common,
+      // `frameProps.lineStyle` is the public escape hatch and wins exactly
+      // as it does in AreaChart; otherwise resolve the HOC defaults here.
+      lineStyle: common.lineStyle || buildAreaLineStyle(data, effectiveColorBy, colorScheme, common, rest),
+    }
+  },
 }
 
 export const differenceChart: ChartConfig = {
@@ -85,6 +237,10 @@ export const differenceChart: ChartConfig = {
     const areaOpacity = rest.areaOpacity ?? 0.6
     const lineWidth = rest.lineWidth ?? 1.5
     const showLines = rest.showLines !== false
+    const showLegend = common.showLegend !== false
+    const seriesALabel = rest.seriesALabel || "A"
+    const seriesBLabel = rest.seriesBLabel || "B"
+    const legendPosition = common.legendPosition || "right"
 
     const segmented = computeDifferenceSegments(Array.isArray(data) ? data : [], getX, getA, getB)
     const overlay: Datum[] = []
@@ -133,6 +289,20 @@ export const differenceChart: ChartConfig = {
       },
       curve: rest.curve || "linear",
       ...common,
+      ...(showLegend && {
+        legend: {
+          legendGroups: [{
+            label: "",
+            type: "fill" as const,
+            styleFn: (item: { color?: string }) => ({ fill: item.color || "currentColor" }),
+            items: [
+              { label: seriesALabel, color: seriesAColor },
+              { label: seriesBLabel, color: seriesBColor },
+            ],
+          }],
+        },
+        legendPosition,
+      }),
     }
   },
 }
@@ -175,33 +345,54 @@ export const stackedAreaChart: ChartConfig = {
       stackOrder: rest.stackOrder,
       lineStyle,
       ...common,
+      // StackedAreaChart's visual default is smooth; the static scene
+      // serializer otherwise falls through to its linear path generator.
+      curve: common.curve ?? rest.curve ?? "monotoneX",
+      showLegend: common.showLegend ?? Boolean(colorAccessor),
     }
   },
 }
 
 export const candlestickChart: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, _colorBy, _colorScheme, common, rest) => ({
-    chartType: "candlestick",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    // yAccessor drives the scale extent; the scene builder reads high/low/
-    // open/close directly. High is the natural upper bound for the axis.
-    yAccessor: rest.highAccessor || "high",
-    highAccessor: rest.highAccessor || "high",
-    lowAccessor: rest.lowAccessor || "low",
-    // Open/close are optional — PipelineStore detects range mode when both
-    // are absent, so don't synthesize defaults here.
-    openAccessor: rest.openAccessor,
-    closeAccessor: rest.closeAccessor,
-    candlestickStyle: rest.candlestickStyle,
-    ...common,
-  }),
+  buildProps: (data, _colorBy, _colorScheme, common, rest) => {
+    const [width] = (common.size as [number, number]) ?? [600, 400]
+    return {
+      chartType: "candlestick",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      // yAccessor drives the scale extent; the scene builder reads high/low/
+      // open/close directly. High is the natural upper bound for the axis.
+      yAccessor: rest.highAccessor || "high",
+      highAccessor: rest.highAccessor || "high",
+      lowAccessor: rest.lowAccessor || "low",
+      // Open/close are optional — PipelineStore detects range mode when both
+      // are absent, so don't synthesize defaults here.
+      openAccessor: rest.openAccessor,
+      closeAccessor: rest.closeAccessor,
+      candlestickStyle: rest.candlestickStyle,
+      ...common,
+      // CandlestickChart deliberately insets the x scale so bodies don't
+      // touch the chart edges. This HOC-level calculation was absent from
+      // renderChart(), making SSR candles visibly wider/outset than CSR.
+      scalePadding: common.scalePadding ?? Math.max(2, Math.min(12, Math.round(width / 40))),
+      extentPadding: common.extentPadding ?? (width <= 200 ? 0.02 : 0.1),
+    }
+  },
 }
 
 export const scatterplot: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const basePointStyle = common.pointStyle || buildScatterPointStyle(data, colorBy, colorScheme, common, rest)
+    const ruleStyle = styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y")
+    const pointStyle = ruleStyle
+      ? (d: Datum) => ({
+          ...(typeof basePointStyle === "function" ? basePointStyle(d) : basePointStyle),
+          ...ruleStyle(d),
+        })
+      : basePointStyle
+    return {
     chartType: "scatter",
     data,
     xAccessor: rest.xAccessor || "x",
@@ -215,10 +406,11 @@ export const scatterplot: ChartConfig = {
     ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
     colorScheme,
     ...common,
-    ...(rest.styleRules && {
-      pointStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.pointStyle),
-    }),
-  }),
+    sizeRange: rest.sizeRange || [3, 15],
+    pointStyle,
+    showLegend: common.showLegend ?? Boolean(colorBy),
+    }
+  },
 }
 
 export const quadrantChart: ChartConfig = {
@@ -285,10 +477,11 @@ export const quadrantChart: ChartConfig = {
       yAccessor: rest.yAccessor || "y",
       colorAccessor: colorBy,
       sizeAccessor: rest.sizeBy,
-      sizeRange: rest.sizeRange,
+      sizeRange: rest.sizeRange || [3, 15],
       colorScheme,
-      pointStyle: rest.pointStyle,
+      pointStyle: common.pointStyle || rest.pointStyle || buildScatterPointStyle(data, colorBy, colorScheme, common, rest),
       ...common,
+      showLegend: common.showLegend ?? Boolean(colorBy),
       ...(svgPreRenderers && { svgPreRenderers }),
     }
   },
@@ -299,18 +492,41 @@ export const connectedScatterplot: ChartConfig = {
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const prepared = prepareConnectedScatterplotData(data, rest)
     const pointRadius = rest.pointRadius ?? 4
+    const svgPreRenderers = [
+      (nodes: Array<{ type?: string; x?: number; y?: number }>) => {
+        const points = nodes.filter((n): n is { type: "point"; x: number; y: number } =>
+          n.type === "point" && typeof n.x === "number" && typeof n.y === "number",
+        )
+        if (points.length < 2) return null
+        const elements: React.ReactElement[] = []
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i]
+          const p1 = points[i + 1]
+          const color = viridisColor(i, points.length)
+          // Match ConnectedScatterplot's small-data halo + viridis segment.
+          if (points.length < 100) {
+            elements.push(React.createElement("line", {
+              key: `halo-${i}`, x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y,
+              stroke: "white", strokeWidth: pointRadius + 2, strokeLinecap: "round", opacity: 0.5,
+            }))
+          }
+          elements.push(React.createElement("line", {
+            key: `segment-${i}`, x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y,
+            stroke: color, strokeWidth: pointRadius, strokeLinecap: "round",
+          }))
+        }
+        return React.createElement(React.Fragment, null, ...elements)
+      },
+    ]
     return {
-      chartType: "line",
+      // ConnectedScatterplot is a scatter scene plus viridis-colored line
+      // segments, not a uniform-stroke LineChart.
+      chartType: "scatter",
       data: prepared.data,
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
       colorAccessor: colorBy,
       colorScheme,
-      lineStyle: rest.lineStyle || {
-        stroke: rest.stroke || "#6366f1",
-        strokeWidth: rest.strokeWidth ?? pointRadius,
-        opacity: rest.opacity,
-      },
       pointStyle: (d: Datum) => {
         const order = prepared.orderMap.get(d)
         const i = order?.idx ?? 0
@@ -324,6 +540,7 @@ export const connectedScatterplot: ChartConfig = {
         }
       },
       ...common,
+      svgPreRenderers,
     }
   },
 }
@@ -338,6 +555,7 @@ export const heatmap: ChartConfig = {
     valueAccessor: rest.valueAccessor,
     colorScheme: colorScheme || rest.colorScheme || "blues",
     showValues: rest.showValues,
+    heatmapValueFormat: rest.valueFormat,
     cellBorderColor: rest.cellBorderColor,
     ...common,
   }),

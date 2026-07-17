@@ -6,7 +6,8 @@
  */
 
 import * as React from "react"
-import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
+import { arc as d3Arc, area as d3Area, line as d3Line, type DefaultArcObject } from "d3-shape"
+import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 
 /**
  * Sentinel arg for d3-shape arc generators that have all four
@@ -296,6 +297,44 @@ function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement 
   )
 }
 
+/**
+ * Build an area fill gradient using the same top-to-bottom geometry and
+ * opacity semantics as `areaCanvasRenderer`. Area gradients span the visible
+ * extrema rather than each datum's local segment, so the fill reads as one
+ * continuous field in both SVG/SSR and canvas.
+ */
+function buildAreaSVGGradient(n: AreaSceneNode, id: string): React.ReactElement | null {
+  const fg = n.fillGradient
+  if (!fg || typeof fg !== "object") return null
+
+  let topY = Infinity
+  for (const [, y] of n.topPath) topY = Math.min(topY, y)
+  let bottomY = -Infinity
+  for (const [, y] of n.bottomPath) bottomY = Math.max(bottomY, y)
+  if (!Number.isFinite(topY) || !Number.isFinite(bottomY)) return null
+
+  const stops: React.ReactElement[] = []
+  if ("colorStops" in fg) {
+    const validStops = fg.colorStops
+      .filter(s => Number.isFinite(s.offset))
+      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
+    if (validStops.length < 2) return null
+    for (let i = 0; i < validStops.length; i++) {
+      stops.push(<stop key={i} offset={validStops[i].offset} stopColor={validStops[i].color} />)
+    }
+  } else {
+    if (!Number.isFinite(fg.topOpacity) || !Number.isFinite(fg.bottomOpacity)) return null
+    stops.push(<stop key="0" offset={0} stopColor={svgFill(n.style.fill)} stopOpacity={Math.max(0, Math.min(1, fg.topOpacity))} />)
+    stops.push(<stop key="1" offset={1} stopColor={svgFill(n.style.fill)} stopOpacity={Math.max(0, Math.min(1, fg.bottomOpacity))} />)
+  }
+
+  return (
+    <linearGradient id={id} gradientUnits="userSpaceOnUse" x1={0} y1={topY} x2={0} y2={bottomY}>
+      {stops}
+    </linearGradient>
+  )
+}
+
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
 
 export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string): React.ReactNode {
@@ -303,7 +342,16 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     case "line": {
       const n = node as LineSceneNode
       if (n.path.length === 0) return null
-      const d = "M" + n.path.map(([x, y]) => `${x},${y}`).join("L")
+      // The SVG serializer is also the SSR renderer. Use the same d3 curve
+      // factory as canvas instead of flattening every scene path to `L`
+      // commands, otherwise a curved client line becomes a straight SSR line.
+      const curveFactory = resolveCurveFactory(n.curve)
+      const d = curveFactory
+        ? d3Line<[number, number]>()
+            .x(([x]) => x)
+            .y(([, y]) => y)
+            .curve(curveFactory)(n.path) ?? ""
+        : "M" + n.path.map(([x, y]) => `${x},${y}`).join("L")
       return (
         <path
           key={`line-${i}`}
@@ -319,13 +367,52 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     case "area": {
       const n = node as AreaSceneNode
       if (n.topPath.length === 0) return null
-      const top = n.topPath.map(([x, y]) => `${x},${y}`).join("L")
-      const bottom = [...n.bottomPath].reverse().map(([x, y]) => `${x},${y}`).join("L")
-      const d = `M${top}L${bottom}Z`
+      // Match `traceAreaPath` in the canvas renderer: d3 interpolates both
+      // the top and baseline edges, then closes the filled region.
+      const curveFactory = resolveCurveFactory(n.curve)
+      const d = curveFactory && n.topPath.length >= 2 && n.bottomPath.length >= 2
+        ? d3Area<[number, number]>()
+            .x(([x]) => x)
+            .y0((_point, index) => n.bottomPath[index][1])
+            .y1(([, y]) => y)
+            .curve(curveFactory)(n.topPath) ?? ""
+        : (() => {
+            const top = n.topPath.map(([x, y]) => `${x},${y}`).join("L")
+            const bottom = [...n.bottomPath].reverse().map(([x, y]) => `${x},${y}`).join("L")
+            return `M${top}L${bottom}Z`
+          })()
       // HatchFill → inline <pattern>, referenced instead of the flat fill.
       const areaHatchId = `${idPrefix ? `${idPrefix}-` : ""}area-${i}-hatch`
       const areaHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, areaHatchId) : undefined
-      const areaFill = areaHatch ? `url(#${areaHatchId})` : svgFill(n.style.fill)
+      const areaGradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}area-${i}-gradient`)
+      const areaGradient = buildAreaSVGGradient(n, areaGradientId)
+      const areaFill = areaGradient
+        ? `url(#${areaGradientId})`
+        : areaHatch ? `url(#${areaHatchId})` : svgFill(n.style.fill)
+      // Canvas applies `style.opacity` to a gradient as a whole, while the
+      // gradient's stops control its internal alpha. Do not additionally
+      // apply the flat-area `fillOpacity`, which would dim stop opacities.
+      const areaFillOpacity = areaGradient
+        ? undefined
+        : n.style.fillOpacity ?? n.style.opacity ?? 0.7
+      // Canvas fills the closed area, then strokes only its top edge. SVG's
+      // `stroke` on the closed fill path outlines the baseline and vertical
+      // ends too, producing the conspicuous SSR-only border.
+      const topStrokePath = curveFactory
+        ? d3Line<[number, number]>()
+            .x(([x]) => x)
+            .y(([, y]) => y)
+            .curve(curveFactory)(n.topPath) ?? ""
+        : "M" + n.topPath.map(([x, y]) => `${x},${y}`).join("L")
+      const topStroke = n.style.stroke && n.style.stroke !== "none" ? (
+        <path
+          d={topStrokePath}
+          fill="none"
+          stroke={svgFill(n.style.stroke)}
+          strokeWidth={n.style.strokeWidth || 2}
+          opacity={n.style.opacity}
+        />
+      ) : null
       // User-supplied clipRect — hard-clips the area to a rect (used by
       // custom layouts for partial reveals, banding, highlight regions).
       // Inline the clipPath alongside the path so the SSR output is a
@@ -337,7 +424,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         return (
           <g key={`area-${i}`}>
             <defs>
-              {areaHatch}
+              {areaGradient}{!areaGradient && areaHatch}
               <clipPath id={cid}>
                 <rect
                   x={n.clipRect.x}
@@ -350,24 +437,26 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             <path
               d={d}
               fill={areaFill}
-              fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
-              stroke={n.style.stroke}
-              strokeWidth={n.style.strokeWidth}
+              fillOpacity={areaFillOpacity}
+              opacity={areaGradient ? n.style.opacity : undefined}
+              stroke="none"
               clipPath={`url(#${cid})`}
             />
+            {topStroke}
           </g>
         )
       }
       return (
         <React.Fragment key={`area-${i}`}>
-          {areaHatch && <defs>{areaHatch}</defs>}
+          {(areaGradient || areaHatch) && <defs>{areaGradient}{!areaGradient && areaHatch}</defs>}
           <path
             d={d}
             fill={areaFill}
-            fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
+            fillOpacity={areaFillOpacity}
+            opacity={areaGradient ? n.style.opacity : undefined}
+            stroke="none"
           />
+          {topStroke}
         </React.Fragment>
       )
     }
@@ -656,6 +745,61 @@ export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNo
 
 // ── Ordinal Scene Nodes ──────────────────────────────────────────────────
 
+function formatFunnelNumber(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 10_000) return `${(value / 1_000).toFixed(0)}K`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+  return String(value)
+}
+
+/**
+ * Funnel builders store their canvas-label geometry on the rect datum. Keep
+ * those labels in the scene-to-SVG backend as well so server SVG is not a
+ * marks-only variant of the canvas chart.
+ */
+function funnelRectLabels(node: RectSceneNode, key: string): React.ReactNode {
+  const datum = node.datum as Record<string, unknown> | undefined
+  if (!datum) return null
+  const labels: React.ReactNode[] = []
+  const step = datum.__funnelStepLabel
+  const stepX = Number(datum.__funnelStepLabelX)
+  const stepY = Number(datum.__funnelStepLabelY)
+  const rowWidth = Number(datum.__funnelRowWidth)
+  if (typeof step === "string" && Number.isFinite(stepX) && Number.isFinite(stepY) &&
+      (!Number.isFinite(rowWidth) || step.length * 8.4 + 16 <= rowWidth)) {
+    labels.push(
+      <text key={`${key}-funnel-step`} x={stepX} y={stepY + 3} textAnchor="middle"
+        dominantBaseline="hanging" fontSize={14} fontWeight="bold" fill="#fff"
+        stroke="rgba(0,0,0,0.6)" strokeWidth={3} paintOrder="stroke">
+        {step}
+      </text>,
+    )
+  }
+
+  const value = Number(datum.__funnelValue)
+  const valueX = Number(datum.__funnelValueLabelX)
+  const valueY = Number(datum.__funnelValueLabelY)
+  const barWidth = Number(datum.__funnelBarW)
+  if (Number.isFinite(value) && value !== 0 && Number.isFinite(valueX) && Number.isFinite(valueY) && barWidth >= 60) {
+    const percent = Number(datum.__funnelPercent)
+    const isFirst = datum.__funnelIsFirstStep === true
+    let text = !isFirst && Number.isFinite(percent)
+      ? `${formatFunnelNumber(value)} (${Math.abs(percent - Math.round(percent)) < 0.05 ? Math.round(percent) : percent.toFixed(1)}%)`
+      : formatFunnelNumber(value)
+    if (text.length * 7.8 + 16 > barWidth) text = formatFunnelNumber(value)
+    if (text.length * 7.8 + 16 <= barWidth) {
+      labels.push(
+        <text key={`${key}-funnel-value`} x={valueX} y={valueY + 22} textAnchor="middle"
+          dominantBaseline="hanging" fontSize={13} fontWeight="bold" fill="#fff"
+          stroke="rgba(0,0,0,0.5)" strokeWidth={3} paintOrder="stroke">
+          {text}
+        </text>,
+      )
+    }
+  }
+  return labels.length ? <g key={`${key}-funnel-labels`}>{labels}</g> : null
+}
+
 export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefix?: string): React.ReactNode {
   // Build a unique key combining node type, category (or group), and index
   // to avoid duplicate key warnings when multiple nodes share the same index
@@ -749,6 +893,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
           />
+          {funnelRectLabels(n, baseKey)}
         </React.Fragment>
       )
     }
@@ -920,7 +1065,11 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
         const b = n.bounds
         const midX = b.x + b.width / 2
         const midY = b.y + b.height / 2
-        const isVertical = b.height > b.width
+        // The scene builder already records the projection used to generate
+        // both the violin path and its IQR. Aspect-ratio inference breaks for
+        // short/wide vertical violins, causing the SVG IQR to rotate while
+        // the body remains vertical; canvas correctly reads this field.
+        const isVertical = n.iqrLine.isVertical
         if (isVertical) {
           elements.push(
             <line key={nodeKey("iqr")}

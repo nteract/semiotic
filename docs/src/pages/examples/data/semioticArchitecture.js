@@ -1223,6 +1223,38 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "earthquakes",
+    shortLabel: "Earthquakes",
+    note: "An orthographic ProportionalSymbolMap with dragRotate filters a deterministic M6+ catalog; facing events drive KPI tiles, ranked magnitude/region bars, and a quarterly LineChart.",
+    uses: [
+      "input-static",
+      "hoc-geo-reference",
+      "hoc-xy-lines",
+      "feature-accessors",
+      "feature-tooltips",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "europa-languages",
+    shortLabel: "Europa languages",
+    note: "A StreamGeoFrame Europe plate inspired by Ausfeld 1840; createRoughRenderMode hachures language-family fills while exact geoarea geometry keeps hover, keyboard nav, and tooltips.",
+    uses: [
+      "input-static",
+      "hoc-geo-reference",
+      "feature-accessors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+
+  {
     id: "where-you-draw-the-line",
     shortLabel: "MAUP",
     note: "An explorable MAUP laboratory: a DirectManipulationControl drags one border across an unchanged continuous field, and an XYCustomChart transect, a GeoCustomChart-backed StreamGeoFrame city, and a TemporalHistogram reporting stack all show the aggregate answer move.",

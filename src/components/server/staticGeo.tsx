@@ -23,6 +23,8 @@ import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
   reserveLegendConfigMargin,
+  hocLegendMarginMinimum,
+  hasExplicitLegendMargin,
   renderLegendConfig,
   wrapSVG
 } from "./staticSVGChrome"
@@ -55,24 +57,30 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   // Reserve legend space BEFORE computing inner dims so the geo projection
   // fits inside the post-legend area. Same shape as XY/Network.
   const legendPos = props.legendPosition
+  const legendPosition = legendPos || "right"
+  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
   if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
     reserveLegendConfigMargin(margin, {
       legend: props.legend,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   } else if (props.showLegend && geoLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: geoLegendCategories,
       colorScheme: props.colorScheme,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   }
   const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
@@ -207,6 +215,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       margin,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
     })
   })() : null
 
@@ -221,6 +230,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
         hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
+        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
       }) || geoAutoLegend
 
   const content = (

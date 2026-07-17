@@ -23,6 +23,8 @@ import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
   reserveStaticLegendMargin,
   reserveLegendConfigMargin,
+  hocLegendMarginMinimum,
+  hasExplicitLegendMargin,
   renderLegendConfig,
   renderGridSVG,
   wrapSVG,
@@ -42,24 +44,30 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
+  const legendPosition = legendPos || "right"
+  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
   if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
     reserveLegendConfigMargin(margin, {
       legend: props.legend,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   } else if (props.showLegend && xyLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: xyLegendCategories,
       colorScheme: props.colorScheme,
       theme,
-      position: legendPos || "right",
+      position: legendPosition,
       size,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      minimumMargin: minimumLegendMargin,
+      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
     })
   }
 
@@ -146,7 +154,12 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     layoutConfig: props.layoutConfig,
     layoutMargin: margin,
     layoutSelection: props.layoutSelection,
-    barColors: props.barColors
+    barColors: props.barColors,
+    // Heatmap labels are scene metadata, not an SVG overlay. Omitting these
+    // fields meant `showValues` appeared to be accepted by renderChart() but
+    // no heatcell ever received a label on the SSR path.
+    showValues: props.showValues,
+    heatmapValueFormat: props.heatmapValueFormat,
   }
 
   const store = new PipelineStore(pipelineConfig)
@@ -253,6 +266,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       margin,
       hasTitle: hasVisibleTitle,
       legendLayout: props.legendLayout,
+      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
     })
   })() : null
   const legend = React.isValidElement(props.legend)
@@ -265,6 +279,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         hasTitle: hasVisibleTitle,
         legendLayout: props.legendLayout,
         idPrefix: props._idPrefix,
+        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
       }) || xyAutoLegend
 
   const content = (

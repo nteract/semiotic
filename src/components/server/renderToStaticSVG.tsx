@@ -107,6 +107,8 @@ const COMMON_FRAME_PROP_KEYS = [
   "extentPadding",
   "scalePadding",
   "sizeRange",
+  "innerRadius",
+  "centerContent",
   "curve",
   "gradientFill",
   "lineGradient",
@@ -128,6 +130,18 @@ const COMMON_FRAME_PROP_KEYS = [
   "legend",
   "legendLayout",
 ] as const
+
+// `renderChart()` accepts HOC-level props, so its implicit margin must match
+// the primary HOC mode rather than the lower-level static frame fallback.
+// Frame APIs (renderXYToStaticSVG, etc.) retain their own defaults.
+const HOC_PRIMARY_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
+const SPARKLINE_MARGIN = { top: 2, right: 2, bottom: 2, left: 2 }
+const FUNNEL_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
+const CHOROPLETH_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
+const PROPORTIONAL_SYMBOL_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
+const NETWORK_CUSTOM_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
+const PROCESS_SANKEY_MARGIN = { top: 30, right: 80, bottom: 40, left: 80 }
+const FLOW_MAP_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
 
 function pickDefinedProps(source: Datum, keys: readonly string[]): Datum {
   const picked: Datum = {}
@@ -203,13 +217,45 @@ function renderChartInternal(
   // Flatten frameProps plus known frame-level top-level props into common.
   // Top-level props win so renderChart mirrors the React HOC API.
   const framePropsOverrides = rest.frameProps || {}
+  const defaultMargin = component === "Sparkline"
+    ? SPARKLINE_MARGIN
+    : component === "FunnelChart"
+      ? (title ? { ...FUNNEL_MARGIN, top: 40 } : FUNNEL_MARGIN)
+      : component === "ChoroplethMap"
+        ? CHOROPLETH_MARGIN
+        : component === "ProportionalSymbolMap"
+          ? PROPORTIONAL_SYMBOL_MARGIN
+          : component === "NetworkCustomChart"
+            ? NETWORK_CUSTOM_MARGIN
+            : component === "ProcessSankey"
+              ? PROCESS_SANKEY_MARGIN
+              : component === "FlowMap"
+                ? FLOW_MAP_MARGIN
+      : HOC_PRIMARY_MARGIN
+  // Keep the caller-supplied margin separately from the resolved default.
+  // Some chart HOCs (for example DifferenceChart's custom legend) only
+  // reserve their standard legend gutter when that side was not explicitly
+  // set by the caller. The static configuration needs the same distinction.
+  const explicitMargin = margin !== undefined ? margin : framePropsOverrides.margin
+  // useChartLegendAndMargin merges partial caller margins over its mode
+  // defaults. Preserve that same shape before handing props to a static
+  // frame; otherwise `{ right: 64 }` accidentally falls back to the lower
+  // level frame's 20px top/left defaults.
+  const effectiveMargin = typeof explicitMargin === "number"
+    ? { top: explicitMargin, right: explicitMargin, bottom: explicitMargin, left: explicitMargin }
+    : { ...defaultMargin, ...(explicitMargin || {}) }
   const topLevelFrameProps = pickDefinedProps(rest, COMMON_FRAME_PROP_KEYS)
   const common: Datum & ThemeAwareProps & { size: [number, number] } = {
     ...framePropsOverrides,
     ...topLevelFrameProps,
     theme, title, description, showLegend, showGrid, background, className, annotations,
     size,
-    ...(margin !== undefined && { margin }),
+    margin: effectiveMargin,
+    __explicitMargin: explicitMargin,
+    // renderChart is the HOC-level server API. Its legend reservation must
+    // follow useChartLegendAndMargin rather than the lower-level static
+    // renderer's content-measurement-only behavior.
+    __autoLegendMargin: true,
     ...(colorScheme !== undefined && { colorScheme }),
     ...(legendPosition !== undefined && { legendPosition }),
     _idPrefix: rest._idPrefix,
@@ -260,36 +306,81 @@ function renderChartInternal(
     value?: number
     startAngleDeg: number
     thresholds?: Array<{ value: number; color: string; label?: string }>
+    centerX: number
+    centerY: number
+    radius: number
+    innerRadius: number
+    showScaleLabels: boolean
+    needleLength: number
+    showNeedle: boolean
+    needleColor?: string
+    contextValue?: string
+    contextValueY?: number
+    valueFontSize?: number
   }
   const gaugeProps = frameProps2 as { __gauge?: GaugeDescriptor }
   if (component === "GaugeChart" && gaugeProps.__gauge) {
     const g = gaugeProps.__gauge
-    const resolvedMargin = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
-    const innerW = (width || 300) - resolvedMargin.left - resolvedMargin.right
-    const innerH = (height || 300) - resolvedMargin.top - resolvedMargin.bottom
-    const chartSize = Math.min(innerW, innerH)
-    const outerRadius = chartSize / 2
-    const needleLen = outerRadius * 0.85
-    const cx = resolvedMargin.left + innerW / 2
-    const cy = resolvedMargin.top + innerH / 2
     const gaugeValue = Math.max(g.gMin, Math.min(g.gMax, g.value ?? g.gMin))
     const valueFraction = g.gMax === g.gMin ? 0 : (gaugeValue - g.gMin) / (g.gMax - g.gMin)
     const needleAngleRad = (g.startAngleDeg + valueFraction * g.sweep - 90) * Math.PI / 180
     const resolvedTheme = resolveTheme(theme)
-    const needleColor = resolvedTheme.colors.text
+    const needleColor = g.needleColor || resolvedTheme.colors.text
+    const scaleLabels = g.showScaleLabels
+      ? (g.thresholds || []).filter(t => t.value > g.gMin && t.value < g.gMax)
+      : []
 
-    const needleEl = ReactDOMServer.renderToStaticMarkup(
+    const gaugeOverlay = ReactDOMServer.renderToStaticMarkup(
       <>
-        <line
-          x1={cx} y1={cy}
-          x2={cx + needleLen * Math.cos(needleAngleRad)}
-          y2={cy + needleLen * Math.sin(needleAngleRad)}
-          stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
-        />
-        <circle cx={cx} cy={cy} r={4} fill={needleColor} />
+        {g.showNeedle && <>
+          <line
+            x1={g.centerX} y1={g.centerY}
+            x2={g.centerX + g.needleLength * Math.cos(needleAngleRad)}
+            y2={g.centerY + g.needleLength * Math.sin(needleAngleRad)}
+            stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
+          />
+          <circle cx={g.centerX} cy={g.centerY} r={4} fill={needleColor} />
+        </>}
+        {g.contextValue != null && (
+          <text x={g.centerX} y={g.contextValueY} textAnchor="middle" dominantBaseline="middle"
+            fontSize={g.valueFontSize} fontWeight={700} fill={needleColor}>
+            {g.contextValue}
+          </text>
+        )}
+        {scaleLabels.map((threshold, index) => {
+          const fraction = g.gMax === g.gMin ? 0 : (threshold.value - g.gMin) / (g.gMax - g.gMin)
+          const angle = (g.startAngleDeg + fraction * g.sweep - 90) * Math.PI / 180
+          const inner = g.innerRadius - 1
+          const outer = g.radius + 1
+          const labelRadius = g.radius + 10
+          const hour = (((angle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
+          const textAnchor = hour >= 11 || hour < 1 ? "middle" : hour < 5 ? "start" : hour < 7 ? "middle" : "end"
+          const dominantBaseline = hour >= 11 || hour < 1 ? "auto" : hour < 5 ? "middle" : hour < 7 ? "hanging" : "middle"
+          return <g key={`gauge-label-${index}`}>
+            <line
+              x1={g.centerX + Math.cos(angle) * inner}
+              y1={g.centerY + Math.sin(angle) * inner}
+              x2={g.centerX + Math.cos(angle) * outer}
+              y2={g.centerY + Math.sin(angle) * outer}
+              stroke={resolvedTheme.colors.border}
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+            <text
+              x={g.centerX + Math.cos(angle) * labelRadius}
+              y={g.centerY + Math.sin(angle) * labelRadius}
+              textAnchor={textAnchor}
+              dominantBaseline={dominantBaseline}
+              fill={resolvedTheme.colors.textSecondary}
+              fontSize={10}
+            >
+              {threshold.label || String(threshold.value)}
+            </text>
+          </g>
+        })}
       </>
     )
-    svg = svg.replace("</svg>", `${needleEl}</svg>`)
+    svg = svg.replace("</svg>", `${gaugeOverlay}</svg>`)
   }
 
   return { svg, frameType: config.frameType as RenderEvidence["frameType"] }

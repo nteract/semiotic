@@ -15,7 +15,17 @@ const TestCase = ({ title, testId, children }) =>
     children,
   )
 
-const examples = makeSsrParityCases(React).map((c) => {
+const requestedCase = new URLSearchParams(window.location.search).get("case")
+const parityCases = makeSsrParityCases(React)
+const selectedCases = requestedCase
+  ? parityCases.filter((c) => c.id === requestedCase)
+  : parityCases
+
+if (requestedCase && selectedCases.length === 0) {
+  throw new Error(`Unknown SSR/CSR parity fixture: ${requestedCase}`)
+}
+
+const examples = selectedCases.map((c) => {
   const Component = COMPONENTS[c.component]
   if (!Component) {
     throw new Error(`Missing SSR parity component export: ${c.component}`)
