@@ -197,11 +197,6 @@
   },
   "files": [
     "dist/*.min.js",
-    "dist/chunk-*.js",
-    "dist/*-semiotic-*.js",
-    "dist/*-statisticalOverlays-*.js",
-    "dist/*-XYBrushOverlay-*.js",
-    "dist/*-OrdinalBrushOverlay-*.js",
     "dist/**/*.d.ts",
     "dist/forceLayoutWorker.js",
     "dist/physicsWorker.js",
