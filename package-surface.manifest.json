@@ -21,17 +21,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -52,17 +52,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-ai.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-ai.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-ai.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -83,17 +83,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-ai-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-ai-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-ai-core.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -114,17 +114,17 @@
         {
           "kind": "import",
           "path": "dist/controls.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/controls.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/controls.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -145,17 +145,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-data.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-data.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-data.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -176,17 +176,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-experimental.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-experimental.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-experimental.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -207,17 +207,17 @@
         {
           "kind": "import",
           "path": "dist/geo.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/geo.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/geo.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -238,17 +238,17 @@
         {
           "kind": "import",
           "path": "dist/network.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/network.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/network.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -269,17 +269,17 @@
         {
           "kind": "import",
           "path": "dist/ordinal.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/ordinal.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/ordinal.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -315,17 +315,17 @@
         {
           "kind": "import",
           "path": "dist/physics.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/physics.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/physics.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -346,17 +346,17 @@
         {
           "kind": "import",
           "path": "dist/physics-matter.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/physics-matter.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/physics-matter.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -377,17 +377,17 @@
         {
           "kind": "import",
           "path": "dist/physics-rapier.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/physics-rapier.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/physics-rapier.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -408,17 +408,17 @@
         {
           "kind": "import",
           "path": "dist/realtime.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/realtime.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/realtime.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -439,17 +439,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-realtime-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-realtime-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-realtime-core.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -470,17 +470,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-realtime-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-realtime-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-realtime-react.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -501,17 +501,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-recipes.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-recipes.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-recipes.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -532,17 +532,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-recipes-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-recipes-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-recipes-core.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -563,17 +563,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-recipes-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-recipes-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-recipes-react.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -594,17 +594,17 @@
         {
           "kind": "import",
           "path": "dist/rough.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/rough.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/rough.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -625,17 +625,17 @@
         {
           "kind": "import",
           "path": "dist/server.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/server.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/server.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -656,17 +656,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-server-edge.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-server-edge.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-server-edge.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -687,17 +687,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-server-node.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-server-node.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-server-node.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -734,17 +734,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-themes.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-themes.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-themes.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -765,17 +765,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-themes-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-themes-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-themes-core.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -796,17 +796,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-themes-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-themes-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-themes-react.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -827,17 +827,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-utils.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-utils.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-utils.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -858,17 +858,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-utils-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-utils-core.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-utils-core.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -889,17 +889,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-utils-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-utils-react.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-utils-react.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -920,17 +920,17 @@
         {
           "kind": "import",
           "path": "dist/semiotic-value.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/semiotic-value.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/semiotic-value.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
@@ -951,17 +951,17 @@
         {
           "kind": "import",
           "path": "dist/xy.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "default",
           "path": "dist/xy.module.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "require",
           "path": "dist/xy.min.js",
-          "sourceMap": true
+          "sourceMap": false
         },
         {
           "kind": "types",
