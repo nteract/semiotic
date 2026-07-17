@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
-import { render, act, fireEvent } from "@testing-library/react"
+import { render, act, fireEvent, waitFor } from "@testing-library/react"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import { ThemeProvider } from "../ThemeProvider"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
@@ -1022,9 +1022,10 @@ describe("StreamOrdinalFrame", () => {
           onBrush={onBrush}
         />
       )
-      // The brush overlay renders an SVG containing a g.brush-g element
-      const brushG = container.querySelector(".brush-g")
-      expect(brushG).toBeTruthy()
+      // Brush overlay is dynamically imported (keeps d3-brush off the cold path).
+      await waitFor(() => {
+        expect(container.querySelector(".brush-g")).toBeTruthy()
+      })
     })
 
     it("does not render brush overlay when brush is not set", () => {
@@ -1040,7 +1041,7 @@ describe("StreamOrdinalFrame", () => {
       expect(brushG).toBeFalsy()
     })
 
-    it("does not render brush overlay for radial projection", () => {
+    it("does not render brush overlay for radial projection", async () => {
       const onBrush = vi.fn()
       const { container } = render(
         <StreamOrdinalFrame
@@ -1053,12 +1054,16 @@ describe("StreamOrdinalFrame", () => {
           onBrush={onBrush}
         />
       )
+      // Give the lazy path a tick; radial must still never mount a brush.
+      await act(async () => {
+        await Promise.resolve()
+      })
       const brushG = container.querySelector(".brush-g")
       expect(brushG).toBeFalsy()
     })
 
     describe("keyboard accessibility", () => {
-      function renderBrush(
+      async function renderBrush(
         projection: "vertical" | "horizontal",
         onBrush = vi.fn()
       ) {
@@ -1076,14 +1081,19 @@ describe("StreamOrdinalFrame", () => {
             onBrush={onBrush}
           />
         )
+        await waitFor(() => {
+          expect(
+            result.container.querySelector('svg[role="region"]')
+          ).toBeTruthy()
+        })
         const region = result.container.querySelector(
           'svg[role="region"]'
         ) as SVGSVGElement
         return { ...result, region, onBrush }
       }
 
-      it("nudges a vertical (default) brush with up/down and ignores left/right", () => {
-        const { region, onBrush } = renderBrush("vertical")
+      it("nudges a vertical (default) brush with up/down and ignores left/right", async () => {
+        const { region, onBrush } = await renderBrush("vertical")
         fireEvent.keyDown(region, { key: "ArrowUp" })
         expect(onBrush).toHaveBeenCalledWith(
           expect.objectContaining({ r: expect.any(Array) })
@@ -1097,8 +1107,8 @@ describe("StreamOrdinalFrame", () => {
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("nudges a horizontal brush with left/right and ignores up/down", () => {
-        const { region, onBrush } = renderBrush("horizontal")
+      it("nudges a horizontal brush with left/right and ignores up/down", async () => {
+        const { region, onBrush } = await renderBrush("horizontal")
         fireEvent.keyDown(region, { key: "ArrowRight" })
         expect(onBrush).toHaveBeenCalledWith(
           expect.objectContaining({ r: expect.any(Array) })
@@ -1112,16 +1122,16 @@ describe("StreamOrdinalFrame", () => {
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("clears the brush extent on Escape after a prior nudge", () => {
-        const { region, onBrush } = renderBrush("vertical")
+      it("clears the brush extent on Escape after a prior nudge", async () => {
+        const { region, onBrush } = await renderBrush("vertical")
         fireEvent.keyDown(region, { key: "ArrowUp" })
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "Escape" })
         expect(onBrush).toHaveBeenCalledWith(null)
       })
 
-      it("exposes an aria-label and matching description element for the ordinal brush region", () => {
-        const { region } = renderBrush("vertical")
+      it("exposes an aria-label and matching description element for the ordinal brush region", async () => {
+        const { region } = await renderBrush("vertical")
         expect(region.getAttribute("aria-label")).toBe(
           "Ordinal value range brush"
         )
