@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.3] - 2026-07-17
+
+### Added
+
+- **Narrative examples.** Added Earthquakes and Europa Languages examples,
+  including deterministic data fixtures and example-gallery previews.
+
+### Changed
+
+- **Browser/server rendering alignment.** Browser, static SVG, and MCP render
+  paths now share chart-mode defaults, line and geo styling, legend layout,
+  temporal histogram configuration, and specialized network, geo, gauge, and
+  custom-chart rendering behavior.
+- **SSR parity coverage.** Replaced the redundant SSR/CSR screenshot matrix
+  with semantic markup and targeted geometry assertions, while retaining the
+  dedicated cross-browser visual suite.
+
+### Fixed
+
+- **Docs example route smoke test.** The route contract now targets the
+  `ExamplePageLayout` title specifically, and the Earthquakes dashboard uses a
+  nested heading level instead of duplicating the page's H1.
+
 ## [3.8.2] - 2026-07-16
 
 ### Fixed

@@ -87,9 +87,7 @@ export default function EarthquakesExamplePage() {
   )
 
   const strongestCaption = formatStrongestCaption(summary.strongest)
-  const deepestCaption = summary.deepest
-    ? "deepest hypocenter"
-    : "deepest hypocenter"
+  const deepestCaption = "deepest hypocenter"
 
   return (
     <ExamplePageLayout title="Earthquakes">
@@ -147,7 +145,7 @@ export default function EarthquakesExamplePage() {
 
           <div className="eq-side" ref={sideRef}>
             <header className="eq-header">
-              <h1 className="eq-title">Earthquakes</h1>
+              <h2 className="eq-title">Earthquakes</h2>
               <p className="eq-subtitle">
                 M6+ · 2021–2025 · USGS · spin the globe to filter
               </p>

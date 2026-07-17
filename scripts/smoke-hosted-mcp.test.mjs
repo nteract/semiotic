@@ -30,8 +30,8 @@ function fixtureIdentity(options) {
   const commitSha = options.commitSha ?? (options.wrongSha ? OTHER_SHA : COMMIT_SHA)
   return {
     channel: options.wrongChannel ? "stable" : "nightly",
-    packageVersion: "3.8.2",
-    surfaceVersion: "3.8.2-ai",
+    packageVersion: "3.8.3",
+    surfaceVersion: "3.8.3-ai",
     commitSha,
     shortCommitSha: commitSha.slice(0, 7),
     buildId: options.wrongBuildId ? "another-build" : BUILD_ID,
@@ -47,7 +47,7 @@ function healthBody(options) {
   return {
     status: "ok",
     name: "semiotic-mcp",
-    version: "3.8.2",
+    version: "3.8.3",
     transport: "streamable-http",
     mode: "stateless",
     ...healthIdentity,
@@ -124,8 +124,8 @@ async function createFixture(options = {}) {
         serverInfo: {
           name: identity.channel === "nightly" ? "semiotic-nightly" : "semiotic",
           version: identity.channel === "nightly"
-            ? `3.8.2-nightly+${identity.shortCommitSha}`
-            : "3.8.2",
+            ? `3.8.3-nightly+${identity.shortCommitSha}`
+            : "3.8.3",
         },
         capabilities: {},
       }), { "MCP-Protocol-Version": "2025-06-18" })
