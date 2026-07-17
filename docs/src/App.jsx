@@ -169,6 +169,7 @@ const TimelineCookbookPage = lazy(() => import("./pages/cookbook/TimelinePage"))
 const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
+const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedgerExamplePage"))
 const InsightForgeExamplePage = lazy(() => import("./pages/examples/InsightForgeExamplePage"))
 const AnalystAdventureExamplePage = lazy(
   () => import("./pages/examples/AnalystAdventureExamplePage"),
@@ -247,6 +248,7 @@ const MobileDataVisualizationExamplePage = lazy(
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
   "AnalystAdventureExamplePage.jsx": AnalystAdventureExamplePage,
   "SentenceStructureExamplePage.jsx": SentenceStructureExamplePage,

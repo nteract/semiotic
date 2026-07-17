@@ -719,6 +719,33 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "living-ledger",
+    shortLabel: "Living Ledger",
+    note: "A deterministic ecosystem-service replay coordinates a custom world atlas, condition-versus-adequacy triage, threshold pulse, six-part ordinal ledger, two-way evidence network, and physics-backed observation pipeline through one serviceSystemId.",
+    uses: [
+      "input-static",
+      "hoc-xy-lines",
+      "hoc-xy-compound",
+      "hoc-ordinal-custom",
+      "frame-network",
+      "hoc-geo-custom",
+      "hoc-physical-flow",
+      "feature-accessors",
+      "feature-axes",
+      "feature-annotations",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-responsive",
+      "feature-theme",
+      "feature-shared-state",
+      "feature-physics-sensors",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "insight-forge",
     shortLabel: "Insight Forge",
     note: "Five chart rooms turn observations into portable predicates, audited artifacts, non-destructive recipes, cross-chart applications, and a lineage-bearing knowledge view.",
@@ -1369,9 +1396,7 @@ if (EXPLICIT_EXAMPLE_PROFILES_BY_ID.size !== EXPLICIT_EXAMPLE_PROFILES.length) {
   throw new Error("Architecture example profiles must use unique ids")
 }
 
-const EXAMPLE_DEFINITION_IDS = new Set(
-  EXAMPLE_DEFINITIONS.map((definition) => definition.id),
-)
+const EXAMPLE_DEFINITION_IDS = new Set(EXAMPLE_DEFINITIONS.map((definition) => definition.id))
 for (const profile of EXPLICIT_EXAMPLE_PROFILES) {
   if (!EXAMPLE_DEFINITION_IDS.has(profile.id)) {
     throw new Error("Architecture profile has no ExampleDefinition: " + profile.id)

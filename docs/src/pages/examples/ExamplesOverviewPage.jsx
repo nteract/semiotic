@@ -4,6 +4,7 @@ import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
+  "living-ledger": MiniLivingLedgerPreview,
   "insight-forge": MiniInsightForgePreview,
   "analyst-adventure": MiniAnalystAdventurePreview,
   "sentence-structure": MiniSentenceStructurePreview,
@@ -64,6 +65,84 @@ function MissingExamplePreview({ preview }) {
       />
       <text x="121" y="86" textAnchor="middle" fill="var(--text-secondary)" fontSize="9">
         Preview unavailable
+      </text>
+    </svg>
+  )
+}
+
+function MiniLivingLedgerPreview() {
+  const stations = [
+    [42, 39, "circle", "#57c7b7"],
+    [66, 55, "triangle", "#e28b55"],
+    [92, 32, "diamond", "#57c7b7"],
+    [119, 48, "circle", "#d6a758"],
+    [151, 30, "notch", "#dfc46a"],
+    [177, 57, "triangle", "#bd86c8"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <defs>
+        <pattern
+          id="living-ledger-preview-grid"
+          width="12"
+          height="12"
+          patternUnits="userSpaceOnUse"
+        >
+          <path d="M12 0H0V12" fill="none" stroke="#89afa5" strokeWidth="0.35" opacity="0.2" />
+        </pattern>
+        <filter id="living-ledger-preview-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="1.8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <rect width="242" height="96" rx="6" fill="#071816" />
+      <rect width="242" height="96" rx="6" fill="url(#living-ledger-preview-grid)" />
+      <path
+        d="M14 39c11-11 24-16 38-13l12 8 17-8 19 4 10 11 18 2 12-9 17-2 8 8 22-4 20 10-4 16-29 7-29-8-28 9-23-8-24 2-24-11-21 0Z"
+        fill="#102a27"
+        stroke="#79958c"
+        strokeWidth="0.7"
+        opacity="0.78"
+      />
+      {stations.map(([x, y, shape, color], index) => (
+        <g key={index} transform={`translate(${x},${y})`} filter="url(#living-ledger-preview-glow)">
+          {shape === "triangle" ? (
+            <path d="M0-5 5 4-5 4Z" fill={color} fillOpacity="0.25" stroke={color} />
+          ) : shape === "diamond" ? (
+            <path d="M0-6 6 0 0 6-6 0Z" fill={color} fillOpacity="0.25" stroke={color} />
+          ) : (
+            <>
+              <circle r="4.6" fill="#071816" stroke={color} strokeWidth="1.4" />
+              {shape === "notch" ? <path d="M0-7V-3" stroke={color} strokeWidth="1.8" /> : null}
+            </>
+          )}
+        </g>
+      ))}
+      <g transform="translate(194,8)">
+        <rect width="39" height="33" fill="#0b211f" stroke="#46675f" />
+        <path d="M19.5 0V33M0 16.5H39" stroke="#789087" strokeDasharray="2 2" strokeWidth="0.5" />
+        <circle cx="28" cy="9" r="3" fill="#57c7b7" />
+        <path d="M8 9 11 14 5 14Z" fill="#e28b55" />
+        <path d="M27 24 31 28 27 32 23 28Z" fill="#ea654f" />
+      </g>
+      <g transform="translate(15,76)">
+        <path
+          d="M0 8C14 8 20 6 29 7s16-5 25-4 14-1 21-3 12 2 22-1 15-6 25-5 14-2 26-4"
+          fill="none"
+          stroke="#57c7b7"
+          strokeWidth="1.7"
+        />
+        <line x1="96" x2="96" y1="-4" y2="11" stroke="#df7857" strokeDasharray="3 2" />
+        <line x1="121" x2="121" y1="-4" y2="11" stroke="#ea654f" strokeDasharray="3 2" />
+      </g>
+      <text x="15" y="15" fill="#f0e7cf" fontSize="8" fontWeight="800" letterSpacing="1.2">
+        THE LIVING LEDGER
+      </text>
+      <text x="15" y="24" fill="#75a79d" fontSize="5.5" letterSpacing="0.7">
+        SERVICE WEATHER / EVIDENCE / THRESHOLDS
       </text>
     </svg>
   )
@@ -1681,7 +1760,15 @@ function MiniMaupPreview() {
           opacity="0.85"
         />
       ))}
-      <line x1={seamX} y1="4" x2={seamX} y2="92" stroke="#ffffff" strokeWidth="2" strokeDasharray="5 3" />
+      <line
+        x1={seamX}
+        y1="4"
+        x2={seamX}
+        y2="92"
+        stroke="#ffffff"
+        strokeWidth="2"
+        strokeDasharray="5 3"
+      />
       <circle cx={seamX} cy="48" r="7" fill="#101820" stroke="#ffffff" strokeWidth="2.5" />
     </svg>
   )
@@ -2309,7 +2396,10 @@ function MiniAnalystAdventurePreview() {
       aria-label="Mini Analyst Adventure chart mystery preview"
     >
       <rect width="500" height="200" fill="#05070b" />
-      <path d="M0 16H500M0 32H500M0 48H500M0 64H500M0 80H500M0 96H500M0 112H500M0 128H500M0 144H500M0 160H500M0 176H500M0 192H500" stroke="#101827" />
+      <path
+        d="M0 16H500M0 32H500M0 48H500M0 64H500M0 80H500M0 96H500M0 112H500M0 128H500M0 144H500M0 160H500M0 176H500M0 192H500"
+        stroke="#101827"
+      />
       <rect x="10" y="10" width="480" height="180" fill="none" stroke="#24d7d7" strokeWidth="3" />
       <rect x="18" y="18" width="464" height="28" fill="#101527" stroke="#ff4fd8" strokeWidth="2" />
       <text x="30" y="37" fill="#f5f5f5" fontSize="13" fontWeight="900" letterSpacing="1.8">
@@ -2323,13 +2413,15 @@ function MiniAnalystAdventurePreview() {
         <g key={label}>
           <rect x={x} y="59" width="49" height="45" fill="#0d1320" stroke={color} strokeWidth="2" />
           <path
-            d={index === 0
-              ? `M${x + 7} 92L${x + 18} 78L${x + 28} 84L${x + 42} 67`
-              : index === 1
-                ? `M${x + 8} 94V78H${x + 18}V94M${x + 23} 94V68H${x + 33}V94M${x + 38} 94V83H${x + 43}V94`
-                : index === 2
-                  ? `M${x + 8} 91L${x + 19} 69L${x + 30} 84L${x + 42} 66`
-                  : `M${x + 10} 88L${x + 25} 69L${x + 40} 87M${x + 25} 69V94`}
+            d={
+              index === 0
+                ? `M${x + 7} 92L${x + 18} 78L${x + 28} 84L${x + 42} 67`
+                : index === 1
+                  ? `M${x + 8} 94V78H${x + 18}V94M${x + 23} 94V68H${x + 33}V94M${x + 38} 94V83H${x + 43}V94`
+                  : index === 2
+                    ? `M${x + 8} 91L${x + 19} 69L${x + 30} 84L${x + 42} 66`
+                    : `M${x + 10} 88L${x + 25} 69L${x + 40} 87M${x + 25} 69V94`
+            }
             fill="none"
             stroke={color}
             strokeWidth="2.5"
@@ -2342,17 +2434,47 @@ function MiniAnalystAdventurePreview() {
 
       <path d="M278 81H305" stroke="#ff4fd8" strokeWidth="2" strokeDasharray="4 3" />
       <polygon points="305,81 297,76 297,86" fill="#ff4fd8" />
-      <rect x="314" y="57" width="151" height="69" fill="#0d1320" stroke="#ff4fd8" strokeWidth="2" />
-      <text x="326" y="74" fill="#ffd84a" fontSize="8" fontWeight="900">EVIDENCE DISKETTE</text>
-      <text x="326" y="91" fill="#f5f5f5" fontSize="8">01 STALE ROOF PING</text>
-      <text x="326" y="104" fill="#f5f5f5" fontSize="8">02 DENOMINATOR KEY</text>
-      <text x="326" y="117" fill="#24d7d7" fontSize="8">03 ORIGIN VECTOR_</text>
+      <rect
+        x="314"
+        y="57"
+        width="151"
+        height="69"
+        fill="#0d1320"
+        stroke="#ff4fd8"
+        strokeWidth="2"
+      />
+      <text x="326" y="74" fill="#ffd84a" fontSize="8" fontWeight="900">
+        EVIDENCE DISKETTE
+      </text>
+      <text x="326" y="91" fill="#f5f5f5" fontSize="8">
+        01 STALE ROOF PING
+      </text>
+      <text x="326" y="104" fill="#f5f5f5" fontSize="8">
+        02 DENOMINATOR KEY
+      </text>
+      <text x="326" y="117" fill="#24d7d7" fontSize="8">
+        03 ORIGIN VECTOR_
+      </text>
 
-      <rect x="24" y="139" width="452" height="34" fill="#080d17" stroke="#f5f5f5" strokeWidth="2" />
-      <text x="35" y="153" fill="#ff4fd8" fontSize="8" fontWeight="900">ZORKBOT-2000:</text>
-      <text x="35" y="166" fill="#f5f5f5" fontSize="9">A TIMESTAMP IS NOT NECESSARILY WHEN IT HAPPENED.</text>
+      <rect
+        x="24"
+        y="139"
+        width="452"
+        height="34"
+        fill="#080d17"
+        stroke="#f5f5f5"
+        strokeWidth="2"
+      />
+      <text x="35" y="153" fill="#ff4fd8" fontSize="8" fontWeight="900">
+        ZORKBOT-2000:
+      </text>
+      <text x="35" y="166" fill="#f5f5f5" fontSize="9">
+        A TIMESTAMP IS NOT NECESSARILY WHEN IT HAPPENED.
+      </text>
       <rect x="444" y="145" width="20" height="20" fill="#ffd84a" />
-      <text x="454" y="159" textAnchor="middle" fill="#05070b" fontSize="10" fontWeight="900">?</text>
+      <text x="454" y="159" textAnchor="middle" fill="#05070b" fontSize="10" fontWeight="900">
+        ?
+      </text>
     </svg>
   )
 }

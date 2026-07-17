@@ -1,9 +1,4 @@
-export const EXAMPLE_DATA_STATES = Object.freeze([
-  "live",
-  "snapshot",
-  "fallback",
-  "error",
-])
+export const EXAMPLE_DATA_STATES = Object.freeze(["live", "snapshot", "fallback", "error"])
 
 const EXAMPLE_DATA_STATE_SET = new Set(EXAMPLE_DATA_STATES)
 const EXAMPLE_CONTRACT_FIELDS = [
@@ -20,12 +15,7 @@ const EXAMPLE_CONTRACT_FIELDS = [
 const DECLARED_EXAMPLE_CONTRACT_STATUS = "declared"
 const NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS = "not-assessed"
 const UNMEASURED_EXAMPLE_PERFORMANCE_STATUS = "unmeasured"
-const EXAMPLE_PERFORMANCE_BUDGET_FIELDS = [
-  "bundle",
-  "interaction",
-  "memory",
-  "hiddenPage",
-]
+const EXAMPLE_PERFORMANCE_BUDGET_FIELDS = ["bundle", "interaction", "memory", "hiddenPage"]
 const UNASSESSED_CONTRACT_FIELD = Object.freeze({
   status: NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS,
 })
@@ -92,6 +82,81 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "living-ledger",
+    path: "/examples/living-ledger",
+    sourceFile: "LivingLedgerExamplePage.jsx",
+    isPilot: true,
+    title: "The Living Ledger",
+    eyebrow: "Six views · one evidence chain",
+    description:
+      "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
+    contract: {
+      publicImports: [
+        "semiotic/controls",
+        "semiotic/geo",
+        "semiotic/network",
+        "semiotic/ordinal",
+        "semiotic/physics",
+        "semiotic/recipes",
+        "semiotic/utils",
+        "semiotic/xy",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-illustrative-180-day-ecosystem-service-replay",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source: "Authored deterministic replay grounded in the bundled source and method manifest",
+        capturedAt: "2026-07-12",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "Six chart-level tables, a complete service-system projection, evidence logs, alert explanations, and polite selection announcements",
+        navigation:
+          "SentenceFilter, guided scene rail, alert desk, synchronized chart selection, network modes, provenance, and full tabular projection",
+        keyboard:
+          "Native buttons, range input, SentenceFilter popovers, chart navigation, tables, details, Enter, Space, Escape, and Arrow keys",
+        forcedColors:
+          "Atlas panels, status shapes, selected systems, chart controls, tables, and focus rings retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "Replay jumps to a discrete end state; frame transitions stop and the physics pipeline opens on a static projection",
+        visibility:
+          "Physics suspends while hidden and the deterministic replay interval exists only while explicitly playing",
+      },
+      responsive: {
+        status: "browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable serviceSystemId, evidence ID, threshold ID, and observation-event ID",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-tested",
+        hydration:
+          "deterministic replay and filters; optional world reference geography resolves after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route with public frame-family entry points and asynchronously loaded reference geography",
+          interaction:
+            "memoized snapshot, pulse, ledger, network, filtering, and threshold projections",
+          memory:
+            "180 bounded replay days, nine service systems, and a bounded 72-particle observation stream",
+          hiddenPage: "physics suspendWhenHidden enabled and replay interval cleaned up",
+        },
+      },
+    },
+  },
+  {
     id: "analyst-adventure",
     path: "/examples/analyst-adventure",
     sourceFile: "AnalystAdventureExamplePage.jsx",
@@ -121,20 +186,27 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         },
       },
       provenance: {
-        source: "Deterministic fictional Zorkcorp fixtures derived from docs/strategy/example-cyoa.md",
+        source:
+          "Deterministic fictional Zorkcorp fixtures derived from docs/strategy/example-cyoa.md",
         capturedAt: "2026-07-13",
         freshnessOwner: "Semiotic maintainers",
         reviewCadence: "release",
       },
       accessibility: {
-        summary: "Visible generated descriptions, complete data tables, and a settled physics ledger",
-        navigation: "Synchronized AccessibleNavTree data and annotations branches in every chart room",
-        keyboard: "Native choices and annotations; 1–4, H, D, R, Enter, Space, Escape, and chart arrow navigation",
-        forcedColors: "CGA panels, choices, focus rings, and chart controls retain system-color boundaries",
+        summary:
+          "Visible generated descriptions, complete data tables, and a settled physics ledger",
+        navigation:
+          "Synchronized AccessibleNavTree data and annotations branches in every chart room",
+        keyboard:
+          "Native choices and annotations; 1–4, H, D, R, Enter, Space, Escape, and chart arrow navigation",
+        forcedColors:
+          "CGA panels, choices, focus rings, and chart controls retain system-color boundaries",
       },
       motion: {
-        reducedMotion: "Particles and chart animation stop; physics opens on its deterministic settled projection",
-        visibility: "Stream physics suspends while hidden and ordinary chart transitions are room-scoped",
+        reducedMotion:
+          "Particles and chart animation stop; physics opens on its deterministic settled projection",
+        visibility:
+          "Stream physics suspends while hidden and ordinary chart transitions are room-scoped",
       },
       responsive: {
         status: "browser-tested",
@@ -166,12 +238,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     description:
       "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
     contract: {
-      publicImports: [
-        "semiotic/controls",
-        "semiotic/network",
-        "semiotic/xy",
-        "semiotic/utils",
-      ],
+      publicImports: ["semiotic/controls", "semiotic/network", "semiotic/xy", "semiotic/utils"],
       data: {
         states: ["snapshot"],
         fixture: {
@@ -187,14 +254,19 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         reviewCadence: "release",
       },
       accessibility: {
-        summary: "Continuous sentence names, view-specific structural summaries, source recovery, and accessible relationship tables",
-        navigation: "Native sentence-filter controls, view rail, specimen cards, token ribbon, and related-entity summaries",
+        summary:
+          "Continuous sentence names, view-specific structural summaries, source recovery, and accessible relationship tables",
+        navigation:
+          "Native sentence-filter controls, view rail, specimen cards, token ribbon, and related-entity summaries",
         keyboard: "Enter, Space, Escape, Arrow keys, Home, End, and native form controls",
-        forcedColors: "Editorial controls, selected tokens, diagrams, and focus rings retain system-color boundaries",
+        forcedColors:
+          "Editorial controls, selected tokens, diagrams, and focus rings retain system-color boundaries",
       },
       motion: {
-        reducedMotion: "Cross-view fades and path drawing stop while persistent selections remain visible",
-        visibility: "No timers or background simulation; authored diagrams update only from reader input",
+        reducedMotion:
+          "Cross-view fades and path drawing stop while persistent selections remain visible",
+        visibility:
+          "No timers or background simulation; authored diagrams update only from reader input",
       },
       responsive: {
         status: "browser-tested",
@@ -384,6 +456,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 ])
 
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "The Living Ledger",
+    path: "/examples/living-ledger",
+    eyebrow: "Six views · one evidence chain",
+    description:
+      "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
+    preview: "living-ledger",
+    badges: ["Deterministic replay", "Evidence lineage", "SentenceFilter", "Physics pipeline"],
+    frames: ["xy", "ordinal", "network", "geo", "stream-physics", "custom"],
+    topics: ["climate", "uncertainty", "realtime", "design", "accessibility"],
+  },
   {
     title: "The Insight Forge",
     path: "/examples/insight-forge",
@@ -762,6 +845,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
   "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
   "/examples/climate-anomaly": "ClimateAnomalyExamplePage.jsx",
@@ -842,13 +926,7 @@ export function getPilotExampleDefinitions() {
  * Example definition schema for the full docs registry. Every route declares
  * either a route-specific contract or an explicit, bounded unassessed record.
  */
-const REQUIRED_DEFINITION_FIELDS = [
-  "id",
-  "path",
-  "title",
-  "eyebrow",
-  "description",
-]
+const REQUIRED_DEFINITION_FIELDS = ["id", "path", "title", "eyebrow", "description"]
 
 const OPTIONAL_DEFINITION_FIELDS = [
   "isPilot",
@@ -882,10 +960,7 @@ function hasExactFields(value, fields) {
 }
 
 function isUnassessedContractField(value) {
-  return (
-    hasExactFields(value, ["status"]) &&
-    value.status === NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS
-  )
+  return hasExactFields(value, ["status"]) && value.status === NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS
 }
 
 function isUnmeasuredPerformanceContract(value) {
@@ -972,19 +1047,27 @@ function validateExampleContract(errors, definition, index) {
   }
 
   if (!isStringArray(contract.publicImports)) {
-    errors.push(`ExampleDefinition contract publicImports for "${label}" must be a non-empty string array`)
+    errors.push(
+      `ExampleDefinition contract publicImports for "${label}" must be a non-empty string array`,
+    )
   } else if (contract.publicImports.some((entry) => !entry.startsWith("semiotic"))) {
-    errors.push(`ExampleDefinition contract publicImports for "${label}" must use public Semiotic entry points`)
+    errors.push(
+      `ExampleDefinition contract publicImports for "${label}" must use public Semiotic entry points`,
+    )
   }
 
   const states = contract.data?.states
   if (!isStringArray(states)) {
-    errors.push(`ExampleDefinition contract data.states for "${label}" must be a non-empty string array`)
+    errors.push(
+      `ExampleDefinition contract data.states for "${label}" must be a non-empty string array`,
+    )
   } else {
     const seenStates = new Set()
     for (const state of states) {
       if (!EXAMPLE_DATA_STATE_SET.has(state)) {
-        errors.push(`ExampleDefinition contract data.states for "${label}" has unknown state "${state}"`)
+        errors.push(
+          `ExampleDefinition contract data.states for "${label}" has unknown state "${state}"`,
+        )
       }
       if (seenStates.has(state)) {
         errors.push(`ExampleDefinition contract data.states for "${label}" repeats "${state}"`)
@@ -995,7 +1078,9 @@ function validateExampleContract(errors, definition, index) {
 
   const fixture = contract.data?.fixture
   if (!fixture || !isNonEmptyString(fixture.kind) || !isNonEmptyString(fixture.schemaVersion)) {
-    errors.push(`ExampleDefinition contract data.fixture for "${label}" must declare kind and schemaVersion`)
+    errors.push(
+      `ExampleDefinition contract data.fixture for "${label}" must declare kind and schemaVersion`,
+    )
   }
   if (!isBoolean(fixture?.replay)) {
     errors.push(`ExampleDefinition contract data.fixture.replay for "${label}" must be a boolean`)
@@ -1004,46 +1089,77 @@ function validateExampleContract(errors, definition, index) {
   const provenance = contract.provenance
   for (const field of ["source", "capturedAt", "freshnessOwner", "reviewCadence"]) {
     if (!isNonEmptyString(provenance?.[field])) {
-      errors.push(`ExampleDefinition contract provenance.${field} for "${label}" must be a non-empty string`)
+      errors.push(
+        `ExampleDefinition contract provenance.${field} for "${label}" must be a non-empty string`,
+      )
     }
   }
-  if (isNonEmptyString(provenance?.capturedAt) && !/^\d{4}-\d{2}-\d{2}$/.test(provenance.capturedAt)) {
-    errors.push(`ExampleDefinition contract provenance.capturedAt for "${label}" must be YYYY-MM-DD`)
+  if (
+    isNonEmptyString(provenance?.capturedAt) &&
+    !/^\d{4}-\d{2}-\d{2}$/.test(provenance.capturedAt)
+  ) {
+    errors.push(
+      `ExampleDefinition contract provenance.capturedAt for "${label}" must be YYYY-MM-DD`,
+    )
   }
 
   for (const field of ["summary", "navigation", "keyboard", "forcedColors"]) {
     if (!isNonEmptyString(contract.accessibility?.[field])) {
-      errors.push(`ExampleDefinition contract accessibility.${field} for "${label}" must be a non-empty string`)
+      errors.push(
+        `ExampleDefinition contract accessibility.${field} for "${label}" must be a non-empty string`,
+      )
     }
   }
   for (const field of ["reducedMotion", "visibility"]) {
     if (!isNonEmptyString(contract.motion?.[field])) {
-      errors.push(`ExampleDefinition contract motion.${field} for "${label}" must be a non-empty string`)
+      errors.push(
+        `ExampleDefinition contract motion.${field} for "${label}" must be a non-empty string`,
+      )
     }
   }
 
   const viewports = contract.responsive?.viewports
-  if (!Array.isArray(viewports) || !viewports.every((viewport) => Number.isFinite(viewport) && viewport > 0)) {
-    errors.push(`ExampleDefinition contract responsive.viewports for "${label}" must be positive numbers`)
+  if (
+    !Array.isArray(viewports) ||
+    !viewports.every((viewport) => Number.isFinite(viewport) && viewport > 0)
+  ) {
+    errors.push(
+      `ExampleDefinition contract responsive.viewports for "${label}" must be positive numbers`,
+    )
   }
   for (const field of ["status", "selectionIdentity"]) {
     if (!isNonEmptyString(contract.responsive?.[field])) {
-      errors.push(`ExampleDefinition contract responsive.${field} for "${label}" must be a non-empty string`)
+      errors.push(
+        `ExampleDefinition contract responsive.${field} for "${label}" must be a non-empty string`,
+      )
     }
   }
   for (const field of ["status", "hydration"]) {
     if (!isNonEmptyString(contract.ssr?.[field])) {
-      errors.push(`ExampleDefinition contract ssr.${field} for "${label}" must be a non-empty string`)
+      errors.push(
+        `ExampleDefinition contract ssr.${field} for "${label}" must be a non-empty string`,
+      )
     }
   }
   if (!isNonEmptyString(contract.performance?.status)) {
-    errors.push(`ExampleDefinition contract performance.status for "${label}" must be a non-empty string`)
+    errors.push(
+      `ExampleDefinition contract performance.status for "${label}" must be a non-empty string`,
+    )
   }
   const budgets = contract.performance?.budgets
-  if (!budgets || typeof budgets !== "object" || Array.isArray(budgets) || Object.keys(budgets).length === 0) {
-    errors.push(`ExampleDefinition contract performance.budgets for "${label}" must be a non-empty object`)
+  if (
+    !budgets ||
+    typeof budgets !== "object" ||
+    Array.isArray(budgets) ||
+    Object.keys(budgets).length === 0
+  ) {
+    errors.push(
+      `ExampleDefinition contract performance.budgets for "${label}" must be a non-empty object`,
+    )
   } else if (!Object.values(budgets).every((value) => isNonEmptyString(value))) {
-    errors.push(`ExampleDefinition contract performance.budgets for "${label}" must use non-empty strings`)
+    errors.push(
+      `ExampleDefinition contract performance.budgets for "${label}" must use non-empty strings`,
+    )
   }
 }
 
@@ -1104,7 +1220,9 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
 
     if (!isBoolean(definition?.isPilot)) {
       if (definition?.isPilot !== undefined) {
-        errors.push(`ExampleDefinition field "isPilot" for "${id ?? `index ${index}`}" must be a boolean`)
+        errors.push(
+          `ExampleDefinition field "isPilot" for "${id ?? `index ${index}`}" must be a boolean`,
+        )
       }
     }
 
