@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-09 · 54 charts indexed.
+Last regen: 2026-07-17 · 54 charts indexed.
 
 **Column key**
 
@@ -85,7 +85,7 @@ Last regen: 2026-07-09 · 54 charts indexed.
 | **RealtimeLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
 | **RealtimeSwarmChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
 | **RealtimeWaterfallChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
-| **TemporalHistogram** | ✓ | ✓ | ✓ | — | — | categorical | plugin | `brush` |
+| **TemporalHistogram** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `brush` |
 
 ## Physics
 
@@ -111,6 +111,6 @@ Last regen: 2026-07-09 · 54 charts indexed.
 
 - 46/54 charts render a top-level legend.
 - 45/54 charts expose a push API.
-- 42/54 charts SSR via the `renderChart()` registry.
+- 43/54 charts SSR via the `renderChart()` registry.
 - 1/54 charts use the customLayout escape hatch.
 - 9/54 charts use synthetic (no-layout) construction.
