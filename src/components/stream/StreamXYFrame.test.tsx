@@ -781,7 +781,7 @@ describe("StreamXYFrame", () => {
           />
         )
         await waitFor(() => {
-          expect(result.container.querySelector('svg[role="region"]')).toBeTruthy()
+          expect(result.container.querySelector('svg[role="region"]')).toBeTruthy() // test-quality-gate: allow-mount-only - precondition for keyboard/aria assertions below (waits for the lazy-loaded brush overlay to mount).
         })
         const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
         return { ...result, region, onBrush }
