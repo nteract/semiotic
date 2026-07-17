@@ -36,7 +36,10 @@ if (probe.error || probe.status !== 0) {
   process.exit(1)
 }
 
-const image = process.env.PW_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-jammy"
+// Noble (Ubuntu 24.04) to match the CI `e2e` job's pinned container
+// (.github/workflows/node.js.yml). Baselines and CI must render in the SAME
+// image or sub-pixel text anti-aliasing drifts and the visual gate fails.
+const image = process.env.PW_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble"
 const defaultSpecs = [
   "integration-tests/mobile-visualization-harness.spec.ts",
   "integration-tests/physics-frame.spec.ts",

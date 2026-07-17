@@ -280,6 +280,13 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: testing
+    # Pin the rendering environment. `ubuntu-latest` is a moving image whose
+    # font/freetype stack drifts from committed baselines, causing sub-pixel
+    # text-AA diffs across the whole visual suite. Running inside the same
+    # Playwright image the baselines are generated in (scripts/run-playwright-
+    # linux-bootstrap.mjs) makes CI renders match the baselines exactly and
+    # survives future `ubuntu-latest` bumps.
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
 
     steps:
       - name: Checkout source code
