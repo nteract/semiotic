@@ -1,7 +1,8 @@
 import { useMemo, useCallback, useState, useId, useEffect, useRef } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
-import { createColorScale, getColor, COLOR_SCHEMES, resolveExplicitColor } from "./colorUtils"
+import { createColorScale, getColor, COLOR_SCHEMES, DEFAULT_COLOR, resolveExplicitColor } from "./colorUtils"
+export { DEFAULT_COLOR } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
@@ -15,16 +16,26 @@ import type {
   LinkedHoverProp,
   ChartMode,
   HoverHighlightMode,
-  MobileInteractionProp,
   ResolvedMobileInteractionConfig,
 } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
+import type { LegendValue } from "../../types/legendTypes"
+import { composeLegendConfigs } from "../../types/legendTypes"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
-import type { MobileVisualizationContract } from "./auditMobileVisualization"
-import { resolveResponsiveRules } from "./responsiveRules"
-import type { ResponsiveRule } from "./responsiveRules"
+import { resolveChartMode } from "./chartMode"
+import type { ChartModeInput, ChartModeResult } from "./chartMode"
+export {
+  DISABLED_MOBILE_INTERACTION,
+  MOBILE_INTERACTION_DEFAULTS,
+  MOBILE_INTERACTION_MIN_HIT_RADIUS,
+  MOBILE_INTERACTION_TARGET_SIZE,
+  isChartMode,
+  resolveChartMode,
+  resolveMobileInteraction,
+} from "./chartMode"
+export type { ChartModeInput, ChartModeResult } from "./chartMode"
 import type {
   SemanticClickBehavior,
   SemanticHoverBehavior,
@@ -40,70 +51,7 @@ import {
   resolveHoverXPosition
 } from "./chartSelectionUtils"
 
-/**
- * Default fill color used when no colorBy is specified
- */
-export const DEFAULT_COLOR = "#007bff"
 const EMPTY_FIELDS: string[] = []
-
-export const MOBILE_INTERACTION_TARGET_SIZE = 44
-export const MOBILE_INTERACTION_MIN_HIT_RADIUS = 24
-
-export const MOBILE_INTERACTION_DEFAULTS: ResolvedMobileInteractionConfig = {
-  enabled: true,
-  tapToSelect: true,
-  tapToLockTooltip: true,
-  clearSelection: "backgroundTap",
-  targetSize: MOBILE_INTERACTION_TARGET_SIZE,
-  snap: "nearestDatum",
-  brushHandleSize: MOBILE_INTERACTION_TARGET_SIZE,
-  standardControls: false,
-}
-
-export const DISABLED_MOBILE_INTERACTION: ResolvedMobileInteractionConfig = {
-  ...MOBILE_INTERACTION_DEFAULTS,
-  enabled: false,
-  tapToSelect: false,
-  tapToLockTooltip: false,
-}
-
-export function resolveMobileInteraction(
-  input: MobileInteractionProp | undefined,
-  context: {
-    mode?: ChartMode
-    width?: number
-    mobileSemantics?: MobileVisualizationContract
-  } = {}
-): ResolvedMobileInteractionConfig {
-  const semanticInteraction = context.mobileSemantics?.interaction
-  const semanticTarget =
-    typeof semanticInteraction?.targetSize === "number"
-      ? semanticInteraction.targetSize
-      : typeof context.mobileSemantics?.minimumHitTarget === "number"
-        ? context.mobileSemantics.minimumHitTarget
-        : undefined
-  const inferredMobile = context.mode === "mobile" || (typeof context.width === "number" && context.width <= 480)
-  const hasSemanticInteraction = !!semanticInteraction || semanticTarget !== undefined
-  const config = input && typeof input === "object" ? input : undefined
-  const enabled =
-    input !== false &&
-    config?.enabled !== false &&
-    (input !== undefined || inferredMobile || hasSemanticInteraction)
-
-  if (!enabled) return DISABLED_MOBILE_INTERACTION
-
-  const mobileConfig = config ?? {}
-  return {
-    enabled: true,
-    tapToSelect: mobileConfig.tapToSelect ?? true,
-    tapToLockTooltip: mobileConfig.tapToLockTooltip ?? true,
-    clearSelection: mobileConfig.clearSelection ?? "backgroundTap",
-    targetSize: mobileConfig.targetSize ?? semanticTarget ?? MOBILE_INTERACTION_TARGET_SIZE,
-    snap: mobileConfig.snap ?? "nearestDatum",
-    brushHandleSize: mobileConfig.brushHandleSize ?? MOBILE_INTERACTION_TARGET_SIZE,
-    standardControls: mobileConfig.standardControls ?? false,
-  }
-}
 
 /**
  * Returns the theme's categorical palette, or undefined if no ThemeProvider or
@@ -630,6 +578,7 @@ export function useChartLegendAndMargin({
   userMargin,
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
   categories,
+  additionalLegend,
 }: {
   data: Array<Datum>
   colorBy: Accessor<string> | undefined
@@ -639,8 +588,10 @@ export function useChartLegendAndMargin({
   userMargin: PartialMargin | undefined
   defaults?: MarginType
   categories?: string[]
+  /** Caller legend composed after the chart's inferred categorical groups. */
+  additionalLegend?: LegendValue
 }): {
-  legend: ReturnType<typeof createLegend> | undefined
+  legend: LegendValue | undefined
   margin: MarginType
   legendPosition: LegendPosition
 } {
@@ -664,7 +615,7 @@ export function useChartLegendAndMargin({
   }, [categories, colorBy, data, shouldResolveCategories])
   useLinkedChartCategories(linkedCategoryRegistryActive && colorBy ? legendCategories : [])
 
-  const legend = useMemo(() => {
+  const automaticLegend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
     const built = createLegend({ data, colorBy, colorScale, getColor, categories: legendCategories })
     // Suppress empty legends — when a chart using the push API mounts with no
@@ -676,6 +627,11 @@ export function useChartLegendAndMargin({
     if (totalItems === 0) return undefined
     return built
   }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
+
+  const legend = useMemo(
+    () => composeLegendConfigs(automaticLegend, additionalLegend),
+    [automaticLegend, additionalLegend],
+  )
 
   const margin = useMemo<MarginType>(() => {
     const userSides = typeof userMargin === "number"
@@ -807,164 +763,17 @@ export function useLegendInteraction(
   }
 }
 
-// ── Mode defaults ──────────────────────────────────────────────────────
-
-const MODE_DEFAULTS = {
-  primary: {
-    width: 600, height: 400,
-    showAxes: true, showGrid: false, enableHover: true,
-    showLegend: undefined as boolean | undefined,
-    showLabels: undefined as boolean | undefined,
-    marginDefaults: { top: 50, bottom: 60, left: 70, right: 40 },
-  },
-  context: {
-    width: 400, height: 250,
-    showAxes: false, showGrid: false, enableHover: false,
-    showLegend: false as boolean | undefined,
-    showLabels: false as boolean | undefined,
-    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
-  },
-  sparkline: {
-    width: 120, height: 24,
-    showAxes: false, showGrid: false, enableHover: false,
-    showLegend: false as boolean | undefined,
-    showLabels: false as boolean | undefined,
-    marginDefaults: { top: 2, bottom: 2, left: 0, right: 0 },
-  },
-  mobile: {
-    width: 390, height: 300,
-    showAxes: true, showGrid: false, enableHover: true,
-    showLegend: false as boolean | undefined,
-    showLabels: true as boolean | undefined,
-    marginDefaults: { top: 28, bottom: 42, left: 44, right: 16 },
-  },
-}
-
-interface ChartModeInput {
-  width?: number
-  height?: number
-  showAxes?: boolean
-  showGrid?: boolean
-  enableHover?: boolean
-  showLegend?: boolean
-  showLabels?: boolean
-  showCategoryTicks?: boolean
-  /** "vertical" | "horizontal" — used to shrink the category-axis margin when showCategoryTicks is false */
-  orientation?: string
-  title?: string
-  description?: string
-  summary?: string
-  accessibleTable?: boolean
-  xLabel?: string
-  yLabel?: string
-  categoryLabel?: string
-  valueLabel?: string
-  /** When truthy, enableHover is forced true regardless of mode (LinkedCharts needs hover) */
-  linkedHover?: LinkedHoverProp
-  /** Optional mobile interaction policy surfaced through useChartMode for custom wrappers. */
-  mobileInteraction?: MobileInteractionProp
-  /** Optional mobile semantic contract surfaced through useChartMode for custom wrappers. */
-  mobileSemantics?: MobileVisualizationContract
-  /** Semantic responsive transformations resolved before mode defaults. */
-  responsiveRules?: ResponsiveRule[]
-}
-
-/** Result of {@link useChartMode} — exported so declaration emit can name it. */
-export interface ChartModeResult {
-  width: number
-  height: number
-  showAxes: boolean
-  showGrid: boolean
-  enableHover: boolean
-  showLegend: boolean | undefined
-  showLabels: boolean | undefined
-  title: string | undefined
-  description: string | undefined
-  summary: string | undefined
-  accessibleTable: boolean | undefined
-  xLabel: string | undefined
-  yLabel: string | undefined
-  categoryLabel: string | undefined
-  valueLabel: string | undefined
-  marginDefaults: { top: number; bottom: number; left: number; right: number }
-  /** True when mode is context or sparkline — the "hide interactive chrome" union. */
-  compactMode: boolean
-  /** Resolved touch-first behavior for mobile-capable wrappers. */
-  mobileInteraction: ResolvedMobileInteractionConfig
-  /** Mobile semantic contract after matching responsive rules are applied. */
-  mobileSemantics: MobileVisualizationContract | undefined
-}
-
 /**
- * Resolve chart display mode into concrete prop defaults.
- * User-provided values always override mode defaults.
+ * React-facing alias for {@link resolveChartMode}. Mode resolution is kept
+ * pure so non-React renderers (notably semiotic/server) consume the exact same
+ * defaults and responsive-rule contract as chart HOCs.
  */
 export function useChartMode(
   mode: ChartMode | undefined,
   userProps: ChartModeInput,
   primaryDefaults?: { width?: number; height?: number }
 ): ChartModeResult {
-  const baseMode = mode || "primary"
-  const baseDefaults = MODE_DEFAULTS[baseMode]
-  const baseWidth = (!mode || mode === "primary") && primaryDefaults?.width ? primaryDefaults.width : baseDefaults.width
-  const baseHeight = (!mode || mode === "primary") && primaryDefaults?.height ? primaryDefaults.height : baseDefaults.height
-  const responsiveBase = { ...userProps, mode } as ChartModeInput & Record<string, unknown>
-  const responsiveProps = resolveResponsiveRules(responsiveBase, {
-    width: userProps.width ?? baseWidth,
-    height: userProps.height ?? baseHeight,
-  }).props as ChartModeInput & { mode?: ChartMode }
-  const resolvedMode = responsiveProps.mode || mode
-  const m = MODE_DEFAULTS[resolvedMode || "primary"]
-  const suppressLabels = resolvedMode === "context" || resolvedMode === "sparkline"
-  const defaultWidth = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.width ? primaryDefaults.width : m.width
-  const defaultHeight = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.height ? primaryDefaults.height : m.height
-  return {
-    width: responsiveProps.width ?? defaultWidth,
-    height: responsiveProps.height ?? defaultHeight,
-    showAxes: responsiveProps.showAxes ?? m.showAxes,
-    showGrid: responsiveProps.showGrid ?? m.showGrid,
-    enableHover: responsiveProps.enableHover ?? (responsiveProps.linkedHover ? true : m.enableHover),
-    showLegend: responsiveProps.showLegend ?? m.showLegend,
-    showLabels: responsiveProps.showLabels ?? m.showLabels,
-    title: suppressLabels ? undefined : responsiveProps.title,
-    description: responsiveProps.description,
-    summary: responsiveProps.summary,
-    accessibleTable: responsiveProps.accessibleTable,
-    xLabel: suppressLabels ? undefined : responsiveProps.xLabel,
-    yLabel: suppressLabels ? undefined : responsiveProps.yLabel,
-    categoryLabel: suppressLabels ? undefined : responsiveProps.categoryLabel,
-    valueLabel: suppressLabels ? undefined : responsiveProps.valueLabel,
-    marginDefaults: adjustMarginsForCategoryTicks(m.marginDefaults, responsiveProps.showCategoryTicks, responsiveProps.orientation),
-    compactMode: suppressLabels,
-    mobileInteraction: resolveMobileInteraction(responsiveProps.mobileInteraction, {
-      mode: resolvedMode,
-      width: responsiveProps.width ?? defaultWidth,
-      mobileSemantics: responsiveProps.mobileSemantics,
-    }),
-    mobileSemantics: responsiveProps.mobileSemantics,
-  }
-}
-
-/**
- * When showCategoryTicks is false, shrink the margin on the category axis side
- * since tick labels no longer need space. Keep a small margin (15px) for the
- * axis baseline and optional axis title.
- */
-function adjustMarginsForCategoryTicks(
-  defaults: { top: number; bottom: number; left: number; right: number },
-  showCategoryTicks: boolean | undefined,
-  orientation: string | undefined
-): { top: number; bottom: number; left: number; right: number } {
-  if (showCategoryTicks !== false) return defaults
-  const adjusted = { ...defaults }
-  if (orientation === "horizontal") {
-    // Horizontal: categories on left axis
-    adjusted.left = Math.min(adjusted.left, 15)
-  } else {
-    // Vertical (default): categories on bottom axis
-    adjusted.bottom = Math.min(adjusted.bottom, 15)
-  }
-  return adjusted
+  return resolveChartMode(mode, userProps, primaryDefaults)
 }
 
 // ── Animate prop → transition config ────────────────────────────────

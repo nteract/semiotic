@@ -33,6 +33,14 @@ const groupedXyData = [
   { x: 3, y: 11, series: "B" },
 ]
 
+const temporalHistogramData = [
+  { time: 0, value: 5, kind: "Errors" },
+  { time: 350, value: 7, kind: "Warnings" },
+  { time: 1200, value: 4, kind: "Errors" },
+  { time: 1850, value: 6, kind: "Warnings" },
+  { time: 2600, value: 8, kind: "Errors" },
+]
+
 const bubbleData = [
   { x: 1, y: 4, size: 12, category: "Alpha" },
   { x: 2, y: 7, size: 22, category: "Beta" },
@@ -875,6 +883,10 @@ function makeSsrParityCases(React) {
     {
       id: "force-directed",
       component: "ForceDirectedGraph",
+      // The browser simulation and synchronous server settle can rotate or
+      // reflect an equivalent force layout. Evidence + the composite snapshot
+      // gate its structure; coordinate-wise pixel comparison is inappropriate.
+      comparison: "structural",
       props: {
         nodes: networkNodes,
         edges: networkEdges,
@@ -940,6 +952,21 @@ function makeSsrParityCases(React) {
       },
     },
     {
+      id: "temporal-histogram",
+      component: "TemporalHistogram",
+      props: {
+        data: temporalHistogramData,
+        binSize: 1000,
+        timeAccessor: "time",
+        valueAccessor: "value",
+        categoryAccessor: "kind",
+        colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+        width: 420,
+        height: 240,
+      },
+      visibleLegendLabel: "Errors",
+    },
+    {
       id: "xy-custom-waffle",
       component: "XYCustomChart",
       props: {
@@ -949,9 +976,12 @@ function makeSsrParityCases(React) {
         colorBy: "category",
         width: 420,
         height: 260,
-        margin: { top: 20, right: 20, bottom: 36, left: 24 },
+        // Keep the authored plot margins while explicitly delegating the
+        // legend side to the chart's standard auto-reservation contract.
+        margin: { top: 20, right: "auto", bottom: 36, left: 24 },
         title: "SSR custom waffle",
       },
+      visibleLegendLabel: "Alpha",
     },
     {
       id: "ordinal-custom-isotype-glyphs",

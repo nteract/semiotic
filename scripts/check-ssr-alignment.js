@@ -41,8 +41,9 @@ const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime"]
 const hocsOnDisk = new Set()
+const namedHocCandidates = new Set()
 
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -57,6 +58,17 @@ for (const dir of HOC_DIRS) {
     // are not chart HOCs and shouldn't be scanned for SSR/validation entries.
     if (!/^[A-Z]/.test(name)) continue
     hocsOnDisk.add(name)
+
+    // A source module can intentionally expose more than one related HOC
+    // (RealtimeHistogram also declares its bounded TemporalHistogram sibling).
+    // Record named PascalCase value exports here and reconcile them against
+    // the canonical chart-spec registry below, which filters aliases/helpers.
+    const source = fs.readFileSync(path.join(fullDir, file), "utf8")
+    const namedExportRegex = /^export\s+(?:const|function)\s+([A-Z]\w+)/gm
+    let exportMatch
+    while ((exportMatch = namedExportRegex.exec(source))) {
+      namedHocCandidates.add(exportMatch[1])
+    }
   }
 }
 
@@ -93,6 +105,10 @@ while ((match = specFileRegex.exec(chartSpecsIndexSource))) {
       validationNames.add(keyMatch[1])
     }
   }
+}
+
+for (const candidate of namedHocCandidates) {
+  if (validationNames.has(candidate)) hocsOnDisk.add(candidate)
 }
 
 // ── 4. Charts that are intentionally SSR-excluded ──────────────────────

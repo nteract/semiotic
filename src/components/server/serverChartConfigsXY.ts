@@ -1,9 +1,12 @@
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
-import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
-import { DEFAULT_COLOR } from "../charts/shared/hooks"
+import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
+import { filterSparseArray } from "../charts/shared/sparseArray"
+import { createColorScale, DEFAULT_COLOR, getColor, getSize } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
+import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, styleRulesToXYStyle, type StyleRule } from "../charts/shared/styleRules"
+import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
   type ChartConfig,
@@ -13,8 +16,48 @@ import {
   viridisColor,
 } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
+import { resolveDownwardHistogramExtent } from "../charts/realtime/temporalHistogramConfig"
 
 // ── XY Charts ──────────────────────────────────────────────────────────
+
+/** Mirror LineChart's shared pure data-to-style contract on the server path. */
+function buildLineStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+): (d: Datum, group?: string) => Datum {
+  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
+  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
+  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrLineColorBy"
+  const colorRows = typeof colorBy === "function"
+    ? rows.map(d => ({ ...d, __ssrLineColorBy: colorBy(d) }))
+    : rows
+  const colorScale = colorBy
+    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
+    : undefined
+  const ruleContext = makeXYRuleContext(
+    rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
+    rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
+  )
+  const base = buildXYLineBaseStyle({
+    lineWidth: typeof rest.lineWidth === "number" ? rest.lineWidth : 2,
+    colorBy: colorBy as string | ((d: Datum) => string) | undefined,
+    colorScale,
+    color: typeof rest.color === "string" ? rest.color : undefined,
+    fillArea: rest.fillArea as boolean | string[] | undefined,
+    areaOpacity: typeof rest.areaOpacity === "number" ? rest.areaOpacity : 0.3,
+    styleRules: rest.styleRules as StyleRule[] | undefined,
+    ruleContext,
+  })
+  return mergeShapeStyle(base, {
+    stroke: typeof rest.stroke === "string" ? rest.stroke : undefined,
+    strokeWidth: typeof rest.strokeWidth === "number" ? rest.strokeWidth : undefined,
+    opacity: typeof rest.opacity === "number" ? rest.opacity : undefined,
+  })
+}
 
 /** Mirror AreaChart's HOC-level fill/top-line style on the server path. */
 function buildAreaLineStyle(
@@ -161,6 +204,7 @@ export const bubbleChart: ChartConfig = {
 
 export const sparkline: ChartConfig = {
   frameType: "xy",
+  layout: { mode: "sparkline" },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "line",
     data,
@@ -171,7 +215,7 @@ export const sparkline: ChartConfig = {
     ...common,
     // Sparkline-specific overrides — always applied regardless of frameProps
     showAxes: false,
-    margin: common.margin || { top: 2, right: 2, bottom: 2, left: 2 },
+    margin: common.margin,
     showLegend: false,
     showGrid: false,
     title: undefined,
@@ -180,32 +224,88 @@ export const sparkline: ChartConfig = {
 
 export const lineChart: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "line",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    groupAccessor: rest.lineBy || colorBy,
-    colorAccessor: colorBy,
-    colorScheme,
-    lineStyle: rest.lineStyle,
-    ...common,
-    // LineChart delegates its default legend decision to useChartSetup:
-    // a grouping/color accessor gets a legend unless the caller disables it.
-    showLegend: common.showLegend ?? Boolean(colorBy),
-    ...(rest.styleRules && {
-      lineStyle: styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y", common.lineStyle || rest.lineStyle),
-    }),
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const effectiveColorBy = colorBy || rest.lineBy
+    return {
+      chartType: "line",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      groupAccessor: rest.lineBy || colorBy,
+      colorAccessor: effectiveColorBy,
+      colorScheme,
+      lineStyle: buildLineStyle(data, effectiveColorBy, colorScheme, common, rest),
+      ...common,
+      // LineChart delegates its default legend decision to useChartSetup:
+      // a grouping/color accessor gets a legend unless the caller disables it.
+      showLegend: common.showLegend ?? Boolean(effectiveColorBy),
+    }
+  },
+}
+
+/** Static-data TemporalHistogram mapped onto the shared time-binned XY pipeline. */
+export const temporalHistogram: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, _colorBy, _colorScheme, common, rest) => {
+    const rows = Array.isArray(data) ? filterSparseArray(data) : []
+    const timeAccessor = rest.timeAccessor || "time"
+    const valueAccessor = rest.valueAccessor || "value"
+    const categoryAccessor = rest.categoryAccessor
+    const valueExtent = rest.valueExtent || common.yExtent
+    const resolvedValueExtent = rest.direction === "down"
+      ? resolveDownwardHistogramExtent({
+          data: rows,
+          timeAccessor,
+          valueAccessor,
+          binSize: Number(rest.binSize),
+          valueExtent,
+          extentPadding: rest.extentPadding,
+        })
+      : valueExtent
+    const barStyle = {
+      ...(rest.fill !== undefined && { fill: rest.fill }),
+      ...(rest.stroke !== undefined && { stroke: rest.stroke }),
+      ...(rest.strokeWidth !== undefined && { strokeWidth: rest.strokeWidth }),
+      ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+      ...(rest.gap !== undefined && { gap: rest.gap }),
+    }
+    return {
+      chartType: "bar",
+      data: rows,
+      ...common,
+      runtimeMode: "streaming",
+      windowMode: "growing",
+      windowSize: Math.max(1, rows.length),
+      arrowOfTime: rest.arrowOfTime || "right",
+      timeAccessor,
+      valueAccessor,
+      xExtent: rest.timeExtent || common.xExtent,
+      yExtent: resolvedValueExtent,
+      extentPadding: rest.extentPadding ?? common.extentPadding,
+      binSize: rest.binSize,
+      categoryAccessor,
+      barColors: rest.colors || common.barColors,
+      colorScheme: rest.colors || common.colorScheme,
+      barStyle: common.barStyle || barStyle,
+      showLegend: common.showLegend ?? Boolean(categoryAccessor),
+    }
+  },
 }
 
 export const areaChart: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const effectiveColorBy = colorBy || rest.areaBy
+    const safeData = Array.isArray(data) ? filterSparseArray(data) : []
+    const preparedData = prepareAreaSeriesData({
+      data,
+      safeData,
+      areaBy: rest.areaBy,
+      lineDataAccessor: rest.lineDataAccessor || "coordinates",
+    })
     return {
       chartType: "area",
-      data,
+      data: preparedData,
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
       y0Accessor: rest.y0Accessor,
@@ -215,7 +315,7 @@ export const areaChart: ChartConfig = {
       ...common,
       // `frameProps.lineStyle` is the public escape hatch and wins exactly
       // as it does in AreaChart; otherwise resolve the HOC defaults here.
-      lineStyle: common.lineStyle || buildAreaLineStyle(data, effectiveColorBy, colorScheme, common, rest),
+      lineStyle: common.lineStyle || buildAreaLineStyle(preparedData, effectiveColorBy, colorScheme, common, rest),
     }
   },
 }

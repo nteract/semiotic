@@ -1,5 +1,4 @@
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
-import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import type {
@@ -7,7 +6,9 @@ import type {
   RealtimeNode,
   RealtimeEdge,
   StreamNetworkFrameProps,
-  NetworkChartType
+  NetworkChartType,
+  NetworkSceneNode,
+  NetworkSceneEdge,
 } from "../stream/networkTypes"
 import { getLayoutPlugin } from "../stream/layouts"
 import {
@@ -24,10 +25,9 @@ import {
   networkSceneEdgeToSVG,
   networkLabelToSVG
 } from "../stream/SceneToSVG"
-import { renderSceneWithBackend } from "../stream/renderBackend"
+import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import {
-  renderStaticLegend,
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
@@ -35,11 +35,8 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
-  reserveStaticLegendMargin,
-  reserveLegendConfigMargin,
-  hocLegendMarginMinimum,
-  hasExplicitLegendMargin,
-  renderLegendConfig,
+  reserveFrameLegendMargin,
+  renderFrameLegend,
   wrapSVG,
   edgeEndpointId
 } from "./staticSVGChrome"
@@ -129,33 +126,13 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   })() : []
   // Match the XY frame: reserve legend space BEFORE computing inner dims so
   // the layout doesn't draw under the legend.
-  const legendPos = props.legendPosition
-  const legendPosition = legendPos || "right"
-  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
-  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
-    reserveLegendConfigMargin(margin, {
-      legend: props.legend,
-      theme,
-      position: legendPosition,
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      minimumMargin: minimumLegendMargin,
-      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
-    })
-  } else if (props.showLegend && networkLegendCategories.length > 0) {
-    reserveStaticLegendMargin(margin, {
-      categories: networkLegendCategories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: legendPosition,
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      minimumMargin: minimumLegendMargin,
-      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
-    })
-  }
+  reserveFrameLegendMargin(margin, {
+    props,
+    categories: networkLegendCategories,
+    theme,
+    size,
+    hasTitle: hasVisibleTitle,
+  })
   const innerWidth = size[0] - margin.left - margin.right
   const innerHeight = size[1] - margin.top - margin.bottom
 
@@ -275,8 +252,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // escape hatch would silently fall through to the force/sankey/etc.
   // plugin during SSR — visible regression class for any registered
   // custom-layout chart.
-  let sceneNodes: import("../stream/networkTypes").NetworkSceneNode[] = []
-  let sceneEdges: import("../stream/networkTypes").NetworkSceneEdge[] = []
+  let sceneNodes: NetworkSceneNode[] = []
+  let sceneEdges: NetworkSceneEdge[] = []
   let labels: import("../stream/networkTypes").NetworkLabel[] = []
   // Overlays returned from a custom layout (drawn above the data layer
   // by NetworkSVGOverlay on CSR; threaded into `content` below on SSR
@@ -344,38 +321,34 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     if (!label.fill) label.fill = s.text
   }
 
+  const renderedEdges = renderSceneListWithBackend<NetworkSceneEdge>({
+    nodes: sceneEdges,
+    renderMode: props.renderMode,
+    fallback: (edge, index) => networkSceneEdgeToSVG(edge, index),
+  })
+  const renderedNodes = renderSceneListWithBackend<NetworkSceneNode>({
+    nodes: sceneNodes,
+    renderMode: props.renderMode,
+    fallback: (node, index) => networkSceneNodeToSVG(node, index),
+  })
+
   if (sink) {
     sink.evidence = buildEvidence({
       frameType: "network",
       width: size[0], height: size[1],
       marks: [
-        ...sceneNodes.map((n) => ({ type: `node:${(n as { type?: string }).type ?? "node"}` })),
-        ...sceneEdges.map((e) => ({ type: `edge:${(e as { type?: string }).type ?? "edge"}` })),
+        ...renderedNodes.map(({ node }) => ({ type: `node:${(node as { type?: string }).type ?? "node"}` })),
+        ...renderedEdges.map(({ node }) => ({ type: `edge:${(node as { type?: string }).type ?? "edge"}` })),
       ],
       title: props.title, description: props.description,
       annotations: props.annotations,
-      nodeCount: sceneNodes.length,
-      edgeCount: sceneEdges.length,
+      nodeCount: renderedNodes.length,
+      edgeCount: renderedEdges.length,
     })
   }
 
-  const edgeElements = sceneEdges
-    .map((edge, i) => renderSceneWithBackend({
-      node: edge,
-      index: i,
-      renderMode: props.renderMode,
-      fallback: () => networkSceneEdgeToSVG(edge, i)
-    }))
-    .filter(Boolean)
-
-  const nodeElements = sceneNodes
-    .map((node, i) => renderSceneWithBackend({
-      node,
-      index: i,
-      renderMode: props.renderMode,
-      fallback: () => networkSceneNodeToSVG(node, i)
-    }))
-    .filter(Boolean)
+  const edgeElements = renderedEdges.map(entry => entry.element)
+  const nodeElements = renderedNodes.map(entry => entry.element)
 
   const labelElements = labels
     .map((label, i) => networkLabelToSVG(label, i))
@@ -404,54 +377,14 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // Both string and function accessors are honored — `extractCategories`
   // accepts either form, and stripping functions to undefined would silently
   // drop the legend for any caller using a typed accessor function.
-  const networkLegend = props.showLegend ? (() => {
-    const isAccessor = (a: unknown): a is CategoricalAccessor =>
-      typeof a === "string" || typeof a === "function"
-    const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
-    if (!colorAccessor) return []
-    const legendSource = nodes.length > 0
-      ? nodes.map((node) => node.data || { id: node.id })
-      : Array.from(new Set(
-        edges.flatMap((e) => {
-          const src = edgeEndpointId(e.source)
-          const tgt = edgeEndpointId(e.target)
-          return [src, tgt]
-        }).filter(Boolean)
-      )).map((id) => ({ id }))
-    const categories = extractCategories(
-      legendSource,
-      colorAccessor as CategoricalAccessor
-    )
-    if (categories.length === 0) return null
-    return renderStaticLegend({
-      categories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: props.legendPosition || "right",
-      totalWidth: size[0],
-      totalHeight: size[1],
-      margin,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
-    })
-  })() : null
-
-  // If the caller supplied a pre-rendered legend element, prefer it over
-  // the auto-build. Config-object legends ({legendGroups} or {gradient})
-  // are rendered statically for SSR.
-  const networkLegendOut = React.isValidElement(props.legend)
-    ? props.legend
-    : renderLegendConfig(props.legend, {
-        theme,
-        position: props.legendPosition || "right",
-        size,
-        margin,
-        hasTitle: hasVisibleTitle,
-        legendLayout: props.legendLayout,
-        idPrefix: props._idPrefix,
-        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
-      }) || networkLegend
+  const networkLegendOut = renderFrameLegend({
+    props,
+    categories: networkLegendCategories,
+    theme,
+    size,
+    margin,
+    hasTitle: hasVisibleTitle,
+  })
 
   const content = (
     <>

@@ -118,6 +118,36 @@ export function renderSceneWithBackend<Node extends SceneLike>(args: {
   return fallback()
 }
 
+export interface RenderedSceneEntry<Node> {
+  node: Node
+  element: React.ReactNode
+}
+
+/**
+ * Render a scene once and retain only nodes that produced static output.
+ * Static evidence and SVG markup consume the same entries, preventing an
+ * unpaintable node from being reported as a successful rendered mark.
+ */
+export function renderSceneListWithBackend<Node extends SceneLike>(args: {
+  nodes: Node[]
+  renderMode: SceneRenderMode<Node> | undefined
+  fallback: (node: Node, index: number) => React.ReactNode
+}): RenderedSceneEntry<Node>[] {
+  const entries: RenderedSceneEntry<Node>[] = []
+  args.nodes.forEach((node, index) => {
+    const element = renderSceneWithBackend({
+      node,
+      index,
+      renderMode: args.renderMode,
+      fallback: () => args.fallback(node, index),
+    })
+    if (element !== null && element !== undefined && element !== false) {
+      entries.push({ node, element })
+    }
+  })
+  return entries
+}
+
 export function resetRenderBackendWarningsForTests(): void {
   warnedFallbacks.clear()
 }

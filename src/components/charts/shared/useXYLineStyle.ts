@@ -37,11 +37,11 @@ import type { Accessor, ChartAccessor } from "./types"
 import type { SelectionHookResult, SelectionStyleConfig } from "./selectionUtils"
 import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
-import { getColor } from "./colorUtils"
-import { DEFAULT_COLOR } from "./hooks"
-import { resolveStyleRules, type StyleRule, type StyleRuleContext } from "./styleRules"
+import { buildXYLineBaseStyle } from "./xyLineStyle"
+import type { XYLineBaseStyleOptions } from "./xyLineStyle"
+import type { StyleRule, StyleRuleContext } from "./styleRules"
 
-export interface XYLineStyleOptions {
+export interface XYLineStyleOptions extends XYLineBaseStyleOptions {
   /**
    * Base stroke width. The top-level `strokeWidth` override below
    * wins via `mergeShapeStyle` when both are supplied.
@@ -162,44 +162,20 @@ export function useXYLineStyle(
   // a single fallback color and lock every push-mode series into
   // it — the original LineChart code had this branch intentionally
   // bare for that reason.
-  const baseLineStyle = useMemo(() => {
-    return (d: Datum, group?: string): Datum => {
-      const style: Datum = { strokeWidth: lineWidth }
-
-      // Group-aware fill gate. `fillArea === true` fills every series;
-      // `fillArea: ["a", "c"]` only fills series whose group key matches.
-      const shouldFill = fillArea === true
-        || (Array.isArray(fillArea) && group != null && fillArea.includes(group))
-
-      let resolved: string | undefined
-      if (resolveStroke) {
-        resolved = resolveStroke(d, group)
-      } else if (colorBy) {
-        // colorBy set but colorScale missing → leave stroke undefined
-        // (frame back-fills); only resolve when both are present.
-        if (colorScale) {
-          resolved = getColor(d, colorBy as ChartAccessor<Datum, string>, colorScale) as string
-        }
-      } else {
-        resolved = color || DEFAULT_COLOR
-      }
-
-      if (resolved !== undefined) {
-        style.stroke = resolved
-        if (shouldFill) {
-          style.fill = resolved
-          style.fillOpacity = areaOpacity
-        }
-      }
-
-      // Declarative style rules merge on top (last-applicable rule wins).
-      // Per-series: `d` is the series sample datum.
-      if (styleRules && styleRules.length > 0) {
-        Object.assign(style, resolveStyleRules(d, styleRules, ruleContext ? ruleContext(d, group) : { value: undefined, category: group }))
-      }
-      return style
-    }
-  }, [lineWidth, colorBy, colorScale, color, resolveStroke, fillArea, areaOpacity, styleRules, ruleContext])
+  const baseLineStyle = useMemo(
+    () => buildXYLineBaseStyle({
+      lineWidth,
+      colorBy,
+      colorScale,
+      color,
+      resolveStroke,
+      fillArea,
+      areaOpacity,
+      styleRules,
+      ruleContext,
+    }),
+    [lineWidth, colorBy, colorScale, color, resolveStroke, fillArea, areaOpacity, styleRules, ruleContext],
+  )
 
   // Step 4 — top-level primitive overlay. `mergeShapeStyle` no-ops
   // when no overrides are set, so HOCs that don't pass these (e.g.

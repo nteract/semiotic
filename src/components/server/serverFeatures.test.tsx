@@ -131,6 +131,15 @@ describe("Shared HOC rendering contracts", () => {
       nodeIdAccessor: "city",
       xAccessor: "lon",
       yAccessor: "lat",
+      areas: [{
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[-20, -20], [20, -20], [20, 20], [-20, 20], [-20, -20]]],
+        },
+      }],
+      areaStyle: { fill: "#fedcba", stroke: "#123456" },
       width: 460,
       height: 300,
     })
@@ -141,6 +150,9 @@ describe("Shared HOC rendering contracts", () => {
     expect(funnel).toContain(">Signed up<")
     // FlowMap shares the HOC's compact geo margin, not the primary XY margin.
     expect(flowMap).toContain('transform="translate(10,10)"')
+    // Shared geo defaults remain defaults: explicit styling still wins.
+    expect(flowMap).toContain("#fedcba")
+    expect(flowMap).toContain("#123456")
   })
 
   it("uses the HOC's right-side Likert legend placement", () => {
@@ -191,6 +203,9 @@ describe("Theme inlining", () => {
     expect(svg).toContain("#aaa")
     // DARK_THEME uses #555 for border
     expect(svg).toContain("#555")
+    // The client canvas paints the active theme background when no explicit
+    // background prop overrides it; standalone SVG must do the same.
+    expect(svg).toMatch(/<rect[^>]*width="400"[^>]*height="300"[^>]*fill="#1a1a2e"/)
   })
 
   it("applies tufte theme with serif font", () => {
@@ -559,6 +574,54 @@ describe("Legend rendering", () => {
     expect(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1]).not.toBe("20")
   })
 
+  it("composes caller legendGroups after an inferred series legend in SSR", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      lineBy: "series",
+      colorBy: "series",
+      width: 420,
+      height: 280,
+      legend: {
+        legendGroups: [{
+          label: "Context",
+          type: "line",
+          styleFn: () => ({ stroke: "#111" }),
+          items: [{ label: "Target" }],
+        }],
+      },
+    })
+
+    expect(svg).toContain(">alpha<")
+    expect(svg).toContain(">beta<")
+    expect(svg).toContain(">Target<")
+    expect(svg).toContain(">Context<")
+  })
+
+  it("renders static TemporalHistogram data with bins, category colors, and legend", () => {
+    const svg = renderChart("TemporalHistogram", {
+      binSize: 1000,
+      data: [
+        { time: 100, value: 5, kind: "Errors" },
+        { time: 900, value: 7, kind: "Warnings" },
+        { time: 2100, value: 4, kind: "Errors" },
+      ],
+      categoryAccessor: "kind",
+      colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+      width: 420,
+      height: 240,
+    })
+
+    expect(svg).toContain("stream-xy-frame")
+    expect(svg).toContain("#d62728")
+    expect(svg).toContain("#f59e0b")
+    expect(svg).toContain(">Errors<")
+    expect(svg).toContain(">Warnings<")
+    expect(svg).toMatch(/<rect[^>]*fill="#d62728"[^>]*><\/rect><text[^>]*>Errors<\/text>/)
+    expect(svg).toMatch(/<rect[^>]*fill="#f59e0b"[^>]*><\/rect><text[^>]*>Warnings<\/text>/)
+  })
+
   it("renders caller-supplied gradient legends in SSR", () => {
     const svg = renderChart("LineChart", {
       data: lineData,
@@ -910,6 +973,11 @@ describe("renderChart", () => {
     expect(svg).toContain("semiotic-legend")
     expect(svg).toContain(">Disagree<")
     expect(svg).toContain(">Agree<")
+    // Default ThemeProvider state supplies RdBu, sampled by the shared Likert
+    // palette resolver instead of the unthemed Carbon fallback.
+    expect(svg).toContain("#67001f")
+    expect(svg).toContain("#053061")
+    expect(svg).toContain('transform="translate(100,50)"')
   })
 
   it("renders DonutChart", () => {
@@ -1135,6 +1203,26 @@ describe("renderChart", () => {
     expect(svg).toContain(">Review<")
     expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
     expect(explicitRight).toContain('class="semiotic-legend" transform="translate(380,30)"')
+  })
+
+  it("resolves ProcessSankey colors from the active theme", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [
+        { id: "intake", phase: "Intake", xExtent: [0, 20] },
+        { id: "review", phase: "Review", xExtent: [20, 50] },
+      ],
+      edges: [{ source: "intake", target: "review", value: 4, startTime: 0, endTime: 50 }],
+      domain: [0, 50],
+      nodeIdAccessor: "id",
+      colorBy: "phase",
+      theme: "dark",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("#4fc3f7")
+    expect(svg).toContain("#ffb74d")
+    expect(svg).not.toContain("#1f77b4")
+    expect(svg).not.toContain("#ff7f0e")
   })
 
   it("uses Sankey and TreeDiagram's HOC-level monocolor/black-outline defaults", () => {

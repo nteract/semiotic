@@ -1,4 +1,3 @@
-import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { ticksForMode } from "../charts/shared/axisExtent"
 import * as React from "react"
@@ -15,12 +14,11 @@ import {
   type EvidenceSink
 } from "./renderEvidence"
 import { ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
-import { renderSceneWithBackend } from "../stream/renderBackend"
+import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import {
-  renderStaticLegend,
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
@@ -29,11 +27,8 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
   chartUID,
-  reserveStaticLegendMargin,
-  reserveLegendConfigMargin,
-  hocLegendMarginMinimum,
-  hasExplicitLegendMargin,
-  renderLegendConfig,
+  reserveFrameLegendMargin,
+  renderFrameLegend,
   defaultTickFormat,
   renderOrdinalGridSVG,
   wrapSVG
@@ -68,10 +63,10 @@ export function generateOrdinalAxesSVG(
   // ticksForMode mirrors the client OrdinalSVGOverlay: "exact" pins the
   // value-axis ticks to the data min/max (the axisExtent headline behavior);
   // "nice"/undefined falls through to scale.ticks — byte-identical to before.
-  const rTickCount = props.axisExtent === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor((isVertical ? layout.height : layout.width) / (isVertical ? 30 : 70))))
-  const rTicks = ticksForMode(scales.r, rTickCount, props.axisExtent).map(v => ({
+  // OrdinalSVGOverlay requests five value ticks for both projections; d3 may
+  // return a nearby "nice" count. Do not apply the XY frame's pixel-budget
+  // heuristic here or SSR and CSR choose different intervals.
+  const rTicks = ticksForMode(scales.r, 5, props.axisExtent).map(v => ({
     pixel: scales.r(v),
     label: (valFormat || defaultTickFormat)(v)
   }))
@@ -159,33 +154,13 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     : []
 
   // Expand margin for legend BEFORE calculating inner dimensions
-  const legendPos = props.legendPosition
-  const legendPosition = legendPos || "right"
-  const minimumLegendMargin = hocLegendMarginMinimum(props, legendPosition)
-  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
-    reserveLegendConfigMargin(margin, {
-      legend: props.legend,
-      theme,
-      position: legendPosition,
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      minimumMargin: minimumLegendMargin,
-      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
-    })
-  } else if (props.showLegend && ordinalLegendCategories.length > 0) {
-    reserveStaticLegendMargin(margin, {
-      categories: ordinalLegendCategories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: legendPosition,
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      minimumMargin: minimumLegendMargin,
-      preserveExplicitMargin: hasExplicitLegendMargin(props, legendPosition),
-    })
-  }
+  reserveFrameLegendMargin(margin, {
+    props,
+    categories: ordinalLegendCategories,
+    theme,
+    size,
+    hasTitle: hasVisibleTitle,
+  })
 
   const width = size[0] - margin.left - margin.right
   const height = size[1] - margin.top - margin.bottom
@@ -291,19 +266,6 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     )
   }
 
-  if (sink) {
-    const oDomain = store.scales.o?.domain?.()
-    sink.evidence = buildEvidence({
-      frameType: "ordinal",
-      width: size[0], height: size[1],
-      marks: store.scene,
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      yDomain: numericDomain(store.scales.r?.domain?.()),
-      categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
-    })
-  }
-
   const idPfx = (props as ThemeAwareProps)._idPrefix
   const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent) : null
 
@@ -343,14 +305,25 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     }
   }
 
-  const dataMarks = store.scene
-    .map((node, i) => renderSceneWithBackend({
-      node,
-      index: i,
-      renderMode: props.renderMode,
-      fallback: () => ordinalSceneNodeToSVG(node, i, idPfx)
-    }))
-    .filter(Boolean)
+  const renderedScene = renderSceneListWithBackend({
+    nodes: store.scene,
+    renderMode: props.renderMode,
+    fallback: (node, index) => ordinalSceneNodeToSVG(node, index, idPfx),
+  })
+  const dataMarks = renderedScene.map(entry => entry.element)
+
+  if (sink) {
+    const oDomain = store.scales.o?.domain?.()
+    sink.evidence = buildEvidence({
+      frameType: "ordinal",
+      width: size[0], height: size[1],
+      marks: renderedScene.map(entry => entry.node),
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      yDomain: numericDomain(store.scales.r?.domain?.()),
+      categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
+    })
+  }
 
   const showAxes = props.showAxes !== false
   const axes = showAxes
@@ -375,34 +348,14 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   // Legend — auto-build from colorAccessor/stackBy/groupBy + showLegend, OR
   // honor caller-supplied pre-rendered ReactNode. See XY block for the
   // contract; same pattern. Config-object form deferred.
-  const ordinalAutoLegend = props.showLegend ? (() => {
-    const categories = ordinalLegendCategories
-    if (categories.length === 0) return null
-    return renderStaticLegend({
-      categories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: props.legendPosition || "right",
-      totalWidth: size[0],
-      totalHeight: size[1],
-      margin,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-      reservedWidth: props.__autoLegendMargin ? 100 : undefined,
-    })
-  })() : null
-  const legend = React.isValidElement(props.legend)
-    ? (props.legend as React.ReactNode)
-    : renderLegendConfig(props.legend, {
-        theme,
-        position: props.legendPosition || "right",
-        size,
-        margin,
-        hasTitle: hasVisibleTitle,
-        legendLayout: props.legendLayout,
-        idPrefix: props._idPrefix,
-        reservedWidth: props.__autoLegendMargin ? 100 : undefined,
-      }) || ordinalAutoLegend
+  const legend = renderFrameLegend({
+    props,
+    categories: ordinalLegendCategories,
+    theme,
+    size,
+    margin,
+    hasTitle: hasVisibleTitle,
+  })
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top

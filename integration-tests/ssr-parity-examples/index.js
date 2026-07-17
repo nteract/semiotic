@@ -31,7 +31,10 @@ const examples = selectedCases.map((c) => {
     throw new Error(`Missing SSR parity component export: ${c.component}`)
   }
 
-  const chart = React.createElement(Component, c.props)
+  // The sheet compares settled geometry, not an arbitrary canvas intro frame.
+  // Apply the same explicit animation setting to every CSR fixture; the
+  // server renderer receives it from the spec as well.
+  const chart = React.createElement(Component, { ...c.props, animate: false })
   const child = c.theme
     ? React.createElement(ThemeProvider, { theme: c.theme }, chart)
     : chart

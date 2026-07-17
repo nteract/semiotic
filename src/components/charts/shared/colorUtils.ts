@@ -25,6 +25,34 @@ export const COLOR_SCHEMES: Record<string, readonly string[] | ((t: number) => s
  */
 export const DEFAULT_COLORS = schemeCategory10
 
+/** Uniform mark color when no categorical encoding or theme is active. */
+export const DEFAULT_COLOR = "#007bff"
+
+/**
+ * Resolve a categorical palette with one precedence contract for React HOCs,
+ * streaming/custom layouts, and server rendering. Explicit settings always
+ * win; the ambient theme is the default, not an override.
+ */
+export function resolveCategoricalPalette(
+  colorScheme: string | string[] | Record<string, string> | undefined,
+  themeCategorical: readonly string[] | undefined,
+  fallback: readonly string[] = DEFAULT_COLORS,
+): readonly string[] {
+  if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
+    const values = Object.values(colorScheme).filter(
+      (color): color is string => typeof color === "string" && color.length > 0,
+    )
+    if (values.length > 0) return values
+  }
+  if (Array.isArray(colorScheme) && colorScheme.length > 0) return colorScheme
+  if (typeof colorScheme === "string") {
+    const named = COLOR_SCHEMES[colorScheme]
+    if (Array.isArray(named) && named.length > 0) return named
+  }
+  if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+  return fallback
+}
+
 /**
  * Pastel palette for depth-based hierarchy coloring (Treemap, CirclePack, TreeDiagram).
  * Index corresponds to hierarchy depth, wraps via modulo.

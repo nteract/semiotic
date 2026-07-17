@@ -726,7 +726,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         // compute — there is no prior projection yet, and re-applying
         // the pre-compute default [0,0,0] would clobber an authored
         // projection.rotate (e.g. orthographic facing the Americas).
-        const hadProjection = store.projection != null
+        const hadProjection = store.hasProjection()
         const savedRotation =
           effectiveDragRotate && hadProjection ? store.getRotation() : null
 

@@ -897,6 +897,11 @@ export class GeoPipelineStore implements UpdateResultStore {
     proj.rotate(rotation)
   }
 
+  /** Whether a projection has been resolved by at least one scene compute. */
+  hasProjection(): boolean {
+    return this.projection != null
+  }
+
   /** Get current rotation (for external tracking) */
   getRotation(): [number, number, number] {
     return (this.projection?.rotate?.() ?? this.baseRotation) as [number, number, number]

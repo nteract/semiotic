@@ -1,4 +1,5 @@
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
+import { renderServerGaugeOverlay } from "./serverGaugeOverlay"
 import { computeArcBoundingBox, sweepToAngles } from "../charts/shared/radialGeometry"
 import {
   aggregateData,
@@ -282,6 +283,7 @@ export const pieChart: ChartConfig = {
 
 export const donutChart: ChartConfig = {
   frameType: "ordinal",
+  layout: { primarySize: { width: 400, height: 400 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const effectiveColorBy = colorBy || rest.categoryAccessor
     return {
@@ -397,6 +399,7 @@ export const swarmPlot: ChartConfig = {
 
 export const dotPlot: ChartConfig = {
   frameType: "ordinal",
+  layout: { modeDefaults: { showGrid: true } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "point",
     data,
@@ -466,6 +469,14 @@ export const ridgelinePlot: ChartConfig = {
 
 export const likertChart: ChartConfig = {
   frameType: "ordinal",
+  layout: {
+    margin: (props, resolved) => ({
+      ...resolved.marginDefaults,
+      left: props.orientation === "vertical"
+        ? resolved.marginDefaults.left
+        : Math.max(100, resolved.marginDefaults.left),
+    }),
+  },
   buildProps: (data, _colorBy, colorScheme, common, rest) => {
     const levels = Array.isArray(rest.levels) && rest.levels.length >= 2
       ? rest.levels as string[]
@@ -484,9 +495,10 @@ export const likertChart: ChartConfig = {
       : null
     let processed = aggregateData(rows, levels, getCategory, getScore, getLevel, getCount)
     if (isDiverging) processed = orderForDiverging(toDivergingValues(processed, levels), levels)
+    const themeDiverging = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.diverging
     const palette = Array.isArray(colorScheme) && colorScheme.length >= levels.length
       ? colorScheme
-      : defaultDivergingScheme(levels.length)
+      : defaultDivergingScheme(levels.length, themeDiverging)
     const levelColors = new Map(levels.map((level, index) => [level, palette[index] || "#888"]))
     const neutralColor = levels.length % 2 ? levelColors.get(levels[Math.floor(levels.length / 2)]) || "#888" : "#888"
     const valueFormat = typeof rest.valueFormat === "function"
@@ -528,14 +540,17 @@ export const likertChart: ChartConfig = {
           styleFn: (item: { label: string }) => ({ fill: levelColors.get(item.label) || "#888" }),
         }],
       },
-      // Match the HOC's extra room for diverging category labels.
-      margin: common.margin ? common.margin : (isDiverging ? { top: 50, right: 40, bottom: 60, left: 100 } : undefined),
     }
   },
 }
 
 export const funnelChart: ChartConfig = {
   frameType: "ordinal",
+  layout: {
+    margin: (props, resolved) => props.orientation === "vertical"
+      ? { top: resolved.title ? 60 : 40, right: 20, bottom: 60, left: 60 }
+      : { top: resolved.title ? 40 : 10, right: 10, bottom: 10, left: 10 },
+  },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const isVertical = rest.orientation === "vertical"
     const effectiveColorBy = colorBy || rest.categoryAccessor
@@ -554,10 +569,10 @@ export const funnelChart: ChartConfig = {
       // the vertical bar-funnel has no connectors). Dropped by SSR before this.
       ...(!isVertical && rest.connectorOpacity != null && { connectorOpacity: rest.connectorOpacity }),
       barPadding: isVertical ? 40 : 0,
-      showAxes: isVertical,
-      showGrid: isVertical,
       colorScheme,
       ...common,
+      showAxes: isVertical,
+      showGrid: isVertical,
       // A one-series funnel is intentionally monocolor; per-step palette
       // cycling is a frame fallback, not FunnelChart's HOC contract.
       pieceStyle: buildBarPieceStyle(data, effectiveColorBy, colorScheme, common, rest),
@@ -569,6 +584,8 @@ export const funnelChart: ChartConfig = {
 // GaugeChart is special — it computes needle geometry
 export const gaugeChart: ChartConfig = {
   frameType: "ordinal",
+  layout: { primarySize: { width: 300, height: 250 } },
+  renderOverlay: renderServerGaugeOverlay,
   buildProps: (data, _colorBy, _colorScheme, common, rest) => {
     const gMin = rest.min ?? 0
     const gMax = rest.max ?? 100

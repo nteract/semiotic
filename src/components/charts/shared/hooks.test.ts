@@ -19,6 +19,7 @@ import { CategoryColorProvider } from "../../CategoryColors"
 import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import type { Datum } from "./datumTypes"
 import { useStreamingLegend } from "./useStreamingLegend"
+import { isLegendConfig } from "../../types/legendTypes"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -494,9 +495,39 @@ describe("useChartLegendAndMargin", () => {
         userMargin: undefined,
       })
     )
-    expect(result.current.legend).toBeDefined()
-    expect(result.current.legend!.legendGroups).toHaveLength(1)
-    expect(result.current.legend!.legendGroups[0].items).toHaveLength(3)
+    const legend = result.current.legend
+    if (!isLegendConfig(legend)) throw new Error("Expected a categorical legend")
+    expect(legend.legendGroups).toHaveLength(1)
+    expect(legend.legendGroups[0].items).toHaveLength(3)
+  })
+
+  it("appends caller categorical groups after the inferred legend", () => {
+    const additionalLegend = {
+      legendGroups: [{
+        label: "Context",
+        type: "line" as const,
+        styleFn: () => ({ stroke: "#111" }),
+        items: [{ label: "Threshold" }],
+      }],
+    }
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: undefined,
+        userMargin: undefined,
+        additionalLegend,
+      })
+    )
+
+    const legend = result.current.legend
+    if (!isLegendConfig(legend)) throw new Error("Expected composed categorical legends")
+    const groups = legend.legendGroups
+    expect(groups).toHaveLength(2)
+    expect(groups[0].items.map(item => item.label)).toEqual(["A", "B", "C"])
+    expect(groups[1].items[0].label).toBe("Threshold")
+    expect(result.current.margin.right).toBe(110)
   })
 
   it("does not create a legend when showLegend is false", () => {

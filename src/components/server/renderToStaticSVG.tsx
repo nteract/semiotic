@@ -1,4 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
+import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
  * Family implementations live in staticXY / staticOrdinal / staticNetwork /
@@ -131,17 +133,29 @@ const COMMON_FRAME_PROP_KEYS = [
   "legendLayout",
 ] as const
 
-// `renderChart()` accepts HOC-level props, so its implicit margin must match
-// the primary HOC mode rather than the lower-level static frame fallback.
-// Frame APIs (renderXYToStaticSVG, etc.) retain their own defaults.
-const HOC_PRIMARY_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
-const SPARKLINE_MARGIN = { top: 2, right: 2, bottom: 2, left: 2 }
-const FUNNEL_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
-const CHOROPLETH_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
-const PROPORTIONAL_SYMBOL_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
-const NETWORK_CUSTOM_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
-const PROCESS_SANKEY_MARGIN = { top: 30, right: 80, bottom: 40, left: 80 }
-const FLOW_MAP_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
+const CHART_MODE_PROP_KEYS = [
+  "width",
+  "height",
+  "showAxes",
+  "showGrid",
+  "enableHover",
+  "showLegend",
+  "showLabels",
+  "showCategoryTicks",
+  "orientation",
+  "title",
+  "description",
+  "summary",
+  "accessibleTable",
+  "xLabel",
+  "yLabel",
+  "categoryLabel",
+  "valueLabel",
+  "linkedHover",
+  "mobileInteraction",
+  "mobileSemantics",
+  "responsiveRules",
+] as const
 
 function pickDefinedProps(source: Datum, keys: readonly string[]): Datum {
   const picked: Datum = {}
@@ -205,33 +219,44 @@ function renderChartInternal(
   _options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
-  // Extract common props
+  // Resolve the public HOC contract before mapping chart-specific props. The
+  // resolver is the same pure function every React chart HOC consumes, so
+  // context/sparkline/mobile dimensions and chrome cannot drift in SSR.
+  const config = CHART_CONFIGS[component]
+  if (!config) {
+    throw new Error(
+      `Unknown chart component: "${component}". ` +
+      `See CLAUDE.md for supported chart types.`
+    )
+  }
+  // Some chart families also own a chart-specific `mode` prop (for example
+  // physics `mode="mechanical"`). Only consume the four semantic display
+  // modes here; the original prop remains in `rest` for the chart builder.
+  const requestedMode = config.layout?.mode ?? (isChartMode(props.mode) ? props.mode : undefined)
+  const resolvedMode = resolveChartMode(
+    requestedMode,
+    {
+      ...config.layout?.modeDefaults,
+      ...pickDefinedProps(props, CHART_MODE_PROP_KEYS),
+    },
+    config.layout?.primarySize,
+  )
+
   const {
-    data, width = 600, height = 400, theme, title, description,
-    showLegend, showGrid, background, className, annotations,
+    data, theme, background, className, annotations,
     margin, colorScheme, colorBy, legendPosition,
     ...rest
   } = props
 
+  const { width, height } = resolvedMode
   const size: [number, number] = [width, height]
   // Flatten frameProps plus known frame-level top-level props into common.
   // Top-level props win so renderChart mirrors the React HOC API.
   const framePropsOverrides = rest.frameProps || {}
-  const defaultMargin = component === "Sparkline"
-    ? SPARKLINE_MARGIN
-    : component === "FunnelChart"
-      ? (title ? { ...FUNNEL_MARGIN, top: 40 } : FUNNEL_MARGIN)
-      : component === "ChoroplethMap"
-        ? CHOROPLETH_MARGIN
-        : component === "ProportionalSymbolMap"
-          ? PROPORTIONAL_SYMBOL_MARGIN
-          : component === "NetworkCustomChart"
-            ? NETWORK_CUSTOM_MARGIN
-            : component === "ProcessSankey"
-              ? PROCESS_SANKEY_MARGIN
-              : component === "FlowMap"
-                ? FLOW_MAP_MARGIN
-      : HOC_PRIMARY_MARGIN
+  const layoutMargin = config.layout?.margin
+  const defaultMargin = typeof layoutMargin === "function"
+    ? layoutMargin(props, resolvedMode)
+    : layoutMargin ?? resolvedMode.marginDefaults
   // Keep the caller-supplied margin separately from the resolved default.
   // Some chart HOCs (for example DifferenceChart's custom legend) only
   // reserve their standard legend gutter when that side was not explicitly
@@ -241,14 +266,26 @@ function renderChartInternal(
   // defaults. Preserve that same shape before handing props to a static
   // frame; otherwise `{ right: 64 }` accidentally falls back to the lower
   // level frame's 20px top/left defaults.
+  const normalizedExplicitMargin = normalizePartialMargin(explicitMargin as PartialMargin | undefined)
   const effectiveMargin = typeof explicitMargin === "number"
     ? { top: explicitMargin, right: explicitMargin, bottom: explicitMargin, left: explicitMargin }
-    : { ...defaultMargin, ...(explicitMargin || {}) }
+    : { ...defaultMargin, ...normalizedExplicitMargin }
   const topLevelFrameProps = pickDefinedProps(rest, COMMON_FRAME_PROP_KEYS)
   const common: Datum & ThemeAwareProps & { size: [number, number] } = {
     ...framePropsOverrides,
     ...topLevelFrameProps,
-    theme, title, description, showLegend, showGrid, background, className, annotations,
+    theme,
+    title: resolvedMode.title,
+    description: resolvedMode.description,
+    showAxes: resolvedMode.showAxes,
+    showLegend: resolvedMode.showLegend,
+    showLabels: resolvedMode.showLabels,
+    showGrid: resolvedMode.showGrid,
+    xLabel: resolvedMode.xLabel,
+    yLabel: resolvedMode.yLabel,
+    categoryLabel: resolvedMode.categoryLabel,
+    valueLabel: resolvedMode.valueLabel,
+    background, className, annotations,
     size,
     margin: effectiveMargin,
     __explicitMargin: explicitMargin,
@@ -259,15 +296,6 @@ function renderChartInternal(
     ...(colorScheme !== undefined && { colorScheme }),
     ...(legendPosition !== undefined && { legendPosition }),
     _idPrefix: rest._idPrefix,
-  }
-
-  // Look up chart config from registry
-  const config = CHART_CONFIGS[component]
-  if (!config) {
-    throw new Error(
-      `Unknown chart component: "${component}". ` +
-      `See CLAUDE.md for supported chart types.`
-    )
   }
 
   const frameProps2 = config.buildProps(data, colorBy, colorScheme, common, rest)
@@ -292,95 +320,10 @@ function renderChartInternal(
       break
   }
 
-  // GaugeChart post-processing: inject needle SVG. The gauge config's
-  // buildProps attaches a `__gauge` descriptor (see serverChartConfigs.ts —
-  // `{ gMin, gMax, sweep, arcWidth, value, startAngleDeg, thresholds }`).
-  // With `CHART_CONFIGS` now typed via `satisfies`, TypeScript narrows
-  // frameProps2 to a union where most shapes don't carry `__gauge`, so we
-  // cast it gated on the runtime component-name check above.
-  type GaugeDescriptor = {
-    gMin: number
-    gMax: number
-    sweep: number
-    arcWidth: number
-    value?: number
-    startAngleDeg: number
-    thresholds?: Array<{ value: number; color: string; label?: string }>
-    centerX: number
-    centerY: number
-    radius: number
-    innerRadius: number
-    showScaleLabels: boolean
-    needleLength: number
-    showNeedle: boolean
-    needleColor?: string
-    contextValue?: string
-    contextValueY?: number
-    valueFontSize?: number
-  }
-  const gaugeProps = frameProps2 as { __gauge?: GaugeDescriptor }
-  if (component === "GaugeChart" && gaugeProps.__gauge) {
-    const g = gaugeProps.__gauge
-    const gaugeValue = Math.max(g.gMin, Math.min(g.gMax, g.value ?? g.gMin))
-    const valueFraction = g.gMax === g.gMin ? 0 : (gaugeValue - g.gMin) / (g.gMax - g.gMin)
-    const needleAngleRad = (g.startAngleDeg + valueFraction * g.sweep - 90) * Math.PI / 180
-    const resolvedTheme = resolveTheme(theme)
-    const needleColor = g.needleColor || resolvedTheme.colors.text
-    const scaleLabels = g.showScaleLabels
-      ? (g.thresholds || []).filter(t => t.value > g.gMin && t.value < g.gMax)
-      : []
-
-    const gaugeOverlay = ReactDOMServer.renderToStaticMarkup(
-      <>
-        {g.showNeedle && <>
-          <line
-            x1={g.centerX} y1={g.centerY}
-            x2={g.centerX + g.needleLength * Math.cos(needleAngleRad)}
-            y2={g.centerY + g.needleLength * Math.sin(needleAngleRad)}
-            stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
-          />
-          <circle cx={g.centerX} cy={g.centerY} r={4} fill={needleColor} />
-        </>}
-        {g.contextValue != null && (
-          <text x={g.centerX} y={g.contextValueY} textAnchor="middle" dominantBaseline="middle"
-            fontSize={g.valueFontSize} fontWeight={700} fill={needleColor}>
-            {g.contextValue}
-          </text>
-        )}
-        {scaleLabels.map((threshold, index) => {
-          const fraction = g.gMax === g.gMin ? 0 : (threshold.value - g.gMin) / (g.gMax - g.gMin)
-          const angle = (g.startAngleDeg + fraction * g.sweep - 90) * Math.PI / 180
-          const inner = g.innerRadius - 1
-          const outer = g.radius + 1
-          const labelRadius = g.radius + 10
-          const hour = (((angle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
-          const textAnchor = hour >= 11 || hour < 1 ? "middle" : hour < 5 ? "start" : hour < 7 ? "middle" : "end"
-          const dominantBaseline = hour >= 11 || hour < 1 ? "auto" : hour < 5 ? "middle" : hour < 7 ? "hanging" : "middle"
-          return <g key={`gauge-label-${index}`}>
-            <line
-              x1={g.centerX + Math.cos(angle) * inner}
-              y1={g.centerY + Math.sin(angle) * inner}
-              x2={g.centerX + Math.cos(angle) * outer}
-              y2={g.centerY + Math.sin(angle) * outer}
-              stroke={resolvedTheme.colors.border}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-            <text
-              x={g.centerX + Math.cos(angle) * labelRadius}
-              y={g.centerY + Math.sin(angle) * labelRadius}
-              textAnchor={textAnchor}
-              dominantBaseline={dominantBaseline}
-              fill={resolvedTheme.colors.textSecondary}
-              fontSize={10}
-            >
-              {threshold.label || String(threshold.value)}
-            </text>
-          </g>
-        })}
-      </>
-    )
-    svg = svg.replace("</svg>", `${gaugeOverlay}</svg>`)
+  const overlay = config.renderOverlay?.(frameProps2, { theme: resolveTheme(theme) })
+  if (overlay != null) {
+    const overlayMarkup = ReactDOMServer.renderToStaticMarkup(<>{overlay}</>)
+    svg = svg.replace("</svg>", `${overlayMarkup}</svg>`)
   }
 
   return { svg, frameType: config.frameType as RenderEvidence["frameType"] }

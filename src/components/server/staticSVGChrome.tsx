@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout } from "../types/legendTypes"
-import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
+import type { LegendValue } from "../types/legendTypes"
+import { composeLegendConfigs, isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import type { StreamXYFrameProps, StreamScales, StreamLayout } from "../stream/types"
 import type {
   StreamNetworkFrameProps,
@@ -13,8 +14,10 @@ import type { PhysicsPipelineStore, PhysicsQueuedSpawn } from "../stream/physics
 import type { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { RenderEvidence } from "./renderEvidence"
 import {
+  renderStaticLegend,
   renderStaticLegendGroups,
   renderStaticGradientLegend,
+  buildStaticCategoricalLegendConfig,
   measureStaticLegend,
   measureStaticLegendGroups,
   measureStaticGradientLegend,
@@ -86,6 +89,21 @@ export interface ThemeAwareProps {
 }
 
 type LegendPosition = "right" | "left" | "top" | "bottom"
+type StaticLegendHostProps = ThemeAwareProps & {
+  legend?: unknown
+  colorScheme?: string | string[] | Record<string, string>
+}
+
+function effectiveFrameLegend(
+  props: StaticLegendHostProps,
+  categories: string[],
+  theme: ReturnType<typeof resolveTheme>,
+): LegendValue | undefined {
+  const automatic = props.showLegend
+    ? buildStaticCategoricalLegendConfig(categories, props.colorScheme, theme)
+    : undefined
+  return composeLegendConfigs(automatic, props.legend as LegendValue | undefined)
+}
 
 const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
   right: 110,
@@ -147,15 +165,22 @@ export function reserveStaticLegendMargin(
     hasTitle: options.hasTitle,
     legendLayout: options.legendLayout,
   })
+  // HOC renderChart requests use the same fixed gutter as
+  // useChartLegendAndMargin. Content measurement belongs to the lower-level
+  // static frame API; letting it expand a HOC gutter makes the SSR plot area
+  // shrink while the CSR plot retains its stable 110/50/80px contract.
+  const horizontalRequirement = options.minimumMargin ?? metrics.width + 14
+  const topRequirement = options.minimumMargin ?? (options.hasTitle ? 32 : 8) + metrics.height + 4
+  const bottomRequirement = options.minimumMargin ?? 38 + metrics.height + 4
 
   if (position === "right") {
-    margin.right = Math.max(margin.right, metrics.width + 14, options.minimumMargin ?? 0)
+    margin.right = Math.max(margin.right, horizontalRequirement)
   } else if (position === "left") {
-    margin.left = Math.max(margin.left, metrics.width + 14, options.minimumMargin ?? 0)
+    margin.left = Math.max(margin.left, horizontalRequirement)
   } else if (position === "top") {
-    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4, options.minimumMargin ?? 0)
+    margin.top = Math.max(margin.top, topRequirement)
   } else {
-    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4, options.minimumMargin ?? 0)
+    margin.bottom = Math.max(margin.bottom, bottomRequirement)
   }
 }
 
@@ -189,15 +214,18 @@ export function reserveLegendConfigMargin(
       ? measureStaticGradientLegend({ ...base, gradient: options.legend.gradient })
       : null
   if (!metrics) return
+  const horizontalRequirement = options.minimumMargin ?? metrics.width + 14
+  const topRequirement = options.minimumMargin ?? (options.hasTitle ? 32 : 8) + metrics.height + 4
+  const bottomRequirement = options.minimumMargin ?? 38 + metrics.height + 4
 
   if (position === "right") {
-    margin.right = Math.max(margin.right, metrics.width + 14, options.minimumMargin ?? 0)
+    margin.right = Math.max(margin.right, horizontalRequirement)
   } else if (position === "left") {
-    margin.left = Math.max(margin.left, metrics.width + 14, options.minimumMargin ?? 0)
+    margin.left = Math.max(margin.left, horizontalRequirement)
   } else if (position === "top") {
-    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4, options.minimumMargin ?? 0)
+    margin.top = Math.max(margin.top, topRequirement)
   } else {
-    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4, options.minimumMargin ?? 0)
+    margin.bottom = Math.max(margin.bottom, bottomRequirement)
   }
 }
 
@@ -232,6 +260,88 @@ export function renderLegendConfig(
     return renderStaticGradientLegend({ ...base, gradient: legend.gradient })
   }
   return null
+}
+
+/** Reserve the plot gutter for either a supplied legend config or categories. */
+export function reserveFrameLegendMargin(
+  margin: { top: number; right: number; bottom: number; left: number },
+  options: {
+    props: StaticLegendHostProps
+    categories: string[]
+    theme: ReturnType<typeof resolveTheme>
+    size: [number, number]
+    hasTitle?: boolean
+  },
+): LegendPosition {
+  const { props, categories, theme, size, hasTitle } = options
+  const position = props.legendPosition || "right"
+  const shared = {
+    theme,
+    position,
+    size,
+    hasTitle,
+    legendLayout: props.legendLayout,
+    minimumMargin: hocLegendMarginMinimum(props, position),
+    preserveExplicitMargin: hasExplicitLegendMargin(props, position),
+  }
+  if (props.legend !== undefined && props.legend !== null) {
+    const legend = effectiveFrameLegend(props, categories, theme)
+    if (isLegendConfig(legend) || isGradientLegendConfig(legend)) {
+      reserveLegendConfigMargin(margin, { ...shared, legend })
+    }
+  } else if (props.showLegend && categories.length > 0) {
+    reserveStaticLegendMargin(margin, {
+      ...shared,
+      categories,
+      colorScheme: props.colorScheme,
+    })
+  }
+  return position
+}
+
+/** Render caller-supplied or automatic categorical legends with one contract. */
+export function renderFrameLegend(options: {
+  props: StaticLegendHostProps
+  categories: string[]
+  theme: ReturnType<typeof resolveTheme>
+  size: [number, number]
+  margin: { top: number; right: number; bottom: number; left: number }
+  hasTitle?: boolean
+}): React.ReactNode {
+  const { props, categories, theme, size, margin, hasTitle } = options
+  const position = props.legendPosition || "right"
+  const shared = {
+    theme,
+    position,
+    size,
+    margin,
+    hasTitle,
+    legendLayout: props.legendLayout,
+    idPrefix: props._idPrefix,
+    reservedWidth: props.__autoLegendMargin ? 100 : undefined,
+  }
+  if (props.legend !== undefined && props.legend !== null) {
+    const legend = effectiveFrameLegend(props, categories, theme)
+    if (React.isValidElement(legend)) return legend
+    const configured = renderLegendConfig(legend, shared)
+    if (configured) return configured
+    if (isLegendConfig(legend) || isGradientLegendConfig(legend)) return null
+    return (legend ?? null) as React.ReactNode
+  }
+  if (!props.showLegend || categories.length === 0) return null
+  return renderStaticLegend({
+    categories,
+    colorScheme: props.colorScheme,
+    theme,
+    position,
+    totalWidth: size[0],
+    totalHeight: size[1],
+    margin,
+    hasTitle,
+    legendLayout: props.legendLayout,
+    reservedWidth: props.__autoLegendMargin ? 100 : undefined,
+    idPrefix: props._idPrefix,
+  })
 }
 
 export function defaultTickFormat(v: number): string {
@@ -294,10 +404,9 @@ export function renderOrdinalGridSVG(
   const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
   // Match the axis ticks (and the client) under axisExtent:"exact".
-  const rTickCount = axisExtent === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor((isVertical ? layout.height : layout.width) / (isVertical ? 30 : 70))))
-  const rTicks = ticksForMode(scales.r, rTickCount, axisExtent)
+  // Match OrdinalSVGOverlay's fixed request; this is intentionally distinct
+  // from the responsive XY tick budget.
+  const rTicks = ticksForMode(scales.r, 5, axisExtent)
 
   if (isVertical) {
     return (
@@ -348,6 +457,7 @@ export function wrapSVG(
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
+  const background = opts.background ?? s.background
   const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
   const titleText = typeof opts.title === "string" ? opts.title : undefined
   const titleId = titleText ? `${pfx}semiotic-title` : undefined
@@ -367,8 +477,8 @@ export function wrapSVG(
       {titleText && <title id={titleId}>{titleText}</title>}
       {opts.description && <desc id={descId}>{opts.description}</desc>}
       {opts.defs && <defs>{opts.defs}</defs>}
-      {opts.background && opts.background !== "transparent" && (
-        <rect x={0} y={0} width={opts.width} height={opts.height} fill={opts.background} />
+      {background && background !== "transparent" && (
+        <rect x={0} y={0} width={opts.width} height={opts.height} fill={background} />
       )}
       <g id={`${pfx}data-area`} transform={opts.innerTransform}>
         {content}

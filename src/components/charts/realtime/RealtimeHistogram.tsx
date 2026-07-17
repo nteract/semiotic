@@ -16,7 +16,7 @@ import type {
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import { useChartSelection, useChartMode, useChartLegendAndMargin } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -30,67 +30,11 @@ import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import type { LegendValue } from "../../types/legendTypes"
+import type { PartialMargin } from "../../types/marginType"
+import { resolveDownwardHistogramExtent } from "./temporalHistogramConfig"
 
 export type RealtimeHistogramDirection = "up" | "down"
-
-function readNumericValue<TDatum extends Datum>(
-  datum: TDatum,
-  accessor: ChartAccessor<TDatum, number> | undefined,
-  fallback: string,
-): number | null {
-  const raw: unknown = typeof accessor === "function"
-    ? accessor(datum)
-    : datum[(accessor ?? fallback) as keyof TDatum]
-  if (raw == null) return null
-  if (raw instanceof Date) return raw.getTime()
-  if (typeof raw === "string" && raw.trim() === "") return null
-  const value = Number(raw)
-  return Number.isFinite(value) ? value : null
-}
-
-function resolveDownwardHistogramExtent<TDatum extends Datum>({
-  data,
-  valueAccessor,
-  timeAccessor,
-  binSize,
-  valueExtent,
-  extentPadding,
-}: {
-  data: readonly TDatum[] | undefined
-  valueAccessor: ChartAccessor<TDatum, number> | undefined
-  timeAccessor: ChartAccessor<TDatum, number> | undefined
-  binSize: number
-  valueExtent: [number, number] | undefined
-  extentPadding: number | undefined
-}): [number, number] | undefined {
-  if (valueExtent) return [valueExtent[1], valueExtent[0]]
-
-  // No data available (push-mode ref usage without an initial array) and
-  // no explicit valueExtent — we have no basis to pick a flipped domain.
-  // Returning undefined lets StreamXYFrame auto-scale upward; downward
-  // streaming requires explicit valueExtent until the frame learns a
-  // domain-reversal flag. Tracked separately as a follow-up.
-  if (!data || data.length === 0) return undefined
-
-  // Always bin-sum: stacked or not, multiple points can land in the same
-  // bin and the bar height is the sum, not the max single datum.
-  const binSums = new Map<number, number>()
-  for (const datum of data) {
-    const time = readNumericValue(datum, timeAccessor, "time")
-    const value = readNumericValue(datum, valueAccessor, "value")
-    if (time == null || value == null) continue
-    const binStart = Math.floor(time / binSize) * binSize
-    binSums.set(binStart, (binSums.get(binStart) ?? 0) + value)
-  }
-  let maxValue = 0
-  for (const sum of binSums.values()) {
-    if (sum > maxValue) maxValue = sum
-  }
-
-  const padFactor = extentPadding ?? 0.1
-  const upper = maxValue > 0 ? maxValue + maxValue * padFactor : 1
-  return [upper, 0]
-}
 
 export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -110,7 +54,7 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Chart height (alternative to size) */
   height?: number
   /** Chart margins */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  margin?: PartialMargin
   /** CSS class name */
   className?: string
   onObservation?: OnObservationCallback
@@ -218,6 +162,8 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   emphasis?: "primary" | "secondary"
   /** Show a legend */
   showLegend?: boolean
+  /** Additional legend content. Categorical groups follow the inferred category legend. */
+  legend?: LegendValue
   /** Legend position */
   legendPosition?: LegendPosition
   /** Legend interaction mode */
@@ -264,19 +210,18 @@ export const RealtimeHistogram = forwardRef(
     // Thread mode-aware dimensions + axes through so `sparkline` / `context`
     // actually strip the axis chrome they're meant to. Previously only
     // dimensions were mode-driven, so `mode="sparkline"` rendered a 120×24
-    // histogram with full axes eating most of the canvas. `showLegend` isn't
-    // wired here because RealtimeHistogram doesn't construct a `legend` prop
-    // for StreamXYFrame — there's no legend surface to suppress.
+    // histogram with full axes eating most of the canvas.
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
       showAxes: props.showAxes,
+      showLegend: props.showLegend,
       enableHover: props.enableHover != null ? !!props.enableHover : undefined,
       linkedHover: props.linkedHover,
-          mobileInteraction: props.mobileInteraction,
+      mobileInteraction: props.mobileInteraction,
       mobileSemantics: props.mobileSemantics,
       responsiveRules: props.responsiveRules,
-})
+    })
 
     const {
       binSize,
@@ -322,6 +267,7 @@ export const RealtimeHistogram = forwardRef(
       emptyContent,
       emphasis,
       legendPosition: legendPositionProp,
+      legend: additionalLegend,
       brush: brushProp,
       onBrush: userOnBrush,
       linkedBrush,
@@ -329,8 +275,23 @@ export const RealtimeHistogram = forwardRef(
 
     const showAxes = resolved.showAxes
     const enableHover = resolved.enableHover
-    const margin = userMargin ?? resolved.marginDefaults
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
+    const histogramColorScale = useMemo(
+      () => colors
+        ? (category: string) => colors[category] ?? fill ?? "#999"
+        : undefined,
+      [colors, fill],
+    )
+    const { legend, margin, legendPosition } = useChartLegendAndMargin({
+      data: data ?? [],
+      colorBy: categoryAccessor,
+      colorScale: histogramColorScale,
+      showLegend: resolved.showLegend,
+      legendPosition: legendPositionProp,
+      userMargin,
+      defaults: resolved.marginDefaults,
+      additionalLegend,
+    })
     // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
     const resolvedTooltip =
       tooltipContent ?? tooltip ?? buildHistogramTooltip({ timeAccessor, valueAccessor })
@@ -507,7 +468,8 @@ export const RealtimeHistogram = forwardRef(
         staleness={staleness}
         transition={transition}
         pointIdAccessor={props.pointIdAccessor}
-        legendPosition={legendPositionProp}
+        legend={legend}
+        legendPosition={legendPosition}
         brush={normalizedBrush || (linkedBrush ? { dimension: "x" as const } : undefined)}
         onBrush={(normalizedBrush || linkedBrush) ? combinedOnBrush : undefined}
       />

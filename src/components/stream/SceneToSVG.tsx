@@ -116,6 +116,7 @@ function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: string):
       d={d}
       transform={transform}
       fill={n.style.fill ? svgFill(n.style.fill) : "none"}
+      fillOpacity={n.style.fillOpacity}
       opacity={n.style.opacity}
       stroke={n.style.stroke}
       strokeWidth={n.style.strokeWidth}
@@ -224,6 +225,21 @@ function safeSvgId(candidate: string): string {
   return cleaned
 }
 
+function colorStopElements(
+  colorStops: Array<{ offset: number; color: string }>,
+): React.ReactElement[] | null {
+  const validStops = colorStops
+    .filter(stop => Number.isFinite(stop.offset))
+    .map(stop => ({
+      offset: Math.max(0, Math.min(1, stop.offset)),
+      color: stop.color,
+    }))
+  if (validStops.length < 2) return null
+  return validStops.map((stop, index) => (
+    <stop key={index} offset={stop.offset} stopColor={stop.color} />
+  ))
+}
+
 /**
  * Emit an SVG path string for a rect with per-corner radii. Same trace
  * order as the canvas helper (CCW from top-left); shared shape utilities
@@ -271,13 +287,9 @@ function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement 
     // Mirror the canvas path: filter non-finite offsets first, then require
     // ≥2 valid stops. Without the filter a NaN offset would emit offset="NaN",
     // which is invalid SVG and breaks the whole gradient.
-    const validStops = fg.colorStops
-      .filter(s => Number.isFinite(s.offset))
-      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
-    if (validStops.length < 2) return null
-    for (let i = 0; i < validStops.length; i++) {
-      stops.push(<stop key={i} offset={validStops[i].offset} stopColor={validStops[i].color} />)
-    }
+    const colorStops = colorStopElements(fg.colorStops)
+    if (!colorStops) return null
+    stops.push(...colorStops)
   } else {
     // Opacity form — use the resolved fill as the base color and let SVG's
     // stop-opacity do the work. Matches the canvas path's rgba() stops.
@@ -315,13 +327,9 @@ function buildAreaSVGGradient(n: AreaSceneNode, id: string): React.ReactElement 
 
   const stops: React.ReactElement[] = []
   if ("colorStops" in fg) {
-    const validStops = fg.colorStops
-      .filter(s => Number.isFinite(s.offset))
-      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
-    if (validStops.length < 2) return null
-    for (let i = 0; i < validStops.length; i++) {
-      stops.push(<stop key={i} offset={validStops[i].offset} stopColor={validStops[i].color} />)
-    }
+    const colorStops = colorStopElements(fg.colorStops)
+    if (!colorStops) return null
+    stops.push(...colorStops)
   } else {
     if (!Number.isFinite(fg.topOpacity) || !Number.isFinite(fg.bottomOpacity)) return null
     stops.push(<stop key="0" offset={0} stopColor={svgFill(n.style.fill)} stopOpacity={Math.max(0, Math.min(1, fg.topOpacity))} />)
@@ -330,6 +338,28 @@ function buildAreaSVGGradient(n: AreaSceneNode, id: string): React.ReactElement 
 
   return (
     <linearGradient id={id} gradientUnits="userSpaceOnUse" x1={0} y1={topY} x2={0} y2={bottomY}>
+      {stops}
+    </linearGradient>
+  )
+}
+
+function buildStrokeSVGGradient(
+  gradient: { colorStops: Array<{ offset: number; color: string }> } | undefined,
+  path: Array<[number, number]>,
+  id: string,
+): React.ReactElement | null {
+  if (!gradient || path.length < 2) return null
+  const stops = colorStopElements(gradient.colorStops)
+  if (!stops) return null
+  return (
+    <linearGradient
+      id={id}
+      gradientUnits="userSpaceOnUse"
+      x1={path[0][0]}
+      y1={0}
+      x2={path[path.length - 1][0]}
+      y2={0}
+    >
       {stops}
     </linearGradient>
   )
@@ -352,16 +382,20 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             .y(([, y]) => y)
             .curve(curveFactory)(n.path) ?? ""
         : "M" + n.path.map(([x, y]) => `${x},${y}`).join("L")
+      const gradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}line-${i}-stroke-gradient`)
+      const strokeGradient = buildStrokeSVGGradient(n.strokeGradient, n.path, gradientId)
       return (
-        <path
-          key={`line-${i}`}
-          d={d}
-          fill="none"
-          stroke={n.style.stroke || "#4e79a7"}
-          strokeWidth={n.style.strokeWidth || 2}
-          strokeDasharray={n.style.strokeDasharray}
-          opacity={n.style.opacity}
-        />
+        <React.Fragment key={`line-${i}`}>
+          {strokeGradient && <defs>{strokeGradient}</defs>}
+          <path
+            d={d}
+            fill="none"
+            stroke={strokeGradient ? `url(#${gradientId})` : n.style.stroke || "#4e79a7"}
+            strokeWidth={n.style.strokeWidth || 2}
+            strokeDasharray={n.style.strokeDasharray}
+            opacity={n.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "area": {
@@ -404,11 +438,13 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             .y(([, y]) => y)
             .curve(curveFactory)(n.topPath) ?? ""
         : "M" + n.topPath.map(([x, y]) => `${x},${y}`).join("L")
+      const strokeGradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}area-${i}-stroke-gradient`)
+      const strokeGradient = buildStrokeSVGGradient(n.strokeGradient, n.topPath, strokeGradientId)
       const topStroke = n.style.stroke && n.style.stroke !== "none" ? (
         <path
           d={topStrokePath}
           fill="none"
-          stroke={svgFill(n.style.stroke)}
+          stroke={strokeGradient ? `url(#${strokeGradientId})` : svgFill(n.style.stroke)}
           strokeWidth={n.style.strokeWidth || 2}
           opacity={n.style.opacity}
         />
@@ -424,7 +460,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         return (
           <g key={`area-${i}`}>
             <defs>
-              {areaGradient}{!areaGradient && areaHatch}
+              {areaGradient}{!areaGradient && areaHatch}{strokeGradient}
               <clipPath id={cid}>
                 <rect
                   x={n.clipRect.x}
@@ -434,21 +470,22 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
                 />
               </clipPath>
             </defs>
-            <path
-              d={d}
-              fill={areaFill}
-              fillOpacity={areaFillOpacity}
-              opacity={areaGradient ? n.style.opacity : undefined}
-              stroke="none"
-              clipPath={`url(#${cid})`}
-            />
-            {topStroke}
+            <g clipPath={`url(#${cid})`}>
+              <path
+                d={d}
+                fill={areaFill}
+                fillOpacity={areaFillOpacity}
+                opacity={areaGradient ? n.style.opacity : undefined}
+                stroke="none"
+              />
+              {topStroke}
+            </g>
           </g>
         )
       }
       return (
         <React.Fragment key={`area-${i}`}>
-          {(areaGradient || areaHatch) && <defs>{areaGradient}{!areaGradient && areaHatch}</defs>}
+          {(areaGradient || areaHatch || strokeGradient) && <defs>{areaGradient}{!areaGradient && areaHatch}{strokeGradient}</defs>}
           <path
             d={d}
             fill={areaFill}
@@ -473,7 +510,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             cy={n.y}
             r={n.r}
             fill={pointHatch ? `url(#${pointHatchId})` : svgFill(n.style.fill)}
-            opacity={n.style.opacity ?? 0.8}
+            opacity={n.style.opacity ?? n.style.fillOpacity ?? 0.8}
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
           />
@@ -904,7 +941,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
           key={baseKey}
           cx={n.x} cy={n.y} r={n.r}
           fill={svgFill(n.style.fill)}
-          opacity={n.style.opacity ?? 0.8}
+          opacity={n.style.opacity ?? n.style.fillOpacity ?? 0.8}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
         />

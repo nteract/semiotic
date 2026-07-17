@@ -39,6 +39,7 @@ import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
 import { filterSparseArray } from "./sparseArray"
 import type { ReactElement, ReactNode } from "react"
+import type { LegendValue } from "../../types/legendTypes"
 
 /**
  * Input parameters for useChartSetup.
@@ -76,6 +77,8 @@ export interface ChartSetupInput {
   chartId: string | undefined
   /** Show legend override */
   showLegend: boolean | undefined
+  /** Caller legend appended to inferred categorical legend groups. */
+  legend?: LegendValue
   /** User-provided margin */
   userMargin: PartialMargin | undefined
   /** Mode-resolved margin defaults */
@@ -181,6 +184,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartType,
     chartId,
     showLegend,
+    legend: additionalLegend,
     userMargin,
     marginDefaults,
     onClick,
@@ -318,6 +322,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     userMargin,
     defaults: marginDefaults,
     categories: activeCategories,
+    additionalLegend,
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────

@@ -31,6 +31,7 @@ import { normalizePartialMargin, type PartialMargin, type MarginType } from "../
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
+import type { LegendValue } from "../../types/legendTypes"
 
 /**
  * Margin shorthand → sided form. The Stream*Frame margin props only
@@ -127,6 +128,8 @@ interface DataSetupOptions extends ScaffoldOptions {
   colorScheme?: string | string[] | Record<string, string>
   /** Semantic color accessor for legend, linked-hover series mode, and frame color config. */
   colorBy?: Accessor<string>
+  /** Caller legend appended to the inferred colorBy legend. */
+  legend?: LegendValue
   /** Pass-through chart-setup inputs. */
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -184,6 +187,7 @@ export function useCustomChartSetup<TFrameHandle>(
     chartType: options.chartTypeLabel,
     chartId: options.chartId,
     showLegend: resolved.showLegend,
+    legend: options.legend,
     userMargin: normalizedMargin,
     marginDefaults: resolved.marginDefaults,
     loading: options.loading,

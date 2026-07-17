@@ -105,7 +105,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
-      supportsPush: false, supportsSSR: false,
+      supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["brush"],
     },

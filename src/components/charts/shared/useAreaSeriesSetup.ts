@@ -34,6 +34,7 @@
 import { useMemo } from "react"
 import type { ReactNode } from "react"
 import type { Datum } from "./datumTypes"
+import { prepareAreaSeriesData } from "./areaSeriesData"
 import type { Accessor, ChartAccessor } from "./types"
 import type { SelectionHookResult } from "./selectionUtils"
 import { wrapStyleWithSelection } from "./selectionUtils"
@@ -164,41 +165,11 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     ruleContext,
   } = options
 
-  // 1 — detect pre-grouped area-object format
-  const isAreaObjectFormat = safeData[0]?.[lineDataAccessor] !== undefined
-
-  // 2 — areaData (intermediate) → flattenedData (frame-ready)
+  // Normalize flat/grouped and pre-grouped object data through the same pure
+  // adapter the server renderer uses.
   const flattenedData = useMemo(() => {
-    if (data == null) return [] as TDatum[]
-    if (!isAreaObjectFormat && !areaBy) return safeData
-
-    let groupedAreas: Datum[]
-    if (isAreaObjectFormat) {
-      groupedAreas = safeData
-    } else {
-      // areaBy is non-null here (guarded by the early return above)
-      const areaAccessor = areaBy!
-      const grouped = safeData.reduce((acc, d) => {
-        const key = typeof areaAccessor === "function" ? areaAccessor(d) : d[areaAccessor]
-        if (!acc[key]) {
-          const areaObj: Datum = { [lineDataAccessor]: [] }
-          if (typeof areaAccessor === "string") areaObj[areaAccessor] = key
-          acc[key] = areaObj
-        }
-        acc[key][lineDataAccessor].push(d)
-        return acc
-      }, {} as Record<string, Datum>)
-      groupedAreas = Object.values(grouped)
-    }
-
-    return groupedAreas.flatMap((area: Datum) => {
-      const coords: TDatum[] = area[lineDataAccessor] || []
-      if (areaBy && typeof areaBy === "string") {
-        return coords.map((c: TDatum) => ({ ...c, [areaBy]: area[areaBy] }))
-      }
-      return coords
-    })
-  }, [data, safeData, areaBy, lineDataAccessor, isAreaObjectFormat])
+    return prepareAreaSeriesData({ data, safeData, areaBy, lineDataAccessor })
+  }, [data, safeData, areaBy, lineDataAccessor])
 
   // 3 — base line/area style
   const baseLineStyle = useMemo(() => {

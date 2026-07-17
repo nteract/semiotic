@@ -31,6 +31,7 @@ import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import { TreeDiagram } from "../charts/network/TreeDiagram"
 import { Treemap } from "../charts/network/Treemap"
 import { CirclePack } from "../charts/network/CirclePack"
+import { TemporalHistogram } from "../charts/realtime/RealtimeHistogram"
 
 // Standalone SSR for equivalence tests
 import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG, renderChart } from "./renderToStaticSVG"
@@ -147,6 +148,25 @@ describe("Component SSR — XY Charts", () => {
     expect(svg).toContain('transform="translate(70,50)"')
   })
 
+  it("TemporalHistogram renders static data as SVG during React SSR", () => {
+    const html = renderComponent(
+      <TemporalHistogram
+        binSize={1000}
+        data={[
+          { time: 100, value: 5 },
+          { time: 900, value: 7 },
+          { time: 2100, value: 4 },
+        ]}
+        width={420}
+        height={240}
+      />
+    )
+
+    expect(html).toContain("<svg")
+    expect(html).not.toContain("<canvas")
+    expect(html).toMatch(/<rect[^>]*(?:fill|style)=/)
+  })
+
   it("AreaChart renders area path with fill", () => {
     const html = renderComponent(
       <AreaChart data={xyData} xAccessor="x" yAccessor="y" width={400} height={300} />
@@ -195,6 +215,63 @@ describe("Component SSR — XY Charts", () => {
     expect(svg).toContain('stop-color="#22c55e"')
     expect(svg).toContain('stop-color="#14532d"')
     expect(svg).toContain('fill="url(#')
+  })
+
+  it.each(["LineChart", "AreaChart"] as const)("renderChart('%s', …) preserves lineGradient", (component) => {
+    const svg = renderChart(component, {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      lineGradient: {
+        colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("stroke-gradient")
+    expect(svg).toContain('stop-color="#ff0000"')
+    expect(svg).toContain('stop-color="#0000ff"')
+    expect(svg).toMatch(/stroke="url\(#.*stroke-gradient\)"/)
+  })
+
+  it("uses the shared sparkline mode contract in renderChart", () => {
+    const svg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      mode: "sparkline",
+    })
+    expect(svg).toContain('width="120"')
+    expect(svg).toContain('height="24"')
+    expect(svg).toContain('transform="translate(0,2)"')
+    expect((svg.match(/<line /g) || []).length).toBe(0)
+  })
+
+  it("uses LineChart's shared default and explicit style precedence", () => {
+    const defaultSvg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 300,
+    })
+    const explicitSvg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      color: "#123456",
+      lineWidth: 7,
+      width: 400,
+      height: 300,
+    })
+
+    expect(defaultSvg).toContain('stroke="#007bff"')
+    expect(defaultSvg).not.toContain('stroke="#1f77b4"')
+    expect(explicitSvg).toContain('stroke="#123456"')
+    expect(explicitSvg).toContain('stroke-width="7"')
   })
 
   it("renderChart('AreaChart', …) matches the HOC's base blue and top-only stroke", () => {

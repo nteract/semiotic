@@ -1,4 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import type { ChartMode } from "../charts/shared/types"
+import type { ChartModeInput, ChartModeResult } from "../charts/shared/chartMode"
+import type { SemioticTheme } from "../store/ThemeStore"
+import type { ReactNode } from "react"
 /**
  * Shared helpers + ChartConfig type for serverChartConfigs family modules.
  */
@@ -9,11 +13,30 @@ export type ServerAccessorValue = string | number | boolean | Date | null | unde
 export type ServerAccessor = string | ((datum: Datum) => ServerAccessorValue)
 export type ServerColorScheme = string | string[] | Record<string, string> | undefined
 export type ServerChartData = Datum | Datum[] | null | undefined
+export type ServerMargin = { top: number; right: number; bottom: number; left: number }
+
+export interface ServerChartLayoutDefaults {
+  /** Force a semantic mode for aliases such as the server-only Sparkline. */
+  mode?: ChartMode
+  /** HOC-specific primary dimensions. Compact/mobile modes retain shared defaults. */
+  primarySize?: { width: number; height: number }
+  /** Chart-specific margin contract when the HOC does not use mode margins. */
+  margin?: ServerMargin | ((props: Datum, resolved: ChartModeResult) => ServerMargin)
+  /** HOC defaults applied before explicit props and semantic mode resolution. */
+  modeDefaults?: Partial<ChartModeInput>
+}
+
+export interface ServerChartOverlayContext {
+  theme: SemioticTheme
+}
 
 export interface ChartConfig {
   frameType: FrameType
+  layout?: ServerChartLayoutDefaults
   /** Build frame props from HOC-level props */
   buildProps: (data: ServerChartData, colorBy: ServerAccessor | undefined, colorScheme: ServerColorScheme, common: Datum, rest: Datum) => Datum
+  /** Optional chart-owned SVG overlay rendered after the shared frame. */
+  renderOverlay?: (frameProps: Datum, context: ServerChartOverlayContext) => ReactNode
 }
 
 export function accessorValue(accessor: ServerAccessor | undefined, fallback: string, d: Datum): ServerAccessorValue {

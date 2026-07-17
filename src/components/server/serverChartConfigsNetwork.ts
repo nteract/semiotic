@@ -3,7 +3,8 @@ import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildS
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import { createEdgeStyleFn, inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
-import { createColorScale, getColor } from "../charts/shared/colorUtils"
+import { createColorScale, getColor, resolveCategoricalPalette } from "../charts/shared/colorUtils"
+import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
@@ -14,6 +15,7 @@ import * as React from "react"
 
 export const forceDirectedGraph: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Mirror the HOC's edgeWidth/edgeColor/edgeOpacity handling so that
     // `renderChart("ForceDirectedGraph", { edgeWidth: "weight" })` honors
@@ -101,6 +103,7 @@ export const forceDirectedGraph: ChartConfig = {
 // function with byte-identical inputs.
 export const processSankey: ChartConfig = {
   frameType: "network",
+  layout: { margin: { top: 30, right: 80, bottom: 40, left: 80 } },
   buildProps: (_data, colorBy, colorScheme, common, rest) => {
     const toTime = (v: unknown): number => {
       if (v == null) return NaN
@@ -220,8 +223,12 @@ export const processSankey: ChartConfig = {
     // when colorBy is a string, so function-form goes through a
     // synthetic `_cat` projection (matching what `useColorScale`
     // does on the CSR side) before passing into the d3-scale.
-    const palette = Array.isArray(colorScheme) ? colorScheme : null
-    const fallbackPalette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+    const resolvedTheme = resolveTheme(common.theme)
+    const palette = resolveCategoricalPalette(
+      colorScheme,
+      resolvedTheme.colors.categorical,
+      schemeCategory10,
+    )
     const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
     const scaleSourceData: Datum[] = colorByFn
       ? rawNodes.map((n) => ({ _cat: colorByFn(n) }))
@@ -229,8 +236,9 @@ export const processSankey: ChartConfig = {
     const scaleColorBy: string | ((d: Datum) => string) | undefined = colorByFn
       ? "_cat"
       : (typeof colorBy === "string" ? colorBy : undefined)
+    const effectiveScheme = colorScheme ?? [...palette]
     const colorScale = scaleColorBy
-      ? createColorScale(scaleSourceData, scaleColorBy, colorScheme)
+      ? createColorScale(scaleSourceData, scaleColorBy, effectiveScheme)
       : null
     const nodeById = new Map<string, Datum>()
     for (const n of ns) nodeById.set(n.id, n.__raw)
@@ -244,8 +252,7 @@ export const processSankey: ChartConfig = {
         }
         return getColor(raw, typeof colorBy === "string" ? colorBy : "id", colorScale ?? undefined) as string
       }
-      const p = palette || fallbackPalette
-      return p[idx % p.length]
+      return palette[idx % palette.length]
     }
 
     // The client HOC supplies a concrete legend config built from its
@@ -386,6 +393,7 @@ export const processSankey: ChartConfig = {
 
 export const sankeyDiagram: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 800, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const nodes = Array.isArray(rest.nodes) ? rest.nodes as Datum[] : inferNodesFromEdges(
       [],
@@ -448,6 +456,7 @@ export const sankeyDiagram: ChartConfig = {
 
 export const chordDiagram: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "chord",
     nodes: rest.nodes,
@@ -465,6 +474,7 @@ export const chordDiagram: ChartConfig = {
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()
@@ -503,6 +513,7 @@ export const treeDiagram: ChartConfig = {
 
 export const treemap: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "treemap",
     data,
@@ -525,6 +536,7 @@ export const treemap: ChartConfig = {
 
 export const circlePack: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()

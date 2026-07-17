@@ -22,6 +22,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { getMinMax } from "../shared/minMax"
+import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 
 export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -180,7 +181,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     tileAttribution,
     tileCacheSize,
     areas,
-    areaStyle = { fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 },
+    areaStyle = GEO_BACKGROUND_AREA_STYLE,
     tooltip,
     annotations,
     margin: userMargin,

@@ -73,6 +73,33 @@ describe("Server legend positioning", () => {
       expect(pos!.tx).toBeLessThan(dims.width)
       expect(pos!.tx).toBeGreaterThan(dims.width * 0.5)
     })
+
+    it('treats margin side "auto" as delegated legend reservation', () => {
+      const svg = renderChart("XYCustomChart", {
+        data: lineData,
+        layout: () => ({
+          nodes: [{
+            type: "rect",
+            x: 0,
+            y: 0,
+            w: 10,
+            h: 10,
+            style: { fill: "#111" },
+            datum: null,
+          }],
+        }),
+        colorBy: "series",
+        margin: { top: 20, right: "auto", bottom: 30, left: 24 },
+        width: 420,
+        height: 260,
+      })
+
+      expect(svg).not.toContain("NaN")
+      const pos = getLegendTranslate(svg)
+      expect(pos).not.toBeNull()
+      expect(pos!.tx).toBeLessThan(420)
+      expect(pos!.tx).toBeGreaterThan(300)
+    })
   })
 
   describe("top position", () => {

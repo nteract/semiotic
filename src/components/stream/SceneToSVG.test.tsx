@@ -70,6 +70,27 @@ describe("xySceneNodeToSVG — line", () => {
     expect(html).toContain('d="M0,0C')
     expect(html).not.toContain('d="M0,0L50,80L100,20"')
   })
+
+  it("serializes a horizontal stroke gradient", () => {
+    const node = {
+      type: "line",
+      path: [[0, 0], [50, 25], [100, 10]],
+      style: { stroke: "#999", strokeWidth: 2 },
+      strokeGradient: {
+        colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0, "chart"))
+    expect(html).toContain('<linearGradient id="chart-line-0-stroke-gradient"')
+    expect(html).toContain('x1="0"')
+    expect(html).toContain('x2="100"')
+    expect(html).toContain('stop-color="#ff0000"')
+    expect(html).toContain('stop-color="#0000ff"')
+    expect(html).toContain('stroke="url(#chart-line-0-stroke-gradient)"')
+  })
 })
 
 describe("xySceneNodeToSVG — point", () => {
@@ -88,6 +109,18 @@ describe("xySceneNodeToSVG — point", () => {
     expect(html).toContain('r="5"')
     expect(html).toContain('fill="#0f0"')
     expect(html).toContain('opacity="0.5"')
+  })
+
+  it("uses fillOpacity as the canvas alpha when opacity is absent", () => {
+    const node = {
+      type: "point",
+      x: 4,
+      y: 8,
+      r: 3,
+      style: { fill: "#0f0", fillOpacity: 0.35 },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    expect(html).toContain('opacity="0.35"')
   })
 
 })
@@ -120,6 +153,19 @@ describe("xySceneNodeToSVG — symbol", () => {
     }
     const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill="none"')
+  })
+
+  it("preserves symbol fillOpacity independently from stroke opacity", () => {
+    const node = {
+      type: "symbol",
+      x: 1,
+      y: 2,
+      size: 80,
+      symbolType: "triangle",
+      style: { fill: "#f00", fillOpacity: 0.4, stroke: "#000" },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+    expect(html).toContain('fill-opacity="0.4"')
   })
 })
 
@@ -562,6 +608,28 @@ describe("xySceneNodeToSVG — area", () => {
     expect(closedFill).toContain('stroke="none"')
     expect(html).toContain('d="M0,10L50,5L100,15"')
     expect(html).toContain('stroke="#007bff"')
+  })
+
+  it("clips both the area fill and its gradient top stroke", () => {
+    const node = {
+      type: "area",
+      topPath: [[0, 10], [50, 5], [100, 15]],
+      bottomPath: [[0, 50], [50, 50], [100, 50]],
+      clipRect: { x: 10, y: 0, width: 70, height: 60 },
+      style: { fill: "#ddd", stroke: "#333", strokeWidth: 2 },
+      strokeGradient: {
+        colorStops: [
+          { offset: 0, color: "#f00" },
+          { offset: 1, color: "#00f" },
+        ],
+      },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0, "chart"))
+    expect(html).toContain('clip-path="url(#chart-area-clip-0)"')
+    expect(html).toContain('stroke="url(#chart-area-0-stroke-gradient)"')
+    expect(html.indexOf('clip-path="url(#chart-area-clip-0)"')).toBeLessThan(
+      html.indexOf('stroke="url(#chart-area-0-stroke-gradient)"'),
+    )
   })
 })
 

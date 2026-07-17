@@ -1,37 +1,11 @@
 import * as React from "react"
 
-import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig, LegendLayout } from "./types/legendTypes"
-
-const SWATCH = 16
-const LABEL_GAP = 6
-const ITEM_GAP = 10
-const ROW_HEIGHT = 22
-
-interface LegendMetrics {
-  swatchSize: number
-  labelGap: number
-  itemGap: number
-  rowHeight: number
-  align: "start" | "center" | "end"
-  maxWidth?: number
-}
-
-function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
-  const swatchSize = Math.max(1, layout?.swatchSize ?? SWATCH)
-  const rowHeight = Math.max(swatchSize, layout?.rowHeight ?? ROW_HEIGHT)
-  return {
-    swatchSize,
-    labelGap: Math.max(0, layout?.labelGap ?? LABEL_GAP),
-    itemGap: Math.max(0, layout?.itemGap ?? ITEM_GAP),
-    rowHeight,
-    align: layout?.align === "left"
-      ? "start"
-      : layout?.align === "right"
-        ? "end"
-        : layout?.align ?? "start",
-    maxWidth: layout?.maxWidth,
-  }
-}
+import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig } from "./types/legendTypes"
+import {
+  layoutVerticalLegendGroups,
+  resolveLegendMetrics,
+  type LegendMetrics,
+} from "./legendLayout"
 
 const typeHash: Record<"fill" | "line", (style: React.CSSProperties, swatchSize: number) => React.ReactElement> = {
   fill: (style, swatchSize) => <rect style={style} width={swatchSize} height={swatchSize} />,
@@ -345,29 +319,32 @@ const renderVerticalGroup = ({
   legendInteraction?: string
   metrics: LegendMetrics
 }) => {
-  let offset = 24
-
   const renderedGroups: React.ReactElement[] = []
+  const groupLayouts = layoutVerticalLegendGroups(
+    legendGroups.map((group) => ({
+      hasLabel: Boolean(group.label),
+      itemCount: group.items.length,
+    })),
+    metrics.rowHeight
+  )
 
   legendGroups.forEach((l, i) => {
-    offset += 5
+    const layout = groupLayouts[i]
     renderedGroups.push(
       <line
         key={`legend-top-line legend-symbol-${i}`}
         stroke="gray"
         x1={0}
-        y1={offset}
+        y1={layout.lineY}
         x2={width}
-        y2={offset}
+        y2={layout.lineY}
       />
     )
-    offset += 8
-    if (l.label) {
-      offset += 16
+    if (l.label && layout.labelY != null) {
       renderedGroups.push(
         <text
           key={`legend-text-${i}`}
-          y={offset}
+          y={layout.labelY}
           className="legend-group-label"
           style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
@@ -375,19 +352,17 @@ const renderVerticalGroup = ({
           {l.label}
         </text>
       )
-      offset += 8
     }
 
     renderedGroups.push(
       <g
         key={`legend-group-${i}`}
         className="legend-item"
-        transform={`translate(0,${offset})`}
+        transform={`translate(0,${layout.itemsY})`}
     >
         {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction, metrics)}
       </g>
     )
-    offset += l.items.length * metrics.rowHeight + 8
   })
 
   return renderedGroups

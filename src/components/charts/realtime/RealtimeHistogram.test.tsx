@@ -154,4 +154,34 @@ describe("RealtimeHistogram", () => {
     expect(frame).toBeTruthy()
     expect(frame?.querySelector("canvas")).toBeTruthy()
   })
+
+  it("renders and composes a category legend for static TemporalHistogram data", async () => {
+    const { getByText } = render(
+      <TooltipProvider>
+        <TemporalHistogram
+          binSize={1000}
+          data={[
+            { time: 100, value: 5, kind: "Errors" },
+            { time: 900, value: 7, kind: "Warnings" },
+          ]}
+          categoryAccessor="kind"
+          colors={{ Errors: "#d62728", Warnings: "#f59e0b" }}
+          legend={{
+            legendGroups: [{
+              label: "Context",
+              type: "line",
+              styleFn: () => ({ stroke: "#111" }),
+              items: [{ label: "Budget" }],
+            }],
+          }}
+        />
+      </TooltipProvider>
+    )
+
+    await waitFor(() => {
+      expect(getByText("Errors")).toBeTruthy()
+      expect(getByText("Warnings")).toBeTruthy()
+      expect(getByText("Budget")).toBeTruthy()
+    })
+  })
 })

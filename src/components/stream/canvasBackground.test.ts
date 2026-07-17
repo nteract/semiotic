@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { paintCanvasBackground } from "./canvasBackground"
+import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
 
 function mockCtx(overrides: Partial<CanvasRenderingContext2D> = {}) {
   return {
@@ -72,5 +72,30 @@ describe("paintCanvasBackground", () => {
         height: 10
       })
     ).toBe(false)
+  })
+})
+
+describe("resolveCanvasBackground", () => {
+  it("uses the explicit background before the theme fallback", () => {
+    expect(resolveCanvasBackground({
+      background: "#112233",
+      themeBackground: "#fafafa",
+    })).toBe("#112233")
+  })
+
+  it("returns the same theme fallback the canvas painter uses", () => {
+    expect(resolveCanvasBackground({ themeBackground: "#fafafa" })).toBe("#fafafa")
+  })
+
+  it("returns null for either transparent composition mode", () => {
+    expect(resolveCanvasBackground({
+      background: "transparent",
+      themeBackground: "#fafafa",
+    })).toBeNull()
+    expect(resolveCanvasBackground({
+      background: "#112233",
+      hasBackgroundGraphics: true,
+      themeBackground: "#fafafa",
+    })).toBeNull()
   })
 })

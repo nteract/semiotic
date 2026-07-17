@@ -70,6 +70,24 @@ describe("renderChartWithEvidence", () => {
     expect(evidence.warnings).toContain("EMPTY_SCENE")
   })
 
+  it("normalizes pre-grouped AreaChart data and counts only painted marks", () => {
+    const { svg, evidence } = renderChartWithEvidence("AreaChart", {
+      data: [{
+        series: "alpha",
+        coordinates: [{ x: 0, y: 1 }, { x: 1, y: 3 }, { x: 2, y: 2 }],
+      }],
+      areaBy: "series",
+      lineDataAccessor: "coordinates",
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 220,
+    })
+    expect(svg).toMatch(/<path[^>]+d="M/)
+    expect(evidence.status).toBe("ok")
+    expect(evidence.markCountByType.area).toBe(1)
+  })
+
   it("emits ordinal evidence with the category domain", () => {
     const { evidence } = renderChartWithEvidence("BarChart", {
       data: barData,

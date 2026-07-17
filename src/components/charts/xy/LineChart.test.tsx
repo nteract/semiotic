@@ -592,6 +592,36 @@ describe("LineChart", () => {
     })
   })
 
+  it("composes a top-level categorical legend with inferred series", () => {
+    const data = [
+      { x: 1, y: 10, series: "A" },
+      { x: 2, y: 12, series: "A" },
+      { x: 1, y: 8, series: "B" },
+      { x: 2, y: 11, series: "B" },
+    ]
+    render(
+      <TooltipProvider>
+        <LineChart
+          data={data}
+          lineBy="series"
+          colorBy="series"
+          legend={{
+            legendGroups: [{
+              label: "Context",
+              type: "line",
+              styleFn: () => ({ stroke: "#111" }),
+              items: [{ label: "Target" }],
+            }],
+          }}
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastXYFrameProps.legend.legendGroups).toHaveLength(2)
+    expect(lastXYFrameProps.legend.legendGroups[0].items.map(item => item.label)).toEqual(["A", "B"])
+    expect(lastXYFrameProps.legend.legendGroups[1].items[0].label).toBe("Target")
+  })
+
   describe("empty and loading states", () => {
     it("renders loading skeleton when loading is true", () => {
       const { container } = render(

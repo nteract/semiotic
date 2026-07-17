@@ -26,6 +26,31 @@ export interface PaintCanvasBackgroundOptions {
   height: number
 }
 
+export type CanvasBackgroundOptions = Pick<
+  PaintCanvasBackgroundOptions,
+  "background" | "hasBackgroundGraphics" | "themeBackground"
+>
+
+/**
+ * Select the background token a canvas will attempt to paint. This is kept
+ * separate from the drawing operation so SVG layer composition can use the
+ * exact same visibility decision as the canvas renderer.
+ */
+export function resolveCanvasBackground(
+  options: CanvasBackgroundOptions
+): string | null {
+  const {
+    background,
+    hasBackgroundGraphics = false,
+    themeBackground = "",
+  } = options
+
+  if (background === "transparent" || hasBackgroundGraphics) return null
+  const theme =
+    themeBackground && themeBackground !== "transparent" ? themeBackground : ""
+  return background || theme || null
+}
+
 /**
  * Paint an opaque chart background when appropriate.
  * Returns true if a fill was applied.
@@ -44,13 +69,11 @@ export function paintCanvasBackground(
     height
   } = options
 
-  // Explicit transparent opt-out for overlay composition.
-  if (background === "transparent") return false
-  if (hasBackgroundGraphics) return false
-
-  const theme =
-    themeBackground && themeBackground !== "transparent" ? themeBackground : ""
-  const effective = background || theme || null
+  const effective = resolveCanvasBackground({
+    background,
+    hasBackgroundGraphics,
+    themeBackground,
+  })
   if (!effective) return false
 
   const resolved = resolveCSSColor(ctx, effective)

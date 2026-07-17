@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement } from "react"
+import type { CSSProperties, ReactElement, ReactNode } from "react"
 
 export type SupportedLegendGlyphs = "fill" | "line"
 
@@ -29,12 +29,45 @@ export interface GradientLegendConfig {
   format?: (v: number) => string
 }
 
+export interface CategoricalLegendConfig {
+  legendGroups: LegendGroup[]
+}
+
+/** Public legend slot accepted by stream frames and legend-aware chart HOCs. */
+export type LegendValue =
+  | ReactNode
+  | CategoricalLegendConfig
+  | { gradient: GradientLegendConfig }
+
+/**
+ * Compose inferred and caller-supplied legends without discarding either
+ * categorical domain. Configured groups are appended in argument order, so
+ * the chart's inferred series remain first and caller context follows.
+ * Gradient/custom-node legends remain exclusive slots; the last explicit
+ * value wins because those forms cannot be laid out as categorical groups.
+ */
+export function composeLegendConfigs(
+  ...values: Array<LegendValue | null | undefined | false>
+): LegendValue | undefined {
+  let result: LegendValue | undefined
+  for (const value of values) {
+    if (!value) continue
+    if (isLegendConfig(result) && isLegendConfig(value)) {
+      result = { legendGroups: [...result.legendGroups, ...value.legendGroups] }
+    } else {
+      result = value
+    }
+  }
+  return result
+}
+
 /** Type guard: categorical legend config */
-export function isLegendConfig(value: unknown): value is { legendGroups: LegendGroup[] } {
+export function isLegendConfig(value: unknown): value is CategoricalLegendConfig {
   return (
     typeof value === "object" &&
     value !== null &&
-    "legendGroups" in value
+    "legendGroups" in value &&
+    Array.isArray((value as CategoricalLegendConfig).legendGroups)
   )
 }
 

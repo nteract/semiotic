@@ -34,6 +34,7 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
 import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
+import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 
 export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
@@ -207,7 +208,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     lineType = "geo",
     flowStyle = "basic",
     areas,
-    areaStyle = { fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 },
+    areaStyle = GEO_BACKGROUND_AREA_STYLE,
     edgeColorBy,
     edgeOpacity = 0.6,
     edgeWidthRange = [1, 8],

@@ -16,6 +16,7 @@ import {
   quadrantChart,
   connectedScatterplot,
   heatmap,
+  temporalHistogram,
 } from "./serverChartConfigsXY"
 import {
   barChart,
@@ -83,6 +84,7 @@ export const CHART_CONFIGS = {
   ConnectedScatterplot: connectedScatterplot,
   QuadrantChart: quadrantChart,
   Heatmap: heatmap,
+  TemporalHistogram: temporalHistogram,
   XYCustomChart: xyCustomChart,
   BarChart: barChart,
   StackedBarChart: stackedBarChart,
