@@ -6,6 +6,7 @@ import { createEdgeStyleFn, inferNodesFromEdges } from "../charts/network/../sha
 import { createColorScale, getColor, resolveCategoricalPalette } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
+import { composeLegendConfigs } from "../types/legendTypes"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
@@ -259,7 +260,7 @@ export const processSankey: ChartConfig = {
     // `colorOf` function. Supplying the same config here avoids the generic
     // network auto-legend (whose labels, swatches, and placement differ from
     // ProcessSankey's chart-level legend).
-    const legend = legendActive && colorBy ? (() => {
+    const chartLegend = legendActive && colorBy ? (() => {
       const seen = new Map<string, { label: string; color: string }>()
       rawNodes.forEach((node, index) => {
         const value = accVal(colorBy, node)
@@ -282,6 +283,7 @@ export const processSankey: ChartConfig = {
           }
         : undefined
     })() : undefined
+    const legend = composeLegendConfigs(chartLegend, common.legend)
 
     const { layout, layoutConfig, issues, xScale } = buildProcessSankeyScenes({
       nodes: ns,
@@ -376,10 +378,15 @@ export const processSankey: ChartConfig = {
       nodeIDAccessor: nodeIdAccessor,
       colorBy,
       colorScheme,
-      ...(legend && { legend, legendPosition: legendPos }),
       ...(backgroundGraphics && { backgroundGraphics }),
       ...common,
       showLegend: legendActive,
+      ...(legend && { legend, legendPosition: legendPos }),
+      // ProcessSankey owns category extraction because its rendered scene is
+      // built from temporal bands rather than ordinary network nodes. The
+      // supplied value already includes both that chart-owned legend and any
+      // caller groups, so the static frame must not infer it a second time.
+      __legendIncludesAutomatic: true,
       // Apply the resolved margin AFTER `...common` so the spread
       // (which carries the user's original margin if any) doesn't
       // overwrite our legend-aware adjustment. Bands/ribbons were

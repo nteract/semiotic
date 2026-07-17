@@ -15,6 +15,7 @@ import { makeRuleValueResolver, resolveStyleRules, type StyleRule } from "../cha
 import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
 import { resolveDefaultFill } from "../charts/shared/hooks"
+import { composeLegendConfigs } from "../types/legendTypes"
 import { resolveTheme } from "./themeResolver"
 import { type ChartConfig, type ServerAccessor } from "./serverChartConfigShared"
 import * as React from "react"
@@ -504,6 +505,16 @@ export const likertChart: ChartConfig = {
     const valueFormat = typeof rest.valueFormat === "function"
       ? rest.valueFormat
       : (value: number | string) => `${Math.abs(Number(value)).toFixed(0)}%`
+    const chartLegend = common.showLegend === false
+      ? undefined
+      : {
+          legendGroups: [{
+            label: "",
+            items: levels.map(label => ({ label })),
+            styleFn: (item: { label: string }) => ({ fill: levelColors.get(item.label) || "#888" }),
+          }],
+        }
+    const legend = composeLegendConfigs(chartLegend, common.legend)
     return {
       chartType: "bar",
       data: processed,
@@ -533,13 +544,11 @@ export const likertChart: ChartConfig = {
       // setup.legendPosition defaults to right in the client HOC. The
       // bottom fallback here was an SSR-only override.
       legendPosition: common.legendPosition || "right",
-      legend: {
-        legendGroups: [{
-          label: "",
-          items: levels.map(label => ({ label })),
-          styleFn: (item: { label: string }) => ({ fill: levelColors.get(item.label) || "#888" }),
-        }],
-      },
+      ...(legend && { legend }),
+      // The level legend above is the complete automatic legend. Asking the
+      // static frame to infer another one from processed rows exposes
+      // internal __likert neutral-split buckets and duplicates real levels.
+      __legendIncludesAutomatic: true,
     }
   },
 }

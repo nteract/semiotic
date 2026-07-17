@@ -315,6 +315,9 @@ describe("renderChart", () => {
     expect(svg).toContain("semiotic-legend")
     expect(svg).toContain(">Disagree<")
     expect(svg).toContain(">Agree<")
+    expect(svg).not.toContain("__likert_")
+    expect(countMatches(svg, />Disagree</g)).toBe(1)
+    expect(countMatches(svg, />Agree</g)).toBe(1)
     // Default ThemeProvider state supplies RdBu, sampled by the shared Likert
     // palette resolver instead of the unthemed Carbon fallback.
     expect(svg).toContain("#67001f")
@@ -543,8 +546,50 @@ describe("renderChart", () => {
     // authoritative for external legend layouts.
     expect(svg).toContain(">Intake<")
     expect(svg).toContain(">Review<")
+    expect(countMatches(svg, />Intake</g)).toBe(1)
+    expect(countMatches(svg, />Review</g)).toBe(1)
     expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
     expect(explicitRight).toContain('class="semiotic-legend" transform="translate(380,30)"')
+  })
+
+  it("composes caller groups after specialized chart-owned legends", () => {
+    const callerLegend = {
+      legendGroups: [{
+        label: "Context",
+        type: "line" as const,
+        items: [{ label: "Target" }],
+        styleFn: () => ({ stroke: "#111" }),
+      }],
+    }
+    const likert = renderChart("LikertChart", {
+      data: [{ question: "Support", level: "Agree", value: 3 }],
+      categoryAccessor: "question",
+      levelAccessor: "level",
+      countAccessor: "value",
+      levels: ["Disagree", "Agree"],
+      legend: callerLegend,
+      width: 460,
+      height: 260,
+    })
+    const process = renderChart("ProcessSankey", {
+      nodes: [
+        { id: "intake", phase: "Intake", xExtent: [0, 20] },
+        { id: "review", phase: "Review", xExtent: [20, 50] },
+      ],
+      edges: [{ source: "intake", target: "review", value: 4, startTime: 0, endTime: 50 }],
+      domain: [0, 50],
+      colorBy: "phase",
+      legend: callerLegend,
+      width: 400,
+      height: 300,
+    })
+
+    for (const svg of [likert, process]) {
+      expect(svg).toContain(">Target<")
+      expect(countMatches(svg, />Target</g)).toBe(1)
+    }
+    expect(likert).toContain(">Agree<")
+    expect(process).toContain(">Intake<")
   })
 
   it("resolves ProcessSankey colors from the active theme", () => {

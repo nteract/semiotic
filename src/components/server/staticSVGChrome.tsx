@@ -86,6 +86,14 @@ export interface ThemeAwareProps {
   /** Internal HOC-level legend/margin contract metadata. */
   __explicitMargin?: unknown
   __autoLegendMargin?: boolean
+  /**
+   * The supplied legend already contains the chart HOC's inferred groups.
+   * Specialized charts use this when their semantic categories cannot be
+   * reconstructed from the lower-level frame data (for example Likert's
+   * split neutral buckets). Caller legend groups may still be composed into
+   * that complete value by the chart config.
+   */
+  __legendIncludesAutomatic?: boolean
 }
 
 type LegendPosition = "right" | "left" | "top" | "bottom"
@@ -99,7 +107,7 @@ function effectiveFrameLegend(
   categories: string[],
   theme: ReturnType<typeof resolveTheme>,
 ): LegendValue | undefined {
-  const automatic = props.showLegend
+  const automatic = props.showLegend && !props.__legendIncludesAutomatic
     ? buildStaticCategoricalLegendConfig(categories, props.colorScheme, theme)
     : undefined
   return composeLegendConfigs(automatic, props.legend as LegendValue | undefined)
