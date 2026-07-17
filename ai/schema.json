@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "semiotic",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "description": "React data visualization library for charts, networks, and beyond",
   "tools": [
     {
@@ -28,7 +28,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -277,7 +291,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -525,7 +553,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -748,7 +790,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -979,7 +1035,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -1220,7 +1290,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -1402,7 +1486,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -1618,7 +1716,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -1832,7 +1944,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -2051,7 +2177,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -2272,7 +2412,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -2472,7 +2626,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -2664,7 +2832,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -2869,7 +3051,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3056,7 +3252,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3268,7 +3478,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3454,7 +3678,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3633,7 +3871,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3825,7 +4077,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -3999,7 +4265,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -4201,7 +4481,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -4360,7 +4654,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -4531,7 +4839,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -4724,7 +5046,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -4966,7 +5302,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -5197,7 +5547,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -5406,7 +5770,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -5617,7 +5995,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -5794,7 +6186,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -5975,7 +6381,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -7150,7 +7570,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -7356,7 +7790,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -7582,7 +8030,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -7723,7 +8185,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -7860,7 +8336,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -8011,7 +8501,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -8177,7 +8681,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -8331,7 +8849,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -8478,7 +9010,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -8767,7 +9313,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",
@@ -9956,7 +10516,21 @@
               "type": "string"
             },
             "title": {
-              "type": "string"
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
             },
             "enableHover": {
               "type": "boolean",

@@ -16,14 +16,15 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.1
+## What's New in 3.8.2
 
-3.8.1 makes the hosted MCP rendering path release-ready:
+3.8.2 makes the hosted MCP accessibility contract internally consistent:
 
-- Stateless HTTP requests no longer cancel rendering after a completed request body.
-- Hosted `createChart` now has verified SVG and render evidence with `render-proven` status.
-- `GET /health` is the sole supported MCP health endpoint; nightly remains `main`-based while
-  stable deployments are pinned to published releases.
+- Chart schemas, validation, repair guidance, and audits consistently expose `title`,
+  `description`, `summary`, and `accessibleTable`.
+- Hosted `getChartSchema` returns structured output for component lists, schemas, and errors,
+  including direct and `ChartContainer` accessibility guidance.
+- The public MCP profile remains a focused five-tool surface with render-proven `createChart` output.
 
 ```jsx
 import { LineChart } from "semiotic/xy"
@@ -429,18 +430,18 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **113.6 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **164.7 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **165.1 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **79.9 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **165.1 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **413.4 KiB** |
-| `import { suggestCharts } from "semiotic/ai/core"` | browser | **30.6 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **165.5 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **413.8 KiB** |
+| `import { suggestCharts } from "semiotic/ai/core"` | browser | **31.0 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **104.1 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.3 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **3.4 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **3.4 KiB** |
 | `import { ThemeProvider } from "semiotic/themes/react"` | browser | **4.4 KiB** |
-| `import { validateProps } from "semiotic/utils"` | browser | **7.9 KiB** |
+| `import { validateProps } from "semiotic/utils"` | browser | **8.0 KiB** |
 | `import { smartTickFormat } from "semiotic/utils/core"` | browser | **2.1 KiB** |
 | `import { useReducedMotion } from "semiotic/utils/react"` | browser | **1.8 KiB** |
 | `import { waffleLayout } from "semiotic/recipes"` | browser | **1.3 KiB** |

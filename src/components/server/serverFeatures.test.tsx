@@ -911,6 +911,57 @@ describe("renderChart", () => {
     expect(svg).toContain("Target")
   })
 
+  it("renders chart with boolean gradientFill shorthand", () => {
+    const svg = renderChart("BarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      gradientFill: true,
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toMatch(/fill="url\(#/)
+  })
+
+  it("renders chart with object-form gradientFill", () => {
+    const svg = renderChart("BarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      gradientFill: { topOpacity: 0.8, bottomOpacity: 0.1 },
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("<linearGradient")
+  })
+
+  it("renders StackedBarChart with gradientFill", () => {
+    const svg = renderChart("StackedBarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      stackBy: "group",
+      gradientFill: true,
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("<linearGradient")
+  })
+
+  it("renders GroupedBarChart with gradientFill", () => {
+    const svg = renderChart("GroupedBarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      groupBy: "group",
+      gradientFill: true,
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("<linearGradient")
+  })
+
   it("renders chart with legend", () => {
     const svg = renderChart("BarChart", {
       data: barData,

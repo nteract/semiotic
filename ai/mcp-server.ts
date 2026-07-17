@@ -992,32 +992,140 @@ function profileResult<T extends Record<string, unknown>>(result: T): T & { surf
   return { ...result, surfaceVersion: SURFACE_VERSION }
 }
 
-async function getSchemaHandler(args: { component?: string }): Promise<ToolResult> {
+function schemaAccessibilityGuidance(entry: any) {
+  const properties = entry?.parameters?.properties ?? {}
+  const directProps = Object.fromEntries(
+    ["title", "description", "summary", "accessibleTable"]
+      .filter((name) => properties[name])
+      .map((name) => [name, properties[name]]),
+  )
+  return {
+    directProps,
+    chartContainer: {
+      component: "ChartContainer",
+      requires: ["chartConfig"],
+      titleProp: "title",
+      subtitleProp: "subtitle",
+      describeProp: "describe",
+      navigableProp: "navigable",
+      description: "Use ChartContainer with chartConfig plus describe for a generated L1–L3 description and navigable for a screen-reader navigation tree.",
+    },
+  }
+}
+
+function accessibilityRecommendation(
+  component: string,
+  props: Record<string, unknown>,
+  data: Record<string, unknown>[],
+) {
+  const directProps = schemaAccessibilityGuidance(schemaByComponent[component]).directProps as Record<string, unknown>
+  const recommendation: Record<string, string> = {}
+  const categoryAccessor = typeof props.categoryAccessor === "string" ? props.categoryAccessor : undefined
+  const valueAccessor = typeof props.valueAccessor === "string" ? props.valueAccessor : undefined
+
+  if (directProps.description && typeof props.description !== "string") {
+    recommendation.description = categoryAccessor && valueAccessor
+      ? `${component} comparing ${valueAccessor} by ${categoryAccessor}.`
+      : `${component} chart.`
+  }
+
+  if (directProps.summary && typeof props.summary !== "string") {
+    const numericRows = categoryAccessor && valueAccessor
+      ? data
+          .map((row) => ({ category: row[categoryAccessor], value: row[valueAccessor] }))
+          .filter((row): row is { category: unknown; value: number } => typeof row.value === "number" && Number.isFinite(row.value))
+      : []
+    const highest = numericRows.reduce<{ category: unknown; value: number } | undefined>(
+      (current, row) => !current || row.value > current.value ? row : current,
+      undefined,
+    )
+    recommendation.summary = highest
+      ? `${String(highest.category)} is highest at ${highest.value}. Use arrow keys to move between chart marks.`
+      : "Use arrow keys to move between chart marks."
+  }
+
+  return Object.keys(recommendation).length > 0
+    ? {
+        location: "direct-component-props",
+        props: recommendation,
+        chartContainer: schemaAccessibilityGuidance(schemaByComponent[component]).chartContainer,
+      }
+    : undefined
+}
+
+async function getSchemaHandler(args: {
+  component?: string
+}): Promise<ToolResult> {
   const component = args.component
 
+  const availableComponents = allComponentNames.map(name => ({
+    name,
+    renderable: metadataForComponent(name).renderable,
+  }))
+
   if (!component) {
-    const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
+    const list = availableComponents.map(({ name, renderable }) =>
+      renderable ? `${name} [renderable]` : name
+    )
+
     return {
-      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{
+        type: "text" as const,
+        text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.`,
+      }],
+      structuredContent: profileResult({
+        status: "component-list",
+        availableComponents,
+      }),
     }
   }
 
   const entry = schemaByComponent[component]
+
   if (!entry) {
     const available = Object.keys(schemaByComponent).sort()
+
     return {
-      content: [{ type: "text" as const, text: `Unknown component "${component}". Available: ${available.join(", ")}` }],
+      content: [{
+        type: "text" as const,
+        text: `Unknown component "${component}". Available: ${available.join(", ")}`,
+      }],
+      structuredContent: profileResult({
+        status: "unknown-component",
+        component,
+        availableComponents,
+      }),
       isError: true,
     }
   }
 
-  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
-  const contracts = behaviorContractsFor({ component, props: {} })
+  const renderable = metadataForComponent(component).renderable
+  const renderableNote = renderable
+    ? "This component can be rendered to SVG via renderChart."
+    : "This component requires a browser environment and cannot be rendered via renderChart."
+
+  const contracts = behaviorContractsFor({
+    component,
+    props: {},
+  })
+
   const contractText = contracts.length > 0
     ? `\n\nBehavior contracts:\n${JSON.stringify(contracts, null, 2)}`
     : ""
+
   return {
-    content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}${contractText}` }],
+    content: [{
+      type: "text" as const,
+      text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}${contractText}`,
+    }],
+    structuredContent: profileResult({
+      status: "component-schema",
+      component,
+      renderable,
+      schema: entry,
+      accessibility: schemaAccessibilityGuidance(entry),
+      behaviorContracts: contracts,
+    }),
   }
 }
 
@@ -2060,9 +2168,17 @@ async function improveChartHandler(args: {
   const repair = repairChartConfigFromCapabilities(args.component, data, { intent })
   const capability = getCapability(args.component)
   const variants = capability ? proposeVariant(args.component, capability, { profile: profileData(data), intent }) : []
+  const accessibility = accessibilityRecommendation(args.component, args.props, data)
   return {
     content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
-    structuredContent: profileResult({ status: repair.status === "ok" ? "reviewed" : "repair-needed", component: args.component, diagnostics: diagnosis.diagnoses, repair, variants }),
+    structuredContent: profileResult({
+      status: repair.status === "ok" ? "reviewed" : "repair-needed",
+      component: args.component,
+      diagnostics: diagnosis.diagnoses,
+      repair,
+      variants,
+      ...(accessibility ? { accessibilityRecommendation: accessibility } : {}),
+    }),
   }
 }
 
@@ -2082,8 +2198,12 @@ async function auditChartHandler(args: {
   viewportWidth?: number
 }): Promise<ToolResult> {
   const diagnosis = diagnoseConfig(args.component, args.props)
-  const accessibility = auditAccessibility(args.component, args.props, { inChartContainer: true, describe: true, navigable: true })
-  const mobile = auditMobileVisualization(args.component, args.props, { viewportWidth: args.viewportWidth, inChartContainer: true })
+  // Public-profile calls contain a chart configuration, not an implicit
+  // ChartContainer. Do not credit optional container-level description or
+  // navigation affordances unless the caller declares them through the
+  // developer audit tool's explicit options.
+  const accessibility = auditAccessibility(args.component, args.props)
+  const mobile = auditMobileVisualization(args.component, args.props, { viewportWidth: args.viewportWidth })
   const blocking = diagnosis.diagnoses.some((item: any) => item.severity === "error") || !accessibility.ok || !mobile.ok
   return {
     content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
@@ -2310,7 +2430,19 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
       inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()), data: z.array(z.record(z.string(), z.unknown())).optional(), intent: z.union([z.string(), z.array(z.string())]).optional() },
-      outputSchema: { status: z.enum(["reviewed", "repair-needed"]), component: z.string(), surfaceVersion: z.string() },
+      outputSchema: {
+        status: z.enum(["reviewed", "repair-needed"]),
+        component: z.string(),
+        diagnostics: z.array(z.unknown()),
+        repair: z.record(z.string(), z.unknown()),
+        variants: z.array(z.unknown()),
+        accessibilityRecommendation: z.object({
+          location: z.literal("direct-component-props"),
+          props: z.record(z.string(), z.string()),
+          chartContainer: z.record(z.string(), z.unknown()),
+        }).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
     }, improveChartHandler)
     srv.registerTool("explainChart", {
@@ -2330,7 +2462,31 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
     srv.registerTool("getChartSchema", {
       title: "Get a chart schema",
       description: "Return canonical Semiotic prop-schema guidance for code editing and advanced configuration.",
-      inputSchema: { component: z.string().optional() },
+      inputSchema: {
+        component: z.string().optional(),
+      },
+      outputSchema: {
+        status: z.enum([
+          "component-list",
+          "component-schema",
+          "unknown-component",
+        ]),
+        component: z.string().optional(),
+        renderable: z.boolean().optional(),
+        availableComponents: z.array(
+          z.object({
+            name: z.string(),
+            renderable: z.boolean(),
+          }),
+        ).optional(),
+        schema: z.record(z.string(), z.unknown()).optional(),
+        accessibility: z.object({
+          directProps: z.record(z.string(), z.unknown()),
+          chartContainer: z.record(z.string(), z.unknown()),
+        }).optional(),
+        behaviorContracts: z.array(z.unknown()).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
     }, getSchemaHandler)
     return srv

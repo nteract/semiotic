@@ -135,6 +135,28 @@ describe("validateProps — network component validation", () => {
 })
 
 describe("validateProps — ordinal component validation", () => {
+  it("accepts canonical BarChart accessibility props and rejects legacy ordinal accessors", () => {
+    const canonical = validateProps("BarChart", {
+      data: [{ quarter: "Q1", revenue: 12 }],
+      categoryAccessor: "quarter",
+      valueAccessor: "revenue",
+      title: "Quarterly revenue",
+      description: "Bar chart comparing quarterly revenue.",
+      summary: "Q1 revenue was 12. Use arrow keys to move between bars.",
+    })
+    expect(canonical.errors).not.toContainEqual(expect.stringContaining('Unknown prop "title"'))
+    expect(canonical.errors).not.toContainEqual(expect.stringContaining('Unknown prop "description"'))
+    expect(canonical.errors).not.toContainEqual(expect.stringContaining('Unknown prop "summary"'))
+
+    const legacy = validateProps("BarChart", {
+      data: [{ quarter: "Q1", revenue: 12 }],
+      oAccessor: "quarter",
+      rAccessor: "revenue",
+    })
+    expect(legacy.errors).toContainEqual(expect.stringContaining('Unknown prop "oAccessor"'))
+    expect(legacy.errors).toContainEqual(expect.stringContaining('Unknown prop "rAccessor"'))
+  })
+
   it("validates BarChart orientation enum", () => {
     const result = validateProps("BarChart", {
       data: [{ category: "A", value: 10 }],

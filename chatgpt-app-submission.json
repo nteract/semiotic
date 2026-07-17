@@ -1,0 +1,140 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "Semiotic",
+    "subtitle": "Create and improve charts",
+    "description": "Semiotic helps users select appropriate charts, generate verified chart previews, improve existing chart configurations, explain charts for non-visual readers, audit chart quality and accessibility, and inspect chart prop schemas.",
+    "category": "DESIGN"
+  },
+  "tools": {
+    "createChart": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Selects, validates, diagnoses, and renders a chart from the supplied data without persisting or changing data.",
+        "open_world_justification": "Produces an in-chat chart preview and does not publish content or change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or otherwise irreversibly change anything."
+      }
+    },
+    "improveChart": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Analyzes the supplied chart configuration and returns diagnostics, repairs, and variants without modifying it.",
+        "open_world_justification": "Returns improvement guidance only and does not publish or update an external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or otherwise irreversibly change anything."
+      }
+    },
+    "explainChart": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Derives a textual description, communicative intent, and navigation structure from the supplied chart data.",
+        "open_world_justification": "Returns an in-chat explanation and does not publish or update an external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or otherwise irreversibly change anything."
+      }
+    },
+    "auditChart": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs chart-quality, accessibility, and mobile checks on supplied configuration and returns findings without modifying it.",
+        "open_world_justification": "Returns audit results only and does not publish or update an external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or otherwise irreversibly change anything."
+      }
+    },
+    "getChartSchema": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Returns canonical chart-prop schema guidance without changing the schema or any user data.",
+        "open_world_justification": "Returns local schema guidance and does not publish or update an external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or otherwise irreversibly change anything."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Create a verified trend chart from a small dataset.",
+      "user_prompt": "Create a chart showing monthly revenue from Jan to Jun and explain the trend.",
+      "file_attachment_urls": null,
+      "tools_triggered": "createChart",
+      "expected_output": "Returns a validated chart preview with a suitable chart choice and a concise summary of the trend.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Improve a chart configuration that may not fit its data.",
+      "user_prompt": "Review my PieChart configuration for monthly sales data and suggest a better option if appropriate.",
+      "file_attachment_urls": null,
+      "tools_triggered": "improveChart",
+      "expected_output": "Returns diagnostics and practical repair or chart-variant recommendations for the supplied configuration.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Explain a chart for a non-visual reader.",
+      "user_prompt": "Explain this LineChart's key trend and structure so a screen-reader user can understand it.",
+      "file_attachment_urls": null,
+      "tools_triggered": "explainChart",
+      "expected_output": "Returns a text-based chart description, its communicative intent, and navigable data structure.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Audit a mobile chart for accessibility and design risks.",
+      "user_prompt": "Audit my Scatterplot for accessibility and mobile-display issues at a 390-pixel viewport.",
+      "file_attachment_urls": null,
+      "tools_triggered": "auditChart",
+      "expected_output": "Returns prioritized quality, accessibility, and mobile findings for the supplied chart configuration.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Look up configuration guidance for a requested chart type.",
+      "user_prompt": "What props do I need to configure a Semiotic BarChart?",
+      "file_attachment_urls": null,
+      "tools_triggered": "getChartSchema",
+      "expected_output": "Returns canonical prop-schema guidance for the requested chart component.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not invoke for general calendar questions.",
+      "user_prompt": "What meetings do I have tomorrow?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because calendar management is outside its chart workflows.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke to publish a social-media post.",
+      "user_prompt": "Post an announcement about our quarterly results to LinkedIn.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it cannot publish content or manage social-media accounts.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke for general image editing.",
+      "user_prompt": "Remove the background from this product photo.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because general photo editing is outside its supported visualization workflows.",
+      "expected_output_url": null
+    }
+  ]
+}

@@ -164,7 +164,23 @@ const commonProps: Record<string, ChartPropSpec> = {
   height: { type: "number", default: 400 },
   margin: { type: "object", description: "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation." },
   className: { type: "string" },
-  title: { type: "string" },
+  title: {
+    type: "string",
+    description: "Visible chart title and the chart's accessible name.",
+  },
+  description: {
+    type: "string",
+    description: "Concise accessible description that overrides the chart's generated aria-label.",
+  },
+  summary: {
+    type: "string",
+    description: "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant.",
+  },
+  accessibleTable: {
+    type: "boolean",
+    default: true,
+    description: "Expose the chart data through Semiotic's screen-reader data table.",
+  },
   enableHover: { type: "boolean", default: true },
   showLegend: { type: "boolean" },
   showGrid: { type: "boolean", default: false },

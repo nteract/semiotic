@@ -23,6 +23,7 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
+import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
 export type FrameType = RenderEvidence["frameType"]
 
@@ -197,12 +198,16 @@ export function renderGridSVG(
   scales: StreamScales,
   layout: StreamLayout,
   theme: SemioticTheme,
-  idPrefix?: string
+  idPrefix?: string,
+  axisExtent?: AxisExtentMode
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
-  const xTicks = scales.x.ticks(5)
-  const yTicks = scales.y.ticks(5)
+  // Grid lines share the axis tick positions (ticksForMode) so they align
+  // under axisExtent:"exact" — matching the client SVGOverlay, which draws
+  // grid from the same tick arrays as the axis.
+  const xTicks = ticksForMode(scales.x, 5, axisExtent)
+  const yTicks = ticksForMode(scales.y, 5, axisExtent)
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
@@ -229,14 +234,16 @@ export function renderOrdinalGridSVG(
   store: OrdinalPipelineStore,
   layout: { width: number; height: number },
   theme: SemioticTheme,
-  idPrefix?: string
+  idPrefix?: string,
+  axisExtent?: AxisExtentMode
 ): React.ReactNode {
   const scales = store.scales
   if (!scales || scales.projection === "radial") return null
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
-  const rTicks = scales.r.ticks(5)
+  // Match the axis ticks (and the client) under axisExtent:"exact".
+  const rTicks = ticksForMode(scales.r, 5, axisExtent)
 
   if (isVertical) {
     return (
@@ -341,12 +348,15 @@ export function generateAxesSVG(
   idPrefix?: string
 ): React.ReactNode {
   const s = themeStyles(theme)
-  const xTicks = scales.x.ticks(5).map(v => ({
+  // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
+  // ticks inclusive of the data min/max (the axisExtent headline behavior);
+  // "nice"/undefined falls through to scale.ticks — byte-identical to before.
+  const xTicks = ticksForMode(scales.x, 5, props.axisExtent).map(v => ({
     pixel: scales.x(v),
     label: (props.xFormat || props.tickFormatTime || defaultTickFormat)(v)
   }))
 
-  const yTicks = scales.y.ticks(5).map(v => ({
+  const yTicks = ticksForMode(scales.y, 5, props.axisExtent).map(v => ({
     pixel: scales.y(v),
     label: (props.yFormat || props.tickFormatValue || defaultTickFormat)(v)
   }))

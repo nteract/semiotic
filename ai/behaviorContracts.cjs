@@ -148,6 +148,15 @@ const STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema()
 
 const BEHAVIOR_CONTRACTS = [
   {
+    id: "accessibility.description-props",
+    category: "accessibility",
+    title: "Accessible chart text uses direct chart props",
+    severity: "warning",
+    appliesTo: {},
+    summary: "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
+    agentAction: "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.",
+  },
+  {
     id: "props.data-required-by-usage-mode",
     category: "required-props",
     title: "Data required by usage mode",

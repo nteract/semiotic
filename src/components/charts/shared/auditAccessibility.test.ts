@@ -67,6 +67,15 @@ describe("auditAccessibility — title/description criticals", () => {
     expect(status(r, "compromising.table")).toBe("pass")
     expect(status(r, "perceivable.low-contrast")).toBe("pass")
   })
+
+  it("does not credit unsupported direct summary text", () => {
+    const r = auditAccessibility("RealtimeLineChart", {
+      summary: "A useful trend summary that this chart API does not support directly.",
+    })
+    expect(status(r, "understandable.unsupported-description-prop")).toBe("warn")
+    expect(status(r, "understandable.title-summary-caption")).toBe("fail")
+    expect(status(r, "understandable.explain-purpose")).toBe("fail")
+  })
 })
 
 describe("auditAccessibility — non-visual alternative (Perceivable + Compromising)", () => {

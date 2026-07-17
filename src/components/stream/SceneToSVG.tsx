@@ -256,7 +256,7 @@ function perCornerSvgPath(n: RectSceneNode): string {
  */
 function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement | null {
   const fg = n.fillGradient
-  if (!fg) return null
+  if (!fg || typeof fg !== "object") return null
 
   // Tip → base coords by orientation. Default top-to-bottom for positive
   // vertical bars (and anything without roundedEdge).

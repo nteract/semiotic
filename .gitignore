@@ -21,3 +21,6 @@ lbe.md
 docs/public/api/
 .claude/
 /docs/strategy
+
+# Core dumps (e.g. WebKit crashes during the dockerized visual-baseline regen)
+/core

@@ -4,6 +4,17 @@ import { type ChartConfig } from "./serverChartConfigShared"
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
 
+// `gradientFill === true` is the HOC's shorthand for the default top/bottom
+// opacity stops; the scene builders only accept the object form, so we
+// normalize it the same way the client frame (and staticXY.tsx) do.
+function normalizeBarGradientFill(gradientFill: unknown): unknown {
+  return gradientFill === true
+    ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+    : gradientFill === false
+      ? undefined
+      : gradientFill
+}
+
 export const barChart: ChartConfig = {
   frameType: "ordinal",
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
@@ -18,6 +29,7 @@ export const barChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     // Resolve declarative styleRules into a pieceStyle (bypassed the HOC hook
     // on this path). Spread after `common` so it composes over any user pieceStyle.
     ...(rest.styleRules && {
@@ -42,6 +54,7 @@ export const stackedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     ...(rest.styleRules && {
       pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
     }),
@@ -63,6 +76,7 @@ export const groupedBarChart: ChartConfig = {
     barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
     ...(rest.styleRules && {
       pieceStyle: styleRulesToPieceStyle(rest.styleRules, rest.valueAccessor || "value", common.pieceStyle),
     }),
@@ -148,6 +162,11 @@ export const swarmPlot: ChartConfig = {
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
     colorAccessor: colorBy,
+    // symbolBy → symbolAccessor is the HOC-level rename (mirrors SwarmPlot.tsx):
+    // the field whose values become glyph shapes. Without this the SSR path
+    // drops symbolBy and every point renders as a circle.
+    ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
+    ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
     colorScheme,
     ...common,
   }),
@@ -180,7 +199,11 @@ export const swimlaneChart: ChartConfig = {
     subcategoryAccessor: rest.subcategoryAccessor,
     colorScheme,
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+    // trackFill paints the lane background behind each swimlane (mirrors
+    // SwimlaneChart.tsx). Dropped by the SSR path before this mapping.
+    ...(rest.trackFill != null && { trackFill: rest.trackFill }),
     ...common,
+    gradientFill: normalizeBarGradientFill(common.gradientFill),
   }),
 }
 
@@ -227,6 +250,10 @@ export const funnelChart: ChartConfig = {
       projection: isVertical ? "vertical" : "horizontal",
       connectorAccessor: rest.connectorAccessor,
       connectorStyle: rest.connectorStyle,
+      // connectorOpacity styles the horizontal funnel's between-step connectors
+      // (mirrors FunnelChart.tsx, which only forwards it for horizontal funnels;
+      // the vertical bar-funnel has no connectors). Dropped by SSR before this.
+      ...(!isVertical && rest.connectorOpacity != null && { connectorOpacity: rest.connectorOpacity }),
       barPadding: isVertical ? 40 : 0,
       showAxes: isVertical,
       showGrid: isVertical,

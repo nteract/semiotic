@@ -4,8 +4,8 @@ import {
 } from "./mcp-build-info"
 
 describe("Semiotic MCP build identity", () => {
-  const packageVersion = "3.8.1"
-  const surfaceVersion = "3.8.1-ai"
+  const packageVersion = "3.8.2"
+  const surfaceVersion = "3.8.2-ai"
 
   it("reports explicit repository-nightly provenance and a distinct MCP identity", () => {
     const commitSha = "00db062e9ed42be02a9c4f59dbf8396ebd1712cd"
@@ -35,7 +35,7 @@ describe("Semiotic MCP build identity", () => {
     })
     expect(mcpServerInfoForBuild(buildInfo)).toEqual({
       name: "semiotic-nightly",
-      version: "3.8.1-nightly+00db062",
+      version: "3.8.2-nightly+00db062",
     })
   })
 
@@ -117,7 +117,7 @@ describe("Semiotic MCP build identity", () => {
 
     const serverInfo = mcpServerInfoForBuild(buildInfo)
     expect(serverInfo.name).toBe("semiotic-nightly")
-    expect(serverInfo.version).toBe("3.8.1-nightly+unknown")
+    expect(serverInfo.version).toBe("3.8.2-nightly+unknown")
     expect(serverInfo.version).not.toBe(packageVersion)
   })
 })

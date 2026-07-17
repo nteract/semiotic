@@ -25,6 +25,7 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP } from "./validateProps"
+import { assessAccessibilityText, isNonEmptyString } from "./auditAccessibilityText"
 import { contrastRatio } from "./colorContrast"
 import {
   annotationDrawsConnector,
@@ -146,10 +147,6 @@ const REFERENCE =
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
-
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0
-}
 
 function annotationConfidence(a: Datum): number | null {
   const c = a?.provenance?.confidence
@@ -331,10 +328,9 @@ export function auditAccessibility(
 
   const isValue = VALUE.has(component)
   const isHierarchy = HIERARCHY.has(component)
+  const { hasTitle, hasDescription, hasSummary, unsupportedFinding } =
+    assessAccessibilityText(component, props)
   const tableEnabled = props.accessibleTable !== false && !isValue
-  const hasTitle = isNonEmptyString(props.title)
-  const hasDescription = isNonEmptyString(props.description)
-  const hasSummary = isNonEmptyString(props.summary)
   const hasAnyText = hasTitle || hasDescription || hasSummary
   const interactive = isInteractive(props)
   const pauseControl = hasPauseControl(props)
@@ -357,6 +353,8 @@ export function auditAccessibility(
   const builtInNote = known
     ? ""
     : ` (unrecognized component "${component}" — verify manually that the built-in applies)`
+
+  if (unsupportedFinding) f.push(unsupportedFinding)
 
   // ── PERCEIVABLE ────────────────────────────────────────────────────────
   f.push(checkContrast(props))

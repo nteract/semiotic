@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "mcpName": "io.github.nteract/semiotic",
   "description": "Verified generative visualization for React and agents, with deterministic chart validation, repair, rendering evidence, and MCP.",
   "main": "dist/semiotic.min.js",
@@ -310,6 +310,7 @@
     "check:cloud-run-manifest": "node scripts/check-cloud-run-manifest.mjs",
     "check:cloud-run-nightly": "node scripts/check-cloud-run-nightly.mjs",
     "check:cloud-run-lock": "node scripts/check-cloud-run-manifest.mjs --require-lockfile",
+    "check:cloud-run-release": "node scripts/check-cloud-run-manifest.mjs --require-lockfile --require-root-version",
     "check:ai-schema": "node scripts/check-ai-schema-valid.mjs",
     "docs:chart-specs:schema": "npx tsx scripts/regenerate-schema.ts",
     "check:test-quality": "node scripts/check-test-quality-gate.mjs",
