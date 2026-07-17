@@ -287,6 +287,12 @@ jobs:
     # linux-bootstrap.mjs) makes CI renders match the baselines exactly and
     # survives future `ubuntu-latest` bumps.
     container: mcr.microsoft.com/playwright:v1.61.1-noble
+    # In a container job GitHub sets $HOME=/github/home (owned by the image's
+    # pwuser) while steps run as root. Firefox refuses to launch unless $HOME
+    # is owned by the current user, so point it at root's own home. Chromium
+    # and WebKit are unaffected; without this only Firefox fails to start.
+    env:
+      HOME: /root
 
     steps:
       - name: Checkout source code
