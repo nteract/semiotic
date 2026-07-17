@@ -22,7 +22,7 @@ import { brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3Brus
 import type { OrdinalScales } from "./ordinalTypes"
 import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
 
-interface OrdinalBrushOverlayProps {
+export interface OrdinalBrushOverlayProps {
   width: number
   height: number
   totalWidth: number

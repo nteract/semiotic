@@ -20,7 +20,7 @@ import type {
   SceneNode,
   StreamScales
 } from "./types"
-import { XYBrushOverlay } from "./XYBrushOverlay"
+import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
@@ -1448,7 +1448,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />
         {(brush || onBrush) && (
-          <XYBrushOverlay
+          <XYBrushOverlayLazy
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}

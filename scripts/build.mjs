@@ -35,18 +35,26 @@ function useClientDirectivePlugin({ clientOnly = false } = {}) {
   }
 }
 
-async function createBundle(options = {}) {
-  const {
-    input = "src/components/semiotic.ts",
-    name = "semiotic",
-    analyze = false,
-    minify = false,
-    serverOnly = false,
-    clientOnly = false,
-  } = options
+const terserOptions = {
+  compress: {
+    pure_getters: true,
+    unsafe: true,
+    unsafe_comps: true,
+    drop_console: false,
+    pure_funcs: ["console.log", "console.debug"],
+    drop_debugger: true,
+    passes: 2,
+  },
+  mangle: {
+    properties: false,
+  },
+  format: {
+    comments: false,
+  },
+}
 
-  const commonOptions = {
-    entry: { [name]: input },
+function baseBuildOptions({ minify, serverOnly, clientOnly }) {
+  return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
     // helpers (optional chaining, nullish coalescing, class fields stay native).
@@ -57,64 +65,97 @@ async function createBundle(options = {}) {
     clean: false,
     sourcemap: !minify,
     minify: minify ? "terser" : false,
-    terserOptions: {
-      compress: {
-        pure_getters: true,
-        unsafe: true,
-        unsafe_comps: true,
-        drop_console: false,
-        pure_funcs: ["console.log", "console.debug"],
-        drop_debugger: true,
-        passes: 2,
-      },
-      mangle: {
-        properties: false,
-      },
-      format: {
-        comments: false,
-      },
-    },
+    terserOptions,
     external: explicitExternals,
     pure: ["console.log", "console.debug"],
     plugins: [useClientDirectivePlugin({ clientOnly })],
-    esbuildOptions(esbuildOptions) {
-      esbuildOptions.chunkNames = `${name}-[name]-[hash]`
-      esbuildOptions.conditions = ["module", "import", "default"]
-    },
     silent: true,
   }
+}
 
-  // CJS: single-file fallback for Node/CommonJS consumers.
+/**
+ * CJS fallback: one fat file per entry. CommonJS cannot share cross-entry
+ * chunks the way ESM can, so multi-subpath CJS consumers still pay a
+ * duplication tax — acceptable for the legacy require() path.
+ */
+async function createCjsBundle(options = {}) {
+  const {
+    input = "src/components/semiotic.ts",
+    name = "semiotic",
+    minify = false,
+    serverOnly = false,
+    clientOnly = false,
+  } = options
+
   await tsupBuild({
-    ...commonOptions,
+    ...baseBuildOptions({ minify, serverOnly, clientOnly }),
+    entry: { [name]: input },
     name: `${name}:cjs`,
     format: "cjs",
     splitting: false,
     outExtension: () => ({ js: ".min.js" }),
+    esbuildOptions(esbuildOptions) {
+      esbuildOptions.conditions = ["module", "import", "default"]
+    },
   })
+}
 
-  // ESM: preserve dynamic imports for lazy loading / code-splitting.
+/**
+ * Multi-entry ESM build with shared chunks.
+ *
+ * Building each subpath (`xy`, `network`, `ai`, …) as an isolated bundle
+ * inlines Stream frames / shared utils into every entry. A consumer that
+ * imports several subpaths then pays for PipelineStore, SceneToSVG, etc.
+ * once per entry (~3–4× the real graph).
+ *
+ * One esbuild graph with `splitting: true` emits shared chunks that every
+ * entry imports, so `semiotic/ai` + `semiotic/xy` + `semiotic/network` share
+ * one copy of the frame runtime. That is the standard fix for multi-entry
+ * library packaging — not per-HOC endpoints.
+ */
+async function createSharedEsmGroup({
+  entries,
+  minify = false,
+  serverOnly = false,
+  clientOnly = false,
+  groupName = "esm",
+  analyze = false,
+} = {}) {
+  const names = Object.keys(entries)
+  if (names.length === 0) return
+
   await tsupBuild({
-    ...commonOptions,
-    name: `${name}:esm`,
+    ...baseBuildOptions({ minify, serverOnly, clientOnly }),
+    entry: entries,
+    name: `${groupName}:esm`,
     format: "esm",
     splitting: true,
-    metafile: analyze && name === "semiotic",
+    metafile: analyze,
     outExtension: () => ({ js: ".module.min.js" }),
+    esbuildOptions(esbuildOptions) {
+      // Stable prefix so package `files` can ship `dist/chunk-*.module.min.js`
+      // and consumer bundlers can content-hash cache them.
+      esbuildOptions.chunkNames = "chunk-[name]-[hash]"
+      esbuildOptions.conditions = ["module", "import", "default"]
+    },
   })
 
-  console.log(`\u2705 ${name} bundle created${minify ? " (minified)" : ""}`)
-  if (analyze && name === "semiotic") {
-    console.log("\ud83d\udcca Bundle metafile saved to: dist/metafile-esm.json")
+  console.log(
+    `\u2705 ESM group "${groupName}" (${names.length} entries, shared chunks)${minify ? " (minified)" : ""}`
+  )
+  if (analyze) {
+    console.log("\ud83d\udcca Bundle metafile saved under dist/ (tsup default)")
   }
 }
 
-async function createBundlesWithConcurrency(bundles, concurrency) {
+async function createCjsBundlesWithConcurrency(bundles, concurrency) {
   const workers = Array.from(
     { length: Math.min(concurrency, bundles.length) },
     async (_, workerIndex) => {
       for (let i = workerIndex; i < bundles.length; i += concurrency) {
-        await createBundle(bundles[i])
+        const b = bundles[i]
+        await createCjsBundle(b)
+        console.log(`\u2705 ${b.name} CJS created${b.minify ? " (minified)" : ""}`)
       }
     }
   )
@@ -524,12 +565,50 @@ async function build() {
 
   buildDeclarations()
 
-  // Each tsup build keeps an esbuild graph plus post-processing state. Starting
-  // every entry point at once can still spike CI memory when a temporary
-  // preview bundle is added, so keep peak memory bounded while allowing local
-  // callers to opt into more parallelism.
-  console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
-  await createBundlesWithConcurrency(bundledEntries, bundleConcurrency)
+  // ── ESM: multi-entry groups with shared chunks ─────────────────────────
+  // Client chart/AI entries share Stream frames; server entries share SSR
+  // helpers; neutral pure entries share light utilities. Mixing client and
+  // server into one graph would either leak "use client" into Node or drop
+  // it from browser charts, so keep three graphs.
+  const clientEntries = Object.fromEntries(
+    bundledEntries.filter((b) => b.clientOnly).map((b) => [b.name, b.input])
+  )
+  const serverEntries = Object.fromEntries(
+    bundledEntries.filter((b) => b.serverOnly).map((b) => [b.name, b.input])
+  )
+  const neutralEntries = Object.fromEntries(
+    bundledEntries
+      .filter((b) => !b.clientOnly && !b.serverOnly)
+      .map((b) => [b.name, b.input])
+  )
+
+  console.log(
+    `Bundling ESM shared groups (client=${Object.keys(clientEntries).length}, ` +
+      `server=${Object.keys(serverEntries).length}, neutral=${Object.keys(neutralEntries).length})`
+  )
+  await createSharedEsmGroup({
+    entries: clientEntries,
+    minify,
+    clientOnly: true,
+    groupName: "client",
+    analyze,
+  })
+  await createSharedEsmGroup({
+    entries: serverEntries,
+    minify,
+    serverOnly: true,
+    groupName: "server",
+  })
+  await createSharedEsmGroup({
+    entries: neutralEntries,
+    minify,
+    groupName: "neutral",
+  })
+
+  // ── CJS: fat per-entry (no cross-entry chunk sharing) ───────────────────
+  console.log(`Bundling ${bundledEntries.length} CJS entry points with concurrency ${bundleConcurrency}`)
+  await createCjsBundlesWithConcurrency(bundledEntries, bundleConcurrency)
+
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })
 

@@ -9,7 +9,7 @@
  *   OrdinalPipelineStore  — data ingestion, scale computation, scene layout
  *   DataSourceAdapter     — static vs streaming data source abstraction
  *   OrdinalSVGOverlay     — annotations, axes, legends (SVG layer above canvas)
- *   OrdinalBrushOverlay   — d3-brush SVG overlay for value-axis brushing
+ *   OrdinalBrushOverlayLazy — d3-brush overlay, loaded only when brush is enabled
  *   ordinalSceneBuilders/ — per-chartType layout algorithms
  *   SceneToSVG            — SSR fallback (scene nodes → SVG elements)
  *
@@ -52,7 +52,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
-import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
+import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
@@ -1129,7 +1129,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
         {/* Brush overlay — not supported for radial projection (pie/donut) */}
         {(brush || onBrushProp) && projection !== "radial" && (
-          <OrdinalBrushOverlay
+          <OrdinalBrushOverlayLazy
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}

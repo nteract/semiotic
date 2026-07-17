@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
-import { render, act, fireEvent } from "@testing-library/react"
+import { render, act, fireEvent, waitFor } from "@testing-library/react"
 import StreamXYFrame, { withAlpha } from "./StreamXYFrame"
 import type { StreamXYFrameHandle } from "./types"
 import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
@@ -738,7 +738,7 @@ describe("StreamXYFrame", () => {
   // ── Brush overlay ─────────────────────────────────────────────────────
 
   describe("brush", () => {
-    it("renders brush SVG overlay when brush prop is provided", () => {
+    it("renders brush SVG overlay when brush prop is provided", async () => {
       const onBrush = vi.fn()
       const { container } = render(
         <StreamXYFrame
@@ -747,8 +747,10 @@ describe("StreamXYFrame", () => {
           onBrush={onBrush}
         />
       )
-      const brushG = container.querySelector(".brush-g")
-      expect(brushG).toBeTruthy()
+      // Brush overlay is dynamically imported (keeps d3-brush off the cold path).
+      await waitFor(() => {
+        expect(container.querySelector(".brush-g")).toBeTruthy()
+      })
     })
 
     it("does not render brush overlay when brush prop is absent", () => {
@@ -765,7 +767,7 @@ describe("StreamXYFrame", () => {
         { x: 10, y: 20 },
       ]
 
-      function renderBrush(dimension: "x" | "y" | "xy", onBrush = vi.fn()) {
+      async function renderBrush(dimension: "x" | "y" | "xy", onBrush = vi.fn()) {
         const result = render(
           <StreamXYFrame
             chartType="scatter"
@@ -778,12 +780,15 @@ describe("StreamXYFrame", () => {
             onBrush={onBrush}
           />
         )
+        await waitFor(() => {
+          expect(result.container.querySelector('svg[role="region"]')).toBeTruthy()
+        })
         const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
         return { ...result, region, onBrush }
       }
 
-      it("nudges an x-dimension brush left/right and ignores vertical arrows", () => {
-        const { region, onBrush } = renderBrush("x")
+      it("nudges an x-dimension brush left/right and ignores vertical arrows", async () => {
+        const { region, onBrush } = await renderBrush("x")
         fireEvent.keyDown(region, { key: "ArrowRight" })
         expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ x: expect.any(Array) }))
         onBrush.mockClear()
@@ -795,8 +800,8 @@ describe("StreamXYFrame", () => {
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("resizes an x-dimension brush with shift+arrow in both directions", () => {
-        const { region, onBrush } = renderBrush("x")
+      it("resizes an x-dimension brush with shift+arrow in both directions", async () => {
+        const { region, onBrush } = await renderBrush("x")
         fireEvent.keyDown(region, { key: "ArrowRight", shiftKey: true })
         expect(onBrush).toHaveBeenCalled()
         onBrush.mockClear()
@@ -804,8 +809,8 @@ describe("StreamXYFrame", () => {
         expect(onBrush).toHaveBeenCalled()
       })
 
-      it("nudges a y-dimension brush up/down and ignores horizontal arrows", () => {
-        const { region, onBrush } = renderBrush("y")
+      it("nudges a y-dimension brush up/down and ignores horizontal arrows", async () => {
+        const { region, onBrush } = await renderBrush("y")
         fireEvent.keyDown(region, { key: "ArrowUp" })
         expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ y: expect.any(Array) }))
         onBrush.mockClear()
@@ -817,29 +822,29 @@ describe("StreamXYFrame", () => {
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("nudges and resizes a two-dimensional brush on any arrow", () => {
-        const { region, onBrush } = renderBrush("xy")
+      it("nudges and resizes a two-dimensional brush on any arrow", async () => {
+        const { region, onBrush } = await renderBrush("xy")
         fireEvent.keyDown(region, { key: "ArrowRight" })
         fireEvent.keyDown(region, { key: "ArrowUp", shiftKey: true })
         expect(onBrush).toHaveBeenCalledTimes(2)
       })
 
-      it("clears the brush extent on Escape after a prior nudge", () => {
-        const { region, onBrush } = renderBrush("xy")
+      it("clears the brush extent on Escape after a prior nudge", async () => {
+        const { region, onBrush } = await renderBrush("xy")
         fireEvent.keyDown(region, { key: "ArrowRight" })
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "Escape" })
         expect(onBrush).toHaveBeenCalledWith(null)
       })
 
-      it("ignores unrelated keys", () => {
-        const { region, onBrush } = renderBrush("x")
+      it("ignores unrelated keys", async () => {
+        const { region, onBrush } = await renderBrush("x")
         fireEvent.keyDown(region, { key: "Tab" })
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("exposes an aria-label and matching description element for the brush dimension", () => {
-        const { region } = renderBrush("y")
+      it("exposes an aria-label and matching description element for the brush dimension", async () => {
+        const { region } = await renderBrush("y")
         expect(region.getAttribute("aria-label")).toBe("Y data range brush")
         const describedBy = region.getAttribute("aria-describedby")
         const description = describedBy ? region.querySelector(`#${describedBy}`) : null
