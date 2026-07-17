@@ -6,7 +6,7 @@ type NetworkDatumComparator = {
   bivarianceHack(a: Datum, b: Datum): number
 }["bivarianceHack"]
 type NetworkGroupComparator = (a: number, b: number) => number
-import type { LegendGroup, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { NetworkSymbolName } from "./symbolPath"
@@ -762,7 +762,7 @@ export interface StreamNetworkFrameProps<T = Datum>
   background?: string
 
   // ── Legend / title ───────────────────────────────
-  legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legend?: LegendValue
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendLayout?: LegendLayout
   legendHoverBehavior?: (item: { label: string } | null) => void

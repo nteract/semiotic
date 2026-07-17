@@ -33,6 +33,14 @@ const groupedXyData = [
   { x: 3, y: 11, series: "B" },
 ]
 
+const temporalHistogramData = [
+  { time: 0, value: 5, kind: "Errors" },
+  { time: 350, value: 7, kind: "Warnings" },
+  { time: 1200, value: 4, kind: "Errors" },
+  { time: 1850, value: 6, kind: "Warnings" },
+  { time: 2600, value: 8, kind: "Errors" },
+]
+
 const bubbleData = [
   { x: 1, y: 4, size: 12, category: "Alpha" },
   { x: 2, y: 7, size: 22, category: "Beta" },
@@ -631,7 +639,18 @@ function makeSsrParityCases(React) {
     {
       id: "area",
       component: "AreaChart",
-      props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 220 },
+      // A single high-signal fixture covers both scene-to-SVG curve
+      // serialization and area-gradient defs. Each once silently degraded to
+      // straight/flat SSR marks while the canvas CSR path was correct.
+      props: {
+        data: xyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        curve: "monotoneX",
+        gradientFill: true,
+        width: 400,
+        height: 220,
+      },
     },
     {
       id: "stacked-area",
@@ -746,7 +765,18 @@ function makeSsrParityCases(React) {
     {
       id: "donut",
       component: "DonutChart",
-      props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 320, height: 320 },
+      // Explicitly exercise the inner-radius and center-content slots — both
+      // are visual SSR/CSR fidelity contracts, not just valid markup.
+      props: {
+        data: categoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        innerRadius: 80,
+        centerContent: React.createElement("strong", null, "126 total"),
+        showLegend: false,
+        width: 320,
+        height: 320,
+      },
     },
     {
       id: "funnel",
@@ -765,6 +795,35 @@ function makeSsrParityCases(React) {
           { value: 80, color: "#f59e0b" },
           { value: 100, color: "#16a34a" },
         ],
+        // A half gauge exposes full-circle centering errors and makes the
+        // default value readout easy to review beside its CSR counterpart.
+        sweep: 180,
+        width: 320,
+        height: 260,
+      },
+    },
+    {
+      // The gradient band is intentionally a separate parity sheet: it
+      // follows a different scene/rendering path from threshold zones, and
+      // must preserve its arc-length color stops in both SSR and CSR.
+      id: "gauge-gradient",
+      component: "GaugeChart",
+      props: {
+        value: 70,
+        min: 0,
+        max: 100,
+        sweep: 180,
+        fillZones: true,
+        showNeedle: false,
+        backgroundColor: "#d1d5db",
+        cornerRadius: 14,
+        gradientFill: {
+          colorStops: [
+            { offset: 0, color: "#ef4444" },
+            { offset: 0.5, color: "#f59e0b" },
+            { offset: 1, color: "#3b82f6" },
+          ],
+        },
         width: 320,
         height: 260,
       },
@@ -824,6 +883,10 @@ function makeSsrParityCases(React) {
     {
       id: "force-directed",
       component: "ForceDirectedGraph",
+      // The browser simulation and synchronous server settle can rotate or
+      // reflect an equivalent force layout. Evidence + the composite snapshot
+      // gate its structure; coordinate-wise pixel comparison is inappropriate.
+      comparison: "structural",
       props: {
         nodes: networkNodes,
         edges: networkEdges,
@@ -889,6 +952,21 @@ function makeSsrParityCases(React) {
       },
     },
     {
+      id: "temporal-histogram",
+      component: "TemporalHistogram",
+      props: {
+        data: temporalHistogramData,
+        binSize: 1000,
+        timeAccessor: "time",
+        valueAccessor: "value",
+        categoryAccessor: "kind",
+        colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+        width: 420,
+        height: 240,
+      },
+      visibleLegendLabel: "Errors",
+    },
+    {
       id: "xy-custom-waffle",
       component: "XYCustomChart",
       props: {
@@ -898,9 +976,12 @@ function makeSsrParityCases(React) {
         colorBy: "category",
         width: 420,
         height: 260,
-        margin: { top: 20, right: 20, bottom: 36, left: 24 },
+        // Keep the authored plot margins while explicitly delegating the
+        // legend side to the chart's standard auto-reservation contract.
+        margin: { top: 20, right: "auto", bottom: 36, left: 24 },
         title: "SSR custom waffle",
       },
+      visibleLegendLabel: "Alpha",
     },
     {
       id: "ordinal-custom-isotype-glyphs",

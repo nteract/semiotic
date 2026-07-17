@@ -1,10 +1,14 @@
 // @vitest-environment node
 
 /**
- * Component-level SSR tests.
+ * Component-level SSR tests — XY charts, ordinal charts, structure, and
+ * canvas/SSR equivalence.
  *
- * Runs in Node environment (no window/document) so isServerEnvironment is true
- * and Stream Frames render SVG instead of canvas.
+ * Network, geo, and mark-count-contract tests live in the sibling
+ * componentSSR.networkGeo.test.tsx (split out to keep both files under the
+ * test hard limit — see scripts/file-size-policy.json). Runs in Node
+ * environment (no window/document) so isServerEnvironment is true and
+ * Stream Frames render SVG instead of canvas.
  */
 
 import { describe, it, expect } from "vitest"
@@ -18,22 +22,16 @@ import { DifferenceChart } from "../charts/xy/DifferenceChart"
 import { StackedAreaChart } from "../charts/xy/StackedAreaChart"
 import { Scatterplot } from "../charts/xy/Scatterplot"
 import { Heatmap } from "../charts/xy/Heatmap"
-import { ConnectedScatterplot } from "../charts/xy/ConnectedScatterplot"
-import { QuadrantChart } from "../charts/xy/QuadrantChart"
 import { BarChart } from "../charts/ordinal/BarChart"
 import { StackedBarChart } from "../charts/ordinal/StackedBarChart"
 import { PieChart } from "../charts/ordinal/PieChart"
 import { DonutChart } from "../charts/ordinal/DonutChart"
 import { BoxPlot } from "../charts/ordinal/BoxPlot"
 import { DotPlot } from "../charts/ordinal/DotPlot"
-import { ForceDirectedGraph } from "../charts/network/ForceDirectedGraph"
-import { SankeyDiagram } from "../charts/network/SankeyDiagram"
-import { TreeDiagram } from "../charts/network/TreeDiagram"
-import { Treemap } from "../charts/network/Treemap"
-import { CirclePack } from "../charts/network/CirclePack"
+import { TemporalHistogram } from "../charts/realtime/RealtimeHistogram"
 
 // Standalone SSR for equivalence tests
-import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG, renderChart } from "./renderToStaticSVG"
+import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderChart } from "./renderToStaticSVG"
 
 // ── Test data ───────────────────────────────────────────────────────────
 
@@ -101,17 +99,10 @@ function differenceFixture() {
   ]
 }
 
-function countPattern(html: string, pattern: RegExp): number {
-  return (html.match(pattern) || []).length
-}
-
 function countOccurrences(html: string, tag: string): number {
   const regex = new RegExp(`<${tag}[\\s/>]`, "g")
   return (html.match(regex) || []).length
 }
-
-type StaticNetworkProps = Parameters<typeof renderNetworkToStaticSVG>[0]
-type StaticGeoProps = Parameters<typeof renderGeoToStaticSVG>[0]
 
 // ── XY Chart SSR ────────────────────────────────────────────────────────
 
@@ -132,6 +123,40 @@ describe("Component SSR — XY Charts", () => {
     expect(countOccurrences(html, "text")).toBeGreaterThan(0)
   })
 
+  it("renderChart('LineChart', …) uses LineChart's HOC default margin", () => {
+    const svg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 200,
+    })
+
+    // Primary-mode LineChart starts its plot at x=70/y=50. The former
+    // static-frame fallback (40/20) made the standalone SSR mark larger and
+    // shifted up/left relative to the equivalent CSR HOC.
+    expect(svg).toContain('transform="translate(70,50)"')
+  })
+
+  it("TemporalHistogram renders static data as SVG during React SSR", () => {
+    const html = renderComponent(
+      <TemporalHistogram
+        binSize={1000}
+        data={[
+          { time: 100, value: 5 },
+          { time: 900, value: 7 },
+          { time: 2100, value: 4 },
+        ]}
+        width={420}
+        height={240}
+      />
+    )
+
+    expect(html).toContain("<svg")
+    expect(html).not.toContain("<canvas")
+    expect(html).toMatch(/<rect[^>]*(?:fill|style)=/)
+  })
+
   it("AreaChart renders area path with fill", () => {
     const html = renderComponent(
       <AreaChart data={xyData} xAccessor="x" yAccessor="y" width={400} height={300} />
@@ -141,6 +166,121 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
     // Area paths have fill (not just stroke)
     expect(html).toMatch(/fill="[^n]/) // fill is not "none"
+  })
+
+  it("AreaChart SSR preserves gradientFill", () => {
+    const html = renderComponent(
+      <AreaChart
+        data={xyData}
+        xAccessor="x"
+        yAccessor="y"
+        gradientFill={{ topOpacity: 0.8, bottomOpacity: 0.05 }}
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).toContain("<linearGradient")
+    expect(html).toContain('fill="url(#')
+    expect(html).toContain('stop-opacity="0.8"')
+    expect(html).toContain('stop-opacity="0.05"')
+  })
+
+  it("renderChart('AreaChart', …) preserves gradientFill", () => {
+    const svg = renderChart("AreaChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      gradientFill: {
+        colorStops: [
+          { offset: 0, color: "#22c55e" },
+          { offset: 1, color: "#14532d" },
+        ],
+      },
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toContain('stop-color="#22c55e"')
+    expect(svg).toContain('stop-color="#14532d"')
+    expect(svg).toContain('fill="url(#')
+  })
+
+  it.each(["LineChart", "AreaChart"] as const)("renderChart('%s', …) preserves lineGradient", (component) => {
+    const svg = renderChart(component, {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      lineGradient: {
+        colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("stroke-gradient")
+    expect(svg).toContain('stop-color="#ff0000"')
+    expect(svg).toContain('stop-color="#0000ff"')
+    expect(svg).toMatch(/stroke="url\(#.*stroke-gradient\)"/)
+  })
+
+  it("uses the shared sparkline mode contract in renderChart", () => {
+    const svg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      mode: "sparkline",
+    })
+    expect(svg).toContain('width="120"')
+    expect(svg).toContain('height="24"')
+    expect(svg).toContain('transform="translate(0,2)"')
+    expect((svg.match(/<line /g) || []).length).toBe(0)
+  })
+
+  it("uses LineChart's shared default and explicit style precedence", () => {
+    const defaultSvg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 300,
+    })
+    const explicitSvg = renderChart("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      color: "#123456",
+      lineWidth: 7,
+      width: 400,
+      height: 300,
+    })
+
+    expect(defaultSvg).toContain('stroke="#007bff"')
+    expect(defaultSvg).not.toContain('stroke="#1f77b4"')
+    expect(explicitSvg).toContain('stroke="#123456"')
+    expect(explicitSvg).toContain('stroke-width="7"')
+  })
+
+  it("renderChart('AreaChart', …) matches the HOC's base blue and top-only stroke", () => {
+    const svg = renderChart("AreaChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      gradientFill: true,
+      width: 400,
+      height: 300,
+    })
+    const closedArea = svg.match(/<path[^>]*d="[^"]*Z"[^>]*>/)?.[0]
+
+    // AreaChart's HOC defaults to DEFAULT_COLOR (#007bff), not the
+    // frame palette. The closed fill has no outline; its top edge is a
+    // separate path, exactly like the canvas renderer.
+    expect(svg).toContain('stop-color="#007bff"')
+    expect(closedArea).toContain('stroke="none"')
+    expect((svg.match(/stroke="#007bff"/g) || []).length).toBe(1)
   })
 
   it("DifferenceChart React SSR renders filled crossover segments, not just two lines", () => {
@@ -247,6 +387,45 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
   })
 
+  it.each([
+    ["LineChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
+    ["AreaChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
+    ["StackedAreaChart", {
+      data: xyData.flatMap(d => [
+        { ...d, group: "A" },
+        { x: d.x, y: d.y * 0.6, group: "B" },
+      ]),
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "group",
+    }],
+  ] as const)("renderChart('%s', …) preserves curve interpolation in SSR", (component, chartProps) => {
+    const linear = renderChart(component, { ...chartProps, curve: "linear", width: 400, height: 300 })
+    const smooth = renderChart(component, { ...chartProps, curve: "monotoneX", width: 400, height: 300 })
+
+    // The curve must reach the scene serializer: d3's monotone output emits
+    // cubic Bézier commands whereas the linear path contains only segments.
+    expect(smooth).not.toBe(linear)
+    expect(smooth).toMatch(/<path[^>]*d="M[^"]*C/)
+  })
+
+  it("uses StackedAreaChart's monotoneX default when curve is omitted", () => {
+    const svg = renderChart("StackedAreaChart", {
+      data: [
+        { x: 0, y: 2, group: "A" }, { x: 1, y: 6, group: "A" }, { x: 2, y: 3, group: "A" },
+        { x: 0, y: 1, group: "B" }, { x: 1, y: 2, group: "B" }, { x: 2, y: 4, group: "B" },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "group",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toMatch(/<path[^>]*d="M[^"]*C/)
+    expect(svg).toContain(">A<")
+    expect(svg).toContain(">B<")
+  })
+
   it("renderChart('StackedAreaChart', …) honors areaOpacity", () => {
     const svg = renderChart("StackedAreaChart", {
       data: [
@@ -315,6 +494,21 @@ describe("Component SSR — Ordinal Charts", () => {
     expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(3)
   })
 
+  it("renderChart('BarChart', …) keeps uncoloured bars monocolor", () => {
+    const svg = renderChart("BarChart", {
+      data: categoryData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      color: "#9E8FFF",
+      width: 400,
+      height: 300,
+    })
+
+    // Without colorBy, BarChart's HOC resolves one shared fill. The
+    // frame-level palette fallback used to color these by category on SSR.
+    expect((svg.match(/fill="#9E8FFF"/g) || [])).toHaveLength(3)
+  })
+
   it("StackedBarChart renders stacked rect elements", () => {
     const html = renderComponent(
       <StackedBarChart
@@ -363,6 +557,26 @@ describe("Component SSR — Ordinal Charts", () => {
     expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(3)
   })
 
+  it("renderChart('DonutChart', …) matches HOC margins and renders centerContent", () => {
+    const svg = renderChart("DonutChart", {
+      data: categoryData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      innerRadius: 80,
+      centerContent: <span>Total: 100</span>,
+      width: 600,
+      height: 400,
+    })
+
+    // HOC primary margins are 70/50/40/60, placing the radial center at
+    // (70 + 490 / 2, 50 + 290 / 2) rather than staticOrdinal's generic center.
+    expect(svg).toContain('transform="translate(315,195)"')
+    expect(svg).toContain("<foreignObject")
+    expect(svg).toContain("Total: 100")
+    // The explicit hole size is still reflected in the d3 arc command.
+    expect(svg).toContain("A80,80")
+  })
+
   it("BoxPlot renders boxplot elements (lines + rects)", () => {
     const html = renderComponent(
       <BoxPlot
@@ -378,6 +592,22 @@ describe("Component SSR — Ordinal Charts", () => {
     // Boxplots have whisker lines and box rects
     expect(countOccurrences(html, "line")).toBeGreaterThan(0)
     expect(countOccurrences(html, "rect")).toBeGreaterThan(0)
+  })
+
+  it("renderChart('BoxPlot', …) uses the HOC's default categorical blue", () => {
+    const svg = renderChart("BoxPlot", {
+      data: boxData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 300,
+    })
+
+    // LIGHT_THEME.categorical[0], which is what BoxPlot resolves through
+    // useOrdinalPieceStyle on the client.
+    expect(svg).toContain('fill="#1f77b4"')
+    expect(svg).toContain('stroke="#1f77b4"')
+    expect(svg).toContain('fill-opacity="0.8"')
   })
 
   it("DotPlot renders circle elements", () => {
@@ -553,726 +783,5 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
 
     expect(componentCircles).toBe(standaloneCircles)
     expect(componentCircles).toBe(5) // 5 data points
-  })
-})
-
-// ── Network Chart SSR ──────────────────────────────────────────────────
-
-const networkNodes = [
-  { id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }
-]
-const networkEdges = [
-  { source: "A", target: "B" },
-  { source: "B", target: "C" },
-  { source: "C", target: "D" },
-  { source: "A", target: "D" },
-]
-
-const sankeyEdges = [
-  { source: "Revenue", target: "Product", value: 80 },
-  { source: "Revenue", target: "Services", value: 50 },
-  { source: "Product", target: "Profit", value: 60 },
-  { source: "Services", target: "Profit", value: 40 },
-]
-
-const treeData = {
-  id: "root",
-  children: [
-    { id: "A", children: [{ id: "A1" }, { id: "A2" }] },
-    { id: "B", children: [{ id: "B1" }] },
-  ]
-}
-
-describe("Component SSR — Network Charts", () => {
-  it("ForceDirectedGraph renders node circles and edge lines", () => {
-    const html = renderComponent(
-      <ForceDirectedGraph
-        nodes={networkNodes}
-        edges={networkEdges}
-        width={400}
-        height={400}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(4)
-  })
-
-  it("SankeyDiagram renders node rects and edge paths", () => {
-    const html = renderComponent(
-      <SankeyDiagram
-        edges={sankeyEdges}
-        width={500}
-        height={300}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    // 5 unique nodes inferred from edges
-    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
-    // 4 edges = 4 paths
-    expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(4)
-  })
-
-  it("renderChart('ProcessSankey', …) renders lifecycle timing stubs in SSR", () => {
-    const svg = renderChart("ProcessSankey", {
-      nodes: [
-        { id: "Queue" },
-        { id: "Review" },
-        { id: "Done" },
-      ],
-      edges: [
-        {
-          source: "Queue",
-          target: "Review",
-          value: 12,
-          enteredSystem: 0,
-          startTime: 1,
-          endTime: 3,
-          exitedSystem: 5,
-        },
-        {
-          source: "Review",
-          target: "Done",
-          value: 8,
-          enteredSystem: 1,
-          startTime: 3,
-          endTime: 5,
-          exitedSystem: 6,
-        },
-      ],
-      sourceAccessor: "source",
-      targetAccessor: "target",
-      valueAccessor: "value",
-      startTimeAccessor: "startTime",
-      endTimeAccessor: "endTime",
-      systemInTimeAccessor: "enteredSystem",
-      systemOutTimeAccessor: "exitedSystem",
-      domain: [0, 6],
-      width: 520,
-      height: 320,
-      showLegend: false,
-    })
-
-    expect(svg).toContain("<svg")
-    expect(svg).toContain("<path")
-    expect(svg).toContain("opacity=\"0.35\"")
-    expect(svg).toContain("fill-opacity=\"0.86\"")
-  })
-
-  it("TreeDiagram renders nodes and edges", () => {
-    const html = renderComponent(
-      <TreeDiagram
-        data={treeData}
-        width={400}
-        height={400}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    // 6 nodes total (root + A + A1 + A2 + B + B1)
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
-  })
-
-  it("Treemap renders rect elements for each leaf", () => {
-    const html = renderComponent(
-      <Treemap
-        data={{
-          id: "root",
-          children: [
-            { id: "A", value: 30 },
-            { id: "B", value: 50 },
-            { id: "C", value: 20 },
-          ]
-        }}
-        width={400}
-        height={400}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(3)
-  })
-
-  it("CirclePack renders circle elements", () => {
-    const html = renderComponent(
-      <CirclePack
-        data={{
-          id: "root",
-          children: [
-            { id: "A", value: 30 },
-            { id: "B", value: 50 },
-            { id: "C", value: 20 },
-          ]
-        }}
-        width={400}
-        height={400}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    // root + 3 children = at least 3 circles
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(3)
-  })
-})
-
-// ── Network SSR — Node inference from edges ────────────────────────────
-
-describe("Component SSR — Network node inference", () => {
-  it("SankeyDiagram with edges-only infers nodes (no explicit nodes prop)", () => {
-    const html = renderComponent(
-      <SankeyDiagram
-        edges={sankeyEdges}
-        width={500}
-        height={300}
-      />
-    )
-
-    // Should have rects for each unique node (Revenue, Product, Services, Profit)
-    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
-    // Should have edge paths
-    expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(4)
-  })
-
-  it("ForceDirectedGraph with edges-only shows validation message (nodes required)", () => {
-    // The HOC requires explicit nodes — node inference only happens in standalone SSR.
-    // The error boundary catches the validation and renders a helpful message.
-    const html = renderComponent(
-      <ForceDirectedGraph
-        edges={networkEdges}
-        width={400}
-        height={400}
-      />
-    )
-
-    expect(html).toContain("ForceDirectedGraph")
-    expect(html).toContain("No nodes provided")
-    expect(html).not.toContain("<canvas")
-  })
-})
-
-// ── Standalone Network SSR — Node inference regression ─────────────────
-
-describe("Standalone SSR — Network node inference from edges", () => {
-  it("sankey renders nodes and edges when only edges are provided", () => {
-    const svg = renderNetworkToStaticSVG({
-      chartType: "sankey",
-      edges: sankeyEdges,
-      size: [500, 300],
-    } as StaticNetworkProps)
-
-    expect(svg).toContain("<svg")
-    // 4 unique nodes
-    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
-    // 4 edge paths
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(4)
-  })
-
-  it("sankey with explicit nodes still works", () => {
-    const svg = renderNetworkToStaticSVG({
-      chartType: "sankey",
-      nodes: [{ id: "Revenue" }, { id: "Product" }, { id: "Services" }, { id: "Profit" }],
-      edges: sankeyEdges,
-      size: [500, 300],
-    } as StaticNetworkProps)
-
-    expect(svg).toContain("<svg")
-    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(4)
-  })
-
-  it("force renders circles when only edges are provided", () => {
-    const svg = renderNetworkToStaticSVG({
-      chartType: "force",
-      edges: networkEdges,
-      size: [400, 400],
-    } as StaticNetworkProps)
-
-    expect(svg).toContain("<svg")
-    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(4)
-  })
-
-  it("edges-only with no edges returns empty SVG", () => {
-    const svg = renderNetworkToStaticSVG({
-      chartType: "sankey",
-      edges: [],
-      size: [500, 300],
-    } as StaticNetworkProps)
-
-    expect(svg).toContain("<svg")
-    expect((svg.match(/<rect /g) || []).length).toBe(0)
-    expect((svg.match(/<path /g) || []).length).toBe(0)
-  })
-})
-
-// ── Mark count contracts ───────────────────────────────────────────────
-
-describe("SSR mark count contracts", () => {
-  it("N scatter points → N circles", () => {
-    for (const n of [3, 7, 12]) {
-      const data = Array.from({ length: n }, (_, i) => ({ x: i, y: i * 2 }))
-      const svg = renderXYToStaticSVG({
-        chartType: "scatter",
-        data,
-        xAccessor: "x",
-        yAccessor: "y",
-        size: [400, 300],
-      })
-      expect((svg.match(/<circle /g) || []).length).toBe(n)
-    }
-  })
-
-  it("N bar categories → N rects", () => {
-    for (const n of [2, 5, 8]) {
-      const data = Array.from({ length: n }, (_, i) => ({
-        category: `Cat${i}`,
-        value: (i + 1) * 10,
-      }))
-      const svg = renderOrdinalToStaticSVG({
-        chartType: "bar",
-        data,
-        oAccessor: "category",
-        rAccessor: "value",
-        size: [400, 300],
-      })
-      const rects = (svg.match(/<rect [^>]*fill="#[0-9a-f]{6}"/gi) || []).length
-      expect(rects).toBe(n)
-    }
-  })
-
-  it("N pie categories → N wedge paths", () => {
-    for (const n of [3, 5]) {
-      const data = Array.from({ length: n }, (_, i) => ({
-        category: `Slice${i}`,
-        value: (i + 1) * 10,
-      }))
-      const svg = renderOrdinalToStaticSVG({
-        chartType: "pie",
-        data,
-        oAccessor: "category",
-        rAccessor: "value",
-        projection: "radial",
-        size: [400, 400],
-      })
-      expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(n)
-    }
-  })
-
-  it("sankey: E edges → E path elements", () => {
-    const edges = [
-      { source: "A", target: "B", value: 10 },
-      { source: "A", target: "C", value: 20 },
-      { source: "B", target: "D", value: 15 },
-    ]
-    const svg = renderNetworkToStaticSVG({
-      chartType: "sankey",
-      edges,
-      size: [500, 300],
-    } as StaticNetworkProps)
-
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
-    // 4 unique nodes → 4 rects
-    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
-  })
-})
-
-// ── Geo SSR — renderGeoToStaticSVG ──────────────────────────────────────
-
-const geoAreas = [
-  {
-    type: "Feature",
-    properties: { name: "CountryA", gdp: 100 },
-    geometry: { type: "Polygon", coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] }
-  },
-  {
-    type: "Feature",
-    properties: { name: "CountryB", gdp: 200 },
-    geometry: { type: "Polygon", coordinates: [[[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]]] }
-  },
-  {
-    type: "Feature",
-    properties: { name: "CountryC", gdp: 50 },
-    geometry: { type: "Polygon", coordinates: [[[40, 0], [50, 0], [50, 10], [40, 10], [40, 0]]] }
-  },
-]
-
-const geoPoints = [
-  { lon: 5, lat: 5, population: 1000000 },
-  { lon: 25, lat: 5, population: 5000000 },
-  { lon: 45, lat: 5, population: 2000000 },
-]
-
-const geoLines = [
-  {
-    coordinates: [
-      { lon: 5, lat: 5 },
-      { lon: 25, lat: 5 },
-      { lon: 45, lat: 5 },
-    ]
-  }
-]
-
-describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
-  it("renders area polygons as SVG path elements", () => {
-    const svg = renderGeoToStaticSVG({
-      areas: geoAreas as StaticGeoProps["areas"],
-      projection: "equalEarth",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    expect(svg).not.toContain("<canvas")
-    // 3 areas = 3 paths
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
-  })
-
-  it("renders point data as SVG circle elements", () => {
-    const svg = renderGeoToStaticSVG({
-      points: geoPoints,
-      xAccessor: "lon",
-      yAccessor: "lat",
-      projection: "equalEarth",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    expect(svg).not.toContain("<canvas")
-    // 3 points = 3 circles
-    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(3)
-  })
-
-  it("renders line data as SVG path elements", () => {
-    const svg = renderGeoToStaticSVG({
-      lines: geoLines,
-      xAccessor: "lon",
-      yAccessor: "lat",
-      lineDataAccessor: "coordinates",
-      projection: "equalEarth",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    expect(svg).not.toContain("<canvas")
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(1)
-  })
-
-  it("renders areas + points together", () => {
-    const svg = renderGeoToStaticSVG({
-      areas: geoAreas as StaticGeoProps["areas"],
-      points: geoPoints,
-      xAccessor: "lon",
-      yAccessor: "lat",
-      projection: "equalEarth",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    // At least 3 area paths + 3 point circles
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
-    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(3)
-  })
-
-  it("returns empty SVG when no geo data is provided", () => {
-    const svg = renderGeoToStaticSVG({
-      projection: "equalEarth",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    expect((svg.match(/<path /g) || []).length).toBe(0)
-    expect((svg.match(/<circle /g) || []).length).toBe(0)
-  })
-
-  it("renders title text when provided", () => {
-    const svg = renderGeoToStaticSVG({
-      areas: geoAreas as StaticGeoProps["areas"],
-      projection: "equalEarth",
-      size: [600, 400],
-      title: "World GDP",
-    } as StaticGeoProps)
-
-    expect(svg).toContain("World GDP")
-  })
-
-  it("applies className to SVG element", () => {
-    const svg = renderGeoToStaticSVG({
-      areas: geoAreas as StaticGeoProps["areas"],
-      projection: "equalEarth",
-      size: [600, 400],
-      className: "my-geo-chart",
-    } as StaticGeoProps)
-
-    expect(svg).toContain("my-geo-chart")
-    expect(svg).toContain("stream-geo-frame")
-  })
-
-  it("supports mercator projection", () => {
-    const svg = renderGeoToStaticSVG({
-      areas: geoAreas as StaticGeoProps["areas"],
-      projection: "mercator",
-      size: [600, 400],
-    } as StaticGeoProps)
-
-    expect(svg).toContain("<svg")
-    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
-  })
-})
-
-describe("SSR mark count contracts — Geo", () => {
-  it("N geo areas → N path elements", () => {
-    for (const n of [1, 3, 5]) {
-      const areas = Array.from({ length: n }, (_, i) => ({
-        type: "Feature",
-        properties: { name: `Country${i}` },
-        geometry: {
-          type: "Polygon",
-          coordinates: [[[i * 15, 0], [i * 15 + 10, 0], [i * 15 + 10, 10], [i * 15, 10], [i * 15, 0]]]
-        }
-      }))
-      const svg = renderGeoToStaticSVG({
-        areas: areas as StaticGeoProps["areas"],
-        projection: "equalEarth",
-        size: [600, 400],
-      } as StaticGeoProps)
-      expect((svg.match(/<path /g) || []).length).toBe(n)
-    }
-  })
-
-  it("N geo points → N circle elements", () => {
-    for (const n of [2, 5, 10]) {
-      const points = Array.from({ length: n }, (_, i) => ({
-        lon: i * 10,
-        lat: i * 5,
-      }))
-      const svg = renderGeoToStaticSVG({
-        points,
-        xAccessor: "lon",
-        yAccessor: "lat",
-        projection: "equalEarth",
-        size: [600, 400],
-      } as StaticGeoProps)
-      expect((svg.match(/<circle /g) || []).length).toBe(n)
-    }
-  })
-})
-
-// ── ConnectedScatterplot SSR ──────────────────────────────────────────────
-
-describe("Component SSR — ConnectedScatterplot", () => {
-  const trajectoryData = [
-    { x: 10, y: 20 },
-    { x: 20, y: 40 },
-    { x: 30, y: 35 },
-    { x: 40, y: 60 },
-    { x: 50, y: 50 },
-  ]
-
-  it("renders point circles in SSR", () => {
-    const html = renderComponent(
-      <ConnectedScatterplot
-        data={trajectoryData}
-        xAccessor="x"
-        yAccessor="y"
-        width={400}
-        height={300}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    // 5 data points = 5 circles
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
-  })
-
-  it("renders connecting line segments via svgPreRenderers", () => {
-    const html = renderComponent(
-      <ConnectedScatterplot
-        data={trajectoryData}
-        xAccessor="x"
-        yAccessor="y"
-        width={400}
-        height={300}
-      />
-    )
-
-    // Connecting segments use stroke-linecap="round" — unique to svgPreRenderer lines
-    // 5 points = 4 connecting segments (each with stroke-linecap="round")
-    const roundCapLines = countPattern(html, /stroke-linecap="round"/g)
-    expect(roundCapLines).toBeGreaterThanOrEqual(4)
-  })
-
-  it("renders halo lines when fewer than 100 points", () => {
-    const html = renderComponent(
-      <ConnectedScatterplot
-        data={trajectoryData}
-        xAccessor="x"
-        yAccessor="y"
-        width={400}
-        height={300}
-      />
-    )
-
-    // Halo lines have stroke="white" + stroke-linecap="round"
-    // 5 points = 4 halos
-    const haloLines = countPattern(html, /stroke="white"[^>]*stroke-linecap="round"/g)
-    expect(haloLines).toBe(4)
-  })
-
-  it("applies viridis colors to connecting segments", () => {
-    const html = renderComponent(
-      <ConnectedScatterplot
-        data={trajectoryData}
-        xAccessor="x"
-        yAccessor="y"
-        width={400}
-        height={300}
-      />
-    )
-
-    // Connecting segments have hex stroke + stroke-linecap="round" (unique to pre-renderer)
-    const viridisSegments = countPattern(html, /stroke="#[0-9a-f]{6}"[^>]*stroke-linecap="round"/gi)
-    expect(viridisSegments).toBe(4) // 4 connecting segments
-  })
-
-  it("respects orderAccessor for sorting", () => {
-    const unordered = [
-      { x: 30, y: 35, t: 3 },
-      { x: 10, y: 20, t: 1 },
-      { x: 50, y: 50, t: 5 },
-      { x: 20, y: 40, t: 2 },
-      { x: 40, y: 60, t: 4 },
-    ]
-    const html = renderComponent(
-      <ConnectedScatterplot
-        data={unordered}
-        xAccessor="x"
-        yAccessor="y"
-        orderAccessor="t"
-        width={400}
-        height={300}
-      />
-    )
-
-    // Should still render circles and round-capped connecting lines
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
-    expect(countPattern(html, /stroke-linecap="round"/g)).toBeGreaterThanOrEqual(4)
-  })
-})
-
-// ── QuadrantChart SSR ─────────────────────────────────────────────────────
-
-describe("Component SSR — QuadrantChart", () => {
-  const quadrantData = [
-    { x: 10, y: 80 },
-    { x: 90, y: 90 },
-    { x: 20, y: 20 },
-    { x: 80, y: 10 },
-  ]
-
-  const quadrants = {
-    topRight: { label: "Stars", color: "#4caf50" },
-    topLeft: { label: "Question Marks", color: "#ff9800" },
-    bottomRight: { label: "Cash Cows", color: "#2196f3" },
-    bottomLeft: { label: "Dogs", color: "#f44336" },
-  }
-
-  it("renders point circles in SSR", () => {
-    const html = renderComponent(
-      <QuadrantChart
-        data={quadrantData}
-        xAccessor="x"
-        yAccessor="y"
-        quadrants={quadrants}
-        width={400}
-        height={300}
-      />
-    )
-
-    expect(html).not.toContain("<canvas")
-    expect(html).toContain("<svg")
-    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(4)
-  })
-
-  it("renders quadrant fill rects via svgPreRenderers", () => {
-    const html = renderComponent(
-      <QuadrantChart
-        data={quadrantData}
-        xAccessor="x"
-        yAccessor="y"
-        quadrants={quadrants}
-        xCenter={50}
-        yCenter={50}
-        width={400}
-        height={300}
-      />
-    )
-
-    // 4 quadrant fill rects (from svgPreRenderers) + any axis/bg rects
-    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
-  })
-
-  it("renders center lines via svgPreRenderers", () => {
-    const html = renderComponent(
-      <QuadrantChart
-        data={quadrantData}
-        xAccessor="x"
-        yAccessor="y"
-        quadrants={quadrants}
-        xCenter={50}
-        yCenter={50}
-        width={400}
-        height={300}
-      />
-    )
-
-    // 2 center lines (vertical + horizontal) with default stroke="#999"
-    const centerLines = countPattern(html, /stroke="#999"/g)
-    expect(centerLines).toBe(2)
-  })
-
-  it("renders quadrant labels when showQuadrantLabels is true", () => {
-    const html = renderComponent(
-      <QuadrantChart
-        data={quadrantData}
-        xAccessor="x"
-        yAccessor="y"
-        quadrants={quadrants}
-        xCenter={50}
-        yCenter={50}
-        showQuadrantLabels
-        width={400}
-        height={300}
-      />
-    )
-
-    expect(html).toContain("Stars")
-    expect(html).toContain("Question Marks")
-    expect(html).toContain("Cash Cows")
-    expect(html).toContain("Dogs")
-  })
-
-  it("renders quadrant fill colors", () => {
-    const html = renderComponent(
-      <QuadrantChart
-        data={quadrantData}
-        xAccessor="x"
-        yAccessor="y"
-        quadrants={quadrants}
-        xCenter={50}
-        yCenter={50}
-        width={400}
-        height={300}
-      />
-    )
-
-    expect(html).toContain("#4caf50")
-    expect(html).toContain("#ff9800")
-    expect(html).toContain("#2196f3")
-    expect(html).toContain("#f44336")
   })
 })

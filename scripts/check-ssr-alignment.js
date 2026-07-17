@@ -41,8 +41,9 @@ const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime"]
 const hocsOnDisk = new Set()
+const namedHocCandidates = new Set()
 
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -57,6 +58,17 @@ for (const dir of HOC_DIRS) {
     // are not chart HOCs and shouldn't be scanned for SSR/validation entries.
     if (!/^[A-Z]/.test(name)) continue
     hocsOnDisk.add(name)
+
+    // A source module can intentionally expose more than one related HOC
+    // (RealtimeHistogram also declares its bounded TemporalHistogram sibling).
+    // Record named PascalCase value exports here and reconcile them against
+    // the canonical chart-spec registry below, which filters aliases/helpers.
+    const source = fs.readFileSync(path.join(fullDir, file), "utf8")
+    const namedExportRegex = /^export\s+(?:const|function)\s+([A-Z]\w+)/gm
+    let exportMatch
+    while ((exportMatch = namedExportRegex.exec(source))) {
+      namedHocCandidates.add(exportMatch[1])
+    }
   }
 }
 
@@ -93,6 +105,10 @@ while ((match = specFileRegex.exec(chartSpecsIndexSource))) {
       validationNames.add(keyMatch[1])
     }
   }
+}
+
+for (const candidate of namedHocCandidates) {
+  if (validationNames.has(candidate)) hocsOnDisk.add(candidate)
 }
 
 // ── 4. Charts that are intentionally SSR-excluded ──────────────────────
@@ -206,6 +222,17 @@ const STREAM_DIR = path.join(ROOT, "src/components/stream")
 const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
   ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
   : path.join(STREAM_DIR, "SceneToSVG.tsx")
+// Network and geo converters live in sibling modules re-exported from
+// SceneToSVG.tsx (split out to stay under the file-size ratchet ceiling).
+// The parity scan below concatenates all three so `extractCaseLabels` still
+// finds `function networkSceneNodeToSVG` / `function geoSceneNodeToSVG`
+// regardless of which file they're physically declared in. Not overridden
+// by SEMIOTIC_SCENE_TO_SVG — that env var only simulates drift in the main
+// file's xy/ordinal converters (see ssr-alignment.test.ts).
+const SCENE_TO_SVG_SIBLINGS = [
+  path.join(STREAM_DIR, "SceneToSVGNetwork.tsx"),
+  path.join(STREAM_DIR, "SceneToSVGGeo.tsx"),
+]
 
 const FRAMES = {
   xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG" },
@@ -296,7 +323,10 @@ function extractCaseLabels(source, functionName) {
 
 console.log("\n[scene parity] checking each frame's canvas ↔ SVG type coverage")
 
-const sceneToSvgSrc = fs.readFileSync(SCENE_TO_SVG, "utf8")
+const sceneToSvgSrc = [SCENE_TO_SVG, ...SCENE_TO_SVG_SIBLINGS]
+  .filter(fs.existsSync)
+  .map(f => fs.readFileSync(f, "utf8"))
+  .join("\n")
 const interfaceToType = buildInterfaceTypeMap()
 
 for (const [frame, { typesFile, unionName, svgFn }] of Object.entries(FRAMES)) {

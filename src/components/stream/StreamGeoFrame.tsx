@@ -720,11 +720,15 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       if (dirtyRef.current && !transitionActive) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
 
-        // In drag-rotate mode, preserve the current rotation across
-        // computeScene() which resets the projection via fitProjection.
-        const savedRotation = effectiveDragRotate
-          ? store.getRotation()
-          : null
+        // In drag-rotate mode, preserve the *user* rotation across
+        // computeScene() which re-resolves the projection from config
+        // (resetting rotate to the authored default). Skip the first
+        // compute — there is no prior projection yet, and re-applying
+        // the pre-compute default [0,0,0] would clobber an authored
+        // projection.rotate (e.g. orthographic facing the Americas).
+        const hadProjection = store.hasProjection()
+        const savedRotation =
+          effectiveDragRotate && hadProjection ? store.getRotation() : null
 
         store.computeScene(layout)
 
@@ -1290,6 +1294,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             chartType="StreamGeoFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
             pointNodes={collectGeoAnnotationAnchors(scene)}
+            geoProjection={storeRef.current?.scales?.projectedPoint}
           />
         </div>
       )
@@ -1378,6 +1383,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           chartType="StreamGeoFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
+          geoProjection={storeRef.current?.scales?.projectedPoint}
         />
         {staleness?.showBadge && (
           <StalenessBadge isStale={isStale} position={staleness.badgePosition} />

@@ -389,7 +389,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
           <g key={`gauge-label-${index}`} transform={`translate(${cx},${cy})`}>
             <line
               x1={mx1} y1={my1} x2={mx2} y2={my2}
-              stroke="var(--semiotic-border)"
+              stroke="var(--semiotic-border, #ccc)"
               strokeWidth={2}
               strokeLinecap="round"
             />

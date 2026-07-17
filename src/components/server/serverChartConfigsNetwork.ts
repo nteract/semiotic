@@ -2,15 +2,21 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
-import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
-import { createColorScale, getColor } from "../charts/shared/colorUtils"
+import { createEdgeStyleFn, inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
+import { createColorScale, getColor, resolveCategoricalPalette } from "../charts/shared/colorUtils"
+import { schemeCategory10 } from "../charts/shared/colorPalettes"
+import { resolveDefaultFill } from "../charts/shared/hooks"
+import { composeLegendConfigs } from "../types/legendTypes"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
+import { resolveTheme } from "./themeResolver"
+import * as React from "react"
 
 // ── Network Charts ─────────────────────────────────────────────────────
 
 export const forceDirectedGraph: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Mirror the HOC's edgeWidth/edgeColor/edgeOpacity handling so that
     // `renderChart("ForceDirectedGraph", { edgeWidth: "weight" })` honors
@@ -43,6 +49,28 @@ export const forceDirectedGraph: ChartConfig = {
             }
           }
         : undefined)
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    const baseNodeStyle = rest.nodeStyle ?? ((d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      return {
+        // ForceDirectedGraph is intentionally monocolor until colorBy is
+        // requested; the network layout's palette fallback would otherwise
+        // assign a different color to each node on SSR.
+        fill: colorBy
+          ? getColor(raw, colorBy as string | ((node: Datum) => string), undefined)
+          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        ...(typeof rest.nodeSize === "number" && { r: rest.nodeSize }),
+      }
+    })
+    const ruleNodeStyle = styleRulesToNodeStyle(
+      rest.styleRules,
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+      typeof rest.nodeSize === "number" ? undefined : rest.nodeSize,
+    )
+    const configuredNodeStyle = ruleNodeStyle
+      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
+      : baseNodeStyle
     return {
       chartType: "force",
       nodes: rest.nodes,
@@ -56,16 +84,11 @@ export const forceDirectedGraph: ChartConfig = {
       colorScheme,
       iterations: rest.iterations,
       forceStrength: rest.forceStrength,
-      showLabels: rest.showLabels,
+      showLabels: rest.showLabels ?? false,
       nodeLabel: rest.nodeLabel,
-      nodeSize: rest.nodeSize,
+      nodeSize: rest.nodeSize ?? 8,
       nodeSizeRange: rest.nodeSizeRange,
-      nodeStyle: styleRulesToNodeStyle(
-        rest.styleRules,
-        colorBy as string | ((d: Datum) => unknown) | undefined,
-        typeof rest.nodeSize === "number" ? undefined : rest.nodeSize,
-        rest.nodeStyle,
-      ) ?? rest.nodeStyle,
+      nodeStyle: configuredNodeStyle,
       edgeStyle,
       ...common,
     }
@@ -81,6 +104,7 @@ export const forceDirectedGraph: ChartConfig = {
 // function with byte-identical inputs.
 export const processSankey: ChartConfig = {
   frameType: "network",
+  layout: { margin: { top: 30, right: 80, bottom: 40, left: 80 } },
   buildProps: (_data, colorBy, colorScheme, common, rest) => {
     const toTime = (v: unknown): number => {
       if (v == null) return NaN
@@ -174,13 +198,20 @@ export const processSankey: ChartConfig = {
     const [width, height] = (common.size as [number, number]) ?? [600, 400]
     const userMargin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | undefined
     const baseMargin = { top: 20, right: 20, bottom: 20, left: 20, ...userMargin }
-    const showLegend = Boolean(common.showLegend)
+    // ProcessSankey owns a categorical legend rather than using the frame's
+    // auto-legend. It is active only for an actual categorical accessor.
+    const showLegend = common.showLegend ?? Boolean(colorBy)
+    const legendActive = showLegend && Boolean(colorBy)
     const legendPos = (common.legendPosition as string | undefined) ?? "right"
-    if (showLegend) {
-      if (legendPos === "right") baseMargin.right = Math.max(baseMargin.right, 100)
-      else if (legendPos === "left") baseMargin.left = Math.max(baseMargin.left, 100)
-      else if (legendPos === "bottom") baseMargin.bottom = Math.max(baseMargin.bottom, 70)
-      else if (legendPos === "top") baseMargin.top = Math.max(baseMargin.top, 40)
+    const explicitMargin = common.__explicitMargin as { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
+    const marginWasSet = (side: "top" | "right" | "bottom" | "left") =>
+      typeof explicitMargin === "number" ||
+      (explicitMargin != null && typeof explicitMargin === "object" && explicitMargin[side] != null)
+    // Match the HOC's custom legend reservation. Do not overwrite a side the
+    // caller explicitly set: that is the contract used for external legends.
+    if (legendActive) {
+      if (legendPos === "right" && !marginWasSet("right")) baseMargin.right = Math.max(baseMargin.right, 140)
+      else if (legendPos === "bottom" && !marginWasSet("bottom")) baseMargin.bottom = Math.max(baseMargin.bottom, 80)
     }
     const margin = baseMargin
     const plotW = width - margin.left - margin.right
@@ -193,8 +224,12 @@ export const processSankey: ChartConfig = {
     // when colorBy is a string, so function-form goes through a
     // synthetic `_cat` projection (matching what `useColorScale`
     // does on the CSR side) before passing into the d3-scale.
-    const palette = Array.isArray(colorScheme) ? colorScheme : null
-    const fallbackPalette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+    const resolvedTheme = resolveTheme(common.theme)
+    const palette = resolveCategoricalPalette(
+      colorScheme,
+      resolvedTheme.colors.categorical,
+      schemeCategory10,
+    )
     const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
     const scaleSourceData: Datum[] = colorByFn
       ? rawNodes.map((n) => ({ _cat: colorByFn(n) }))
@@ -202,8 +237,9 @@ export const processSankey: ChartConfig = {
     const scaleColorBy: string | ((d: Datum) => string) | undefined = colorByFn
       ? "_cat"
       : (typeof colorBy === "string" ? colorBy : undefined)
+    const effectiveScheme = colorScheme ?? [...palette]
     const colorScale = scaleColorBy
-      ? createColorScale(scaleSourceData, scaleColorBy, colorScheme)
+      ? createColorScale(scaleSourceData, scaleColorBy, effectiveScheme)
       : null
     const nodeById = new Map<string, Datum>()
     for (const n of ns) nodeById.set(n.id, n.__raw)
@@ -217,11 +253,39 @@ export const processSankey: ChartConfig = {
         }
         return getColor(raw, typeof colorBy === "string" ? colorBy : "id", colorScale ?? undefined) as string
       }
-      const p = palette || fallbackPalette
-      return p[idx % p.length]
+      return palette[idx % palette.length]
     }
 
-    const { layoutConfig, issues } = buildProcessSankeyScenes({
+    // The client HOC supplies a concrete legend config built from its
+    // `colorOf` function. Supplying the same config here avoids the generic
+    // network auto-legend (whose labels, swatches, and placement differ from
+    // ProcessSankey's chart-level legend).
+    const chartLegend = legendActive && colorBy ? (() => {
+      const seen = new Map<string, { label: string; color: string }>()
+      rawNodes.forEach((node, index) => {
+        const value = accVal(colorBy, node)
+        const label = value == null ? "" : String(value)
+        if (!label || seen.has(label)) return
+        seen.set(label, { label, color: colorOf(String(accVal(nodeIdAccessor, node)), index) })
+      })
+      const items = Array.from(seen.values())
+      return items.length > 0
+        ? {
+            legendGroups: [{
+              type: "fill" as const,
+              label: "",
+              items,
+              styleFn: (item: { color?: string }) => {
+                const color = item.color || "#333"
+                return { fill: color, stroke: color }
+              },
+            }],
+          }
+        : undefined
+    })() : undefined
+    const legend = composeLegendConfigs(chartLegend, common.legend)
+
+    const { layout, layoutConfig, issues, xScale } = buildProcessSankeyScenes({
       nodes: ns,
       edges: es,
       domain,
@@ -249,6 +313,48 @@ export const processSankey: ChartConfig = {
       throw new Error(`ProcessSankey: data invalid — ${messages}`)
     }
 
+    // ProcessSankey's temporal axis is HOC-owned background graphics, not a
+    // StreamNetworkFrame feature. Recreate that chrome here from the same
+    // pure layout result so SSR gets the baseline, optional ticks, and grids
+    // rather than silently dropping the entire time-axis contract.
+    const axisTicks = Array.isArray(rest.axisTicks) ? rest.axisTicks as Datum[] : []
+    const backgroundGraphics = layout ? (() => {
+      let minX: number | null = null
+      let maxX: number | null = null
+      for (const node of ns) {
+        const lifetime = layout.laneLifetime[node.id]
+        if (!lifetime || lifetime.start == null || lifetime.end == null) continue
+        const start = Number(xScale(lifetime.start))
+        const end = Number(xScale(lifetime.end))
+        minX = minX == null ? start : Math.min(minX, start)
+        maxX = maxX == null ? end : Math.max(maxX, end)
+      }
+      const clampX = (x: number) => Math.max(0, Math.min(plotW, x))
+      const axisLeft = clampX(minX ?? 0)
+      const axisRight = Math.max(axisLeft, clampX(maxX ?? plotW))
+      const visibleTicks = axisTicks.map((tick, index) => ({ tick, index, x: Number(xScale(toTime(tick.date))) }))
+        .filter(({ x }) => x >= axisLeft - 0.5 && x <= axisRight + 0.5)
+      return React.createElement("g", null,
+        ...visibleTicks.map(({ index, x }) => React.createElement("line", {
+          key: `grid-${index}`, x1: x, y1: 0, x2: x, y2: plotH,
+          stroke: "#94a3b8", strokeOpacity: 0.15, strokeDasharray: "2 4",
+        })),
+        React.createElement("line", {
+          key: "axis", x1: axisLeft, y1: plotH + 4, x2: axisRight, y2: plotH + 4, stroke: "#94a3b8",
+        }),
+        ...visibleTicks.map(({ tick, index, x }) => {
+          const time = toTime(tick.date)
+          const label = tick.label != null
+            ? tick.label
+            : typeof rest.timeFormat === "function" ? rest.timeFormat(new Date(time)) : ""
+          return React.createElement("g", { key: `tick-${index}`, transform: `translate(${x},${plotH + 4})` },
+            React.createElement("line", { y2: 6, stroke: "#94a3b8" }),
+            React.createElement("text", { y: 20, textAnchor: "middle", fontSize: 11, fill: "#475569" }, label as React.ReactNode),
+          )
+        }),
+      )
+    })() : undefined
+
     return {
       chartType: "force",
       // Pass raw nodes/edges (not pre-wrapped { id, data }) — the
@@ -272,7 +378,15 @@ export const processSankey: ChartConfig = {
       nodeIDAccessor: nodeIdAccessor,
       colorBy,
       colorScheme,
+      ...(backgroundGraphics && { backgroundGraphics }),
       ...common,
+      showLegend: legendActive,
+      ...(legend && { legend, legendPosition: legendPos }),
+      // ProcessSankey owns category extraction because its rendered scene is
+      // built from temporal bands rather than ordinary network nodes. The
+      // supplied value already includes both that chart-owned legend and any
+      // caller groups, so the static frame must not infer it a second time.
+      __legendIncludesAutomatic: true,
       // Apply the resolved margin AFTER `...common` so the spread
       // (which carries the user's original margin if any) doesn't
       // overwrite our legend-aware adjustment. Bands/ribbons were
@@ -286,7 +400,43 @@ export const processSankey: ChartConfig = {
 
 export const sankeyDiagram: ChartConfig = {
   frameType: "network",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+  layout: { primarySize: { width: 800, height: 600 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const nodes = Array.isArray(rest.nodes) ? rest.nodes as Datum[] : inferNodesFromEdges(
+      [],
+      Array.isArray(rest.edges) ? rest.edges as Datum[] : [],
+      (rest.sourceAccessor || "source") as string | ((d: Datum) => string),
+      (rest.targetAccessor || "target") as string | ((d: Datum) => string),
+    ) as Datum[]
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    const colorKey = typeof colorBy === "string" ? colorBy : "__ssrSankeyColorBy"
+    const colorRows = typeof colorBy === "function"
+      ? nodes.map(d => ({ ...d, __ssrSankeyColorBy: colorBy(d) }))
+      : nodes
+    const colorScale = colorBy
+      ? createColorScale(colorRows, colorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      : undefined
+    const baseNodeStyle = (d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      return {
+        fill: colorBy
+          ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
+          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        stroke: common.stroke ?? "black",
+        strokeWidth: common.strokeWidth ?? 1,
+        ...(common.opacity !== undefined && { opacity: common.opacity }),
+      }
+    }
+    const baseEdgeStyle = createEdgeStyleFn({
+      edgeColorBy: rest.edgeColorBy ?? "source",
+      colorBy: colorBy as string | ((d: Datum) => string) | undefined,
+      colorScale,
+      nodeStyleFn: baseNodeStyle,
+      edgeOpacity: rest.edgeOpacity ?? 0.5,
+      baseStyle: { stroke: "none", strokeWidth: 0 },
+    })
+    return {
     chartType: "sankey",
     nodes: rest.nodes,
     edges: rest.edges,
@@ -303,15 +453,17 @@ export const sankeyDiagram: ChartConfig = {
     colorBy,
     edgeColorBy: rest.edgeColorBy,
     edgeOpacity: rest.edgeOpacity,
-    nodeStyle: rest.nodeStyle,
-    edgeStyle: rest.edgeStyle,
+    nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+    edgeStyle: common.edgeStyle || rest.edgeStyle || baseEdgeStyle,
     colorScheme,
     ...common,
-  }),
+    }
+  },
 }
 
 export const chordDiagram: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "chord",
     nodes: rest.nodes,
@@ -329,7 +481,29 @@ export const chordDiagram: ChartConfig = {
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+  layout: { primarySize: { width: 600, height: 600 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    const rows = data && typeof data === "object" ? [data as Datum] : []
+    const colorScale = colorBy && typeof colorBy === "string"
+      ? createColorScale(rows, colorBy, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      : undefined
+    const depthPalette = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc949", "#af7aa1", "#ff9da7"]
+    const baseNodeStyle = (d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      return {
+        fill: rest.colorByDepth
+          ? depthPalette[Number(d?.depth || 0) % depthPalette.length]
+          : colorBy
+            ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
+            : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        stroke: common.stroke ?? "black",
+        strokeWidth: common.strokeWidth ?? 1,
+        ...(common.opacity !== undefined && { opacity: common.opacity }),
+      }
+    }
+    return {
     chartType: rest.layout === "cluster" ? "cluster" : "tree",
     data,
     childrenAccessor: rest.childrenAccessor,
@@ -339,11 +513,14 @@ export const treeDiagram: ChartConfig = {
     showLabels: rest.showLabels,
     colorScheme,
     ...common,
-  }),
+    nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+    }
+  },
 }
 
 export const treemap: ChartConfig = {
   frameType: "network",
+  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "treemap",
     data,
@@ -354,19 +531,41 @@ export const treemap: ChartConfig = {
     showLabels: rest.showLabels,
     colorScheme,
     ...common,
+    // Preserve Treemap's HOC-level border token. The surrounding page/theme
+    // resolves this CSS variable identically for the static SVG and canvas.
+    nodeStyle: common.nodeStyle || rest.nodeStyle || (() => ({
+      stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
+      strokeWidth: 1,
+      strokeOpacity: 0.8,
+    })),
   }),
 }
 
 export const circlePack: ChartConfig = {
   frameType: "network",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "circlepack",
-    data,
-    childrenAccessor: rest.childrenAccessor,
-    hierarchySum: rest.valueAccessor,
-    colorBy,
-    colorByDepth: rest.colorByDepth,
-    colorScheme,
-    ...common,
-  }),
+  layout: { primarySize: { width: 600, height: 600 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    return {
+      chartType: "circlepack",
+      data,
+      childrenAccessor: rest.childrenAccessor,
+      hierarchySum: rest.valueAccessor,
+      colorBy,
+      colorByDepth: rest.colorByDepth,
+      colorScheme,
+      ...common,
+      // CirclePack's client style deliberately uses currentColor for the
+      // subtle dark outline; hierarchy's generic fallback uses the theme
+      // surface (white), which made SSR visibly diverge.
+      nodeStyle: common.nodeStyle || (() => ({
+        fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        fillOpacity: rest.circleOpacity ?? 0.7,
+        stroke: "currentColor",
+        strokeWidth: 1,
+        strokeOpacity: 0.3,
+      })),
+    }
+  },
 }

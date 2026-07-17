@@ -1,4 +1,3 @@
-import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
@@ -11,19 +10,18 @@ import {
   type EvidenceSink
 } from "./renderEvidence"
 import { xySceneNodeToSVG } from "../stream/SceneToSVG"
-import { renderSceneWithBackend } from "../stream/renderBackend"
+import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme } from "./themeResolver"
 import {
-  renderStaticLegend,
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
-  reserveStaticLegendMargin,
-  reserveLegendConfigMargin,
-  renderLegendConfig,
+  chartUID,
+  reserveFrameLegendMargin,
+  renderFrameLegend,
   renderGridSVG,
   wrapSVG,
   generateAxesSVG
@@ -37,31 +35,17 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const hasVisibleTitle = hasTextTitle(props.title)
   const data = filterSparseArray(props.data)
   const xyLegendCategories = props.showLegend
-    ? extractCategories(data, props.colorAccessor || props.groupAccessor)
+    ? extractCategories(data, props.colorAccessor || props.groupAccessor || props.categoryAccessor)
     : []
 
   // Expand margin for legend BEFORE calculating inner dimensions
-  const legendPos = props.legendPosition
-  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
-    reserveLegendConfigMargin(margin, {
-      legend: props.legend,
-      theme,
-      position: legendPos || "right",
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-    })
-  } else if (props.showLegend && xyLegendCategories.length > 0) {
-    reserveStaticLegendMargin(margin, {
-      categories: xyLegendCategories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: legendPos || "right",
-      size,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-    })
-  }
+  reserveFrameLegendMargin(margin, {
+    props,
+    categories: xyLegendCategories,
+    theme,
+    size,
+    hasTitle: hasVisibleTitle,
+  })
 
   const width = size[0] - margin.left - margin.right
   const height = size[1] - margin.top - margin.bottom
@@ -146,7 +130,12 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     layoutConfig: props.layoutConfig,
     layoutMargin: margin,
     layoutSelection: props.layoutSelection,
-    barColors: props.barColors
+    barColors: props.barColors,
+    // Heatmap labels are scene metadata, not an SVG overlay. Omitting these
+    // fields meant `showValues` appeared to be accepted by renderChart() but
+    // no heatcell ever received a label on the SSR path.
+    showValues: props.showValues,
+    heatmapValueFormat: props.heatmapValueFormat,
   }
 
   const store = new PipelineStore(pipelineConfig)
@@ -180,11 +169,18 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     )
   }
 
+  const idPfx = (props as ThemeAwareProps)._idPrefix
+  const renderedScene = renderSceneListWithBackend({
+    nodes: store.scene,
+    renderMode: props.renderMode,
+    fallback: (node, index) => xySceneNodeToSVG(node, index, idPfx),
+  })
+
   if (sink) {
     sink.evidence = buildEvidence({
       frameType: "xy",
       width: size[0], height: size[1],
-      marks: store.scene,
+      marks: renderedScene.map(entry => entry.node),
       title: props.title, description: props.description,
       annotations: props.annotations,
       xDomain: numericDomain(store.scales.x?.domain?.()),
@@ -193,17 +189,10 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     })
   }
 
-  const idPfx = (props as ThemeAwareProps)._idPrefix
   const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent) : null
 
-  const dataMarks = store.scene
-    .map((node, i) => renderSceneWithBackend({
-      node,
-      index: i,
-      renderMode: props.renderMode,
-      fallback: () => xySceneNodeToSVG(node, i, idPfx)
-    }))
-    .filter(Boolean)
+  const dataMarks = renderedScene.map(entry => entry.element)
+  const plotClipId = `${chartUID(props)}-plot-clip`
 
   const showAxes = props.showAxes !== false
   const axes = showAxes
@@ -240,39 +229,26 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
   // honor a caller-supplied pre-rendered ReactNode/config object.
-  const xyAutoLegend = props.showLegend ? (() => {
-    const categories = xyLegendCategories
-    if (categories.length === 0) return null
-    return renderStaticLegend({
-      categories,
-      colorScheme: props.colorScheme,
-      theme,
-      position: props.legendPosition || "right",
-      totalWidth: size[0],
-      totalHeight: size[1],
-      margin,
-      hasTitle: hasVisibleTitle,
-      legendLayout: props.legendLayout,
-    })
-  })() : null
-  const legend = React.isValidElement(props.legend)
-    ? (props.legend as React.ReactNode)
-    : renderLegendConfig(props.legend, {
-        theme,
-        position: props.legendPosition || "right",
-        size,
-        margin,
-        hasTitle: hasVisibleTitle,
-        legendLayout: props.legendLayout,
-        idPrefix: props._idPrefix,
-      }) || xyAutoLegend
+  const legend = renderFrameLegend({
+    props,
+    categories: xyLegendCategories,
+    theme,
+    size,
+    margin,
+    hasTitle: hasVisibleTitle,
+  })
 
   const content = (
     <>
       {props.backgroundGraphics}
       {svgPreRendererNodes}
       {grid}
-      {dataMarks}
+      <defs>
+        <clipPath id={plotClipId}>
+          <rect x={0} y={0} width={width} height={height} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${plotClipId})`}>{dataMarks}</g>
       {axes}
       {annotationNodes}
       {props.foregroundGraphics}

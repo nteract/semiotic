@@ -5,10 +5,14 @@
  * - Accessibility (title, desc, role)
  * - Grid lines
  * - Annotations
- * - renderChart HOC API
- * - renderDashboard composition
+ * - DifferenceChart server layout
  *
  * Tests verify actual SVG output structure, not just "contains string".
+ *
+ * The renderChart HOC-level API, renderDashboard composition, parity, and
+ * edge-case tests live in the sibling serverFeatures.renderChart.test.tsx
+ * (split out to keep both files under the test hard limit — see
+ * scripts/file-size-policy.json).
  */
 
 // Polyfill TextEncoder/TextDecoder for react-dom/server in jsdom
@@ -21,20 +25,14 @@ import {
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
   renderChart,
-  renderDashboard,
 } from "./renderToStaticSVG"
 
 // ── Helpers ──────────────────────────────────────────────────────────
-
-function countMatches(svg: string, pattern: RegExp): number {
-  return (svg.match(pattern) || []).length
-}
 
 type StaticFrameProps = Parameters<typeof renderToStaticSVG>[1]
 type StaticXYProps = Parameters<typeof renderXYToStaticSVG>[0]
 type StaticOrdinalProps = Parameters<typeof renderOrdinalToStaticSVG>[0]
 type StaticNetworkProps = Parameters<typeof renderNetworkToStaticSVG>[0]
-type RenderChartName = Parameters<typeof renderChart>[0]
 
 // ── Test data ────────────────────────────────────────────────────────
 
@@ -65,11 +63,107 @@ const pieData = [
   { category: "C", value: 20 },
 ]
 
-const networkEdges = [
-  { source: "Revenue", target: "Product", value: 80 },
-  { source: "Revenue", target: "Services", value: 50 },
-  { source: "Product", target: "Profit", value: 60 },
-]
+describe("DifferenceChart server layout", () => {
+  const data = [
+    { x: 0, a: 10, b: 12 },
+    { x: 1, a: 16, b: 14 },
+  ]
+
+  it("reserves the client legend gutter when no margin side was supplied", () => {
+    const svg = renderChart("DifferenceChart", {
+      data,
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      width: 420,
+      height: 240,
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(320,50)"')
+  })
+
+  it("does not overwrite an explicit legend-side margin", () => {
+    const svg = renderChart("DifferenceChart", {
+      data,
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      width: 420,
+      height: 240,
+      margin: { right: 64 },
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(366,50)"')
+  })
+})
+
+describe("Shared HOC rendering contracts", () => {
+  it("carries legend, funnel-label, and geo-margin defaults through static rendering", () => {
+    const dotPlot = renderChart("DotPlot", {
+      data: [
+        { category: "A", value: 1, group: "X" },
+        { category: "B", value: 2, group: "Y" },
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "group",
+      width: 420,
+      height: 260,
+    })
+    const funnel = renderChart("FunnelChart", {
+      data: [{ step: "Visited", value: 100 }, { step: "Signed up", value: 60 }],
+      stepAccessor: "step",
+      valueAccessor: "value",
+      width: 420,
+      height: 240,
+    })
+    const flowMap = renderChart("FlowMap", {
+      nodes: [{ city: "A", lon: 0, lat: 0 }, { city: "B", lon: 10, lat: 10 }],
+      flows: [{ source: "A", target: "B", value: 1 }],
+      nodeIdAccessor: "city",
+      xAccessor: "lon",
+      yAccessor: "lat",
+      areas: [{
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[-20, -20], [20, -20], [20, 20], [-20, 20], [-20, -20]]],
+        },
+      }],
+      areaStyle: { fill: "#fedcba", stroke: "#123456" },
+      width: 460,
+      height: 300,
+    })
+
+    expect(dotPlot).toContain("semiotic-legend")
+    expect(dotPlot).toContain(">X<")
+    expect(funnel).toContain(">Visited<")
+    expect(funnel).toContain(">Signed up<")
+    // FlowMap shares the HOC's compact geo margin, not the primary XY margin.
+    expect(flowMap).toContain('transform="translate(10,10)"')
+    // Shared geo defaults remain defaults: explicit styling still wins.
+    expect(flowMap).toContain("#fedcba")
+    expect(flowMap).toContain("#123456")
+  })
+
+  it("uses the HOC's right-side Likert legend placement", () => {
+    const svg = renderChart("LikertChart", {
+      data: [
+        { question: "Support", level: "Disagree", value: 2 },
+        { question: "Support", level: "Agree", value: 3 },
+      ],
+      categoryAccessor: "question",
+      levelAccessor: "level",
+      countAccessor: "value",
+      levels: ["Disagree", "Agree"],
+      width: 460,
+      height: 260,
+    })
+
+    expect(svg).toContain('class="semiotic-legend" transform="translate(360,50)"')
+  })
+})
 
 // ═══════════════════════════════════════════════════════════════════════
 // Theme Inlining
@@ -101,6 +195,9 @@ describe("Theme inlining", () => {
     expect(svg).toContain("#aaa")
     // DARK_THEME uses #555 for border
     expect(svg).toContain("#555")
+    // The client canvas paints the active theme background when no explicit
+    // background prop overrides it; standalone SVG must do the same.
+    expect(svg).toMatch(/<rect[^>]*width="400"[^>]*height="300"[^>]*fill="#1a1a2e"/)
   })
 
   it("applies tufte theme with serif font", () => {
@@ -469,6 +566,54 @@ describe("Legend rendering", () => {
     expect(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1]).not.toBe("20")
   })
 
+  it("composes caller legendGroups after an inferred series legend in SSR", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      lineBy: "series",
+      colorBy: "series",
+      width: 420,
+      height: 280,
+      legend: {
+        legendGroups: [{
+          label: "Context",
+          type: "line",
+          styleFn: () => ({ stroke: "#111" }),
+          items: [{ label: "Target" }],
+        }],
+      },
+    })
+
+    expect(svg).toContain(">alpha<")
+    expect(svg).toContain(">beta<")
+    expect(svg).toContain(">Target<")
+    expect(svg).toContain(">Context<")
+  })
+
+  it("renders static TemporalHistogram data with bins, category colors, and legend", () => {
+    const svg = renderChart("TemporalHistogram", {
+      binSize: 1000,
+      data: [
+        { time: 100, value: 5, kind: "Errors" },
+        { time: 900, value: 7, kind: "Warnings" },
+        { time: 2100, value: 4, kind: "Errors" },
+      ],
+      categoryAccessor: "kind",
+      colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+      width: 420,
+      height: 240,
+    })
+
+    expect(svg).toContain("stream-xy-frame")
+    expect(svg).toContain("#d62728")
+    expect(svg).toContain("#f59e0b")
+    expect(svg).toContain(">Errors<")
+    expect(svg).toContain(">Warnings<")
+    expect(svg).toMatch(/<rect[^>]*fill="#d62728"[^>]*><\/rect><text[^>]*>Errors<\/text>/)
+    expect(svg).toMatch(/<rect[^>]*fill="#f59e0b"[^>]*><\/rect><text[^>]*>Warnings<\/text>/)
+  })
+
   it("renders caller-supplied gradient legends in SSR", () => {
     const svg = renderChart("LineChart", {
       data: lineData,
@@ -516,7 +661,7 @@ describe("Legend rendering", () => {
     } as StaticXYProps)
 
     const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
-    expect(svg).toContain('transform="translate(0,20)"')
+    expect(svg).toContain('transform="translate(40,8)"')
     expect(dataAreaTop).toBeGreaterThan(40)
   })
 })
@@ -569,698 +714,3 @@ describe("Annotations in server SVG", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
-// renderChart HOC-level API
-// ═══════════════════════════════════════════════════════════════════════
-
-describe("renderChart", () => {
-  // ── XY Charts ──────────────────────────────────────────────────────
-
-  it("renders LineChart", () => {
-    const svg = renderChart("LineChart", {
-      data: lineData,
-      xAccessor: "x",
-      yAccessor: "y",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<svg")
-    expect(svg).toContain('role="img"')
-    expect(svg).toContain("<path") // line path
-  })
-
-  it("forwards top-level frame props through renderChart", () => {
-    const svg = renderChart("LineChart", {
-      data: lineData,
-      xAccessor: "x",
-      yAccessor: "y",
-      xLabel: "Time",
-      yLabel: "Revenue",
-      xFormat: () => "tick",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain(">Time<")
-    expect(svg).toContain(">Revenue<")
-    expect(svg).toContain(">tick<")
-  })
-
-  it("renders Scatterplot", () => {
-    const svg = renderChart("Scatterplot", {
-      data: scatterData,
-      xAccessor: "x",
-      yAccessor: "y",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<circle")
-  })
-
-  it("renders ConnectedScatterplot with both connectors and points", () => {
-    const svg = renderChart("ConnectedScatterplot", {
-      data: scatterData,
-      xAccessor: "x",
-      yAccessor: "y",
-      orderAccessor: "x",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<path")
-    expect(countMatches(svg, /<circle/g)).toBeGreaterThan(0)
-  })
-
-  it("renders Heatmap", () => {
-    const svg = renderChart("Heatmap", {
-      data: [
-        { x: 0, y: 0, value: 10 },
-        { x: 1, y: 0, value: 20 },
-        { x: 0, y: 1, value: 15 },
-      ],
-      xAccessor: "x",
-      yAccessor: "y",
-      valueAccessor: "value",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-  })
-
-  // ── Ordinal Charts ─────────────────────────────────────────────────
-
-  it("renders BarChart", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-    expect(countMatches(svg, /<rect /g)).toBeGreaterThanOrEqual(3)
-  })
-
-  it("renders horizontal BarChart", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      orientation: "horizontal",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-  })
-
-  it("renders StackedBarChart", () => {
-    const svg = renderChart("StackedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      stackBy: "group",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-  })
-
-  it("forwards StackedBarChart barPadding", () => {
-    const tight = renderChart("StackedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      stackBy: "group",
-      barPadding: 0,
-      width: 400,
-      height: 300,
-    })
-    const loose = renderChart("StackedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      stackBy: "group",
-      barPadding: 40,
-      width: 400,
-      height: 300,
-    })
-    expect(loose).not.toEqual(tight)
-  })
-
-  it("renders GroupedBarChart", () => {
-    const svg = renderChart("GroupedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      groupBy: "group",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-  })
-
-  it("renders PieChart", () => {
-    const svg = renderChart("PieChart", {
-      data: pieData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 400,
-    })
-    expect(svg).toContain("<path")
-    expect(countMatches(svg, /<path /g)).toBeGreaterThanOrEqual(3)
-  })
-
-  it("renders DonutChart", () => {
-    const svg = renderChart("DonutChart", {
-      data: pieData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 400,
-    })
-    expect(svg).toContain("<path")
-  })
-
-  it("renders GaugeChart arc-length gradients across multiple slices", () => {
-    const svg = renderChart("GaugeChart", {
-      value: 70,
-      min: 0,
-      max: 100,
-      fillZones: true,
-      showNeedle: false,
-      backgroundColor: "#d1d5db",
-      cornerRadius: 14,
-      gradientFill: {
-        colorStops: [
-          { offset: 0, color: "#ef4444" },
-          { offset: 0.5, color: "#f59e0b" },
-          { offset: 1, color: "#3b82f6" },
-        ],
-      },
-    })
-    const fills = new Set<string>()
-    for (const match of svg.matchAll(/<path\b[^>]*fill="([^"]+)"/g)) {
-      fills.add(match[1])
-    }
-    expect(svg).toContain("#d1d5db")
-    expect(fills.size).toBeGreaterThan(3)
-  })
-
-  it("matches FunnelChart axis defaults by orientation", () => {
-    const funnelData = [
-      { step: "Visited", value: 100 },
-      { step: "Signed up", value: 45 },
-      { step: "Paid", value: 20 },
-    ]
-    const horizontal = renderChart("FunnelChart", {
-      data: funnelData,
-      stepAccessor: "step",
-      valueAccessor: "value",
-      orientation: "horizontal",
-      width: 400,
-      height: 300,
-    })
-    const vertical = renderChart("FunnelChart", {
-      data: funnelData,
-      stepAccessor: "step",
-      valueAccessor: "value",
-      orientation: "vertical",
-      width: 400,
-      height: 300,
-    })
-    expect(horizontal).not.toContain('id="axes"')
-    expect(vertical).toContain('id="axes"')
-  })
-
-  it("renders Histogram", () => {
-    const histData = Array.from({ length: 50 }, (_, _i) => ({
-      category: "All",
-      value: Math.random() * 100,
-    }))
-    const svg = renderChart("Histogram", {
-      data: histData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      bins: 10,
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<rect")
-  })
-
-  it("renders BoxPlot", () => {
-    const boxData = Array.from({ length: 30 }, (_, i) => ({
-      category: i < 15 ? "A" : "B",
-      value: Math.random() * 100,
-    }))
-    const svg = renderChart("BoxPlot", {
-      data: boxData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<line") // whiskers
-    expect(svg).toContain("<rect") // boxes
-  })
-
-  it("renders SwarmPlot", () => {
-    const svg = renderChart("SwarmPlot", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<circle")
-  })
-
-  // ── Network Charts ─────────────────────────────────────────────────
-
-  it("renders ForceDirectedGraph", () => {
-    const svg = renderChart("ForceDirectedGraph", {
-      nodes: [{ id: "A" }, { id: "B" }, { id: "C" }],
-      edges: [{ source: "A", target: "B" }, { source: "B", target: "C" }],
-      width: 400,
-      height: 400,
-    })
-    expect(svg).toContain("<circle")
-    expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
-  })
-
-  it("renders SankeyDiagram", () => {
-    const svg = renderChart("SankeyDiagram", {
-      edges: networkEdges,
-      width: 500,
-      height: 300,
-    })
-    expect(svg).toContain("<rect") // nodes
-    expect(svg).toContain("<path") // edges
-  })
-
-  // ── With features ─────────────────────────────────────────────────
-
-  it("renders chart with theme", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      theme: "dark",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("#555") // dark theme border
-  })
-
-  it("renders chart with title and description", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      title: "Sales Chart",
-      description: "Shows sales by category",
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<title")
-    expect(svg).toContain("Sales Chart")
-    expect(svg).toContain("<desc")
-    expect(svg).toContain("Shows sales by category")
-  })
-
-  it("renders chart with grid", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      showGrid: true,
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("semiotic-grid")
-  })
-
-  it("renders chart with annotations", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      annotations: [{ type: "y-threshold", value: 15, label: "Target" }],
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("Target")
-  })
-
-  it("renders chart with boolean gradientFill shorthand", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      gradientFill: true,
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<linearGradient")
-    expect(svg).toMatch(/fill="url\(#/)
-  })
-
-  it("renders chart with object-form gradientFill", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      gradientFill: { topOpacity: 0.8, bottomOpacity: 0.1 },
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<linearGradient")
-  })
-
-  it("renders StackedBarChart with gradientFill", () => {
-    const svg = renderChart("StackedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      stackBy: "group",
-      gradientFill: true,
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<linearGradient")
-  })
-
-  it("renders GroupedBarChart with gradientFill", () => {
-    const svg = renderChart("GroupedBarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      groupBy: "group",
-      gradientFill: true,
-      width: 400,
-      height: 300,
-    })
-    expect(svg).toContain("<linearGradient")
-  })
-
-  it("renders chart with legend", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      colorBy: "group",
-      showLegend: true,
-      width: 500,
-      height: 300,
-    })
-    expect(svg).toContain("semiotic-legend")
-  })
-
-  it("throws for unknown component", () => {
-    expect(() => renderChart("UnknownChart" as RenderChartName, {})).toThrow(
-      /Unknown chart component/
-    )
-  })
-})
-
-// ═══════════════════════════════════════════════════════════════════════
-// renderDashboard
-// ═══════════════════════════════════════════════════════════════════════
-
-describe("renderDashboard", () => {
-  it("renders empty dashboard", () => {
-    const svg = renderDashboard([], { width: 800, height: 400 })
-    expect(svg).toContain("<svg")
-    expect(svg).toContain('role="img"')
-  })
-
-  it("renders dashboard with title", () => {
-    const svg = renderDashboard([], {
-      title: "Q1 Dashboard",
-      width: 800,
-      height: 400,
-    })
-    expect(svg).toContain("<title")
-    expect(svg).toContain("Q1 Dashboard")
-  })
-
-  it("renders dashboard with subtitle", () => {
-    const svg = renderDashboard([], {
-      title: "Dashboard",
-      subtitle: "January - March 2026",
-      width: 800,
-      height: 400,
-    })
-    expect(svg).toContain("January - March 2026")
-  })
-
-  it("renders dashboard with multiple charts", () => {
-    const svg = renderDashboard(
-      [
-        {
-          component: "BarChart",
-          props: {
-            data: barData,
-            categoryAccessor: "category",
-            valueAccessor: "value",
-          },
-        },
-        {
-          component: "PieChart",
-          props: {
-            data: pieData,
-            categoryAccessor: "category",
-            valueAccessor: "value",
-          },
-        },
-      ],
-      {
-        title: "Multi-Chart",
-        width: 1200,
-        layout: { columns: 2, gap: 16 },
-      }
-    )
-    expect(svg).toContain("<svg")
-    // Both charts rendered via foreignObject
-    expect(countMatches(svg, /foreignObject/g)).toBeGreaterThanOrEqual(4) // open + close for each
-    // Both charts should produce <rect (bar) or <path (pie)
-    expect(svg).toContain("<rect")
-    expect(svg).toContain("<path")
-  })
-
-  it("applies theme to all dashboard charts", () => {
-    const svg = renderDashboard(
-      [
-        {
-          component: "BarChart",
-          props: {
-            data: barData,
-            categoryAccessor: "category",
-            valueAccessor: "value",
-          },
-        },
-      ],
-      {
-        theme: "dark",
-        width: 800,
-      }
-    )
-    // The inner chart should use dark theme colors
-    expect(svg).toContain("#555") // dark border
-  })
-
-  it("renders dashboard with background", () => {
-    const svg = renderDashboard([], {
-      width: 800,
-      height: 400,
-      background: "#f0f0f0",
-    })
-    expect(svg).toContain("#f0f0f0")
-  })
-
-  it("handles frameType-based charts", () => {
-    const svg = renderDashboard(
-      [
-        {
-          frameType: "ordinal",
-          props: {
-            chartType: "bar",
-            data: barData,
-            oAccessor: "category",
-            rAccessor: "value",
-          },
-        },
-      ],
-      { width: 800 }
-    )
-    expect(svg).toContain("<rect")
-  })
-
-  it("respects colSpan for emphasis charts", () => {
-    const svg = renderDashboard(
-      [
-        {
-          component: "BarChart",
-          colSpan: 2,
-          props: {
-            data: barData,
-            categoryAccessor: "category",
-            valueAccessor: "value",
-          },
-        },
-        {
-          component: "PieChart",
-          props: {
-            data: pieData,
-            categoryAccessor: "category",
-            valueAccessor: "value",
-          },
-        },
-      ],
-      {
-        width: 1200,
-        layout: { columns: 2 },
-      }
-    )
-    expect(svg).toContain("<svg")
-  })
-})
-
-// ═══════════════════════════════════════════════════════════════════════
-// Parity: renderChart vs renderToStaticSVG
-// ═══════════════════════════════════════════════════════════════════════
-
-describe("Parity: renderChart vs frame-level API", () => {
-  it("BarChart produces same structure as ordinal frame", () => {
-    const hoc = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 300,
-    })
-    const frame = renderToStaticSVG("ordinal", {
-      chartType: "bar",
-      data: barData,
-      oAccessor: "category",
-      rAccessor: "value",
-      size: [400, 300],
-    } as StaticFrameProps)
-
-    // Both should be valid SVGs with bars
-    expect(hoc).toContain("<svg")
-    expect(frame).toContain("<svg")
-
-    // Both should have the same number of data rects
-    const hocRects = countMatches(hoc, /<rect /g)
-    const frameRects = countMatches(frame, /<rect /g)
-    expect(hocRects).toBe(frameRects)
-  })
-
-  it("PieChart produces same structure as radial ordinal frame", () => {
-    const hoc = renderChart("PieChart", {
-      data: pieData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      width: 400,
-      height: 400,
-    })
-    const frame = renderToStaticSVG("ordinal", {
-      chartType: "pie",
-      data: pieData,
-      oAccessor: "category",
-      rAccessor: "value",
-      projection: "radial",
-      size: [400, 400],
-    } as StaticFrameProps)
-
-    const hocPaths = countMatches(hoc, /<path /g)
-    const framePaths = countMatches(frame, /<path /g)
-    expect(hocPaths).toBe(framePaths)
-  })
-
-  it("SankeyDiagram produces same structure as sankey frame", () => {
-    const hoc = renderChart("SankeyDiagram", {
-      edges: networkEdges,
-      width: 500,
-      height: 300,
-    })
-    const frame = renderToStaticSVG("network", {
-      chartType: "sankey",
-      edges: networkEdges,
-      size: [500, 300],
-    } as StaticFrameProps)
-
-    const hocRects = countMatches(hoc, /<rect /g)
-    const frameRects = countMatches(frame, /<rect /g)
-    expect(hocRects).toBe(frameRects)
-  })
-})
-
-// ═══════════════════════════════════════════════════════════════════════
-// Edge cases and error handling
-// ═══════════════════════════════════════════════════════════════════════
-
-describe("Edge cases", () => {
-  it("handles empty data gracefully", () => {
-    const svg = renderChart("BarChart", {
-      data: [],
-      categoryAccessor: "category",
-      valueAccessor: "value",
-    })
-    expect(svg).toContain("<svg")
-    expect(svg).toContain('role="img"')
-  })
-
-  it("handles undefined data gracefully", () => {
-    const svg = renderChart("BarChart", {
-      categoryAccessor: "category",
-      valueAccessor: "value",
-    })
-    expect(svg).toContain("<svg")
-  })
-
-  it("handles single data point", () => {
-    const svg = renderChart("Scatterplot", {
-      data: [{ x: 5, y: 10 }],
-      xAccessor: "x",
-      yAccessor: "y",
-    })
-    expect(svg).toContain("<svg")
-    expect(svg).toContain("<circle")
-  })
-
-  it("renders without axes when showAxes=false", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      showAxes: false,
-    })
-    expect(svg).toContain("<svg")
-    expect(svg).not.toContain('id="axes"')
-  })
-
-  it("renders with custom background", () => {
-    const svg = renderChart("BarChart", {
-      data: barData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-      background: "#1a1a2e",
-    })
-    expect(svg).toContain("#1a1a2e")
-  })
-
-  it("handles large datasets", () => {
-    const largeData = Array.from({ length: 1000 }, (_, i) => ({
-      category: `cat-${i % 20}`,
-      value: Math.random() * 100,
-    }))
-    const svg = renderChart("BarChart", {
-      data: largeData,
-      categoryAccessor: "category",
-      valueAccessor: "value",
-    })
-    expect(svg).toContain("<svg")
-    expect(svg).toContain("<rect")
-  })
-})

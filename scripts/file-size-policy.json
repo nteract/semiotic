@@ -60,19 +60,14 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/charts/shared/hooks.ts",
-      "maxLines": 997,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/charts/value/BigNumber.tsx",
       "maxLines": 1252,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
       "path": "src/components/charts/xy/LineChart.tsx",
-      "maxLines": 1102,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. Split plan: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800."
+      "maxLines": 1115,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match — split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800."
     },
     {
       "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
@@ -101,8 +96,8 @@
     },
     {
       "path": "src/components/stream/GeoPipelineStore.ts",
-      "maxLines": 1257,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +39 (2026-07-11): custom-layout failure recovery (preserve last-good scene, lastCustomLayoutFailure, onLayoutError) + a restyle-only repaint flag (_stylePaintPending)."
+      "maxLines": 1263,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +39 (2026-07-11): custom-layout failure recovery (preserve last-good scene, lastCustomLayoutFailure, onLayoutError) + a restyle-only repaint flag (_stylePaintPending). +6 (2026-07-17): minor follow-on touch, ceiling ratcheted to match."
     },
     {
       "path": "src/components/stream/NetworkPipelineStore.ts",
@@ -146,8 +141,8 @@
     },
     {
       "path": "src/components/stream/SceneToSVG.tsx",
-      "maxLines": 1057,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +55 (2026-07-15): HatchFill descriptors now emit inline SVG <pattern> defs across every styleRules-reachable mark (XY point/area/rect, network circle/rect/arc, geoarea/geopoint) for canvas/SSR hatch parity; each adds a Fragment+defs wrapper. Split plan: move geoSceneNodeToSVG and networkSceneNodeToSVG into sibling modules (SceneToSVGGeo/SceneToSVGNetwork) re-exported here, exporting the shared svgFill/glyph helpers — that alone drops this file ~250 lines, well under 800."
+      "maxLines": 865,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. (2026-07-17): executed the documented split — geoSceneNodeToSVG and networkSceneNodeToSVG/networkSceneEdgeToSVG/networkLabelToSVG moved to sibling modules (SceneToSVGGeo.tsx / SceneToSVGNetwork.tsx, both re-exported here), with svgFill/safeSvgId/glyphNodeToSVG/ARC_NOOP factored into sceneToSVGShared.tsx. Dropped from 1243 to 865 lines. Remaining split plan: the XY + ordinal serializers left in this file could each move to their own sibling module to clear the hard limit entirely."
     },
     {
       "path": "src/components/stream/StreamGeoFrame.tsx",

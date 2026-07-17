@@ -187,6 +187,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     emptyContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const nodeIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // When data is empty (push API, no edges at mount), the HOC's colorScale
   // is built from zero data points and returns "#999" for everything.
@@ -207,12 +208,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       } else {
         const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] || DEFAULT_COLORS)
         const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
-        const index = (d as { index?: number }).index ?? i ?? 0
+        // `nodeStyle` is called with the realtime node wrapper but no reliable
+        // positional index. The old `i ?? 0` fallback therefore painted every
+        // CSR arc with palette[0]. Assign a stable slot from its node id.
+        const id = String((d as { id?: unknown }).id ?? (d as { data?: Datum }).data?.[nodeIdAccessor as string] ?? "")
+        if (!nodeIndexMap.has(id)) nodeIndexMap.set(id, nodeIndexMap.size)
+        const index = (d as { index?: number }).index ?? i ?? nodeIndexMap.get(id)!
         baseStyle.fill = colors[index % colors.length]
       }
       return baseStyle
     }
-  }, [hasColorData, colorBy, setup.colorScale, colorScheme])
+  }, [hasColorData, colorBy, setup.colorScale, colorScheme, nodeIdAccessor, nodeIndexMap])
 
   const nodeRuleContext = useMemo(
     () => makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),

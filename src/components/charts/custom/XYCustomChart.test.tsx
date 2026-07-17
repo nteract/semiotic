@@ -19,6 +19,7 @@ let lastXYFrameProps: {
   summary?: unknown
   accessibleTable?: unknown
   animate?: unknown
+  legend?: { legendGroups: Array<{ items: Array<{ label: string }> }> }
 } | null = null
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
@@ -106,6 +107,42 @@ describe("XYCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastXYFrameProps?.colorAccessor).toBe("category")
+  })
+
+  it("composes top-level and frame categorical legends with inferred categories", () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ category: "Alpha" }, { category: "Beta" }]}
+          layout={trivialLayout}
+          colorBy="category"
+          frameProps={{
+            legend: {
+              legendGroups: [{
+                label: "Frame",
+                type: "line",
+                styleFn: () => ({ stroke: "#555" }),
+                items: [{ label: "Frame guide" }],
+              }],
+            },
+          }}
+          legend={{
+            legendGroups: [{
+              label: "Context",
+              type: "fill",
+              styleFn: () => ({ fill: "#111" }),
+              items: [{ label: "Top-level guide" }],
+            }],
+          }}
+        />
+      </TooltipProvider>
+    )
+
+    const groups = lastXYFrameProps?.legend?.legendGroups
+    expect(groups).toHaveLength(3)
+    expect(groups?.[0].items.map(item => item.label)).toEqual(["Alpha", "Beta"])
+    expect(groups?.[1].items[0].label).toBe("Frame guide")
+    expect(groups?.[2].items[0].label).toBe("Top-level guide")
   })
 
   it("forwards shared chart metadata and animation", () => {

@@ -23,6 +23,8 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import type { LegendValue } from "../../types/legendTypes"
+import { composeLegendConfigs } from "../../types/legendTypes"
 
 // Line-object input needs a group key after its coordinate arrays are
 // flattened for StreamXYFrame. Keep the field internal so parent metadata can
@@ -190,6 +192,9 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * @default "right"
    */
   legendPosition?: "right" | "left" | "top" | "bottom"
+
+  /** Additional legend content. Categorical groups follow the inferred series legend. */
+  legend?: LegendValue
 
   /**
    * Tooltip configuration
@@ -425,6 +430,7 @@ export const LineChart = forwardRef(
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
+    legend: legendProp,
     xScaleType,
     yScaleType,
     color,
@@ -432,6 +438,12 @@ export const LineChart = forwardRef(
     strokeWidth: topLevelStrokeWidth,
     opacity,
   } = props
+
+  const { legend: frameLegend, ...framePropsWithoutLegend } = frameProps
+  const additionalLegend = useMemo(
+    () => composeLegendConfigs(frameLegend, legendProp),
+    [frameLegend, legendProp],
+  )
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
@@ -782,6 +794,7 @@ export const LineChart = forwardRef(
     chartType: "LineChart",
     chartId,
     showLegend: effectiveShowLegend,
+    legend: additionalLegend,
     userMargin,
     marginDefaults: directLabelMarginDefaults,
     loading,
@@ -1087,7 +1100,7 @@ export const LineChart = forwardRef(
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
     }),
     ...crosshairFrameProps,
-    ...frameProps
+    ...framePropsWithoutLegend
   }
 
   // ── Loading / empty / validation guards (deferred to after all hooks) ──

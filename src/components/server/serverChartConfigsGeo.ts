@@ -2,6 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
 import { DEFAULT_COLOR } from "../charts/shared/hooks"
 import { getMinMax } from "../charts/shared/minMax"
+import { GEO_BACKGROUND_AREA_STYLE } from "../charts/shared/geoStyleDefaults"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { composeStyleRules, makeNodeRuleContext } from "../charts/shared/styleRules"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
@@ -99,6 +100,7 @@ function buildChoroplethAreaStyle(
 
 export const choroplethMap: ChartConfig = {
   frameType: "geo",
+  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const scheme = typeof colorScheme === "string" ? colorScheme : "blues"
     // Base sequential fill (CSR parity) — user `areaStyle` overrides it, matching
@@ -132,6 +134,7 @@ export const choroplethMap: ChartConfig = {
 
 export const proportionalSymbolMap: ChartConfig = {
   frameType: "geo",
+  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const points = data || rest.points
     // Base per-point fill/size (CSR parity) — user `pointStyle` overrides it.
@@ -158,7 +161,7 @@ export const proportionalSymbolMap: ChartConfig = {
       xAccessor: rest.xAccessor || "lon",
       yAccessor: rest.yAccessor || "lat",
       areas: rest.areas,
-      areaStyle: rest.areaStyle,
+      areaStyle: rest.areaStyle || GEO_BACKGROUND_AREA_STYLE,
       pointStyle,
       sizeBy: rest.sizeBy,
       colorBy,
@@ -178,6 +181,7 @@ export const proportionalSymbolMap: ChartConfig = {
  */
 export const flowMap: ChartConfig = {
   frameType: "geo",
+  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Accept flows either via the primary `data` arg (matches how
     // ProportionalSymbolMap / ChoroplethMap consume their data) or via
@@ -285,7 +289,7 @@ export const flowMap: ChartConfig = {
       lineType: rest.lineType || "geo",
       flowStyle: rest.flowStyle || "basic",
       areas: rest.areas,
-      areaStyle: rest.areaStyle,
+      areaStyle: rest.areaStyle || GEO_BACKGROUND_AREA_STYLE,
       projection: rest.projection || "equalEarth",
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
@@ -315,4 +319,3 @@ export const flowMap: ChartConfig = {
     }
   },
 }
-

@@ -14,7 +14,11 @@ export const xyCustomChart: ChartConfig = {
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
     ...common,
-    showAxes: common.showAxes ?? false,
+    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false,
+    // useCustomChartSetup delegates the default legend decision to
+    // useChartSetup; categorical custom layouts therefore gain a legend when
+    // colorBy is supplied unless callers explicitly disable it.
+    showLegend: common.showLegend ?? Boolean(colorBy),
   }),
 }
 
@@ -31,12 +35,13 @@ export const ordinalCustomChart: ChartConfig = {
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
     ...common,
-    showAxes: common.showAxes ?? false,
+    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false,
   }),
 }
 
 export const networkCustomChart: ChartConfig = {
   frameType: "network",
+  layout: { margin: { top: 40, right: 40, bottom: 40, left: 40 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     chartType: "force",
     nodes: rest.nodes || data || [],
@@ -70,4 +75,3 @@ export const geoCustomChart: ChartConfig = {
     ...common,
   }),
 }
-

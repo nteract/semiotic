@@ -48,7 +48,7 @@ import {
   resolveMobileInteraction,
 } from "./hooks"
 import type { LegendInteractionMode, LegendPosition, LegendInteractionState } from "./hooks"
-import { COLOR_SCHEMES, DEFAULT_COLORS } from "./colorUtils"
+import { DEFAULT_COLORS, resolveCategoricalPalette } from "./colorUtils"
 import { inferNodesFromEdges } from "./networkUtils"
 import { filterSparseArray } from "./sparseArray"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
@@ -289,13 +289,8 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   const themeCategorical = useThemeCategorical()
 
   const effectivePalette = useMemo<string[]>(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    if (typeof colorScheme === "string") {
-      const named = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-      if (Array.isArray(named) && named.length > 0) return named as string[]
-    }
-    return DEFAULT_COLORS as unknown as string[]
+    if (Array.isArray(colorScheme) && colorScheme.length > 0) return colorScheme
+    return [...resolveCategoricalPalette(colorScheme, themeCategorical, DEFAULT_COLORS)]
   }, [colorScheme, themeCategorical])
 
   // ── Categories for legend interaction ───────────────────────────

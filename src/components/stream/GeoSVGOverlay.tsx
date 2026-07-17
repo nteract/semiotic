@@ -58,6 +58,8 @@ interface GeoSVGOverlayProps {
   chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
+  /** Project geographic `[longitude, latitude]` annotation coordinates. */
+  geoProjection?: (longitude: number, latitude: number) => [number, number] | null
 }
 
 /**
@@ -91,7 +93,8 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     chartId,
     chartType,
     autoPlaceAnnotations,
-    pointNodes
+    pointNodes,
+    geoProjection,
   } = props
   const annotationActivation = useAnnotationActivationOptions({
     onAnnotationActivate,
@@ -113,11 +116,27 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
 
+    // Geo annotations use the public `coordinates: [lon, lat]` form. The
+    // generic annotation rules deliberately only understand pixel x/y, so
+    // project that form before handing annotations to them. SSR already did
+    // this in staticAnnotations; this closes the client-only gap.
+    const projectedAnnotations = geoProjection
+      ? annotations.map((annotation) => {
+          if (!Array.isArray(annotation.coordinates) || annotation.coordinates.length < 2) return annotation
+          const projected = geoProjection(Number(annotation.coordinates[0]), Number(annotation.coordinates[1]))
+          return projected ? { ...annotation, x: projected[0], y: projected[1] } : annotation
+        })
+      : annotations
+
     // These values deliberately mirror the context Geo received through the
-    // Cartesian overlay. Changing frameType or the accessibility strings would
-    // alter existing annotation and SSR/CSR markup behavior.
+    // Cartesian overlay. Geo x/y values here are already pixels (including
+    // the projected `coordinates` form above), so identity scales let the
+    // shared resolver consume them without treating them as data-space values.
     const context: AnnotationContext = {
-      scales: null,
+      scales: {
+        x: (value: unknown) => Number(value),
+        y: (value: unknown) => Number(value),
+      } as unknown as AnnotationContext["scales"],
       timeAxis: "x",
       width,
       height,
@@ -127,13 +146,13 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     }
     const layoutAnnotations = autoPlaceAnnotations
       ? annotationLayout({
-          annotations,
+          annotations: projectedAnnotations,
           context,
           ...(typeof autoPlaceAnnotations === "object"
             ? autoPlaceAnnotations
             : {})
         })
-      : annotations
+      : projectedAnnotations
 
     return renderAnnotationPass(
       layoutAnnotations,
@@ -141,7 +160,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
       undefined,
       context
     )
-  }, [annotations, autoPlaceAnnotations, width, height, pointNodes, annotationActivation])
+  }, [annotations, autoPlaceAnnotations, width, height, pointNodes, annotationActivation, geoProjection])
 
   const hasContent =
     showAxes ||

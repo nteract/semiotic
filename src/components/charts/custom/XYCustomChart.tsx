@@ -12,6 +12,8 @@ import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 import type { ChartRecipe } from "../../ai/chartRecipes"
+import type { LegendValue } from "../../types/legendTypes"
+import { composeLegendConfigs } from "../../types/legendTypes"
 
 export interface XYCustomChartProps<
   TDatum extends Datum = Datum,
@@ -41,6 +43,8 @@ export interface XYCustomChartProps<
   showGrid?: boolean
   enableHover?: boolean
   showLegend?: boolean
+  /** Additional legend content. Categorical groups follow the inferred colorBy legend. */
+  legend?: LegendValue
   annotations?: Datum[]
   /** Field or function that declares the semantic category used for custom-layout color. */
   colorBy?: ChartAccessor<TDatum, string>
@@ -98,8 +102,15 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     emptyContent,
     colorBy,
     colorScheme,
+    legend,
     frameProps = {},
   } = props
+
+  const { legend: frameLegend, ...framePropsWithoutLegend } = frameProps
+  const additionalLegend = useMemo(
+    () => composeLegendConfigs(frameLegend, legend),
+    [frameLegend, legend],
+  )
 
   const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamXYFrameHandle>({
     imperativeRef: ref,
@@ -109,6 +120,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     data,
     colorBy,
     colorScheme,
+    legend: additionalLegend,
     selection,
     linkedHover,
     onObservation,
@@ -185,7 +197,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...setup.crosshairProps,
-    ...frameProps,
+    ...framePropsWithoutLegend,
   }
 
   return (

@@ -56,7 +56,7 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "DistanceCartogram": {"category":"geo","recommendedImport":"semiotic/geo"},
   "RealtimeLineChart": {"category":"realtime","recommendedImport":"semiotic/realtime","docsRoute":"/charts/realtime-line-chart","pilot":true},
   "RealtimeHistogram": {"category":"realtime","recommendedImport":"semiotic/realtime"},
-  "TemporalHistogram": {"category":"realtime","recommendedImport":"semiotic/realtime"},
+  "TemporalHistogram": {"category":"realtime","recommendedImport":"semiotic/realtime","serverImport":"semiotic/server"},
   "RealtimeSwarmChart": {"category":"realtime","recommendedImport":"semiotic/realtime"},
   "RealtimeWaterfallChart": {"category":"realtime","recommendedImport":"semiotic/realtime"},
   "RealtimeHeatmap": {"category":"realtime","recommendedImport":"semiotic/realtime"},

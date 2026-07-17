@@ -47,6 +47,12 @@ describe("renderStaticLegend", () => {
     expect(svg).toContain(">C<")
   })
 
+  it("uses the shared client vertical header geometry", () => {
+    const svg = renderLegendString(baseConfig)
+    expect(svg).toContain('y1="29" x2="100" y2="29"')
+    expect(svg).toContain('transform="translate(0,37)"')
+  })
+
   it("uses theme text color for labels", () => {
     const svg = renderLegendString({ ...baseConfig, theme: DARK_THEME })
     expect(svg).toContain(DARK_THEME.colors.text)
@@ -77,10 +83,9 @@ describe("renderStaticLegend", () => {
     expect(svg).toContain("translate(40,")
   })
 
-  it("positions legend at bottom within SVG bounds", () => {
+  it("matches the client bottom legend placement", () => {
     const svg = renderLegendString({ ...baseConfig, position: "bottom" })
-    // Bottom clamps by rendered legend height, not only swatch height.
-    expect(svg).toContain("translate(40,378)")
+    expect(svg).toContain("translate(40,408)")
   })
 
   it("positions legend at left", () => {
@@ -89,7 +94,7 @@ describe("renderStaticLegend", () => {
       position: "left",
       margin: { ...baseConfig.margin, left: 100 },
     })
-    expect(svg).toContain("translate(63,")
+    expect(svg).toContain("translate(4,")
   })
 
   it("uses legendSize when estimating label width", () => {
@@ -177,10 +182,10 @@ describe("renderStaticLegendGroups", () => {
   it("matches the client diagonal line glyph", () => {
     const node = renderStaticLegendGroups(baseConfig)
     const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
-    expect(svg).toContain('x1="0" y1="0" x2="14" y2="14"')
+    expect(svg).toContain('x1="0" y1="0" x2="16" y2="16"')
   })
 
-  it("uses theme color for group separators", () => {
+  it("matches client neatlines and offsets for multiple vertical groups", () => {
     const node = renderStaticLegendGroups({
       ...baseConfig,
       theme: DARK_THEME,
@@ -190,8 +195,10 @@ describe("renderStaticLegendGroups", () => {
       ],
     })
     const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
-    expect(svg).toContain(`stroke="${DARK_THEME.colors.grid}"`)
-    expect(svg).not.toContain('stroke="gray"')
+    expect(svg).toContain('y1="29" x2="100" y2="29" stroke="gray"')
+    expect(svg).toContain('transform="translate(0,61)"')
+    expect(svg).toContain('y1="118" x2="100" y2="118" stroke="gray"')
+    expect(svg).toContain(DARK_THEME.colors.text)
   })
 })
 
