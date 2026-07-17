@@ -222,6 +222,17 @@ const STREAM_DIR = path.join(ROOT, "src/components/stream")
 const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
   ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
   : path.join(STREAM_DIR, "SceneToSVG.tsx")
+// Network and geo converters live in sibling modules re-exported from
+// SceneToSVG.tsx (split out to stay under the file-size ratchet ceiling).
+// The parity scan below concatenates all three so `extractCaseLabels` still
+// finds `function networkSceneNodeToSVG` / `function geoSceneNodeToSVG`
+// regardless of which file they're physically declared in. Not overridden
+// by SEMIOTIC_SCENE_TO_SVG — that env var only simulates drift in the main
+// file's xy/ordinal converters (see ssr-alignment.test.ts).
+const SCENE_TO_SVG_SIBLINGS = [
+  path.join(STREAM_DIR, "SceneToSVGNetwork.tsx"),
+  path.join(STREAM_DIR, "SceneToSVGGeo.tsx"),
+]
 
 const FRAMES = {
   xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG" },
@@ -312,7 +323,10 @@ function extractCaseLabels(source, functionName) {
 
 console.log("\n[scene parity] checking each frame's canvas ↔ SVG type coverage")
 
-const sceneToSvgSrc = fs.readFileSync(SCENE_TO_SVG, "utf8")
+const sceneToSvgSrc = [SCENE_TO_SVG, ...SCENE_TO_SVG_SIBLINGS]
+  .filter(fs.existsSync)
+  .map(f => fs.readFileSync(f, "utf8"))
+  .join("\n")
 const interfaceToType = buildInterfaceTypeMap()
 
 for (const [frame, { typesFile, unionName, svgFn }] of Object.entries(FRAMES)) {

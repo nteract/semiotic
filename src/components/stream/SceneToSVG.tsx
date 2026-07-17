@@ -3,25 +3,17 @@
  *
  * Shared module used by Stream Frames for SSR rendering and
  * by semiotic/server for static SVG export.
+ *
+ * Network and geo serializers live in sibling modules
+ * (SceneToSVGNetwork.tsx / SceneToSVGGeo.tsx) and are re-exported below to
+ * keep this file under the file-size ratchet ceiling; low-level helpers
+ * shared across all three (svgFill, safeSvgId, glyphNodeToSVG, ARC_NOOP)
+ * live in sceneToSVGShared.tsx.
  */
 
 import * as React from "react"
-import { arc as d3Arc, area as d3Area, line as d3Line, type DefaultArcObject } from "d3-shape"
+import { arc as d3Arc, area as d3Area, line as d3Line } from "d3-shape"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
-
-/**
- * Sentinel arg for d3-shape arc generators that have all four
- * accessors set to constants. The generator's call signature requires
- * a `DefaultArcObject` even though it never reads the argument when
- * accessors are non-functional. Typing this once avoids local unsafe casts at
- * the three arc-emit sites below.
- */
-const ARC_NOOP: DefaultArcObject = {
-  innerRadius: 0,
-  outerRadius: 0,
-  startAngle: 0,
-  endAngle: 0,
-}
 
 import type {
   SceneNode,
@@ -32,28 +24,11 @@ import type {
   GlyphSceneNode,
   RectSceneNode,
   HeatcellSceneNode,
-  CandlestickSceneNode,
-  Style
+  CandlestickSceneNode
 } from "./types"
 
-import type {
-  NetworkSceneNode,
-  NetworkSceneEdge,
-  NetworkLabel,
-  NetworkCircleNode,
-  NetworkRectNode,
-  NetworkArcNode,
-  NetworkSymbolNode,
-  NetworkGlyphNode,
-  NetworkLineEdge,
-  NetworkBezierEdge,
-  NetworkRibbonEdge,
-  NetworkCurvedEdge
-} from "./networkTypes"
 import { symbolPathString } from "./symbolPath"
-import { isHatchFill, hatchPatternDef, type HatchFill } from "../charts/shared/hatchFill"
-import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
-import type { GlyphDef } from "./glyphDef"
+import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
 import { annularSectorPath, buildGaugeGradientGeometry } from "./renderers/wedgePathBuilder"
@@ -67,10 +42,10 @@ import type {
   TrapezoidSceneNode
 } from "./ordinalTypes"
 
-import type {
-  GeoSceneNode,
-  GeoAreaSceneNode
-} from "./geoTypes"
+import { ARC_NOOP, svgFill, safeSvgId, glyphNodeToSVG } from "./sceneToSVGShared"
+
+export { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG } from "./SceneToSVGNetwork"
+export { geoSceneNodeToSVG } from "./SceneToSVGGeo"
 
 // ── Color parsing helper (for heatcell contrast text) ───────────────────
 
@@ -85,17 +60,6 @@ function parseHeatcellColor(color: string): [number, number, number] {
   const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
   if (m) return [+m[1], +m[2], +m[3]]
   return [128, 128, 128]
-}
-
-// ── Fill helper (CanvasPattern → fallback for SVG) ─────────────────────
-
-function svgFill(fill: string | HatchFill | CanvasPattern | undefined, fallback = "#4e79a7"): string {
-  // A HatchFill descriptor is only rendered as an SVG <pattern> by the rect
-  // serializer (bars). Any other node degrades it to a solid color — the
-  // descriptor's background if present, else the fallback.
-  if (isHatchFill(fill)) return fill.background && fill.background !== "transparent" ? fill.background : fallback
-  if (!fill || typeof fill !== "string") return fallback
-  return fill
 }
 
 /**
@@ -122,107 +86,6 @@ function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: string):
       strokeWidth={n.style.strokeWidth}
     />
   )
-}
-
-/**
- * Shared SVG serializer for glyph nodes across all four pipelines — the
- * composite-pictogram sibling of `symbolSceneNodeToSVG`. Callers pass the
- * node's position explicitly (`x`/`y` for XY/ordinal/geo, `cx`/`cy` for
- * network) so one implementation matches `glyphCanvasRenderer` exactly:
- * anchor + scale transform, role-token paints, optional ghost silhouette,
- * and a deterministic `clipPath` for partial fills.
- */
-function glyphNodeToSVG(
-  g: {
-    size: number
-    glyph: GlyphDef
-    color?: string
-    accent?: string
-    fraction?: number
-    fractionStart?: number
-    fractionDirection?: "horizontal" | "vertical"
-    ghostColor?: string
-    rotation?: number
-    style: Style
-    pointId?: string
-    _decayOpacity?: number
-  },
-  x: number,
-  y: number,
-  key: string
-): React.ReactNode {
-  const def = g.glyph
-  if (!def?.parts?.length || g.size <= 0) return null
-  const placement = glyphPlacement(def, g.size)
-  if (placement.scale <= 0) return null
-  const rotate = g.rotation ? ` rotate(${(g.rotation * 180) / Math.PI})` : ""
-  const transform = `translate(${x},${y})${rotate} translate(${placement.offsetX},${placement.offsetY}) scale(${placement.scale})`
-  const color = g.color ?? (typeof g.style.fill === "string" ? g.style.fill : undefined)
-  const clip = glyphFractionClipRect(
-    def,
-    g.fraction ?? 1,
-    g.fractionStart ?? 0,
-    g.fractionDirection ?? "horizontal"
-  )
-  const clipId = clip ? safeSvgId(`${key}-clip`) : undefined
-  // Mirror glyphCanvasRenderer, which folds fillOpacity into the node alpha —
-  // otherwise SSR/SVG output is more opaque than canvas when fillOpacity is set.
-  const opacity =
-    (g.style.opacity ?? 1) * (g._decayOpacity ?? 1) * (g.style.fillOpacity ?? 1)
-
-  const parts = (paintOverride?: string) =>
-    def.parts.map((part, partIndex) => {
-      const fill = paintOverride
-        ? part.fill === "none"
-          ? undefined
-          : paintOverride
-        : resolveGlyphPaint(part.fill, color, g.accent)
-      const stroke = paintOverride
-        ? part.stroke && part.stroke !== "none"
-          ? paintOverride
-          : undefined
-        : resolveGlyphPaint(part.stroke ?? "none", color, g.accent)
-      if (!fill && !stroke) return null
-      return (
-        <path
-          key={partIndex}
-          d={part.d}
-          fill={fill ?? "none"}
-          stroke={stroke}
-          strokeWidth={stroke ? part.strokeWidth ?? 1 : undefined}
-          strokeLinecap={part.strokeLinecap}
-          strokeLinejoin={part.strokeLinejoin}
-          opacity={part.opacity}
-        />
-      )
-    })
-
-  return (
-    <g key={key} transform={transform} opacity={opacity === 1 ? undefined : opacity}>
-      {clip && clipId && (
-        <clipPath id={clipId}>
-          <rect x={clip.x} y={clip.y} width={clip.width} height={clip.height} />
-        </clipPath>
-      )}
-      {clip && g.ghostColor ? <g>{parts(g.ghostColor)}</g> : null}
-      {clip && clipId ? <g clipPath={`url(#${clipId})`}>{parts()}</g> : parts()}
-    </g>
-  )
-}
-
-/**
- * Coerce a candidate SVG `id` value to the strict `[A-Za-z0-9_-]` charset.
- * Scene-node keys embed user-provided category/group strings, which can
- * contain spaces, colons, parentheses, or other characters that are either
- * invalid in an SVG id or break a `url(#id)` reference. Non-matching
- * characters are replaced with underscores; an empty/leading-digit result
- * is prefixed so the final id is a legal SVG identifier.
- */
-function safeSvgId(candidate: string): string {
-  const cleaned = candidate.replace(/[^A-Za-z0-9_-]/g, "_")
-  // SVG ids can't start with a digit; prepend a letter in that edge case.
-  if (!cleaned || /^\d/.test(cleaned)) return `s_${cleaned}`
-  return cleaned
 }
 
 function colorStopElements(
@@ -608,178 +471,6 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
   }
 }
 
-// ── Network Scene Nodes ──────────────────────────────────────────────────
-
-export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.ReactNode {
-  switch (node.type) {
-    case "circle": {
-      const n = node as NetworkCircleNode
-      // HatchFill (e.g. from node styleRules) → inline <pattern> (SSR parity).
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-circle-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`net-circle-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <circle
-            cx={n.cx} cy={n.cy} r={n.r}
-            fill={hatch ? `url(#net-circle-${i}-hatch)` : svgFill(n.style.fill)}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            opacity={n.style.opacity}
-          />
-        </React.Fragment>
-      )
-    }
-    case "rect": {
-      const n = node as NetworkRectNode
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-rect-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`net-rect-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <rect
-            x={n.x} y={n.y} width={n.w} height={n.h}
-            fill={hatch ? `url(#net-rect-${i}-hatch)` : svgFill(n.style.fill)}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            opacity={n.style.opacity}
-          />
-        </React.Fragment>
-      )
-    }
-    case "arc": {
-      const n = node as NetworkArcNode
-      // Scene stores angles in canvas convention (0 = 3 o'clock).
-      // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
-      const arcPath = d3Arc()
-        .innerRadius(n.innerR)
-        .outerRadius(n.outerR)
-        .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)(ARC_NOOP) || ""
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-arc-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`net-arc-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <path
-            d={arcPath}
-            transform={`translate(${n.cx},${n.cy})`}
-            fill={hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill)}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            opacity={n.style.opacity}
-          />
-        </React.Fragment>
-      )
-    }
-    case "symbol": {
-      const n = node as NetworkSymbolNode
-      const d = symbolPathString(n.symbolType, n.size, n.path)
-      const transform = n.rotation
-        ? `translate(${n.cx},${n.cy}) rotate(${(n.rotation * 180) / Math.PI})`
-        : `translate(${n.cx},${n.cy})`
-      return (
-        <path
-          key={`net-symbol-${i}`}
-          d={d}
-          transform={transform}
-          fill={n.style.fill ? svgFill(n.style.fill) : "none"}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n.style.opacity}
-        />
-      )
-    }
-    case "glyph": {
-      const n = node as NetworkGlyphNode
-      return glyphNodeToSVG(n, n.cx, n.cy, `net-glyph-${n.id ?? i}`)
-    }
-    default:
-      return null
-  }
-}
-
-export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.ReactNode {
-  switch (edge.type) {
-    case "line": {
-      const e = edge as NetworkLineEdge
-      return (
-        <line
-          key={`net-edge-${i}`}
-          x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
-          stroke={e.style.stroke || "#999"}
-          strokeWidth={e.style.strokeWidth || 1}
-          opacity={e.style.opacity}
-        />
-      )
-    }
-    case "bezier": {
-      const e = edge as NetworkBezierEdge
-      return (
-        <path
-          key={`net-edge-${i}`}
-          d={e.pathD}
-          fill={svgFill(e.style.fill, "#999")}
-          fillOpacity={e.style.fillOpacity}
-          stroke={e.style.stroke || "none"}
-          strokeWidth={e.style.strokeWidth}
-          opacity={e.style.opacity}
-        />
-      )
-    }
-    case "ribbon": {
-      const e = edge as NetworkRibbonEdge
-      return (
-        <path
-          key={`net-edge-${i}`}
-          d={e.pathD}
-          fill={svgFill(e.style.fill, "#999")}
-          fillOpacity={e.style.fillOpacity}
-          stroke={e.style.stroke || "none"}
-          strokeWidth={e.style.strokeWidth}
-          opacity={e.style.opacity}
-        />
-      )
-    }
-    case "curved": {
-      const e = edge as NetworkCurvedEdge
-      return (
-        <path
-          key={`net-edge-${i}`}
-          d={e.pathD}
-          fill={svgFill(e.style.fill, "none")}
-          stroke={e.style.stroke || "#999"}
-          strokeWidth={e.style.strokeWidth || 1}
-          opacity={e.style.opacity}
-        />
-      )
-    }
-    default:
-      return null
-  }
-}
-
-export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNode {
-  return (
-    <text
-      key={`net-label-${i}`}
-      x={label.x} y={label.y}
-      textAnchor={label.anchor || "middle"}
-      // Cast via React's `SVGAttributes["dominantBaseline"]` rather
-      // than `any`. `NetworkLabel.baseline` is a free-form string
-      // (consumers control it); React types this attribute as a strict
-      // SVG-spec union. The cast is the boundary, not a type-safety
-      // bypass — runtime accepts whatever the user supplied.
-      dominantBaseline={(label.baseline || "auto") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
-      fontSize={label.fontSize || 11}
-      fontWeight={label.fontWeight}
-      fill={label.fill || "var(--semiotic-text, #333)"}
-      stroke={label.stroke}
-      strokeWidth={label.strokeWidth}
-      paintOrder={label.paintOrder}
-    >
-      {label.text}
-    </text>
-  )
-}
-
 // ── Ordinal Scene Nodes ──────────────────────────────────────────────────
 
 function formatFunnelNumber(value: number): string {
@@ -1158,75 +849,6 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
           strokeWidth={n.style.strokeWidth}
         />
       )
-    }
-    default:
-      return null
-  }
-}
-
-// ── Geo Scene Nodes ─────────────────────────────────────────────────────
-
-export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNode {
-  switch (node.type) {
-    case "geoarea": {
-      const n = node as GeoAreaSceneNode
-      if (!n.pathData) return null
-      // A HatchFill descriptor becomes an inline <pattern> (SSR parity with the
-      // canvas backend, which resolves the same descriptor to a CanvasPattern).
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geoarea-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`geoarea-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <path
-            d={n.pathData}
-            fill={hatch ? `url(#geoarea-${i}-hatch)` : svgFill(n.style.fill, "#e0e0e0")}
-            fillOpacity={n.style.fillOpacity ?? 1}
-            stroke={n.style.stroke || "none"}
-            strokeWidth={n.style.strokeWidth || 0.5}
-            strokeDasharray={n.style.strokeDasharray}
-            opacity={n._decayOpacity ?? 1}
-          />
-        </React.Fragment>
-      )
-    }
-    case "point": {
-      const n = node as PointSceneNode
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geopoint-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`point-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <circle
-            cx={n.x}
-            cy={n.y}
-            r={n.r}
-            fill={hatch ? `url(#geopoint-${i}-hatch)` : svgFill(n.style.fill)}
-            fillOpacity={n.style.fillOpacity ?? 0.8}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            opacity={n._decayOpacity ?? (n.style.opacity ?? 1)}
-          />
-        </React.Fragment>
-      )
-    }
-    case "line": {
-      const n = node
-      if (n.path.length < 2) return null
-      const d = "M" + n.path.map(p => `${p[0]},${p[1]}`).join("L")
-      return (
-        <path
-          key={`line-${i}`}
-          d={d}
-          fill="none"
-          stroke={n.style.stroke || "#4e79a7"}
-          strokeWidth={n.style.strokeWidth || 1.5}
-          strokeDasharray={n.style.strokeDasharray}
-          opacity={n.style.opacity ?? 1}
-        />
-      )
-    }
-    case "glyph": {
-      const n = node as GlyphSceneNode
-      return glyphNodeToSVG(n, n.x, n.y, `geo-glyph-${n.pointId ?? i}`)
     }
     default:
       return null
