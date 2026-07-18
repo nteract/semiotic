@@ -475,9 +475,45 @@ export const chordDiagram: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const nodes = Array.isArray(rest.nodes) ? rest.nodes as Datum[] : []
+    // Match ChordDiagram HOC coloring:
+    //  - colorBy → categorical scale fill
+    //  - else → stable per-node palette slot (NOT monochrome resolveDefaultFill,
+    //    which painted every SSR arc the same and broke ssr-csr-chord parity)
+    //  - styleRules layer on top when present
+    // When nothing needs a custom nodeStyle, omit it so the layout plugin's
+    // built-in path stays identical to the pre-styleRules SSR config.
+    const hasStyleRules = Array.isArray(rest.styleRules) && (rest.styleRules as unknown[]).length > 0
+    const needsNodeStyle = Boolean(colorBy || hasStyleRules || common.nodeStyle || rest.nodeStyle)
+    if (!needsNodeStyle) {
+      return {
+        chartType: "chord",
+        nodes: rest.nodes,
+        edges: rest.edges,
+        valueAccessor: rest.valueAccessor,
+        padAngle: rest.padAngle,
+        groupWidth: rest.groupWidth,
+        showLabels: rest.showLabels,
+        colorBy,
+        edgeColorBy: rest.edgeColorBy,
+        colorScheme,
+        ...common,
+      }
+    }
+
+    const edges = Array.isArray(rest.edges) ? rest.edges as Datum[] : []
+    const nodes = Array.isArray(rest.nodes) && (rest.nodes as Datum[]).length > 0
+      ? rest.nodes as Datum[]
+      : inferNodesFromEdges(
+          [],
+          edges,
+          (rest.sourceAccessor || "source") as string | ((d: Datum) => string),
+          (rest.targetAccessor || "target") as string | ((d: Datum) => string),
+        ) as Datum[]
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
+    const palette = resolveCategoricalPalette(
+      colorScheme as string | string[] | Record<string, string> | undefined,
+      themeCategorical as string[],
+    )
     const colorKey = typeof colorBy === "string" ? colorBy : "__ssrChordColorBy"
     const colorRows = typeof colorBy === "function"
       ? nodes.map(d => ({ ...d, __ssrChordColorBy: colorBy(d) }))
@@ -485,25 +521,38 @@ export const chordDiagram: ChartConfig = {
     const colorScale = colorBy
       ? createColorScale(colorRows, colorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
       : undefined
-    const baseNodeStyle = (d: Datum) => {
+    const nodeIndexMap = new Map<string, number>()
+    const nodeIdAccessor = (rest.nodeIdAccessor || rest.nodeIDAccessor || "id") as string
+    const baseNodeStyle = (d: Datum, i?: number) => {
       const raw = (d?.data as Datum) || d
+      let fill: string
+      if (colorBy) {
+        fill = getColor(raw, colorBy as string | ((node: Datum) => string), colorScale) as string
+      } else {
+        const id = String(
+          (d as { id?: unknown }).id
+            ?? raw?.[nodeIdAccessor]
+            ?? "",
+        )
+        if (!nodeIndexMap.has(id)) nodeIndexMap.set(id, nodeIndexMap.size)
+        const index = (d as { index?: number }).index ?? i ?? nodeIndexMap.get(id)!
+        fill = palette[index % palette.length]
+      }
       return {
-        fill: colorBy
-          ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
-          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        fill,
         stroke: common.stroke ?? "black",
         strokeWidth: common.strokeWidth ?? 1,
         ...(common.opacity !== undefined && { opacity: common.opacity }),
       }
     }
-    const ruleNodeStyle = styleRulesToNodeStyle(
-      rest.styleRules,
+    // styleRulesToNodeStyle layers rules over an optional user style — pass
+    // baseNodeStyle as the user style so rules merge on top of palette/colorBy.
+    const configuredNodeStyle = styleRulesToNodeStyle(
+      rest.styleRules as Parameters<typeof styleRulesToNodeStyle>[0],
       colorBy as string | ((d: Datum) => unknown) | undefined,
       rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
-    )
-    const configuredNodeStyle = ruleNodeStyle
-      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
-      : baseNodeStyle
+      baseNodeStyle,
+    ) ?? baseNodeStyle
     return {
       chartType: "chord",
       nodes: rest.nodes,
