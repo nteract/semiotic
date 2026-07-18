@@ -1,8 +1,6 @@
 import React, { useCallback, useMemo } from "react"
 import { NetworkCustomChart, networkHitTarget } from "semiotic/network"
 import { XYCustomChart, hitTargetPoint } from "semiotic/xy"
-// Source import so the monorepo docs/tests pick up new recipe helpers before
-// dist is rebuilt. Public package consumers use `semiotic/recipes`.
 import {
   estimateLabelWidth,
   hullFromBoxes,
@@ -13,7 +11,7 @@ import {
   spanArcPath,
   spanArcPeakY,
   unwrapDatum,
-} from "../../../../../src/components/semiotic-recipes-core"
+} from "semiotic/recipes"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
 import { surfaceText } from "./sentenceStructureData"
 
