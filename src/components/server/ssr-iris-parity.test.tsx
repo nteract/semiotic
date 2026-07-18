@@ -22,11 +22,11 @@ import { describe, it, expect } from "vitest"
 import * as React from "react"
 import { renderToString } from "react-dom/server"
 import { renderChart, renderChartWithEvidence } from "./renderToStaticSVG"
-import { LineChart } from "../charts/xy/LineChart"
-import { SwimlaneChart } from "../charts/ordinal/SwimlaneChart"
-import { PieChart } from "../charts/ordinal/PieChart"
+import { LineChart, type LineChartProps } from "../charts/xy/LineChart"
+import { SwimlaneChart, type SwimlaneChartProps } from "../charts/ordinal/SwimlaneChart"
+import { PieChart, type PieChartProps } from "../charts/ordinal/PieChart"
 import { DonutChart } from "../charts/ordinal/DonutChart"
-import { Treemap } from "../charts/network/Treemap"
+import { Treemap, type TreemapProps } from "../charts/network/Treemap"
 
 /** Count `<path>` marks whose fill is a real paint (color or url()) — i.e.
  * filled areas. Lines render with `fill="none"`, so this isolates area fills. */
@@ -53,7 +53,7 @@ describe("LineChart — mixed line+area SSR parity", () => {
     { step: 3, value: 600, series: "Volume" },
     { step: 3, value: 38, series: "Latency" },
   ]
-  const props = {
+  const props: LineChartProps<(typeof data)[number]> = {
     data,
     xAccessor: "step",
     yAccessor: "value",
@@ -101,13 +101,13 @@ describe("LineChart — mixed line+area SSR parity", () => {
 // to the data max, so the segment fills the whole track instead of 40%.
 
 describe("SwimlaneChart — valueExtent SSR parity", () => {
-  const single = {
-    data: [{ category: "bar", segment: "Value", value: 40 }],
+  const singleData = [{ category: "bar", segment: "Value", value: 40 }]
+  const single: SwimlaneChartProps<(typeof singleData)[number]> = {
+    data: singleData,
     categoryAccessor: "category",
     subcategoryAccessor: "segment",
     valueAccessor: "value",
-    orientation: "horizontal" as const,
-    showAxes: false,
+    orientation: "horizontal",
     width: 400,
     height: 60,
   }
@@ -131,8 +131,7 @@ describe("SwimlaneChart — valueExtent SSR parity", () => {
       valueExtent: [0, 100],
     })
     const inFrame = renderToString(<SwimlaneChart {...single} valueExtent={[0, 100]} />)
-    // The in-frame axis is suppressed (showAxes:false) but the segment width
-    // encodes the domain: 40 of 100 ≈ 40% of the plot width.
+    // The segment width encodes the domain: 40 of 100 ≈ 40% of the plot width.
     const widths = [...inFrame.matchAll(/<rect\b[^>]*\bwidth="([\d.]+)"/g)].map((m) => Number(m[1]))
     const maxWidth = Math.max(0, ...widths)
     // Plot width ≈ 400 − default horizontal margins. 40% of it is well under
@@ -156,7 +155,6 @@ describe("SwimlaneChart — valueExtent SSR parity", () => {
       orientation: "horizontal",
       valueExtent: [0, 200],
       barPadding: 0,
-      showAxes: false,
       width: 400,
       height: 40,
     })
@@ -174,8 +172,15 @@ describe("SwimlaneChart — valueExtent SSR parity", () => {
 // nodeStyle's job), and (b) drop `labelMode`, so no parent/container label
 // appeared.
 
+interface HierarchyTreemapNode {
+  name: string
+  value?: number
+  tier?: string
+  children?: HierarchyTreemapNode[]
+}
+
 describe("Treemap — colorBy + hierarchy labels SSR parity", () => {
-  const hierarchy = {
+  const hierarchy: HierarchyTreemapNode = {
     name: "All",
     children: [
       {
@@ -198,12 +203,12 @@ describe("Treemap — colorBy + hierarchy labels SSR parity", () => {
       },
     ],
   }
-  const props = {
+  const props: TreemapProps<HierarchyTreemapNode> = {
     data: hierarchy,
     childrenAccessor: "children",
     valueAccessor: "value",
     colorBy: "tier",
-    labelMode: "all" as const,
+    labelMode: "all",
     paddingTop: 18,
     showLabels: true,
     colorScheme: ["#0E9AA7", "#C2185B", "#7CB342"],
@@ -294,8 +299,9 @@ describe("AreaChart — semanticGradient SSR parity", () => {
 // o'clock), so the same config produced a different rotation than the HOC.
 
 describe("PieChart / DonutChart — startAngle SSR parity", () => {
-  const base = {
-    data: [ { c: "K", v: 45 }, { c: "F", v: 25 }, { c: "C", v: 30 } ],
+  const pieData = [ { c: "K", v: 45 }, { c: "F", v: 25 }, { c: "C", v: 30 } ]
+  const base: PieChartProps<(typeof pieData)[number]> = {
+    data: pieData,
     categoryAccessor: "c",
     valueAccessor: "v",
     colorScheme: ["#6C4EE8", "#0E9AA7", "#C2185B"],
@@ -329,15 +335,16 @@ describe("PieChart / DonutChart — startAngle SSR parity", () => {
 // drew straight edges under a curved line. Both are fixed together.
 
 describe("LineChart — band SSR parity", () => {
-  const props = {
-    data: [
-      { t: 0, v: 10, s: "A", lo: 5, hi: 15 }, { t: 1, v: 25, s: "A", lo: 18, hi: 32 },
-      { t: 2, v: 18, s: "A", lo: 12, hi: 24 }, { t: 3, v: 30, s: "A", lo: 22, hi: 38 },
-    ],
+  const bandData = [
+    { t: 0, v: 10, s: "A", lo: 5, hi: 15 }, { t: 1, v: 25, s: "A", lo: 18, hi: 32 },
+    { t: 2, v: 18, s: "A", lo: 12, hi: 24 }, { t: 3, v: 30, s: "A", lo: 22, hi: 38 },
+  ]
+  const props: LineChartProps<(typeof bandData)[number]> = {
+    data: bandData,
     xAccessor: "t",
     yAccessor: "v",
     lineBy: "s",
-    curve: "monotoneX" as const,
+    curve: "monotoneX",
     band: { y0Accessor: "lo", y1Accessor: "hi" },
     width: 400,
     height: 240,
