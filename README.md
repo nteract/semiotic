@@ -372,18 +372,18 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **136 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **116 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **122 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
-| `semiotic/geo` | **95 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **148 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **144 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/xy` | **138 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **117 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **123 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/geo` | **97 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/realtime` | **150 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **145 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **188 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **188 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **205 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
-| `semiotic/utils` | **75 KB** | ThemeProvider, validators, serialization — no chart components |
-| `semiotic/utils/core` | **73 KB** | Theme helpers and serialization utilities |
+| `semiotic/server` | **190 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **190 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **208 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/utils` | **76 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/utils/core` | **74 KB** | Theme helpers and serialization utilities |
 | `semiotic/utils/react` | **6 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
 | `semiotic/recipes` | **77 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/core` | **77 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
@@ -396,11 +396,11 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/physics` | **133 KB** | GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **430 KB** | All schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic/ai/core` | **69 KB** | suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components |
+| `semiotic/ai` | **432 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai/core` | **70 KB** | suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **12 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **4 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
-| `semiotic` | **348 KB** | Everything below (full bundle) |
+| `semiotic` | **349 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
