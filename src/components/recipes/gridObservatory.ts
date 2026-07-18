@@ -252,7 +252,7 @@ export function thresholdBandsForReserve(
     comfortableFill?: string
   } = {},
 ): StyleRule[] {
-  const { tight, watch, comfortable } = { ...DEFAULT_LEVELS, ...levels }
+  const { watch, comfortable } = { ...DEFAULT_LEVELS, ...levels }
   const field = options.field
   const whenField = field ? { field } : {}
 
