@@ -14,6 +14,7 @@ import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
 import { resolveSvgFill } from "../charts/shared/hatchFill"
+import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 
 const TOP_LABEL_BASELINE = 16
 const TOP_THRESHOLD_LABEL_FLIP = 20
@@ -69,7 +70,7 @@ interface AnnotationScales {
 
 type AnnotationScale = {
   bivarianceHack(value: DatumValue): number
-}["bivarianceHack"]
+}["bivarianceHack"] & { domain?: () => DatumValue[] }
 
 interface AnnotationLayout {
   width: number
@@ -142,8 +143,11 @@ function resolveYPixel(
  * Render annotations as static SVG elements.
  */
 export function renderStaticAnnotations(config: StaticAnnotationConfig): React.ReactNode {
-  const { annotations } = config
-  if (!annotations || annotations.length === 0) return null
+  const { annotations: rawAnnotations } = config
+  if (!rawAnnotations || rawAnnotations.length === 0) return null
+  // Match describeChart/nav tree: hide retracted & superseded notes by default
+  // so SSR/MCP SVG does not paint editorial dead weight the text layers omit.
+  const annotations = filterAnnotationsByStatus(rawAnnotations)
 
   const layoutAnnotations = config.autoPlaceAnnotations
     ? annotationLayout({
@@ -273,8 +277,13 @@ function renderAnnotation(
     }
 
     case "band": {
-      const y0 = ann.y0 != null && scales.y ? scales.y(ann.y0) : null
-      const y1 = ann.y1 != null && scales.y ? scales.y(ann.y1) : null
+      const yDomain = scales.y?.domain?.()
+      // A null/omitted bound extends to the axis extent on that side
+      // (y0 → domain min, y1 → domain max) rather than skipping the band.
+      const y0Value = ann.y0 ?? yDomain?.[0]
+      const y1Value = ann.y1 ?? yDomain?.[1]
+      const y0 = y0Value != null && scales.y ? scales.y(y0Value) : null
+      const y1 = y1Value != null && scales.y ? scales.y(y1Value) : null
       if (y0 == null || y1 == null) return null
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
@@ -307,8 +316,13 @@ function renderAnnotation(
     }
 
     case "x-band": {
-      const x0 = ann.x0 != null && scales.x ? scales.x(ann.x0) : null
-      const x1 = ann.x1 != null && scales.x ? scales.x(ann.x1) : null
+      const xDomain = scales.x?.domain?.()
+      // A null/omitted bound extends to the axis extent on that side
+      // (x0 → domain min, x1 → domain max) rather than skipping the band.
+      const x0Value = ann.x0 ?? xDomain?.[0]
+      const x1Value = ann.x1 ?? xDomain?.[1]
+      const x0 = x0Value != null && scales.x ? scales.x(x0Value) : null
+      const x1 = x1Value != null && scales.x ? scales.x(x1Value) : null
       if (x0 == null || x1 == null) return null
       const left = Math.min(x0, x1)
       const width = Math.abs(x1 - x0)

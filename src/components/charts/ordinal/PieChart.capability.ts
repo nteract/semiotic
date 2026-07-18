@@ -36,7 +36,9 @@ export const PieChartCapability: ChartCapability = {
     {
       key: "donut",
       label: "Donut",
-      description: "Hollow center — easier to fit a label or KPI inside.",
+      description: "Hollow center — easier to fit a label or KPI inside. Switches to DonutChart (PieChart ignores innerRadius).",
+      // Prefer the real DonutChart component — PieChart has no innerRadius prop.
+      component: "DonutChart",
       props: { innerRadius: 60 },
       tags: ["donut"],
     },

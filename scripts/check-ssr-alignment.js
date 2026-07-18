@@ -114,15 +114,17 @@ for (const candidate of namedHocCandidates) {
 // ── 4. Charts that are intentionally SSR-excluded ──────────────────────
 
 const SSR_EXCLUDED = new Set([
-  // Composite/wrapper charts — not standalone renderable
-  "ScatterplotMatrix", "MinimapChart", "MultiAxisLineChart", "QuadrantChart",
-  // Realtime-only charts — no static representation
+  // Composite/wrapper charts — not standalone renderable via CHART_CONFIGS
+  // (HOC React SSR may still work). Note: QuadrantChart and FlowMap *are*
+  // registered in CHART_CONFIGS and must NOT be listed here.
+  "ScatterplotMatrix", "MinimapChart", "MultiAxisLineChart",
+  // Realtime-only charts — no static representation (TemporalHistogram is static)
   "RealtimeLineChart", "RealtimeHistogram", "RealtimeSwarmChart",
   "RealtimeWaterfallChart", "RealtimeHeatmap",
   // Animated hierarchy — no static representation
   "OrbitDiagram",
-  // Geo charts with complex state
-  "FlowMap", "DistanceCartogram",
+  // Stateful geo — no CHART_CONFIGS entry (MCP HOC path is the snapshot route)
+  "DistanceCartogram",
   // Interactive dependency-enactment chart — its static visual lives entirely
   // in a foregroundGraphics overlay (task cards + dependency tracks) that the
   // physics settled-scene SSR renderer cannot emit (it renders only settled
@@ -174,30 +176,72 @@ for (const hoc of hocsOnDisk) {
 
 // ── 6. Check key prop threading in SSR configs ─────────────────────────
 
-// Props that should be in SSR configs when they exist on the HOC
+// Props that should be threaded on the SSR path when they exist on the HOC.
+// Expand this list when a silent SSR drop ships — it is the load-bearing
+// gate against the gradientFill/baseline/symbolBy class of bug.
+//
+// Family configs live in serverChartConfigs{XY,Ordinal,Network,...}.ts; the
+// registry only re-exports them. Scan family sources + optional extras
+// (staticXY, renderToStaticSVG) rather than the thin registry file.
+const SERVER_DIR = path.join(ROOT, "src/components/server")
+const FAMILY_CONFIG_SOURCES = [
+  "serverChartConfigsXY.ts",
+  "serverChartConfigsOrdinal.ts",
+  "serverChartConfigsNetwork.ts",
+  "serverChartConfigsGeo.ts",
+  "serverChartConfigsPhysics.ts",
+  "serverChartConfigsCustom.ts",
+  "staticXY.tsx",
+  "staticOrdinal.tsx",
+  "staticNetwork.tsx",
+  "renderToStaticSVG.tsx",
+].map((f) => path.join(SERVER_DIR, f))
+
+const familySourceCorpus = FAMILY_CONFIG_SOURCES
+  .filter((f) => fs.existsSync(f))
+  .map((f) => fs.readFileSync(f, "utf8"))
+  .join("\n\n")
+
 const PROP_CHECKS = [
-  { prop: "oSort", charts: ["BarChart", "StackedBarChart", "GroupedBarChart"], label: "sort/oSort" },
+  { prop: "oSort", charts: ["BarChart", "StackedBarChart", "GroupedBarChart"], label: "sort/oSort", alts: ["rest.sort", "oSort"] },
   { prop: "cornerRadius", charts: ["PieChart", "DonutChart"], label: "cornerRadius" },
+  // StackedArea streamgraph/silhouette — without baseline SSR always paints zero.
+  { prop: "baseline", charts: ["StackedAreaChart"], label: "baseline", alts: ["rest.baseline", "props.baseline"] },
+  // BoxPlot outliers toggle
+  { prop: "showOutliers", charts: ["BoxPlot"], label: "showOutliers", alts: ["rest.showOutliers"] },
+  // Hierarchy labels require nodeLabel (showLabels alone is insufficient)
+  { prop: "nodeLabel", charts: ["Treemap", "CirclePack", "TreeDiagram"], label: "nodeLabel", alts: ["rest.nodeLabel", "nodeLabel:"] },
+  // Network styleRules (ForceDirected + Sankey + Chord)
+  { prop: "styleRules", charts: ["ForceDirectedGraph", "SankeyDiagram", "ChordDiagram"], label: "styleRules", alts: ["rest.styleRules"] },
+  // renderChart top-level auto-place (COMMON_FRAME_PROP_KEYS)
+  { prop: "autoPlaceAnnotations", charts: ["BarChart"], label: "autoPlaceAnnotations", global: true },
+  // LineChart series features (forecast/anomaly/gap/directLabel)
+  { prop: "forecast", charts: ["LineChart"], label: "forecast", alts: ["rest.forecast", "prepareLineSeriesForSsr"] },
+  { prop: "gapStrategy", charts: ["LineChart"], label: "gapStrategy", alts: ["rest.gapStrategy", "prepareLineSeriesForSsr"] },
+  { prop: "directLabel", charts: ["LineChart"], label: "directLabel", alts: ["rest.directLabel", "prepareLineSeriesForSsr"] },
 ]
 
-for (const { prop, charts, label } of PROP_CHECKS) {
+for (const { prop, charts, label, alts, global } of PROP_CHECKS) {
+  const needles = [prop, `rest.${prop}`, `props.${prop}`, ...(alts || [])]
+  if (global) {
+    // Prop must appear in the corpus (e.g. COMMON_FRAME_PROP_KEYS list).
+    if (!needles.some((n) => familySourceCorpus.includes(n))) {
+      errors.push(`SSR path is missing "${label}" prop threading (expected in renderToStaticSVG/COMMON_FRAME_PROP_KEYS or family configs)`)
+    }
+    continue
+  }
   for (const chart of charts) {
     if (!ssrNames.has(chart)) continue
-    // Find the config block for this chart
-    const configBlockRegex = new RegExp(`const \\w+[^}]+${chart}`, "s")
-    // Simpler: just check if the prop name appears near the chart name
-    const chartIdx = ssrSource.indexOf(`  ${chart}:`)
-    if (chartIdx === -1) continue
-    // Look backwards to find the config variable
-    const beforeChart = ssrSource.slice(Math.max(0, chartIdx - 500), chartIdx)
-    const varMatch = beforeChart.match(/const (\w+): ChartConfig[^}]*$/s)
-    if (!varMatch) continue
-    const varName = varMatch[1]
-    // Find the full config block
-    const blockStart = ssrSource.indexOf(`const ${varName}:`)
-    const blockEnd = ssrSource.indexOf("\n}", blockStart) + 2
-    const block = ssrSource.slice(blockStart, blockEnd)
-    if (!block.includes(prop) && !block.includes(`rest.${prop.replace("oSort", "sort")}`)) {
+    // Locate the exported config const by camelCase name convention, e.g.
+    // StackedAreaChart → stackedAreaChart, BoxPlot → boxPlot.
+    const camel = chart.charAt(0).toLowerCase() + chart.slice(1)
+    const exportRe = new RegExp(`export const ${camel}\\s*:\\s*ChartConfig[\\s\\S]*?^}`, "m")
+    const match = familySourceCorpus.match(exportRe)
+    // Fall back: any block that mentions the chart name heavily.
+    const block = match
+      ? match[0]
+      : familySourceCorpus
+    if (!needles.some((n) => block.includes(n))) {
       errors.push(`SSR config for "${chart}" is missing "${label}" prop threading`)
     }
   }

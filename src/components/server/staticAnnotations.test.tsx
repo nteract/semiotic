@@ -131,12 +131,28 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain('opacity="0.1"')
     })
 
-    it("skips when y0 or y1 missing", () => {
+    it("extends to the domain max when y1 is missing", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
         annotations: [{ type: "band", y0: 30 }],
       })
-      expect(svg).toBe("")
+      expect(svg).toContain('<rect x="0" y="0" width="400" height="210"')
+    })
+
+    it("extends to the domain min when y0 is missing", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "band", y1: 70 }],
+      })
+      expect(svg).toMatch(/<rect x="0" y="90(\.\d+)?" width="400" height="210"/)
+    })
+
+    it("treats an explicit null bound the same as an omitted one", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "band", y0: 30, y1: null }],
+      })
+      expect(svg).toContain('<rect x="0" y="0" width="400" height="210"')
     })
   })
 
@@ -167,12 +183,28 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain('y="16"')
     })
 
-    it("skips when x0 or x1 is missing", () => {
+    it("extends to the domain max when x1 is missing", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
         annotations: [{ type: "x-band", x0: 30 }],
       })
-      expect(svg).toBe("")
+      expect(svg).toContain('<rect x="120" y="0" width="280" height="300"')
+    })
+
+    it("extends to the domain min when x0 is missing", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x1: 70 }],
+      })
+      expect(svg).toContain('<rect x="0" y="0" width="280" height="300"')
+    })
+
+    it("treats an explicit null bound the same as an omitted one", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x0: 30, x1: null }],
+      })
+      expect(svg).toContain('<rect x="120" y="0" width="280" height="300"')
     })
   })
 

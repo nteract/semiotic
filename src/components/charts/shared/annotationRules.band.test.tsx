@@ -39,9 +39,25 @@ describe("band annotations", () => {
     expect(svg).toContain("Phase")
   })
 
-  it("skips x-band with missing bounds (matches SSR)", () => {
-    expect(rules({ type: "x-band", x0: 20 }, 0, context)).toBeNull()
-    expect(rules({ type: "x-band", x1: 60 }, 0, context)).toBeNull()
+  it("extends to the domain min/max when a bound is missing (matches SSR)", () => {
+    // x1 omitted → extends to the domain max (100 → px 400)
+    const openEnd = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 20 }, 0, context) as React.ReactElement,
+    )
+    expect(openEnd).toContain('<rect x="80" y="0" width="320" height="200"')
+
+    // x0 omitted → extends to the domain min (0 → px 0)
+    const openStart = renderToStaticMarkup(
+      rules({ type: "x-band", x1: 60 }, 0, context) as React.ReactElement,
+    )
+    expect(openStart).toContain('<rect x="0" y="0" width="240" height="200"')
+  })
+
+  it("treats an explicit null bound the same as an omitted one", () => {
+    const svg = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 20, x1: null }, 0, context) as React.ReactElement,
+    )
+    expect(svg).toContain('<rect x="80" y="0" width="320" height="200"')
   })
 
   it("skips x-band when no x scale is available", () => {
@@ -51,6 +67,20 @@ describe("band annotations", () => {
       { ...context, scales: {} },
     )
     expect(node).toBeNull()
+  })
+
+  it("extends band to the domain min/max when y0/y1 is missing", () => {
+    // y1 omitted → domain max (100 → px 0, the top of the plot)
+    const openTop = renderToStaticMarkup(
+      rules({ type: "band", y0: 30 }, 0, context) as React.ReactElement,
+    )
+    expect(openTop).toContain('y="0" width="400" height="140"')
+
+    // y0 omitted → domain min (0 → px 200, the bottom of the plot)
+    const openBottom = renderToStaticMarkup(
+      rules({ type: "band", y1: 70 }, 0, context) as React.ReactElement,
+    )
+    expect(openBottom).toMatch(/y="60(\.\d+)?" width="400" height="140"/)
   })
 })
 

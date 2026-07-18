@@ -22,6 +22,7 @@ import {
   annotationLayout,
   type AutoPlaceAnnotations
 } from "../recipes/annotationLayout"
+import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { TITLE_BASELINE } from "./titleLayout"
 
@@ -115,18 +116,19 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
 
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
+    const visibleAnnotations = filterAnnotationsByStatus(annotations)
 
     // Geo annotations use the public `coordinates: [lon, lat]` form. The
     // generic annotation rules deliberately only understand pixel x/y, so
     // project that form before handing annotations to them. SSR already did
     // this in staticAnnotations; this closes the client-only gap.
     const projectedAnnotations = geoProjection
-      ? annotations.map((annotation) => {
+      ? visibleAnnotations.map((annotation) => {
           if (!Array.isArray(annotation.coordinates) || annotation.coordinates.length < 2) return annotation
           const projected = geoProjection(Number(annotation.coordinates[0]), Number(annotation.coordinates[1]))
           return projected ? { ...annotation, x: projected[0], y: projected[1] } : annotation
         })
-      : annotations
+      : visibleAnnotations
 
     // These values deliberately mirror the context Geo received through the
     // Cartesian overlay. Geo x/y values here are already pixels (including

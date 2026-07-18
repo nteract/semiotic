@@ -73,6 +73,32 @@ const DATA_PROPS = new Set([
   "flows",
 ])
 
+/**
+ * Recursively drop functions and React elements so structuredClone never
+ * throws on nested non-serializable values (predicate-form styleRules, etc.).
+ */
+function stripNonSerializable(value: unknown): unknown {
+  if (value == null) return value
+  if (typeof value === "function") return undefined
+  if (typeof value !== "object") return value
+  // React element
+  if ((value as { $$typeof?: unknown }).$$typeof) return undefined
+  if (Array.isArray(value)) {
+    return value
+      .map(stripNonSerializable)
+      .filter((v) => v !== undefined)
+  }
+  if (value instanceof Date) return value
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof v === "function") continue
+    if (v?.$$typeof) continue
+    const stripped = stripNonSerializable(v)
+    if (stripped !== undefined) out[k] = stripped
+  }
+  return out
+}
+
 function shouldExcludeDataProp(key: string, value: unknown): boolean {
   if (!DATA_PROPS.has(key)) return false
   // `areas` can be a reference geography id (e.g. "world-110m"), which is
@@ -114,7 +140,13 @@ export function toConfig(
     if (typeof value === "function") continue
     if (value?.$$typeof) continue // React element
 
-    serializedProps[key] = deepClone(value)
+    // Deep-strip nested functions (e.g. styleRules with predicate `when`)
+    // so structuredClone does not throw on agent/serializable configs.
+    try {
+      serializedProps[key] = deepClone(stripNonSerializable(value))
+    } catch {
+      // Non-cloneable value — skip rather than fail the whole toConfig call.
+    }
   }
 
   return {

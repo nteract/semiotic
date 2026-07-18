@@ -428,11 +428,20 @@ export const sankeyDiagram: ChartConfig = {
         ...(common.opacity !== undefined && { opacity: common.opacity }),
       }
     }
+    // HOC wires styleRules into nodeStyle; SSR previously only did this for
+    // ForceDirectedGraph, so hatch/threshold fills no-op'd on Sankey SVG.
+    const ruleNodeStyle = styleRulesToNodeStyle(
+      rest.styleRules,
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+    )
+    const configuredNodeStyle = ruleNodeStyle
+      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
+      : baseNodeStyle
     const baseEdgeStyle = createEdgeStyleFn({
       edgeColorBy: rest.edgeColorBy ?? "source",
       colorBy: colorBy as string | ((d: Datum) => string) | undefined,
       colorScale,
-      nodeStyleFn: baseNodeStyle,
+      nodeStyleFn: configuredNodeStyle,
       edgeOpacity: rest.edgeOpacity ?? 0.5,
       baseStyle: { stroke: "none", strokeWidth: 0 },
     })
@@ -453,7 +462,7 @@ export const sankeyDiagram: ChartConfig = {
     colorBy,
     edgeColorBy: rest.edgeColorBy,
     edgeOpacity: rest.edgeOpacity,
-    nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+    nodeStyle: common.nodeStyle || rest.nodeStyle || configuredNodeStyle,
     edgeStyle: common.edgeStyle || rest.edgeStyle || baseEdgeStyle,
     colorScheme,
     ...common,
@@ -464,19 +473,50 @@ export const sankeyDiagram: ChartConfig = {
 export const chordDiagram: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "chord",
-    nodes: rest.nodes,
-    edges: rest.edges,
-    valueAccessor: rest.valueAccessor,
-    padAngle: rest.padAngle,
-    groupWidth: rest.groupWidth,
-    showLabels: rest.showLabels,
-    colorBy,
-    edgeColorBy: rest.edgeColorBy,
-    colorScheme,
-    ...common,
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const nodes = Array.isArray(rest.nodes) ? rest.nodes as Datum[] : []
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    const colorKey = typeof colorBy === "string" ? colorBy : "__ssrChordColorBy"
+    const colorRows = typeof colorBy === "function"
+      ? nodes.map(d => ({ ...d, __ssrChordColorBy: colorBy(d) }))
+      : nodes
+    const colorScale = colorBy
+      ? createColorScale(colorRows, colorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      : undefined
+    const baseNodeStyle = (d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      return {
+        fill: colorBy
+          ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
+          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+        stroke: common.stroke ?? "black",
+        strokeWidth: common.strokeWidth ?? 1,
+        ...(common.opacity !== undefined && { opacity: common.opacity }),
+      }
+    }
+    const ruleNodeStyle = styleRulesToNodeStyle(
+      rest.styleRules,
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+    )
+    const configuredNodeStyle = ruleNodeStyle
+      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
+      : baseNodeStyle
+    return {
+      chartType: "chord",
+      nodes: rest.nodes,
+      edges: rest.edges,
+      valueAccessor: rest.valueAccessor,
+      padAngle: rest.padAngle,
+      groupWidth: rest.groupWidth,
+      showLabels: rest.showLabels,
+      colorBy,
+      edgeColorBy: rest.edgeColorBy,
+      colorScheme,
+      nodeStyle: common.nodeStyle || rest.nodeStyle || configuredNodeStyle,
+      ...common,
+    }
+  },
 }
 
 export const treeDiagram: ChartConfig = {
@@ -485,24 +525,38 @@ export const treeDiagram: ChartConfig = {
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()
-    const rows = data && typeof data === "object" ? [data as Datum] : []
-    const colorScale = colorBy && typeof colorBy === "string"
-      ? createColorScale(rows, colorBy, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+    // Flatten hierarchy so categorical colorBy on leaves gets a full domain
+    // (root-only scale previously produced empty/wrong domains).
+    const allNodes = flattenHierarchy(
+      (data ?? null) as Datum | null,
+      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
+    )
+    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const scaleSource: Datum[] = colorByFn
+      ? allNodes.map((n) => ({ __ssrTreeColorBy: colorByFn(n) }))
+      : allNodes
+    const scaleColorKey = colorByFn ? "__ssrTreeColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
+    const colorScale = colorBy && scaleColorKey
+      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
       : undefined
-    const depthPalette = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc949", "#af7aa1", "#ff9da7"]
     const baseNodeStyle = (d: Datum) => {
       const raw = (d?.data as Datum) || d
       return {
         fill: rest.colorByDepth
-          ? depthPalette[Number(d?.depth || 0) % depthPalette.length]
+          ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
           : colorBy
-            ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
+            ? (colorByFn
+                ? getColor({ __ssrTreeColorBy: colorByFn(raw) }, "__ssrTreeColorBy", colorScale ?? undefined)
+                : getColor(raw, colorBy as string, colorScale ?? undefined))
             : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
         stroke: common.stroke ?? "black",
         strokeWidth: common.strokeWidth ?? 1,
         ...(common.opacity !== undefined && { opacity: common.opacity }),
       }
     }
+    // HOC defaults showLabels true and supplies nodeLabel || nodeIdAccessor;
+    // hierarchy scene builders skip labels when nodeLabel is unset.
+    const effectiveShowLabels = rest.showLabels !== false
     return {
     chartType: rest.layout === "cluster" ? "cluster" : "tree",
     data,
@@ -511,6 +565,7 @@ export const treeDiagram: ChartConfig = {
     colorByDepth: rest.colorByDepth,
     orientation: rest.orientation,
     showLabels: rest.showLabels,
+    nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
     colorScheme,
     ...common,
     nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
@@ -591,8 +646,44 @@ export const circlePack: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
+    // Mirror Treemap: hierarchy scene builder never applies colorBy itself;
+    // HOC builds fill in nodeStyle over flattened nodes. SSR must match or
+    // every circle is monochrome and labels never emit.
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()
+    const allNodes = flattenHierarchy(
+      (data ?? null) as Datum | null,
+      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
+    )
+    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const scaleSource: Datum[] = colorByFn
+      ? allNodes.map((n) => ({ __ssrCirclePackColorBy: colorByFn(n) }))
+      : allNodes
+    const scaleColorKey = colorByFn ? "__ssrCirclePackColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
+    const colorScale = colorBy && scaleColorKey
+      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      : undefined
+    const baseNodeStyle = (d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      const fill = rest.colorByDepth
+        ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
+        : colorBy
+          ? (colorByFn
+              ? getColor({ __ssrCirclePackColorBy: colorByFn(raw) }, "__ssrCirclePackColorBy", colorScale ?? undefined)
+              : getColor(raw, colorBy as string, colorScale ?? undefined))
+          : resolveDefaultFill(undefined, themeCategorical, colorScheme as string | string[] | Record<string, string> | undefined, undefined, categoryIndexMap)
+      return {
+        fill,
+        fillOpacity: rest.circleOpacity ?? 0.7,
+        // CirclePack's client style deliberately uses currentColor for the
+        // subtle dark outline; hierarchy's generic fallback uses the theme
+        // surface (white), which made SSR visibly diverge.
+        stroke: "currentColor",
+        strokeWidth: 1,
+        strokeOpacity: 0.3,
+      }
+    }
+    const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
     return {
       chartType: "circlepack",
       data,
@@ -600,18 +691,12 @@ export const circlePack: ChartConfig = {
       hierarchySum: rest.valueAccessor,
       colorBy,
       colorByDepth: rest.colorByDepth,
+      showLabels: rest.showLabels,
+      nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
+      ...(rest.padding != null && { padding: rest.padding }),
       colorScheme,
       ...common,
-      // CirclePack's client style deliberately uses currentColor for the
-      // subtle dark outline; hierarchy's generic fallback uses the theme
-      // surface (white), which made SSR visibly diverge.
-      nodeStyle: common.nodeStyle || (() => ({
-        fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
-        fillOpacity: rest.circleOpacity ?? 0.7,
-        stroke: "currentColor",
-        strokeWidth: 1,
-        strokeOpacity: 0.3,
-      })),
+      nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
     }
   },
 }

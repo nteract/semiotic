@@ -11,6 +11,7 @@ import {
   renderAnnotationPass,
 } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import type { AnnotationContext } from "../realtime/types"
 import { symbolRadius } from "./symbolPath"
 import { TITLE_BASELINE } from "./titleLayout"
@@ -182,9 +183,11 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
   }, [height, sceneNodes, width])
 
   const layoutAnnotations = React.useMemo(() => {
-    if (!annotations || !autoPlaceAnnotations) return annotations
+    if (!annotations) return annotations
+    const visible = filterAnnotationsByStatus(annotations)
+    if (!autoPlaceAnnotations) return visible
     return annotationLayout({
-      annotations,
+      annotations: visible,
       context: annotationContext,
       ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
     })

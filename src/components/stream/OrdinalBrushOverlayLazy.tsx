@@ -15,10 +15,16 @@ let loadPromise: Promise<BrushComponent> | null = null
 function loadOrdinalBrushOverlay(): Promise<BrushComponent> {
   if (cached) return Promise.resolve(cached)
   if (!loadPromise) {
-    loadPromise = import("./OrdinalBrushOverlay").then((mod) => {
-      cached = mod.OrdinalBrushOverlay
-      return cached
-    })
+    loadPromise = import("./OrdinalBrushOverlay")
+      .then((mod) => {
+        cached = mod.OrdinalBrushOverlay
+        return cached
+      })
+      .catch((err) => {
+        // Clear so a later mount can retry after a flaky chunk load.
+        loadPromise = null
+        throw err
+      })
   }
   return loadPromise
 }

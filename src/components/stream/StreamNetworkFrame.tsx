@@ -731,6 +731,9 @@ const StreamNetworkFrame = memo(forwardRef<
       updateNode: (id: string, updater: (data: Datum) => Datum) => {
         const previous = storeRef.current?.updateNode(id, updater) ?? null
         if (previous) {
+          // Match updateEdge/remove: node field updates (size, force weights)
+          // can change geometry; style-only paints are insufficient.
+          runLayout()
           dirtyRef.current = true
           scheduleRender()
         }
@@ -956,11 +959,16 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Initial streaming data ───────────────────────────────────────────
 
+  // Seed initial edges once. ingestEdge is additive (value +=); re-running
+  // on StrictMode double-invoke or pushManyEdges identity churn would double
+  // edge weights. Guard with a once-ref so the seed is mount-only in practice.
+  const initialEdgesSeededRef = React.useRef(false)
   useEffect(() => {
+    if (initialEdgesSeededRef.current) return
     if (initialEdges && initialEdges.length > 0) {
+      initialEdgesSeededRef.current = true
       pushManyEdges(initialEdges)
     }
-    // Only run on mount
   }, [initialEdges, pushManyEdges])
 
   // ── Observation wrappers ─────────────────────────────────────────────

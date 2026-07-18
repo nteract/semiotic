@@ -116,7 +116,9 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      // Selection/linkedHover are on BaseChartProps but the HOC hard-codes
+      // them to undefined until wiring lands — do not claim support yet.
+      supportsLegend: true, supportsSelection: false, supportsLinkedHover: false,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "custom",
       specialFeatures: ["temporal", "particles", "lane-reuse"],

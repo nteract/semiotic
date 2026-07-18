@@ -185,6 +185,11 @@ export interface RealtimeFrameHandle {
   remove(id: string | string[]): Datum[]
   /** Update data by ID in place. Requires an ID accessor. Returns previous values. */
   update(id: string | string[], updater: (d: Datum) => Datum): Datum[]
+  /**
+   * Ordinal-only bounded ingest: replace the buffer while preserving category
+   * order and enter/move/exit transitions. XY/network/geo typically omit this.
+   */
+  replace?(data: Datum[]): void
   clear(): void
   getData(): Datum[]
   /** Returns the frame's resolved scales, or null if unavailable.

@@ -226,7 +226,7 @@ All components also accept: `width`, `height`, `theme`, `title`, `description`, 
 All HOCs accept `annotations`. Coordinates use data field names.
 
 **Positioning**: `widget`, `label`, `callout`, `callout-circle`, `callout-rect`, `text`, `bracket`
-**Reference lines**: `y-threshold` (`value`, `label`, `color`, `labelPosition`), `x-threshold`, `band` (`y0`, `y1`), `x-band` (`x0`, `x1`, `fill`, `fillOpacity` — full-height vertical region for eras/phases; skipped when either bound is missing)
+**Reference lines**: `y-threshold` (`value`, `label`, `color`, `labelPosition`), `x-threshold`, `band` (`y0`, `y1` — a `null`/omitted bound extends to the axis min/max on that side, e.g. `y1: null` shades "at least `y0`"), `x-band` (`x0`, `x1`, `fill`, `fillOpacity` — full-height vertical region for eras/phases; a `null`/omitted bound likewise extends to the domain edge; only skipped when the axis has no scale at all)
 **Ordinal**: `category-highlight`
 **Enclosures**: `enclose`, `rect-enclose`, `highlight`
 **Label backgrounds**: every region-bounding annotation (`y-threshold`, `x-threshold`, `band`, `x-band`, `enclose`, `rect-enclose`, `category-highlight`) accepts `labelBackground` for a legibility backdrop behind the label text — `"halo"`/`true` (stroke halo in the plot bg; default for threshold/band labels), `"box"` (semitransparent rounded panel), `"none"`/`false` (plain), or a config `{ type: "halo"|"box", fill?, opacity? (0.85), padding? ({x,y}), radius? (3), stroke?, haloWidth? (3) }`. One shared renderer (`AnnotationLabel`) drives client + SSR, so it works on every frame and in server SVG. `band`/`x-band` `fill` also accepts a `HatchFill` for hatched regions.

@@ -65,19 +65,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -144,6 +147,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -328,19 +376,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -407,6 +458,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -590,19 +686,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -669,6 +768,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -827,19 +971,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -906,6 +1053,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -1072,19 +1264,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -1151,6 +1346,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -1333,12 +1573,14 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -1405,6 +1647,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -1523,19 +1810,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -1602,6 +1892,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -1753,19 +2088,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -1832,6 +2170,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -1991,12 +2374,14 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -2063,6 +2448,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -2214,19 +2644,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -2293,6 +2726,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -2449,19 +2927,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -2528,6 +3009,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -2664,19 +3190,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -2743,6 +3272,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -2869,19 +3443,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -2948,6 +3525,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -3089,19 +3711,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -3168,6 +3793,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -3289,19 +3959,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -3368,6 +4041,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -3515,19 +4233,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -3594,6 +4315,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -3715,19 +4481,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -3794,6 +4563,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -3908,19 +4722,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -3987,6 +4804,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -4114,19 +4976,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -4193,6 +5058,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -4302,19 +5212,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -4381,6 +5294,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -4518,19 +5476,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -4597,6 +5558,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "array",
@@ -4691,19 +5697,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -4770,6 +5779,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "array",
@@ -4876,19 +5930,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -4956,6 +6013,51 @@
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
             },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Fallback fill color used when no thresholds are defined"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
             "value": {
               "type": "number",
               "description": "Current gauge value"
@@ -5001,10 +6103,6 @@
             },
             "needleColor": {
               "type": "string"
-            },
-            "color": {
-              "type": "string",
-              "description": "Fallback fill color used when no thresholds are defined"
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -5083,19 +6181,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -5162,6 +6263,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "nodes": {
               "type": "array",
@@ -5339,19 +6485,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -5418,6 +6567,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "edges": {
               "type": "array",
@@ -5584,19 +6778,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -5663,6 +6860,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "edges": {
               "type": "array",
@@ -5807,19 +7049,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -5886,6 +7131,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "object",
@@ -6032,19 +7322,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -6111,6 +7404,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "object",
@@ -6223,19 +7561,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -6302,6 +7643,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "object",
@@ -6418,19 +7804,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -6497,6 +7886,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "object",
@@ -7607,19 +9041,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -7687,6 +9124,51 @@
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
             },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -7746,9 +9228,6 @@
               "type": "boolean",
               "description": "Show category tick labels on ordinal axis",
               "default": false
-            },
-            "responsiveWidth": {
-              "type": "boolean"
             },
             "legendPosition": {
               "type": "string",
@@ -7827,19 +9306,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -7906,6 +9388,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "categoryLabel": {
               "type": "string"
@@ -7987,9 +9514,6 @@
               "type": "boolean",
               "description": "Show lane labels on the category axis"
             },
-            "responsiveWidth": {
-              "type": "boolean"
-            },
             "legendPosition": {
               "type": "string",
               "enum": [
@@ -8067,19 +9591,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8146,6 +9673,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "array"
@@ -8222,19 +9794,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8301,6 +9876,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "data": {
               "type": "array"
@@ -8379,12 +9999,14 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8451,6 +10073,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "areas": {
               "type": [
@@ -8538,19 +10205,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8617,6 +10287,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "points": {
               "type": "array"
@@ -8718,19 +10433,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8797,6 +10515,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "flows": {
               "type": "array"
@@ -8886,19 +10649,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -8965,6 +10731,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "points": {
               "type": "array"
@@ -9047,19 +10858,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -9126,6 +10940,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "edges": {
               "type": "array",
@@ -9350,19 +11209,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -9429,6 +11291,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "xLabel": {
               "type": "string"
@@ -10553,19 +12460,22 @@
             "colorScheme": {
               "type": [
                 "string",
-                "array"
+                "array",
+                "object"
               ],
               "default": "category10"
             },
             "tooltip": {
               "type": [
                 "boolean",
-                "object"
+                "object",
+                "string"
               ],
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
-                "object"
+                "object",
+                "string"
               ]
             },
             "annotations": {
@@ -10632,6 +12542,51 @@
               ],
               "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
               "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": "boolean",
+              "description": "Dim non-hovered series/categories (requires colorBy string field)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
             },
             "size": {
               "type": "array",

@@ -51,13 +51,13 @@
     },
     {
       "path": "src/components/charts/shared/annotationRules.tsx",
-      "maxLines": 1073,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1077,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +4 (2026-07-17): band/x-band omitted bounds extend to scale domain (CSR parity with SSR)."
     },
     {
       "path": "src/components/charts/shared/auditAccessibility.ts",
-      "maxLines": 1352,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1358,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +6 (2026-07-17): honest navigable-structure message for hierarchy/network (root-only tree, not false full chart→series→datum claim)."
     },
     {
       "path": "src/components/charts/value/BigNumber.tsx",

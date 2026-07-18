@@ -14,6 +14,7 @@ import {
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import { TITLE_BASELINE } from "./titleLayout"
 
@@ -339,6 +340,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   // Annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
+    const visibleAnnotations = filterAnnotationsByStatus(annotations)
 
     const defaultRules = createDefaultAnnotationRules("ordinal", annotationActivation)
 
@@ -374,11 +376,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
     const layoutAnnotations = autoPlaceAnnotations
       ? annotationLayout({
-          annotations,
+          annotations: visibleAnnotations,
           context,
           ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
         })
-      : annotations
+      : visibleAnnotations
 
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // XY overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.

@@ -187,7 +187,12 @@ export const processFlowChart: ChartConfig = {
       projectionRows: layout.projectionRows,
       regionEffects: metadata?.regionEffects,
       bodyStyle: styleFromColorAccessor(
-        colorBy || rest.colorBy || rest.groupBy
+        colorBy || rest.colorBy || rest.groupBy,
+        "#4e79a7",
+        {
+          styleRules: rest.styleRules,
+          valueAccessor: rest.workAccessor || rest.stageAccessor || "stage",
+        },
       )
     }
   },

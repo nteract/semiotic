@@ -291,6 +291,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     pushMany: wrappedPushMany,
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
+    replace: (rows: Datum[]) => frameRef.current?.replace(rows),
     clear: () => {
       accumulatorRef.current = []
       streaming.resetCategories()
