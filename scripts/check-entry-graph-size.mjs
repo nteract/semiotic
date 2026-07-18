@@ -13,7 +13,7 @@
  *   node scripts/check-entry-graph-size.mjs --print
  */
 
-import { readFileSync, existsSync, readdirSync } from "node:fs"
+import { readFileSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { constants as zlibConstants, gzipSync } from "node:zlib"
