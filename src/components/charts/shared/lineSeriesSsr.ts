@@ -110,14 +110,8 @@ function applyGapStrategy(
     groups.get(key)!.push(d)
   }
 
-  // Sort each group by x for stable gap detection.
-  for (const [, pts] of groups) {
-    pts.sort((a, b) => {
-      const ax = Number(a[xKey])
-      const bx = Number(b[xKey])
-      return (Number.isFinite(ax) ? ax : 0) - (Number.isFinite(bx) ? bx : 0)
-    })
-  }
+  // Preserve input order (matches client LineChart gapStrategy behavior,
+  // which never sorts by x — it assumes rows already arrive in series order).
 
   if (gapStrategy === "interpolate") {
     const out: Datum[] = []
@@ -340,6 +334,15 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
 
   // ── Gap strategy ───────────────────────────────────────────────────
   if (input.gapStrategy) {
+    // Mirror client behavior: gap processing runs per-series even when
+    // lineBy/groupAccessor is a function — materialize it onto each row so
+    // applyGapStrategy can group by a stable string key instead of
+    // collapsing every series into one "__single" bucket.
+    if (typeof groupAccessor === "function") {
+      const resolveGroup = groupAccessor
+      rows = rows.map((d) => ({ ...d, __semiotic_gapGroup: resolveGroup(d) }))
+      groupAccessor = "__semiotic_gapGroup"
+    }
     const groupKey = typeof groupAccessor === "string" ? groupAccessor : undefined
     const gapped = applyGapStrategy(rows, input.gapStrategy, xKey, yKey, groupKey)
     rows = gapped.rows
