@@ -111,9 +111,10 @@ test.describe("docs example source route smoke", () => {
             // ExamplePageLayout owns the H1 for all manifest entries. Requiring its
             // title proves the lazy route module loaded and the page completed its
             // first React commit, rather than merely receiving the SPA shell.
-            await expect(page.getByRole("heading", { level: 1, name: example.title })).toBeVisible({
-              timeout: 60_000,
-            })
+            const pageHeader = page.locator(".example-page-header")
+            await expect(
+              pageHeader.getByRole("heading", { level: 1, name: example.title, exact: true }),
+            ).toBeVisible({ timeout: 60_000 })
             await page.evaluate(async () => {
               await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
               await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))

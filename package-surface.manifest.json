@@ -5,7 +5,7 @@
   "generatedBy": "scripts/generate-package-surface-manifest.mjs",
   "package": {
     "name": "semiotic",
-    "version": "3.8.2",
+    "version": "3.8.3",
     "types": "dist/semiotic.d.ts",
     "module": "dist/semiotic.module.min.js",
     "main": "dist/semiotic.min.js"
