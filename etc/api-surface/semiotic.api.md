@@ -92,7 +92,7 @@ function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datu
 function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
-function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | null
+function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
 function darkenColor(hex: string, factor?: number | undefined): string
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>

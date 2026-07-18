@@ -10,6 +10,8 @@ const DEFAULT_GLYPH_ANCHOR: [number, number]
 const DEFAULT_GLYPH_VIEWBOX: [number, number]
 const DEFAULT_HIT_RADIUS: 8
 const DEFAULT_ISOMETRIC_SPRITE_SIZES: { readonly resource: 32; readonly city: 64; }
+const GRID_FUEL_KEYS: readonly ["naturalGas", "coal", "nuclear", "hydro", "wind", "solar", "other"]
+const GRID_FUEL_LABELS: Record<"naturalGas" | "coal" | "nuclear" | "hydro" | "wind" | "solar" | "other", string>
 const SYMBOL_SEQUENCE: NetworkSymbolName[]
 const TAU: number
 const isotypeBoltGlyph: GlyphDef
@@ -71,15 +73,19 @@ function curvedEdgePath(from: Point, to: Point, opts?: CurvedEdgeOptions | undef
 function cyclicRangeContains(value: number, start: number, end: number): boolean
 function dagreLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").DagreConfig>): import("../semiotic-network").NetworkLayoutResult
 function degree(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
+function demandForecastRows(hours: readonly GridHour[]): DemandForecastRow[]
 function diagnoseTokenEncoding(encoding: Partial<TokenEncoding>, context?: TokenDiagnosticsContext | undefined): TokenDiagnostic[]
 function dimFor(datum: Datum, opts?: DimOptions | undefined): number
 function egoNetwork(nodes: readonly GraphNode[], edges: readonly GraphEdge[], id: string, depth?: number | undefined): Set<string>
+function estimateLabelWidth(text: unknown, minimum?: number | undefined, charWidth?: number | undefined, pad?: number | undefined): number
 function extractTooltipDatum(payload: unknown): Record<string, unknown> | null
 function fanOutBend(index: number, opts?: FanOutBendOptions | undefined): number
 function flextreeLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").FlextreeConfig>): import("../semiotic-network").NetworkLayoutResult
 function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
 function forceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutOptions | undefined): Record<string, Point>
 function forceLayoutAsync(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutAsyncOptions | undefined): Promise<Record<string, Point>>
+function formatMw(value: number, digits?: number | undefined): string
+function formatReservePct(value: number, digits?: number | undefined): string
 function formatTooltipValue(value: unknown): string
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
 function generateTokens<D = unknown>(input: number | readonly number[] | TokenGeneratorInput<D>, encoding: TokenEncoding): TokenSet<D>
@@ -88,13 +94,17 @@ function geoHitTarget(props: HitTargetPointProps): PointSceneNode
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "vertical" | "horizontal" | undefined): { x: number; y: number; width: number; height: number; } | null
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function gridEventAnnotations(events: readonly GridEventWindow[], options?: { now?: number; author?: string; source?: string; } | undefined): Record<string, unknown>[]
 function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]>
 function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: readonly string[] | ReadonlySet<string>): { id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[]; }[]
 function hatchFill(opts: HatchFillOptions): { def: ReactElement; fill: string; }
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
+function hullFromBoxes(boxes: readonly HullBox[], padding?: HullPadding | undefined): HullBox | null
 function intervalLanesLayout(fig: OrdinalLayoutContext<import("../semiotic-recipes-core").IntervalLanesConfig<Datum>>): import("../semiotic-ordinal").OrdinalLayoutResult
 function isometricLandmarkLayout(nu: GeoLayoutContext<import("../semiotic-recipes-core").IsometricLandmarkConfig>): import("../semiotic-geo").GeoLayoutResult
+function layoutChipStrip(items: readonly ChipStripItem[], options: LayoutChipStripOptions): Map<string, ChipStripPosition>
+function layoutSequence(items: readonly SequenceItem[], options: LayoutSequenceOptions): Map<string, SequencePosition>
 function layoutTokenGrid<D = unknown>(tokenSetOrTokens: TokenSet<D> | readonly VisualToken<D>[], options?: TokenGridOptions | undefined): PositionedToken<D>[]
 function legendGroupsFrom(input: LegendGroupsInput): LegendGroup[]
 function legendSwatches(p: LegendSwatchesProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
@@ -127,8 +137,10 @@ function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
 function orderByGroupDegree<N extends GraphNode>(nodes: readonly N[], edges: readonly GraphEdge[], groupAccessor?: keyof N | ((n: N) => number | string) | undefined): string[]
 function orthogonalEdgePath(from: Point, to: Point, opts?: { orientation?: EdgeOrientation; } | undefined): string
 function packIntervals<T = Datum>(items: readonly T[], options?: PackIntervalsOptions<T> | undefined): PackIntervalsResult<T>
+function packSpanLevels<T extends SpanInterval>(spans: readonly T[]): PackSpanLevelsResult<T>
 function packedClusterMatrix(do: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
 function parallelCoordinatesLayout(*: OrdinalLayoutContext<import("../semiotic-recipes-core").ParallelCoordinatesConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function partitionSharedEdges<T>(edgeSets: readonly (readonly T[])[], keyOf?: EdgeKeyFn<T> | undefined): { shared: T[]; exclusive: T[][]; }
 function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: PhysicsReferenceEnvelopeOptions<TSample>): PhysicsReferenceEnvelope
 function pointMagnitude(a: Point): number
 function polarToXY(angle: number, radius: number, opts?: PolarOptions | undefined): Point
@@ -145,11 +157,15 @@ function radiusScale(domain: readonly [number, number], range: readonly [number,
 function readField(d: unknown, key: string, fallback: unknown): unknown
 function rectCollide(boxes: readonly CollisionBox[], opts?: RectCollideOptions | undefined): Map<string, number>
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): { label: string; value: number; }[]
+function reserveAnnotationBands(levels?: ReserveLevels | undefined): { type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary"; }[]
+function reserveMarginPct(input: { demand: number; capacityOrNetGen: number; interchange?: number; }): number
+function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[]
 function ringArcPath(startAngle: number, endAngle: number, innerRadius: number, outerRadius: number, opts?: PolarOptions | undefined): string
 function roundedEnclosure(p: RoundedEnclosureProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
 function routeSurfaceRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; }): StreamPhysicsRegionEffect
 function runLengthEncode<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
 function runs<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
+function scaleArcBand(options: ScaleArcBandOptions): ScaleArcBandResult
 function scalePoint(a: Point, k: number): Point
 function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBakeOptions | undefined): SedimentBakeResult
 function selectCyclicRange<T>(items: readonly T[], accessor: (item: T) => number, start: number, end: number): T[]
@@ -158,13 +174,19 @@ function shade(baseColor: string, t: number, strength?: number | undefined): str
 function shortestArcDelta(from: number, to: number, period: number): number
 function shortestPath(nodes: readonly GraphNode[], edges: readonly GraphEdge[], source: string, target: string): string[]
 function signatureKey(parts: readonly (string | number | boolean | null | undefined)[]): string
+function spanArcPath(x0: number, x1: number, baselineY: number, peakY: number, options?: SpanArcPathOptions | undefined): string
+function spanArcPeakY(baselineY: number, level: number, metrics: ScaleArcBandResult): number
 function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options?: SpawnFromTokensOptions<D> | undefined): PhysicsQueuedSpawn[]
+function stackFuelSeries(hours: readonly GridHour[], options?: { fuels?: readonly GridFuelKey[]; includeZero?: boolean; } | undefined): FuelStackRow[]
 function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: { random?: () => number; along?: number; jitterX?: number; padY?: number; } | undefined): { x: number; y: number; }
 function subtractPoints(a: Point, b: Point): Point
 function suggestTokenEncoding(input: SuggestTokenEncodingInput): TokenEncodingSuggestion
+function summarizeOperatingPoint(hours: readonly GridHour[], now?: number | undefined): OperatingPointSummary | null
 function symbolExtent(symbolType: string | undefined, size: number, customPath?: string | undefined): number
 function symbolPathString(symbolType: string | undefined, size: number, customPath?: string | undefined): string
 function symbolRadius(size: number): number
+function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: { field?: string; tightHatch?: HatchFill; tightFill?: string; watchFill?: string; comfortableFill?: string; } | undefined): StyleRule[]
+function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
 function unitize(value: number, options: UnitizeOptions): UnitizeResult
@@ -211,6 +233,8 @@ interface CapacityQueueVisitInfo
 interface CapacityQueueWindowSnapshot
 interface CellWeight
 interface CenteredBox
+interface ChipStripItem
+interface ChipStripPosition
 interface CircularLayoutOptions
 interface CollisionBox
 interface ComposedPhysicsControllers
@@ -240,12 +264,15 @@ interface GraphNode
 interface HatchFillOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
+interface HullBox
 interface IntervalLanesConfig<T = Datum>
 interface IsometricLandmarkConfig
 interface IsometricLandmarkTile
 interface IsometricTerrainCell
+interface LayoutChipStripOptions
 interface LayoutContext<C extends object = Record<string, unknown>>
 interface LayoutResult
+interface LayoutSequenceOptions
 interface LegendGroupsInput
 interface LegendSwatch
 interface LegendSwatchesProps
@@ -271,8 +298,10 @@ interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
 interface PackIntervalsOptions<T>
 interface PackIntervalsResult<T>
+interface PackSpanLevelsResult<T extends SpanInterval = SpanInterval>
 interface PackedClusterMatrixConfig
 interface PackedInterval<T>
+interface PackedSpanLevel<T extends SpanInterval = SpanInterval>
 interface ParallelCoordinatesConfig
 interface PhysicsBandColliderOptions<TBand = string | number>
 interface PhysicsColliderSpec
@@ -323,8 +352,12 @@ interface RegionCountBucket
 interface RoundedEnclosureProps
 interface Run<V>
 interface RunOptions<T, V>
+interface ScaleArcBandOptions
+interface ScaleArcBandResult
 interface SedimentBakeOptions
 interface SedimentBakeResult
+interface SequenceItem
+interface SequencePosition
 interface ServiceLevelCaseInfo
 interface ServiceLevelController
 interface ServiceLevelControllerOptions
@@ -334,6 +367,8 @@ interface ServiceResourceDefinition
 interface ServiceResourcePoolController
 interface ServiceResourcePoolOptions
 interface ServiceResourcePoolSnapshot
+interface SpanArcPathOptions
+interface SpanInterval
 interface SpawnFromTokensOptions<D = unknown>
 interface SuggestTokenEncodingInput
 interface TokenDiagnostic
@@ -364,7 +399,51 @@ type CalloutConnector = "straight" | "elbow" | "curve"
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
+type DemandForecastRow = {
+    t: number;
+    a: number;
+    b: number;
+    demandMw: number;
+    forecastMw: number;
+    errorMw: number;
+    ba: string;
+}
+type EdgeKeyFn<T> = (edge: T) => string
 type EdgeOrientation = "vertical" | "horizontal"
+type FuelStackRow = {
+    t: number;
+    fuel: GridFuelKey;
+    fuelLabel: string;
+    mw: number;
+    ba: string;
+}
+type GridEventWindow = {
+    id: string;
+    /** Inclusive start epoch ms. */
+    start: number;
+    /** Inclusive end epoch ms. */
+    end: number;
+    label: string;
+    /** Optional longer note for callouts. */
+    note?: string;
+    /** "heat-wave" | "outage" | "demand-spike" | open string. */
+    kind?: string;
+    /** ISO 8601 duration or ms; default "P7D". */
+    ttlHint?: string | number;
+    y?: number;
+    /** Data y for y-threshold style notes. */
+    value?: number;
+}
+type GridFuelKey = (typeof GRID_FUEL_KEYS)[number]
+type GridHour = {
+    t: number;
+    ba: string;
+    demandMw: number;
+    forecastMw?: number;
+    netGenMw: number;
+    interchangeMw?: number;
+    fuels: Partial<Record<GridFuelKey, number>>;
+}
 type HighlightMatch = {
     field: string;
     value: unknown;
@@ -372,6 +451,10 @@ type HighlightMatch = {
     field: string;
     value: unknown;
 }>
+type HullPadding = number | {
+    x?: number;
+    y?: number;
+}
 type IsometricTerrainKind = "land" | "ocean" | "forest" | "grassland" | "cropland" | "wetland" | "urban" | "scrub" | "bare" | "snow"
 type LandmarkKind = "city" | "culture" | "monument" | "faith" | "nature" | "knowledge" | "defense" | "arena" | "transport"
 type LineageLod = "full" | "compact" | "icon" | "dot"
@@ -380,6 +463,19 @@ type MobileChartFamily = "line" | "area" | "ordinal" | "scatter" | "network" | "
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSymbolName = "circle" | "square" | "triangle" | "diamond" | "star" | "cross" | "wye" | "chevron"
 type NumericScale = (value: number) => number
+type OperatingPointSummary = {
+    t: number;
+    ba: string;
+    demandMw: number;
+    forecastMw: number | null;
+    forecastErrorMw: number | null;
+    netGenMw: number;
+    reserveMarginPct: number;
+    topFuel: GridFuelKey | null;
+    topFuelShare: number;
+    topFuelMw: number;
+    fuelShares: Partial<Record<GridFuelKey, number>>;
+}
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult
 type PhysicsReferenceBandSelector = "min" | "median" | "max" | number
 type PhysicsReferenceSampleGrid = readonly number[] | {
@@ -395,6 +491,23 @@ type ProcessVolumePoint = [x: number, y: number]
 type ProcessVolumePolygonRole = "volume" | "incoming" | "center" | "outgoing"
 type ProcessVolumeShape = "lane" | "bowtie" | "funnel"
 type RegionCountMap = Record<string, RegionCountBucket>
+type ReserveLevels = {
+    /** Margin below this % is "tight" / danger. Default 5. */
+    tight?: number;
+    /** Margin below this % is "watch" / warning. Default 12. */
+    watch?: number;
+    /** Margin at or above this % is comfortable / success. Default 20. */
+    comfortable?: number;
+}
+type ReserveSnapshot = {
+    t: number;
+    ba: string;
+    /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */
+    reserveMarginPct: number;
+    netLoadMw: number;
+    demandMw: number;
+    netGenMw: number;
+}
 type RingArcOptions = PolarOptions
 type ServiceLevelCaseState = "waiting" | "protected" | "unhappy" | "resolved" | "resolved-unhappy"
 type TokenCapabilityIntent = "compare-categories" | "distribution" | "part-to-whole" | "rank" | "outlier-detection"
