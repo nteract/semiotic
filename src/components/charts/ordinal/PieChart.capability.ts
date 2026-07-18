@@ -33,15 +33,10 @@ export const PieChartCapability: ChartCapability = {
       props: {},
       tags: ["pie"],
     },
-    {
-      key: "donut",
-      label: "Donut",
-      description: "Hollow center — easier to fit a label or KPI inside. Switches to DonutChart (PieChart ignores innerRadius).",
-      // Prefer the real DonutChart component — PieChart has no innerRadius prop.
-      component: "DonutChart",
-      props: { innerRadius: 60 },
-      tags: ["donut"],
-    },
+    // No "donut" variant here — DonutChart is a separate capability with its
+    // own buildProps/innerRadius. Emitting a PieChart→DonutChart override
+    // duplicated DonutChart in the ranked list and crowded out lower-score
+    // but valid charts (e.g. BigNumber) under maxResults caps.
   ],
 
   buildProps: (profile, variant) => ({
