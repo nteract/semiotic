@@ -92,7 +92,7 @@ function stripNonSerializable(value: unknown): unknown {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
     if (typeof v === "function") continue
-    if (v?.$$typeof) continue
+    if (v && typeof v === "object" && (v as { $$typeof?: unknown }).$$typeof) continue
     const stripped = stripNonSerializable(v)
     if (stripped !== undefined) out[k] = stripped
   }

@@ -433,6 +433,7 @@ export const sankeyDiagram: ChartConfig = {
     const ruleNodeStyle = styleRulesToNodeStyle(
       rest.styleRules,
       colorBy as string | ((d: Datum) => unknown) | undefined,
+      rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
     )
     const configuredNodeStyle = ruleNodeStyle
       ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
@@ -498,6 +499,7 @@ export const chordDiagram: ChartConfig = {
     const ruleNodeStyle = styleRulesToNodeStyle(
       rest.styleRules,
       colorBy as string | ((d: Datum) => unknown) | undefined,
+      rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
     )
     const configuredNodeStyle = ruleNodeStyle
       ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })

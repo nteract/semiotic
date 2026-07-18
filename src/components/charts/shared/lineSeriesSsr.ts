@@ -332,7 +332,7 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
         (d) => input.baseLineStyle!(d),
         input.forecast,
       )
-      lineStyle = (d, group) => segmentStyle(d)
+      lineStyle = (d) => segmentStyle(d)
     }
   } else if (input.anomaly) {
     annotations.push(...buildAnomalyAnnotations(input.anomaly))
