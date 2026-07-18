@@ -2,8 +2,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
-import { createEdgeStyleFn, inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
-import { createColorScale, getColor, resolveCategoricalPalette } from "../charts/shared/colorUtils"
+import { createEdgeStyleFn, inferNodesFromEdges, flattenHierarchy } from "../charts/network/../shared/networkUtils"
+import { createColorScale, getColor, resolveCategoricalPalette, DEPTH_PALETTE_COLORS } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
@@ -521,24 +521,70 @@ export const treeDiagram: ChartConfig = {
 export const treemap: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "treemap",
-    data,
-    childrenAccessor: rest.childrenAccessor,
-    hierarchySum: rest.valueAccessor,
-    colorBy,
-    colorByDepth: rest.colorByDepth,
-    showLabels: rest.showLabels,
-    colorScheme,
-    ...common,
-    // Preserve Treemap's HOC-level border token. The surrounding page/theme
-    // resolves this CSS variable identically for the static SVG and canvas.
-    nodeStyle: common.nodeStyle || rest.nodeStyle || (() => ({
-      stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
-      strokeWidth: 1,
-      strokeOpacity: 0.8,
-    })),
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    // The network hierarchy scene builder resolves fill from the nodeStyle
+    // (or a single default fill) — it never applies `colorBy` itself. The
+    // Treemap HOC therefore builds fill inside its own nodeStyle via a color
+    // scale over the flattened hierarchy; SSR must do the same or every tile
+    // collapses to one color. Build the same scale off the leaves so a
+    // categorical `colorBy` (e.g. sku) paints distinct tiles.
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const categoryIndexMap = new Map<string, number>()
+    const allNodes = flattenHierarchy(
+      (data ?? null) as Datum | null,
+      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
+    )
+    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const scaleSource: Datum[] = colorByFn
+      ? allNodes.map((n) => ({ __ssrTreemapColorBy: colorByFn(n) }))
+      : allNodes
+    const scaleColorKey = colorByFn ? "__ssrTreemapColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
+    const colorScale = colorBy && scaleColorKey
+      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      : undefined
+    const baseNodeStyle = (d: Datum) => {
+      const raw = (d?.data as Datum) || d
+      const fill = rest.colorByDepth
+        ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
+        : colorBy
+          ? (colorByFn
+              ? getColor({ __ssrTreemapColorBy: colorByFn(raw) }, "__ssrTreemapColorBy", colorScale ?? undefined)
+              : getColor(raw, colorBy as string, colorScale ?? undefined))
+          : resolveDefaultFill(undefined, themeCategorical, colorScheme as string | string[] | Record<string, string> | undefined, undefined, categoryIndexMap)
+      return {
+        fill,
+        // Preserve Treemap's HOC-level border token. The surrounding page/theme
+        // resolves this CSS variable identically for the static SVG and canvas.
+        stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
+        strokeWidth: 1,
+        strokeOpacity: 0.8,
+      }
+    }
+    // Mirror Treemap.tsx's resolvedPaddingTop: reserve a label band on parent
+    // tiles when labels cover parents. Without this SSR parent labels have no
+    // room and the tile chrome differs from CSR.
+    const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
+    const labelMode = rest.labelMode as "leaf" | "parent" | "all" | undefined
+    const resolvedPaddingTop = rest.paddingTop !== undefined
+      ? rest.paddingTop
+      : (effectiveShowLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
+    return {
+      chartType: "treemap",
+      data,
+      childrenAccessor: rest.childrenAccessor,
+      hierarchySum: rest.valueAccessor,
+      colorBy,
+      colorByDepth: rest.colorByDepth,
+      showLabels: rest.showLabels,
+      labelMode,
+      nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
+      ...(rest.padding != null && { padding: rest.padding }),
+      ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
+      colorScheme,
+      ...common,
+      nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+    }
+  },
 }
 
 export const circlePack: ChartConfig = {

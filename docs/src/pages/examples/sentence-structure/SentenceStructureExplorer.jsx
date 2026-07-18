@@ -46,19 +46,19 @@ const VIEW_COPY = {
   dependency: {
     number: "03",
     short: "relations",
-    eyebrow: "Grammar as directed relations",
+    eyebrow: "Who needs whom",
     question: "Which word depends on which other word?",
     explanation:
-      "Dependency arcs return the active corpus sentence to a line and expose the invisible government between its words. Alternative attachments reuse exactly the same surface tokens.",
+      "Each arc points from a governor to a dependent: “this word needs that word.” Short attachments sit low; longer ones stack above. Select a word to isolate its relationships.",
     frame: "XYCustomChart",
   },
   ambiguity: {
     number: "04",
     short: "ambiguity",
-    eyebrow: "One string, several structures",
-    question: "How many defensible sentences are hiding in this sentence?",
+    eyebrow: "Same words, different jobs",
+    question: "Which attachment changes the meaning?",
     explanation:
-      "The parse forest compares two attachment hypotheses generated for the active corpus sentence. Shared relationships remain solid while the disputed relationship branches.",
+      "Two readings share most of the sentence. Gray arcs are shared structure; the colored dashed arc is the disputed attachment. Click a reading card to flip which attachment is active.",
     frame: "XYCustomChart",
   },
   semantics: {
@@ -73,10 +73,10 @@ const VIEW_COPY = {
   rhetoric: {
     number: "06",
     short: "rhetoric",
-    eyebrow: "Claims need support",
-    question: "Which span carries the claim, and which spans qualify it?",
+    eyebrow: "The claim and its props",
+    question: "What is the claim, and what props it up?",
     explanation:
-      "Rhetorical structure treats the selected Shakespeare passage as nucleus and satellites—contrast, cause, condition, coordination, or elaboration.",
+      "The dark plate is the nucleus—the claim. Each satellite below is a reason, concession, condition, or elaboration, quoted from the same sentence and banded on the token strip.",
     frame: "NetworkCustomChart",
   },
   "word-tree": {

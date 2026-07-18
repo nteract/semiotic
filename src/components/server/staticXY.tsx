@@ -92,6 +92,10 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     stackOrder: props.stackOrder,
     boundsAccessor: props.boundsAccessor,
     boundsStyle: props.boundsStyle,
+    // `band` (LineChart/AreaChart shaded envelope) normalizes to ribbons in the
+    // pipeline store. The client frame threads it through its pipeline config;
+    // SSR must too or the band never paints server-side.
+    band: props.band,
     // Mixed-frame props (DifferenceChart, LineChart fillArea[]).
     // Without these the mixed scene builder treats every group as a
     // line and the difference fills never paint — the regression that

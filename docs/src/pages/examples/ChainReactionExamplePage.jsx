@@ -170,11 +170,11 @@ export default function ChainReactionExamplePage() {
       <div className="release-machine">
         <section className="release-machine__hero">
           <div>
-            <span className="release-machine__kicker">Physics as dependency enactment</span>
+            <span className="release-machine__kicker">Which blocker is really costing you?</span>
             <p>
               City Pulse Live has two blockers. Both are 90% complete and both are late. One holds
-              a local launch asset; the other prevents nine unfinished tasks across four teams
-              from becoming possible.
+              a local launch asset; the other keeps nine unfinished tasks across four teams from
+              even becoming possible.
             </p>
           </div>
           <div className="release-machine__hero-stat">
@@ -257,7 +257,7 @@ export default function ChainReactionExamplePage() {
           </div>
 
           <ChartContainer
-            title="Dependency enactment machine"
+            title="What can move once a blocker clears"
             subtitle="Logical task transitions with physics-guided prerequisite tokens"
             status={previewTaskID ? "preview" : "live"}
             height={machineHeight + 160}

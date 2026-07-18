@@ -115,6 +115,7 @@ export default function MapRoom({
             label="Activate unlabeled maintenance marker"
             active={activated}
             tone="cyan"
+            caret="top"
           >
             ??
           </AdventureAnnotation>

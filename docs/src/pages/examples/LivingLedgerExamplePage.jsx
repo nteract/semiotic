@@ -117,7 +117,7 @@ const AUDIENCE_COPY = Object.freeze({
   },
   science: {
     label: "Science",
-    selectedEyebrow: "Selected serviceSystemId",
+    selectedEyebrow: "Selected service system",
     methodLabel: "Evidence and threshold basis",
   },
 })
@@ -456,7 +456,7 @@ export function LivingLedgerObservatory() {
     >
       <header className="ll-masthead">
         <div className="ll-masthead-copy">
-          <p className="ll-kicker">Ecosystem services / curated 180-day replay</p>
+          <p className="ll-kicker">Ecosystem services · 180-day teaching replay</p>
           <h2>The Living Ledger</h2>
           <p className="ll-deck">
             You think you&apos;re looking at a map of nature. You&apos;re not. You&apos;re looking
@@ -496,7 +496,7 @@ export function LivingLedgerObservatory() {
             onSelect={selectSystem}
           />
         )}
-        <section className="ll-control-deck" aria-label="Observatory controls">
+        <section className="ll-control-deck" aria-label="Replay and audience controls">
           <div className="ll-transport">
             <button type="button" onClick={playing ? () => setPlaying(false) : startReplay}>
               {playing

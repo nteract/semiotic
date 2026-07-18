@@ -99,8 +99,8 @@ export type ChartContainerMobileAudit =
   | ChartContainerMobileAuditOptions
 
 export interface ChartContainerProps {
-  /** Chart title */
-  title?: string
+  /** Chart title (string or inline nodes — e.g. a secret debug hit-target) */
+  title?: React.ReactNode
   /** Subtitle / description */
   subtitle?: string
   /** Chart children (any Semiotic chart component) */

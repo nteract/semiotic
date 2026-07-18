@@ -114,6 +114,8 @@ function eventTypeForAction(
       return "choice"
     case "NAVIGATE":
       return "navigation"
+    case "DEBUG_WARP":
+      return "navigation"
     case "ACTIVATE_ANNOTATION":
       return "annotation"
     case "USE_HINT":
@@ -316,6 +318,19 @@ export function adventureReducer(
     return target ? commit(state, action, target) : state
   }
 
+  // Secret debug warps work even after an ending (otherwise the freeze below
+  // would leave you stuck on the end card). Always produce a new path event so
+  // re-clicking the same room still mutates state.
+  if (action.type === "DEBUG_WARP") {
+    const next = snapshotAdventureState(state)
+    next.flags.storyStarted = true
+    next.flags.debugWarpNonce = (Number(state.flags.debugWarpNonce) || 0) + 1
+    delete next.endingId
+    next.currentRoomId = action.roomId
+    next.visitedRoomIds = unique([...next.visitedRoomIds, action.roomId])
+    return commit(state, action, next)
+  }
+
   if (state.endingId) return state
 
   switch (action.type) {
@@ -370,13 +385,13 @@ export function adventureReducer(
       return commit(state, action, next)
     }
     case "SHOW_SETTLED_PROJECTION": {
-      if (state.currentRoomId !== "forecast-vault" || state.flags.settledProjectionRead) {
+      // Visual only — parks the board and unlocks option 2. Evidence is claimed
+      // when the player selects “Read the settled projection…”.
+      if (state.currentRoomId !== "forecast-vault" || state.flags.settledProjectionShown) {
         return state
       }
-      let next = snapshotAdventureState(state)
-      next.flags.settledProjectionRead = true
+      const next = snapshotAdventureState(state)
       next.flags.settledProjectionShown = true
-      next = addEvidenceToSnapshot(next, ["settled-projection"])
       return commit(state, action, next)
     }
   }
@@ -390,6 +405,10 @@ export const adventureActions = {
   }),
   navigate: (roomId: RoomId): AdventureAction => ({
     type: "NAVIGATE",
+    roomId,
+  }),
+  debugWarp: (roomId: RoomId): AdventureAction => ({
+    type: "DEBUG_WARP",
     roomId,
   }),
   activateAnnotation: (annotationId: string): AdventureAction => ({

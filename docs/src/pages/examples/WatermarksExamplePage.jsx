@@ -762,19 +762,19 @@ export default function WatermarksExamplePage() {
       <div className="watermarks-example">
         <section className="watermarks-example__intro">
           <p className="watermarks-example__lede">
-            Event-time streams arrive out of order. A <strong>watermark</strong> is the
-            pipeline&rsquo;s promise that older event-time windows can close. Here, a window stays
-            open while its end time plus the watermark strategy is still at or beyond the current
-            event time. A late arrival drops over its own event time, hits an angled lid, and rolls
-            into the left gutter.
+            Events do not always arrive in the order they happened. A <strong>watermark</strong> is
+            the pipeline&rsquo;s promise that it is safe to close older windows. Here, a late
+            arrival drops at its own event time, hits an angled lid, and rolls into the left
+            gutter—while open windows wait for the watermark to pass.
           </p>
           <div className="watermarks-example__credit">
-            A Semiotic remake of the mechanic from{" "}
+            A remake of the mechanic from{" "}
             <a href="https://flink-watermarks.wtf/" target="_blank" rel="noopener noreferrer">
               flink-watermarks.wtf
             </a>
-            , built on <a href="/charts/event-drop-chart">EventDropChart</a> so the settled
-            projection and runtime state stay inspectable.
+            , using Semiotic&apos;s{" "}
+            <a href="/charts/event-drop-chart">EventDropChart</a> so you can still inspect the
+            settled bins and runtime state.
           </div>
         </section>
 
@@ -816,7 +816,7 @@ export default function WatermarksExamplePage() {
             </label>
 
             <label className="watermarks-example__control-group watermarks-example__control-group--live">
-              <span>Watermark strategy</span>
+              <span>How late is still on time</span>
               <input
                 type="range"
                 min="0"
@@ -916,7 +916,7 @@ export default function WatermarksExamplePage() {
           </div>
           <div className="watermarks-example__metric">
             <strong>{model.onTime}</strong>
-            <span>binned by physics</span>
+            <span>landed on time</span>
           </div>
           <div className="watermarks-example__metric watermarks-example__metric--late">
             <strong>{model.late}</strong>
@@ -924,7 +924,7 @@ export default function WatermarksExamplePage() {
           </div>
           <div className="watermarks-example__metric">
             <strong>{seconds(model.watermarkStrategy)}</strong>
-            <span>watermark strategy</span>
+            <span>late allowance</span>
           </div>
           <div className="watermarks-example__metric">
             <strong>{seconds(currentTime)}</strong>

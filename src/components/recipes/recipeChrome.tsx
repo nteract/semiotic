@@ -79,6 +79,58 @@ export function boundsOf(
   return { x: minX - pad, y: minY - pad, width: maxX - minX + pad * 2, height: maxY - minY + pad * 2 }
 }
 
+/** Axis-aligned box with a top-left origin (chip, card, scene rect). */
+export interface HullBox {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export type HullPadding = number | { x?: number; y?: number }
+
+/**
+ * Axis-aligned hull of discrete mark boxes, with optional padding. Use this when
+ * marks are chips/cards with known extents (not just points): the result fully
+ * surrounds the marks so a stroke drawn *after* the marks reads as a true
+ * enclosure (fill under, stroke over). Returns null for an empty set.
+ *
+ * @example
+ * ```ts
+ * const hull = hullFromBoxes(chips, { x: 12, y: 10 })
+ * // overlays: fill rect (under) then marks then stroke-only rect (over)
+ * ```
+ */
+export function hullFromBoxes(
+  boxes: ReadonlyArray<HullBox>,
+  padding: HullPadding = 0
+): HullBox | null {
+  if (!boxes.length) return null
+  const padX = typeof padding === "number" ? padding : (padding.x ?? 0)
+  const padY = typeof padding === "number" ? padding : (padding.y ?? 0)
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const box of boxes) {
+    if (!Number.isFinite(box.x) || !Number.isFinite(box.y)) continue
+    if (!Number.isFinite(box.width) || !Number.isFinite(box.height)) continue
+    const w = Math.max(0, box.width)
+    const h = Math.max(0, box.height)
+    if (box.x < minX) minX = box.x
+    if (box.y < minY) minY = box.y
+    if (box.x + w > maxX) maxX = box.x + w
+    if (box.y + h > maxY) maxY = box.y + h
+  }
+  if (!Number.isFinite(minX)) return null
+  return {
+    x: minX - padX,
+    y: minY - padY,
+    width: maxX - minX + padX * 2,
+    height: maxY - minY + padY * 2
+  }
+}
+
 // ── Band / axis label ────────────────────────────────────────────────────────
 
 export interface BandLabelProps {

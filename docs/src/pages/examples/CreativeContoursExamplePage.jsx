@@ -181,9 +181,9 @@ export default function CreativeContoursExamplePage() {
   return (
     <ExamplePageLayout title="Creative Gravity of America">
       <p className="creative-contours__lede">
-        Metro-level creative industries are sampled into contours and stacked across an isometric
-        United States. Height encodes the selected
-        cultural-production signal.
+        Metro creative industries—screen, sound, games, design, research—are sampled into contour
+        shelves and stacked as an isometric United States. Height is the selected cultural-production
+        signal, not topography. Pick a layer and the terrain shifts under the same cities.
       </p>
 
       <StatStrip

@@ -1,7 +1,17 @@
 import React, { useCallback, useMemo } from "react"
 import { NetworkCustomChart, networkHitTarget } from "semiotic/network"
 import { XYCustomChart, hitTargetPoint } from "semiotic/xy"
-import { unwrapDatum } from "semiotic/utils"
+import {
+  estimateLabelWidth,
+  hullFromBoxes,
+  layoutSequence,
+  packSpanLevels,
+  partitionSharedEdges,
+  scaleArcBand,
+  spanArcPath,
+  spanArcPeakY,
+  unwrapDatum,
+} from "semiotic/recipes"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
 import { surfaceText } from "./sentenceStructureData"
 
@@ -40,10 +50,7 @@ function tokenLabel(token) {
 }
 
 function tokenPositions(tokens, width, y) {
-  const left = Math.min(74, Math.max(34, width * 0.08))
-  const right = Math.min(74, Math.max(34, width * 0.08))
-  const step = tokens.length > 1 ? (width - left - right) / (tokens.length - 1) : 0
-  return new Map(tokens.map((token, index) => [token.id, { x: left + step * index, y, index }]))
+  return layoutSequence(tokens, { width, y })
 }
 
 function isReedKelloggModifier(token) {
@@ -126,7 +133,7 @@ function structureActionLabel(value, fallback) {
 }
 
 function labelWidth(text, minimum = 38) {
-  return Math.max(minimum, String(text ?? "").length * 7.4 + 20)
+  return estimateLabelWidth(text, minimum)
 }
 
 function relatedToSelection(ids, selectedTokenIds) {
@@ -411,123 +418,291 @@ function edgeEndpoints(edge) {
   }
 }
 
-function DependencyArcSet({ edges, positions, baselineY, selectedTokenIds, rowOffset = 0, disputedIds = new Set() }) {
-  const ordered = [...edges].sort((a, b) => {
-    const aEnds = edgeEndpoints(a)
-    const bEnds = edgeEndpoints(b)
-    return Math.abs((positions.get(aEnds.source)?.index ?? 0) - (positions.get(aEnds.target)?.index ?? 0)) -
-      Math.abs((positions.get(bEnds.source)?.index ?? 0) - (positions.get(bEnds.target)?.index ?? 0))
+function dependencySpanRows(edges, positions) {
+  return edges
+    .map((edge) => {
+      const { source, target } = edgeEndpoints(edge)
+      const left = positions.get(source)
+      const right = positions.get(target)
+      if (!left || !right) return null
+      return {
+        id: edge.id ?? `${source}-${target}`,
+        a: Math.min(left.index, right.index),
+        b: Math.max(left.index, right.index),
+        edge,
+        source,
+        target,
+        left,
+        right,
+      }
+    })
+    .filter(Boolean)
+}
+
+function DependencyArcSet({
+  edges,
+  positions,
+  baselineY,
+  selectedTokenIds,
+  disputedIds = new Set(),
+  readingColor,
+  showLabels = true,
+  arcCeiling = 80,
+}) {
+  const spanRows = dependencySpanRows(edges, positions)
+  const { packed, levelCount } = packSpanLevels(spanRows)
+  const metrics = scaleArcBand({
+    baselineY,
+    ceilingY: arcCeiling,
+    levelCount,
+    labelRoom: showLabels ? 20 : 8,
   })
-  return ordered.map((edge, edgeIndex) => {
-    const { source, target } = edgeEndpoints(edge)
-    const sourcePosition = positions.get(source)
-    const targetPosition = positions.get(target)
-    if (!sourcePosition || !targetPosition) return null
-    const distance = Math.abs(sourcePosition.index - targetPosition.index)
-    const peakY = baselineY - 30 - distance * 20 - (edgeIndex % 3) * 9 + rowOffset
+  const byId = new Map(spanRows.map((row) => [row.id, row]))
+  // Longest spans on top: draw short arcs first so tall ones sit above them.
+  const drawOrder = [...packed].sort((a, b) => a.level - b.level)
+  return drawOrder.map(({ span, level }) => {
+    const row = byId.get(span.id)
+    if (!row) return null
+    const { edge, source, target, left, right } = row
     const selected = relatedToSelection([source, target], selectedTokenIds)
     const disputed = disputedIds.has(edge.id) || edge.disputed
-    const color = selected || disputed ? COLORS.coral : COLORS.teal
-    const midX = (sourcePosition.x + targetPosition.x) / 2
+    const color =
+      readingColor ??
+      (selected || disputed ? COLORS.coral : COLORS.teal)
+    const peakY = spanArcPeakY(baselineY, level, metrics)
+    const midX = (left.x + right.x) / 2
+    const label = edge.label ?? edge.relation
+    const labelW = labelWidth(label, 30)
+    const labelY = Math.min(baselineY - 40, peakY + Math.min(14, metrics.levelStep * 0.28))
     return (
-      <g key={`${edge.id ?? `${source}-${target}`}-${rowOffset}`} className={disputed ? "is-disputed" : ""}>
+      <g key={edge.id ?? `${source}-${target}-${level}`} className={disputed ? "is-disputed" : ""}>
         <path
-          d={`M${sourcePosition.x} ${baselineY - 24}Q${midX} ${peakY} ${targetPosition.x} ${baselineY - 24}`}
+          d={spanArcPath(left.x, right.x, baselineY, peakY, { footLift: 26 })}
           fill="none"
           stroke={color}
-          strokeWidth={selected || disputed ? 3.5 : 2}
-          strokeDasharray={disputed ? "7 4" : undefined}
-          markerEnd={`url(#${selected || disputed ? "sentence-arrow-coral" : "sentence-arrow"})`}
+          strokeWidth={selected || disputed ? 3.25 : 2.15}
+          strokeDasharray={disputed ? "6 4" : undefined}
+          opacity={selected || disputed ? 1 : 0.9}
+          markerEnd={`url(#${
+            selected || disputed || readingColor === COLORS.coral
+              ? "sentence-arrow-coral"
+              : "sentence-arrow"
+          })`}
         />
-        <rect x={midX - labelWidth(edge.label ?? edge.relation, 28) / 2} y={peakY + 5} width={labelWidth(edge.label ?? edge.relation, 28)} height="18" rx="9" fill={COLORS.paper} />
-        <text x={midX} y={peakY + 17} textAnchor="middle" fill={color} fontSize="8" fontWeight="900">
-          {edge.label ?? edge.relation}
-        </text>
+        {showLabels ? (
+          <>
+            <rect
+              x={midX - labelW / 2}
+              y={labelY}
+              width={labelW}
+              height="17"
+              rx="8"
+              fill={COLORS.paper}
+              stroke={color}
+              strokeWidth="1"
+            />
+            <text x={midX} y={labelY + 12} textAnchor="middle" fill={color} fontSize="8" fontWeight="900">
+              {label}
+            </text>
+          </>
+        ) : null}
       </g>
     )
   })
 }
 
 function DependencyDiagram({ width, height, specimen, tokens, selectedTokenIds, interpretationId, onSelectToken }) {
-  const baselineY = height - 72
+  // Token strip sits mid-low; arcs own the large open band above it.
+  const baselineY = Math.round(height * 0.72)
+  const arcCeiling = 78
   const positions = tokenPositions(tokens, width, baselineY)
   const edges = dependencyEdges(specimen, interpretationId)
   const activeParse = parseFor(specimen, interpretationId)
+  const rootId = specimen?.rootTokenId
+  const contentEdges = edges.filter((edge) => (edge.relation ?? edge.label) !== "punct")
+  const selectedEdge = contentEdges.find((edge) => {
+    const { source, target } = edgeEndpoints(edge)
+    return relatedToSelection([source, target], selectedTokenIds)
+  })
+  const reading =
+    activeParse?.interpretation ??
+    activeParse?.label ??
+    "Governor → dependent: each arc points from a word to the word that depends on it."
+
   return (
     <g className="sentence-diagram sentence-diagram--dependency">
       <DiagramDefs />
-      <DiagramLabel accent={COLORS.teal}>DEPENDENCIES / GOVERNOR → DEPENDENT</DiagramLabel>
-      <text x={width - 18} y="24" textAnchor="end" fill={COLORS.coral} fontSize="9" fontWeight="850">
-        {activeParse?.interpretation ?? activeParse?.label ?? "corpus-derived dependency analysis"}
+      <DiagramLabel accent={COLORS.teal}>WORD RELATIONSHIPS / GOVERNOR → DEPENDENT</DiagramLabel>
+      <rect
+        x="14"
+        y="34"
+        width={Math.min(width - 28, 640)}
+        height="28"
+        rx="6"
+        fill="rgba(47,114,112,.08)"
+        stroke={COLORS.tealSoft}
+        strokeWidth="1"
+      />
+      <text x="24" y="52" fill={COLORS.ink} fontSize="9" fontWeight="650">
+        Arc = “this word needs that word.” Arrow lands on the dependent. Higher arcs span more words.
       </text>
-      <DependencyArcSet edges={edges} positions={positions} baselineY={baselineY} selectedTokenIds={selectedTokenIds} />
-      <TokenStrip tokens={tokens} positions={positions} selectedTokenIds={selectedTokenIds} onSelectToken={onSelectToken} y={baselineY} showPos dimUnselected />
+      <DependencyArcSet
+        edges={contentEdges}
+        positions={positions}
+        baselineY={baselineY}
+        arcCeiling={arcCeiling}
+        selectedTokenIds={selectedTokenIds}
+      />
+      {rootId && positions.get(rootId) ? (
+        <g transform={`translate(${positions.get(rootId).x} ${baselineY - 48})`}>
+          <rect x="-22" y="-10" width="44" height="16" rx="8" fill={COLORS.coral} />
+          <text textAnchor="middle" y="2" fill={COLORS.white} fontSize="8" fontWeight="900">
+            ROOT
+          </text>
+        </g>
+      ) : null}
+      <TokenStrip
+        tokens={tokens}
+        positions={positions}
+        selectedTokenIds={selectedTokenIds}
+        onSelectToken={onSelectToken}
+        y={baselineY}
+        showPos
+        dimUnselected
+      />
+      <text x="18" y={height - 16} fill={COLORS.muted} fontSize="9" fontWeight="650">
+        {selectedEdge
+          ? `Selected: “${tokenLabel(tokens.find((token) => token.id === edgeEndpoints(selectedEdge).source))}” ← “${tokenLabel(tokens.find((token) => token.id === edgeEndpoints(selectedEdge).target))}” (${selectedEdge.label ?? selectedEdge.relation})`
+          : reading}
+      </text>
     </g>
   )
 }
 
-function AmbiguityDiagram({ width, height, specimen, tokens, selectedTokenIds, interpretationId, onSelectToken, onSelectInterpretation }) {
+function edgeSignature(edge) {
+  const { source, target } = edgeEndpoints(edge)
+  return `${source}|${target}|${edge.relation ?? edge.label ?? ""}`
+}
+
+function AmbiguityDiagram({
+  width,
+  height,
+  specimen,
+  tokens,
+  selectedTokenIds,
+  interpretationId,
+  onSelectToken,
+  onSelectInterpretation,
+}) {
   const parses = specimen?.alternateDependencies?.length
-    ? specimen.alternateDependencies.slice(0, 3)
+    ? specimen.alternateDependencies.slice(0, 2)
     : [{ id: "default", label: "Authored parse", edges: specimen?.dependencies ?? [] }]
-  const rowHeight = Math.max(118, (height - 54) / parses.length)
-  const index = tokenIndexById(tokens)
-  const signatures = new Map()
-  for (const parse of parses) {
-    for (const edge of parse.edges ?? []) {
-      const endpoints = edgeEndpoints(edge)
-      const signature = `${endpoints.source}:${endpoints.target}:${edge.relation}`
-      signatures.set(signature, (signatures.get(signature) ?? 0) + 1)
-    }
-  }
+  const edgeSets = parses.map((parse) =>
+    (parse.edges ?? []).filter((edge) => (edge.relation ?? edge.label) !== "punct"),
+  )
+  const { shared: sharedEdges, exclusive } = partitionSharedEdges(edgeSets, edgeSignature)
+  const activeId = interpretationId && parses.some((parse) => parse.id === interpretationId)
+    ? interpretationId
+    : parses[0]?.id
+  // Slim reading chips up top; the whole middle of the stage is for arcs.
+  const cardHeight = 58
+  const cardTop = 36
+  const arcCeiling = cardTop + cardHeight + 16
+  const baselineY = Math.round(height * 0.74)
+  const positions = tokenPositions(tokens, width, baselineY)
+  const cardGap = 12
+  const cardWidth = (width - 28 - cardGap * Math.max(0, parses.length - 1)) / Math.max(1, parses.length)
+  const readingColors = [COLORS.coral, COLORS.teal, COLORS.violet]
+  const activeIndex = Math.max(0, parses.findIndex((parse) => parse.id === activeId))
+  const disputedForActive = exclusive[activeIndex] ?? []
+
   return (
     <g className="sentence-diagram sentence-diagram--ambiguity">
       <DiagramDefs />
-      <DiagramLabel accent={COLORS.coral}>PARSE FOREST / SHARED + DISPUTED</DiagramLabel>
+      <DiagramLabel accent={COLORS.coral}>ONE SENTENCE · TWO READINGS</DiagramLabel>
+      <text x={width - 18} y="24" textAnchor="end" fill={COLORS.muted} fontSize="9" fontWeight="650">
+        Gray = shared · color dashed = the attachment that flips the meaning
+      </text>
+
       {parses.map((parse, parseIndex) => {
-        const rowTop = 47 + parseIndex * rowHeight
-        const baselineY = rowTop + rowHeight - 30
-        const positions = tokenPositions(tokens, width, baselineY)
-        const active = parse.id === interpretationId
-        const disputed = new Set(
-          (parse.edges ?? []).filter((edge) => {
-            const endpoints = edgeEndpoints(edge)
-            return signatures.get(`${endpoints.source}:${endpoints.target}:${edge.relation}`) !== parses.length
-          }).map((edge) => edge.id),
-        )
+        const active = parse.id === activeId
+        const color = readingColors[parseIndex % readingColors.length]
+        const x = 14 + parseIndex * (cardWidth + cardGap)
+        const plain =
+          parse.interpretation ??
+          parse.label ??
+          "This reading groups the words differently."
         return (
           <g
             key={parse.id}
             role="button"
             tabIndex="0"
             aria-pressed={active}
-            aria-label={`${parse.label}. ${parse.interpretation ?? "Choose this interpretation"}`}
+            aria-label={`Reading ${parseIndex + 1}: ${parse.label}. ${plain}`}
             onClick={() => onSelectInterpretation(parse.id)}
             onKeyDown={(event) => activateOnKeyboard(event, () => onSelectInterpretation(parse.id))}
-            style={{ cursor: "pointer", pointerEvents: "all", opacity: interpretationId && !active ? 0.52 : 1 }}
+            style={{ cursor: "pointer", pointerEvents: "all" }}
           >
-            <rect x="6" y={rowTop - 6} width={width - 12} height={rowHeight - 4} rx="7" fill={active ? "rgba(206,83,62,.07)" : "transparent"} stroke={active ? COLORS.coral : COLORS.paperDeep} strokeWidth={active ? 2.5 : 1} />
-            <text x="18" y={rowTop + 12} fill={active ? COLORS.coral : COLORS.ink} fontSize="10" fontWeight="900">
-              {String(parseIndex + 1).padStart(2, "0")} · {parse.label}
+            <rect
+              x={x}
+              y={cardTop}
+              width={cardWidth}
+              height={cardHeight}
+              rx="8"
+              fill={active ? "rgba(206,83,62,.1)" : COLORS.white}
+              stroke={active ? color : COLORS.paperDeep}
+              strokeWidth={active ? 2.75 : 1.25}
+            />
+            <rect x={x} y={cardTop} width="7" height={cardHeight} rx="4" fill={color} />
+            <text x={x + 16} y={cardTop + 18} fill={color} fontSize="9" fontWeight="900" letterSpacing="0.6">
+              READING {String(parseIndex + 1).padStart(2, "0")}
+              {parse.probability != null ? ` · ${Math.round(parse.probability * 100)}%` : ""}
+              {active ? " · ACTIVE" : ""}
             </text>
-            <text x={width - 18} y={rowTop + 12} textAnchor="end" fill={COLORS.muted} fontSize="8">
-              {parse.probability != null ? `${Math.round(parse.probability * 100)}% analysis weight` : parse.interpretation}
+            <text x={x + 16} y={cardTop + 36} fill={COLORS.ink} fontSize="12" fontWeight="900">
+              {parse.label}
             </text>
-            <DependencyArcSet edges={parse.edges ?? []} positions={positions} baselineY={baselineY} selectedTokenIds={selectedTokenIds} disputedIds={disputed} />
-            {tokens.map((token) => {
-              const position = positions.get(token.id)
-              const selected = selectedTokenIds.includes(token.id)
-              return (
-                <text key={token.id} x={position.x} y={baselineY + 2} textAnchor="middle" fill={selected ? COLORS.coral : COLORS.ink} fontSize="9" fontWeight={selected ? 900 : 700}>
-                  {token.text}
-                </text>
-              )
-            })}
+            <text x={x + 16} y={cardTop + 50} fill={COLORS.muted} fontSize="9" fontWeight="650">
+              {plain.length > Math.floor(cardWidth / 6.2)
+                ? `${plain.slice(0, Math.floor(cardWidth / 6.2) - 1)}…`
+                : plain}
+            </text>
           </g>
         )
       })}
-      <text x="18" y={height - 8} fill={COLORS.muted} fontSize="8">
-        {index.size} surface tokens · only dashed relationships differ
+
+      <DependencyArcSet
+        edges={sharedEdges}
+        positions={positions}
+        baselineY={baselineY}
+        arcCeiling={arcCeiling}
+        selectedTokenIds={selectedTokenIds}
+        readingColor={COLORS.muted}
+        showLabels={false}
+      />
+      <DependencyArcSet
+        edges={disputedForActive}
+        positions={positions}
+        baselineY={baselineY}
+        arcCeiling={arcCeiling}
+        selectedTokenIds={selectedTokenIds}
+        disputedIds={new Set(disputedForActive.map((edge) => edge.id))}
+        readingColor={
+          readingColors[parses.findIndex((parse) => parse.id === activeId)] ?? COLORS.coral
+        }
+      />
+
+      <TokenStrip
+        tokens={tokens}
+        positions={positions}
+        selectedTokenIds={selectedTokenIds}
+        onSelectToken={onSelectToken}
+        y={baselineY}
+        showPos
+        dimUnselected
+      />
+      <text x="18" y={height - 14} fill={COLORS.muted} fontSize="9" fontWeight="650">
+        Click a reading card to swap the disputed attachment. The words never change.
       </text>
     </g>
   )
@@ -597,64 +772,319 @@ function fallbackRhetoric(specimen, tokens) {
   return {
     nodes: [
       { id: "claim", label: "main claim", role: "nucleus", tokenStart: 0, tokenEnd: split },
-      { id: "qualification", label: "qualifying detail", role: "satellite", relation: "elaboration", tokenStart: split, tokenEnd: tokens.length },
+      {
+        id: "qualification",
+        label: "qualifying detail",
+        role: "satellite",
+        relation: "elaboration",
+        tokenStart: split,
+        tokenEnd: tokens.length,
+      },
     ],
-    edges: [{ id: "claim-qualification", source: "claim", target: "qualification", relation: "elaboration" }],
+    edges: [
+      {
+        id: "claim-qualification",
+        source: "claim",
+        target: "qualification",
+        relation: "elaboration",
+      },
+    ],
     fallback: true,
     source: specimen?.text,
   }
 }
 
-function rhetoricGeometry(width, nodes) {
-  const cardGap = 14
-  const cardWidth = Math.max(120, (width - 48 - cardGap * Math.max(0, nodes.length - 1)) / Math.max(1, nodes.length))
-  const positions = new Map(nodes.map((node, index) => [node.id, { x: 24 + index * (cardWidth + cardGap), y: 105 + (node.role === "satellite" ? 62 : 0) }]))
-  return { cardWidth, positions }
+const RHETORIC_RELATION_STYLE = {
+  concession: { color: COLORS.coral, plain: "admits a counterpoint" },
+  cause: { color: COLORS.teal, plain: "gives a reason" },
+  condition: { color: COLORS.gold, plain: "sets a condition" },
+  contrast: { color: COLORS.violet, plain: "sets up a contrast" },
+  elaboration: { color: COLORS.teal, plain: "adds detail" },
+  evidence: { color: COLORS.gold, plain: "supplies evidence" },
+  circumstance: { color: COLORS.violet, plain: "sets the scene" },
+  coordination: { color: COLORS.muted, plain: "joins equals" },
+}
+
+function rhetoricRelationStyle(relation) {
+  return (
+    RHETORIC_RELATION_STYLE[String(relation ?? "").toLowerCase()] ?? {
+      color: COLORS.violet,
+      plain: "supports the claim",
+    }
+  )
+}
+
+function tokenIdsForRhetoricNode(node, tokens) {
+  if (node.tokenIds?.length) return node.tokenIds
+  return tokens
+    .filter((token, tokenIndex) => {
+      const value = token.index ?? tokenIndex
+      return value >= (node.tokenStart ?? 0) && value < (node.tokenEnd ?? tokens.length)
+    })
+    .map((token) => token.id)
+}
+
+/**
+ * Claim-centered plate: nucleus is the big headline claim; satellites hang
+ * below as labeled supports / qualifications with full quoted spans.
+ */
+function rhetoricGeometry(width, nodes, height = 420) {
+  const cardWidth = Math.min(width - 40, Math.max(280, width * 0.72))
+  const left = (width - cardWidth) / 2
+  const nucleus = nodes.find((node) => node.role === "nucleus") ?? nodes[0]
+  const satellites = nodes.filter((node) => node.id !== nucleus?.id)
+  const positions = new Map()
+  if (nucleus) {
+    positions.set(nucleus.id, {
+      x: left,
+      y: 44,
+      width: cardWidth,
+      height: 96,
+      kind: "nucleus",
+    })
+  }
+  const satelliteTop = 168
+  const satelliteHeight = 78
+  const gap = 12
+  satellites.forEach((node, index) => {
+    positions.set(node.id, {
+      x: left,
+      y: satelliteTop + index * (satelliteHeight + gap),
+      width: cardWidth,
+      height: satelliteHeight,
+      kind: "satellite",
+    })
+  })
+  return {
+    cardWidth,
+    positions,
+    nucleus,
+    satellites,
+    left,
+    maxY:
+      satellites.length > 0
+        ? satelliteTop + satellites.length * (satelliteHeight + gap)
+        : 150,
+    plotBottom: height,
+  }
 }
 
 function RhetoricDiagram({ width, height, specimen, tokens, selectedTokenIds, onSelectToken }) {
   const rhetoric = specimen?.rhetoric ?? fallbackRhetoric(specimen, tokens)
   const nodes = rhetoric.nodes ?? []
-  const { cardWidth, positions } = rhetoricGeometry(width, nodes)
-  const tokenY = height - 54
+  const geometry = rhetoricGeometry(width, nodes, height)
+  const { cardWidth, positions, nucleus, satellites } = geometry
+  const tokenY = height - 52
   const tokenPos = tokenPositions(tokens, width, tokenY)
+  const relationByTarget = new Map(
+    (rhetoric.edges ?? []).map((edge) => [edge.target, edge]),
+  )
+
   return (
     <g className="sentence-diagram sentence-diagram--rhetoric">
       <DiagramDefs />
-      <DiagramLabel accent={COLORS.violet}>RHETORICAL STRUCTURE / NUCLEUS + SATELLITES</DiagramLabel>
-      {rhetoric.fallback ? <text x={width - 18} y="24" textAnchor="end" fill={COLORS.coral} fontSize="8" fontWeight="900">LOAD THE ANALYST SPECIMEN FOR THE FULL PLATE</text> : null}
-      {(rhetoric.edges ?? []).map((edge) => {
-        const source = positions.get(edge.source)
-        const target = positions.get(edge.target)
-        if (!source || !target) return null
-        return (
-          <g key={edge.id}>
-            <path d={`M${source.x + cardWidth / 2} ${source.y + 74}Q${(source.x + target.x + cardWidth) / 2} ${source.y + 115} ${target.x + cardWidth / 2} ${target.y + 74}`} fill="none" stroke={COLORS.violet} strokeWidth="2.5" />
-            <text x={(source.x + target.x + cardWidth) / 2} y={(source.y + target.y) / 2 + 95} textAnchor="middle" fill={COLORS.violet} fontSize="8" fontWeight="900">{edge.relation}</text>
-          </g>
-        )
-      })}
+      <DiagramLabel accent={COLORS.violet}>THE CLAIM AND WHAT HOLDS IT UP</DiagramLabel>
+      {rhetoric.fallback ? (
+        <text x={width - 18} y="24" textAnchor="end" fill={COLORS.coral} fontSize="8" fontWeight="900">
+          DEMONSTRATION FALLBACK · PICK A RHETORIC SPECIMEN FOR THE FULL PLATE
+        </text>
+      ) : (
+        <text x={width - 18} y="24" textAnchor="end" fill={COLORS.muted} fontSize="9" fontWeight="650">
+          Nucleus = the claim · satellites = support, contrast, or condition
+        </text>
+      )}
+
+      {/* Spine from claim down through supports */}
+      {nucleus && satellites.length ? (
+        <line
+          x1={width / 2}
+          y1={(positions.get(nucleus.id)?.y ?? 0) + 96}
+          x2={width / 2}
+          y2={(positions.get(satellites[satellites.length - 1].id)?.y ?? 0) + 8}
+          stroke={COLORS.paperDeep}
+          strokeWidth="3"
+          strokeDasharray="4 5"
+        />
+      ) : null}
+
       {nodes.map((node, index) => {
         const position = positions.get(node.id)
-        const tokenIds = tokens.filter((token, tokenIndex) => {
-          const value = token.index ?? tokenIndex
-          return value >= (node.tokenStart ?? 0) && value < (node.tokenEnd ?? tokens.length)
-        }).map((token) => token.id)
+        if (!position) return null
+        const tokenIds = tokenIdsForRhetoricNode(node, tokens)
         const selected = relatedToSelection(tokenIds, selectedTokenIds)
         const span = surfaceText(tokens.filter((token) => tokenIds.includes(token.id)))
+        const edge = relationByTarget.get(node.id)
+        const relation = node.relation ?? edge?.relation
+        const style = rhetoricRelationStyle(relation)
+        const isNucleus = node.role === "nucleus" || node.id === nucleus?.id
         return (
           <g key={node.id} transform={`translate(${position.x} ${position.y})`}>
-            <rect width={cardWidth} height="74" rx="5" fill={selected ? COLORS.coral : node.role === "nucleus" ? COLORS.ink : COLORS.white} stroke={selected ? COLORS.coral : node.role === "nucleus" ? COLORS.ink : COLORS.violet} strokeWidth="2" />
-            <text x="12" y="18" fill={selected || node.role === "nucleus" ? COLORS.white : COLORS.violet} fontSize="8" fontWeight="900" letterSpacing="1">{String(node.role ?? "span").toUpperCase()} · {String(index + 1).padStart(2, "0")}</text>
-            <text x="12" y="37" fill={selected || node.role === "nucleus" ? COLORS.white : COLORS.ink} fontSize="11" fontWeight="900">{node.label}</text>
-            <text x="12" y="55" fill={selected || node.role === "nucleus" ? COLORS.paperDeep : COLORS.muted} fontSize="8">{span.slice(0, 34)}{span.length > 34 ? "…" : ""}</text>
-            <text x="12" y="67" fill={selected || node.role === "nucleus" ? COLORS.paperDeep : COLORS.muted} fontSize="7" fontWeight="800">{String(node.relation ?? "central claim").toUpperCase()}</text>
+            {!isNucleus ? (
+              <>
+                <circle cx={cardWidth / 2} cy="-6" r="5" fill={style.color} />
+                <rect
+                  x={cardWidth / 2 - 42}
+                  y="-28"
+                  width="84"
+                  height="18"
+                  rx="9"
+                  fill={COLORS.paper}
+                  stroke={style.color}
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={cardWidth / 2}
+                  y="-15"
+                  textAnchor="middle"
+                  fill={style.color}
+                  fontSize="8"
+                  fontWeight="900"
+                >
+                  {String(relation ?? "support").toUpperCase()}
+                </text>
+              </>
+            ) : null}
+            <rect
+              width={cardWidth}
+              height={position.height}
+              rx="8"
+              fill={
+                selected
+                  ? COLORS.coral
+                  : isNucleus
+                    ? COLORS.ink
+                    : COLORS.white
+              }
+              stroke={
+                selected ? COLORS.coral : isNucleus ? COLORS.ink : style.color
+              }
+              strokeWidth={isNucleus || selected ? 2.5 : 1.75}
+            />
+            <text
+              x="16"
+              y="22"
+              fill={selected || isNucleus ? COLORS.paperDeep : style.color}
+              fontSize="9"
+              fontWeight="900"
+              letterSpacing="1"
+            >
+              {isNucleus
+                ? "THE CLAIM"
+                : `${String(style.plain).toUpperCase()} · ${String(index).padStart(2, "0")}`}
+            </text>
+            <text
+              x="16"
+              y="44"
+              fill={selected || isNucleus ? COLORS.white : COLORS.ink}
+              fontSize={isNucleus ? 15 : 12}
+              fontWeight="900"
+            >
+              {node.label}
+            </text>
+            <text
+              x="16"
+              y={isNucleus ? 68 : 64}
+              fill={selected || isNucleus ? COLORS.paperDeep : COLORS.muted}
+              fontSize="10"
+              fontWeight="650"
+            >
+              “{span.length > 64 ? `${span.slice(0, 63)}…` : span}”
+            </text>
+            {isNucleus ? (
+              <text
+                x="16"
+                y="86"
+                fill={selected ? COLORS.paperDeep : COLORS.gold}
+                fontSize="8"
+                fontWeight="900"
+                letterSpacing="0.6"
+              >
+                EVERYTHING BELOW ANSWERS OR QUALIFIES THIS
+              </text>
+            ) : null}
           </g>
         )
       })}
-      <TokenStrip tokens={tokens} positions={tokenPos} selectedTokenIds={selectedTokenIds} onSelectToken={onSelectToken} y={tokenY} compact dimUnselected />
+
+      {/*
+        Span hulls around token chips: fill drawn under the strip, stroke drawn
+        after so the outline actually surrounds the nodes instead of vanishing
+        behind them.
+      */}
+      {nodes.map((node) => {
+        const hull = rhetoricTokenHull(node, tokens, tokenPos, tokenY)
+        if (!hull) return null
+        const style = rhetoricRelationStyle(
+          node.relation ?? relationByTarget.get(node.id)?.relation,
+        )
+        const isNucleus = node.role === "nucleus" || node.id === nucleus?.id
+        return (
+          <rect
+            key={`hull-fill-${node.id}`}
+            x={hull.x}
+            y={hull.y}
+            width={hull.width}
+            height={hull.height}
+            rx="10"
+            fill={isNucleus ? "rgba(206,83,62,.16)" : `${style.color}26`}
+            stroke="none"
+          />
+        )
+      })}
+      <TokenStrip
+        tokens={tokens}
+        positions={tokenPos}
+        selectedTokenIds={selectedTokenIds}
+        onSelectToken={onSelectToken}
+        y={tokenY}
+        compact
+        dimUnselected
+      />
+      {nodes.map((node) => {
+        const hull = rhetoricTokenHull(node, tokens, tokenPos, tokenY)
+        if (!hull) return null
+        const style = rhetoricRelationStyle(
+          node.relation ?? relationByTarget.get(node.id)?.relation,
+        )
+        const isNucleus = node.role === "nucleus" || node.id === nucleus?.id
+        return (
+          <rect
+            key={`hull-stroke-${node.id}`}
+            x={hull.x}
+            y={hull.y}
+            width={hull.width}
+            height={hull.height}
+            rx="10"
+            fill="none"
+            stroke={isNucleus ? COLORS.coral : style.color}
+            strokeWidth="2"
+            pointerEvents="none"
+          />
+        )
+      })}
     </g>
   )
+}
+
+/** Axis-aligned hull that fully surrounds a rhetoric span's token chips. */
+function rhetoricTokenHull(node, tokens, tokenPos, tokenY) {
+  const tokenIds = tokenIdsForRhetoricNode(node, tokens)
+  // TokenStrip compact chips: rect y = -16, height 27 around origin at tokenY.
+  const boxes = tokenIds
+    .map((id) => {
+      const token = tokens.find((candidate) => candidate.id === id)
+      const position = tokenPos.get(id)
+      if (!token || !position) return null
+      const w = labelWidth(tokenLabel(token), 28)
+      return {
+        x: position.x - w / 2,
+        y: tokenY - 16,
+        width: w,
+        height: 27,
+      }
+    })
+    .filter(Boolean)
+  return hullFromBoxes(boxes, { x: 12, y: 10 })
 }
 
 function flattenTrie(root) {
@@ -1618,7 +2048,11 @@ function networkHitGeometry(view, width, nodes, node) {
     return { width: labelWidth(label, 70), height: 44 }
   }
   if (view === "rhetoric") {
-    return { width: rhetoricGeometry(width, nodes).cardWidth, height: 74 }
+    const isNucleus = node.role === "nucleus"
+    return {
+      width: rhetoricGeometry(width, nodes).cardWidth,
+      height: isNucleus ? 96 : 78,
+    }
   }
   if (view === "word-tree") {
     return {
@@ -1650,11 +2084,16 @@ function networkNodePositions(view, width, height, nodes, common, edges = []) {
   }
   if (view === "semantics") return semanticPositions(width, height, nodes)
   if (view === "rhetoric") {
-    const { cardWidth, positions } = rhetoricGeometry(width, nodes)
-    return new Map([...positions].map(([id, position]) => [id, {
-      x: position.x + cardWidth / 2,
-      y: position.y + 37,
-    }]))
+    const { positions } = rhetoricGeometry(width, nodes, height)
+    return new Map(
+      [...positions].map(([id, position]) => [
+        id,
+        {
+          x: position.x + position.width / 2,
+          y: position.y + position.height / 2,
+        },
+      ]),
+    )
   }
   if (view === "word-tree") {
     return wordTreePositions(width, height, nodes, common.direction, edges)

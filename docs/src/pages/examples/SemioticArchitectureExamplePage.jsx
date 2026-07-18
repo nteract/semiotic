@@ -70,9 +70,9 @@ export default function SemioticArchitectureExamplePage() {
   return (
     <ExamplePageLayout title="The Living System of Semiotic">
       <p className="architecture-lede">
-        This map connects Semiotic's visible charts and controls to five frame models, two data
-        paths, and the internal systems they share. Choose an example to highlight only the parts
-        used by that composition.
+        For builders: which pieces of Semiotic power each demo? This map ties the public charts to
+        the frames and shared systems underneath. Pick an example to light up only what that page
+        uses.
       </p>
 
       <section className="architecture-controls" aria-labelledby="architecture-example-heading">

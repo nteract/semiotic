@@ -119,6 +119,34 @@ export type {
   AnnotationDensityResult,
 } from "./recipes/annotationDensity"
 
+// Grid observatory math — fuel stack long-form, demand/forecast pairs, reserve
+// proxy, threshold→styleRules factory, provenanced event annotations.
+export {
+  GRID_FUEL_KEYS,
+  GRID_FUEL_LABELS,
+  stackFuelSeries,
+  demandForecastRows,
+  reserveMarginPct,
+  reserveSeries,
+  thresholdBandsForReserve,
+  reserveAnnotationBands,
+  summarizeOperatingPoint,
+  gridEventAnnotations,
+  tightestHours,
+  formatMw,
+  formatReservePct,
+} from "./recipes/gridObservatory"
+export type {
+  GridFuelKey,
+  GridHour,
+  ReserveSnapshot,
+  ReserveLevels,
+  FuelStackRow,
+  DemandForecastRow,
+  OperatingPointSummary,
+  GridEventWindow,
+} from "./recipes/gridObservatory"
+
 export { intervalLanesLayout } from "./recipes/intervalLanes"
 export type { IntervalLanesConfig } from "./recipes/intervalLanes"
 
@@ -170,6 +198,34 @@ export type {
   ActiveCount,
   ActiveCountOptions,
 } from "./recipes/intervals"
+
+// Sequence diagram kit — linear spines, span-arc packing, shared-edge partition
+// (dependency arcs, co-reference, alternate-hypothesis overlays).
+export {
+  layoutSequence,
+  layoutChipStrip,
+  estimateLabelWidth,
+  packSpanLevels,
+  scaleArcBand,
+  spanArcPath,
+  spanArcPeakY,
+  partitionSharedEdges,
+} from "./recipes/sequenceLayout"
+export type {
+  SequenceItem,
+  SequencePosition,
+  LayoutSequenceOptions,
+  ChipStripItem,
+  LayoutChipStripOptions,
+  ChipStripPosition,
+  SpanInterval,
+  PackedSpanLevel,
+  PackSpanLevelsResult,
+  ScaleArcBandOptions,
+  ScaleArcBandResult,
+  SpanArcPathOptions,
+  EdgeKeyFn,
+} from "./recipes/sequenceLayout"
 
 // Radial coordinate kit — angle ⟂ radius primitives for bespoke radial charts.
 export { polarToXY, xyToAngle, angleScale, radiusScale, ringArcPath, TAU } from "./recipes/radialCoords"
@@ -266,9 +322,19 @@ export {
 
 // Recipe chrome kit — group enclosures, band labels, and mark callouts that
 // custom-layout recipes draw in their `overlays` layer.
-export { roundedEnclosure, boundsOf, bandLabel, markCallout, linearAxis, hatchFill } from "./recipes/recipeChrome"
+export {
+  roundedEnclosure,
+  boundsOf,
+  hullFromBoxes,
+  bandLabel,
+  markCallout,
+  linearAxis,
+  hatchFill,
+} from "./recipes/recipeChrome"
 export type {
   RoundedEnclosureProps,
+  HullBox,
+  HullPadding,
   BandLabelProps,
   MarkCalloutProps,
   CalloutConnector,

@@ -505,21 +505,21 @@ export default function StakeholderJourneyExamplePage() {
         <section className="stakeholder-journey__hero">
           <div>
             <span className="stakeholder-journey__kicker">
-              Controlled process-physics counterfactual
+              From first use to real contribution
             </span>
             <p className="stakeholder-journey__lede">
-              First Impact proves utility. It does not create a contributor. The same
-              deterministic cohort starts with the same left-side membranes; after Habit,
-              an intentional invitation relay either makes Commitment reachable or leaves
-              usage private. Leadership can then feed capacity back into the whole passage.
+              First impact proves the tool is useful. It does not create a contributor. The same
+              people start both sides of this experiment; after Habit, an intentional invitation
+              either opens a path to Commitment or leaves usage private. Leadership can then feed
+              capacity back into the whole passage.
             </p>
           </div>
           <aside className="stakeholder-journey__model-note">
-            <strong>Illustrative model, not observed stdlib data</strong>
+            <strong>Illustrative model, not observed product data</strong>
             <span>
-              Counts are unique stage crossings from the simulation. No participant is
-              assigned a final role or destination at spawn. In both conditions, each
-              Leadership crossing widens the complete Impact passage by two pixels.
+              Counts are unique stage crossings in a simulation. Nobody is assigned a final role
+              at spawn. In both conditions, each Leadership crossing slightly widens the Impact
+              passage for everyone who follows.
             </span>
           </aside>
           <div className="stakeholder-journey__sources" aria-label="Source essays">

@@ -17,6 +17,7 @@ const PREVIEW_COMPONENTS = {
   "lake-isotype": MiniLakeIsotypePreview,
   "hotdog-variations": MiniHotDogPreview,
   "data-centers-isotype": MiniDataCentersIsotypePreview,
+  "the-grid": MiniTheGridPreview,
   "creative-contours": MiniCreativeContoursPreview,
   discrete: MiniDiscretePreview,
   isometric: MiniIsometricPreview,
@@ -422,6 +423,68 @@ function MiniHotDogPreview() {
       <text x="213" y="76" fill="#c74733" fontSize="13" fontWeight="900" fontFamily="sans-serif">
         54
       </text>
+    </svg>
+  )
+}
+
+function MiniTheGridPreview() {
+  const stack = [
+    [18, 62, 14, "#5c5346"],
+    [18, 48, 14, "#6b8fad"],
+    [18, 38, 10, "#8b7ec8"],
+    [18, 28, 10, "#7ec8e3"],
+    [40, 58, 18, "#5c5346"],
+    [40, 40, 18, "#6b8fad"],
+    [40, 28, 12, "#e0a84a"],
+    [62, 64, 16, "#5c5346"],
+    [62, 46, 18, "#6b8fad"],
+    [62, 32, 14, "#7ec8e3"],
+    [84, 60, 14, "#5c5346"],
+    [84, 42, 18, "#6b8fad"],
+    [84, 30, 12, "#e0a84a"],
+    [106, 66, 12, "#5c5346"],
+    [106, 50, 16, "#6b8fad"],
+    [106, 36, 14, "#8b7ec8"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#0e1520" />
+      <text
+        x="12"
+        y="16"
+        fill="#e8a23a"
+        fontSize="8"
+        fontWeight="700"
+        fontFamily="ui-monospace, monospace"
+        letterSpacing="1.5"
+      >
+        THE GRID · ERCOT
+      </text>
+      {stack.map(([x, y, h, fill], i) => (
+        <rect key={i} x={x} y={y} width="18" height={h} fill={fill} opacity="0.92" />
+      ))}
+      <path
+        d="M140 70 C150 66 158 48 168 42 C178 36 188 44 198 38 C208 32 218 28 228 34"
+        fill="none"
+        stroke="#e8a23a"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M140 62 C150 60 158 54 168 50 C178 46 188 52 198 48 C208 44 218 40 228 46"
+        fill="none"
+        stroke="#5ec8d8"
+        strokeWidth="1.4"
+        strokeDasharray="3 2"
+      />
+      <rect x="140" y="14" width="44" height="18" fill="#141c2a" stroke="#2a3a52" />
+      <text x="146" y="25" fill="#d8e2f0" fontSize="8" fontFamily="ui-monospace, monospace">
+        +4.2%
+      </text>
+      <rect x="190" y="14" width="40" height="18" fill="#141c2a" stroke="#e05a3c" />
+      <text x="196" y="25" fill="#e05a3c" fontSize="8" fontFamily="ui-monospace, monospace">
+        TIGHT
+      </text>
+      <line x1="12" y1="84" x2="230" y2="84" stroke="#2a3a52" strokeWidth="1" />
     </svg>
   )
 }

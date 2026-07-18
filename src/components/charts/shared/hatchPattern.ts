@@ -12,6 +12,8 @@
  * />
  * ```
  */
+import type { HatchFill } from "./hatchFill"
+
 export interface HatchPatternOptions {
   /** Background color of the pattern tile */
   background?: string
@@ -23,6 +25,24 @@ export interface HatchPatternOptions {
   spacing?: number
   /** Angle of the lines in degrees (0 = horizontal, 45 = diagonal) @default 45 */
   angle?: number
+}
+
+/**
+ * The serializable `HatchFill` equivalent of the requested pattern. Returned
+ * when no canvas is available (SSR/test) so a `pieceStyle`/`nodeStyle` doing
+ * `createHatchPattern(...) ?? color` still yields a hatch that the SVG path
+ * renders as a `<pattern>` — instead of silently collapsing to the solid
+ * fallback. On canvas the real `CanvasPattern` is returned as before.
+ */
+function hatchFillDescriptor(o: Required<HatchPatternOptions>): HatchFill {
+  return {
+    type: "hatch",
+    background: o.background,
+    stroke: o.stroke,
+    lineWidth: o.lineWidth,
+    spacing: o.spacing,
+    angle: o.angle,
+  }
 }
 
 let _offscreen: HTMLCanvasElement | OffscreenCanvas | null = null
@@ -42,14 +62,18 @@ function getOffscreenCanvas(size: number): HTMLCanvasElement | OffscreenCanvas {
 /**
  * Create a repeating diagonal-line hatch pattern for canvas fills.
  *
- * Must be called in a browser environment (needs canvas). Returns null
- * in server/test environments where canvas is unavailable.
+ * In a browser (canvas available) returns a `CanvasPattern`. In server/test
+ * environments — where canvas is unavailable — returns the equivalent
+ * serializable {@link HatchFill} descriptor instead of `null`, so the same
+ * `pieceStyle`/`nodeStyle` renders a hatch through the SVG path rather than
+ * collapsing to the solid fallback. Use {@link isHatchFill} to distinguish the
+ * two forms; both are valid as a `style.fill`.
  */
 export function createHatchPattern(
   options: HatchPatternOptions = {},
   /** Optional target canvas to create the pattern on (for correct DPR scaling) */
   targetCtx?: CanvasRenderingContext2D
-): CanvasPattern | null {
+): CanvasPattern | HatchFill | null {
   const {
     background = "transparent",
     stroke = "#000",
@@ -57,6 +81,7 @@ export function createHatchPattern(
     spacing = 6,
     angle = 45,
   } = options
+  const resolved = { background, stroke, lineWidth, spacing, angle }
 
   // Pattern tile size — needs to be large enough to tile seamlessly
   const size = Math.max(8, Math.ceil(spacing * 2))
@@ -65,11 +90,11 @@ export function createHatchPattern(
   try {
     tileCanvas = getOffscreenCanvas(size)
   } catch {
-    return null // SSR or test environment
+    return hatchFillDescriptor(resolved) // SSR or test environment
   }
 
   const ctx = tileCanvas.getContext("2d")
-  if (!ctx) return null
+  if (!ctx) return hatchFillDescriptor(resolved)
 
   // Background
   if (background && background !== "transparent") {

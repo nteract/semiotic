@@ -733,13 +733,12 @@ export default function MergePressureExamplePage() {
         <section className="merge-pressure__hero">
           <div>
             <span className="merge-pressure__kicker">
-              GauntletChart · staggered compound stream
+              Review queues under AI throughput
             </span>
             <p className="merge-pressure__lede">
-              AI can increase code production without increasing review service. Each PR is one
-              compound body: code points in the core, negative traits attached as satellites, and
-              repeat visits when CI sends that same body back. Only merged PR points accumulate
-              into the Feature.
+              AI can increase code production without increasing review capacity. Each pull request
+              is a bundle: how much code it carries, what risks ride with it, and what happens when
+              CI sends it back. Only merges count toward shipping the feature.
             </p>
           </div>
           <div className="merge-pressure__source-card">
@@ -777,8 +776,8 @@ export default function MergePressureExamplePage() {
         <section className="merge-pressure__legend" aria-label="Visual grammar">
           <LegendItem title="PR core" body="Circle area grows with code points; arrivals are staggered by the scenario." swatch="core" />
           <LegendItem title="Negative trait" body="Square satellites remain attached until AI or human review transforms or removes them." swatch="trait" />
-          <LegendItem title="Shared service" body="Human Review is one FIFO work queue across every compound PR core." swatch="capacity" />
-          <LegendItem title="Feature" body="The socket fills once from each merged PR's code points; review activity adds nothing." swatch="feature" />
+          <LegendItem title="Shared service" body="Human review is one shared queue—PRs wait their turn." swatch="capacity" />
+          <LegendItem title="Feature" body="Only merged PR work fills the feature. Reviewing alone does not." swatch="feature" />
         </section>
 
         <section className="merge-pressure__workbench">

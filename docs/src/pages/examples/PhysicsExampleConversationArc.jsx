@@ -62,7 +62,7 @@ export function usePhysicsExampleConversationArc({ sessionId, arcId, component, 
   }
 }
 
-export function PhysicsArcStatus({ arc, label = "Conversation Arc" }) {
+export function PhysicsArcStatus({ arc, label = "Session log" }) {
   const latestProps =
     arc.latest?.type === "chart-edited" && arc.latest.changedProps?.length
       ? arc.latest.changedProps.join(", ")
@@ -79,7 +79,7 @@ export function PhysicsArcStatus({ arc, label = "Conversation Arc" }) {
       <div className="physics-arc-status__counts">
         <div>
           <strong>{arc.events.length}</strong>
-          <span>events</span>
+          <span>changes</span>
         </div>
         <div>
           <strong>{arc.editCount}</strong>
@@ -87,12 +87,12 @@ export function PhysicsArcStatus({ arc, label = "Conversation Arc" }) {
         </div>
         <div>
           <strong>{arc.renderedCount}</strong>
-          <span>renders</span>
+          <span>redraws</span>
         </div>
       </div>
       <div className="physics-arc-status__latest">
-        <span>{arc.enabled ? "enabled" : "disabled"}</span>
-        <strong>{latestProps ?? "no events yet"}</strong>
+        <span>{arc.enabled ? "recording" : "off"}</span>
+        <strong>{latestProps ?? "nothing yet"}</strong>
       </div>
     </div>
   )

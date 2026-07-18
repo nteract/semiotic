@@ -207,8 +207,9 @@ export default function ClimateAnomalyExamplePage() {
       title="Point Climate Anomaly"
     >
       <p style={styles.lede}>
-        Compare each day this year with the historical daily mean. A hatched
-        5th-95th percentile band.
+        Compare each day this year with the usual day for that date. The hatched band is the
+        historical 5th–95th percentile range; the fill shows whether today ran warmer or cooler
+        than the long-term mean.
       </p>
 
       <ThemeProvider theme={carbonTheme}>

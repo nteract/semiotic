@@ -537,6 +537,7 @@ export const roomRegistry: Readonly<Record<RoomId, AdventureRoom>> = {
         id: "vault-read-projection",
         label: "Read the settled projection before touching anything.",
         kind: "correct",
+        // Enabled only after SHOW SETTLED PROJECTION (or an equivalent shown flag).
         outcomes: always({
           evidenceIds: ["settled-projection"],
           setFlags: {
@@ -552,22 +553,18 @@ export const roomRegistry: Readonly<Record<RoomId, AdventureRoom>> = {
         outcomes: always({ endingId: "forecast-avalanche" }),
       },
       {
-        id: "vault-janitor",
-        label: "Activate the janitor annotation.",
-        kind: "secret",
-        outcomes: always({
-          completeRoom: true,
-          activateAnnotationId: "vault-janitor",
-          endingId: "janitors-monte-carlo",
-        }),
+        id: "vault-mort-bin-saas",
+        label: "Productize the Mort Bin as Capture-as-a-Service for every executive.",
+        kind: "incorrect",
+        outcomes: always({ endingId: "mort-bin-as-a-service" }),
       },
     ],
     secretAnnotations: [
       {
         id: "vault-janitor",
-        label: "Janitor note at PURE EXECUTIVE WEATHER",
-        accessibleLabel: "Activate the janitor annotation at the Pure Executive Weather sensor",
-        anchorId: "PURE EXECUTIVE WEATHER",
+        label: "Janitor note on the Mort Bin",
+        accessibleLabel: "Activate the janitor annotation on the Mort Bin after catching M. Zork",
+        anchorId: "mort-bin",
         messages: ["JANITOR: I keep telling them gravity is not a KPI."],
       },
     ],
@@ -761,6 +758,16 @@ export const endingRegistry: Readonly<Record<EndingId, AdventureEnding>> = {
       "The company reports all future revenue immediately and is delisted by lunch.",
     ],
   },
+  "mort-bin-as-a-service": {
+    id: "mort-bin-as-a-service",
+    title: "MORT BIN AS A SERVICE",
+    category: "bad",
+    narrative: [
+      "You pitch the gold bay as a self-serve executive capture funnel.",
+      "Marketing renames it Capture-as-a-Service and ships a Mort Bin to every department.",
+      "By Q3 there are seventeen Mort Bins, zero remaining executives, and a slide deck titled ‘Synergy Retention.’",
+    ],
+  },
   "mean-floor": {
     id: "mean-floor",
     title: "THE MEAN FLOOR",
@@ -869,11 +876,17 @@ export function getAvailableChoices(state: AnalystAdventureState): AdventureChoi
 /**
  * Choices remain visible after being disabled so the room can explain its
  * resolved state, but reducers and keyboard shortcuts must share the same
- * one-shot rule as the rendered button.
+ * rule as the rendered button.
+ *
+ * Vault option 2 (“read the settled projection”) is only selectable after the
+ * board has actually shown the projection (`settledProjectionShown`), and is
+ * one-shot once the player has claimed that read (`settledProjectionRead`).
  */
 export function isAdventureChoiceDisabled(
   state: Pick<AnalystAdventureState, "flags">,
   choiceId: string,
 ): boolean {
-  return choiceId === "vault-read-projection" && Boolean(state.flags.settledProjectionRead)
+  if (choiceId !== "vault-read-projection") return false
+  if (state.flags.settledProjectionRead) return true
+  return !state.flags.settledProjectionShown
 }

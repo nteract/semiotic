@@ -13,7 +13,26 @@
  * media-query changes that bypass React).
  */
 
-const varPattern = /^var\(\s*(--[^,)]+)(?:\s*,\s*([^)]+))?\s*\)$/
+/**
+ * Split a `var(--name, fallback)` string into its property name and fallback.
+ * Unlike a regex, this balances parentheses so a *nested* fallback var
+ * (`var(--a, var(--b, #fff))`) keeps its inner `var(...)` intact instead of
+ * being truncated at the first `)` — the mis-parse that made a canvas stroke
+ * fall through to black while the SVG path resolved the fallback to `#fff`.
+ */
+function extractVar(value: string): { name: string; fallback?: string } | null {
+  const s = value.trim()
+  if (!s.startsWith("var(") || !s.endsWith(")")) return null
+  const inner = s.slice(4, -1) // strip leading "var(" and the matching ")"
+  const commaIdx = inner.indexOf(",")
+  if (commaIdx === -1) {
+    const name = inner.trim()
+    return name.startsWith("--") ? { name } : null
+  }
+  const name = inner.slice(0, commaIdx).trim()
+  const fallback = inner.slice(commaIdx + 1).trim()
+  return name.startsWith("--") ? { name, fallback: fallback || undefined } : null
+}
 
 interface CacheEntry {
   version: number
@@ -72,11 +91,18 @@ export function resolveCSSColor(
   value: string | undefined
 ): string | undefined {
   if (!value) return value
-  const match = varPattern.exec(value)
-  if (!match) return value
+  const parsed = extractVar(value)
+  if (!parsed) return value
+
+  // A fallback may itself be a `var(...)` (or a nested chain) — resolve it
+  // recursively so `var(--a, var(--b, #fff))` degrades to `#fff` on both the
+  // canvas and SVG backends rather than handing the canvas an unparseable
+  // string (which silently paints black).
+  const resolveFallback = (): string | undefined =>
+    parsed.fallback ? resolveCSSColor(ctx, parsed.fallback) : value
 
   const canvas = ctx.canvas
-  if (!canvas) return match[2]?.trim() || value
+  if (!canvas) return resolveFallback()
 
   ensureGlobalObserver()
 
@@ -88,8 +114,8 @@ export function resolveCSSColor(
   const cached = entry.map.get(value)
   if (cached !== undefined) return cached
 
-  const computed = getComputedStyle(canvas).getPropertyValue(match[1]).trim()
-  const resolved = computed || match[2]?.trim() || value
+  const computed = getComputedStyle(canvas).getPropertyValue(parsed.name).trim()
+  const resolved = computed || resolveFallback() || value
   entry.map.set(value, resolved)
   return resolved
 }

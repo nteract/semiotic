@@ -29,6 +29,7 @@ import {
   getAvailableChoices,
   getAvailableDestinations,
   getRoom,
+  isAdventureChoiceDisabled,
   roomRegistry,
 } from "./roomRegistry"
 import { ANALYST_ADVENTURE_SEED, acceptedAtForEvidence } from "./storySeed1984"
@@ -354,6 +355,17 @@ describe("adventure reducer", () => {
     expect(getAvailableDestinations(atMap)).not.toContain("forecast-vault")
   })
 
+  it("debug-warps into the Calendar That Lies without destination gates", () => {
+    const ended = play([start, adventureActions.choose("executive-roof")])
+    expect(ended.endingId).toBe("helicopter-of-synergy")
+
+    const warped = adventureReducer(ended, adventureActions.debugWarp("executive-suite"))
+    expect(warped.endingId).toBeUndefined()
+    expect(warped.flags.storyStarted).toBe(true)
+    expect(warped.currentRoomId).toBe("executive-suite")
+    expect(warped.visitedRoomIds).toContain("executive-suite")
+  })
+
   it("unlocks the vault only through the tunnel map plus daemon annotation", () => {
     const noTunnel = play(
       [adventureActions.activateAnnotation("server-presentation-daemon")],
@@ -412,7 +424,7 @@ describe("adventure reducer", () => {
       "vault-release-mort",
       "vault-read-projection",
       "vault-gravity",
-      "vault-janitor",
+      "vault-mort-bin-saas",
     ])
   })
 
@@ -443,25 +455,29 @@ describe("adventure reducer", () => {
     ])
   })
 
-  it("exposes the deterministic settled projection without waiting for motion", () => {
+  it("parks the settled projection without claiming evidence until option 2 is chosen", () => {
     const vault = arriveAtVault()
     const projected = adventureReducer(vault, adventureActions.showSettledProjection())
-    expect(projected.flags.settledProjectionRead).toBe(true)
-    expect(projected.evidence.at(-1)).toMatchObject({
-      id: "settled-projection",
-      frame: "StreamPhysicsFrame",
-    })
+    expect(projected.flags.settledProjectionShown).toBe(true)
+    expect(projected.flags.settledProjectionRead).not.toBe(true)
+    expect(projected.evidence.map((artifact) => artifact.id)).not.toContain("settled-projection")
+    expect(isAdventureChoiceDisabled(vault, "vault-read-projection")).toBe(true)
+    expect(isAdventureChoiceDisabled(projected, "vault-read-projection")).toBe(false)
     expect(adventureReducer(projected, adventureActions.showSettledProjection())).toBe(projected)
   })
 
-  it("keeps the settled-projection choice one-shot for keyboard and programmatic actions", () => {
+  it("keeps the settled-projection choice gated on SHOW and one-shot after read", () => {
     const vault = arriveAtVault()
-    const projected = adventureReducer(vault, adventureActions.choose("vault-read-projection"))
+    expect(adventureReducer(vault, adventureActions.choose("vault-read-projection"))).toBe(vault)
+
+    const shown = adventureReducer(vault, adventureActions.showSettledProjection())
+    const projected = adventureReducer(shown, adventureActions.choose("vault-read-projection"))
 
     expect(projected.flags.settledProjectionRead).toBe(true)
     expect(
       projected.evidence.filter((artifact) => artifact.id === "settled-projection"),
     ).toHaveLength(1)
+    expect(isAdventureChoiceDisabled(projected, "vault-read-projection")).toBe(true)
     expect(adventureReducer(projected, adventureActions.choose("vault-read-projection"))).toBe(
       projected,
     )
@@ -533,6 +549,7 @@ describe("ending reachability", () => {
     const vault = arriveAtVault()
     record(endingFrom(vault, adventureActions.choose("vault-release-mort")))
     record(endingFrom(vault, adventureActions.choose("vault-gravity")))
+    record(endingFrom(vault, adventureActions.choose("vault-mort-bin-saas")))
     record(endingFrom(vault, adventureActions.activateAnnotation("vault-janitor")))
 
     expect([...reached].sort()).toEqual([...ENDING_IDS].sort())

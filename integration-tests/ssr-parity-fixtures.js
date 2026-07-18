@@ -628,6 +628,72 @@ const symbolScatterData = [
   { x: 4, y: 9, kind: "Comms" },
   { x: 5, y: 6, kind: "Weather" },
 ]
+// Wide-form composed series melted to long form: one "area" series + one
+// "line" series on a single LineChart (the ComposedChart mixed shape).
+const mixedAreaData = [
+  { step: 1, value: 400, series: "Volume" }, { step: 1, value: 24, series: "Latency" },
+  { step: 2, value: 300, series: "Volume" }, { step: 2, value: 13, series: "Latency" },
+  { step: 3, value: 600, series: "Volume" }, { step: 3, value: 38, series: "Latency" },
+  { step: 4, value: 800, series: "Volume" }, { step: 4, value: 43, series: "Latency" },
+]
+// AreaChart value ramp exercised with a value-anchored semanticGradient.
+const semanticAreaData = [
+  { time: 0, value: 10 }, { time: 1, value: 45 }, { time: 2, value: 62 },
+  { time: 3, value: 80 }, { time: 4, value: 95 },
+]
+// LineChart band: per-series low/high envelope, curved.
+const bandLineData = [
+  { time: 0, value: 10, series: "A", low: 5, high: 15 },
+  { time: 1, value: 25, series: "A", low: 18, high: 32 },
+  { time: 2, value: 18, series: "A", low: 12, high: 24 },
+  { time: 3, value: 30, series: "A", low: 22, high: 38 },
+  { time: 0, value: 15, series: "B", low: 8, high: 22 },
+  { time: 1, value: 12, series: "B", low: 5, high: 20 },
+  { time: 2, value: 28, series: "B", low: 20, high: 35 },
+  { time: 3, value: 20, series: "B", low: 12, high: 28 },
+]
+// Single-lane / single-segment quota exercised against a pinned value axis:
+// the segment (40) is well under the extent max (100) so it must fill ~40%.
+const valueExtentBarData = [{ lane: "capacity", phase: "used", value: 40 }]
+// Range/dumbbell: high/low only (no open/close) → CandlestickChart range mode.
+const rangeData = [
+  { t: 1, high: 80, low: 40 },
+  { t: 2, high: 90, low: 50 },
+  { t: 3, high: 70, low: 30 },
+  { t: 4, high: 100, low: 60 },
+  { t: 5, high: 85, low: 45 },
+]
+// One lane with a solid "used" segment and a hatched "reserved" segment. The
+// hatch is a declarative HatchFill descriptor, resolved to a CanvasPattern on
+// canvas and an SVG <pattern> in SSR — so the two backends match.
+const hatchBarData = [
+  { lane: "capacity", phase: "used", value: 55 },
+  { lane: "capacity", phase: "reserved", value: 25 },
+]
+// A settling series annotated with a vertical band (an era/phase region) and a
+// vertical threshold line + label — the native x-band / x-threshold types.
+const verticalBandData = [
+  { x: 0, y: 12 }, { x: 1, y: 17 }, { x: 2, y: 15 }, { x: 3, y: 8 },
+  { x: 4, y: 3 }, { x: 5, y: 4 }, { x: 6, y: 3 }, { x: 7, y: 4 },
+]
+// Hierarchy whose leaves carry a categorical `tier`, so `colorBy` must paint
+// distinct tiles and `labelMode:"all"` must label every tier.
+const tieredHierarchy = {
+  name: "All",
+  children: [
+    {
+      name: "Group A",
+      children: [
+        { name: "Zone 1", children: [
+          { name: "item-a1", value: 142, tier: "primary" },
+          { name: "item-a2", value: 12, tier: "backup" },
+        ] },
+        { name: "Zone 3", children: [{ name: "item-a3", value: 64, tier: "primary" }] },
+      ],
+    },
+    { name: "Group B", children: [{ name: "Zone 2", children: [{ name: "item-b1", value: 96, tier: "primary" }] }] },
+  ],
+}
 
 function makeSsrParityCases(React) {
   return [
@@ -1286,6 +1352,210 @@ function makeSsrParityCases(React) {
         trackFill: "#c9d6ea",
         width: 460,
         height: 260,
+      },
+    },
+    {
+      // LineChart mixed line+area: `fillArea:[names]` fills one series while the
+      // other stays a line, `gradientFill` (via frameProps) gradients the area.
+      // SSR dropped fillArea/areaOpacity and drew every series as a bare line.
+      id: "line-mixed-area",
+      component: "LineChart",
+      props: {
+        data: mixedAreaData,
+        xAccessor: "step",
+        yAccessor: "value",
+        lineBy: "series",
+        colorBy: "series",
+        fillArea: ["Volume"],
+        areaOpacity: 0.3,
+        curve: "monotoneX",
+        colorScheme: ["#E04F5F", "#3E8CF9"],
+        frameProps: { gradientFill: true },
+        width: 440,
+        height: 240,
+      },
+    },
+    {
+      // AreaChart value-anchored semanticGradient. SSR dropped it and painted a
+      // flat area; the step curve + y-threshold annotations already worked.
+      id: "area-semantic-gradient",
+      component: "AreaChart",
+      props: {
+        data: semanticAreaData,
+        xAccessor: "time",
+        yAccessor: "value",
+        curve: "step",
+        semanticGradient: [
+          { at: 50, color: "#E5A800" },
+          { at: 75, color: "#FF8000" },
+          { at: 95, color: "#FF7077" },
+        ],
+        yExtent: [0, 100],
+        annotations: [
+          { type: "y-threshold", value: 50, label: "Warning", color: "#E5A800" },
+          { type: "y-threshold", value: 90, label: "Critical", color: "#FF7077" },
+        ],
+        width: 440,
+        height: 260,
+      },
+    },
+    {
+      // LineChart band envelope: SSR dropped `band` entirely, and the ribbon
+      // ignored the line's curve (drew straight edges under a curved line).
+      id: "line-band",
+      component: "LineChart",
+      props: {
+        data: bandLineData,
+        xAccessor: "time",
+        yAccessor: "value",
+        lineBy: "series",
+        colorBy: "series",
+        curve: "monotoneX",
+        lineWidth: 3,
+        band: { y0Accessor: "low", y1Accessor: "high" },
+        width: 440,
+        height: 260,
+      },
+    },
+    {
+      // PieChart startAngle rotation (+ cornerRadius). SSR ignored startAngle
+      // and always began at 12 o'clock.
+      id: "pie-start-angle",
+      component: "PieChart",
+      props: {
+        data: categoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        colorScheme: ["#6C4EE8", "#0E9AA7", "#C2185B"],
+        startAngle: 45,
+        cornerRadius: 4,
+        width: 320,
+        height: 320,
+      },
+    },
+    {
+      // DonutChart startAngle rotation (+ cornerRadius + innerRadius).
+      id: "donut-start-angle",
+      component: "DonutChart",
+      props: {
+        data: categoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        colorScheme: ["#6C4EE8", "#0E9AA7", "#C2185B"],
+        startAngle: 90,
+        cornerRadius: 6,
+        innerRadius: 70,
+        showLegend: false,
+        width: 320,
+        height: 320,
+      },
+    },
+    {
+      // SwimlaneChart valueExtent pins the value axis so a segment (40) under
+      // the extent max (100) fills the right fraction, plus roundedTop caps the
+      // outer ends. SSR auto-scaled to the data max (bar filled the whole lane).
+      id: "swimlane-value-extent",
+      component: "SwimlaneChart",
+      props: {
+        data: valueExtentBarData,
+        categoryAccessor: "lane",
+        subcategoryAccessor: "phase",
+        valueAccessor: "value",
+        // The single "used" segment is 40; the pinned [0,100] axis must keep it
+        // at ~40% of the track. Without the fix SSR auto-scaled to 40 (full).
+        valueExtent: [0, 100],
+        trackFill: "#e3e3ea",
+        roundedTop: 6,
+        colorBy: "phase",
+        width: 440,
+        height: 160,
+      },
+    },
+    {
+      // Treemap colorBy paints leaf tiles by a categorical field, and
+      // labelMode:"all" + paddingTop label every hierarchy tier. SSR collapsed
+      // all tiles to one color and dropped parent labels.
+      id: "treemap-colorby-labels",
+      component: "Treemap",
+      props: {
+        data: tieredHierarchy,
+        childrenAccessor: "children",
+        valueAccessor: "value",
+        colorBy: "tier",
+        labelMode: "all",
+        paddingTop: 18,
+        showLabels: true,
+        colorScheme: ["#0E9AA7", "#C2185B", "#7CB342"],
+        width: 520,
+        height: 340,
+      },
+    },
+    {
+      // CandlestickChart range mode (high/low, no open/close) → a dumbbell:
+      // high→low line with endpoint bulbs. SSR used to draw a filled body rect.
+      id: "range-dumbbell",
+      component: "CandlestickChart",
+      props: {
+        data: rangeData,
+        xAccessor: "t",
+        highAccessor: "high",
+        lowAccessor: "low",
+        candlestickStyle: { rangeColor: "#6C4EE8" },
+        width: 440,
+        height: 260,
+      },
+    },
+    {
+      // A hatched swimlane segment via a declarative HatchFill descriptor in
+      // pieceStyle — a CanvasPattern on canvas, an SVG <pattern> in SSR. This
+      // is the backend-agnostic way to get the hatch that a canvas-only
+      // `createHatchPattern` (→ null in SSR) can't. `createHatchPattern` now
+      // also returns this descriptor when no canvas exists, so either path works.
+      id: "swimlane-hatch",
+      component: "SwimlaneChart",
+      props: {
+        data: hatchBarData,
+        categoryAccessor: "lane",
+        subcategoryAccessor: "phase",
+        valueAccessor: "value",
+        valueExtent: [0, 100],
+        trackFill: "#e3e3ea",
+        roundedTop: 6,
+        colorScheme: ["#6C4EE8", "#6C4EE8"],
+        width: 440,
+        height: 160,
+        frameProps: {
+          pieceStyle: (d) =>
+            d.phase === "reserved"
+              ? { fill: { type: "hatch", background: "transparent", stroke: "#6C4EE8", spacing: 6, angle: 45 } }
+              : { fill: "#6C4EE8" },
+        },
+      },
+    },
+    {
+      // Vertical band (an era/phase region) + vertical threshold line & label —
+      // the native `x-band` / `x-threshold` annotation types. Both render on the
+      // canvas (CSR) and serialize to SVG (SSR) through the shared annotation
+      // renderer, so the region fill, the dashed line, and both labels match.
+      // (This is the library-native equivalent of a downstream chart's custom
+      // "vertical bands + annotations" — which used bespoke annotation types +
+      // manual SVG splicing that dropped out in SSR.)
+      id: "line-vertical-bands",
+      component: "LineChart",
+      props: {
+        data: verticalBandData,
+        xAccessor: "x",
+        yAccessor: "y",
+        curve: "monotoneX",
+        annotations: [
+          // Explicit label `color` so the band label matches on both backends
+          // regardless of whether a ThemeProvider set `--semiotic-primary`.
+          { type: "x-band", x0: 0, x1: 3, label: "Catch-up window", color: "#6C4EE8", fill: "#6C4EE8", fillOpacity: 0.15 },
+          { type: "x-threshold", value: 3, label: "Caught up", color: "#DB2777" },
+        ],
+        margin: { top: 40, right: 24, bottom: 30, left: 48 },
+        width: 460,
+        height: 280,
       },
     },
   ]

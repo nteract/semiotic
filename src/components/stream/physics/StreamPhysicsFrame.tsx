@@ -1150,7 +1150,9 @@ export const StreamPhysicsFrame = memo(forwardRef<
       return
     }
     if (usingWorker && workerStartingRef.current) return
-    lastFrameTimeRef.current = null
+    // Do NOT null lastFrameTime here. Pause/resume/visibility already reset
+    // the clock; wiping it on every kick (React re-renders, push, config
+    // patches) forces zero-delta ticks and stalls motion under thrash.
     scheduleRender()
   }, [
     composedControllers,
@@ -1541,6 +1543,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
           width={size[0]}
           height={size[1]}
           aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            display: "block"
+          }}
           onPointerDown={handleCanvasPointerDown}
           onPointerMove={enableHover ? handleCanvasPointerMove : undefined}
           onPointerLeave={enableHover ? clearHover : undefined}

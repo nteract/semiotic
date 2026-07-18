@@ -18,6 +18,7 @@ import {
   adventureDiagnosticProps,
   adventureSuggestionInput,
 } from "../analyticalHeuristics"
+import { withSecretTitleWarp } from "./SecretRoomWarp"
 
 const QUESTION_OPTIONS = [
   "What should I compare?",
@@ -215,8 +216,12 @@ export default function AnalyticalRoom({
   onInspect,
   onAnalyticsReady,
   onActivateAnnotation,
+  onSecretCalendarWarp,
   renderChart,
 }) {
+  const displayTitle = onSecretCalendarWarp
+    ? withSecretTitleWarp(room.title, { word: "Lies", onWarp: onSecretCalendarWarp })
+    : room.title
   const semanticAnnotations = useMemo(
     () => annotations.map(semanticAnnotation),
     [annotations],
@@ -406,7 +411,7 @@ export default function AnalyticalRoom({
     <div className="analyst-adventure__analytics">
       <ChartContainer
         className="analyst-adventure__chart-container"
-        title={room.title}
+        title={displayTitle}
         subtitle={summary}
         height={chartHeight}
         status="static"

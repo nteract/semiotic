@@ -121,6 +121,10 @@ export function buildRibbonForGroup(
     type: "area",
     topPath,
     bottomPath,
+    // Honor the chart's curve so the band's top/bottom edges follow the same
+    // interpolation as the line/area they sit under (mirrors areaScene). Without
+    // this the envelope drew straight segments beneath a curved line.
+    ...(ctx.config.curve && ctx.config.curve !== "linear" && { curve: ctx.config.curve }),
     style: pickStyle(ctx, ribbon, group, data[0]),
     datum: data,
     group,

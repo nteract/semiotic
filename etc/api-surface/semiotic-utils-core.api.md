@@ -27,7 +27,7 @@ function computeArcBoundingBox(sweepDegrees?: number | undefined): ArcBoundingBo
 function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function countNodes(root: NavTreeNode): number
-function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | null
+function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
 function darkenColor(hex: string, factor?: number | undefined): string
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>

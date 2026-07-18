@@ -257,6 +257,25 @@ describe("PhysicsPipelineStore", () => {
     expect(store.queueSize()).toBe(1)
   })
 
+  it("materializeDueSpawns injects already-due seed bodies while paused", () => {
+    const store = new PhysicsPipelineStore()
+    store.setPaused(true)
+    store.enqueue([
+      { ...circle("due"), spawnAt: 0 },
+      { ...circle("later", 1, 1), spawnAt: 0.5 }
+    ])
+
+    expect(store.materializeDueSpawns()).toEqual(["due"])
+    expect(store.readBodies().map((body) => body.id)).toEqual(["due"])
+    expect(store.queueSize()).toBe(1)
+    expect(store.elapsed()).toBe(0)
+
+    // Future queue items still require an unpaused tick — materialize is not a
+    // time advance.
+    expect(store.materializeDueSpawns()).toEqual([])
+    expect(store.queueSize()).toBe(1)
+  })
+
   it("reports no pending work after a settled empty queue", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 1 / 60,

@@ -202,6 +202,8 @@ export default function AnalystAdventureGame() {
   })
   const [hintRequestToken, setHintRequestToken] = useState(0)
   const [announcement, setAnnouncement] = useState("")
+  // Bumped by the secret "Lies" warp so the room remounts even if already there.
+  const [roomEpoch, setRoomEpoch] = useState(0)
   const { record } = useConversationArc({
     capacity: 180,
     sessionId: "analyst-adventure-seed-1984",
@@ -258,6 +260,23 @@ export default function AnalystAdventureGame() {
   const navigate = useCallback((roomId) => {
     dispatch(adventureActions.navigate(roomId))
     setAnnouncement(`Traveling to ${DESTINATION_LABELS[roomId]}.`)
+  }, [])
+
+  // Secret pointer-only warp from the word "Lies" in "The Calendar That Lies".
+  // Always mutates mount epoch so re-clicking while already in the suite still
+  // remounts the room (otherwise the reducer is a no-op and nothing appears to happen).
+  const secretCalendarWarp = useCallback(() => {
+    dispatch(adventureActions.debugWarp("executive-suite"))
+    setRoomEpoch((value) => value + 1)
+    setDataSummaryOpen(false)
+    setHintRequestToken(0)
+    setAnnouncement("Warped to The Calendar That Lies.")
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const chart = document.querySelector(".aa-chart-viewport")
+        chart?.scrollIntoView({ block: "start", behavior: "auto" })
+      })
+    })
   }, [])
 
   const startAdventure = useCallback(() => {
@@ -487,15 +506,18 @@ export default function AnalystAdventureGame() {
       onShowSettledProjection: () => dispatch(adventureActions.showSettledProjection()),
       onChoose: choose,
       onReopenEvidence: reopenEvidence,
+      onSecretCalendarWarp: secretCalendarWarp,
     }
     shell = (
       <CgaShell
         title="ANALYST ADVENTURE"
         location={{ title: room.title, subtitle: room.subtitle }}
         headerActions={headerAction}
+        onSecretCalendarWarp={secretCalendarWarp}
         narrative={
           <NarrativeTerminal
             title={room.title}
+            onSecretCalendarWarp={secretCalendarWarp}
             eyebrow={`ROOM ${state.visitedRoomIds.indexOf(room.id) + 1} // ${room.frameFamily.toUpperCase()}`}
             lines={[
               ...room.narrative,
@@ -504,7 +526,7 @@ export default function AnalystAdventureGame() {
             prompt={room.prompt}
           />
         }
-        chart={<RoomComponent {...roomProps} />}
+        chart={<RoomComponent key={`${room.id}-${roomEpoch}`} {...roomProps} />}
         chartLabel={`${room.title} analytical puzzle`}
         choices={
           <ChoicePanel
