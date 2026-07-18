@@ -450,19 +450,19 @@ export default function YellowstoneExamplePage() {
       <div className="yellowstone">
         <section className="yellowstone__hero">
           <div>
-            <span className="yellowstone__kicker">Constraint topology as a field-guide mobile</span>
+            <span className="yellowstone__kicker">A field-guide mobile of ecological constraints</span>
             <p>
-              Restore wolves and watch a signed ecological topology seek a new equilibrium.
-              Spring movement keeps the dependencies legible; it does not encode a literal
-              ecosystem. Every plate keeps its identity while its index, evidence, and
+              Restore wolves and watch the web of dependencies settle into a new balance. The
+              springy motion is there to keep who depends on whom legible—not to simulate a
+              literal ecosystem. Each plate keeps its identity while the index, evidence, and
               constraints change by chapter.
             </p>
           </div>
           <div className="yellowstone__legend-note">
-            <strong>1 glyph = 10 index points</strong>
+            <strong>1 sign = 10 index points</strong>
             <span>Illustrative ecological index, never an animal count.</span>
           </div>
-          <PhysicsArcStatus arc={arc} label="Physics story arc" />
+          <PhysicsArcStatus arc={arc} label="Story progress" />
         </section>
 
         <section className="yellowstone__chapter" aria-live="polite">
@@ -510,7 +510,7 @@ export default function YellowstoneExamplePage() {
         <section ref={hostRef} className="yellowstone__chart-host">
           <LinkedCharts>
             <ChartContainer
-              title="Signed trophic topology"
+              title="Who depends on whom"
               subtitle={`${scenario.short}: ${detail === "full" ? "core relations plus external pressures" : "core ecosystem relations"}`}
               status={paused ? "paused" : "live"}
               controls={controls}

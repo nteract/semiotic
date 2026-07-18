@@ -183,13 +183,12 @@ export default function MobileDataVisualizationExamplePage() {
       <div className="mv-page">
         <section className="mv-hero" aria-labelledby="mv-title">
           <div className="mv-hero-copy">
-            <div className="mv-kicker">State of the art, phone first</div>
-            <h2 id="mv-title">A field guide to charts that survive a thumb, a train, and 360 CSS pixels.</h2>
+            <div className="mv-kicker">Phone-first charts that still work</div>
+            <h2 id="mv-title">A field guide to charts that survive a thumb, a train, and a narrow screen.</h2>
             <p>
-              Mobile visualization is not a smaller desktop dashboard. The best
-              current work treats phone charts as designed transformations: remove
-              low-value furniture, preserve the task, use text as an interface,
-              and make every exploratory move possible with a single, visible tap.
+              Mobile visualization is not a smaller desktop dashboard. The best work redesigns the
+              chart for the phone: cut low-value furniture, keep the task, treat text as part of
+              the interface, and make every exploratory move possible with a single visible tap.
             </p>
           </div>
           <PhoneTeaser />
@@ -726,7 +725,7 @@ function SourceLedger() {
   return (
     <section className="mv-sources" aria-labelledby="mv-sources-title">
       <div className="mv-section-label">Sources</div>
-      <h2 id="mv-sources-title">Reference ledger</h2>
+      <h2 id="mv-sources-title">Sources and papers</h2>
       <div className="mv-source-grid">
         {SOURCE_LINKS.map((source) => (
           <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="mv-source-card">

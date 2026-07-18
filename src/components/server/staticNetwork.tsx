@@ -170,6 +170,11 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     edgeStyle: props.edgeStyle,
     nodeLabel: props.nodeLabel,
     showLabels: props.showLabels,
+    // labelMode ("leaf"|"parent"|"all") selects which hierarchy tiers get
+    // labels (Treemap/CirclePack). The scene builder defaults to "leaf", so
+    // dropping this here made SSR omit every parent/container label the CSR
+    // chart draws.
+    labelMode: props.labelMode,
     colorBy: props.colorBy,
     colorScheme: props.colorScheme || theme.colors.categorical,
     edgeColorBy: props.edgeColorBy,

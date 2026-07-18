@@ -79,11 +79,10 @@ export default function GestaltPrinciplesExamplePage() {
         <div className="gz-hero">
           <span className="gz-kicker">Perception Lab</span>
           <p className="gz-lede">
-            Gestalt is a <em>pragmatic</em> part of building charts — necessary
-            the moment you do more than a plain bar or line. This is a working
-            re-make of a 2015 essay series, with every demonstration rebuilt on
-            a Semiotic chart. Each principle is shown where it actually lives:
-            the encoding it powers, or the chart it quietly sabotages.
+            Gestalt is a <em>pragmatic</em> part of building charts—necessary the moment you do
+            more than a plain bar or line. This is a working remake of a 2015 essay series. Each
+            principle is shown where it actually lives: the encoding it powers, or the chart it
+            quietly sabotages.
           </p>
         </div>
 

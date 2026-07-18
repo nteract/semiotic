@@ -108,4 +108,22 @@ describe("resolveCSSColor", () => {
     const ctx = { canvas: null as unknown as HTMLCanvasElement } as CanvasRenderingContext2D
     expect(resolveCSSColor(ctx, "var(--missing, #defabc)")).toBe("#defabc")
   })
+
+  it("resolves a nested var() fallback to its innermost color", () => {
+    // The Treemap cell-border stroke: both custom props unset → #fff. The old
+    // regex truncated the fallback at the first ")", handing the canvas an
+    // unparseable string that painted black instead.
+    const ctx = makeCtx()
+    expect(resolveCSSColor(ctx, "var(--semiotic-cell-border, var(--semiotic-border, #fff))")).toBe("#fff")
+  })
+
+  it("uses the inner var when the outer is unset but the inner is defined", () => {
+    const ctx = makeCtx("--semiotic-border", "#cccccc")
+    expect(resolveCSSColor(ctx, "var(--semiotic-cell-border, var(--semiotic-border, #fff))")).toBe("#cccccc")
+  })
+
+  it("resolves a nested var() fallback with ctx.canvas missing", () => {
+    const ctx = { canvas: null as unknown as HTMLCanvasElement } as CanvasRenderingContext2D
+    expect(resolveCSSColor(ctx, "var(--a, var(--b, #fff))")).toBe("#fff")
+  })
 })

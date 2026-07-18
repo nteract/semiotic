@@ -23,6 +23,7 @@ export const ENDING_IDS = [
   "three-d-pie-dimension",
   "centrality-justice",
   "forecast-avalanche",
+  "mort-bin-as-a-service",
   "mean-floor",
   "clean-data-incident",
   "mercator-event",
@@ -153,6 +154,8 @@ export type AdventureAction =
       inputType: AdventureInputType
     }
   | { type: "SHOW_SETTLED_PROJECTION" }
+  /** Secret debug teleport — bypasses destination locks and clears endings. */
+  | { type: "DEBUG_WARP"; roomId: RoomId }
   | { type: "REWIND" }
   | { type: "RESTART" }
 

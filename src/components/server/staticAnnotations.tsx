@@ -36,7 +36,15 @@ function ssrLabelBackground(
   defaultType: "halo" | "none",
 ): AnnotationLabelBackground {
   const lb = ann.labelBackground as AnnotationLabelBackground | undefined
-  const bg = theme.colors.background
+  // A halo/box only aids legibility if it actually paints. The default light
+  // theme's background is "transparent" (so charts compose over any page), but
+  // baking that verbatim yields an invisible halo — a threshold label drawn
+  // over a same-colored area (e.g. a semanticGradient fill) then vanishes. On
+  // the client the halo is a CSS var that resolves to the real page background;
+  // SSR is standalone, so fall back to the theme's opaque `surface` (the "paper"
+  // behind the plot) whenever the background is transparent/unset.
+  const rawBg = theme.colors.background
+  const bg = rawBg && rawBg !== "transparent" ? rawBg : (theme.colors.surface || rawBg)
   if (lb === undefined) return defaultType === "none" ? "none" : { type: "halo", fill: bg }
   if (lb === false || lb === "none") return "none"
   if (lb === true || lb === "halo") return { type: "halo", fill: bg }
@@ -318,7 +326,10 @@ function renderAnnotation(
               x={left + 4} y={TOP_LABEL_BASELINE}
               textAnchor="start"
               fontSize={theme.typography.tickSize}
-              fill={ann.color || resolveAnnotationColor(ann, theme)}
+              // Match the client x-band label default (`--semiotic-primary`),
+              // not the generic annotation text color — otherwise an unlabeled-
+              // color x-band reads dark in SSR but primary-tinted on canvas.
+              fill={ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme)}
               fontFamily={theme.typography.fontFamily}
               fontWeight="bold"
               text={ann.label}

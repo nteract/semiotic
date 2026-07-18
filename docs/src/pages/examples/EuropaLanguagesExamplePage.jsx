@@ -96,10 +96,9 @@ export default function EuropaLanguagesExamplePage() {
         <p className="europa-lede">
           A rough-ink remake of Karl von Ausfeld&apos;s 1840 plate{" "}
           <em>Europa nach den lebenden Sprachen</em> — Europe tinted by living language families.
-          Country polygons are exact Semiotic <code>geoarea</code> scene nodes (hit testing,
-          keyboard nav, tooltips stay authoritative); only the paint goes through{" "}
-          <code>createRoughRenderMode</code> from <code>semiotic/rough</code> so the hachure reads
-          like a hand-colored copperplate without inventing new geometry.
+          The countries are still real map shapes you can hover, keyboard-navigate, and read in a
+          data table. Only the ink is rough: hand-tinted hachure in the spirit of a copperplate,
+          without inventing new borders.
         </p>
 
         <div className="europa-plate" aria-label="Historical language map of Europe">
@@ -168,7 +167,7 @@ export default function EuropaLanguagesExamplePage() {
             </div>
 
             <div className="europa-map-caption">
-              <p className="europa-hint">Hover a region · rough hachure · exact geo hit targets</p>
+              <p className="europa-hint">Hover a region · keyboard-navigable · rough hachure ink</p>
               <div className="europa-title-block">
                 <h1 className="europa-title">Europa</h1>
                 <p className="europa-subtitle">nach den lebenden Sprachen.</p>

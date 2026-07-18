@@ -1223,4 +1223,83 @@ describe("StreamPhysicsFrame", () => {
     )
     expect(screen.getByText(/Queue depth is rising/i)).toBeInTheDocument()
   })
+
+  it("materializes initialSpawns on a paused frame so snapshot mounts are not empty", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        paused
+        initialSpawns={[circle("paused-seed", 40, 50), circle("paused-seed-b", 60, 50)]}
+        config={{ fixedDt: 1 / 60, kernel: quietKernel }}
+      />
+    )
+
+    expect(ref.current?.getData().map((body) => body.id)).toEqual([
+      "paused-seed",
+      "paused-seed-b"
+    ])
+    expect(ref.current?.snapshot().elapsedSeconds).toBe(0)
+  })
+
+  it("keeps non-zero frame deltas under repeated request kicks so gravity progresses", () => {
+    const scheduler = createFrameScheduler(0)
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    let now = 0
+
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 160]}
+        frameScheduler={scheduler.scheduler}
+        clock={() => now}
+        continuous
+        initialSpawns={[{ ...circle("faller", 40, 10), vy: 0 }]}
+        config={{
+          fixedDt: 1 / 60,
+          maxSubsteps: 8,
+          kernel: {
+            gravity: { x: 0, y: 600 },
+            velocityDamping: 1,
+            sleepAfter: 999,
+            sleepSpeed: 0.01
+          }
+        }}
+      />
+    )
+
+    // Prime the loop (first tick may be zero-delta because lastFrameTime starts null).
+    act(() => {
+      scheduler.flush()
+    })
+    const y0 = ref.current?.getData()[0]?.y ?? 0
+
+    // Re-kick the scheduler the way React paint-deps / push paths do: schedule
+    // without wiping the frame clock (the previous thrash path zeroed deltas).
+    for (let i = 0; i < 6; i += 1) {
+      now += 16
+      act(() => {
+        ref.current?.pushMany([])
+        scheduler.flush()
+      })
+    }
+
+    const y1 = ref.current?.getData()[0]?.y ?? 0
+    expect(y1).toBeGreaterThan(y0 + 1)
+  })
+
+  it("positions the physics canvas absolutely like other stream frames", () => {
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        initialSpawns={[circle("abs-canvas")]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+      />
+    )
+    const canvas = container.querySelector("canvas")
+    expect(canvas?.style.position).toBe("absolute")
+    expect(canvas?.style.left).toBe("0px")
+    expect(canvas?.style.top).toBe("0px")
+  })
 })

@@ -56,7 +56,13 @@ function withOpacity(color: string, opacity: number | undefined): string {
   return color
 }
 
-function semanticGradientToColorStops(stops: SemanticGradientStop[]): Array<{ offset: number; color: string }> {
+/**
+ * Convert value-anchored `semanticGradient` stops (`{ at, color }` on the value
+ * scale, 0–100) into the frame's `gradientFill.colorStops` (offset 0 = top).
+ * Exported so the server (`renderChart`) config resolves it identically to this
+ * HOC — otherwise SSR silently drops `semanticGradient` and paints a flat area.
+ */
+export function semanticGradientToColorStops(stops: SemanticGradientStop[]): Array<{ offset: number; color: string }> {
   return stops
     .filter((stop) => Number.isFinite(stop.at))
     .map((stop) => ({

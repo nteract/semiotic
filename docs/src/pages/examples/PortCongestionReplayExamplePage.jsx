@@ -406,7 +406,7 @@ export default function PortCongestionReplayExamplePage() {
         <section className="port-replay__hero-panel">
           <PanelHeading
             number="A"
-            eyebrow="Temporal process flow"
+            eyebrow="Ships moving through gates over time"
             title="Traffic picks a lane, and the lanes trade places"
             note="Each ribbon is three days of real container-ship transits recorded at the downstream gate. Hover or click a ribbon to isolate its corridor."
           />

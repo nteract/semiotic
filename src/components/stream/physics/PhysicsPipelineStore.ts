@@ -284,6 +284,31 @@ export class PhysicsPipelineStore {
     this.updateResults.record({ kind: "enqueue", count: 1 }, PHYSICS_BODY_INVALIDATIONS)
   }
 
+  /**
+   * Materialize already-due queued spawns without advancing simulation time.
+   *
+   * Unlike {@link tick} / {@link settleWithObservations}, this runs while
+   * paused or hidden so seed bodies (`initialSpawns` with `spawnAt <= elapsed`)
+   * appear on the first paint of a paused snapshot frame. Future-paced queue
+   * items stay queued. Does not step the kernel.
+   */
+  materializeDueSpawns(): string[] {
+    const revisionBefore = this.revision
+    const spawned: string[] = []
+    const observations: PhysicsObservationEvent[] = []
+    this.spawnDue(spawned, observations)
+    if (spawned.length === 0) return spawned
+    this.observeBodyBudget(observations)
+    this.evictOverflow(observations)
+    this.syncSimulationState(observations)
+    this.revision += 1
+    this.updateResults.record(
+      { kind: "enqueue", count: spawned.length },
+      this.revision !== revisionBefore ? PHYSICS_BODY_INVALIDATIONS : []
+    )
+    return spawned
+  }
+
   clear(): void {
     const kernelOptions = this.world.snapshot().options
     this.world.init({

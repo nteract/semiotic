@@ -93,13 +93,13 @@ export default function EarthquakesExamplePage() {
     <ExamplePageLayout title="Earthquakes">
       <div className="eq-page">
         <p className="eq-lede">
-          An orthographic globe that filters the rest of the dashboard. Drag to spin; the KPI
-          tiles, magnitude bins, regional ranks, and quarterly series recount only the events
-          currently facing you. The catalog is a deterministic M6+ fixture styled after{" "}
+          Drag the globe to spin it. The tiles, magnitude bars, regional ranks, and quarterly line
+          recount only the earthquakes currently facing you. The catalog is a fixed M6+ sample
+          styled after{" "}
           <a href={USGS_CATALOG_URL} target="_blank" rel="noopener noreferrer">
             USGS ComCat
           </a>
-          , not a live feed.
+          —not a live feed.
         </p>
 
         <div className="eq-dashboard" aria-label="Earthquakes dashboard">

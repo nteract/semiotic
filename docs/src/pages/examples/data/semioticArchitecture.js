@@ -893,6 +893,28 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "the-grid",
+    shortLabel: "Grid Observatory",
+    note: "Multi-series power observatory: StackedArea fuel mix, DifferenceChart demand vs forecast, BigNumber threshold tiles, Minimap reserve brush, and BarChart styleRules/HatchFill for tight hours — pure helpers from semiotic/recipes.",
+    uses: [
+      "input-static",
+      "hoc-difference",
+      "hoc-xy-lines",
+      "hoc-xy-compound",
+      "hoc-ordinal-bars",
+      "hoc-big-number",
+      "feature-accessors",
+      "feature-axes",
+      "feature-annotations",
+      "feature-tooltips",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-container",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "creative-contours",
     note: "A GeoCustomChart samples metro creative-industry signals into a contour field, renders stacked isometric prisms as SVG overlays, and keeps transparent geoarea cells for hover, tooltips, and accessible rows.",
     uses: [

@@ -46,6 +46,7 @@ export default function ExecutiveSuiteRoom({
   onInspect,
   onAnalyticsReady,
   onActivateAnnotation,
+  onSecretCalendarWarp,
 }) {
   const data = useMemo(
     () =>
@@ -162,6 +163,7 @@ export default function ExecutiveSuiteRoom({
         onInspect={onInspect}
         onAnalyticsReady={onAnalyticsReady}
         onActivateAnnotation={activateCachedRoof}
+        onSecretCalendarWarp={onSecretCalendarWarp}
         labelForDatum={(datum) =>
           `${datum.source} at ${timeLabel(datum.timestamp)}: floor ${datum.floor < 0 ? `B${Math.abs(datum.floor)}` : datum.floor}; observed ${timeLabel(datum.observedAt)}; cache age ${datum.cacheAgeMinutes} minutes; ${datum.trusted ? "contemporaneous" : "cached"}`
         }

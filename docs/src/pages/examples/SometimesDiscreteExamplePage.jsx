@@ -834,7 +834,7 @@ function ChartPanel({
         <div>
           <div className="discrete-example__eyebrow">
             {eyebrow}
-            {recommended ? <span className="discrete-example__pick">IDID pick</span> : null}
+            {recommended ? <span className="discrete-example__pick">Suggested</span> : null}
           </div>
           <h2>{title}</h2>
         </div>
@@ -1144,10 +1144,10 @@ function SometimesDiscreteExamplePage() {
         <header className="discrete-example__header">
           <div>
             <div className="discrete-example__eyebrow">
-              Tokenized reasoning · ISOTYPE · uncertainty
+              Counting uncertainty · repeated signs
             </div>
             <p className="discrete-example__lede">
-              When dots, icons, and tokens beat bars, blobs, and densities.
+              When dots, icons, and repeated signs beat bars, blobs, and smooth densities.
             </p>
             <h2>Should I leave now or wait for the bus?</h2>
           </div>
@@ -1380,7 +1380,7 @@ function SometimesDiscreteExamplePage() {
               <div className="discrete-example__eyebrow">
                 05 · Hybrid encoding
                 {recommendedPanel === "hybrid" ? (
-                  <span className="discrete-example__pick">IDID pick</span>
+                  <span className="discrete-example__pick">Suggested</span>
                 ) : null}
               </div>
               <h2>Keep precision where it matters, tokenize where it helps.</h2>
@@ -1413,7 +1413,7 @@ function SometimesDiscreteExamplePage() {
           <section className="discrete-example__panel discrete-example__panel--recommendation">
             <div className="discrete-example__panel-head">
               <div>
-                <div className="discrete-example__eyebrow">06 · IDID recommendation</div>
+                <div className="discrete-example__eyebrow">06 · Suggested encoding</div>
                 <h2>
                   {RECOMMENDATION_LABELS[suggestion.recommendedEncoding] ??
                     suggestion.recommendedEncoding}
@@ -1440,9 +1440,8 @@ function SometimesDiscreteExamplePage() {
               ))}
             </div>
             <p className="discrete-example__fine-print">
-              <code>suggestTokenEncoding</code> maps the task above to the encoding it would hand to{" "}
-              <code>generateTokens</code>; the panel it picks carries the &ldquo;IDID pick&rdquo;
-              badge.
+              The recommendation is deterministic: same task, same suggested encoding. API names
+              for wiring it up live in the implementation section below.
             </p>
           </section>
         </div>
@@ -1462,8 +1461,8 @@ function SometimesDiscreteExamplePage() {
           </div>
           <p className="discrete-example__fine-print">
             One idea connects pictograms, infographics, icon arrays, and uncertainty visualization:
-            replace an abstract magnitude with things a reader can count — units, cases, and
-            possible worlds. <code>tokenSemantics</code> is that idea as an API.
+            replace an abstract magnitude with things a reader can count—units, cases, and possible
+            worlds.
           </p>
         </section>
 

@@ -204,10 +204,10 @@ export default function LakeTravisIsotypeExamplePage() {
   return (
     <ExamplePageLayout title="Lake Travis, in Signs">
       <p className="lake-isotype__lede">
-        A live lake dashboard remade with the visual grammar of ISOTYPE: repeated symbols instead
-        of enlarged ones, a small printing palette, direct labels, and diagrams that read as
-        explanations. Underneath the ink, four Semiotic custom frames retain streaming ingestion,
-        keyboard-readable data, tooltips, observation events, and stable mark identity.
+        A lake-level and weather dashboard remade in the visual grammar of ISOTYPE: repeated
+        symbols instead of enlarged ones, a small printing palette, and diagrams that read as
+        explanations. The signs count water and weather; they do not grow when the number gets
+        bigger.
       </p>
 
       <div className="lake-isotype" ref={pageRef}>

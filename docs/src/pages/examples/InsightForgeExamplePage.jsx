@@ -1206,27 +1206,26 @@ export function InsightForgeWorkbench() {
           </blockquote>
         </div>
         <div>
-          <span>Implementation lesson</span>
+          <span>How the forge is built (optional)</span>
           <p>
-            Semiotic renders four analytical chart forms and the scoped-value readouts. Its
-            observation, grounding, audit, annotation lifecycle, navigation, and config surfaces
-            make the artifacts portable. The satchel and forge are ordinary React.
+            The rooms are ordinary Semiotic charts with scoped evidence attached. The satchel and
+            forge are plain React. The list below is for people wiring the same pattern—skip it if
+            you came for the story.
           </p>
           <ul>
             <li>
-              <code>onObservation</code> normalizes transient chart events.
+              Chart clicks and hovers flow through <code>onObservation</code>.
             </li>
             <li>
-              <code>describeChart</code> and <code>buildReaderGrounding</code> reinterpret each
-              room.
+              Each room can describe itself and build a screen-reader path (
+              <code>describeChart</code>, <code>buildReaderGrounding</code>).
             </li>
             <li>
-              <code>validateProps</code>, <code>diagnoseConfig</code>, and{" "}
-              <code>auditAccessibility</code> power the Appraisal Desk.
+              The Appraisal Desk runs validation, diagnosis, and accessibility checks.
             </li>
             <li>
-              <code>toConfig</code>, <code>fromConfig</code>, and <code>configToJSX</code> preserve
-              saved views.
+              Saved views round-trip through config helpers so an artifact keeps its chart
+              definition.
             </li>
           </ul>
         </div>

@@ -8,6 +8,8 @@ import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, styleRulesToXYStyle, type StyleRule } from "../charts/shared/styleRules"
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
+import { semanticGradientToColorStops } from "../charts/xy/AreaChart"
+import type { SemanticGradientStop } from "../charts/xy/AreaChart"
 import {
   type ChartConfig,
   accessorValue,
@@ -226,8 +228,15 @@ export const lineChart: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const effectiveColorBy = colorBy || rest.lineBy
+    // Mirror LineChart.tsx: `fillArea` selects the frame chartType and, in the
+    // array form, names which groups fill (mixed line+area — how ComposedChart
+    // draws an area series alongside a line series). Without this the SSR path
+    // rendered every series as a bare line, dropping the area fill + its
+    // gradient entirely (same class of bug as gradientFill/valueExtent).
+    const fillArea = rest.fillArea as boolean | string[] | undefined
+    const chartType = Array.isArray(fillArea) ? "mixed" : fillArea ? "area" : "line"
     return {
-      chartType: "line",
+      chartType,
       data,
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
@@ -235,6 +244,12 @@ export const lineChart: ChartConfig = {
       colorAccessor: effectiveColorBy,
       colorScheme,
       lineStyle: buildLineStyle(data, effectiveColorBy, colorScheme, common, rest),
+      ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
+      ...(fillArea && rest.areaOpacity != null && { areaOpacity: rest.areaOpacity }),
+      // `band` ({y0Accessor,y1Accessor} or array) draws the shaded envelope
+      // under the line(s). Mirrors LineChart.tsx; SSR dropped it so the band
+      // never painted server-side.
+      ...(rest.band != null && { band: rest.band }),
       ...common,
       // LineChart delegates its default legend decision to useChartSetup:
       // a grouping/color accessor gets a legend unless the caller disables it.
@@ -303,6 +318,13 @@ export const areaChart: ChartConfig = {
       areaBy: rest.areaBy,
       lineDataAccessor: rest.lineDataAccessor || "coordinates",
     })
+    // Mirror AreaChart.tsx: a value-anchored `semanticGradient` resolves to a
+    // `gradientFill.colorStops` before reaching the frame. Without this the SSR
+    // path dropped it and painted a flat area (same class as gradientFill).
+    const semanticGradient = rest.semanticGradient as SemanticGradientStop[] | undefined
+    const resolvedGradientFill = semanticGradient && semanticGradient.length > 0
+      ? { colorStops: semanticGradientToColorStops(semanticGradient) }
+      : common.gradientFill
     return {
       chartType: "area",
       data: preparedData,
@@ -313,6 +335,7 @@ export const areaChart: ChartConfig = {
       colorAccessor: effectiveColorBy,
       colorScheme,
       ...common,
+      ...(resolvedGradientFill !== undefined && { gradientFill: resolvedGradientFill }),
       // `frameProps.lineStyle` is the public escape hatch and wins exactly
       // as it does in AreaChart; otherwise resolve the HOC defaults here.
       lineStyle: common.lineStyle || buildAreaLineStyle(preparedData, effectiveColorBy, colorScheme, common, rest),

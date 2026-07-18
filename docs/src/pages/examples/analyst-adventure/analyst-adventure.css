@@ -125,13 +125,60 @@
 }
 
 .aa-shell__location strong {
-  overflow: hidden;
+  overflow: visible;
   color: var(--aa-cyan);
   font-size: 0.92rem;
   letter-spacing: 0.035em;
-  text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* Invisible secret warps — must look like plain text, always. */
+.aa-secret-warp,
+.semiotic-chart-title .aa-secret-warp,
+.aa-shell__location .aa-secret-warp,
+.aa-terminal__header .aa-secret-warp {
+  position: relative;
+  z-index: 8;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration: none !important;
+  text-shadow: inherit;
+  text-transform: inherit;
+  cursor: text !important;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.aa-secret-warp:hover,
+.aa-secret-warp:active,
+.aa-secret-warp:focus,
+.aa-secret-warp:focus-visible,
+.semiotic-chart-title .aa-secret-warp:hover,
+.semiotic-chart-title .aa-secret-warp:focus-visible {
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  text-decoration: none !important;
+  cursor: text !important;
 }
 
 .aa-shell__location > span:last-child:not(.aa-shell__location-label) {
@@ -913,77 +960,205 @@
   border-top: 1px dashed var(--aa-cyan-dim);
 }
 
-/* Annotation widgets ---------------------------------------------------- */
+/* Annotation widgets ----------------------------------------------------
+   Compact CGA "secret note" pings: monogram face + corner reticle + caret.
+   Hit target stays ≥44px; the drawn face is smaller so charts stay readable. */
 
 .aa-annotation {
+  --aa-ann-ink: var(--aa-cyan, #54f4ff);
+  --aa-ann-face: rgba(4, 7, 11, 0.92);
+  --aa-ann-glow: rgba(84, 244, 255, 0.28);
   position: relative;
   z-index: 8;
-  display: inline-flex;
-  gap: 0.4rem;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0.28rem;
-  border: 3px solid var(--aa-cyan, #54f4ff);
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 0;
-  background: var(--aa-black, #04070b);
-  box-shadow:
-    3px 3px 0 var(--aa-magenta, #ff55d8),
-    0 0 0 2px rgba(4, 7, 11, 0.75);
-  color: var(--aa-cyan, #54f4ff);
+  background: transparent;
+  box-shadow: none;
+  color: var(--aa-ann-ink);
   font-family: var(--aa-font, "Courier New", monospace);
   cursor: pointer;
+  appearance: none;
 }
 
-.aa-annotation--magenta {
-  border-color: var(--aa-magenta, #ff55d8);
-  color: var(--aa-magenta, #ff55d8);
-}
-
+.aa-annotation--magenta,
 .aa-annotation--secret {
-  border-color: var(--aa-magenta, #ff55d8);
-  color: var(--aa-magenta, #ff55d8);
+  --aa-ann-ink: var(--aa-magenta, #ff55d8);
+  --aa-ann-glow: rgba(255, 85, 216, 0.32);
 }
 
 .aa-annotation--danger {
-  border-color: var(--aa-danger, #ff707f);
-  color: var(--aa-danger, #ff707f);
+  --aa-ann-ink: var(--aa-danger, #ff707f);
+  --aa-ann-glow: rgba(255, 112, 127, 0.3);
 }
 
 .aa-annotation--status {
-  border-color: var(--aa-status, #ffd75a);
-  color: var(--aa-status, #ffd75a);
+  --aa-ann-ink: var(--aa-status, #ffd75a);
+  --aa-ann-glow: rgba(255, 215, 90, 0.3);
+}
+
+.aa-annotation__face {
+  position: relative;
+  display: grid;
+  width: 30px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--aa-ann-ink);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 55%),
+    var(--aa-ann-face);
+  box-shadow:
+    0 0 0 1px rgba(4, 7, 11, 0.95),
+    0 0 10px var(--aa-ann-glow);
+  color: var(--aa-ann-ink);
+}
+
+/* Double-line CGA bezel via inset ring */
+.aa-annotation__face::before {
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(84, 244, 255, 0.4);
+  content: "";
+  pointer-events: none;
+}
+
+.aa-annotation--magenta .aa-annotation__face::before,
+.aa-annotation--secret .aa-annotation__face::before {
+  border-color: rgba(255, 85, 216, 0.4);
+}
+
+.aa-annotation--danger .aa-annotation__face::before {
+  border-color: rgba(255, 112, 127, 0.4);
+}
+
+.aa-annotation--status .aa-annotation__face::before {
+  border-color: rgba(255, 215, 90, 0.4);
+}
+
+/* Corner reticle ticks — adventure-game hotspot, not a nested box */
+.aa-annotation__corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.aa-annotation__corners::before,
+.aa-annotation__corners::after {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-color: var(--aa-ann-ink);
+  border-style: solid;
+  content: "";
+}
+
+.aa-annotation__corners::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.aa-annotation__corners::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.aa-annotation__mono {
+  position: relative;
+  z-index: 1;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Speech caret toward the anchored mark */
+.aa-annotation__caret {
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--aa-ann-face);
+  content: "";
+  pointer-events: none;
+}
+
+.aa-annotation--caret-bottom .aa-annotation__caret {
+  bottom: -5px;
+  border-right: 1px solid var(--aa-ann-ink);
+  border-bottom: 1px solid var(--aa-ann-ink);
+  box-shadow: 1px 1px 0 rgba(4, 7, 11, 0.9);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.aa-annotation--caret-top .aa-annotation__caret {
+  top: -5px;
+  border-top: 1px solid var(--aa-ann-ink);
+  border-left: 1px solid var(--aa-ann-ink);
+  box-shadow: -1px -1px 0 rgba(4, 7, 11, 0.9);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.aa-annotation:hover:not(:disabled) .aa-annotation__face,
+.aa-annotation:focus-visible .aa-annotation__face {
+  box-shadow:
+    0 0 0 1px rgba(4, 7, 11, 0.95),
+    0 0 14px var(--aa-ann-glow),
+    0 0 0 1px var(--aa-ann-ink);
 }
 
 .aa-annotation[aria-pressed="true"] {
-  background: var(--aa-cyan, #54f4ff);
   color: var(--aa-black, #04070b);
 }
 
+.aa-annotation[aria-pressed="true"] .aa-annotation__face {
+  border-color: var(--aa-ann-ink);
+  background: var(--aa-ann-ink);
+  box-shadow:
+    0 0 0 1px rgba(4, 7, 11, 0.95),
+    0 0 12px var(--aa-ann-glow);
+  color: var(--aa-black, #04070b);
+}
+
+.aa-annotation[aria-pressed="true"] .aa-annotation__face::before {
+  border-color: rgba(4, 7, 11, 0.35);
+}
+
+.aa-annotation[aria-pressed="true"] .aa-annotation__corners::before,
+.aa-annotation[aria-pressed="true"] .aa-annotation__corners::after {
+  border-color: rgba(4, 7, 11, 0.55);
+}
+
+.aa-annotation[aria-pressed="true"] .aa-annotation__caret {
+  border-color: var(--aa-ann-ink);
+  background: var(--aa-ann-ink);
+  box-shadow: none;
+}
+
 .aa-annotation:disabled {
-  border-style: dashed;
   cursor: not-allowed;
-  opacity: 0.58;
+  opacity: 0.5;
+}
+
+.aa-annotation:disabled .aa-annotation__face {
+  border-style: dashed;
+  box-shadow: 0 0 0 1px rgba(4, 7, 11, 0.95);
+}
+
+/* Legacy label slot (unused by monogram pings; keep for any long-form children) */
+.aa-annotation__label {
+  display: none;
 }
 
 .aa-annotation__reticle {
-  display: grid;
-  width: 1.7rem;
-  height: 1.7rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid currentColor;
-  font-size: 1.05rem;
-  font-weight: 900;
-}
-
-.aa-annotation__label {
-  padding-inline-end: 0.35rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: none;
 }
 
 /* Anchored chat --------------------------------------------------------- */
@@ -1405,6 +1580,210 @@ p.aa-chat__message::before {
   min-width: 0;
 }
 
+/* Forecast vault: do not let ChartContainer's fixed height + overflow:hidden
+   clip the falling board. Auto-size the body around the physics frame. */
+.analyst-adventure__chart-container .semiotic-chart-body {
+  display: block !important;
+  height: auto !important;
+  min-height: 0;
+  overflow: visible !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+.analyst-adventure__chart-with-controls--physics {
+  width: 100%;
+}
+
+.analyst-adventure__vault-stage {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.analyst-adventure__mort-bin-hit {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--aa-status);
+  cursor: pointer;
+  font: inherit;
+}
+
+.analyst-adventure__mort-bin-hit:hover,
+.analyst-adventure__mort-bin-hit:focus-visible {
+  border-color: var(--aa-status);
+  background: rgba(255, 215, 90, 0.12);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 215, 90, 0.35);
+}
+
+.analyst-adventure__mort-bin-hit-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* 80286 / C64 break screen over the vault board */
+.analyst-adventure__c64-fault {
+  position: absolute;
+  z-index: 6;
+  inset: 8% 8% auto;
+  max-height: 84%;
+  overflow: auto;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border: 3px solid #8888ff;
+  background: #0000aa;
+  color: #ccccff;
+  box-shadow:
+    0 0 0 2px #000,
+    6px 6px 0 #000066;
+  font-family: var(--aa-font);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+.analyst-adventure__c64-fault--success {
+  border-color: #55ff55;
+  background: #002200;
+  color: #aaffaa;
+  box-shadow:
+    0 0 0 2px #000,
+    6px 6px 0 #003300;
+}
+
+.analyst-adventure__c64-fault--error-no-catch,
+.analyst-adventure__c64-fault--error-wrong-catch {
+  animation: aa-c64-blink-border 1.1s steps(2, end) infinite;
+}
+
+@keyframes aa-c64-blink-border {
+  50% {
+    border-color: #ffffff;
+  }
+}
+
+.analyst-adventure__c64-fault-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: -0.75rem -0.9rem 0.65rem;
+  padding: 0.15rem 0.35rem 0.15rem 0.65rem;
+  background: #8888ff;
+  color: #0000aa;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.analyst-adventure__c64-fault--success .analyst-adventure__c64-fault-bar {
+  background: #55ff55;
+  color: #002200;
+}
+
+.analyst-adventure__c64-fault-close {
+  flex: none;
+  margin: 0;
+  padding: 0;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.analyst-adventure__c64-fault-close:hover,
+.analyst-adventure__c64-fault-close:focus-visible {
+  background: currentColor;
+  color: #0000aa;
+  outline: none;
+}
+
+.analyst-adventure__c64-fault--success .analyst-adventure__c64-fault-close:hover,
+.analyst-adventure__c64-fault--success .analyst-adventure__c64-fault-close:focus-visible {
+  color: #002200;
+}
+
+.analyst-adventure__c64-fault h3 {
+  margin: 0 0 0.45rem;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.analyst-adventure__c64-fault--success h3 {
+  color: #55ff55;
+}
+
+.analyst-adventure__c64-fault p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.analyst-adventure__c64-fault-blank {
+  min-height: 0.55rem;
+}
+
+.analyst-adventure__c64-fault button {
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border: 2px solid #ccccff;
+  background: #0000aa;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.analyst-adventure__c64-fault button:hover,
+.analyst-adventure__c64-fault button:focus-visible {
+  background: #ccccff;
+  color: #0000aa;
+  outline: none;
+}
+
+.analyst-adventure__c64-fault--success button {
+  border-color: #55ff55;
+  background: #002200;
+  color: #55ff55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analyst-adventure__c64-fault--error-no-catch,
+  .analyst-adventure__c64-fault--error-wrong-catch {
+    animation: none;
+  }
+}
+
+.analyst-adventure__physics-count {
+  margin-left: auto;
+  color: var(--aa-status);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
 .analyst-adventure__metric-switch,
 .analyst-adventure__physics-controls {
   display: flex;
@@ -1460,30 +1839,46 @@ p.aa-chat__message::before {
 }
 
 .analyst-adventure__settled-ledger {
-  width: min(28rem, calc(100% - 1rem));
-  margin: 0.5rem auto;
+  width: min(28rem, calc(100% - 1.2rem));
+  margin: 0.65rem auto 0.85rem;
   border-collapse: collapse;
   color: var(--aa-white);
   font-size: 0.68rem;
+  /* Lives outside ChartContainer so fixed chart height cannot clip rows. */
+  background: var(--aa-panel);
+  box-shadow: 3px 3px 0 rgba(22, 139, 152, 0.55);
 }
 
 .analyst-adventure__settled-ledger caption {
-  padding: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  caption-side: top;
   color: var(--aa-status);
   font-weight: 800;
+  text-align: start;
 }
 
 .analyst-adventure__settled-ledger th,
 .analyst-adventure__settled-ledger td {
-  padding: 0.45rem 0.6rem;
+  padding: 0.5rem 0.7rem;
   border: 1px solid var(--aa-cyan-dim);
   text-align: start;
+  vertical-align: middle;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.analyst-adventure__settled-ledger tbody tr:last-child th,
+.analyst-adventure__settled-ledger tbody tr:last-child td {
+  /* Extra bottom padding so the last row (DEFENSIBLE / PEW / etc.) never feels clipped */
+  padding-bottom: 0.65rem;
 }
 
 .analyst-adventure__settled-ledger thead th {
-  background: var(--aa-panel);
+  background: rgba(4, 7, 11, 0.55);
   color: var(--aa-cyan);
   text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.62rem;
 }
 
 .analyst-adventure__physics-chrome text {

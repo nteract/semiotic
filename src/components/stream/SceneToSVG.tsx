@@ -449,6 +449,22 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     }
     case "candlestick": {
       const n = node as CandlestickSceneNode
+      if (n.isRange) {
+        // Range/dumbbell mode: high→low line + endpoint bulbs, matching the
+        // canvas renderer. Previously this fell through to the body rect below,
+        // so SSR painted a filled bar where CSR drew a dumbbell.
+        const dotRadius = n.dotRadius ?? Math.max(2, n.bodyWidth / 2)
+        return (
+          <g key={`candle-${i}`}>
+            <line
+              x1={n.x} y1={n.highY} x2={n.x} y2={n.lowY}
+              stroke={n.wickColor} strokeWidth={n.wickWidth}
+            />
+            <circle cx={n.x} cy={n.highY} r={dotRadius} fill={n.wickColor} />
+            <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={n.wickColor} />
+          </g>
+        )
+      }
       const bodyTop = Math.min(n.openY, n.closeY)
       const bodyHeight = Math.max(Math.abs(n.openY - n.closeY), 1)
       const bodyColor = n.isUp ? n.upColor : n.downColor

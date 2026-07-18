@@ -88,10 +88,9 @@ export default function OregonTrailExamplePage() {
   return (
     <ExamplePageLayout title="Map of the Oregon Trail">
       <p className="ot-intro">
-        A closing bit of fun: the classic 1985 <em>Oregon Trail</em> end-game map, rebuilt with
-        Semiotic's <code>GeoCustomChart</code>. Washington, Oregon, and Idaho, along with the forts,
-        rivers, mountains, and the trail itself sit at their true coordinates. Only the palette is
-        borrowed from an Apple II.
+        A closing bit of fun: the classic 1985 <em>Oregon Trail</em> end-game map, rebuilt on real
+        geography. Washington, Oregon, and Idaho—and the forts, rivers, mountains, and trail—sit
+        at their true coordinates. Only the palette is borrowed from an Apple II.
       </p>
 
       <div

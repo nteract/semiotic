@@ -276,12 +276,11 @@ export default function WhatTheMachineSeesExamplePage() {
       title="What the Machine Sees"
     >
       <p className="machine-lede">
-        A moment ago, in <em>The Scroll You’re Telling</em>, a chart watched
-        a person read. Turn it around. Hand Semiotic a real dataset and watch
-        the <em>machine</em> read it — choose the form, justify the choice,
-        narrate what it shows, audit whether you could even perceive it, and lay
-        out a path through it for a screen reader. <strong>No model is called.</strong>{" "}
-        Every panel below is a deterministic function of the data.
+        In <em>The Scroll You’re Telling</em>, a chart watched a person read. Turn it around.
+        Hand Semiotic a real table and watch it choose a chart form, say why, describe what it
+        shows, check whether you could perceive it, and build a path for a screen reader.{" "}
+        <strong>No language model is called.</strong> Every panel is a deterministic function of
+        the data.
       </p>
 
       <section className="machine-questions" aria-label="Choose a question">
@@ -334,9 +333,8 @@ export default function WhatTheMachineSeesExamplePage() {
               <h2>What it weighed</h2>
             </div>
             <p className="machine-panel-note">
-              Built-in charts and registered recipes, scored against this shape and the{" "}
-              <strong>{question.intent}</strong> intent. Click any candidate to
-              overrule the engine.
+              Built-in charts scored against this table and the question type{" "}
+              <strong>{question.intent}</strong>. Click any candidate to overrule the ranking.
             </p>
             <div className="machine-rack">
               {renderable.map((s) => {
@@ -482,12 +480,12 @@ export default function WhatTheMachineSeesExamplePage() {
 
       <section className="machine-custom-recipe">
         <div className="machine-section-heading machine-section-heading--custom">
-          <span className="machine-kicker">Custom recipe contract · v0</span>
-          <h2>The chart exposes the intent behind its design.</h2>
+          <span className="machine-kicker">When a custom chart is the point</span>
+          <h2>The chart can say why it looks the way it does.</h2>
           <p>
-            The frame knows how to render rectangles. The recipe manifest states that they mean
-            repeated units, that the analytical intent is part-to-whole, and that readers should
-            navigate category summaries before moving into the one hundred individual cells.
+            A default bar chart can count shares. A waffle chart can also say that each cell is a
+            unit of population, that the job is part-to-whole, and that a screen-reader path should
+            hit the income groups before the hundred individual cells.
           </p>
         </div>
 
@@ -534,8 +532,8 @@ export default function WhatTheMachineSeesExamplePage() {
                 <dd>category, not cell</dd>
               </div>
               <div>
-                <dt>Reception strength</dt>
-                <dd>memorable + explainable</dd>
+                <dt>Easy to remember?</dt>
+                <dd>Yes — countable cells, short story</dd>
               </div>
             </dl>
             <div className="machine-flagship-note">

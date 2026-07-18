@@ -294,9 +294,9 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "WatermarksExamplePage.jsx",
     isPilot: true,
     title: "Watermarks, Made Physical",
-    eyebrow: "EventDropChart · streaming lateness",
+    eyebrow: "Late events, closing windows",
     description:
-      "A physics-backed remake of the flink-watermarks mechanic with event-time and arrival-time as separate axes.",
+      "Events arrive out of order. A watermark decides when a window can close; late arrivals roll into a visible gutter.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -349,9 +349,9 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "StakeholderJourneyExamplePage.jsx",
     isPilot: true,
     title: "The Stakeholder Journey",
-    eyebrow: "StreamPhysicsFrame · controlled process comparison",
+    eyebrow: "From first use to real contribution",
     description:
-      "One deterministic cohort tracks the invitation relay and feeds leadership reach back into synchronized process geometry.",
+      "Same people, two community setups: after habit forms, invitation either opens a path to commitment or leaves usage private.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -404,9 +404,9 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "MergePressureExamplePage.jsx",
     isPilot: true,
     title: "Merge Pressure",
-    eyebrow: "GauntletChart · compound PR stream",
+    eyebrow: "Review queues under AI throughput",
     description:
-      "Compound PRs share finite review capacity, recirculate through CI, and accumulate merged points into a compound artifact.",
+      "Pull requests share finite human review, recirculate through CI, and only merged work counts toward shipping the feature.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -503,9 +503,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Watermarks, Made Physical",
     path: "/examples/watermarks",
-    eyebrow: "EventDropChart · streaming lateness",
+    eyebrow: "Late events, closing windows",
     description:
-      "A physics-backed remake of the flink-watermarks mechanic: event-time windows become bins, the watermark closes old windows, and late arrivals collect in a visible gutter.",
+      "Events arrive out of order. A watermark decides when a window can close; late arrivals roll into a visible gutter.",
     preview: "watermarks",
     badges: ["EventDropChart", "Physics", "Agent-readable"],
     frames: ["stream-physics", "xy"],
@@ -514,9 +514,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Stakeholder Journey",
     path: "/examples/stakeholder-journey",
-    eyebrow: "StreamPhysicsFrame · controlled process comparison",
+    eyebrow: "From first use to real contribution",
     description:
-      "Compare how two systems move the same cohort from first use to leadership. A stage ledger drives the width of each process corridor.",
+      "Same people, two community setups: after habit forms, invitation either opens a path to commitment or leaves usage private.",
     preview: "stakeholder-journey",
     badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
     frames: ["stream-physics"],
@@ -525,9 +525,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Merge Pressure",
     path: "/examples/merge-pressure",
-    eyebrow: "GauntletChart · compound PR stream",
+    eyebrow: "Review queues under AI throughput",
     description:
-      "Staggered compound PRs share finite human review, recirculate through CI, transform attached risks, and accumulate merged points into a Feature.",
+      "Pull requests share finite human review, recirculate through CI, and only merged work counts toward shipping the feature.",
     preview: "merge-pressure",
     badges: ["GauntletChart", "Shared capacity", "Weighted groups"],
     frames: ["gauntlet"],
@@ -536,9 +536,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Not in MY Backyard",
     path: "/examples/not-in-my-backyard",
-    eyebrow: "GauntletChart · compound process physics",
+    eyebrow: "Housing plan vs cumulative drag",
     description:
-      "A housing approval simulator where a plan enters as a compound glyph, loses features at civic gates, gains dollar-weight burden, loops through procedural review, and may reach approval without becoming housing.",
+      "A housing approval simulator: a plan enters with lift and drag, loses features at civic gates, gains burden, and may get approved without becoming housing.",
     preview: "nimby",
     badges: ["GauntletChart", "bodyForces", "Compound glyphs"],
     frames: ["gauntlet"],
@@ -589,11 +589,22 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["ai", "geography", "climate"],
   },
   {
+    title: "The Grid Is the Real AI Infrastructure",
+    path: "/examples/the-grid",
+    eyebrow: "Fuel mix · demand vs forecast · spare capacity",
+    description:
+      "What is generating, whether demand beat the forecast, and how little spare capacity is left—for the grid regions under AI data centers. Twin of The Buildings Behind AI.",
+    preview: "the-grid",
+    badges: ["DifferenceChart", "styleRules", "BigNumber", "Agent-readable"],
+    frames: ["xy", "ordinal"],
+    topics: ["ai", "climate", "realtime"],
+  },
+  {
     title: "Creative Gravity of America",
     path: "/examples/creative-contours",
-    eyebrow: "Isometric GeoCustomChart - contours",
+    eyebrow: "Isometric creative-industry terrain",
     description:
-      "Metro creative-industry signals become contour shelves on a stacked isometric view of the United States: screen, sound, games, design, and research are sampled into a non-topographic terrain.",
+      "Metro creative industries become contour shelves on a stacked isometric United States: screen, sound, games, design, and research as height—not topography.",
     preview: "creative-contours",
     badges: ["GeoCustomChart", "Contours", "Isometric", "Custom layout"],
     frames: ["geo", "custom"],
@@ -834,9 +845,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Map of the Oregon Trail",
     path: "/examples/oregon-trail",
-    eyebrow: "Retro cartography · GeoCustomChart",
+    eyebrow: "Retro cartography · real geography",
     description:
-      "The 1985 Oregon Trail end-game map, rebuilt with GeoCustomChart over real Washington/Oregon/Idaho geography — gray land, CGA-blue rivers, caret mountains, forts, and a wagon you can drive from START to FINISH.",
+      "The 1985 Oregon Trail end-game map over real Washington/Oregon/Idaho geography—gray land, CGA-blue rivers, caret mountains, forts, and a wagon from START to FINISH.",
     preview: "oregontrail",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["geo", "custom"],
@@ -874,6 +885,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/climate-radial-weather": "ClimateRadialWeatherExamplePage.jsx",
   "/examples/creative-contours": "CreativeContoursExamplePage.jsx",
   "/examples/data-centers-isotype": "DataCentersIsotypeExamplePage.jsx",
+  "/examples/the-grid": "TheGridExamplePage.jsx",
   "/examples/dataviz-people": "DatavizPeopleExamplePage.jsx",
   "/examples/distant-reading": "DistantReadingExamplePage.jsx",
   "/examples/erie-railroad-organization": "ErieRailroadOrganizationExamplePage.jsx",

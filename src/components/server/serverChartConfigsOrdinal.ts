@@ -275,6 +275,9 @@ export const pieChart: ChartConfig = {
       colorAccessor: effectiveColorBy,
       colorScheme,
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
+      // startAngle rotates the first wedge (mirrors PieChart.tsx). Dropped by
+      // the SSR path before this mapping, so SSR always started at 12 o'clock.
+      ...(rest.startAngle != null && { startAngle: rest.startAngle }),
       ...common,
       pieceStyle: buildBarPieceStyle(data, effectiveColorBy, colorScheme, common, rest),
       showLegend: common.showLegend ?? Boolean(effectiveColorBy),
@@ -301,6 +304,9 @@ export const donutChart: ChartConfig = {
       colorAccessor: effectiveColorBy,
       colorScheme,
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
+      // startAngle rotates the first wedge (mirrors DonutChart.tsx). Dropped by
+      // the SSR path before this mapping, so SSR always started at 12 o'clock.
+      ...(rest.startAngle != null && { startAngle: rest.startAngle }),
       ...common,
       // Bind fills to category values through the same ordinal color scale as
       // DonutChart, rather than assigning palette slots while wedges happen
@@ -436,6 +442,14 @@ export const swimlaneChart: ChartConfig = {
     // trackFill paints the lane background behind each swimlane (mirrors
     // SwimlaneChart.tsx). Dropped by the SSR path before this mapping.
     ...(rest.trackFill != null && { trackFill: rest.trackFill }),
+    // valueExtent → rExtent pins the value axis so a lane whose segments do
+    // not sum to the extent max (e.g. a ThresholdBar showing 40 of 100) fills
+    // the correct fraction instead of auto-scaling to the data max. The
+    // SwimlaneChart HOC maps this the same way; SSR dropped it (same class of
+    // bug as gradientFill/trackFill).
+    ...(rest.valueExtent && { rExtent: rest.valueExtent }),
+    // roundedTop rounds the outer ends of each lane (mirrors SwimlaneChart.tsx).
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
     gradientFill: normalizeBarGradientFill(common.gradientFill),
     pieceStyle: common.pieceStyle || buildBarPieceStyle(data, effectiveColorBy, colorScheme, common, rest),

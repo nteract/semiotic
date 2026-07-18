@@ -46,11 +46,10 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     if (!compact) drawWick()
 
     if (n.isRange) {
-      // Range/dumbbell mode: dots scale with the scene-computed bodyWidth
-      // (derived from min x-gap) and get capped by canvas height so sparkline
-      // rows (24px tall) don't render marble-sized dots. Floor at 2px so
-      // there's always SOMETHING to see.
-      const dotRadius = Math.max(2, Math.min(n.bodyWidth / 2, layout.height * 0.12))
+      // Range/dumbbell mode: endpoint bulbs. The radius is computed in the
+      // scene builder (so canvas + SVG match); fall back to the same formula
+      // for any node built before this field existed.
+      const dotRadius = n.dotRadius ?? Math.max(2, Math.min(n.bodyWidth / 2, layout.height * 0.12))
       ctx.fillStyle = wickColor
       ctx.beginPath()
       ctx.arc(n.x, n.highY, dotRadius, 0, Math.PI * 2)

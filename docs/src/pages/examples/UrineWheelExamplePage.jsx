@@ -129,9 +129,9 @@ export default function UrineWheelExamplePage() {
       <p style={styles.lede}>
         Before laboratories, a physician read disease from the color of urine. The medieval{" "}
         <em>rota urinarum</em> ringed twenty named colors around a chart and tied each to a stage of{" "}
-        <em>digestio</em> — the body&apos;s &ldquo;cooking&rdquo; of the humors. It is, in modern
-        terms, a node-link diagram in a circle, so Semiotic draws it as one: a custom radial network
-        layout, every flask and roundel a real, navigable mark.
+        <em>digestio</em> — the body&apos;s &ldquo;cooking&rdquo; of the humors. Drawn here as a
+        circular diagram: every flask and roundel is a real mark you can hover, keyboard-navigate,
+        and open in a data table.
       </p>
       <p style={styles.recipeContract}>
         Inspectable recipe contract: <code>{urineWheelRecipeManifest.id}</code>. This is a{" "}

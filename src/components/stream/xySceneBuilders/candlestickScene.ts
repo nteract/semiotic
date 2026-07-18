@@ -9,7 +9,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import type { CandlestickSceneNode, StreamLayout } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layout: StreamLayout): CandlestickSceneNode[] {
+export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): CandlestickSceneNode[] {
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
   // Range mode: detected by PipelineStore when both open/close accessors are missing.
@@ -77,7 +77,15 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layou
       isUp,
       datum: d,
     }
-    if (isRangeMode) node.isRange = true
+    if (isRangeMode) {
+      node.isRange = true
+      // Endpoint bulb radius: scales with the gap-derived bodyWidth, capped by
+      // canvas height so short (sparkline) rows don't get marble-sized dots,
+      // floored at 2px. Computed here — not in each renderer — so the canvas
+      // and SVG backends draw identical dumbbells (SSR previously drew a filled
+      // body rect because the SVG converter never handled range mode).
+      node.dotRadius = Math.max(2, Math.min(bodyWidth / 2, layout.height * 0.12))
+    }
     nodes.push(node as CandlestickSceneNode)
   }
 

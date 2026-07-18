@@ -172,6 +172,7 @@ const navData = [
         path: "/examples/hot-dog-contest-variations",
       },
       { title: "The Buildings Behind AI", path: "/examples/data-centers-isotype" },
+      { title: "The Grid Is the Real AI Infrastructure", path: "/examples/the-grid" },
       { title: "Creative Gravity of America", path: "/examples/creative-contours" },
       {
         title: "Sometimes it's better to be discrete",

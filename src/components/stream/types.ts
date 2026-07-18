@@ -481,6 +481,10 @@ export interface CandlestickSceneNode {
   isUp: boolean
   /** Range/dumbbell mode — no body, endpoint dots instead */
   isRange?: boolean
+  /** Endpoint dot radius for range/dumbbell mode. Computed in the scene
+   *  builder (which owns the layout height) so the canvas and SVG renderers
+   *  paint identical bulbs. */
+  dotRadius?: number
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]

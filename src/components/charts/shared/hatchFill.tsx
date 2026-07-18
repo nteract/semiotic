@@ -116,7 +116,7 @@ export function resolveHatchCanvasPattern(
   const key = `${hatchFillKey(h)}@${dpr}`
   const cached = _canvasPatternCache.get(key)
   if (cached !== undefined) return cached
-  const pattern = createHatchPattern(
+  const result = createHatchPattern(
     {
       background: h.background,
       stroke: h.stroke,
@@ -126,6 +126,10 @@ export function resolveHatchCanvasPattern(
     },
     ctx,
   )
+  // A real `ctx` is only ever passed on canvas, so `result` is a CanvasPattern
+  // here; the descriptor branch (SSR) can't be reached. Guard anyway to keep
+  // the cache strictly CanvasPattern | null.
+  const pattern = isHatchFill(result) ? null : result
   _canvasPatternCache.set(key, pattern)
   return pattern
 }

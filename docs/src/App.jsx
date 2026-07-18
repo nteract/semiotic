@@ -196,6 +196,7 @@ const HotDogContestVariationsExamplePage = lazy(
 const DataCentersIsotypeExamplePage = lazy(
   () => import("./pages/examples/DataCentersIsotypeExamplePage"),
 )
+const TheGridExamplePage = lazy(() => import("./pages/examples/TheGridExamplePage"))
 const CreativeContoursExamplePage = lazy(
   () => import("./pages/examples/CreativeContoursExamplePage"),
 )
@@ -264,6 +265,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LakeTravisIsotypeExamplePage.jsx": LakeTravisIsotypeExamplePage,
   "HotDogContestVariationsExamplePage.jsx": HotDogContestVariationsExamplePage,
   "DataCentersIsotypeExamplePage.jsx": DataCentersIsotypeExamplePage,
+  "TheGridExamplePage.jsx": TheGridExamplePage,
   "CreativeContoursExamplePage.jsx": CreativeContoursExamplePage,
   "SometimesDiscreteExamplePage.jsx": SometimesDiscreteExamplePage,
   "WhereYouDrawTheLineExamplePage.jsx": WhereYouDrawTheLineExamplePage,

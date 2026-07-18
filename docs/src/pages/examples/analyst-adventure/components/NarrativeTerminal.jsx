@@ -1,4 +1,5 @@
 import React, { useId } from "react"
+import { withSecretTitleWarp } from "./SecretRoomWarp"
 
 function normalizedLines(lines) {
   if (lines == null) return []
@@ -33,15 +34,19 @@ export function NarrativeTerminal({
   eyebrow = "CASE TRANSCRIPT",
   live = "polite",
   className = "",
+  onSecretCalendarWarp,
 }) {
   const transcript = normalizedLines(lines)
   const titleId = useId()
+  const titleNode = onSecretCalendarWarp
+    ? withSecretTitleWarp(title, { word: "Lies", onWarp: onSecretCalendarWarp })
+    : title
 
   return (
     <section className={`aa-terminal ${className}`.trim()} aria-labelledby={titleId}>
       <header className="aa-terminal__header">
         <span className="aa-terminal__eyebrow">{eyebrow}</span>
-        <h2 id={titleId}>{title}</h2>
+        <h2 id={titleId}>{titleNode}</h2>
       </header>
       <div className="aa-terminal__transcript">
         {transcript.map((line, index) => (

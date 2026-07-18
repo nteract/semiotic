@@ -45,6 +45,7 @@ interface RenderEvidence {
   markCountByType: Record<string, number>
   nodeCount?: number
   edgeCount?: number
+  yDomain?: [number, number]
 }
 
 // SVG and layered canvas/SVG frames differ substantially at individual ink
@@ -91,10 +92,10 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   expect(evidence.empty).toBe(false)
   expect(evidence.markCount).toBeGreaterThan(0)
   if (id === "area") {
-    expect(svg).toMatch(/<path[^>]*d="M[^\"]*C/)
+    expect(svg).toMatch(/<path[^>]*d="M[^"]*C/)
     expect(svg).toContain("<linearGradient")
     expect(svg).toMatch(/fill="url\(#/)
-    expect(svg.match(/<path[^>]*d="[^\"]*Z"[^>]*>/)?.[0]).toContain('stroke="none"')
+    expect(svg.match(/<path[^>]*d="[^"]*Z"[^>]*>/)?.[0]).toContain('stroke="none"')
   }
   if (id === "xy-custom-waffle") {
     expect(evidence.frameType).toBe("xy")
@@ -167,7 +168,60 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   if (id === "swimlane-track") {
     expect(svg).toContain("#c9d6ea")
   }
+  // fillArea:[names] fills one series as an area (gradient) while the other
+  // stays a line — SSR used to draw every series as a bare line.
+  if (id === "line-mixed-area") {
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toMatch(/<path\b[^>]*fill="url\(#/)
+  }
+  // Value-anchored semanticGradient resolves to a colorStops gradient; SSR
+  // used to drop it and paint a flat area.
+  if (id === "area-semantic-gradient") {
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toContain("#E5A800")
+  }
+  // band draws a filled envelope that follows the line's curve. SSR dropped
+  // the band; the ribbon also used to ignore the curve (straight edges).
+  if (id === "line-band") {
+    // A filled ribbon path (lines are fill:none) that carries cubic curve
+    // commands — proves both that the band rendered AND that it curved.
+    expect(svg).toMatch(/<path\b[^>]*d="M[^"]*C[^"]*"[^>]*fill="(?!none)/)
+  }
+  // valueExtent pins the value axis; the single 40-of-100 segment must not
+  // fill the whole lane. yDomain is ground truth from the resolved scale.
+  if (id === "swimlane-value-extent") {
+    expect(evidence.yDomain).toEqual([0, 100])
+  }
+  // colorBy paints leaf tiles with distinct categorical fills and
+  // labelMode:"all" labels every tier. SSR used to collapse to one fill and
+  // drop parent labels.
+  if (id === "treemap-colorby-labels") {
+    expect(svg).toContain("#0E9AA7")
+    expect(svg).toContain("#C2185B")
+    expect(svg).toContain(">Group A<")
+  }
+  // Range/dumbbell candlestick: endpoint bulbs (2 per point), no body rect.
+  // SSR used to draw a filled body rect for high/low-only data.
+  if (id === "range-dumbbell") {
+    expect((svg.match(/<circle/g) ?? []).length).toBe(rangeDumbbellPoints * 2)
+  }
+  // A declarative HatchFill segment resolves to an SVG <pattern> server-side.
+  if (id === "swimlane-hatch") {
+    expect(svg).toContain("<pattern")
+    expect(svg).toMatch(/fill="url\(#/)
+  }
+  // Native x-band (region fill) + x-threshold (dashed line + label) both
+  // serialize server-side; a bespoke vertical-annotation implementation used
+  // to drop them from SSR.
+  if (id === "line-vertical-bands") {
+    expect(svg).toContain("Catch-up window")
+    expect(svg).toContain("Caught up")
+    expect(svg).toMatch(/stroke-dasharray/)
+  }
 }
+
+/** Point count for the range-dumbbell fixture (kept in sync with the fixture). */
+const rangeDumbbellPoints = 5
 
 async function compareCurrentPanels(
   page: import("@playwright/test").Page,

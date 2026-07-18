@@ -236,9 +236,8 @@ export default function ErieRailroadOrganizationExamplePage() {
           system: power begins with the directors, concentrates in the president and general
           superintendent, then follows five operating lines to local stations. Choose{" "}
           <strong>Workforce</strong> and the same geometry becomes a distribution display. Leaf
-          color identifies work and leaf quantity reflects the representative crew count. The chart
-          does not swap components; <code>layoutConfig</code> cheaply re-runs one custom layout
-          against the same graph.
+          color identifies work and leaf quantity reflects the representative crew count. The
+          diagram does not rebuild the railroad—it restyles and reweights the same tree.
         </p>
 
         <h2>Railroad geometry, botanical grammar</h2>
@@ -252,13 +251,12 @@ export default function ErieRailroadOrganizationExamplePage() {
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
 
-        <h2>Why this remains a Semiotic chart</h2>
+        <h2>Why this still behaves like a chart</h2>
         <p>
-          The visible plate is art-directed SVG, but a transparent <code>networkHitTarget</code>{" "}
-          sits behind every meaningful office and crew. Semiotic supplies pointer and keyboard
-          observation, tooltips, focus geometry, click locking, the accessible data table, point-id
-          annotation anchoring, and export. The custom layout owns the unusual geometry; the frame
-          continues to own chart behavior.
+          The plate is art-directed, but every office and crew still has an invisible hit target
+          behind it. Hover, keyboard focus, tooltips, click-to-hold, the accessible data table, and
+          export all keep working. The custom drawing owns the railroad geometry; the chart frame
+          still owns the interaction.
         </p>
 
         <p style={styles.sourceNote}>

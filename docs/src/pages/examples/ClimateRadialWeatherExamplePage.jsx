@@ -172,9 +172,8 @@ export default function ClimateRadialWeatherExamplePage() {
   return (
     <ExamplePageLayout title="Brushable Weather Rings">
       <p style={styles.lede}>
-        The rings align the same dates across years, making seasonal timing and unusual spells easy
-        to compare. Brush a span to inspect those days on a straight timeline, where
-        here's a radial brush to get that, too.
+        The rings line up the same dates across years so seasonal timing and odd spells are easy to
+        compare. Brush a span on the ring to inspect those days on a straight timeline below.
       </p>
 
       <ThemeProvider theme={carbonTheme}>

@@ -255,10 +255,9 @@ export default function WikipediaRealtimeExamplePage() {
   return (
     <ExamplePageLayout title="Wikipedia, as it happens">
       <p className="wiki-realtime-lede">
-        Every dot is a live edit to English Wikipedia. Time moves left to right; the overview plots
-        signed character change above and below zero. It keeps editor identity in fill and outline,
-        while the four small multiples use absolute magnitude and recode direction: green adds text,
-        red removes it.
+        Every dot is a live edit to English Wikipedia. Time runs left to right. The big plot puts
+        character gains above zero and losses below; the four small multiples keep size as volume
+        and use green for adds, red for removals.
       </p>
 
       <div className="wiki-realtime-status-strip" aria-label="Live stream status">

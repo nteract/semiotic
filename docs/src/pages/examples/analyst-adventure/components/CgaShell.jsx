@@ -1,5 +1,6 @@
 import React from "react"
 import "../analyst-adventure.css"
+import { withSecretTitleWarp } from "./SecretRoomWarp"
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ")
@@ -41,9 +42,17 @@ export function CgaShell({
   className,
   ariaLabel,
   busy = false,
+  /** Secret pointer-only warp used by hidden title words (debug). */
+  onSecretCalendarWarp,
 }) {
   const currentLocation = locationParts(location, subtitle)
   const hasSupport = Boolean(status || evidence)
+  const locationTitle = onSecretCalendarWarp
+    ? withSecretTitleWarp(currentLocation.title, {
+        word: "Lies",
+        onWarp: onSecretCalendarWarp,
+      })
+    : currentLocation.title
 
   return (
     <section
@@ -58,7 +67,7 @@ export function CgaShell({
         </div>
         <div className="aa-shell__location" aria-label="Current location">
           <span className="aa-shell__location-label">Current location</span>
-          <strong>{currentLocation.title}</strong>
+          <strong>{locationTitle}</strong>
           {currentLocation.subtitle ? <span>{currentLocation.subtitle}</span> : null}
         </div>
         {headerActions ? <div className="aa-shell__header-actions">{headerActions}</div> : null}

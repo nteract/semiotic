@@ -98,9 +98,9 @@ export default function NetworkVizExamplePage() {
           <span className="nv-imprint">A Visual Primer</span>
           <p className="nv-blurb">
             A node-link diagram is the easiest network picture to make and the hardest to read. This
-            primer rebuilds a 2015 network-visualization workshop on Semiotic — every technique as a
-            working chart — and ends with an interactive toy for thinking with a graph instead of
-            at it.
+            primer rebuilds a 2015 network-visualization workshop—every technique as a working
+            chart—and ends with an interactive toy for thinking <em>with</em> a graph instead of
+            only looking at one.
           </p>
         </div>
 
