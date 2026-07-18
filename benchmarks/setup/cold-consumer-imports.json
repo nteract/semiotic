@@ -160,8 +160,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 738657,
-      "gzipBytes": 212133,
+      "rawBytes": 738441,
+      "gzipBytes": 212044,
       "packedPackageInputFiles": 38
     },
     {
@@ -169,8 +169,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 179308,
-      "gzipBytes": 33013,
+      "rawBytes": 179092,
+      "gzipBytes": 32927,
       "packedPackageInputFiles": 2
     },
     {

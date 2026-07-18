@@ -215,7 +215,8 @@ const LINKED_HOVER_BURN_DOWN = new Map([
   ["CirclePack", "no chart-specific linked-hover interaction snapshot yet"],
   ["ForceDirectedGraph", "no chart-specific linked-hover interaction snapshot yet"],
   ["OrbitDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ProcessSankey", "no chart-specific linked-hover interaction snapshot yet"],
+  // ProcessSankey: supportsLinkedHover is false until selection wiring lands
+  // (HOC hard-codes selection/linkedHover to undefined).
   ["SankeyDiagram", "no chart-specific linked-hover interaction snapshot yet"],
   ["TreeDiagram", "no chart-specific linked-hover interaction snapshot yet"],
   ["Treemap", "no chart-specific linked-hover interaction snapshot yet"],

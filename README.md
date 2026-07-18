@@ -434,7 +434,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { renderChart } from "semiotic/server"` | node | **248.3 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **165.2 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **248.7 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **207.2 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **207.1 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.2 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **106.3 KiB** |
