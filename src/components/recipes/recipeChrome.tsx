@@ -114,6 +114,7 @@ export function hullFromBoxes(
   let maxY = -Infinity
   for (const box of boxes) {
     if (!Number.isFinite(box.x) || !Number.isFinite(box.y)) continue
+    if (!Number.isFinite(box.width) || !Number.isFinite(box.height)) continue
     const w = Math.max(0, box.width)
     const h = Math.max(0, box.height)
     if (box.x < minX) minX = box.x

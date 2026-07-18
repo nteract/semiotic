@@ -274,7 +274,7 @@ export default function AnalystAdventureGame() {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         const chart = document.querySelector(".aa-chart-viewport")
-        chart?.scrollIntoView({ block: "start", behavior: "instant" })
+        chart?.scrollIntoView({ block: "start", behavior: "auto" })
       })
     })
   }, [])

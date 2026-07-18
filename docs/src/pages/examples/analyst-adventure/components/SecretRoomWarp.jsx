@@ -1,11 +1,12 @@
-import React from "react"
+import React, { useRef } from "react"
 
 /**
  * Invisible debug hit-target. Looks like ordinary text (inherits font/color,
  * cursor: text, no hover/focus chrome) but warps into a room when clicked.
  *
  * Uses onMouseDown (not only onClick) so parent handlers / focus stealers
- * cannot swallow the gesture before click fires.
+ * cannot swallow the gesture before click fires. A ref guard suppresses the
+ * click that follows the same gesture so onWarp only fires once per press.
  */
 export function SecretRoomWarp({
   children,
@@ -13,9 +14,22 @@ export function SecretRoomWarp({
   label = "Secret room warp",
   className = "",
 }) {
-  const fire = (event) => {
+  const firedRef = useRef(false)
+
+  const fireOnMouseDown = (event) => {
     event.preventDefault()
     event.stopPropagation()
+    firedRef.current = true
+    onWarp?.()
+  }
+
+  const fireOnClick = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (firedRef.current) {
+      firedRef.current = false
+      return
+    }
     onWarp?.()
   }
 
@@ -23,8 +37,8 @@ export function SecretRoomWarp({
     <button
       type="button"
       className={`aa-secret-warp ${className}`.trim()}
-      onMouseDown={fire}
-      onClick={fire}
+      onMouseDown={fireOnMouseDown}
+      onClick={fireOnClick}
       // Keep it out of the tab order — secrets are pointer-only.
       tabIndex={-1}
       aria-hidden="true"
