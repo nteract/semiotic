@@ -20,7 +20,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -342,7 +342,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -663,7 +663,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -959,7 +959,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -1263,7 +1263,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -1577,7 +1577,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -2110,7 +2110,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -2397,7 +2397,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -2688,7 +2688,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -2982,7 +2982,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -3255,7 +3255,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -3520,7 +3520,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -3798,7 +3798,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -4058,7 +4058,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -4343,7 +4343,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -4602,7 +4602,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -4854,7 +4854,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -5119,7 +5119,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -5366,7 +5366,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -5641,7 +5641,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -5873,7 +5873,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -6117,7 +6117,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -6379,7 +6379,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -6694,7 +6694,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -6998,7 +6998,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -7280,7 +7280,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -7564,7 +7564,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -7814,7 +7814,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -8068,7 +8068,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -9316,7 +9316,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -9592,7 +9592,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -9888,7 +9888,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -10102,7 +10102,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -10312,7 +10312,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -10535,7 +10535,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -10774,7 +10774,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -11006,7 +11006,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -11230,7 +11230,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -11592,7 +11592,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {
@@ -12868,7 +12868,7 @@
                 "sparkline",
                 "mobile"
               ],
-              "description": "Display mode controlling default size, chrome, margins, labels, and interaction.",
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
               "default": "primary"
             },
             "width": {

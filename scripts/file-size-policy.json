@@ -126,8 +126,8 @@
     },
     {
       "path": "src/components/stream/physics/PhysicsPipelineStore.ts",
-      "maxLines": 971,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +3 (2026-07-17): materializeDueSpawns() surfaces already-due queued spawns on a paused snapshot's first paint without advancing simulation time."
+      "maxLines": 939,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +3 (2026-07-17): materializeDueSpawns() surfaces already-due queued spawns on a paused snapshot's first paint without advancing simulation time. -111 (2026-07-19): extracted eviction/sediment-absorption (physicsPipelineEviction.ts) and sustained-quiescence tracking (physicsPipelineQuiescence.ts) into pure sibling modules."
     },
     {
       "path": "src/components/stream/physics/StreamPhysicsFrame.tsx",
@@ -138,11 +138,6 @@
       "path": "src/components/stream/PipelineStore.ts",
       "maxLines": 1610,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +112 (2026-07-11): custom-layout failure recovery, pushDatumYExtent/evictDatumYExtent extraction (dedupes 3 copies of the candlestick/ribbon y-extent branch), and pulse-timestamp-buffer resync on config change."
-    },
-    {
-      "path": "src/components/stream/SceneToSVG.tsx",
-      "maxLines": 881,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. (2026-07-17): executed the documented split — geoSceneNodeToSVG and networkSceneNodeToSVG/networkSceneEdgeToSVG/networkLabelToSVG moved to sibling modules (SceneToSVGGeo.tsx / SceneToSVGNetwork.tsx, both re-exported here), with svgFill/safeSvgId/glyphNodeToSVG/ARC_NOOP factored into sceneToSVGShared.tsx. Dropped from 1243 to 865 lines. +16 (2026-07-17): candlestick SSR range/dumbbell mode (high→low wick + endpoint bulbs) to match the canvas renderer. Remaining split plan: the XY + ordinal serializers left in this file could each move to their own sibling module to clear the hard limit entirely."
     },
     {
       "path": "src/components/stream/StreamGeoFrame.tsx",

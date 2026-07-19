@@ -127,16 +127,16 @@ export function usePhysicsRerun(
     [clearRerun, previousStateChange, scheduleRerun]
   )
 
-  const rerunnableConfig = useMemo<StreamPhysicsFrameProps["config"]>(
-    () => ({
+  const rerunnableConfig = useMemo<StreamPhysicsFrameProps["config"]>(() => {
+    if (delay == null) return config
+    return {
       ...config,
       observation: {
         ...config?.observation,
         onSimulationStateChange
       }
-    }),
-    [config, onSimulationStateChange]
-  )
+    }
+  }, [config, delay, onSimulationStateChange])
 
   return { config: rerunnableConfig, rerunKey }
 }

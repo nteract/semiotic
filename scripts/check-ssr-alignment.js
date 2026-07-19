@@ -266,16 +266,18 @@ const STREAM_DIR = path.join(ROOT, "src/components/stream")
 const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
   ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
   : path.join(STREAM_DIR, "SceneToSVG.tsx")
-// Network and geo converters live in sibling modules re-exported from
-// SceneToSVG.tsx (split out to stay under the file-size ratchet ceiling).
-// The parity scan below concatenates all three so `extractCaseLabels` still
-// finds `function networkSceneNodeToSVG` / `function geoSceneNodeToSVG`
+// Network, geo, and ordinal converters live in sibling modules re-exported
+// from SceneToSVG.tsx (split out to stay under the file-size ratchet
+// ceiling). The parity scan below concatenates all four so
+// `extractCaseLabels` still finds `function networkSceneNodeToSVG` /
+// `function geoSceneNodeToSVG` / `function ordinalSceneNodeToSVG`
 // regardless of which file they're physically declared in. Not overridden
 // by SEMIOTIC_SCENE_TO_SVG — that env var only simulates drift in the main
-// file's xy/ordinal converters (see ssr-alignment.test.ts).
+// file's xy converter (see ssr-alignment.test.ts).
 const SCENE_TO_SVG_SIBLINGS = [
   path.join(STREAM_DIR, "SceneToSVGNetwork.tsx"),
   path.join(STREAM_DIR, "SceneToSVGGeo.tsx"),
+  path.join(STREAM_DIR, "SceneToSVGOrdinal.tsx"),
 ]
 
 const FRAMES = {

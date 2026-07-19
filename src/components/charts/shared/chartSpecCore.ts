@@ -171,7 +171,7 @@ const commonProps: Record<string, ChartPropSpec> = {
     type: "string",
     enum: ["primary", "context", "sparkline", "mobile"] as const,
     default: "primary",
-    description: "Display mode controlling default size, chrome, margins, labels, and interaction.",
+    description: "Display mode controlling default size, decoration, margins, labels, and interaction.",
   },
   width: { type: "number", default: 600 },
   height: { type: "number", default: 400 },

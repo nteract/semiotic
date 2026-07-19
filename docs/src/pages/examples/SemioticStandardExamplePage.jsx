@@ -940,7 +940,7 @@ export default function SemioticStandardExamplePage() {
   const dataset = useMemo(() => buildDataset(metric), [metric])
   const charts = useMemo(() => buildChartDefinitions(dataset), [dataset])
   const handleTabKeyDown = (event, index) => {
-    let nextIndex = index
+    let nextIndex
     if (event.key === "ArrowRight") nextIndex = (index + 1) % METRICS.length
     else if (event.key === "ArrowLeft") nextIndex = (index - 1 + METRICS.length) % METRICS.length
     else if (event.key === "Home") nextIndex = 0
