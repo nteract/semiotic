@@ -18,10 +18,17 @@ let loadPromise: Promise<BrushComponent> | null = null
 function loadXYBrushOverlay(): Promise<BrushComponent> {
   if (cached) return Promise.resolve(cached)
   if (!loadPromise) {
-    loadPromise = import("./XYBrushOverlay").then((mod) => {
-      cached = mod.XYBrushOverlay
-      return cached
-    })
+    loadPromise = import("./XYBrushOverlay")
+      .then((mod) => {
+        cached = mod.XYBrushOverlay
+        return cached
+      })
+      .catch((err) => {
+        // Clear so a later mount can retry (CDN/HMR flake otherwise
+        // permanently poisons the module-level promise).
+        loadPromise = null
+        throw err
+      })
   }
   return loadPromise
 }

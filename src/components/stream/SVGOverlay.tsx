@@ -10,6 +10,7 @@ import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
 import { ticksForMode } from "../charts/shared/axisExtent"
@@ -503,6 +504,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // Render annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
+    // Hide retracted/superseded by default so paint matches describe/nav tree.
+    const visibleAnnotations = filterAnnotationsByStatus(annotations)
 
     const defaultRules = createDefaultAnnotationRules("xy", annotationActivation)
 
@@ -524,11 +527,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
     const layoutAnnotations = autoPlaceAnnotations
       ? annotationLayout({
-          annotations,
+          annotations: visibleAnnotations,
           context,
           ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
         })
-      : annotations
+      : visibleAnnotations
 
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // ordinal overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.

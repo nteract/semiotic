@@ -918,7 +918,15 @@ export function auditAccessibility(
       "Information cannot be navigated according to narrative or structure",
     critical: false,
     ...(navigable
-      ? {
+      ? isHierarchy
+        ? {
+            // buildNavigationTree is root-only for hierarchy/network — don't
+            // claim a full chart→series→datum tree when the widget is enabled.
+            status: "pass" as A11yStatus,
+            message:
+              "ChartContainer's navigable option mounts a structured navigation tree. For hierarchical/network charts the tree is currently shallow (root/topology summary + annotations branch), not a full descent of every node.",
+          }
+        : {
           status: "pass" as A11yStatus,
           message:
             "ChartContainer's navigable option mounts a structured tree (chart → axes/series → data points) that screen readers can traverse."

@@ -3,10 +3,9 @@ import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
-import { brushX, brushY, type D3BrushEvent } from "d3-brush"
-import { select } from "d3-selection"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, StreamScales } from "../../stream/types"
+import { MinimapBrushOverlayLazy } from "./minimapBrushOverlayLazy"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
@@ -117,112 +116,6 @@ export interface MinimapChartProps<TDatum extends Datum = Datum>
 }
 
 // ── Brush overlay ──────────────────────────────────────────────────────
-
-interface BrushOverlayProps {
-  width: number
-  height: number
-  margin: { top: number; right: number; bottom: number; left: number }
-  scales: StreamScales | null
-  brushDirection: "x" | "y"
-  extent: [number, number] | null
-  onBrush: (extent: [number, number] | null) => void
-}
-
-function BrushOverlay({
-  width,
-  height,
-  margin,
-  scales,
-  brushDirection,
-  extent,
-  onBrush
-}: BrushOverlayProps) {
-  const svgRef = useRef<SVGSVGElement>(null)
-  const moveBrushRef = useRef<((selection: [number, number] | null) => void) | null>(null)
-  const isUpdatingRef = useRef(false)
-
-  const totalWidth = width + margin.left + margin.right
-  const totalHeight = height + margin.top + margin.bottom
-
-  useEffect(() => {
-    if (!svgRef.current || !scales) return
-
-    const g = select(svgRef.current).select<SVGGElement>(".brush-group")
-
-    const brush = brushDirection === "x"
-      ? brushX().extent([[0, 0], [width, height]])
-      : brushY().extent([[0, 0], [width, height]])
-
-    brush.on("brush end", (event: D3BrushEvent<SVGElement>) => {
-      if (isUpdatingRef.current) return
-      if (!event.sourceEvent) return // programmatic — skip
-
-      const sel = event.selection as [number, number] | null
-      if (!sel) {
-        onBrush(null)
-        return
-      }
-
-      const scale = brushDirection === "x" ? scales.x : scales.y
-      const inv = scale.invert
-      if (!inv) return
-
-      const domain: [number, number] = brushDirection === "x"
-        ? [inv(sel[0]), inv(sel[1])]
-        : [inv(sel[0]), inv(sel[1])]
-
-      onBrush(domain)
-    })
-
-    g.call(brush)
-    moveBrushRef.current = (selection) => {
-      g.call(brush.move, selection)
-    }
-
-    // Style the brush selection
-    g.select(".selection")
-      .attr("fill", "steelblue")
-      .attr("fill-opacity", 0.2)
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1)
-
-    return () => {
-      moveBrushRef.current = null
-      brush.on("brush end", null)
-    }
-  }, [scales, width, height, brushDirection, onBrush])
-
-  // Sync controlled extent to brush position
-  useEffect(() => {
-    if (!moveBrushRef.current || !scales || !svgRef.current) return
-    const scale = brushDirection === "x" ? scales.x : scales.y
-
-    isUpdatingRef.current = true
-    if (extent) {
-      const pixelExtent: [number, number] = [scale(extent[0]), scale(extent[1])]
-      moveBrushRef.current(pixelExtent)
-    } else {
-      moveBrushRef.current(null)
-    }
-    isUpdatingRef.current = false
-  }, [extent, scales, brushDirection])
-
-  return (
-    <svg
-      ref={svgRef}
-      width={totalWidth}
-      height={totalHeight}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        pointerEvents: "all"
-      }}
-    >
-      <g className="brush-group" transform={`translate(${margin.left},${margin.top})`} />
-    </svg>
-  )
-}
 
 // ── MinimapChart ────────────────────────────────────────────────────────
 
@@ -561,7 +454,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
       style={{ position: "relative", width, overflow: "hidden" }}
     >
       <StreamXYFrame ref={overviewRef} {...overviewProps} />
-      <BrushOverlay
+      <MinimapBrushOverlayLazy
         width={width - minimapMargin.left - minimapMargin.right}
         height={minimapHeight}
         margin={minimapMargin}

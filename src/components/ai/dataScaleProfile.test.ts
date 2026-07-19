@@ -494,7 +494,13 @@ describe("scale-aware suggestCharts integration", () => {
     })
 
     it("buildProps returns runnable props (value + label + optional comparison) — no removed slot props", () => {
-      const results = suggestCharts(monthlyTrend, { maxResults: 10 })
+      // Pin the buildProps contract, not top-N ranking. Catalog growth can
+      // push BigNumber out of maxResults:10 even when it still fits (score
+      // ~1.2 for a 4-row series). Allow-list keeps the assertion stable.
+      const results = suggestCharts(monthlyTrend, {
+        maxResults: 5,
+        allow: ["BigNumber"],
+      })
       const big = results.find((r) => r.component === "BigNumber")
       expect(big).toBeDefined()
       expect(big?.props).toMatchObject({

@@ -18,7 +18,7 @@
  * mount and never re-emitted to the consumer's callback ref.
  */
 import * as React from "react"
-import { useRef, useCallback } from "react"
+import { useRef, useCallback, useState } from "react"
 import { render, act } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
@@ -115,5 +115,53 @@ describe("useFrameImperativeHandle reference stability", () => {
     await act(async () => { bumpParent?.() })
     await act(async () => { bumpParent?.() })
     expect(pushCalls).toBe(3)
+  })
+
+  it("stays stable when callers pass a fresh inline overrides object each render", async () => {
+    // Reproduces Sankey/Chord/Bubble/Scatterplot/ProcessSankey/FlowMap:
+    // they pass `overrides={{ getData: () => ... }}` (new object identity)
+    // every render. Including overrides in useImperativeHandle deps rebuilt
+    // the handle and re-fired callback-ref seeds.
+    let bumpParent: (() => void) | null = null
+    let pushCalls = 0
+    const frameRef = {
+      current: {
+        push: () => { pushCalls += 1 },
+        pushMany: () => {},
+        remove: () => [],
+        update: () => [],
+        clear: () => {},
+        getData: () => [],
+        getScales: () => null,
+      },
+    }
+
+    function Wrapper() {
+      const [, setN] = useState(0)
+      bumpParent = useCallback(() => setN((n) => n + 1), [])
+      const initialized = useRef(false)
+      const initRef = useCallback((handle: RealtimeFrameHandle | null) => {
+        if (handle && !initialized.current) {
+          initialized.current = true
+          handle.push({})
+        }
+      }, [])
+      // Fresh overrides identity every render — must NOT rebuild handle.
+      useFrameImperativeHandle(initRef, {
+        variant: "xy",
+        frameRef,
+        overrides: {
+          getData: () => [{ id: "from-override" }],
+        },
+      })
+      return null
+    }
+
+    await act(async () => { render(<Wrapper />) })
+    expect(pushCalls).toBe(1)
+    await act(async () => { bumpParent?.() })
+    await act(async () => { bumpParent?.() })
+    await act(async () => { bumpParent?.() })
+    expect(pushCalls).toBe(1)
   })
 })

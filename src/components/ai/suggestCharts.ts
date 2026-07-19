@@ -355,9 +355,10 @@ export function suggestCharts(
         rowsSource: effectiveScale.rowsSource,
       }
 
+      const resolvedComponent = variant?.component ?? capability.component
       out.push({
-        component: capability.component,
-        displayName: capability.displayName ?? capability.component,
+        component: resolvedComponent,
+        displayName: capability.displayName ?? resolvedComponent,
         candidateKind: capability.candidateKind ?? "built-in",
         ...(capability.recipe ? { recipeId: capability.recipe.id } : {}),
         family: capability.family,
@@ -519,9 +520,10 @@ export function scoreChart(
     ...recipeBias.caveats,
   ]
 
+  const resolvedComponent = variant?.component ?? capability.component
   return {
-    component: capability.component,
-    displayName: capability.displayName ?? capability.component,
+    component: resolvedComponent,
+    displayName: capability.displayName ?? resolvedComponent,
     candidateKind: capability.candidateKind ?? "built-in",
     ...(capability.recipe ? { recipeId: capability.recipe.id } : {}),
     family: capability.family,

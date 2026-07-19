@@ -177,6 +177,11 @@ export interface ChartVariant {
   description?: string
   /** Props to merge into the base chart props. */
   props: Record<string, unknown>
+  /**
+   * When set, suggestions use this component instead of `capability.component`
+   * (e.g. PieChart's "donut" variant → DonutChart, which actually honors innerRadius).
+   */
+  component?: string
   /** Style/role tags (used by consumers like vizmart for filtering). */
   tags?: ReadonlyArray<string>
   /** Per-intent additive score deltas (e.g. {"trend": +1, "outlier-detection": -2}). */

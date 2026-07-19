@@ -555,6 +555,20 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     return Tooltip(config)
   }
 
+  // `tooltip="multi"` is only wired when the HOC sets tooltipMode:"multi"
+  // (Line/Area/StackedArea/Difference). If normalizeTooltip still sees the
+  // string, the chart does not support multi mode — return a multi-series
+  // content function so callers still get a useful multi tooltip, and warn
+  // in development so silent generic Tooltip() degrade is no longer free.
+  if (tooltip === "multi") {
+    if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+      console.warn(
+        '[semiotic] tooltip="multi" reached normalizeTooltip — prefer charts that set tooltipMode (LineChart, AreaChart, StackedAreaChart, DifferenceChart). Rendering MultiLineTooltip content as a fallback.',
+      )
+    }
+    return MultiLineTooltip()
+  }
+
   // Should not reach here but return a generic tooltip
   return Tooltip()
 }

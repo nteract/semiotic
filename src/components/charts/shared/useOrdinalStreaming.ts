@@ -44,6 +44,9 @@ export function useOrdinalStreaming({
     pushMany: (d: Datum[]) => frameRef.current?.pushMany(d),
     remove: (id: string | string[]) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
+    // Bounded ingest preserves category order + enter/move/exit transitions
+    // (clear+pushMany drops them). Documented on the public ordinal push API.
+    replace: (data: Datum[]) => frameRef.current?.replace(data),
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? [],
     getScales: () => frameRef.current?.getScales() ?? null

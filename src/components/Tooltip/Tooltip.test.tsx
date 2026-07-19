@@ -436,8 +436,9 @@ describe("MultiPointTooltip", () => {
     expect(container.textContent).toContain("42")
   })
 
-  it("normalizeTooltip returns a generic tooltip function for 'multi' (HOC handles it before normalizeTooltip)", () => {
-    // "multi" is intercepted at the HOC level; if it reaches normalizeTooltip it falls through to generic
+  it("normalizeTooltip returns MultiLineTooltip content for 'multi' when HOCs do not intercept", () => {
+    // Preferred path: Line/Area/StackedArea/Difference set tooltipMode before normalize.
+    // Fallback: multi content so unsupported charts still get a multi-series tooltip.
     const result = normalizeTooltip("multi")
     expect(typeof result).toBe("function")
   })

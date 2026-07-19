@@ -358,6 +358,10 @@ export const boxPlot: ChartConfig = {
     rAccessor: rest.valueAccessor || "value",
     colorAccessor: colorBy,
     colorScheme,
+    // staticOrdinal can pass showOutliers into the pipeline; without this
+    // mapping showOutliers:false silently no-ops (default keeps outliers).
+    ...(rest.showOutliers != null && { showOutliers: rest.showOutliers }),
+    ...(rest.outlierRadius != null && { outlierRadius: rest.outlierRadius }),
     ...common,
     summaryStyle: common.summaryStyle || buildBoxPlotSummaryStyle(data, colorBy, colorScheme, common, rest),
   }),

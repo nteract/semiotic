@@ -2,7 +2,7 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import { MinimapChart } from "./MinimapChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -128,15 +128,16 @@ describe("MinimapChart", () => {
     expect(overviewProps.size[1]).toBe(80)
   })
 
-  it("renders brush overlay for minimap", () => {
+  it("renders brush overlay for minimap", async () => {
     const { container } = render(
       <TooltipProvider>
         <MinimapChart data={sampleData} />
       </TooltipProvider>
     )
-    // BrushOverlay renders a svg with a .brush-group g element
-    const brushGroup = container.querySelector(".brush-group")
-    expect(brushGroup).toBeTruthy()
+    // Brush overlay is lazy-loaded (d3-brush code-split); wait for the chunk.
+    await waitFor(() => {
+      expect(container.querySelector(".brush-group")).toBeTruthy()
+    })
   })
 
   it("handles data update via rerender", () => {

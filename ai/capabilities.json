@@ -430,8 +430,8 @@
     "ProcessSankey": {
       "category": "network",
       "supportsLegend": true,
-      "supportsSelection": true,
-      "supportsLinkedHover": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
       "colorModel": "categorical",

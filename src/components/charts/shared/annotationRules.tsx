@@ -557,8 +557,13 @@ export function createDefaultAnnotationRules(
       // ── Band (shaded region between y0 and y1) ────────────────────────
       case "band": {
         const scaleY = context.scales?.y ?? context.scales?.value
-        const y0px = scaleY?.(ann.y0) ?? 0
-        const y1px = scaleY?.(ann.y1) ?? (context.height || 0)
+        const yDomain = scaleY?.domain?.()
+        // A null/omitted bound extends to the axis extent on that side
+        // (y0 → domain min, y1 → domain max) instead of being treated as 0.
+        const y0Value = ann.y0 ?? yDomain?.[0]
+        const y1Value = ann.y1 ?? yDomain?.[1]
+        const y0px = y0Value != null && scaleY ? scaleY(y0Value) : 0
+        const y1px = y1Value != null && scaleY ? scaleY(y1Value) : (context.height || 0)
         // Region fill may be a declarative HatchFill → inline <pattern>.
         const bandFill = resolveSvgFill(ann.fill, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
         return (
@@ -591,8 +596,13 @@ export function createDefaultAnnotationRules(
       // ── Vertical band (shaded region between x0 and x1) ─────────────
       case "x-band": {
         const scaleX = context.scales?.x ?? context.scales?.time
-        const x0px = ann.x0 != null && scaleX ? scaleX(ann.x0) : null
-        const x1px = ann.x1 != null && scaleX ? scaleX(ann.x1) : null
+        const xDomain = scaleX?.domain?.()
+        // A null/omitted bound extends to the axis extent on that side
+        // (x0 → domain min, x1 → domain max) rather than skipping the band.
+        const x0Value = ann.x0 ?? xDomain?.[0]
+        const x1Value = ann.x1 ?? xDomain?.[1]
+        const x0px = x0Value != null && scaleX ? scaleX(x0Value) : null
+        const x1px = x1Value != null && scaleX ? scaleX(x1Value) : null
         if (x0px == null || x1px == null) return null
         const xBandFill = resolveSvgFill(ann.fill || ann.color, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
         return (

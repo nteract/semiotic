@@ -1,11 +1,9 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
-import { useMemo, useCallback, useState, useRef, useEffect } from "react"
+import { useMemo, useCallback, useState, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
-import { brush as d3Brush, type D3BrushEvent } from "d3-brush"
-import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
 import type { BaseChartProps, ChartAccessor, ResolvedMobileInteractionConfig } from "../shared/types"
@@ -16,9 +14,9 @@ import { useSelection, useBrushSelection } from "../../store/useSelection"
 import { useSelectionSelector } from "../../store/SelectionStore"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
-  isTwoDimensionalBrushSelection,
   type ScatterplotMatrixHoverInfo,
 } from "./scatterplotMatrixInteractionTypes"
+import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"
@@ -75,71 +73,6 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
    * drag-select overlay captures pointer events, so clicks are not delivered.
    */
   onClick?: (datum: TDatum, event: { x: number; y: number }) => void
-}
-
-// ── Cell Brush Overlay ────────────────────────────────────────────────────
-
-interface CellBrushOverlayProps {
-  frameRef: React.RefObject<StreamXYFrameHandle | null>
-  cellSize: number
-  xField: string
-  yField: string
-  onBrush: (extent: [number, number][] | null) => void
-}
-
-function CellBrushOverlay({ frameRef, cellSize, xField: _xField, yField: _yField, onBrush }: CellBrushOverlayProps) {
-  const svgRef = useRef<SVGSVGElement>(null)
-
-  const chartW = cellSize - CELL_MARGIN.left - CELL_MARGIN.right
-  const chartH = cellSize - CELL_MARGIN.top - CELL_MARGIN.bottom
-
-  useEffect(() => {
-    if (!svgRef.current) return
-
-    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
-    const brush = d3Brush()
-      .extent([[0, 0], [chartW, chartH]])
-      .on("brush end", (event: D3BrushEvent<Datum>) => {
-        const scales = frameRef.current?.getScales()
-        if (!scales) return
-
-        if (!isTwoDimensionalBrushSelection(event.selection)) {
-          onBrush(null)
-          return
-        }
-
-        const [[px0, py0], [px1, py1]] = event.selection
-        const dataExtent: [number, number][] = [
-          [scales.x.invert(px0), scales.y.invert(py0)],
-          [scales.x.invert(px1), scales.y.invert(py1)]
-        ]
-        onBrush(dataExtent)
-      })
-
-    g.call(brush)
-
-    // Style the brush
-    g.select(".selection")
-      .attr("fill", "steelblue")
-      .attr("fill-opacity", 0.15)
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1)
-
-    return () => {
-      brush.on("brush end", null)
-    }
-  }, [chartW, chartH, frameRef, onBrush])
-
-  return (
-    <svg
-      ref={svgRef}
-      width={cellSize}
-      height={cellSize}
-      style={{ position: "absolute", top: 0, left: 0 }}
-    >
-      <g className="brush-g" transform={`translate(${CELL_MARGIN.left},${CELL_MARGIN.top})`} />
-    </svg>
-  )
 }
 
 // ── Scatterplot Cell ───────────────────────────────────────────────────────
@@ -315,11 +248,9 @@ function ScatterplotCell({
         tooltipContent={mode === "hover" ? (() => null) : undefined}
       />
       {mode === "brush" && (
-        <CellBrushOverlay
+        <ScatterplotMatrixBrushOverlayLazy
           frameRef={frameRef}
           cellSize={cellSize}
-          xField={xField}
-          yField={yField}
           onBrush={handleBrush}
         />
       )}

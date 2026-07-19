@@ -20,7 +20,7 @@
  * fight rather than a tool.
  */
 "use client"
-import { useImperativeHandle } from "react"
+import { useImperativeHandle, useRef } from "react"
 import type { Ref, RefObject } from "react"
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -31,6 +31,8 @@ interface XYOrdinalFrameLike {
   pushMany(points: Datum[]): void
   remove(id: string | string[]): Datum[]
   update(id: string | string[], updater: (d: Datum) => Datum): Datum[]
+  /** Ordinal bounded-ingest; XY frames typically omit this. */
+  replace?(data: Datum[]): void
   clear(): void
   getData(): Datum[]
   getScales(): unknown | null
@@ -107,28 +109,45 @@ export function useFrameImperativeHandle(
   options: Options,
 ): void {
   const { variant, frameRef, overrides } = options
+  // Keep the latest overrides on a ref so the imperative handle can stay
+  // referentially stable (deps `[]`) even when callers pass an inline
+  // `overrides` object every render (Sankey/Chord/Bubble/Scatterplot/
+  // ProcessSankey/FlowMap). Including `overrides` in deps rebuilt the
+  // handle on every parent re-render, which re-fired callback-ref seed
+  // patterns and undid live remove/update — the documented "Remove Cache"
+  // bug this helper was written to kill.
+  const overridesRef = useRef(overrides)
+  overridesRef.current = overrides
   // Default deps to `[]` so the handle is referentially stable across
-  // renders. The method bodies read `frameRef.current` at call time, so
-  // a frozen closure still dispatches into the latest store. Without
-  // this, every parent re-render produces a new handle, which makes
-  // React fire any callback ref attached via `ref={callback}` with
-  // `null` then the new handle each render. Consumers that pre-seed
-  // data inside such a callback (the canonical pattern in the docs
-  // `/features/push-api` NetworkDemo `initRef` and similar) would
-  // re-run the seed on every parent re-render — re-pushing the same
-  // edges and undoing any user-driven `remove` / `update` between
-  // renders. Reproduced concretely on the network demo's "Remove
-  // Cache" button: the click triggered a `setLog` re-render, the
-  // re-render rebuilt the imperative handle, the callback ref fired
-  // null→new, the seed pushed the original 5 edges back, and the
-  // Cache node reappeared with its edges within the same frame.
+  // renders. The method bodies read `frameRef.current` (and overridesRef)
+  // at call time, so a frozen closure still dispatches into the latest
+  // store and latest overrides.
   useImperativeHandle(
     ref,
     () => {
       const defaults = makeVariantDefaults(variant, frameRef)
-      return { ...defaults, ...overrides } as RealtimeFrameHandle
+      // Proxy so each property access prefers the *current* overrides without
+      // rebuilding the handle object identity. Missing keys on network/geo
+      // (e.g. getScales) stay absent when neither defaults nor overrides
+      // define them — `typeof handle.getScales === "function"` stays false.
+      return new Proxy(defaults, {
+        get(target, prop, receiver) {
+          if (typeof prop === "string") {
+            const latest = overridesRef.current?.[prop as keyof RealtimeFrameHandle]
+            if (typeof latest === "function") return latest
+          }
+          return Reflect.get(target, prop, receiver)
+        },
+        has(target, prop) {
+          if (typeof prop === "string" && overridesRef.current && prop in overridesRef.current) {
+            return true
+          }
+          return Reflect.has(target, prop)
+        },
+      }) as RealtimeFrameHandle
     },
-    [frameRef, overrides, variant],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: stable handle; see comment above
+    [],
   )
 }
 
@@ -143,6 +162,9 @@ function makeVariantDefaults(
       pushMany: (points) => r.current?.pushMany(points),
       remove: (id) => r.current?.remove(id) ?? [],
       update: (id, updater) => r.current?.update(id, updater) ?? [],
+      // Ordinal frames expose replace for bounded-ingest transitions;
+      // XY frames typically omit it (no-op when missing).
+      replace: (data) => r.current?.replace?.(data),
       clear: () => r.current?.clear(),
       getData: () => r.current?.getData() ?? [],
       getScales: () => r.current?.getScales() ?? null,

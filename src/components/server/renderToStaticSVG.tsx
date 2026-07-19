@@ -131,6 +131,10 @@ const COMMON_FRAME_PROP_KEYS = [
   "barColors",
   "legend",
   "legendLayout",
+  // BaseChartProps / AI annotation workflows — without this top-level
+  // renderChart(..., { autoPlaceAnnotations: true }) silently no-ops
+  // (static* frames honor the prop when present on the built frame props).
+  "autoPlaceAnnotations",
 ] as const
 
 const CHART_MODE_PROP_KEYS = [

@@ -19,6 +19,8 @@ import {
 } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
 import { resolveDownwardHistogramExtent } from "../charts/realtime/temporalHistogramConfig"
+import { prepareLineSeriesForSsr } from "../charts/shared/lineSeriesSsr"
+import type { AnomalyConfig, ForecastConfig } from "../charts/shared/statisticalOverlays"
 
 // ── XY Charts ──────────────────────────────────────────────────────────
 
@@ -224,6 +226,34 @@ export const sparkline: ChartConfig = {
   }),
 }
 
+/** Build pointStyle when showPoints is true (mirrors LineChart/AreaChart HOC). */
+function buildShowPointsStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+): ((d: Datum) => Datum) | undefined {
+  if (!rest.showPoints) return undefined
+  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
+  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
+  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrPointColorBy"
+  const colorRows = typeof colorBy === "function"
+    ? rows.map(d => ({ ...d, __ssrPointColorBy: colorBy(d) }))
+    : rows
+  const colorScale = colorBy
+    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
+    : undefined
+  const r = typeof rest.pointRadius === "number" ? rest.pointRadius : 3
+  return (d: Datum) => {
+    const color = colorBy && colorScale
+      ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
+      : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR
+    return { r, fill: color, stroke: "none" }
+  }
+}
+
 export const lineChart: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
@@ -235,15 +265,71 @@ export const lineChart: ChartConfig = {
     // gradient entirely (same class of bug as gradientFill/valueExtent).
     const fillArea = rest.fillArea as boolean | string[] | undefined
     const chartType = Array.isArray(fillArea) ? "mixed" : fillArea ? "area" : "line"
-    return {
-      chartType,
+    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const baseLineStyle = buildLineStyle(data, effectiveColorBy, colorScheme, common, rest)
+
+    // forecast / anomaly / gapStrategy / directLabel — pure prep shared with
+    // the client HOC's useSeriesFeatures + gap/direct-label paths.
+    const series = prepareLineSeriesForSsr({
       data,
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
-      groupAccessor: rest.lineBy || colorBy,
-      colorAccessor: effectiveColorBy,
+      lineBy: rest.lineBy as string | ((d: Datum) => unknown) | undefined,
+      colorBy: effectiveColorBy as string | ((d: Datum) => unknown) | undefined,
       colorScheme,
-      lineStyle: buildLineStyle(data, effectiveColorBy, colorScheme, common, rest),
+      color: typeof rest.color === "string" ? rest.color : undefined,
+      forecast: rest.forecast as ForecastConfig | undefined,
+      anomaly: rest.anomaly as AnomalyConfig | undefined,
+      gapStrategy: rest.gapStrategy as "break" | "interpolate" | "zero" | undefined,
+      directLabel: rest.directLabel as boolean | { position?: "start" | "end"; fontSize?: number } | undefined,
+      annotations: common.annotations as Datum[] | undefined,
+      themeCategorical,
+      baseLineStyle,
+    })
+
+    const pointStyle = common.pointStyle || buildShowPointsStyle(
+      series.data,
+      series.colorAccessor,
+      colorScheme,
+      common,
+      rest,
+    )
+
+    // Direct-label margin expansion (right/left).
+    let margin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
+    if (series.marginExtra && margin && typeof margin === "object") {
+      margin = {
+        ...margin,
+        ...(series.marginExtra.right != null && {
+          right: Math.max(Number(margin.right) || 0, series.marginExtra.right),
+        }),
+        ...(series.marginExtra.left != null && {
+          left: Math.max(Number(margin.left) || 0, series.marginExtra.left),
+        }),
+      }
+    } else if (series.marginExtra && margin == null) {
+      margin = {
+        top: 20,
+        right: series.marginExtra.right ?? 20,
+        bottom: 30,
+        left: series.marginExtra.left ?? 40,
+      }
+    }
+
+    // Suppress legend when directLabel is on (matches HOC) unless caller set showLegend.
+    const showLegend = rest.directLabel && common.showLegend === undefined
+      ? false
+      : (common.showLegend ?? Boolean(series.colorAccessor))
+
+    return {
+      chartType,
+      data: series.data,
+      xAccessor: series.xAccessor,
+      yAccessor: series.yAccessor,
+      groupAccessor: series.groupAccessor,
+      colorAccessor: series.colorAccessor,
+      colorScheme,
+      lineStyle: series.lineStyle || baseLineStyle,
       ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
       ...(fillArea && rest.areaOpacity != null && { areaOpacity: rest.areaOpacity }),
       // `band` ({y0Accessor,y1Accessor} or array) draws the shaded envelope
@@ -251,9 +337,11 @@ export const lineChart: ChartConfig = {
       // never painted server-side.
       ...(rest.band != null && { band: rest.band }),
       ...common,
-      // LineChart delegates its default legend decision to useChartSetup:
-      // a grouping/color accessor gets a legend unless the caller disables it.
-      showLegend: common.showLegend ?? Boolean(effectiveColorBy),
+      ...(margin !== undefined && { margin }),
+      annotations: series.annotations,
+      ...(series.yExtent && !common.yExtent && { yExtent: series.yExtent }),
+      ...(pointStyle && { pointStyle }),
+      showLegend,
     }
   },
 }
@@ -325,6 +413,7 @@ export const areaChart: ChartConfig = {
     const resolvedGradientFill = semanticGradient && semanticGradient.length > 0
       ? { colorStops: semanticGradientToColorStops(semanticGradient) }
       : common.gradientFill
+    const pointStyle = common.pointStyle || buildShowPointsStyle(preparedData, effectiveColorBy, colorScheme, common, rest)
     return {
       chartType: "area",
       data: preparedData,
@@ -339,6 +428,7 @@ export const areaChart: ChartConfig = {
       // `frameProps.lineStyle` is the public escape hatch and wins exactly
       // as it does in AreaChart; otherwise resolve the HOC defaults here.
       lineStyle: common.lineStyle || buildAreaLineStyle(preparedData, effectiveColorBy, colorScheme, common, rest),
+      ...(pointStyle && { pointStyle }),
     }
   },
 }
@@ -438,23 +528,38 @@ export const stackedAreaChart: ChartConfig = {
       typeof colorAccessor === "string" && Array.isArray(data)
         ? createColorScale(data, colorAccessor, colorScheme)
         : undefined
-    const lineStyle =
-      rest.areaOpacity == null
-        ? undefined
-        : (d: Datum) => {
-            const color =
-              colorAccessor == null ? undefined : getColor(d, colorAccessor, colorScale)
-            const showLine = rest.showLine ?? true
-            const stroke = rest.stroke ?? color
-            const strokeWidth = rest.strokeWidth ?? rest.lineWidth ?? 2
-            return {
-              fill: rest.color ?? color,
-              stroke: showLine ? stroke : "none",
-              ...(showLine ? { strokeWidth } : {}),
-              fillOpacity: rest.areaOpacity,
-              ...(rest.opacity == null ? {} : { opacity: rest.opacity }),
-            }
-          }
+    const areaOpacity = typeof rest.areaOpacity === "number" ? rest.areaOpacity : 0.7
+    // Always build a base lineStyle so styleRules/color/opacity apply even
+    // when areaOpacity is left at the HOC default (previously only when
+    // rest.areaOpacity was set, styleRules no-op'd on SSR).
+    const lineStyle = common.lineStyle || ((d: Datum) => {
+      const color =
+        colorAccessor == null ? undefined : getColor(d, colorAccessor, colorScale)
+      const showLine = rest.showLine ?? true
+      const stroke = rest.stroke ?? color
+      const strokeWidth = rest.strokeWidth ?? rest.lineWidth ?? 2
+      const style: Datum = {
+        fill: rest.color ?? color,
+        stroke: showLine ? stroke : "none",
+        ...(showLine ? { strokeWidth } : {}),
+        fillOpacity: areaOpacity,
+        ...(rest.opacity == null ? {} : { opacity: rest.opacity }),
+      }
+      const rules = rest.styleRules as StyleRule[] | undefined
+      if (rules?.length) {
+        const resolveValue = makeRuleValueResolver(rest.yAccessor as string | ((d: Datum) => unknown) | undefined)
+        const group = colorAccessor
+          ? (typeof colorAccessor === "function"
+              ? String(colorAccessor(d) ?? "")
+              : String(d[colorAccessor as string] ?? ""))
+          : undefined
+        Object.assign(style, resolveStyleRules(d, rules, { value: resolveValue(d), category: group }))
+      }
+      return style
+    })
+    // Mirror StackedAreaChart HOC: normalize forces zero baseline.
+    const baseline = rest.normalize ? "zero" : (rest.baseline ?? "zero")
+    const pointStyle = common.pointStyle || buildShowPointsStyle(data, colorAccessor as string | ((d: Datum) => unknown) | undefined, colorScheme, common, rest)
 
     return {
       chartType: "stackedarea",
@@ -465,9 +570,11 @@ export const stackedAreaChart: ChartConfig = {
       colorAccessor,
       colorScheme,
       normalize: rest.normalize,
+      baseline,
       stackOrder: rest.stackOrder,
       lineStyle,
       ...common,
+      ...(pointStyle && { pointStyle }),
       // StackedAreaChart's visual default is smooth; the static scene
       // serializer otherwise falls through to its linear path generator.
       curve: common.curve ?? rest.curve ?? "monotoneX",

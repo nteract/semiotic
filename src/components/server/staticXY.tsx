@@ -89,6 +89,9 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     scalePadding: props.scalePadding,
     binSize: props.binSize,
     normalize: props.normalize,
+    // StackedArea streamgraph/silhouette/diverging — client threads baseline
+    // into the pipeline; without it SSR always paints zero-baseline stacks.
+    baseline: props.baseline,
     stackOrder: props.stackOrder,
     boundsAccessor: props.boundsAccessor,
     boundsStyle: props.boundsStyle,

@@ -64,9 +64,15 @@ function ensureGlobalObserver(): void {
 
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
     installedObserver = new MutationObserver(bumpVersion)
+    // Observe the whole document tree so intermediate-wrapper scoped CSS vars
+    // (`<div style={{ "--semiotic-danger": "#4b0082" }}>` around a chart)
+    // invalidate the canvas color cache the same way ThemeProvider / dark-mode
+    // class toggles on <html> do. Attribute-only + subtree keeps this cheap —
+    // we only re-resolve vars on the next paint, not re-layout.
     installedObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class", "style", "data-theme", "data-semiotic-theme"]
+      attributeFilter: ["class", "style", "data-theme", "data-semiotic-theme"],
+      subtree: true,
     })
   }
 

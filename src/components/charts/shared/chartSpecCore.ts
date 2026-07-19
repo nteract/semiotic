@@ -185,12 +185,15 @@ const commonProps: Record<string, ChartPropSpec> = {
   showLegend: { type: "boolean" },
   showGrid: { type: "boolean", default: false },
   colorBy: { type: ["string", "function"] },
-  colorScheme: { type: ["string", "array"], default: "category10" },
+  // Object maps are first-class at runtime (createColorScale); accept them
+  // in validation so agent/object-map configs don't fail doctor.
+  colorScheme: { type: ["string", "array", "object"], default: "category10" },
   // Tooltip surfaces in schema as a type union including "function" —
   // canonical schema entries for `tooltip` already use this shape (e.g.
   // `RidgelinePlot.tooltip: ["function", "object"]`). LLMs that can't
   // supply functions choose the boolean/object variant.
-  tooltip: { type: ["boolean", "function", "object"] },
+  // String form includes "multi" for charts that wire tooltipMode (Line/Area/…).
+  tooltip: { type: ["boolean", "function", "object", "string"] },
   annotations: { type: "array" },
   autoPlaceAnnotations: {
     type: ["boolean", "object"],
@@ -206,6 +209,24 @@ const commonProps: Record<string, ChartPropSpec> = {
     default: "nice",
     description: 'Tick endpoint mode. "nice" rounds endpoints to readable values; "exact" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.',
   },
+  animate: {
+    type: ["boolean", "object"],
+    description: "Enable mark transitions (boolean or {duration?, easing?, intro?}).",
+  },
+  loading: { type: "boolean", description: "Show loading skeleton / loadingContent." },
+  loadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode override for loading state; false suppresses." },
+  emptyContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode when data is empty; false suppresses." },
+  hoverHighlight: { type: "boolean", description: "Dim non-hovered series/categories (requires colorBy string field)." },
+  chartId: { type: "string", description: "Stable id for linked selection / observation / nav sync." },
+  emphasis: { type: "string", enum: ["primary", "secondary"] as const },
+  responsiveWidth: { type: "boolean" },
+  responsiveHeight: { type: "boolean" },
+  color: { type: "string", description: "Uniform mark fill (primitive styling)." },
+  stroke: { type: "string" },
+  strokeWidth: { type: "number" },
+  opacity: { type: "number" },
+  // `onObservation` is function-only; LLMs can't populate it.
+  onObservation: { type: "function", omitFromSchema: true },
   // `frameProps` is a typed pass-through for advanced StreamFrame
   // overrides — too unstructured to be useful in LLM tool definitions.
   frameProps: { type: "object", omitFromSchema: true },
