@@ -62,6 +62,8 @@ export interface NetworkFramePaintContext {
   lastAnnotationFrameTimeRef: { current: number }
   setAnnotationFrame: (updater: (f: number) => number) => void
   scheduleNextFrame: () => void
+  /** Resync color caches from scene fills after an invalidating rebuild. */
+  syncColorMap?: () => void
 }
 
 /**
@@ -97,7 +99,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     pendingAnnotationFrameRef,
     lastAnnotationFrameTimeRef,
     setAnnotationFrame,
-    scheduleNextFrame
+    scheduleNextFrame,
+    syncColorMap
   } = ctx
 
   const c2d = canvas.getContext("2d")
@@ -125,6 +128,12 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const computedScene = transitionActive || wasDirty || animationTicked
   if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
+    // Resync particle/hover color caches from the freshly rebuilt scene fills
+    // only on an invalidating rebuild (an effect / mount paint set `dirtyRef`),
+    // NOT on pure transition/animation frames whose fills are unchanged. This
+    // covers the mount hydration-lifecycle paint (which owns the first build);
+    // post-mount ingest/layout pre-builds sync in `rebuildSceneNow` directly.
+    if (wasDirty) syncColorMap?.()
   }
   if (sceneRevisionCheck) {
     sceneRevisionDiagnostics?.afterCompute(sceneRevisionCheck, computedScene, false)
