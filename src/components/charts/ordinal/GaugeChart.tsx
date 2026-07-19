@@ -164,7 +164,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   // scale labels and per-threshold annotations — they don't read at compact
   // sizes. Context keeps its own value readout as an SVG annotation; sparkline
   // suppresses that too. User-supplied values always win.
-  const modeIsContext = props.mode === "context"
+  const modeIsContext = resolved.mode === "context"
   const { compactMode } = resolved
 
   const {

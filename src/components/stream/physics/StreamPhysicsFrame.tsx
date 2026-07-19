@@ -1359,6 +1359,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
             color: options.color ?? "#f59e0b",
             durationMs: Math.max(120, options.durationMs ?? 520),
             radius: options.radius ?? physicsBodyRadius(body),
+            scale: options.scale != null && options.scale > 0 ? options.scale : 1,
             startedAt: now
           })
           if (focusedBodyIdRef.current === id) {

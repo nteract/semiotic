@@ -19,6 +19,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       mechanicalCount: { type: "number", description: "Number of generated bodies in mechanical mode." },
       branchProbability: { type: "number", default: 0.5, description: "Probability that each mechanical sample branches right at a peg." },
       referenceLines: { type: ["object", "array"], description: "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }." },
+      rerunMS: { type: ["number", "null"], description: "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
       showProjection: { type: "boolean", description: "Whether companion docs or wrappers should show the settled projection." },
     },
     capabilities: {
@@ -113,6 +114,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       xExtent: { type: "array", description: "Optional [min, max] domain for the quantitative axis." },
       collisionIterations: { type: "number", default: 6, description: "Collision solver iterations per fixed physics step." },
       settle: { type: "boolean", description: "Start bodies near their target positions for a calmer first paint or reduced-motion demo." },
+      rerunMS: { type: ["number", "null"], description: "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
       showProjection: { type: "boolean", default: true, description: "Draw x-axis and group-lane guides behind the moving bodies." },
     },
     capabilities: {
@@ -144,6 +146,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       startTimeAccessor: { type: ["string", "function"], description: "Optional per-project simulation second used as the local event-timeline origin." },
       onCapacityChange: { type: "function", description: "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots." },
       crashDetection: { type: "boolean", default: true, description: "Treat the crash line as a live failure trigger." },
+      rerunMS: { type: ["number", "null"], description: "Replay the full compound simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
       showChrome: { type: "boolean", default: true, description: "Draw route, socket, and graveyard chrome." },
       showProjection: { type: "boolean", default: true, description: "Draw settled viability/outcome strip." },
       showTethers: { type: "boolean", default: true, description: "Draw tethers between cores and property bodies." },

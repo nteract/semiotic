@@ -13,6 +13,7 @@ import {
   clampGauntletPoint,
   defaultPlacement,
   featureSlot,
+  gauntletSpatialScale,
   projectCoreId,
   projectNegativeId,
   projectPositiveId,
@@ -80,6 +81,18 @@ function resolveNegativeBodyIdsForPop<TDatum extends Datum>(
   })
 }
 
+function settleAwareForce(
+  body: PhysicsBodyState,
+  force: { x: number; y: number }
+): { x: number; y: number } | null {
+  const speed = Math.hypot(body.vx, body.vy)
+  // StreamPhysicsFrame treats every non-zero force as an impulse, which wakes
+  // the body and restarts its sleep timer. Compound bodies asymptotically hover
+  // around their spring target, so suppress their final sub-pixel correction
+  // once both motion and the requested correction are visually negligible.
+  return speed < 2 && Math.hypot(force.x, force.y) < 4 ? null : force
+}
+
 export function computeGauntletBodyForce<TDatum extends Datum>(options: {
   body: PhysicsBodyState
   bodies: readonly PhysicsBodyState[]
@@ -115,11 +128,12 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
   if (!project) return null
   const placement = resolvePlacement(project, projectIndex, layout, projectPlacement)
   const core = bodies.find((candidate) => candidate.id === projectCoreId(project.id))
+  const spatialScale = gauntletSpatialScale(layout)
   const negativeLoad = project.negativeIds.reduce(
     (sum, id) => sum + (negativeById.get(id)?.load ?? 1),
     0
   )
-  const forward = project.killed ? 0 : 58
+  const forward = project.killed ? 0 : 58 * Math.max(0.25, spatialScale)
   if (datum.kind !== CORE_KIND) {
     if (!core) return null
     let target: { x: number; y: number }
@@ -149,7 +163,11 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
         project
       }) ?? { x: core.x, y: core.y }
     } else if (datum.kind === POSITIVE_KIND && datum.property) {
-      const slot = featureSlot(project.activePositiveIds, datum.property.id)
+      const slot = featureSlot(
+        project.activePositiveIds,
+        datum.property.id,
+        spatialScale
+      )
       target = {
         x: core.x + Math.cos(slot.angle) * slot.radius,
         y: core.y + Math.sin(slot.angle) * slot.radius - 2
@@ -171,8 +189,8 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
       const count = Math.min(4, negatives.length - row * 4)
       const column = index % 4
       target = {
-        x: core.x + (column - (count - 1) / 2) * 18,
-        y: core.y + 54 + row * 13
+        x: core.x + (column - (count - 1) / 2) * 18 * spatialScale,
+        y: core.y + (54 + row * 13) * spatialScale
       }
     }
     const bodyRadius = body.shape.type === "circle" ? body.shape.radius : 8
@@ -198,17 +216,17 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
             y: (property?.pull?.y ?? 22) * 0.22
           }
         : { x: 0, y: 0 }
-    return {
+    return settleAwareForce(body, {
       x: (target.x - body.x) * 28 - (body.vx - core.vx) * 3 + pull.x + forward * 0.01,
       y: (target.y - body.y) * 28 - (body.vy - core.vy) * 3 + pull.y - lift
-    }
+    })
   }
   if (project.killed) {
     const crashX = project.crashX ?? project.metrics.lastX ?? body.x
-    return {
+    return settleAwareForce(body, {
       x: (crashX - body.x) * 44 - body.vx * 9,
-      y: 160 + negativeLoad * 12 - body.vy * 1.6
-    }
+      y: (160 + negativeLoad * 12) * spatialScale - body.vy * 1.6
+    })
   }
   const projectEventsForRoute = projectEvents(project)
   const projectElapsed = Math.max(0, elapsed - (project.startedAt ?? 0))
@@ -230,15 +248,15 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
   const dragPull = negativeLoad * 13
   if (coreForceMode === "net") {
     const verticalBalance = (negativeLoad - positiveLift) * 32
-    return {
+    return settleAwareForce(body, {
       x: (target.x - body.x) * 15 - body.vx * 1.8 + forward * 0.18,
       y: (placement.routeY - body.y) * 1.25 - body.vy * 1.4 + verticalBalance
-    }
+    })
   }
-  return {
+  return settleAwareForce(body, {
     x: (target.x - body.x) * 15 - body.vx * 1.8 + forward * 0.18,
     y: (target.y - body.y) * 15 - body.vy * 1.8 + dragPull - positiveLift * 2.2
-  }
+  })
 }
 
 export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
@@ -251,8 +269,10 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
   coreBody?: GauntletCoreBodyFn<TDatum>
   popBodies: (
     ids: string[],
-    options?: { color?: string; durationMs?: number; radius?: number }
+    options?: { color?: string; durationMs?: number; radius?: number; scale?: number }
   ) => unknown
+  /** Uniform pop-burst scale (see StreamPhysicsPopOptions.scale). */
+  popScale?: number
 }): void {
   const {
     project,
@@ -262,7 +282,8 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
     positiveById,
     negativeById,
     coreBody,
-    popBodies
+    popBodies,
+    popScale
   } = options
   const core = controls
     .readBodies()
@@ -317,7 +338,8 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
     popBodies([projectPositiveId(project.id, propertyId)], {
       color: property?.popColor ?? property?.color,
       durationMs: 900,
-      radius: (property?.radius ?? 10) + 3
+      radius: (property?.radius ?? 10) + 3,
+      scale: popScale
     })
   }
   const popNegativeEntries = resolvePopNegativeEntries(project, effect)
@@ -331,7 +353,8 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
     popBodies([popNegativeBodyIds[index]], {
       color: property?.popColor ?? property?.color,
       durationMs: 900,
-      radius: (property?.radius ?? 7) + 3
+      radius: (property?.radius ?? 7) + 3,
+      scale: popScale
     })
   })
 }
@@ -345,6 +368,7 @@ export function projectRouteTarget<TDatum extends Datum>(
   gateById: Map<string, GauntletLayout["gates"][number]>,
   terminalBehavior: "outcome" | "hold-last"
 ): { x: number; y: number } {
+  const spatialScale = gauntletSpatialScale(layout)
   if (project.killed) return { x: project.metrics.lastX ?? placement.graveyardX, y: placement.graveyardY }
   const finalEvent = events[events.length - 1]
   if (!finalEvent) return { x: placement.socketX, y: placement.routeY }
@@ -381,7 +405,7 @@ export function projectRouteTarget<TDatum extends Datum>(
       return {
         time: event.time,
         x: event.routeX ?? gate?.x ?? placement.startX,
-        y: event.routeY ?? placement.routeY + Math.min(180, burden) * 0.28
+        y: event.routeY ?? placement.routeY + Math.min(180, burden) * 0.28 * spatialScale
       }
     })
   ].sort((a, b) => a.time - b.time)
@@ -402,6 +426,6 @@ export function projectRouteTarget<TDatum extends Datum>(
     y:
       previous.y +
       (next.y - previous.y) * t +
-      Math.sin(routeElapsed * 2.6) * 7
+      Math.sin(routeElapsed * 2.6) * 7 * spatialScale
   }
 }

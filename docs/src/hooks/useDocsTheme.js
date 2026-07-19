@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 
 // localStorage key + custom event channel used by the docs app and the
 // blog header to stay in sync. Without the event, toggling theme in the
-// blog (which renders a separate React subtree from the docs chrome)
+// blog (which renders a separate React subtree from the docs decoration)
 // would write localStorage but not nudge the docs's `theme` state, so
 // navigating blog → docs without a refresh would render the docs in
 // the pre-toggle theme.

@@ -183,7 +183,7 @@ const DASHBOARDS = [
     id: "editorial",
     title: "Editorial Report",
     description:
-      "Data journalism style with Tufte aesthetics — minimal chrome, annotations tell the story.",
+      "Data journalism style with Tufte aesthetics — minimal decoration, annotations tell the story.",
     theme: "tufte",
     options: {
       title: "Annual Revenue Analysis",

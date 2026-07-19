@@ -36,6 +36,7 @@ const PREVIEW_COMPONENTS = {
   architecture: MiniArchitecturePreview,
   octopus: MiniOctopusPreview,
   gestalt: MiniGestaltPreview,
+  "semiotic-standard": MiniSemioticStandardPreview,
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
   oregontrail: MiniOregonTrailPreview,
@@ -1049,6 +1050,38 @@ function MiniGestaltPreview() {
       <rect x="0" y="89" width="81" height="7" fill="#df2b1f" />
       <rect x="81" y="89" width="80" height="7" fill="#2a4cad" />
       <rect x="161" y="89" width="81" height="7" fill="#f3b724" />
+    </svg>
+  )
+}
+
+function MiniSemioticStandardPreview() {
+  const signs = [
+    { x: 12, y: 12, kind: "line" },
+    { x: 68, y: 12, kind: "bars" },
+    { x: 124, y: 12, kind: "network" },
+    { x: 180, y: 12, kind: "map" },
+    { x: 12, y: 53, kind: "dots" },
+    { x: 68, y: 53, kind: "area" },
+    { x: 124, y: 53, kind: "flow" },
+    { x: 180, y: 53, kind: "pile" },
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f6f5ef" />
+      {signs.map((sign) => (
+        <g key={`${sign.x}-${sign.y}`} transform={`translate(${sign.x} ${sign.y})`}>
+          <rect width="48" height="34" rx="5" fill="#e7e9f1" stroke="#ed1c24" strokeWidth="5" />
+          {sign.kind === "line" && <path d="M7 25 17 15 27 20 40 8" fill="none" stroke="#11110e" strokeWidth="3" />}
+          {sign.kind === "bars" && <path d="M8 26V18h6v8m5 0V9h6v17m5 0V14h6v12" stroke="#343d96" strokeWidth="5" />}
+          {sign.kind === "network" && <><path d="m10 23 12-12 15 13M22 11v15" stroke="#8f8782" /><circle cx="10" cy="23" r="3" fill="#11110e" /><circle cx="22" cy="11" r="4" fill="#ed1c24" /><circle cx="37" cy="24" r="3" fill="#343d96" /></>}
+          {sign.kind === "map" && <><path d="m7 19 8-9 8 5 7-5 11 9-8 8-10-3-8 4Z" fill="#11110e" /><circle cx="30" cy="16" r="4" fill="#ed6711" /></>}
+          {sign.kind === "dots" && <><circle cx="9" cy="24" r="2" fill="#11110e" /><circle cx="16" cy="18" r="3" fill="#11110e" /><circle cx="23" cy="12" r="2" fill="#11110e" /><circle cx="30" cy="24" r="3" fill="#ed1c24" /><circle cx="37" cy="18" r="2" fill="#11110e" /></>}
+          {sign.kind === "area" && <path d="M6 27V22l9-10 9 5 9-9 9 7v12Z" fill="#343d96" />}
+          {sign.kind === "flow" && <><path d="M7 9c14 0 13 15 33 15M7 24c15 0 18-15 33-15" fill="none" stroke="#ed6711" strokeWidth="4" /><path d="m36 20 5 4-6 2" fill="#ed6711" /></>}
+          {sign.kind === "pile" && <><path d="M12 27h30M15 22h24M18 17h18M21 12h12" stroke="#11110e" strokeWidth="4" strokeLinecap="round" strokeDasharray="1 5" /><circle cx="21" cy="12" r="2.6" fill="#ed1c24" /><circle cx="27" cy="12" r="2.6" fill="#ed1c24" /><circle cx="33" cy="12" r="2.6" fill="#ed1c24" /></>}
+        </g>
+      ))}
+      <rect y="92" width="242" height="4" fill="#ed1c24" />
     </svg>
   )
 }

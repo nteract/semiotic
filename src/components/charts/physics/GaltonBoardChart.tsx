@@ -26,7 +26,9 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type PhysicsSimulationMode,
   type TooltipProp
@@ -78,6 +80,11 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   styleRules?: StyleRule[]
   referenceLines?: GaltonBoardReferenceLine | GaltonBoardReferenceLine[]
   seed?: number
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   showProjection?: boolean
   tooltip?: TooltipProp
   paused?: boolean
@@ -268,7 +275,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     valueAccessor = "value" as ChartAccessor<TDatum, number>,
     styleRules,
     bins = 21,
-    ballRadius = 6,
+    ballRadius,
     colorBy,
     branchProbability = 0.5,
     emptyContent,
@@ -279,6 +286,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     paused,
     pegRows,
     referenceLines,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
@@ -300,6 +308,8 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     summary: modeSummary,
     accessibleTable: modeAccessibleTable
   } = layoutMode
+  const resolvedBallRadius =
+    ballRadius ?? (chartMode === "sparkline" ? 1.5 : chartMode === "context" ? 4 : 6)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const resolvedPegRows = Math.max(1, Math.round(pegRows ?? bins - 1))
   const resolvedValueExtent = useMemo(
@@ -336,13 +346,14 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         data: chartData,
         valueAccessor,
         bins,
-        ballRadius,
+        ballRadius: resolvedBallRadius,
         seed,
         size: chartSize,
         valueExtent: resolvedValueExtent
       }),
-    [ballRadius, bins, chartData, chartSize, resolvedValueExtent, seed, valueAccessor]
+    [bins, chartData, chartSize, resolvedBallRadius, resolvedValueExtent, seed, valueAccessor]
   )
+  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {
@@ -350,7 +361,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         data: [datum],
         valueAccessor: valueAccessor as ChartAccessor<Datum, number>,
         bins,
-        ballRadius,
+        ballRadius: resolvedBallRadius,
         seed: seed + index + 1,
         size: chartSize,
         valueExtent: resolvedValueExtent
@@ -360,7 +371,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         x: physicsChartArea(chartSize).plot.x,
         y: physicsChartArea(chartSize).plot.y,
         mass: 1,
-        shape: { type: "circle" as const, radius: ballRadius },
+        shape: { type: "circle" as const, radius: resolvedBallRadius },
         datum
       }
       return {
@@ -368,7 +379,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         spawns: [spawn as PhysicsQueuedSpawn]
       }
     },
-    [ballRadius, bins, chartSize, resolvedValueExtent, seed, valueAccessor]
+    [bins, chartSize, resolvedBallRadius, resolvedValueExtent, seed, valueAccessor]
   )
   usePhysicsHocHandle(ref, {
     frameRef,
@@ -423,16 +434,16 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       margin: modeMargin
     }
   )
-
   return renderPhysicsFrame(
     "GaltonBoardChart",
     chartSize,
     <StreamPhysicsFrame
+      key={rerun.rerunKey}
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      config={layout.config}
+      config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         structureOverlay,
         frameProps?.foregroundGraphics

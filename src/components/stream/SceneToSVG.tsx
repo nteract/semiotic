@@ -422,7 +422,15 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         const fontSize = Math.max(10, Math.min(16, Math.min(n.w, n.h) * 0.3))
         return (
           <g key={`heatcell-${i}`}>
-            <rect x={n.x} y={n.y} width={n.w} height={n.h} fill={n.fill} />
+            <rect
+              x={n.x}
+              y={n.y}
+              width={n.w}
+              height={n.h}
+              fill={n.fill}
+              stroke={n.style?.stroke}
+              strokeWidth={n.style?.strokeWidth}
+            />
             <text
               x={n.x + n.w / 2}
               y={n.y + n.h / 2}
@@ -444,6 +452,8 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
           width={n.w}
           height={n.h}
           fill={n.fill}
+          stroke={n.style?.stroke}
+          strokeWidth={n.style?.strokeWidth}
         />
       )
     }

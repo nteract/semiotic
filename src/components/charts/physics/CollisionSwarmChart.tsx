@@ -25,7 +25,9 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
@@ -50,6 +52,11 @@ export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
   xExtent?: [number, number]
   collisionIterations?: number
   settle?: boolean
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   showProjection?: boolean
   tooltip?: TooltipProp
   paused?: boolean
@@ -222,8 +229,9 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     loading,
     loadingContent,
     paused,
-    pointRadius = 5,
+    pointRadius,
     radiusAccessor,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
@@ -244,6 +252,8 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     summary: modeSummary,
     accessibleTable: modeAccessibleTable
   } = layoutMode
+  const resolvedPointRadius =
+    pointRadius ?? (chartMode === "sparkline" ? 2 : chartMode === "context" ? 4 : 5)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const chartData = useMemo(() => data ?? [], [data])
   const layout = useMemo(
@@ -253,7 +263,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
         xAccessor,
         groupAccessor,
         radiusAccessor,
-        pointRadius,
+        pointRadius: resolvedPointRadius,
         seed,
         size: chartSize,
         xExtent,
@@ -265,7 +275,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       chartSize,
       collisionIterations,
       groupAccessor,
-      pointRadius,
+      resolvedPointRadius,
       radiusAccessor,
       seed,
       settle,
@@ -273,6 +283,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       xExtent
     ]
   )
+  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {
@@ -281,7 +292,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
         xAccessor: xAccessor as ChartAccessor<Datum, number>,
         groupAccessor: groupAccessor as ChartAccessor<Datum, string> | undefined,
         radiusAccessor: radiusAccessor as ChartAccessor<Datum, number> | undefined,
-        pointRadius,
+        pointRadius: resolvedPointRadius,
         seed: seed + index + 1,
         size: chartSize,
         xExtent,
@@ -293,7 +304,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
         x: physicsChartArea(chartSize).plot.x,
         y: physicsChartArea(chartSize).plot.y,
         mass: 1,
-        shape: { type: "circle" as const, radius: pointRadius },
+        shape: { type: "circle" as const, radius: resolvedPointRadius },
         datum
       }
       return {
@@ -305,7 +316,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       chartSize,
       collisionIterations,
       groupAccessor,
-      pointRadius,
+      resolvedPointRadius,
       radiusAccessor,
       seed,
       settle,
@@ -363,16 +374,16 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       margin: modeMargin
     }
   )
-
   return renderPhysicsFrame(
     "CollisionSwarmChart",
     chartSize,
     <StreamPhysicsFrame
+      key={rerun.rerunKey}
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      config={layout.config}
+      config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
         frameProps?.foregroundGraphics

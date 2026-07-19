@@ -1,5 +1,5 @@
 import * as React from "react"
-import { fireEvent, render } from "@testing-library/react"
+import { act, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
@@ -522,6 +522,136 @@ describe("physics chart HOCs", () => {
     expect(root).toHaveClass("stream-physics-frame--mode-context")
     // compact ChartMode suppresses default title chrome
     expect(container.querySelector(".semiotic-chart-title")).toBeNull()
+  })
+
+  it.each([
+    {
+      name: "CollisionSwarmChart",
+      chart: (ref: React.RefObject<PhysicsFrameHandle | null>) => (
+        <CollisionSwarmChart
+          ref={ref}
+          data={[{ id: "a", x: 1 }, { id: "b", x: 2 }]}
+          xAccessor="x"
+          rerunMS={1000}
+          size={[220, 140]}
+        />
+      )
+    },
+    {
+      name: "GaltonBoardChart",
+      chart: (ref: React.RefObject<PhysicsFrameHandle | null>) => (
+        <GaltonBoardChart
+          ref={ref}
+          data={[{ id: "a", value: 1 }, { id: "b", value: 2 }]}
+          valueAccessor="value"
+          rerunMS={1000}
+          size={[220, 140]}
+        />
+      )
+    },
+    {
+      name: "GauntletChart",
+      chart: (ref: React.RefObject<PhysicsFrameHandle | null>) => (
+        <GauntletChart
+          ref={ref}
+          data={[{ id: "plan-a", positives: ["signal"], negatives: ["burden"] }]}
+          positiveAccessor="positives"
+          negativeAccessor="negatives"
+          positiveProperties={[{ id: "signal", radius: 4 }]}
+          negativeProperties={[{ id: "burden", radius: 4 }]}
+          rerunMS={1000}
+          size={[220, 140]}
+        />
+      )
+    }
+  ])("reruns $name only after its settle delay", ({ chart }) => {
+    vi.useFakeTimers()
+    try {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const { container } = render(chart(ref))
+      const firstCanvas = container.querySelector("canvas")
+
+      act(() => ref.current?.clear())
+      act(() => vi.advanceTimersByTime(999))
+      expect(container.querySelector("canvas")).toBe(firstCanvas)
+
+      act(() => vi.advanceTimersByTime(1))
+      expect(container.querySelector("canvas")).not.toBe(firstCanvas)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("does not rerun when rerunMS is omitted or null", () => {
+    vi.useFakeTimers()
+    try {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const { container } = render(
+        <CollisionSwarmChart
+          ref={ref}
+          data={[{ id: "a", x: 1 }]}
+          xAccessor="x"
+          rerunMS={null}
+          size={[220, 140]}
+        />
+      )
+      const firstCanvas = container.querySelector("canvas")
+
+      act(() => ref.current?.clear())
+      act(() => vi.advanceTimersByTime(5000))
+      expect(container.querySelector("canvas")).toBe(firstCanvas)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("accepts zero as an immediate post-settle rerun delay", () => {
+    vi.useFakeTimers()
+    try {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const { container } = render(
+        <GaltonBoardChart
+          ref={ref}
+          data={[{ id: "a", value: 1 }]}
+          valueAccessor="value"
+          rerunMS={0}
+          size={[220, 140]}
+        />
+      )
+      const firstCanvas = container.querySelector("canvas")
+
+      act(() => ref.current?.clear())
+      act(() => vi.advanceTimersByTime(0))
+      expect(container.querySelector("canvas")).not.toBe(firstCanvas)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("fully restores Galton seed bodies when a rerun remounts the frame", () => {
+    vi.useFakeTimers()
+    try {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      render(
+        <GaltonBoardChart
+          ref={ref}
+          data={[{ id: "a", value: 1 }, { id: "b", value: 2 }]}
+          valueAccessor="value"
+          rerunMS={1000}
+          size={[220, 140]}
+        />
+      )
+
+      act(() => ref.current?.clear())
+      expect(ref.current?.getData()).toHaveLength(0)
+      act(() => vi.advanceTimersByTime(1000))
+      // Spawn pacing intentionally materializes only the first seed body on
+      // the remount's initial frame. A mere wake-up of the cleared store would
+      // still contain no bodies at all.
+      expect(ref.current?.getData().map((datum) => datum.id)).toContain("a")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("ProcessFlowChart sparkline mode is ChartContainer-exportable (svg+canvas)", () => {

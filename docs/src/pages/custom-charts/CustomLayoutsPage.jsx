@@ -968,7 +968,7 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
       <section>
         <h2>Recipe authoring contracts</h2>
         <p>
-          Custom layouts work best when they split semantic marks from decorative chrome. Emit
+          Custom layouts work best when they split semantic marks from decoration. Emit
           data-bearing scene nodes for anything the reader can hover, click, select, animate, or
           describe. Render labels, petals, ribbons, arrows, silhouettes, and other visual detail as
           keyed SVG overlays. If a layout returns overlays without scene nodes, or every scene node

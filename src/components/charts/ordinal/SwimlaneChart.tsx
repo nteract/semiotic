@@ -198,7 +198,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   // always win regardless of mode.
   const barPadding = useMemo(() => {
     if (userBarPadding != null) return userBarPadding
-    if (props.mode !== "sparkline") return 40
+    if (resolved.mode !== "sparkline") return 40
     const uniqueCategories = new Set(
       safeData.map((d) => typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor as string])
     )
@@ -212,7 +212,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     // pad = (avail - 2n) / (n - 1), capped at 1 (the target default).
     const maxPadForMinLane = (availableLength - 2 * laneCount) / (laneCount - 1)
     return Math.max(0, Math.min(1, maxPadForMinLane))
-  }, [userBarPadding, props.mode, safeData, categoryAccessor, orientation, width, height])
+  }, [userBarPadding, resolved.mode, safeData, categoryAccessor, orientation, width, height])
 
   const setup = useChartSetup({
     data: safeData,

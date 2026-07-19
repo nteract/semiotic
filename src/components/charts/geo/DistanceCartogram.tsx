@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
@@ -56,10 +57,12 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   styleRules?: StyleRule[]
   /** Color scheme @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
-  /** Point radius @default 5 */
+  /** Point radius. Defaults to 5, or 1.5 in sparkline mode. */
   pointRadius?: number
   /** Tooltip */
   tooltip?: TooltipProp
+  /** Enable hover interaction. Defaults by chart mode. */
+  enableHover?: boolean
   /** Show legend */
   showLegend?: boolean
   /** Legend position */
@@ -88,11 +91,13 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   tileAttribution?: string
   /** Max cached tiles @default 256 */
   tileCacheSize?: number
-  /** Show concentric distance rings around center. true for auto intervals, number for ring count, or number[] for explicit cost values. @default true */
+  /** Show concentric distance rings around center. @default true */
   showRings?: boolean | number | number[]
+  /** Show numeric labels on distance rings. Defaults to false in context and sparkline modes. */
+  showRingLabels?: boolean
   /** Ring style overrides */
   ringStyle?: { stroke?: string; strokeWidth?: number; strokeDasharray?: string; labelColor?: string; labelSize?: number }
-  /** Show north indicator arrow @default true */
+  /** Show north indicator arrow. Defaults to true, or false in sparkline mode. */
   showNorth?: boolean
   /** Label for cost units shown on rings (e.g. "hrs", "km") */
   costLabel?: string
@@ -155,6 +160,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     width: props.width,
     height: props.height,
     showLegend: props.showLegend,
+    enableHover: props.enableHover,
+    linkedHover: props.linkedHover,
     title: props.title,
     description: props.description,
     accessibleTable: props.accessibleTable,
@@ -188,11 +195,12 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     colorBy,
     styleRules,
     colorScheme,
-    pointRadius = 5,
+    pointRadius: pointRadiusProp,
     tooltip,
-    showRings = true,
+    showRings: showRingsProp,
+    showRingLabels: showRingLabelsProp,
     ringStyle,
-    showNorth = true,
+    showNorth: showNorthProp,
     costLabel,
     annotations,
     margin: userMargin,
@@ -211,6 +219,11 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     strokeWidth,
     opacity,
   } = props
+
+  const pointRadius = pointRadiusProp ?? (resolved.mode === "sparkline" ? 1.5 : 5)
+  const showRings = showRingsProp ?? true
+  const showRingLabels = showRingLabelsProp ?? !resolved.compactMode
+  const showNorth = showNorthProp ?? resolved.mode !== "sparkline"
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
   const zoomable = zoomableProp ?? (tileURL ? true : false)
@@ -238,7 +251,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     chartId,
     showLegend: resolved.showLegend,
     userMargin,
-    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,
@@ -393,15 +406,17 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
                 strokeDasharray={rs.strokeDasharray}
                 opacity={0.5}
               />
-              <text
-                x={cx + mx + r + 3}
-                y={cy + my - 2}
-                fontSize={rs.labelSize}
-                fill={rs.labelColor}
-                fontFamily="system-ui, sans-serif"
-              >
-                {cost}{costLabel ? ` ${costLabel}` : ""}
-              </text>
+              {showRingLabels && (
+                <text
+                  x={cx + mx + r + 3}
+                  y={cy + my - 2}
+                  fontSize={rs.labelSize}
+                  fill={rs.labelColor}
+                  fontFamily="system-ui, sans-serif"
+                >
+                  {cost}{costLabel ? ` ${costLabel}` : ""}
+                </text>
+              )}
             </g>
           )
         })}
@@ -439,7 +454,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
         {frameProps.foregroundGraphics}
       </g>
     )
-  }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, setup.margin, frameProps.foregroundGraphics])
+  }, [cartogramLayout, ringValues, showRingLabels, showNorth, costLabel, ringStyle, setup.margin, frameProps.foregroundGraphics])
 
   // Loading / empty state — returned only after every hook above has run, so
   // the hook count is identical whether or not data is present. Mounting empty
@@ -472,7 +487,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
     margin: setup.margin,
-    enableHover: true,
+    enableHover: resolved.enableHover,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),

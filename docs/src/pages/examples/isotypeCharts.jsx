@@ -27,7 +27,7 @@ export function unwrapIsotypeDatum(value) {
 // ── The sign set ──────────────────────────────────────────────────────────
 // One GlyphDef per sign, in a 40×40 box with feet at the anchor — the same
 // definition stamps `glyph` scene nodes onto canvas inside charts AND renders
-// as SVG chrome through the library's <Glyph>. Parts declare role paints
+// as SVG decoration through the library's <Glyph>. Parts declare role paints
 // ("color"/"accent"), so one cut prints in every ink.
 
 const SIGN = { viewBox: [40, 40], anchor: [0.5, 1] }
@@ -211,7 +211,7 @@ export function isotypeGlyphDef(kind) {
   return ISOTYPE_GLYPHS[kind] || ISOTYPE_GLYPHS.water
 }
 
-// The chrome face of the sign set — a thin wrapper over the library's
+// The decoration face of the sign set — a thin wrapper over the library's
 // <Glyph>. Same call signature the pages have always used (x/y are the
 // definition's top-left corner).
 export function IsotypeGlyph({
@@ -336,7 +336,7 @@ export function lakeLevelIsotypeLayout(ctx) {
   return {
     // The pushed readings stay point nodes: they carry the frame's pulse,
     // decay, and windowed-transition machinery, which draws through the
-    // point pipeline. The water signs above them are chrome.
+    // point pipeline. The water signs above them are decoration.
     nodes: points.map(({ row, x: px, y: py }) => ({
       type: "point",
       x: px,
@@ -419,7 +419,7 @@ export function forecastIsotypeLayout(ctx) {
 
   return {
     // hitTargetRect: the day column is fully interactive/keyboard-navigable;
-    // the pictograms below are chrome decorating that one target.
+    // the pictograms below are decoration for that one target.
     nodes: rows.map((row, index) =>
       hitTargetRect({
         x: index * columnWidth + 3,

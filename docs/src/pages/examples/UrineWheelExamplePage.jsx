@@ -31,7 +31,7 @@ import { urineWheelRecipeManifest } from "./urineWheelRecipeManifest"
 // the "override the theme" end of Semiotic's theming spectrum: the frame is
 // transparent and the layout paints these fixed editorial colors rather than
 // --semiotic-* tokens. The ChartContainer gets parchment CSS-var overrides so
-// its chrome reads as aged paper in both light and dark docs themes.
+// its decoration reads as aged paper in both light and dark docs themes.
 const INK = "#3f2d1a"
 const INK_SOFT = "#6b563c"
 const PARCHMENT = "#efe5cb"
@@ -683,7 +683,7 @@ const PHYSICIANS_NOTES = [
 // ── A clean cursor tooltip (frameProps.tooltipContent) ────────────────────────
 // The frame's default tooltip would dump every datum field (kind, hex, order…).
 // A custom renderer surfaces only the meaningful ones; the raw datum is at
-// hoverData.data. FlippingTooltip paints the chrome, so we return bare content.
+// hoverData.data. FlippingTooltip paints the decoration, so we return bare content.
 function renderWheelTooltip(hoverData) {
   const d = unwrapDatum(hoverData)
   if (!d || !d.kind) return null
@@ -817,7 +817,7 @@ const styles = {
     fontSize: "13px",
     lineHeight: 1.55,
   },
-  // Parchment chrome regardless of docs theme — set the semantic CSS vars the
+  // Parchment decoration regardless of docs theme — set the semantic CSS vars the
   // ChartContainer reads, so its header/title/border render as aged paper.
   parchmentContainer: {
     margin: "4px 0 6px",

@@ -23,6 +23,32 @@ import {
 } from "./gauntletRuntime"
 
 describe("GauntletChart physics primitives", () => {
+  it("scales its corridor and default bodies into a sparkline viewport", () => {
+    const { initialSpawns, config, layout } = buildGauntletPhysics({
+      data: [{ id: "compact", positives: ["signal"], negatives: ["burden"] }],
+      positiveAccessor: "positives",
+      negativeAccessor: "negatives",
+      positiveProperties: [{ id: "signal" }],
+      negativeProperties: [{ id: "burden" }],
+      size: [118, 36]
+    })
+
+    expect(layout.floorY).toBeGreaterThan(layout.routeY)
+    for (const spawn of initialSpawns) {
+      expect(spawn.x).toBeGreaterThan(0)
+      expect(spawn.x).toBeLessThan(118)
+      expect(spawn.y).toBeGreaterThan(0)
+      expect(spawn.y).toBeLessThan(36)
+    }
+    for (const collider of config.colliders ?? []) {
+      if (collider.shape.type !== "segment") continue
+      expect(collider.shape.x1).toBeGreaterThanOrEqual(0)
+      expect(collider.shape.x2).toBeLessThanOrEqual(118)
+      expect(collider.shape.y1).toBeGreaterThanOrEqual(0)
+      expect(collider.shape.y2).toBeLessThanOrEqual(36)
+    }
+  })
+
   it("uses one project-local start time for a core and every satellite", () => {
     const { initialSpawns } = buildGauntletPhysics({
       data: [

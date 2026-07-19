@@ -92,10 +92,10 @@ export function resolvePhysicsSimulationState(
   paused: boolean,
   visible: boolean,
   hasQueuedBodies: boolean,
-  allSleeping: boolean
+  atRest: boolean
 ): PhysicsSimulationState {
   if (paused || !visible) return "paused"
-  return hasQueuedBodies || !allSleeping ? "running" : "settled"
+  return hasQueuedBodies || !atRest ? "running" : "settled"
 }
 
 export function emitPhysicsSimulationStateTransition(

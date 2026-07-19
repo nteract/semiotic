@@ -2,7 +2,7 @@ import React, { useRef } from "react"
 
 /**
  * Invisible debug hit-target. Looks like ordinary text (inherits font/color,
- * cursor: text, no hover/focus chrome) but warps into a room when clicked.
+ * cursor: text, no hover/focus decoration) but warps into a room when clicked.
  *
  * Uses onMouseDown (not only onClick) so parent handlers / focus stealers
  * cannot swallow the gesture before click fires. A ref guard suppresses the

@@ -249,7 +249,7 @@ export default function SemanticColorsPage() {
           emphasis — tick labels vs axis titles.
         </li>
         <li>
-          <strong>border / grid</strong> — Chart chrome. Bar outlines,
+          <strong>border / grid</strong> — Chart decoration. Bar outlines,
           axis lines, gridlines, legend separators.
         </li>
         <li>

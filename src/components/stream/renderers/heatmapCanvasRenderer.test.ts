@@ -58,6 +58,29 @@ describe("heatmapCanvasRenderer", () => {
     expect(ctx.strokeRect).toHaveBeenCalledWith(10, 20, 25, 15)
   })
 
+  it("uses an explicit cell border style", () => {
+    const ctx = createMockCanvasContext()
+    const node = makeHeatcellNode({
+      style: { stroke: "#ed1c24", strokeWidth: 2.5 }
+    })
+
+    heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.strokeStyle).toBe("#ed1c24")
+    expect(ctx.lineWidth).toBe(2.5)
+    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 20, 25, 15)
+  })
+
+  it("does not stroke a heat cell when strokeWidth is zero", () => {
+    const ctx = createMockCanvasContext()
+    const node = makeHeatcellNode({ style: { strokeWidth: 0 } })
+
+    heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.fillRect).toHaveBeenCalledWith(10, 20, 25, 15)
+    expect(ctx.strokeRect).not.toHaveBeenCalled()
+  })
+
   it("sets globalAlpha from style.opacity (decay)", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []

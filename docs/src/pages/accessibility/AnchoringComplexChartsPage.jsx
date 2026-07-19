@@ -738,7 +738,7 @@ function MergeLinkedInner({ halfWidth, height }) {
           title="PROCESS FLOW"
           description="Each PR is one physics body. Hover a body to highlight the matching scatter point."
           showLegend={false}
-          // Compact chrome: outline stage bays only — no feature-group sockets.
+          // Compact decoration: outline stage bays only — no feature-group sockets.
           chromeOptions={{
             outlineStages: true,
             showGroupSockets: false,

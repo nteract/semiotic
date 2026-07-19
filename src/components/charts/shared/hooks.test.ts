@@ -659,6 +659,7 @@ describe("useChartLegendAndMargin", () => {
 describe("useChartMode", () => {
   it("uses primary defaults when mode is undefined", () => {
     const result = useChartMode(undefined, {})
+    expect(result.mode).toBe("primary")
     expect(result.width).toBe(600)
     expect(result.height).toBe(400)
     expect(result.showAxes).toBe(true)
@@ -668,6 +669,7 @@ describe("useChartMode", () => {
 
   it("uses context mode defaults", () => {
     const result = useChartMode("context", {})
+    expect(result.mode).toBe("context")
     expect(result.width).toBe(400)
     expect(result.height).toBe(250)
     expect(result.showAxes).toBe(false)
@@ -767,6 +769,7 @@ describe("useChartMode", () => {
       ],
     })
     expect(result.width).toBe(390)
+    expect(result.mode).toBe("mobile")
     expect(result.showAxes).toBe(false)
     expect(result.showLegend).toBe(false)
     expect(result.showLabels).toBe(true)

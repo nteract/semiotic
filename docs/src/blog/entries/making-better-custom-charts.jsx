@@ -260,9 +260,9 @@ function Body() {
         Semiotic's bet is a <strong>scene-node / overlay split</strong>. A custom layout returns two
         things: <em>scene nodes</em> (rects, points, areas) that flow through the same canvas
         pipeline the built-in charts use. They get hit-testing, transitions, decay, and SSR
-        evidence. They also get <em>overlays</em> (arbitrary SVG) for the chrome that doesn't need
+        evidence. They also get <em>overlays</em> (arbitrary SVG) for the decoration that doesn't need
         to be a first-class datum: labels, connectors, decorative glyph detail. The rule that
-        emerged is worth stating plainly: <strong>never let chrome replace data.</strong> A pretty
+        emerged is worth stating plainly: <strong>never let decoration replace data.</strong> A pretty
         glyph is fine, but the thing the user hovers, the thing a screen reader announces, the thing
         SSR can prove rendered needs to be a scene node.
       </p>
@@ -355,7 +355,7 @@ function Body() {
         positioned primitives in absolute pixels, the coordinate transforms already folded in, so a
         polar petal arrives as a baked <code style={inlineCode}>path</code>. Each item carries a{" "}
         <code style={inlineCode}>role</code> (<code style={inlineCode}>node</code> for data-bearing
-        marks, <code style={inlineCode}>overlay</code> for chrome) and an optional{" "}
+        marks, <code style={inlineCode}>overlay</code> for decoration) and an optional{" "}
         <code style={inlineCode}>datum</code>. The adapter maps the list onto a custom layout by that
         contract: data-bearing marks become scene nodes with a transparent hit-rect carrying their{" "}
         <code style={inlineCode}>datum</code>; everything else renders verbatim as overlay. Nothing is

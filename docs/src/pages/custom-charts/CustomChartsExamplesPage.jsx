@@ -43,7 +43,7 @@ export default function CustomChartsExamplesPage() {
         { label: "Custom Charts", path: "/custom-charts/overview" },
         { label: "Examples", path: "/custom-charts/examples" },
       ]}
-      prevPage={{ title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" }}
+      prevPage={{ title: "Recipe Decoration Kit", path: "/custom-charts/recipe-kit" }}
     >
       <section>
         <p>

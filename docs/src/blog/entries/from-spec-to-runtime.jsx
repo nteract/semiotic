@@ -27,7 +27,7 @@ const META = {
     "applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
 }
 
-// ─── Shared chrome ─────────────────────────────────────────────────────────
+// ─── Shared decoration ─────────────────────────────────────────────────────────
 
 const card = {
   background: "var(--surface-1)",

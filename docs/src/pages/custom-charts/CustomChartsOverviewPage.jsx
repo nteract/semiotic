@@ -62,7 +62,7 @@ const BUILDING_BLOCKS = [
     what: "The per-datum shape channel: the symbol scene-node, d3-shape glyphs, and the composite-glyph model (a filled base mark + an optional stroked inner icon).",
   },
   {
-    title: "Recipe Chrome Kit",
+    title: "Recipe Decoration Kit",
     path: "/custom-charts/recipe-kit",
     what: "Small composable helpers for the decoration recipes draw in their overlays — group enclosures, band/axis labels, leader-line callouts, the node.data reader, and color/shade utilities.",
   },

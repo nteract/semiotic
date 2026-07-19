@@ -71,10 +71,18 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
     ctx.fillStyle = node.fill
     ctx.fillRect(node.x, node.y, node.w, node.h)
 
-    // Cell border — falls back to theme surface so dark themes don't get stark white gridlines
-    ctx.strokeStyle = resolveCSSColor(ctx, "var(--semiotic-surface, #fff)")!
-    ctx.lineWidth = 1
-    ctx.strokeRect(node.x, node.y, node.w, node.h)
+    // Cell border — explicit scene style wins; zero suppresses the stroke.
+    // The fallback stays theme-aware so direct StreamXYFrame heatmaps retain
+    // their existing light/dark surface separator.
+    const borderWidth = Math.max(0, nodeStyle?.strokeWidth ?? 1)
+    if (borderWidth > 0) {
+      ctx.strokeStyle = resolveCSSColor(
+        ctx,
+        nodeStyle?.stroke ?? "var(--semiotic-surface, #fff)"
+      )!
+      ctx.lineWidth = borderWidth
+      ctx.strokeRect(node.x, node.y, node.w, node.h)
+    }
 
     // Pulse overlay
     renderRectPulse(ctx, node)

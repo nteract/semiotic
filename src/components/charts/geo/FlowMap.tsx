@@ -21,6 +21,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -67,6 +68,8 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   edgeOpacity?: number
   /** Min/max pixel width for proportional edge width @default [1, 8] */
   edgeWidthRange?: [number, number]
+  /** Node radius in pixels. Defaults to 5, or 1.5 in sparkline mode. */
+  pointRadius?: number
   /** Line cap style for flow edges @default "round" */
   edgeLinecap?: "butt" | "round" | "square"
   /** Color scheme for edges @default "category10" */
@@ -77,6 +80,8 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   particleStyle?: GeoParticleStyle
   /** Tooltip */
   tooltip?: TooltipProp
+  /** Enable hover interaction. Defaults by chart mode. */
+  enableHover?: boolean
   /** Show legend */
   showLegend?: boolean
   /** Legend interaction mode */
@@ -179,6 +184,8 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     width: props.width,
     height: props.height,
     showLegend: props.showLegend,
+    enableHover: props.enableHover,
+    linkedHover: props.linkedHover,
     title: props.title,
     description: props.description,
     accessibleTable: props.accessibleTable,
@@ -212,6 +219,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     edgeColorBy,
     edgeOpacity = 0.6,
     edgeWidthRange = [1, 8],
+    pointRadius: pointRadiusProp,
     edgeLinecap = "round",
     colorScheme,
     showParticles,
@@ -278,7 +286,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     chartId,
     showLegend: resolved.showLegend,
     userMargin,
-    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,
@@ -519,12 +527,13 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
 
   // Point style — not selection-wrapped because node datums lack flow
   // fields (source/target). Flow lines carry the selection visual signal.
+  const pointRadius = pointRadiusProp ?? (resolved.mode === "sparkline" ? 1.5 : 5)
   const pointStyleFn = useMemo(
     () => mergeShapeStyle(
-      () => ({ fill: "#333", r: 5, fillOpacity: 0.8 } as Style & { r?: number }),
+      () => ({ fill: "#333", r: pointRadius, fillOpacity: 0.8 } as Style & { r?: number }),
       { stroke, strokeWidth, opacity }
     ) as (d: Datum) => Style & { r?: number },
-    [stroke, strokeWidth, opacity]
+    [pointRadius, stroke, strokeWidth, opacity]
   )
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
@@ -601,7 +610,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
     margin: setup.margin,
-    enableHover: true,
+    enableHover: resolved.enableHover,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),

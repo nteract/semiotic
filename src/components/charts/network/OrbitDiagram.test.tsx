@@ -112,6 +112,11 @@ describe("OrbitDiagram", () => {
     expect(lastNetworkFrameProps.size).toEqual([800, 800])
   })
 
+  it("uses compact margins in sparkline mode", () => {
+    render(<OrbitDiagram data={sampleData} mode="sparkline" width={118} height={36} animated={false} />)
+    expect(lastNetworkFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+  })
+
   it("renders title when provided", () => {
     const { container } = render(
       <OrbitDiagram data={sampleData} title="My Orbit" animated={false} />

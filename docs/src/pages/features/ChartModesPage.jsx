@@ -618,7 +618,7 @@ export default function ChartModesPage() {
       <h2 id="interactive-demo">Interactive Demo</h2>
 
       <p>
-        Toggle between modes to see the same charts adapt their chrome, size,
+        Toggle between modes to see the same charts adapt their decoration, size,
         and interaction. User-provided props always override mode defaults —
         modes are presets, not constraints.
       </p>
@@ -631,7 +631,7 @@ export default function ChartModesPage() {
       <h2 id="kpi-cards">KPI Cards with Sparklines</h2>
 
       <p>
-        Sparkline mode strips all chrome for inline use. Embed trend lines in
+        Sparkline mode strips all decoration for inline use. Embed trend lines in
         KPI cards, table cells, or notification badges — anywhere a full chart
         would be too heavy.
       </p>
@@ -684,7 +684,7 @@ export default function ChartModesPage() {
     selection={{ name: "dash" }}
   />
 
-  {/* Context panels — compact, no chrome, side by side */}
+  {/* Context panels — compact, no decoration, side by side */}
   <div style={{ display: "flex", gap: 12 }}>
     <Treemap
       data={channelTree} childrenAccessor="children" valueAccessor="value"
@@ -813,7 +813,7 @@ export default function ChartModesPage() {
       <ul>
         <li>
           <Link to="/features/chart-container">Chart Container</Link> — wrap
-          any chart in production chrome (title, export, status badge)
+          any chart in production decoration (title, export, status badge)
         </li>
         <li>
           <Link to="/features/small-multiples">Linked Charts</Link> — cross-highlighting

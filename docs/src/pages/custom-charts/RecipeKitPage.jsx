@@ -25,14 +25,14 @@ function KitDemo() {
       width={320}
       height={190}
       role="img"
-      aria-label="Recipe chrome kit demo"
+      aria-label="Recipe decoration kit demo"
       style={{ background: "#0a1330", borderRadius: 8 }}
     >
       {/* the marks (what a layout emits to canvas; here just SVG dots) */}
       {DOTS.map((d, i) => (
         <circle key={i} cx={d.x} cy={d.y} r={5} fill="#7b52c9" />
       ))}
-      {/* chrome kit pieces, exactly as a recipe would return them in overlays */}
+      {/* decoration kit pieces, exactly as a recipe would return them in overlays */}
       {box &&
         roundedEnclosure({
           ...box,
@@ -70,18 +70,18 @@ function KitDemo() {
 export default function RecipeKitPage() {
   return (
     <PageLayout
-      title="Recipe Chrome Kit"
+      title="Recipe Decoration Kit"
       subtitle="Composable overlay building blocks for custom layouts"
       breadcrumbs={[
         { label: "Custom Charts", path: "/custom-charts/overview" },
-        { label: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" },
+        { label: "Recipe Decoration Kit", path: "/custom-charts/recipe-kit" },
       ]}
       prevPage={{ title: "Glyph Marks", path: "/custom-charts/glyph-marks" }}
     >
       <section>
         <p>
           A custom layout returns scene primitives <em>and</em> an <code>overlays</code> ReactNode
-          painted on top (for the chrome the canvas doesn&rsquo;t draw: labels, enclosures,
+          painted on top (for the decoration the canvas doesn&rsquo;t draw: labels, enclosures,
           callouts). Surveying the recipes, the same overlay chores recurred — so the building
           blocks live in one small, composable kit, exported from <code>semiotic/recipes</code>.
           They return plain SVG with <code>pointer-events: none</code>, so they decorate without
@@ -250,7 +250,7 @@ export default function RecipeKitPage() {
       <section>
         <h2>Scene nodes, geometry &amp; data helpers</h2>
         <p>
-          Beyond overlay chrome, the kit ships the pure pieces a hand-built custom chart kept
+          Beyond overlay decoration, the kit ships the pure pieces a hand-built custom chart kept
           re-deriving — so a layout assembles geometry from named, tested functions instead of
           inlining trigonometry and bezier control points.
         </p>
@@ -393,7 +393,7 @@ export default function RecipeKitPage() {
               <td>any</td>
               <td>
                 the React face + geometry of the composite-pictogram <code>glyph</code> scene node:
-                render a <code>GlyphDef</code> in overlays/legends/chrome with{" "}
+                render a <code>GlyphDef</code> in overlays/legends/decoration with{" "}
                 <code>&lt;Glyph&gt;</code>, and measure a definition&rsquo;s drawn box/anchor
                 offsets for layout math — see{" "}
                 <Link to="/custom-charts/glyph-marks">Glyph Marks</Link>
@@ -566,9 +566,9 @@ const placed = layout?.nodes ?? []   // summarize what was actually drawn
         <h2>Why a kit, not props on the frame</h2>
         <p>
           The frame deliberately owns interaction, accessibility, transitions, and SSR; recipes own
-          chrome; the host owns the editorial aesthetic. Keeping these as small composable functions
+          decoration; the host owns the editorial aesthetic. Keeping these as small composable functions
           (rather than a giant options bag on the frame, or one render-everything recipe) means a
-          new layout — or an AI generating one — assembles exactly the chrome it needs from named
+          new layout — or an AI generating one — assembles exactly the decoration it needs from named
           pieces with obvious signatures.
         </p>
         <p style={{ fontSize: 13, color: "var(--text-2)" }}>

@@ -25,7 +25,14 @@ export interface ValidationResult {
   errors: string[]
 }
 
-export type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
+export type PropType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "array"
+  | "object"
+  | "function"
+  | "null"
 
 export interface PropDef {
   type: PropType | PropType[]

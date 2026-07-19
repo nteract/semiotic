@@ -155,7 +155,7 @@ export default function GoFishLayoutsPage() {
             <strong>
               <code>role: {"\"overlay\""}</code> → overlay.
             </strong>{" "}
-            Chrome (axis ticks, labels, glyph detail) renders verbatim into one ordered SVG overlay
+            Decoration (axis ticks, labels, glyph detail) renders verbatim into one ordered SVG overlay
             layer — a JSX port of GoFish’s reference renderer — so painter order and every{" "}
             <code>kind</code> (warped <code>path</code>s, <code>image</code>s, Porter-Duff{" "}
             <code>composite</code>/<code>mask</code> graphs) stay pixel-faithful.
@@ -167,7 +167,7 @@ export default function GoFishLayoutsPage() {
             Each data-bearing mark renders into that same SVG layer <em>and</em> gets a transparent
             hit-rect scene node carrying its <code>datum</code>, so Semiotic stays authoritative for
             hover, tooltips, <code>onObservation</code>, cross-chart selection, keyboard a11y, and
-            SSR mark-count evidence. Chrome without a <code>datum</code> (legend swatches, axis
+            SSR mark-count evidence. Decoration without a <code>datum</code> (legend swatches, axis
             ticks) stays overlay-only.
           </li>
         </ul>
@@ -384,19 +384,19 @@ export default function GoFishLayoutsPage() {
               label="Flower meadow"
               href={exampleByKey.flower?.source}
               primitives="rect (stems) + path (polar petals) + rect/text (legend)"
-              contract="layer([stems, flowers]): each green stem is a data node carrying its lake's catch rows; the polar petals atop it are baked paths (chrome) with no per-row datum."
+              contract="layer([stems, flowers]): each green stem is a data node carrying its lake's catch rows; the polar petals atop it are baked paths (decoration) with no per-row datum."
             />
             <TargetRow
               label="Polar ribbon chart"
               href={exampleByKey.polarribbon?.source}
               primitives="path (clock-projected radial bars + bumped species ribbons) + rect/text (legend)"
-              contract="layer({ coord: clock() }, [bars, ribbons]): each radial bar is a data node; the per-species area ribbons that selectAll the bars are baked paths (chrome). Wrap, gap, and bumps are all in absolute-pixel paths."
+              contract="layer({ coord: clock() }, [bars, ribbons]): each radial bar is a data node; the per-species area ribbons that selectAll the bars are baked paths (decoration). Wrap, gap, and bumps are all in absolute-pixel paths."
             />
             <TargetRow
               label="Fare circle treemap"
               href={exampleByKey.treemap?.source}
-              primitives="ellipse (one circle per passenger, faceted by class) + rect/text (facet + legend chrome)"
-              contract="facet by pclass (dir x) → squarify-circle treemap per class, fare-sized, sorted desc. Every circle is a data node coloured by survival; the three class blocks and legend are chrome."
+              primitives="ellipse (one circle per passenger, faceted by class) + rect/text (facet + legend decoration)"
+              contract="facet by pclass (dir x) → squarify-circle treemap per class, fare-sized, sorted desc. Every circle is a data node coloured by survival; the three class blocks and legend are decoration."
             />
             <TargetRow
               label="Bottle fill pictorial"
@@ -408,13 +408,13 @@ export default function GoFishLayoutsPage() {
               label="Boba cups (hand-written)"
               href={exampleByKey.boba?.source}
               primitives="path (cup, tea/ice slabs, straw) + ellipse (pearls) + rect (ice cubes, lid) + text (labels)"
-              contract="Hand-emitted DisplayList — no gofish-graphics, no GoFish solve; all the cup geometry is plain arithmetic. Proof the render IR is an open, host-emittable format. The three volume bands per drink are data nodes carrying drink + volume; cup, straw, pearls, and labels are chrome."
+              contract="Hand-emitted DisplayList — no gofish-graphics, no GoFish solve; all the cup geometry is plain arithmetic. Proof the render IR is an open, host-emittable format. The three volume bands per drink are data nodes carrying drink + volume; cup, straw, pearls, and labels are decoration."
             />
             <TargetRow
               label="Python memory diagram"
               href={exampleByKey.python?.source}
               primitives="rect + text (frame + tuple cells) + path/ellipse (pointer arrows)"
-              contract="Best-effort reconstruction from primitives (the real example needs unpublished GoFish helpers). Built from literal values, so no mark carries a datum — every item is chrome, zero hit targets. Bakes vertically flipped vs the live render (toDisplayList y-orientation, GoFish #143/#16)."
+              contract="Best-effort reconstruction from primitives (the real example needs unpublished GoFish helpers). Built from literal values, so no mark carries a datum — every item is decoration, zero hit targets. Bakes vertically flipped vs the live render (toDisplayList y-orientation, GoFish #143/#16)."
             />
           </tbody>
         </table>

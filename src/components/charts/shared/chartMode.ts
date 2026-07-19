@@ -128,6 +128,8 @@ export interface ChartModeInput {
 }
 
 export interface ChartModeResult {
+  /** Effective mode after responsive rules have been applied. */
+  mode: ChartMode
   width: number
   height: number
   showAxes: boolean
@@ -163,12 +165,13 @@ export function resolveChartMode(
     width: userProps.width ?? baseWidth,
     height: userProps.height ?? baseHeight,
   }).props as ChartModeInput & { mode?: ChartMode }
-  const resolvedMode = responsiveProps.mode || mode
-  const defaults = MODE_DEFAULTS[resolvedMode || "primary"]
+  const resolvedMode = responsiveProps.mode || mode || "primary"
+  const defaults = MODE_DEFAULTS[resolvedMode]
   const suppressLabels = resolvedMode === "context" || resolvedMode === "sparkline"
-  const defaultWidth = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.width ? primaryDefaults.width : defaults.width
-  const defaultHeight = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.height ? primaryDefaults.height : defaults.height
+  const defaultWidth = resolvedMode === "primary" && primaryDefaults?.width ? primaryDefaults.width : defaults.width
+  const defaultHeight = resolvedMode === "primary" && primaryDefaults?.height ? primaryDefaults.height : defaults.height
   return {
+    mode: resolvedMode,
     width: responsiveProps.width ?? defaultWidth,
     height: responsiveProps.height ?? defaultHeight,
     showAxes: responsiveProps.showAxes ?? defaults.showAxes,
@@ -193,6 +196,19 @@ export function resolveChartMode(
     }),
     mobileSemantics: responsiveProps.mobileSemantics,
   }
+}
+
+const AXIS_FREE_MARGIN_DEFAULTS = { top: 10, bottom: 10, left: 10, right: 10 }
+
+/**
+ * Axis-free charts keep their established 10px regular-mode inset while
+ * adopting the shared context/sparkline margins. Reading `resolved` here is
+ * important: responsive rules may have changed the effective chart mode.
+ */
+export function resolveAxisFreeMarginDefaults(
+  resolved: Pick<ChartModeResult, "compactMode" | "marginDefaults">,
+): ChartModeResult["marginDefaults"] {
+  return resolved.compactMode ? resolved.marginDefaults : AXIS_FREE_MARGIN_DEFAULTS
 }
 
 function adjustMarginsForCategoryTicks(

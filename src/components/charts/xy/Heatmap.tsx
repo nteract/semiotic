@@ -253,11 +253,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     customColorScale,
     showValues = false,
     valueFormat,
-    // cellBorderColor/cellBorderWidth are accepted on HeatmapProps for API
-    // completeness; the heatmap canvas renderer draws cell borders via the
-    // theme surface fallback and doesn't consume these fields yet.
-    cellBorderColor: _cellBorderColor = "#fff",
-    cellBorderWidth: _cellBorderWidth = 1,
+    cellBorderColor = "#fff",
+    cellBorderWidth = 1,
     tooltip,
     annotations,
     xExtent,
@@ -356,6 +353,16 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])
 
+  const cellStyle = useMemo(() => {
+    const borderWidth = Number.isFinite(cellBorderWidth)
+      ? Math.max(0, cellBorderWidth)
+      : 1
+    return () => ({
+      stroke: cellBorderColor,
+      strokeWidth: borderWidth,
+    })
+  }, [cellBorderColor, cellBorderWidth])
+
   // showValues is handled natively by the canvas renderer and SSR SVG path.
   // No SVG summaryRenderMode overlay needed — the previous `summaryStyle` /
   // `summaryData` useMemos were never wired into StreamXYFrame props and were
@@ -400,6 +407,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     yAccessor,
     valueAccessor,
     colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
+    areaStyle: cellStyle,
     showValues,
     heatmapValueFormat: valueFormat,
     size: [width, height],

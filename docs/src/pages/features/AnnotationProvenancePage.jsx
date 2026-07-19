@@ -479,7 +479,7 @@ const treated = applyAnnotationStatus(
         <code>recordAnnotationStatusChange(toStatus, {"{ annotationId, fromStatus }"})</code>{" "}
         from your review UI and the move lands in the{" "}
         <Link to="/intelligence/conversation-arc">conversation arc</Link> — the
-        annotation becomes the durable node the arc is about, not chart chrome.
+        annotation becomes the durable node the arc is about, not chart decoration.
       </p>
 
       {/* ----------------------------------------------------------------- */}

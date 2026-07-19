@@ -150,7 +150,7 @@ function RuleTable() {
           <td style={cell}>Histogram, dotplot, bar/pile, window table, and lane-state projections.</td>
         </tr>
         <tr>
-          <td style={cell}>Make chrome physical</td>
+          <td style={cell}>Make decoration physical</td>
           <td style={cell}>Decorative collisions detached from scales and annotations.</td>
           <td style={cell}>Scale-derived bins, walls, floors, thresholds, watermarks, and sensors.</td>
         </tr>

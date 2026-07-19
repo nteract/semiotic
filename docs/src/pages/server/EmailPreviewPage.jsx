@@ -50,7 +50,7 @@ const CHART_PRESETS = {
   },
 }
 
-// Mock email client chrome
+// Mock email client decoration
 function EmailFrame({ subject, from, to, body, chartSvg, emailSafe }) {
   return (
     <div style={{

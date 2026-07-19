@@ -33,7 +33,14 @@
  *     (which only reads `type` and `enum`).
  */
 
-export type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
+export type PropType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "array"
+  | "object"
+  | "function"
+  | "null"
 export type DataShape = "array" | "object" | "network" | "realtime" | "none"
 export type ChartCategory = "xy" | "ordinal" | "network" | "geo" | "realtime" | "physics" | "value"
 
@@ -160,6 +167,12 @@ export interface ChartSpec {
 // ---------------------------------------------------------------------------
 
 const commonProps: Record<string, ChartPropSpec> = {
+  mode: {
+    type: "string",
+    enum: ["primary", "context", "sparkline", "mobile"] as const,
+    default: "primary",
+    description: "Display mode controlling default size, chrome, margins, labels, and interaction.",
+  },
   width: { type: "number", default: 600 },
   height: { type: "number", default: 400 },
   margin: { type: "object", description: "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation." },
@@ -331,7 +344,7 @@ export const CURVE_ENUM = [
   "linear", "monotoneX", "monotoneY", "step",
   "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom",
 ] as const
-export const CHART_MODE_ENUM = ["primary", "context", "sparkline"] as const
+export const CHART_MODE_ENUM = ["primary", "context", "sparkline", "mobile"] as const
 
 // ---------------------------------------------------------------------------
 // Chart specs (XY, ordinal, network, geo, and realtime families)

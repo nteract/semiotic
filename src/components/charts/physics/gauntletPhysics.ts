@@ -52,8 +52,9 @@ export const DEFAULT_WIDTH = 900
 export const DEFAULT_HEIGHT = 520
 
 export function gauntletWallColliders(
-  layout: Pick<GauntletLayout, "width" | "floorY">
+  layout: Pick<GauntletLayout, "width" | "floorY"> & Partial<Pick<GauntletLayout, "height">>
 ): NonNullable<PhysicsPipelineConfig["colliders"]> {
+  const wall = resolveGauntletWall(layout)
   return [
     {
       id: "gauntlet-left",
@@ -61,11 +62,11 @@ export function gauntletWallColliders(
       friction: 0.42,
       shape: {
         type: "segment",
-        x1: 28,
-        y1: 76,
-        x2: 28,
+        x1: wall.left,
+        y1: wall.top,
+        x2: wall.left,
         y2: layout.floorY,
-        thickness: 8
+        thickness: wall.thickness
       }
     },
     {
@@ -74,11 +75,11 @@ export function gauntletWallColliders(
       friction: 0.42,
       shape: {
         type: "segment",
-        x1: 28,
-        y1: 76,
-        x2: layout.width - 30,
-        y2: 76,
-        thickness: 8
+        x1: wall.left,
+        y1: wall.top,
+        x2: layout.width - wall.rightInset,
+        y2: wall.top,
+        thickness: wall.thickness
       }
     },
     {
@@ -87,11 +88,11 @@ export function gauntletWallColliders(
       friction: 0.42,
       shape: {
         type: "segment",
-        x1: 28,
+        x1: wall.left,
         y1: layout.floorY,
-        x2: layout.width - 30,
+        x2: layout.width - wall.rightInset,
         y2: layout.floorY,
-        thickness: 8
+        thickness: wall.thickness
       }
     },
     {
@@ -100,11 +101,11 @@ export function gauntletWallColliders(
       friction: 0.42,
       shape: {
         type: "segment",
-        x1: layout.width - 30,
-        y1: 76,
-        x2: layout.width - 30,
+        x1: layout.width - wall.rightInset,
+        y1: wall.top,
+        x2: layout.width - wall.rightInset,
         y2: layout.floorY,
-        thickness: 8
+        thickness: wall.thickness
       }
     }
   ]
@@ -147,6 +148,30 @@ export const GAUNTLET_WALL = {
   thickness: 8
 } as const
 
+type GauntletWallLayout = Pick<GauntletLayout, "width" | "floorY"> &
+  Partial<Pick<GauntletLayout, "height">>
+
+/** Scale the authored gauntlet corridor into context and sparkline boxes. */
+export function resolveGauntletWall(layout: GauntletWallLayout) {
+  const height = layout.height ?? layout.floorY + 36
+  const compact = layout.width < 220 || height < 160
+  if (!compact) return GAUNTLET_WALL
+  const shortest = Math.max(1, Math.min(layout.width, height))
+  const sideInset = Math.max(2, layout.width * 0.04)
+  return {
+    left: sideInset,
+    top: Math.max(2, height * 0.08),
+    rightInset: sideInset,
+    thickness: Math.max(1, Math.min(4, shortest * 0.04))
+  }
+}
+
+/** Scale default body/orbit geometry while preserving authored full-size values. */
+export function gauntletSpatialScale(layout: GauntletWallLayout): number {
+  const height = layout.height ?? layout.floorY + 36
+  return Math.max(0.12, Math.min(1, layout.width / 500, height / 260))
+}
+
 /**
  * Keep body centers inside the playable gauntlet corridor so satellite
  * property particles never spawn or settle outside the left/right walls
@@ -156,23 +181,29 @@ export function clampGauntletPoint(
   x: number,
   y: number,
   radius: number,
-  layout: Pick<GauntletLayout, "width" | "floorY">
+  layout: GauntletWallLayout
 ): { x: number; y: number } {
+  const wall = resolveGauntletWall(layout)
   const pad = Math.max(2, radius + 2)
-  const minX = GAUNTLET_WALL.left + GAUNTLET_WALL.thickness / 2 + pad
-  const maxX = layout.width - GAUNTLET_WALL.rightInset - GAUNTLET_WALL.thickness / 2 - pad
-  const minY = GAUNTLET_WALL.top + GAUNTLET_WALL.thickness / 2 + pad
+  const minX = wall.left + wall.thickness / 2 + pad
+  const maxX = layout.width - wall.rightInset - wall.thickness / 2 - pad
+  const minY = wall.top + wall.thickness / 2 + pad
   const maxY = layout.floorY - pad
+  const clampAxis = (value: number, min: number, max: number) =>
+    min <= max ? Math.max(min, Math.min(max, value)) : (min + max) / 2
   return {
-    x: Math.max(minX, Math.min(maxX, x)),
-    y: Math.max(minY, Math.min(maxY, y))
+    x: clampAxis(x, minX, maxX),
+    y: clampAxis(y, minY, maxY)
   }
 }
 
 export function buildLayout(size: [number, number], gates: readonly GauntletGate[] | undefined, crashOffset: number): GauntletLayout {
   const [width, height] = size
+  const compact = width < 220 || height < 160
   const routeY = Math.round(height * 0.48)
-  const floorY = height - 36
+  const floorY = compact
+    ? height - Math.max(3, Math.min(12, height * 0.1))
+    : height - 36
   const enabledGates = (gates ?? []).filter((gate) => gate.enabled !== false)
   const gateCount = Math.max(1, enabledGates.length)
   const gateStart = width * 0.22
@@ -180,21 +211,28 @@ export function buildLayout(size: [number, number], gates: readonly GauntletGate
   const gateStep = gateCount <= 1 ? 0 : (gateEnd - gateStart) / (gateCount - 1)
   // Start far enough right that positive-property orbits (radius ~72–80)
   // never clear the left wall on spawn.
-  const startX = Math.max(Math.round(width * 0.14), 110)
+  const startX = compact
+    ? Math.max(Math.round(width * 0.12), width * 0.08 + 6)
+    : Math.max(Math.round(width * 0.14), 110)
+  const resolvedCrashOffset = compact
+    ? Math.min(crashOffset, Math.max(3, height * 0.22))
+    : crashOffset
   return {
-    crashY: floorY - crashOffset,
+    crashY: floorY - resolvedCrashOffset,
     floorY,
     gates: enabledGates.map((gate, index) => ({
       ...gate,
       id: gate.id,
       x: gate.x ?? Math.round(gateStart + index * gateStep),
-      width: gate.width ?? Math.max(54, Math.round(width * 0.07))
+      width: gate.width ?? (compact
+        ? Math.max(8, Math.round(width * 0.07))
+        : Math.max(54, Math.round(width * 0.07)))
     })),
-    graveyardX: Math.round(width * 0.84),
+    graveyardX: Math.round(width * (compact ? 0.72 : 0.84)),
     graveyardY: floorY - 4,
     height,
     routeY,
-    socketX: Math.round(width * 0.92),
+    socketX: Math.round(width * (compact ? 0.82 : 0.92)),
     startX,
     width
   }
@@ -229,7 +267,11 @@ export function resolvePlacement<TDatum extends Datum>(
   }
 }
 
-export function featureSlot(ids: readonly string[], id: string): { angle: number; index: number; radius: number } {
+export function featureSlot(
+  ids: readonly string[],
+  id: string,
+  spatialScale = 1
+): { angle: number; index: number; radius: number } {
   const ordered = [...ids].sort((a, b) => a.localeCompare(b))
   const index = Math.max(0, ordered.indexOf(id))
   const t = ordered.length > 1 ? index / (ordered.length - 1) : 0.5
@@ -238,7 +280,7 @@ export function featureSlot(ids: readonly string[], id: string): { angle: number
   return {
     angle: -Math.PI * 0.82 + t * Math.PI * 0.64,
     index,
-    radius: 48 + (index % 2) * 6
+    radius: (48 + (index % 2) * 6) * spatialScale
   }
 }
 
@@ -305,9 +347,15 @@ export function buildProjectSpawns<TDatum extends Datum>(
   negativeProperties: Map<string, GauntletPropertyDefinition>,
   coreBody?: GauntletCoreBodyFn<TDatum>
 ): PhysicsQueuedSpawn[] {
+  const spatialScale = gauntletSpatialScale(layout)
+  const defaultCoreRadius = Math.max(3, 28 * spatialScale)
   const coreX = placement.startX
-  const coreY = placement.startY + (placement.startY === layout.routeY ? projectIndex * 38 : 0)
+  const coreY = placement.startY + (
+    placement.startY === layout.routeY ? projectIndex * 38 * spatialScale : 0
+  )
   const corePatch = coreBody?.(project, projectIndex, layout, placement) ?? {}
+  const authoredCoreX = corePatch.x ?? coreX
+  const authoredCoreY = corePatch.y ?? coreY
   const coreDatum = {
     __gauntlet: true,
     kind: CORE_KIND,
@@ -318,30 +366,35 @@ export function buildProjectSpawns<TDatum extends Datum>(
     {
       ...corePatch,
       id: projectCoreId(project.id),
-      x: corePatch.x ?? coreX,
-      y: corePatch.y ?? coreY,
+      x: authoredCoreX,
+      y: authoredCoreY,
       vx: corePatch.vx ?? 42,
       vy: corePatch.vy ?? 0,
       mass: corePatch.mass ?? 7,
       bodyCollisions: corePatch.bodyCollisions ?? true,
-      shape: corePatch.shape ?? { type: "circle", radius: 28 },
+      shape: corePatch.shape ?? { type: "circle", radius: defaultCoreRadius },
       spawnAt: corePatch.spawnAt ?? project.startedAt,
       datum: coreDatum
     }
   ]
   const coreRadius =
     corePatch.shape && "radius" in corePatch.shape
-      ? Number(corePatch.shape.radius) || 28
-      : 28
-  const clampedCore = clampGauntletPoint(coreX, coreY, coreRadius, layout)
+      ? Number(corePatch.shape.radius) || defaultCoreRadius
+      : defaultCoreRadius
+  const clampedCore = clampGauntletPoint(
+    authoredCoreX,
+    authoredCoreY,
+    coreRadius,
+    layout
+  )
   spawns[0].x = clampedCore.x
   spawns[0].y = clampedCore.y
 
   for (const propertyId of project.activePositiveIds) {
     const property = positiveProperties.get(propertyId)
     if (!property) continue
-    const slot = featureSlot(project.activePositiveIds, propertyId)
-    const radius = property.radius ?? 10
+    const slot = featureSlot(project.activePositiveIds, propertyId, spatialScale)
+    const radius = property.radius ?? Math.max(2, 10 * spatialScale)
     const rawX = clampedCore.x + Math.cos(slot.angle) * slot.radius
     const rawY = clampedCore.y + Math.sin(slot.angle) * slot.radius
     const pos = clampGauntletPoint(rawX, rawY, radius, layout)
@@ -367,7 +420,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
           target: { type: "body", bodyId: projectCoreId(project.id) },
           stiffness: 0.56,
           damping: 0.9,
-          restLength: 52 + (slot.index % 2) * 4,
+          restLength: Math.max(6, (52 + (slot.index % 2) * 4) * spatialScale),
           ...(property.spring ?? {})
         }
       ]
@@ -492,13 +545,14 @@ export function buildNegativeSpawn<TDatum extends Datum>(
   index: number,
   x: number,
   y: number,
-  layout: Pick<GauntletLayout, "width" | "floorY">,
+  layout: GauntletWallLayout,
   spawnAt?: number
 ): PhysicsQueuedSpawn {
-  const radius = property.radius ?? 7.2
+  const spatialScale = gauntletSpatialScale(layout)
+  const radius = property.radius ?? Math.max(2, 7.2 * spatialScale)
   const pos = clampGauntletPoint(
-    x - 12 + (index % 4) * 12,
-    y + 54 + Math.floor(index / 4) * 12,
+    x + (-12 + (index % 4) * 12) * spatialScale,
+    y + (54 + Math.floor(index / 4) * 12) * spatialScale,
     radius,
     layout
   )
@@ -524,10 +578,9 @@ export function buildNegativeSpawn<TDatum extends Datum>(
         target: { type: "body", bodyId: projectCoreId(project.id) },
         stiffness: 0.62,
         damping: 0.92,
-        restLength: 52 + (index % 4) * 3,
+        restLength: Math.max(6, (52 + (index % 4) * 3) * spatialScale),
         ...(property.spring ?? {})
       }
     ]
   }
 }
-

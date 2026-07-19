@@ -113,9 +113,13 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
   const xRangeEnd = area.plot.x + area.plot.width - maxRadius - 8
   const xScale = scaleLinear().domain([min, max]).range([xRangeStart, xRangeEnd])
   const groupCount = Math.max(1, groups.length)
-  const laneTop = area.plot.y + Math.max(28, maxRadius * 3)
+  const lanePadding = Math.min(
+    Math.max(28, maxRadius * 3),
+    area.plot.height / 4
+  )
+  const laneTop = area.plot.y + lanePadding
   const laneBottom =
-    area.plot.y + area.plot.height - Math.max(28, maxRadius * 3)
+    area.plot.y + area.plot.height - lanePadding
   const laneSpan = Math.max(0, laneBottom - laneTop)
   const yForGroup = (group: string): number => {
     const index = groupIndex.get(group) ?? 0
@@ -208,4 +212,3 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
     } satisfies CollisionSwarmProjectionMetadata
   }
 }
-

@@ -59,6 +59,13 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     const forceStrength = config.forceStrength ?? 0.1
     const cx = size[0] / 2
     const cy = size[1] / 2
+    // Fixed full-chart force distances cannot fit in short context/sparkline
+    // viewports. When the smaller dimension drops below 200px, scale distances
+    // and repulsion while strengthening the positional pull, so the simulation
+    // settles inside the plot instead of relying on a final boundary clamp.
+    // Charts at or above 200px retain their historical force magnitudes.
+    const spatialScale = Math.max(0.1, Math.min(1, Math.min(size[0], size[1]) / 200))
+    const positionalStrength = Math.min(0.5, 0.06 + (1 - spatialScale) * 1.8)
 
     // Retrieve previous positions if stashed by the pipeline store
     // (used for bounded re-ingestion where nodes are recreated)
@@ -108,14 +115,14 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
           // stacking multiple new nodes at exactly the same point
           const hash = simpleHash(node.id)
           const offsetAngle = (hash % 360) * (Math.PI / 180)
-          const offsetR = 10 + (hash % 20)
+          const offsetR = (10 + (hash % 20)) * spatialScale
           node.x = sumX / neighbors.length + offsetR * Math.cos(offsetAngle)
           node.y = sumY / neighbors.length + offsetR * Math.sin(offsetAngle)
         } else {
           // No positioned neighbors — place near center
           const hash = simpleHash(node.id)
           const offsetAngle = (hash % 360) * (Math.PI / 180)
-          const offsetR = 15 + (hash % 30)
+          const offsetR = (15 + (hash % 30)) * spatialScale
           node.x = cx + offsetR * Math.cos(offsetAngle)
           node.y = cy + offsetR * Math.sin(offsetAngle)
         }
@@ -130,7 +137,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         if (node.x == null || node.y == null || (node.x === 0 && node.y === 0)) {
-          const r = Math.sqrt(i + 0.5) * 10
+          const r = Math.sqrt(i + 0.5) * 10 * spatialScale
           const theta = i * goldenAngle
           node.x = cx + r * Math.cos(theta)
           node.y = cy + r * Math.sin(theta)
@@ -211,8 +218,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
           const endpointClearance =
             (source ? nodeRadius(source) : 0) +
             (target ? nodeRadius(target) : 0) +
-            12
-          return Math.max(40, endpointClearance)
+            Math.max(6, 12 * spatialScale)
+          return Math.max(16, 40 * spatialScale, endpointClearance)
         })
         .id((d) => d.id)
 
@@ -237,7 +244,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
           "charge",
           forceManyBody<RealtimeNode>().strength((d) => {
             const degree = degreeById.get(d.id) ?? 0
-            return -15 * nodeRadius(d) * Math.sqrt(degree + 1)
+            return -15 * spatialScale * nodeRadius(d) * Math.sqrt(degree + 1)
           })
         )
         // A static no-overlap pass is one of the main reasons Sigma/Graphology
@@ -246,7 +253,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // while preserving deterministic, non-interactive output.
         .force(
           "collide",
-          forceCollide<RealtimeNode>((d) => nodeRadius(d) + 3)
+          forceCollide<RealtimeNode>((d) => nodeRadius(d) + 3 * spatialScale)
             .strength(0.9)
             .iterations(2)
         )
@@ -254,9 +261,15 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // ensuring the graph as a whole stays centered in the chart area
         .force("center", forceCenter(cx, cy).strength(0.8))
         // Keep components on screen without crushing community structure into
-        // the center. The previous 0.15 pull dominated sparse layouts.
-        .force("x", forceX<RealtimeNode>(cx).strength(0.06))
-        .force("y", forceY<RealtimeNode>(cy).strength(0.06))
+        // the center. Compact layouts need a stronger pull to balance the
+        // repulsion between disconnected components; full-size layouts retain
+        // the historical 0.06 strength.
+        .force("x", forceX<RealtimeNode>(cx).strength(positionalStrength))
+        .force("y", forceY<RealtimeNode>(cy).strength(positionalStrength))
+        // Apply the viewport constraint during settling so collision and link
+        // forces can respond to it. A final coordinate clamp alone assigns
+        // every outlier the same border coordinate in short viewports.
+        .force("bounds", forceBounds(size, nodeRadius))
 
       simulation.nodes(nodes)
 
@@ -287,12 +300,19 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
-    // Clamp node positions to stay within the canvas area (with padding for node radius)
+    // Retain a padded safety clamp for extremely dense or under-settled
+    // layouts. The bounds force above should do nearly all of this work while
+    // preserving collision spacing.
     for (const node of nodes) {
       if (node.x == null || node.y == null) continue
       const r = nodeRadius(node)
-      node.x = Math.max(r, Math.min(size[0] - r, node.x))
-      node.y = Math.max(r, Math.min(size[1] - r, node.y))
+      // Preserve the historical radius-only clamp for explicitly pinned
+      // layouts; the extra inset belongs to simulated layouts only.
+      const safetyPadding = iterations > 0 ? 2 : 0
+      const insetX = Math.min(size[0] / 2, r + safetyPadding)
+      const insetY = Math.min(size[1] / 2, r + safetyPadding)
+      node.x = Math.max(insetX, Math.min(size[0] - insetX, node.x))
+      node.y = Math.max(insetY, Math.min(size[1] - insetY, node.y))
 
       // Reset bounding box so finalizeLayout derives it from the updated x/y.
       // Without this, stale x0/x1/y0/y1 from a previous layout would cause
@@ -473,6 +493,51 @@ function findNeighborPositions(
   }
 
   return positions
+}
+
+/**
+ * Softly keep a force simulation inside its viewport. Constraining velocity
+ * during the simulation lets link and collision forces settle around the
+ * boundary; clamping coordinates only after the last tick collapses outliers
+ * onto identical edge positions.
+ */
+function forceBounds(
+  size: [number, number],
+  nodeRadius: (node: RealtimeNode) => number,
+  padding = 2,
+  strength = 0.6
+) {
+  type ForcePositionedNode = RealtimeNode & { vx?: number; vy?: number }
+  let nodes: ForcePositionedNode[] = []
+
+  const force = (alpha: number) => {
+    const forceStrength = strength * Math.max(alpha, 0.2)
+    for (const node of nodes) {
+      const x = node.x ?? size[0] / 2
+      const y = node.y ?? size[1] / 2
+      const vx = node.vx ?? 0
+      const vy = node.vy ?? 0
+      const radius = nodeRadius(node) + padding
+      const minX = Math.min(size[0] / 2, radius)
+      const maxX = Math.max(size[0] / 2, size[0] - radius)
+      const minY = Math.min(size[1] / 2, radius)
+      const maxY = Math.max(size[1] / 2, size[1] - radius)
+      const nextX = x + vx
+      const nextY = y + vy
+
+      if (nextX < minX) node.vx = vx + (minX - nextX) * forceStrength
+      else if (nextX > maxX) node.vx = vx + (maxX - nextX) * forceStrength
+
+      if (nextY < minY) node.vy = vy + (minY - nextY) * forceStrength
+      else if (nextY > maxY) node.vy = vy + (maxY - nextY) * forceStrength
+    }
+  }
+
+  force.initialize = (nextNodes: RealtimeNode[]) => {
+    nodes = nextNodes as ForcePositionedNode[]
+  }
+
+  return force
 }
 
 /**

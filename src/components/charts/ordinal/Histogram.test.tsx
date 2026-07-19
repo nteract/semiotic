@@ -164,6 +164,24 @@ describe("Histogram", () => {
     expect(lastOrdinalFrameProps.barPadding).toBe(40)
   })
 
+  it("removes category padding by default in sparkline mode", () => {
+    const { rerender } = render(
+      <TooltipProvider>
+        <Histogram data={sampleData} mode="sparkline" />
+      </TooltipProvider>
+    )
+
+    expect(lastOrdinalFrameProps.barPadding).toBe(0)
+
+    rerender(
+      <TooltipProvider>
+        <Histogram data={sampleData} mode="sparkline" categoryPadding={6} />
+      </TooltipProvider>
+    )
+
+    expect(lastOrdinalFrameProps.barPadding).toBe(6)
+  })
+
   it("updates when data changes", () => {
     const { rerender } = render(
       <TooltipProvider>

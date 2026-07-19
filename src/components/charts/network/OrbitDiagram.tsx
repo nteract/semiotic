@@ -9,6 +9,7 @@ import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -215,7 +216,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     mobileSemantics: resolved.mobileSemantics,
     chartType: "OrbitDiagram",
     chartId,
-    marginDefaults: { top: 10, right: 10, bottom: 10, left: 10 },
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     userMargin,
     width, height,
     loading,

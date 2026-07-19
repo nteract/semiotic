@@ -535,7 +535,7 @@ const result = diagnoseConfig("LineChart", {
       <p>
         Charts auto-detect <code>prefers-reduced-motion</code> and{" "}
         <code>forced-colors</code> and adapt (animations off, high-contrast
-        focus rings). When you build chrome <em>around</em> a chart — custom
+        focus rings). When you build decoration <em>around</em> a chart — custom
         intros, transitions, decorative motion — read the same signals so your
         UI stays consistent with the chart. Two hooks expose them, from{" "}
         <code>semiotic/utils</code>:

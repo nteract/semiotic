@@ -116,7 +116,57 @@ export function drawTethers(ctx: CanvasRenderingContext2D, bodies: PhysicsBodySt
   ctx.restore()
 }
 
-export function GauntletChrome({ layout, states }: { layout: GauntletLayout; states: readonly GauntletProjectState[] }) {
+function GauntletGates({ layout, compact, showLabels }: { layout: GauntletLayout; compact: boolean; showLabels: boolean }) {
+  // In compact mode the route/crash/socket geometry is suppressed, so gates
+  // span a proportional vertical band instead of the tall full-mode rect
+  // (whose `layout.height - 170` height collapsed to a few pixels when small).
+  const gateY = compact ? Math.round(layout.height * 0.14) : Math.max(80, layout.routeY - 180)
+  const gateHeight = compact
+    ? Math.max(6, Math.round(layout.height * 0.72))
+    : Math.min(360, layout.height - 170)
+  return (
+    <>
+      {layout.gates.map((gate) => (
+        <g key={gate.id}>
+          <rect
+            x={gate.x - gate.width / 2}
+            y={gateY}
+            width={gate.width}
+            height={gateHeight}
+            rx={compact ? 2 : 12}
+            fill={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
+            fillOpacity={0.1}
+            stroke={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
+            strokeDasharray="5 5"
+            strokeOpacity={0.7}
+          />
+          {showLabels ? (
+            <text x={gate.x} y={Math.max(64, layout.routeY - 196)} fill="var(--semiotic-text-secondary, #64748b)" fontSize={10} fontWeight={800} textAnchor="middle">{gate.label ?? gate.id}</text>
+          ) : null}
+        </g>
+      ))}
+    </>
+  )
+}
+
+export function GauntletChrome({
+  layout,
+  states,
+  compact = false
+}: {
+  layout: GauntletLayout
+  states: readonly GauntletProjectState[]
+  compact?: boolean
+}) {
+  // Compact (context / sparkline) chartmodes draw gates only — no route curve,
+  // crash line, socket, graveyard, or text labels.
+  if (compact) {
+    return (
+      <svg aria-hidden="true" viewBox={`0 0 ${layout.width} ${layout.height}`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <GauntletGates layout={layout} compact showLabels={false} />
+      </svg>
+    )
+  }
   return (
     <svg aria-hidden="true" viewBox={`0 0 ${layout.width} ${layout.height}`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <path
@@ -138,23 +188,7 @@ export function GauntletChrome({ layout, states }: { layout: GauntletLayout; sta
         strokeOpacity={0.64}
       />
       <text x={Math.round(layout.width * 0.07)} y={layout.crashY - 8} fill="var(--semiotic-negative, #ef4444)" fontSize={9} fontWeight={800}>CRASH LINE</text>
-      {layout.gates.map((gate) => (
-        <g key={gate.id}>
-          <rect
-            x={gate.x - gate.width / 2}
-            y={Math.max(80, layout.routeY - 180)}
-            width={gate.width}
-            height={Math.min(360, layout.height - 170)}
-            rx={12}
-            fill={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
-            fillOpacity={0.1}
-            stroke={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
-            strokeDasharray="5 5"
-            strokeOpacity={0.7}
-          />
-          <text x={gate.x} y={Math.max(64, layout.routeY - 196)} fill="var(--semiotic-text-secondary, #64748b)" fontSize={10} fontWeight={800} textAnchor="middle">{gate.label ?? gate.id}</text>
-        </g>
-      ))}
+      <GauntletGates layout={layout} compact={false} showLabels />
       <g>
         <rect x={layout.socketX - 52} y={layout.routeY - 56} width={104} height={112} rx={13} fill="var(--semiotic-positive, #22c55e)" fillOpacity={0.12} stroke="var(--semiotic-positive, #22c55e)" strokeWidth={1.5} />
         <text x={layout.socketX} y={layout.routeY - 72} fill="var(--semiotic-text-secondary, #64748b)" fontSize={10} fontWeight={800} textAnchor="middle">SOCKET</text>

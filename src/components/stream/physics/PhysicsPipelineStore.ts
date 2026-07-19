@@ -106,6 +106,31 @@ export type {
   UpdateResult
 } from "../pipelineUpdateContract"
 
+/**
+ * Speed (px/s) below which a still-awake body counts as quiescent. Matches the
+ * kernel's default `sleepSpeed`; overridden per-store from `kernel.sleepSpeed`.
+ */
+const DEFAULT_QUIESCENT_SPEED = 8
+
+/**
+ * How long (seconds of simulated time) the whole system must stay below
+ * {@link DEFAULT_QUIESCENT_SPEED} before it is treated as "at rest" even if some
+ * bodies never formally sleep. Two bodies leaning on each other (neither counts
+ * as the other's support) or a tethered body held in force equilibrium can sit
+ * still forever without sleeping; without this fallback `allSleeping()` is never
+ * true, so the sim never reports "settled" and `rerunMS` never re-arms.
+ */
+const QUIESCENT_AFTER_SECONDS = 0.6
+
+function quiescentSpeedFromKernel(
+  kernel: PhysicsKernelOptions | undefined
+): number {
+  const sleepSpeed = kernel?.sleepSpeed
+  return typeof sleepSpeed === "number" && Number.isFinite(sleepSpeed) && sleepSpeed > 0
+    ? sleepSpeed
+    : DEFAULT_QUIESCENT_SPEED
+}
+
 export class PhysicsPipelineStore {
   private activeSensorPairs = new Set<string>()
   private accumulator = 0
@@ -138,6 +163,10 @@ export class PhysicsPipelineStore {
   private simulationState: PhysicsSimulationState = "settled"
   private visible = true
   private world: PhysicsEngineAdapter
+  // Sustained-quiescence fallback for "at rest" (see QUIESCENT_AFTER_SECONDS).
+  private quiescentSeconds = 0
+  private quiescentSpeed = DEFAULT_QUIESCENT_SPEED
+  private quiescenceScratch: PhysicsBodyState[] = []
 
   constructor(config: PhysicsPipelineConfig = {}) {
     const {
@@ -159,6 +188,7 @@ export class PhysicsPipelineStore {
       fixedDt: this.config.fixedDt,
       ...kernel
     })
+    this.quiescentSpeed = quiescentSpeedFromKernel(kernel)
     if (colliders) this.world.setColliders(cloneColliders(colliders))
   }
 
@@ -201,6 +231,7 @@ export class PhysicsPipelineStore {
         }
       }
       this.world.restore({ ...snapshot, options: nextOptions })
+      this.quiescentSpeed = quiescentSpeedFromKernel(nextOptions)
       this.revision += 1
     }
     if (observation) {
@@ -321,6 +352,7 @@ export class PhysicsPipelineStore {
     this.accumulator = 0
     this.elapsedSeconds = 0
     this.nextSequence = 0
+    this.quiescentSeconds = 0
     this.sediment.clear()
     this.bodyBudgetObservationKey = "ok"
     this.revision += 1
@@ -379,6 +411,8 @@ export class PhysicsPipelineStore {
     if (steps === this.config.maxSubsteps) {
       this.accumulator = Math.min(this.accumulator, this.config.fixedDt)
     }
+
+    this.refreshQuiescence(delta, spawned.length)
 
     if (
       steps > 0 ||
@@ -455,13 +489,17 @@ export class PhysicsPipelineStore {
     this.syncSimulationState(observations)
 
     let steps = 0
-    while (steps < maxSteps && !this.world.allSleeping()) {
+    if (spawned.length > 0) this.quiescentSeconds = 0
+    while (steps < maxSteps && !this.atRest()) {
       this.world.step(this.config.fixedDt)
       const stepEvents = this.world.events()
       events.push(...stepEvents)
       this.observeKernelEvents(stepEvents, observations)
       this.observeSensorTransitions(observations)
       steps += 1
+      // Break early on sustained quiescence so a bounded settle doesn't spin to
+      // the step limit on stragglers that never formally sleep.
+      this.refreshQuiescence(this.config.fixedDt, 0)
     }
 
     if (
@@ -535,8 +573,47 @@ export class PhysicsPipelineStore {
     return this.world.allSleeping()
   }
 
+  /**
+   * True when the world is done moving — either every body has formally slept,
+   * or the whole system has stayed quiescent long enough that never-sleeping
+   * stragglers (mutually-leaning bodies, force-equilibrium tethers) should still
+   * count as settled. This is the gate for `shouldContinue` and the "settled"
+   * simulation state, so it decides when `rerunMS` re-arms.
+   */
+  atRest(): boolean {
+    return (
+      this.world.allSleeping() ||
+      this.quiescentSeconds >= QUIESCENT_AFTER_SECONDS
+    )
+  }
+
+  /**
+   * Advance (or reset) the sustained-quiescence timer from the bodies' current
+   * speeds. A fresh spawn or any body moving faster than `quiescentSpeed` resets
+   * it; otherwise it accrues the simulated delta.
+   */
+  private refreshQuiescence(deltaSeconds: number, spawnedCount: number): void {
+    if (spawnedCount > 0) {
+      this.quiescentSeconds = 0
+      return
+    }
+    const bodies = this.world.readState(this.quiescenceScratch)
+    const thresholdSq = this.quiescentSpeed * this.quiescentSpeed
+    let quiescent = true
+    for (const body of bodies) {
+      if (body.sleeping) continue
+      if (body.vx * body.vx + body.vy * body.vy >= thresholdSq) {
+        quiescent = false
+        break
+      }
+    }
+    this.quiescentSeconds = quiescent
+      ? this.quiescentSeconds + Math.max(0, deltaSeconds)
+      : 0
+  }
+
   hasPendingWork(): boolean {
-    return this.queue.length > 0 || !this.world.allSleeping()
+    return this.queue.length > 0 || !this.atRest()
   }
 
   queueSize(): number {
@@ -696,6 +773,8 @@ export class PhysicsPipelineStore {
     }
     this.bodyBudget = cloneBodyBudgetOptions(snapshot.bodyBudget ?? {})
     this.bodyBudgetObservationKey = "ok"
+    this.quiescentSpeed = quiescentSpeedFromKernel(snapshot.world.options)
+    this.quiescentSeconds = 0
     this.activeSensorPairs = new Set(snapshot.activeSensorPairs)
     this.accumulator = snapshot.accumulator
     this.elapsedSeconds = snapshot.elapsedSeconds
@@ -783,7 +862,7 @@ export class PhysicsPipelineStore {
       queueSize: this.queue.length,
       revision: this.revision,
       shouldContinue:
-        shouldContinueOverride ?? (this.queue.length > 0 || !sleeping),
+        shouldContinueOverride ?? (this.queue.length > 0 || !this.atRest()),
       sleeping,
       sedimented,
       spawned,
@@ -882,7 +961,7 @@ export class PhysicsPipelineStore {
       this.paused,
       this.visible,
       this.queue.length > 0,
-      this.world.allSleeping()
+      this.atRest()
     )
     if (next === this.simulationState) return
     const previous = this.simulationState

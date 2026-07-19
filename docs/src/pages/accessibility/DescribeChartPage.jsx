@@ -145,7 +145,7 @@ export default function DescribeChartPage() {
       <h2 id="chart-container">Wiring: ChartContainer is the opt-in layer</h2>
       <p>
         Semiotic doesn't bake auto-description into every bare chart. Full
-        accessible chrome — title, caption, and the generated description — lives
+        accessible decoration — title, caption, and the generated description — lives
         at the <Link to="/features/chart-container">ChartContainer</Link> layer,
         as an explicit opt-in. Set <code>describe</code> and give the container a{" "}
         <code>chartConfig</code> (which it already takes for "copy config"), and
@@ -168,7 +168,7 @@ export default function DescribeChartPage() {
       <p>
         Why opt-in at the container, not automatic on every chart? Because the
         bare chart space is a deliberate baseline (keyboard nav, focus ring,
-        live region, data table), and the container is where presentation chrome
+        live region, data table), and the container is where presentation decoration
         belongs. It also keeps the description in one place instead of competing
         with the chart's own terse aria-label. The{" "}
         <Link to="/accessibility/audit">accessibility audit</Link> knows about

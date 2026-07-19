@@ -716,7 +716,7 @@ export default function WatermarksExamplePage() {
     () => ({
       // The EventDropChart owns placement, colliders, settled rows, and
       // accessibility. This foreground layer only explains the window state
-      // with SVG chrome anchored to the same physics geometry.
+      // with SVG decoration anchored to the same physics geometry.
       foregroundGraphics: watermarkForegroundGraphics,
       onTick: handleTick,
       onBodyPointerDown: (body) => {

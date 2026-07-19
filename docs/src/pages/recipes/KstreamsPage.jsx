@@ -110,7 +110,7 @@ export default function KstreamsPage() {
         <strong>
           exactly one <code>rect</code> scene node per node
         </strong>{" "}
-        — that single mark owns the canvas hit area and carries the datum — and draws all the chrome
+        — that single mark owns the canvas hit area and carries the datum — and draws all the decoration
         in the layout's <code>overlays</code> layer, which is <code>pointer-events: none</code>. So
         the rich glyph never intercepts a hover: hover and click always resolve to the node as a
         unit. As the graph gets denser the recipe drops to a compact glyph, then an icon, then a 5px

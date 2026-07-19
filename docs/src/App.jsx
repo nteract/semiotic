@@ -243,6 +243,9 @@ const OctopusMetaphorExamplePage = lazy(() => import("./pages/examples/OctopusMe
 const GestaltPrinciplesExamplePage = lazy(
   () => import("./pages/examples/GestaltPrinciplesExamplePage"),
 )
+const SemioticStandardExamplePage = lazy(
+  () => import("./pages/examples/SemioticStandardExamplePage"),
+)
 const MobileDataVisualizationExamplePage = lazy(
   () => import("./pages/examples/MobileDataVisualizationExamplePage"),
 )
@@ -286,6 +289,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "OctopusMetaphorExamplePage.jsx": OctopusMetaphorExamplePage,
   "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,
   "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
+  "SemioticStandardExamplePage.jsx": SemioticStandardExamplePage,
   "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
   "NetworkVizExamplePage.jsx": NetworkVizExamplePage,
   "OregonTrailExamplePage.jsx": OregonTrailExamplePage,
@@ -424,7 +428,7 @@ export default function DocsApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [theme, toggleTheme] = useDocsTheme()
 
-  // Blog routes opt out of the docs chrome. The blog has its own
+  // Blog routes opt out of the docs decoration. The blog has its own
   // typographic identity (full-bleed article, no sidebar, minimal
   // top strip) so the docs header + sidebar would just compete with
   // the article. Pathname inspection is sufficient — react-router's
@@ -604,7 +608,7 @@ export default function DocsApp() {
               </Route>
 
               {/* Blog routes are registered in the early-return branch above
-                (`isBlogRoute`) so the docs chrome is stripped. */}
+                (`isBlogRoute`) so the docs decoration is stripped. */}
 
               {/* Internal development sandboxes. These are intentionally not in navData. */}
               <Route path="dev/physics-frame" element={<PhysicsFrameSandboxPage />} />

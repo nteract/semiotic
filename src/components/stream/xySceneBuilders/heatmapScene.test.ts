@@ -151,6 +151,22 @@ describe("buildHeatmapScene (static mode)", () => {
     const node = nodes[0]
     expect(node.valueFormat).toBe(fmt)
   })
+
+  it("carries areaStyle onto heat cells for border rendering", () => {
+    const data = [{ x: 0, y: 0, value: 9 }]
+    const ctx = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        areaStyle: () => ({ stroke: "#ed1c24", strokeWidth: 0 }),
+      },
+    })
+
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+
+    expect(nodes[0].style).toEqual({ stroke: "#ed1c24", strokeWidth: 0 })
+  })
 })
 
 describe("buildHeatmapScene (static mode) — color LUT and deduplication", () => {

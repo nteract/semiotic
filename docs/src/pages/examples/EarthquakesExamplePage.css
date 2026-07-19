@@ -59,7 +59,7 @@
   user-select: none;
 }
 
-/* Hide built-in +/- chrome; wheel still zooms, drag still rotates. */
+/* Hide built-in +/- decoration; wheel still zooms, drag still rotates. */
 .eq-globe-shell .stream-geo-zoom-controls {
   display: none !important;
 }

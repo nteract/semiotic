@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   SafeRender,
   renderEmptyState,
@@ -43,7 +43,103 @@ export type PhysicsSharedChartProps = {
 /** Galton / pile sampling mode (orthogonal to ChartMode display modes). */
 export type PhysicsSimulationMode = "sample" | "mechanical"
 
+/** Delay between a settled physics run and a fresh seeded replay. */
+export type PhysicsRerunMS = number | null
+
 const SIM_MODES = new Set<string>(["sample", "mechanical"])
+
+function normalizedRerunDelay(rerunMS: PhysicsRerunMS | undefined): number | null {
+  return typeof rerunMS === "number" && Number.isFinite(rerunMS) && rerunMS >= 0
+    ? rerunMS
+    : null
+}
+
+/**
+ * Add an optional settle -> delay -> remount loop to a physics HOC.
+ *
+ * Remounting is intentional: it replays the chart's deterministic seed,
+ * initial bodies, and spawn pacing instead of trying to reverse a live store.
+ */
+export function usePhysicsRerun(
+  config: StreamPhysicsFrameProps["config"],
+  rerunMS: PhysicsRerunMS | undefined,
+  paused: boolean | undefined,
+  onRerun?: () => void
+): {
+  config: StreamPhysicsFrameProps["config"]
+  rerunKey: number
+} {
+  const [rerunKey, setRerunKey] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const settledRef = useRef(false)
+  const delay = normalizedRerunDelay(rerunMS)
+  const delayRef = useRef(delay)
+  const pausedRef = useRef(Boolean(paused))
+  const onRerunRef = useRef(onRerun)
+  delayRef.current = delay
+  pausedRef.current = Boolean(paused)
+  onRerunRef.current = onRerun
+
+  const clearRerun = useCallback(() => {
+    if (timerRef.current == null) return
+    clearTimeout(timerRef.current)
+    timerRef.current = null
+  }, [])
+
+  const scheduleRerun = useCallback(() => {
+    clearRerun()
+    const nextDelay = delayRef.current
+    if (nextDelay == null || pausedRef.current || !settledRef.current) return
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null
+      settledRef.current = false
+      onRerunRef.current?.()
+      setRerunKey((current) => current + 1)
+    }, nextDelay)
+  }, [clearRerun])
+
+  useEffect(() => {
+    if (delay == null || paused) clearRerun()
+    else if (settledRef.current) scheduleRerun()
+  }, [clearRerun, delay, paused, scheduleRerun])
+
+  useEffect(() => clearRerun, [clearRerun])
+
+  const previousStateChange = config?.observation?.onSimulationStateChange
+  const onSimulationStateChange = useCallback<
+    NonNullable<
+      NonNullable<
+        NonNullable<StreamPhysicsFrameProps["config"]>["observation"]
+      >["onSimulationStateChange"]
+    >
+  >(
+    (state, previousState) => {
+      previousStateChange?.(state, previousState)
+      if (state === "running") {
+        settledRef.current = false
+        clearRerun()
+        return
+      }
+      if (state !== "settled" || previousState !== "running") return
+      settledRef.current = true
+      scheduleRerun()
+    },
+    [clearRerun, previousStateChange, scheduleRerun]
+  )
+
+  const rerunnableConfig = useMemo<StreamPhysicsFrameProps["config"]>(
+    () => ({
+      ...config,
+      observation: {
+        ...config?.observation,
+        onSimulationStateChange
+      }
+    }),
+    [config, onSimulationStateChange]
+  )
+
+  return { config: rerunnableConfig, rerunKey }
+}
 
 /**
  * Split ChartMode (`primary`/`context`/`sparkline`/`mobile`) from the

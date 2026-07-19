@@ -187,6 +187,56 @@ describe("FlowMap", () => {
       expect(lastGeoFrameProps.size).toEqual([800, 500])
     })
 
+    it("uses compact margins and node radii after responsive rules select sparkline mode", () => {
+      render(
+        <Wrapper>
+          <FlowMap
+            nodes={sampleNodes}
+            flows={sampleFlows}
+            mode="primary"
+            width={118}
+            height={36}
+            responsiveRules={[{ when: { maxWidth: 200 }, transform: { mode: "sparkline" } }]}
+          />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+      expect(lastGeoFrameProps.enableHover).toBe(false)
+      expect(lastGeoFrameProps.pointStyle(sampleNodes[0]).r).toBe(1.5)
+    })
+
+    it("keeps hover enabled for linked sparkline interactions", () => {
+      render(
+        <Wrapper>
+          <FlowMap
+            nodes={sampleNodes}
+            flows={sampleFlows}
+            mode="sparkline"
+            linkedHover={{ name: "route-hover", fields: ["source"] }}
+          />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.enableHover).toBe(true)
+    })
+
+    it("lets enableHover override the sparkline interaction default", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} mode="sparkline" enableHover />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.enableHover).toBe(true)
+    })
+
+    it("lets pointRadius override the mode-aware node radius", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} mode="sparkline" pointRadius={3} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.pointStyle(sampleNodes[0]).r).toBe(3)
+    })
+
     it("sets enableHover to true", () => {
       render(
         <Wrapper>

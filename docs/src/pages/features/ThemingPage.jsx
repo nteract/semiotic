@@ -585,7 +585,7 @@ const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorica
       />
 
       <CodeBlock
-        code={`// Hybrid approach: ThemeProvider for palette only, CSS vars for chrome
+        code={`// Hybrid approach: ThemeProvider for palette only, CSS vars for decoration
 // Since this object has no \`mode\`, it merges onto the current theme
 // without overriding background/text/grid (which come from your CSS vars)
 <ThemeProvider theme={{

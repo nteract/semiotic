@@ -342,7 +342,7 @@ import { LineChart } from "semiotic/xy"
 
       <h2 id="layout-modes">Layout Modes</h2>
       <p style={sectionNote}>
-        Four modes wrap the focal value in different chrome envelopes. The same content reformats
+        Four modes wrap the focal value in different decoration envelopes. The same content reformats
         per mode — useful for dashboards (tile), hero cards (presentation), in-paragraph numbers
         (inline), and dense grids (thumbnail).
       </p>
@@ -472,7 +472,7 @@ import { LineChart } from "semiotic/xy"
           beneath the value. <code>LineChart</code>, <code>AreaChart</code>,{" "}
           <code>DifferenceChart</code>, anything that reads as a horizontal
           strip. <code>mode=&quot;sparkline&quot;</code> on the chart strips
-          chrome automatically.
+          decoration automatically.
         </li>
         <li>
           <code>chartSlot</code> — <strong>square</strong> charts anchored
@@ -801,7 +801,7 @@ import { DonutChart } from "semiotic/ordinal"
       <p style={sectionNote}>
         Every visible piece of <code>BigNumber</code> reads from theme CSS variables:
         the focal value picks its colour from <code>--semiotic-&#123;level&#125;</code> via
-        the resolved threshold, the card chrome reads from{" "}
+        the resolved threshold, the card decoration reads from{" "}
         <code>--semiotic-border</code> / <code>--semiotic-surface</code> /{" "}
         <code>--semiotic-border-radius</code>, the trend sparkline inherits the value
         colour and renders through Semiotic&apos;s <code>LineChart</code> in{" "}
