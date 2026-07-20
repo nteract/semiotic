@@ -663,6 +663,15 @@ const rangeData = [
   { t: 4, high: 100, low: 60 },
   { t: 5, high: 85, low: 45 },
 ]
+// Range + middleAccessor: same high/low dumbbell plus a mean/median middle
+// mark that a downstream RangeChart paints via custom svgAnnotationRules.
+const rangeMiddleData = [
+  { t: 1, high: 80, low: 40, middle: 60 },
+  { t: 2, high: 90, low: 50, middle: 72 },
+  { t: 3, high: 70, low: 30, middle: 48 },
+  { t: 4, high: 100, low: 60, middle: 82 },
+  { t: 5, high: 85, low: 45, middle: 66 },
+]
 // One lane with a solid "used" segment and a hatched "reserved" segment. The
 // hatch is a declarative HatchFill descriptor, resolved to a CanvasPattern on
 // canvas and an SVG <pattern> in SSR — so the two backends match.
@@ -1262,6 +1271,59 @@ function makeSsrParityCases(React) {
         height: 300,
       },
     },
+    {
+      // Custom geo pin overlay via svgAnnotationRules. Geo used to hardcode
+      // `undefined` for the user rule in GeoSVGOverlay and never threaded the
+      // prop through StreamGeoFrame / renderChart staticGeo — so custom pins
+      // only existed on hand-rolled SVG splices. Coordinates are projected
+      // before the rule runs (same on CSR and SSR).
+      id: "geo-custom-annotation",
+      component: "ProportionalSymbolMap",
+      package: "geo",
+      props: {
+        points: geoPoints,
+        xAccessor: "lon",
+        yAccessor: "lat",
+        sizeBy: "magnitude",
+        areas: geoAreas,
+        annotations: [
+          { type: "geo-pin", coordinates: [20, 55], color: "#DB2777", label: "Hotspot" },
+          { type: "geo-pin", coordinates: [0, 45], color: "#0E9AA7", label: "Hub" },
+          // Built-in callout still falls through when the custom rule returns null.
+          { type: "callout", coordinates: [15, 42], label: "Delta", dx: 18, dy: -18, color: "#7c3aed" },
+        ],
+        frameProps: {
+          svgAnnotationRules: (ann, _i, context) => {
+            if (ann.type !== "geo-pin") return null
+            const sx = context.scales && context.scales.x
+            const sy = context.scales && context.scales.y
+            if (!sx || !sy || ann.x == null || ann.y == null) return null
+            const cx = sx(ann.x)
+            const cy = sy(ann.y)
+            return React.createElement(
+              "g",
+              { className: "geo-custom-pin", key: `pin-${ann.label || cx}` },
+              React.createElement("circle", {
+                cx,
+                cy,
+                r: 9,
+                fill: ann.color || "#DB2777",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }),
+              React.createElement("circle", {
+                cx,
+                cy,
+                r: 3,
+                fill: "#fff",
+              }),
+            )
+          },
+        },
+        width: 460,
+        height: 300,
+      },
+    },
 
     // ── SSR-fix regression fixtures ────────────────────────────────────
     // Each locks in a prop that used to be silently dropped on the SSR
@@ -1501,6 +1563,83 @@ function makeSsrParityCases(React) {
         highAccessor: "high",
         lowAccessor: "low",
         candlestickStyle: { rangeColor: "#6C4EE8" },
+        width: 440,
+        height: 260,
+      },
+    },
+    {
+      // Treemap with colorBy + nested header bands (paddingTop / labelMode all)
+      // PLUS a hide-root nodeStyle overlay. SSR used to replace (not compose)
+      // the built-in color encoding when any custom nodeStyle was present, so
+      // the nested multi-color layout collapsed to monochrome "flat" tiles.
+      id: "treemap-hideroot",
+      component: "Treemap",
+      props: {
+        data: tieredHierarchy,
+        childrenAccessor: "children",
+        valueAccessor: "value",
+        colorBy: "tier",
+        labelMode: "all",
+        paddingTop: 18,
+        showLabels: true,
+        colorScheme: ["#0E9AA7", "#C2185B", "#7CB342"],
+        width: 520,
+        height: 340,
+        nodeStyle: (d) =>
+          d.depth === 0
+            ? { fill: "transparent", pointerEvents: "none" }
+            : {},
+      },
+    },
+    {
+      // RangeChart middleAccessor analog: CandlestickChart range dumbbell plus
+      // a custom mean/median bulb+pill painted via svgAnnotationRules. The
+      // native dumbbell path was already fixed; the custom rule path used to
+      // vanish entirely from renderChart SVG. Rules ride `frameProps` so the
+      // live CandlestickChart HOC (CSR) and renderChart (SSR) both see them.
+      id: "range-middle-overlay",
+      component: "CandlestickChart",
+      props: {
+        data: rangeMiddleData,
+        xAccessor: "t",
+        highAccessor: "high",
+        lowAccessor: "low",
+        candlestickStyle: { rangeColor: "#6C4EE8" },
+        annotations: rangeMiddleData.map((d) => ({
+          type: "range-middle",
+          x: d.t,
+          y: d.middle,
+          color: "#DB2777",
+        })),
+        frameProps: {
+          svgAnnotationRules: (ann, _i, context) => {
+            if (ann.type !== "range-middle") return null
+            const sx = context.scales && context.scales.x
+            const sy = context.scales && context.scales.y
+            if (!sx || !sy || ann.x == null || ann.y == null) return null
+            const cx = sx(ann.x)
+            const cy = sy(ann.y)
+            return React.createElement(
+              "g",
+              { className: "range-middle-overlay", key: `mid-${ann.x}` },
+              React.createElement("circle", {
+                cx,
+                cy,
+                r: 5,
+                fill: ann.color || "#DB2777",
+              }),
+              React.createElement("rect", {
+                x: cx - 12,
+                y: cy - 4,
+                width: 24,
+                height: 8,
+                rx: 4,
+                fill: ann.color || "#DB2777",
+                opacity: 0.9,
+              }),
+            )
+          },
+        },
         width: 440,
         height: 260,
       },

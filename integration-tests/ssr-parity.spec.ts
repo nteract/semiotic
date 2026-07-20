@@ -200,10 +200,27 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("#C2185B")
     expect(svg).toContain(">Group A<")
   }
+  // hideRoot nodeStyle must compose with colorBy (not replace it) and keep
+  // nested header-band geometry (paddingTop bands + parent labels).
+  if (id === "treemap-hideroot") {
+    expect(svg).toContain("transparent")
+    expect(svg).toContain("#0E9AA7")
+    expect(svg).toContain("#C2185B")
+    expect(svg).toContain(">Group A<")
+  }
   // Range/dumbbell candlestick: endpoint bulbs (2 per point), no body rect.
   // SSR used to draw a filled body rect for high/low-only data.
   if (id === "range-dumbbell") {
     expect((svg.match(/<circle/g) ?? []).length).toBe(rangeDumbbellPoints * 2)
+  }
+  // Custom middleAccessor bulb+pill via svgAnnotationRules — SSR used to drop
+  // the entire custom rule path even after the native dumbbell was fixed.
+  if (id === "range-middle-overlay") {
+    expect(svg).toContain("range-middle-overlay")
+    expect((svg.match(/range-middle-overlay/g) ?? []).length).toBe(rangeMiddlePoints)
+    expect(svg).toContain("#DB2777")
+    // Native dumbbell bulbs still present (2 endpoints × N points).
+    expect((svg.match(/<circle/g) ?? []).length).toBeGreaterThanOrEqual(rangeMiddlePoints * 2)
   }
   // A declarative HatchFill segment resolves to an SVG <pattern> server-side.
   if (id === "swimlane-hatch") {
@@ -218,10 +235,22 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("Caught up")
     expect(svg).toMatch(/stroke-dasharray/)
   }
+  // Geo svgAnnotationRules: custom pin glyphs + fall-through built-in callout.
+  // GeoSVGOverlay previously hard-coded `undefined` for the user rule.
+  if (id === "geo-custom-annotation") {
+    expect(svg).toContain("geo-custom-pin")
+    expect((svg.match(/geo-custom-pin/g) ?? []).length).toBe(2)
+    expect(svg).toContain("#DB2777")
+    expect(svg).toContain("#0E9AA7")
+    // Built-in callout still rendered (rule returned null for type:"callout").
+    expect(svg).toContain("Delta")
+  }
 }
 
 /** Point count for the range-dumbbell fixture (kept in sync with the fixture). */
 const rangeDumbbellPoints = 5
+/** Point count for the range-middle-overlay fixture (kept in sync with the fixture). */
+const rangeMiddlePoints = 5
 
 async function compareCurrentPanels(
   page: import("@playwright/test").Page,

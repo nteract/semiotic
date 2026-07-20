@@ -158,6 +158,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       annotations,
       onAnnotationActivate,
       autoPlaceAnnotations,
+      svgAnnotationRules,
 
       // Realtime
       decay,
@@ -1293,6 +1294,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             chartId={chartId}
             chartType="StreamGeoFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
+            svgAnnotationRules={svgAnnotationRules}
             pointNodes={collectGeoAnnotationAnchors(scene)}
             geoProjection={storeRef.current?.scales?.projectedPoint}
           />
@@ -1382,6 +1384,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           chartId={chartId}
           chartType="StreamGeoFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
+          svgAnnotationRules={svgAnnotationRules}
           pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
           geoProjection={storeRef.current?.scales?.projectedPoint}
         />

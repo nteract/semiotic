@@ -362,9 +362,11 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // Network annotations: layout assigns absolute pixel coords to nodes, so
   // overlay annotations use raw `x`/`y` numbers directly. `staticAnnotations`
   // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
+  // Custom `svgAnnotationRules` still runs first for bespoke note types.
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
+    svgAnnotationRules: props.svgAnnotationRules,
     scales: {},
     layout: { width: innerWidth, height: innerHeight },
     theme,

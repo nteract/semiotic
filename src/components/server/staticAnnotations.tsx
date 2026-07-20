@@ -9,7 +9,7 @@ import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
 import Annotation from "../Annotation"
 import type { SemioticTheme } from "../store/ThemeStore"
-import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
+import { renderAnnotationPass } from "../charts/shared/annotationRules"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
@@ -89,6 +89,21 @@ export interface StaticAnnotationConfig {
   yAccessor?: string
   /** Ordinal projection — determines whether r maps to x or y */
   projection?: "vertical" | "horizontal" | "radial"
+  /**
+   * Custom SVG annotation renderer — same contract as the client
+   * `svgAnnotationRules` frame prop. When present, each annotation is
+   * offered to this rule first; returning `null`/`undefined` falls through
+   * to the built-in static type handlers. Without this, custom middle-
+   * marker / bulb overlays (and any other non-built-in annotation type)
+   * silently vanished from `renderChart` SVG.
+   */
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext,
+  ) => React.ReactNode
+  /** Chart data forwarded into the AnnotationContext for custom rules. */
+  annotationData?: Datum[]
 }
 
 /**
@@ -147,39 +162,90 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   if (!rawAnnotations || rawAnnotations.length === 0) return null
   // Match describeChart/nav tree: hide retracted & superseded notes by default
   // so SSR/MCP SVG does not paint editorial dead weight the text layers omit.
-  const annotations = filterAnnotationsByStatus(rawAnnotations)
+  const filtered = filterAnnotationsByStatus(rawAnnotations)
+
+  // Mirror GeoSVGOverlay: when a geo projection is available, project
+  // `coordinates: [lon, lat]` onto pixel `x`/`y` *before* custom rules run so
+  // the same svgAnnotationRules body works on CSR and SSR (client uses
+  // identity pixel scales after this projection step).
+  const geoProject = config.scales.geoProjection
+  const annotations = geoProject
+    ? filtered.map((annotation) => {
+        if (!Array.isArray(annotation.coordinates) || annotation.coordinates.length < 2) {
+          return annotation
+        }
+        const projected = geoProject([
+          Number(annotation.coordinates[0]),
+          Number(annotation.coordinates[1]),
+        ])
+        return projected
+          ? { ...annotation, x: projected[0], y: projected[1] }
+          : annotation
+      })
+    : filtered
+
+  // Geo frames that only have a projection (no Cartesian x/y scale) feed
+  // identity pixel scales into the annotation context so custom rules can do
+  // `context.scales.x(ann.x)` after the pre-project step above — matching
+  // GeoSVGOverlay. Non-geo frames keep their real data-space scales.
+  const isGeoOnly = Boolean(geoProject) && !config.scales.x && !config.scales.y
+  const identity = (value: unknown) => Number(value)
+  const scaleX = config.scales.x ?? (isGeoOnly ? identity : undefined)
+  const scaleY = config.scales.y ?? (isGeoOnly ? identity : undefined)
+
+  // Infer frame family the way the client overlays advertise it so custom
+  // `svgAnnotationRules` that branch on `context.frameType` stay CSR/SSR
+  // parity-safe. Ordinal is explicit via `config.projection`; geo reuses the
+  // xy rule set (GeoSVGOverlay sets frameType:"xy"); bare network has no
+  // Cartesian scales and no geo projection. Never advertise a default
+  // ordinal `projection` of "vertical" on non-ordinal frames.
+  const frameType: AnnotationContext["frameType"] = config.projection
+    ? "ordinal"
+    : geoProject || config.scales.x || config.scales.y
+      ? "xy"
+      : "network"
+  const projection: AnnotationContext["projection"] = config.projection
+    ? (config.projection === "horizontal" ? "horizontal" : "vertical")
+    : undefined
+
+  // Scales bag matches the client SVG overlay contract so custom
+  // `svgAnnotationRules` can call `context.scales.x(value)` the same way.
+  // Cast: static scales are structurally compatible with d3 ScaleLinear /
+  // ScaleBand but carry a slightly wider domain type.
+  const annotationContext: AnnotationContext = {
+    scales: {
+      x: scaleX,
+      y: scaleY,
+      time: scaleX,
+      value: scaleY,
+      o: config.scales.o,
+      ...(geoProject ? { geoProjection: geoProject } : {}),
+    } as AnnotationContext["scales"],
+    width: config.layout.width,
+    height: config.layout.height,
+    xAccessor: config.xAccessor,
+    yAccessor: config.yAccessor,
+    data: config.annotationData,
+    frameType,
+    ...(projection ? { projection } : {}),
+  }
 
   const layoutAnnotations = config.autoPlaceAnnotations
     ? annotationLayout({
         annotations,
-        context: {
-          scales: {
-            x: config.scales.x,
-            y: config.scales.y,
-            time: config.scales.x,
-            value: config.scales.y,
-            o: config.scales.o,
-            geoProjection: config.scales.geoProjection,
-          } as unknown as AnnotationContext["scales"],
-          width: config.layout.width,
-          height: config.layout.height,
-          xAccessor: config.xAccessor,
-          yAccessor: config.yAccessor,
-          frameType: config.projection ? "ordinal" : "xy",
-          projection: config.projection === "horizontal" ? "horizontal" : "vertical",
-        },
+        context: annotationContext,
         ...(typeof config.autoPlaceAnnotations === "object" ? config.autoPlaceAnnotations : {}),
       })
     : annotations
 
-  const pairs: AnnotationRenderPair[] = []
-
-  for (let i = 0; i < layoutAnnotations.length; i++) {
-    const node = renderAnnotation(layoutAnnotations[i], i, config)
-    if (node) pairs.push({ node, annotation: layoutAnnotations[i] })
-  }
-
-  const elements = applyAnnotationEmphasis(pairs)
+  // Shared dispatch with the client SVG overlays: custom rules first, then
+  // built-in static handlers, then emphasis hierarchy.
+  const elements = renderAnnotationPass(
+    layoutAnnotations,
+    (ann, i) => renderAnnotation(ann, i, config),
+    config.svgAnnotationRules,
+    annotationContext,
+  )
   const pfx = config.idPrefix ? `${config.idPrefix}-` : ""
   return elements.length > 0 ? <g id={`${pfx}annotations`} className="semiotic-annotations">{elements}</g> : null
 }
