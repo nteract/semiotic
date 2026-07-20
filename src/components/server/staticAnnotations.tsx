@@ -193,6 +193,21 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   const scaleX = config.scales.x ?? (isGeoOnly ? identity : undefined)
   const scaleY = config.scales.y ?? (isGeoOnly ? identity : undefined)
 
+  // Infer frame family the way the client overlays advertise it so custom
+  // `svgAnnotationRules` that branch on `context.frameType` stay CSR/SSR
+  // parity-safe. Ordinal is explicit via `config.projection`; geo reuses the
+  // xy rule set (GeoSVGOverlay sets frameType:"xy"); bare network has no
+  // Cartesian scales and no geo projection. Never advertise a default
+  // ordinal `projection` of "vertical" on non-ordinal frames.
+  const frameType: AnnotationContext["frameType"] = config.projection
+    ? "ordinal"
+    : geoProject || config.scales.x || config.scales.y
+      ? "xy"
+      : "network"
+  const projection: AnnotationContext["projection"] = config.projection
+    ? (config.projection === "horizontal" ? "horizontal" : "vertical")
+    : undefined
+
   // Scales bag matches the client SVG overlay contract so custom
   // `svgAnnotationRules` can call `context.scales.x(value)` the same way.
   // Cast: static scales are structurally compatible with d3 ScaleLinear /
@@ -211,8 +226,8 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     xAccessor: config.xAccessor,
     yAccessor: config.yAccessor,
     data: config.annotationData,
-    frameType: config.projection ? "ordinal" : "xy",
-    projection: config.projection === "horizontal" ? "horizontal" : "vertical",
+    frameType,
+    ...(projection ? { projection } : {}),
   }
 
   const layoutAnnotations = config.autoPlaceAnnotations

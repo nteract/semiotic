@@ -70,6 +70,9 @@ describe("renderStaticAnnotations", () => {
       svgAnnotationRules: (ann, i, context) => {
         if (ann.type !== "geo-pin") return null
         // After pre-project: x=30, y=40; scales are identity pixel maps.
+        // Geo reuses the xy rule surface (frameType:"xy", no ordinal projection).
+        expect(context.frameType).toBe("xy")
+        expect(context.projection).toBeUndefined()
         const cx = context.scales?.x?.(ann.x as number)
         const cy = context.scales?.y?.(ann.y as number)
         if (cx == null || cy == null) return null
@@ -84,6 +87,43 @@ describe("renderStaticAnnotations", () => {
     expect(svg).toContain("#0E9AA7")
     expect(svg).toContain('cx="30"')
     expect(svg).toContain('cy="40"')
+  })
+
+  it("advertises frameType network (no projection) for bare network annotation contexts", () => {
+    const seen: Array<string | undefined> = []
+    renderAnnotationsString({
+      scales: {},
+      layout: { width: 200, height: 150 },
+      theme: LIGHT_THEME,
+      annotations: [{ type: "label", x: 10, y: 20, label: "N" }],
+      svgAnnotationRules: (ann, i, context) => {
+        seen.push(context.frameType)
+        expect(context.projection).toBeUndefined()
+        return (
+          <text key={`n-${i}`} x={Number(ann.x)} y={Number(ann.y)}>
+            {String(ann.label)}
+          </text>
+        )
+      },
+    })
+    expect(seen).toEqual(["network"])
+  })
+
+  it("advertises frameType ordinal + projection for ordinal annotation contexts", () => {
+    const seen: Array<{ frameType?: string; projection?: string }> = []
+    renderAnnotationsString({
+      scales: { o: ((v: string) => (v === "a" ? 0 : 1)) as never, r: (v: number) => v },
+      layout: { width: 200, height: 150 },
+      theme: LIGHT_THEME,
+      projection: "horizontal",
+      annotations: [{ type: "custom-ordinal", label: "O" }],
+      svgAnnotationRules: (_ann, _i, context) => {
+        seen.push({ frameType: context.frameType, projection: context.projection })
+        return null
+      },
+    })
+    // Rule returned null → falls through; still observed the context.
+    expect(seen).toEqual([{ frameType: "ordinal", projection: "horizontal" }])
   })
 
   describe("y-threshold", () => {

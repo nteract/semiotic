@@ -173,15 +173,20 @@ describe("GeoSVGOverlay parity", () => {
   })
 
   it("runs custom svgAnnotationRules after projecting coordinates", () => {
-    const rule = vi.fn((ann: Datum, _i: number, context: { scales?: { x?: (v: unknown) => number } | null }) => {
+    const rule = vi.fn((
+      ann: Datum,
+      _i: number,
+      context: { scales?: { x?: (v: unknown) => number; y?: (v: unknown) => number } | null },
+    ) => {
       if (ann.type !== "geo-pin") return null
-      // After projection, x/y are pixels and scales are identity.
+      // After projection, x/y are pixels and scales are identity — use both
+      // channels so the test documents the real GeoSVGOverlay contract.
       const cx = context.scales?.x?.(ann.x)
-      const cy = context.scales?.x?.(ann.y) // identity: y scale also maps pixel → pixel; use y if present
-      void cy
+      const cy = context.scales?.y?.(ann.y)
+      if (cx == null || cy == null || Number.isNaN(cx) || Number.isNaN(cy)) return null
       return (
         <g key="geo-pin" className="geo-custom-pin" data-testid="geo-custom-pin">
-          <circle cx={Number(ann.x)} cy={Number(ann.y)} r={7} fill="#DB2777" />
+          <circle cx={cx} cy={cy} r={7} fill="#DB2777" />
         </g>
       )
     })
@@ -204,7 +209,10 @@ describe("GeoSVGOverlay parity", () => {
     const calledAnn = rule.mock.calls[0][0] as Datum
     expect(calledAnn.x).toBe(40)
     expect(calledAnn.y).toBe(55)
-    expect(container.querySelector('[data-testid="geo-custom-pin"]')).not.toBeNull()
-    expect(container.querySelector("circle")?.getAttribute("fill")).toBe("#DB2777")
+    const pin = container.querySelector('[data-testid="geo-custom-pin"] circle')
+    expect(pin).not.toBeNull()
+    expect(pin?.getAttribute("cx")).toBe("40")
+    expect(pin?.getAttribute("cy")).toBe("55")
+    expect(pin?.getAttribute("fill")).toBe("#DB2777")
   })
 })
