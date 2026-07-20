@@ -31,6 +31,61 @@ describe("renderStaticAnnotations", () => {
     expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined })).toBeNull()
   })
 
+  it("honors svgAnnotationRules for custom annotation types and falls through on null", () => {
+    const svg = renderAnnotationsString({
+      ...baseConfig,
+      annotations: [
+        { type: "range-middle", x: 50, y: 50, color: "#DB2777" },
+        { type: "y-threshold", value: 25, label: "Floor" },
+      ],
+      svgAnnotationRules: (ann, i, context) => {
+        if (ann.type !== "range-middle") return null
+        const cx = context.scales?.x?.(ann.x as number)
+        const cy = context.scales?.y?.(ann.y as number)
+        if (cx == null || cy == null) return null
+        return (
+          <g key={`range-middle-${i}`} className="range-middle-overlay">
+            <circle cx={cx} cy={cy} r={4} fill={String(ann.color)} />
+          </g>
+        )
+      },
+    })
+    expect(svg).toContain("range-middle-overlay")
+    expect(svg).toContain("#DB2777")
+    // Built-in threshold still renders when the custom rule returns null.
+    expect(svg).toContain("Floor")
+  })
+
+  it("projects geo coordinates before svgAnnotationRules (CSR/SSR parity)", () => {
+    const svg = renderAnnotationsString({
+      scales: {
+        // Only a geo projection — no Cartesian data scales (geo frame shape).
+        geoProjection: ([lon, lat]) => [lon * 3, lat * 2],
+      },
+      layout: { width: 400, height: 300 },
+      theme: LIGHT_THEME,
+      annotations: [
+        { type: "geo-pin", coordinates: [10, 20], color: "#0E9AA7" },
+      ],
+      svgAnnotationRules: (ann, i, context) => {
+        if (ann.type !== "geo-pin") return null
+        // After pre-project: x=30, y=40; scales are identity pixel maps.
+        const cx = context.scales?.x?.(ann.x as number)
+        const cy = context.scales?.y?.(ann.y as number)
+        if (cx == null || cy == null) return null
+        return (
+          <g key={`geo-pin-${i}`} className="geo-custom-pin">
+            <circle cx={cx} cy={cy} r={6} fill={String(ann.color)} />
+          </g>
+        )
+      },
+    })
+    expect(svg).toContain("geo-custom-pin")
+    expect(svg).toContain("#0E9AA7")
+    expect(svg).toContain('cx="30"')
+    expect(svg).toContain('cy="40"')
+  })
+
   describe("y-threshold", () => {
     it("renders horizontal dashed line at data value", () => {
       const svg = renderAnnotationsString({

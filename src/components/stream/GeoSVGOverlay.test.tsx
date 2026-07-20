@@ -171,4 +171,40 @@ describe("GeoSVGOverlay parity", () => {
 
     expect(container.textContent).toContain("Projected")
   })
+
+  it("runs custom svgAnnotationRules after projecting coordinates", () => {
+    const rule = vi.fn((ann: Datum, _i: number, context: { scales?: { x?: (v: unknown) => number } | null }) => {
+      if (ann.type !== "geo-pin") return null
+      // After projection, x/y are pixels and scales are identity.
+      const cx = context.scales?.x?.(ann.x)
+      const cy = context.scales?.x?.(ann.y) // identity: y scale also maps pixel → pixel; use y if present
+      void cy
+      return (
+        <g key="geo-pin" className="geo-custom-pin" data-testid="geo-custom-pin">
+          <circle cx={Number(ann.x)} cy={Number(ann.y)} r={7} fill="#DB2777" />
+        </g>
+      )
+    })
+
+    const { container } = render(
+      <GeoSVGOverlay
+        width={220}
+        height={120}
+        totalWidth={276}
+        totalHeight={160}
+        margin={margin}
+        annotations={[{ type: "geo-pin", coordinates: [20, 55], label: "Pin" }]}
+        geoProjection={(lon, lat) => [lon * 2, lat]}
+        svgAnnotationRules={rule}
+      />
+    )
+
+    expect(rule).toHaveBeenCalled()
+    // Projected: lon 20 → x 40, lat 55 → y 55
+    const calledAnn = rule.mock.calls[0][0] as Datum
+    expect(calledAnn.x).toBe(40)
+    expect(calledAnn.y).toBe(55)
+    expect(container.querySelector('[data-testid="geo-custom-pin"]')).not.toBeNull()
+    expect(container.querySelector("circle")?.getAttribute("fill")).toBe("#DB2777")
+  })
 })

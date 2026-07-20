@@ -330,10 +330,13 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     ? generateOrdinalAxesSVG(store, { width, height }, props, theme, idPfx)
     : null
 
-  // Annotations
+  // Annotations — same custom-rule path as XY so ordinal custom overlays
+  // survive renderChart.
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
+    svgAnnotationRules: props.svgAnnotationRules,
+    annotationData: data,
     scales: {
       o: store.scales.o,
       r: store.scales.r,

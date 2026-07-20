@@ -27,6 +27,7 @@ import { SwimlaneChart, type SwimlaneChartProps } from "../charts/ordinal/Swimla
 import { PieChart, type PieChartProps } from "../charts/ordinal/PieChart"
 import { DonutChart } from "../charts/ordinal/DonutChart"
 import { Treemap, type TreemapProps } from "../charts/network/Treemap"
+import { ProportionalSymbolMap } from "../charts/geo/ProportionalSymbolMap"
 
 /** Count `<path>` marks whose fill is a real paint (color or url()) — i.e.
  * filled areas. Lines render with `fill="none"`, so this isolates area fills. */
@@ -240,6 +241,168 @@ describe("Treemap — colorBy + hierarchy labels SSR parity", () => {
     const inFrame = renderToString(<Treemap {...props} />)
     expect([...uniqueFills(ssr)].sort()).toEqual([...uniqueFills(inFrame)].sort())
     expect(inFrame.includes(">Group A<")).toBe(true)
+  })
+
+  it("custom nodeStyle (hide-root) still keeps colorBy fills + nested paddingTop bands", () => {
+    // Downstream TreeMap hideRoot forces a nodeStyle that only paints the root
+    // transparent. SSR used to *replace* the built-in color encoding with that
+    // style, so every non-root tile collapsed to the default fill (looked flat).
+    const hideRoot = (d: { depth?: number }) =>
+      d.depth === 0 ? { fill: "transparent", pointerEvents: "none" as const } : {}
+    const withHide = { ...props, nodeStyle: hideRoot }
+    const svg = renderChart("Treemap", withHide)
+    const fills = uniqueFills(svg)
+    expect(fills.has("transparent")).toBe(true)
+    expect(fills.has("#0E9AA7")).toBe(true) // primary tier
+    expect(fills.has("#C2185B")).toBe(true) // backup tier
+    // Nested header-band geometry: parent tiles start below the paddingTop band
+    // (y ≈ 18 for depth-1), not a single flat partition of the plot.
+    const ys = [...svg.matchAll(/<rect\b[^>]*\by="([\d.]+)"/g)].map((m) => Number(m[1]))
+    expect(ys.some((y) => y >= 15 && y <= 25)).toBe(true)
+    expect(svg.includes(">Group A<")).toBe(true)
+  })
+})
+
+// ── RangeChart middleAccessor via svgAnnotationRules ──────────────────────
+// Downstream RangeChart paints high/low as CandlestickChart range mode, then
+// overlays a mean/median bulb+pill with custom svgAnnotationRules. The native
+// dumbbell path was fixed for SSR; the custom rule path was still dropped.
+
+describe("CandlestickChart — svgAnnotationRules middle overlay SSR parity", () => {
+  const data = [
+    { t: 1, high: 80, low: 40, middle: 60 },
+    { t: 2, high: 90, low: 50, middle: 70 },
+    { t: 3, high: 70, low: 30, middle: 50 },
+  ]
+  const middleAnnotations = data.map((d) => ({
+    type: "range-middle",
+    x: d.t,
+    y: d.middle,
+    color: "#DB2777",
+  }))
+  const middleRules = (
+    ann: { type?: string; x?: number; y?: number; color?: string },
+    _i: number,
+    context: {
+      scales?: { x?: (v: number) => number; y?: (v: number) => number } | null
+    },
+  ) => {
+    if (ann.type !== "range-middle") return null
+    const sx = context.scales?.x
+    const sy = context.scales?.y
+    if (!sx || !sy || ann.x == null || ann.y == null) return null
+    const cx = sx(ann.x)
+    const cy = sy(ann.y)
+    return (
+      <g key={`mid-${ann.x}`} className="range-middle-overlay" data-testid="range-middle">
+        <circle cx={cx} cy={cy} r={5} fill={ann.color || "#DB2777"} />
+        <rect x={cx - 10} y={cy - 4} width={20} height={8} rx={4} fill={ann.color || "#DB2777"} opacity={0.85} />
+      </g>
+    )
+  }
+
+  it("renderChart paints custom middle markers via svgAnnotationRules", () => {
+    const svg = renderChart("CandlestickChart", {
+      data,
+      xAccessor: "t",
+      highAccessor: "high",
+      lowAccessor: "low",
+      candlestickStyle: { rangeColor: "#6C4EE8" },
+      annotations: middleAnnotations,
+      svgAnnotationRules: middleRules,
+      width: 440,
+      height: 260,
+    })
+    // Native dumbbell still present.
+    expect((svg.match(/<circle/g) ?? []).length).toBeGreaterThanOrEqual(data.length * 2)
+    // Custom middle overlays.
+    expect(svg).toContain("range-middle-overlay")
+    expect((svg.match(/range-middle-overlay/g) ?? []).length).toBe(data.length)
+    expect(svg).toContain("#DB2777")
+  })
+
+  it("without svgAnnotationRules, custom middle types emit nothing", () => {
+    const svg = renderChart("CandlestickChart", {
+      data,
+      xAccessor: "t",
+      highAccessor: "high",
+      lowAccessor: "low",
+      annotations: middleAnnotations,
+      width: 440,
+      height: 260,
+    })
+    expect(svg).not.toContain("range-middle-overlay")
+  })
+})
+
+// ── Geo svgAnnotationRules ────────────────────────────────────────────────
+// GeoSVGOverlay previously hard-coded `undefined` for the user rule, and
+// staticGeo never threaded svgAnnotationRules — so custom pins only appeared
+// on CSR (and only if a consumer patched the overlay).
+
+describe("ProportionalSymbolMap — geo svgAnnotationRules SSR parity", () => {
+  const areas = [
+    {
+      type: "Feature" as const,
+      properties: { name: "Region A", value: 100 },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [[[-10, 40], [10, 40], [10, 50], [-10, 50], [-10, 40]]],
+      },
+    },
+  ]
+  const points = [
+    { city: "Alpha", lon: 0, lat: 45, magnitude: 30 },
+    { city: "Beta", lon: 5, lat: 48, magnitude: 50 },
+  ]
+  const pinRules = (
+    ann: { type?: string; x?: number; y?: number; color?: string },
+    i: number,
+    context: { scales?: { x?: (v: number) => number; y?: (v: number) => number } | null },
+  ) => {
+    if (ann.type !== "geo-pin") return null
+    const cx = context.scales?.x?.(ann.x as number)
+    const cy = context.scales?.y?.(ann.y as number)
+    if (cx == null || cy == null) return null
+    return (
+      <g key={`geo-pin-${i}`} className="geo-custom-pin">
+        <circle cx={cx} cy={cy} r={8} fill={ann.color || "#DB2777"} />
+      </g>
+    )
+  }
+  const props = {
+    points,
+    areas,
+    xAccessor: "lon" as const,
+    yAccessor: "lat" as const,
+    sizeBy: "magnitude" as const,
+    annotations: [
+      { type: "geo-pin", coordinates: [0, 45] as [number, number], color: "#DB2777" },
+      { type: "geo-pin", coordinates: [5, 48] as [number, number], color: "#0E9AA7" },
+    ],
+    frameProps: { svgAnnotationRules: pinRules },
+    width: 400,
+    height: 280,
+  }
+
+  it("renderChart paints custom geo pins via svgAnnotationRules", () => {
+    const svg = renderChart("ProportionalSymbolMap", props)
+    expect(svg).toContain("geo-custom-pin")
+    expect((svg.match(/geo-custom-pin/g) ?? []).length).toBe(2)
+    expect(svg).toContain("#DB2777")
+    expect(svg).toContain("#0E9AA7")
+  })
+
+  it("without svgAnnotationRules, custom geo-pin types emit nothing", () => {
+    const { frameProps, ...plain } = props
+    void frameProps
+    const svg = renderChart("ProportionalSymbolMap", plain)
+    expect(svg).not.toContain("geo-custom-pin")
+  })
+
+  it("in-frame HOC SSR also paints the custom pins", () => {
+    const html = renderToString(<ProportionalSymbolMap {...props} />)
+    expect(html).toContain("geo-custom-pin")
   })
 })
 

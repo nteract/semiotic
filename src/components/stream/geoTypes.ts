@@ -16,6 +16,7 @@ import type {
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
+  AnnotationContext,
   HoverAnnotationConfig,
   HoverData
 } from "../realtime/types"
@@ -313,6 +314,18 @@ export interface StreamGeoFrameProps<T = Datum> {
   /** Observe activation of widget annotations without replacing widget behavior. */
   onAnnotationActivate?: OnAnnotationActivateCallback
   autoPlaceAnnotations?: AutoPlaceAnnotations
+  /**
+   * Custom SVG annotation renderer — same contract as XY/ordinal
+   * `svgAnnotationRules`. Called before the built-in geo annotation rules;
+   * return `null`/`undefined` to fall through. Geo pre-projects
+   * `coordinates: [lon, lat]` to pixel `x`/`y` before this runs so a single
+   * rule body works on canvas CSR and `renderChart` SSR.
+   */
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
 
   // ── Realtime encoding ──
   decay?: DecayConfig

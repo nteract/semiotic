@@ -127,6 +127,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
           {props.annotations ? renderStaticAnnotations({
             annotations: props.annotations,
             autoPlaceAnnotations: props.autoPlaceAnnotations,
+            svgAnnotationRules: props.svgAnnotationRules,
             scales: {
               geoProjection: store.scales?.projectedPoint
                 ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
@@ -158,9 +159,14 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   // Geo annotations: `coordinates: [lon, lat]` flows through the resolved
   // projection from the store's scales; raw `x`/`y` numbers remain valid via
   // staticAnnotations' pixel passthrough for callers who pre-projected.
+  // Honor `svgAnnotationRules` so geo custom overlays (callouts with bespoke
+  // SVG, pin glyphs, etc.) survive renderChart the same way they paint on the
+  // client GeoSVGOverlay. Coordinates are projected via geoProjection before
+  // the custom rule runs (see renderStaticAnnotations).
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
+    svgAnnotationRules: props.svgAnnotationRules,
     scales: {
       geoProjection: store.scales?.projectedPoint
         ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))

@@ -12,6 +12,27 @@ import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
 import * as React from "react"
 
+/**
+ * Compose a user/frame `nodeStyle` on top of the HOC's built-in fill
+ * encoding. Hierarchy HOCs (Treemap / CirclePack / TreeDiagram) always
+ * merge this way; SSR used to *replace* the base style whenever a custom
+ * `nodeStyle` was present, so hide-root / border overlays collapsed every
+ * tile to the default fill (looked like a flat monochrome layout).
+ */
+function composeHierarchyNodeStyle(
+  baseNodeStyle: (d: Datum) => Record<string, unknown>,
+  userNodeStyle: ((d: Datum) => Record<string, unknown> | undefined | null) | Record<string, unknown> | undefined | null,
+): (d: Datum) => Record<string, unknown> {
+  if (!userNodeStyle) return baseNodeStyle
+  if (typeof userNodeStyle === "function") {
+    return (d: Datum) => ({
+      ...baseNodeStyle(d),
+      ...(userNodeStyle(d) ?? {}),
+    })
+  }
+  return (d: Datum) => ({ ...baseNodeStyle(d), ...userNodeStyle })
+}
+
 // ── Network Charts ─────────────────────────────────────────────────────
 
 export const forceDirectedGraph: ChartConfig = {
@@ -608,6 +629,10 @@ export const treeDiagram: ChartConfig = {
     // HOC defaults showLabels true and supplies nodeLabel || nodeIdAccessor;
     // hierarchy scene builders skip labels when nodeLabel is unset.
     const effectiveShowLabels = rest.showLabels !== false
+    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
+      | ((d: Datum) => Record<string, unknown> | undefined | null)
+      | Record<string, unknown>
+      | undefined
     return {
     chartType: rest.layout === "cluster" ? "cluster" : "tree",
     data,
@@ -619,7 +644,7 @@ export const treeDiagram: ChartConfig = {
     nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
     colorScheme,
     ...common,
-    nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+    nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
     }
   },
 }
@@ -668,12 +693,24 @@ export const treemap: ChartConfig = {
     }
     // Mirror Treemap.tsx's resolvedPaddingTop: reserve a label band on parent
     // tiles when labels cover parents. Without this SSR parent labels have no
-    // room and the tile chrome differs from CSR.
+    // room and the tile chrome differs from CSR. Prefer top-level rest, then
+    // frameProps (already flattened into `common`) so hide-root wrappers that
+    // pass paddingTop only via frameProps still get the nested header band.
     const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
     const labelMode = rest.labelMode as "leaf" | "parent" | "all" | undefined
-    const resolvedPaddingTop = rest.paddingTop !== undefined
+    const explicitPaddingTop = rest.paddingTop !== undefined
       ? rest.paddingTop
+      : common.paddingTop
+    const resolvedPaddingTop = explicitPaddingTop !== undefined
+      ? explicitPaddingTop
       : (effectiveShowLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
+    // Compose like Treemap.tsx: base colorBy/colorByDepth fill + user overlay
+    // (hide-root transparent fill, custom borders). Replace-not-compose made
+    // any custom nodeStyle drop color encoding → monochrome "flat" tiles.
+    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
+      | ((d: Datum) => Record<string, unknown> | undefined | null)
+      | Record<string, unknown>
+      | undefined
     return {
       chartType: "treemap",
       data,
@@ -688,7 +725,7 @@ export const treemap: ChartConfig = {
       ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
       colorScheme,
       ...common,
-      nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
     }
   },
 }
@@ -735,6 +772,10 @@ export const circlePack: ChartConfig = {
       }
     }
     const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
+    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
+      | ((d: Datum) => Record<string, unknown> | undefined | null)
+      | Record<string, unknown>
+      | undefined
     return {
       chartType: "circlepack",
       data,
@@ -747,7 +788,7 @@ export const circlePack: ChartConfig = {
       ...(rest.padding != null && { padding: rest.padding }),
       colorScheme,
       ...common,
-      nodeStyle: common.nodeStyle || rest.nodeStyle || baseNodeStyle,
+      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
     }
   },
 }

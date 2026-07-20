@@ -206,10 +206,14 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? generateAxesSVG(store.scales, { width, height }, props, theme, idPfx)
     : null
 
-  // Annotations
+  // Annotations — honor `svgAnnotationRules` so custom overlays (e.g. a
+  // RangeChart mean/median bulb+pill) serialize through renderChart the same
+  // way they paint on the client SVG overlay.
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
+    svgAnnotationRules: props.svgAnnotationRules,
+    annotationData: data,
     scales: { x: store.scales.x, y: store.scales.y },
     layout: { width, height },
     theme,

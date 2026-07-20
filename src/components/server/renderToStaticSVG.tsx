@@ -128,6 +128,10 @@ const COMMON_FRAME_PROP_KEYS = [
   "backgroundGraphics",
   "foregroundGraphics",
   "svgPreRenderers",
+  // Custom SVG annotation renderer — same as StreamXYFrame.svgAnnotationRules.
+  // Without this top-level key, renderChart dropped middle-marker overlays and
+  // other bespoke annotation types that only exist via a custom rule.
+  "svgAnnotationRules",
   "barColors",
   "legend",
   "legendLayout",
