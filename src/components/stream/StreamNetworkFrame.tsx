@@ -268,11 +268,6 @@ const StreamNetworkFrame = memo(forwardRef<
   // (matches server output); pure CSR mounts skip it.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
-  // Mirror `hydrated` into a ref so `rebuildSceneNow` can read it without
-  // widening its useCallback deps (which would re-identify it on the mount
-  // hydration flip and needlessly re-run the ingest effect).
-  const hydratedRef = useRef(hydrated)
-  hydratedRef.current = hydrated
   const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
   const safeEdges = useMemo(
     () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
@@ -487,28 +482,20 @@ const StreamNetworkFrame = memo(forwardRef<
     [colorScheme]
   )
 
-  // Ingest/layout/theme changes rebuild the scene so dependent state stays
-  // current. Two regimes:
-  //
-  // - Before the mount paint (`!hydrated`): skip the build and just mark dirty.
-  //   The hydration-lifecycle mount paint performs the first `buildScene` and
-  //   the paint loop resyncs the color map. Pre-building here would be rebuilt
-  //   a second time by that forced mount paint — the duplicate
-  //   `SceneRevisionDiagnostics` flagged (XY/ordinal don't pre-build, so they
-  //   never hit it).
-  // - After mount (`hydrated`): build synchronously so `store.sceneNodes` is
-  //   current for the consumers that read it between paints (keyboard nav,
-  //   hit-testing, `getData`) — the async rAF paint is too late for those. Then
-  //   hand the paint loop a *repaint-only* signal (`markStylePaintPending` +
-  //   clearing `dirtyRef`) so it paints this scene instead of rebuilding the
-  //   same revision. Transition/animation frames still rebuild via the paint
-  //   loop's own gates.
+  // Ingest/layout/theme changes rebuild the scene **synchronously** so
+  // `store.sceneNodes` (and the derived `customLayoutHtmlMarks`) are current
+  // for the consumers that read them between paints — keyboard nav,
+  // hit-testing, `getData`, and the React-rendered htmlMarks layer. The async
+  // rAF paint is too late for those. Then hand the paint loop a *repaint-only*
+  // signal (`markStylePaintPending` + clearing `dirtyRef`) so it paints this
+  // freshly-built scene instead of rebuilding the same revision a second time
+  // (the duplicate `SceneRevisionDiagnostics` flagged). The one forced mount
+  // paint that would otherwise re-set `dirtyRef` — `useHydrationLifecycle` —
+  // is taught to repaint-not-rebuild when a scene already exists (see the
+  // `skipInitialCanvasPaintInvalidation` note below and `useHydration.ts`).
+  // Transition/animation frames still rebuild via the paint loop's own gates.
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
-      if (!hydratedRef.current) {
-        dirtyRef.current = true
-        return
-      }
       buildSceneWithDiagnostics(store, sceneSize)
       syncColorMap(store)
       dirtyRef.current = false

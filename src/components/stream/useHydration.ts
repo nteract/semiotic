@@ -112,9 +112,15 @@ export interface HydrationLifecycleOptions {
    * `cancelIntroAnimation()`; the hook calls it when the SVG → canvas
    * swap fires after SSR rehydration. (Currently every shipped store
    * implements the method, but the optional shape lets a custom store
-   * opt out.)
+   * opt out.) `sceneNodes` + `markStylePaintPending()` let the hook
+   * repaint an already-built scene instead of forcing a rebuild (see the
+   * effect body); both are optional so a minimal custom store still works.
    */
-  storeRef: RefObject<{ cancelIntroAnimation?: () => void } | null>
+  storeRef: RefObject<{
+    cancelIntroAnimation?: () => void
+    sceneNodes?: { length: number }
+    markStylePaintPending?: () => void
+  } | null>
   /**
    * Mutable dirty flag the renderer reads on its next paint. The hook
    * sets it to true on every commit so the post-hydration paint
@@ -154,10 +160,24 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     cleanup
   } = opts
   useIsomorphicLayoutEffect(() => {
+    const store = storeRef.current
     if (hydrated && wasHydratingFromSSR) {
-      storeRef.current?.cancelIntroAnimation?.()
+      store?.cancelIntroAnimation?.()
     }
-    dirtyRef.current = true
+    // A frame that already built its scene synchronously (the network frame
+    // pre-builds for keyboard nav / hit-testing / htmlMarks) only needs a
+    // repaint here, not a rebuild — forcing `dirtyRef` would recompute an
+    // identical scene (flagged by SceneRevisionDiagnostics). Restrict this to
+    // the CSR path: SSR rehydration keeps the unconditional rebuild so the
+    // just-cancelled intro state is reflected, and frames that haven't painted
+    // a scene yet (XY/ordinal/geo mount, empty SSR client store) fall through
+    // to the dirty-flag build.
+    const hasBuiltScene = !!store?.sceneNodes && store.sceneNodes.length > 0
+    if (!wasHydratingFromSSR && hasBuiltScene && store?.markStylePaintPending) {
+      store.markStylePaintPending()
+    } else {
+      dirtyRef.current = true
+    }
     cancelRender?.()
     // Synchronous paint — see the hook's docstring for why an rAF
     // here would produce a one-frame blank-canvas flicker on SSR
