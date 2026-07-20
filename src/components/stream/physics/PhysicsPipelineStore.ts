@@ -69,6 +69,8 @@ import {
   removePhysicsSensorPairsForBodies,
   resolvePhysicsSimulationState
 } from "./physicsPipelineObservations"
+import { evictPhysicsOverflow } from "./physicsPipelineEviction"
+import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
 
 // Re-export public API for stable import paths
 export type {
@@ -138,6 +140,7 @@ export class PhysicsPipelineStore {
   private simulationState: PhysicsSimulationState = "settled"
   private visible = true
   private world: PhysicsEngineAdapter
+  private quiescence = new PhysicsQuiescenceTracker()
 
   constructor(config: PhysicsPipelineConfig = {}) {
     const {
@@ -159,6 +162,7 @@ export class PhysicsPipelineStore {
       fixedDt: this.config.fixedDt,
       ...kernel
     })
+    this.quiescence.setKernelOptions(kernel)
     if (colliders) this.world.setColliders(cloneColliders(colliders))
   }
 
@@ -201,6 +205,7 @@ export class PhysicsPipelineStore {
         }
       }
       this.world.restore({ ...snapshot, options: nextOptions })
+      this.quiescence.setKernelOptions(nextOptions)
       this.revision += 1
     }
     if (observation) {
@@ -321,6 +326,7 @@ export class PhysicsPipelineStore {
     this.accumulator = 0
     this.elapsedSeconds = 0
     this.nextSequence = 0
+    this.quiescence.reset()
     this.sediment.clear()
     this.bodyBudgetObservationKey = "ok"
     this.revision += 1
@@ -379,6 +385,8 @@ export class PhysicsPipelineStore {
     if (steps === this.config.maxSubsteps) {
       this.accumulator = Math.min(this.accumulator, this.config.fixedDt)
     }
+
+    this.quiescence.refresh(this.world, delta, spawned.length)
 
     if (
       steps > 0 ||
@@ -455,13 +463,17 @@ export class PhysicsPipelineStore {
     this.syncSimulationState(observations)
 
     let steps = 0
-    while (steps < maxSteps && !this.world.allSleeping()) {
+    if (spawned.length > 0) this.quiescence.reset()
+    while (steps < maxSteps && !this.atRest()) {
       this.world.step(this.config.fixedDt)
       const stepEvents = this.world.events()
       events.push(...stepEvents)
       this.observeKernelEvents(stepEvents, observations)
       this.observeSensorTransitions(observations)
       steps += 1
+      // Break early on sustained quiescence so a bounded settle doesn't spin to
+      // the step limit on stragglers that never formally sleep.
+      this.quiescence.refresh(this.world, this.config.fixedDt, 0)
     }
 
     if (
@@ -535,8 +547,19 @@ export class PhysicsPipelineStore {
     return this.world.allSleeping()
   }
 
+  /**
+   * True when the world is done moving — either every body has formally slept,
+   * or the whole system has stayed quiescent long enough that never-sleeping
+   * stragglers (mutually-leaning bodies, force-equilibrium tethers) should still
+   * count as settled. This is the gate for `shouldContinue` and the "settled"
+   * simulation state, so it decides when `rerunMS` re-arms.
+   */
+  atRest(): boolean {
+    return this.world.allSleeping() || this.quiescence.isAtRest()
+  }
+
   hasPendingWork(): boolean {
-    return this.queue.length > 0 || !this.world.allSleeping()
+    return this.queue.length > 0 || !this.atRest()
   }
 
   queueSize(): number {
@@ -696,6 +719,8 @@ export class PhysicsPipelineStore {
     }
     this.bodyBudget = cloneBodyBudgetOptions(snapshot.bodyBudget ?? {})
     this.bodyBudgetObservationKey = "ok"
+    this.quiescence.setKernelOptions(snapshot.world.options)
+    this.quiescence.reset()
     this.activeSensorPairs = new Set(snapshot.activeSensorPairs)
     this.accumulator = snapshot.accumulator
     this.elapsedSeconds = snapshot.elapsedSeconds
@@ -783,7 +808,7 @@ export class PhysicsPipelineStore {
       queueSize: this.queue.length,
       revision: this.revision,
       shouldContinue:
-        shouldContinueOverride ?? (this.queue.length > 0 || !sleeping),
+        shouldContinueOverride ?? (this.queue.length > 0 || !this.atRest()),
       sleeping,
       sedimented,
       spawned,
@@ -882,7 +907,7 @@ export class PhysicsPipelineStore {
       this.paused,
       this.visible,
       this.queue.length > 0,
-      this.world.allSleeping()
+      this.atRest()
     )
     if (next === this.simulationState) return
     const previous = this.simulationState
@@ -897,75 +922,18 @@ export class PhysicsPipelineStore {
   private evictOverflow(
     observations?: PhysicsObservationEvent[]
   ): PhysicsPipelineEvictionResult {
-    if (this.config.eviction === false) {
-      return { evicted: [], sedimented: [] }
+    const { evicted, sedimented, liveBodyOrder } = evictPhysicsOverflow(
+      this.world,
+      this.sediment,
+      this.config.eviction,
+      this.config.bodyLimit,
+      this.liveBodyOrder,
+      this.observationContext(observations)
+    )
+    if (evicted.length > 0) {
+      this.liveBodyOrder = liveBodyOrder
+      this.removeActiveSensorPairsForBodies(new Set(evicted))
     }
-    const limit = Math.max(0, Math.floor(this.config.bodyLimit))
-    if (!Number.isFinite(limit)) return { evicted: [], sedimented: [] }
-    const overflow = this.liveBodyOrder.length - limit
-    if (overflow <= 0) return { evicted: [], sedimented: [] }
-
-    const candidates =
-      this.config.eviction === "sleeping-first"
-        ? this.sleepingFirstEvictionOrder()
-        : this.liveBodyOrder.slice()
-    const evicted = candidates.slice(0, overflow)
-    if (evicted.length === 0) return { evicted: [], sedimented: [] }
-
-    const sedimented = this.absorbSediment(evicted, observations)
-
-    this.world.remove(evicted)
-    const evictedSet = new Set(evicted)
-    this.liveBodyOrder = this.liveBodyOrder.filter((id) => !evictedSet.has(id))
-    this.removeActiveSensorPairsForBodies(evictedSet)
     return { evicted, sedimented }
   }
-
-  private absorbSediment(
-    ids: string[],
-    observations?: PhysicsObservationEvent[]
-  ): string[] {
-    const bodyById = new Map(
-      this.world.readState().map((body) => [body.id, body])
-    )
-    const sedimented: string[] = []
-    for (const id of ids) {
-      const body = bodyById.get(id)
-      if (!body) continue
-      const bin = this.sediment.add(body)
-      if (!bin) continue
-      sedimented.push(id)
-      this.emitObservation(
-        {
-          type: "physics-sediment",
-          timestamp: this.elapsedSeconds,
-          chartType: this.observation.chartType,
-          chartId: this.observation.chartId,
-          bodyId: id,
-          datum: body.datum,
-          x: body.x,
-          y: body.y,
-          binId: bin.id,
-          count: bin.count,
-          total: bin.total
-        },
-        observations
-      )
-    }
-    return sedimented
-  }
-
-  private sleepingFirstEvictionOrder(): string[] {
-    const sleepState = new Map(
-      this.world.readState().map((body) => [body.id, body.sleeping])
-    )
-    const sleeping: string[] = []
-    const awake: string[] = []
-    for (const id of this.liveBodyOrder) {
-      if (sleepState.get(id)) sleeping.push(id)
-      else awake.push(id)
-    }
-    return [...sleeping, ...awake]
-  }
-
 }

@@ -117,7 +117,7 @@ function isotypeGlyphLayout(ctx) {
         <li>
           <strong>Glyphs are real scene nodes</strong> — they render on canvas and SSR/SVG, carry
           stable transition identity, and share the same <code>GlyphDef</code> used in legends and
-          page chrome.
+          page decoration.
         </li>
         <li>
           <strong>One hit target per logical mark</strong> — repeated signs can be datum-less while
@@ -132,7 +132,7 @@ function isotypeGlyphLayout(ctx) {
           fills
         </li>
         <li>
-          <Link to="/custom-charts/recipe-kit">Recipe Chrome Kit</Link> — token and glyph helpers
+          <Link to="/custom-charts/recipe-kit">Recipe Decoration Kit</Link> — token and glyph helpers
         </li>
         <li>
           <Link to="/charts/bar-chart">BarChart</Link> — continuous comparison alternative

@@ -822,6 +822,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["design", "accessibility"],
   },
   {
+    title: "Semiotic Standard: Chart Deployment Codes",
+    path: "/examples/semiotic-standard",
+    eyebrow: "16 charts · context → sparkline",
+    description:
+      "An Alien-inspired field standard for when to deploy 16 Semiotic charts across XY, ordinal, network, geographic, and physics frames—then redeploy the same charts as sparklines.",
+    preview: "semiotic-standard",
+    badges: ["Context mode", "Sparkline mode", "Real World Bank data"],
+    frames: ["xy", "ordinal", "network", "geo", "stream-physics"],
+    topics: ["design", "process", "accessibility"],
+  },
+  {
     title: "Mobile Data Visualization That Works",
     path: "/examples/mobile-data-visualization",
     eyebrow: "Mobile-first review · Semiotic demos",
@@ -890,6 +901,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/distant-reading": "DistantReadingExamplePage.jsx",
   "/examples/erie-railroad-organization": "ErieRailroadOrganizationExamplePage.jsx",
   "/examples/gestalt-principles": "GestaltPrinciplesExamplePage.jsx",
+  "/examples/semiotic-standard": "SemioticStandardExamplePage.jsx",
   "/examples/hot-dog-contest-variations": "HotDogContestVariationsExamplePage.jsx",
   "/examples/insight-forge": "InsightForgeExamplePage.jsx",
   "/examples/lake-travis-isotype": "LakeTravisIsotypeExamplePage.jsx",

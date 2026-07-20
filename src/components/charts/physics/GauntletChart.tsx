@@ -27,7 +27,8 @@ import {
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
-  usePhysicsChartMode
+  usePhysicsChartMode,
+  usePhysicsRerun
 } from "./physicsHocUtils"
 import {
   DEFAULT_WIDTH,
@@ -179,6 +180,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     paused,
     positiveProperties = EMPTY_GAUNTLET_PROPERTIES,
     projectPlacement,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     showTethers = true,
@@ -271,12 +273,18 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           x: gate.x,
           y: layout.routeY,
           width: gate.capacity
-            ? gate.capacity.sensorWidth ?? Math.max(96, gate.width * 6)
-            : Math.max(gate.width, 54),
-          height: Math.min(360, layout.height - 170)
+            ? gate.capacity.sensorWidth ?? Math.max(
+                layout.width < 220 ? 12 : 96,
+                gate.width * (layout.width < 220 ? 2 : 6)
+              )
+            : Math.max(gate.width, layout.width < 220 ? 10 : 54),
+          height: Math.max(
+            4,
+            Math.min(360, layout.height - (layout.height < 160 ? 8 : 170))
+          )
         }
       })),
-    [layout.gates, layout.height, layout.routeY]
+    [layout.gates, layout.height, layout.routeY, layout.width]
   )
   const [states, setStates] = useState<GauntletProjectState<TDatum>[]>(() =>
     safeData.map((datum, index) => {
@@ -297,20 +305,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   const capacitySnapshotsRef = useRef<CapacityQueueSnapshot[]>([])
   const onCapacityChangeRef = useRef(onCapacityChange)
   onCapacityChangeRef.current = onCapacityChange
-  const capacityControllers = useMemo(
-    () =>
-      buildGauntletCapacityControllers({
-        dataKey,
-        gates: layout.gates,
-        statesRef,
-        processedGateVisitsRef
-      }),
-    [dataKey, layout.gates]
-  )
-  const combinedControllers = useMemo(
-    () => [...capacityControllers, ...(frameProps.controllers ?? [])],
-    [capacityControllers, frameProps.controllers]
-  )
   // Keep latest builders/callbacks in refs so identity thrash (inline
   // viability, data={[row]}, onStateChange={() => …}) cannot re-seed the
   // simulation or re-enter React update loops.
@@ -359,6 +353,59 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     }
   }, [])
 
+  const resetRunState = useCallback(() => {
+    processedGateVisitsRef.current.clear()
+    capacitySnapshotsRef.current = []
+    elapsedRef.current = 0
+    const next = safeDataRef.current.map((datum, index) => createState(datum, index))
+    statesRef.current = next
+    setStates(next)
+  }, [createState])
+
+  const physicsConfig = useMemo(
+    () => ({
+      fixedDt: 1 / 60,
+      maxSubsteps: 8,
+      kernel: {
+        gravity: { x: 0, y: 0 },
+        restitution: 0.16,
+        friction: 0.44,
+        velocityDamping: 0.982,
+        maxVelocity: 520,
+        sleepAfter: 0.8,
+        sleepSpeed: 7,
+        ...(frameProps.config?.kernel ?? {})
+      },
+      colliders: [
+        ...gauntletWallColliders(layout),
+        ...(frameProps.config?.colliders ?? [])
+      ]
+    }),
+    [frameProps.config?.colliders, frameProps.config?.kernel, layout]
+  )
+  const rerun = usePhysicsRerun(
+    physicsConfig,
+    rerunMS,
+    paused,
+    resetRunState
+  )
+  // Capacity controllers own queue state, so a replay must construct fresh
+  // controllers along with the new physics store.
+  const capacityControllers = useMemo(
+    () =>
+      buildGauntletCapacityControllers({
+        dataKey: `${dataKey}:${rerun.rerunKey}`,
+        gates: layout.gates,
+        statesRef,
+        processedGateVisitsRef
+      }),
+    [dataKey, layout.gates, rerun.rerunKey]
+  )
+  const combinedControllers = useMemo(
+    () => [...capacityControllers, ...(frameProps.controllers ?? [])],
+    [capacityControllers, frameProps.controllers]
+  )
+
   // Re-seed project state only when the set of project ids changes — not when
   // the parent passes a fresh `data={[…]}` array with the same rows (the usual
   // cause of gauntlet remount flicker + max-update-depth loops with live
@@ -366,6 +413,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   useEffect(() => {
     processedGateVisitsRef.current.clear()
     capacitySnapshotsRef.current = []
+    elapsedRef.current = 0
     const next = safeDataRef.current.map((datum, index) => createState(datum, index))
     statesRef.current = next
     setStates(next)
@@ -460,6 +508,10 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     [coreBody, createState, layout, negativeById, positiveById, projectPlacement]
   )
 
+  // A context-scale pop burst overwhelms a sparkline (its expansion is tens of
+  // px against a ~36px-tall chart), so shrink the whole burst by mode.
+  const popScale =
+    chartMode === "sparkline" ? 0.22 : chartMode === "mobile" ? 0.55 : 1
   const addBodiesForEffect = useCallback(
     (project: GauntletProjectState<TDatum>, effect: GauntletEffect, controls: PhysicsPipelineControlSurface) => {
       spawnBodiesForGauntletEffect({
@@ -470,10 +522,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         positiveById,
         negativeById,
         coreBody,
-        popBodies: (ids, options) => frameRef.current?.popBodies(ids, options)
+        popBodies: (ids, options) => frameRef.current?.popBodies(ids, options),
+        popScale
       })
     },
-    [coreBody, layout, negativeById, positiveById]
+    [coreBody, layout, negativeById, positiveById, popScale]
   )
 
   const bodyForces = useCallback(
@@ -606,27 +659,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     },
     [frameProps, showTethers]
   )
-  const physicsConfig = useMemo(
-    () => ({
-      fixedDt: 1 / 60,
-      maxSubsteps: 8,
-      kernel: {
-        gravity: { x: 0, y: 0 },
-        restitution: 0.16,
-        friction: 0.44,
-        velocityDamping: 0.982,
-        maxVelocity: 520,
-        sleepAfter: 0.8,
-        sleepSpeed: 7,
-        ...(frameProps.config?.kernel ?? {})
-      },
-      colliders: [
-        ...gauntletWallColliders(layout),
-        ...(frameProps.config?.colliders ?? [])
-      ]
-    }),
-    [frameProps.config?.colliders, frameProps.config?.kernel, layout]
-  )
   const regionEffects = useMemo(
     () => [...gateRegionEffects, ...(frameProps.regionEffects ?? [])],
     [frameProps.regionEffects, gateRegionEffects]
@@ -654,7 +686,9 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     <GauntletProjectionOverlay states={states} layout={layout} />
   ) : undefined
   const backgroundGraphics = composePhysicsFrameGraphics(
-    showChrome ? <GauntletChrome layout={layout} states={states} /> : undefined,
+    showChrome ? (
+      <GauntletChrome layout={layout} states={states} compact={layoutMode.resolved.compactMode} />
+    ) : undefined,
     frameProps.backgroundGraphics
   )
   const foregroundGraphics = composePhysicsFrameGraphics(
@@ -671,7 +705,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
-      key={`${chartSize[0]}x${chartSize[1]}:${dataKey}`}
+      key={`${chartSize[0]}x${chartSize[1]}:${dataKey}:${rerun.rerunKey}`}
       ref={frameRef}
       accessibleTable={props.accessibleTable ?? frameProps.accessibleTable}
       backgroundGraphics={backgroundGraphics}
@@ -680,7 +714,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       bodyStyle={bodyStyle}
       beforePaint={beforePaint}
       onClick={onClick ? gauntletOnClick : sharedFrameProps.onClick}
-      config={physicsConfig}
+      config={rerun.config}
       controllers={combinedControllers}
       enableHover={tooltipProps.enableHover ?? true}
       foregroundGraphics={foregroundGraphics}

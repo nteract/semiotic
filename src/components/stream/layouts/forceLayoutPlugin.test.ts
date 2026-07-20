@@ -361,6 +361,41 @@ describe("forceLayoutPlugin", () => {
     }
   })
 
+  it("settles compact layouts inside the viewport without hiding their links", () => {
+    const nodes = Array.from({ length: 12 }, (_, i) => makeNode(`N${i}`))
+    const pairs = [
+      [0, 1], [0, 2], [0, 3], [1, 4], [1, 5], [2, 6], [2, 7],
+      [3, 8], [3, 9], [4, 10], [7, 10], [9, 11], [10, 11],
+    ]
+    const edges = pairs.map(([source, target]) => makeEdge(`N${source}`, `N${target}`))
+    const config: NetworkPipelineConfig = {
+      chartType: "force",
+      iterations: 200,
+      nodeSize: 3,
+    }
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, [118, 36])
+
+    // A radius-3 node clamped to the frame would land at y=3 or y=33.
+    // Compact settling keeps every node inside those borders and retains
+    // multiple distinct y positions rather than collapsing to two rows.
+    for (const node of nodes) {
+      expect(node.x).toBeGreaterThan(3)
+      expect(node.x).toBeLessThan(115)
+      expect(node.y).toBeGreaterThan(3)
+      expect(node.y).toBeLessThan(33)
+    }
+    expect(new Set(nodes.map((node) => Math.round(node.y))).size).toBeGreaterThan(4)
+
+    // A center-to-center distance no greater than the two radii would leave
+    // the whole edge hidden beneath its endpoint circles.
+    for (const edge of edges) {
+      const source = edge.source as RealtimeNode
+      const target = edge.target as RealtimeNode
+      expect(Math.hypot(source.x - target.x, source.y - target.y)).toBeGreaterThan(6)
+    }
+  })
+
   it("resets bounding box so finalizeLayout uses force-computed x/y", () => {
     // After computeLayout, x0/x1/y0/y1 should be zeroed so that the
     // pipeline store's finalizeLayout derives the bounding box from x/y

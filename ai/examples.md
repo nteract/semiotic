@@ -1381,7 +1381,7 @@ import { BigNumber } from "semiotic/value"
 />
 ```
 
-Key props: `value` (the one number), `format` ("number"|"currency"|"percent"|"compact"|"duration"|fn), `comparison` derives a delta with auto-sentiment, `target` renders "X% of goal", `thresholds` map value to a semantic theme role (`--semiotic-{success|warning|danger|info}`). Suppress chrome via `mode="thumbnail"` for dense grids or `mode="inline"` for prose. Stream via `ref.current.push({ value, time })` — pair with `stalenessThreshold` to dim the card when updates stop.
+Key props: `value` (the one number), `format` ("number"|"currency"|"percent"|"compact"|"duration"|fn), `comparison` derives a delta with auto-sentiment, `target` renders "X% of goal", `thresholds` map value to a semantic theme role (`--semiotic-{success|warning|danger|info}`). Suppress decoration via `mode="thumbnail"` for dense grids or `mode="inline"` for prose. Stream via `ref.current.push({ value, time })` — pair with `stalenessThreshold` to dim the card when updates stop.
 
 ### BigNumber with a Semiotic chart embedded via `trendSlot` (wide / rectangular)
 

@@ -250,7 +250,7 @@ function Card({ children, style, T, semioticVars }) {
 }
 
 // No custom Tooltip wrapper — Semiotic's normalizeTooltip wraps user content
-// in defaultTooltipStyle chrome automatically. Just return plain content.
+// in defaultTooltipStyle decoration automatically. Just return plain content.
 
 // ── Main component ──────────────────────────────────────────────────────
 export default function BenchmarkDashboard() {

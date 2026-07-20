@@ -190,7 +190,7 @@ export default function EuropaLanguagesExamplePage() {
             <code>
               createRoughRenderMode(&#123; fillStyle: &quot;hachure&quot;, seed: 1840 &#125;)
             </code>{" "}
-            for <code>geoarea</code> nodes only — points, chrome, and tooltips stay on the default
+            for <code>geoarea</code> nodes only — points, decoration, and tooltips stay on the default
             renderer. Geometry, selection, and accessibility never pass through Rough.js.
           </p>
         </section>

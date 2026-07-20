@@ -95,7 +95,7 @@ export default function SatellitesInSpacePage() {
       </ul>
       <p>
         This composite (a hit-testable base mark + a decorator drawn in the overlay) is a pattern
-        several recipes share — so the building blocks live in a small <em>recipe chrome kit</em>{" "}
+        several recipes share — so the building blocks live in a small <em>recipe decoration kit</em>{" "}
         (<code>roundedEnclosure</code>, <code>bandLabel</code>, <code>markCallout</code>,{" "}
         <code>readField</code>) exported from <code>semiotic/recipes</code> for any custom layout to
         reuse.

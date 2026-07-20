@@ -331,7 +331,7 @@ export default function MigrationPage() {
           </tr>
           <tr>
             <td style={tdStyle}>Rendering</td>
-            <td style={tdStyle}>SVG marks + SVG chrome</td>
+            <td style={tdStyle}>SVG marks + SVG decoration</td>
             <td style={tdStyle}>Canvas marks + SVG overlay (axes, labels, annotations)</td>
           </tr>
           <tr>

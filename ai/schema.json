@@ -12,6 +12,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -323,6 +334,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -633,6 +655,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -918,6 +951,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -1211,6 +1255,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -1514,6 +1569,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -1757,6 +1823,15 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ]
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -2010,14 +2085,6 @@
             "candlestickStyle": {
               "type": "object",
               "description": "Style overrides."
-            },
-            "mode": {
-              "type": "string",
-              "enum": [
-                "primary",
-                "context",
-                "sparkline"
-              ]
             }
           },
           "required": [
@@ -2035,6 +2102,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -2311,6 +2389,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -2591,6 +2680,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -2874,6 +2974,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -3136,6 +3247,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -3390,6 +3512,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -3657,6 +3790,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -3906,6 +4050,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -4180,6 +4335,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -4428,6 +4594,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -4669,6 +4846,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -4923,6 +5111,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -5159,6 +5358,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -5423,6 +5633,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -5644,6 +5865,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -5877,6 +6109,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -6128,6 +6371,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -6432,6 +6686,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -6725,6 +6990,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -6996,6 +7272,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -7269,6 +7556,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -7508,6 +7806,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -7751,6 +8060,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -8988,6 +9308,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -9253,6 +9584,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -9538,6 +9880,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -9741,6 +10094,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -9940,6 +10304,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -10152,6 +10527,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -10380,6 +10766,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -10580,6 +10977,11 @@
                 "string",
                 "function"
               ]
+            },
+            "pointRadius": {
+              "type": "number",
+              "description": "Node radius in pixels; defaults to 1.5 in sparkline mode.",
+              "default": 5
             }
           },
           "required": [
@@ -10596,6 +10998,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -10789,6 +11202,10 @@
                 "string",
                 "function"
               ]
+            },
+            "showRingLabels": {
+              "type": "boolean",
+              "description": "Show numeric distance-ring labels; defaults off in context and sparkline modes."
             }
           },
           "required": [
@@ -10805,6 +11222,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -11156,6 +11584,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -12018,6 +12457,13 @@
               ],
               "description": "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }."
             },
+            "rerunMS": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
+            },
             "showProjection": {
               "type": "boolean",
               "description": "Whether companion docs or wrappers should show the settled projection."
@@ -12389,6 +12835,13 @@
               "type": "boolean",
               "description": "Start bodies near their target positions for a calmer first paint or reduced-motion demo."
             },
+            "rerunMS": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
+            },
             "showProjection": {
               "type": "boolean",
               "description": "Draw x-axis and group-lane guides behind the moving bodies.",
@@ -12407,6 +12860,17 @@
         "parameters": {
           "type": "object",
           "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
             "width": {
               "type": "number",
               "default": 600
@@ -12856,6 +13320,13 @@
               "type": "boolean",
               "description": "Treat the crash line as a live failure trigger.",
               "default": true
+            },
+            "rerunMS": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Replay the full compound simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
             },
             "showChrome": {
               "type": "boolean",

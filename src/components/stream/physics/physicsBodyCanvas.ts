@@ -23,6 +23,12 @@ export interface StreamPhysicsPopOptions {
   color?: string
   durationMs?: number
   radius?: number
+  /**
+   * Uniform multiplier on the whole burst geometry (ring + sparks). Defaults to
+   * 1. Shrink it for small charts — a sparkline can't hold a context-scale
+   * burst — without changing the removed body's `radius`.
+   */
+  scale?: number
 }
 
 export interface StreamPhysicsPopAnimation {
@@ -30,6 +36,7 @@ export interface StreamPhysicsPopAnimation {
   color: string
   durationMs: number
   radius: number
+  scale: number
   startedAt: number
 }
 
@@ -171,14 +178,17 @@ export function drawPopAnimations(
     active = true
     const easeOut = 1 - Math.pow(1 - t, 3)
     const { body } = animation
-    const radius = animation.radius + 28 * easeOut
+    // One multiplier scales the entire burst so it stays proportional in a
+    // sparkline; default 1 leaves context/primary bursts unchanged.
+    const scale = animation.scale > 0 ? animation.scale : 1
+    const radius = (animation.radius + 28 * easeOut) * scale
     const alpha = 1 - t
 
     ctx.save()
     ctx.globalAlpha *= alpha
     ctx.strokeStyle = animation.color
     ctx.fillStyle = animation.color
-    ctx.lineWidth = 2.4 * alpha + 0.4
+    ctx.lineWidth = Math.max(0.5, (2.4 * alpha + 0.4) * scale)
     ctx.beginPath()
     ctx.arc(body.x, body.y, radius, 0, Math.PI * 2)
     ctx.stroke()
@@ -192,11 +202,11 @@ export function drawPopAnimations(
     ctx.save()
     ctx.globalAlpha *= alpha
     ctx.strokeStyle = animation.color
-    ctx.lineWidth = 1.8
+    ctx.lineWidth = Math.max(0.5, 1.8 * scale)
     for (let index = 0; index < 8; index += 1) {
       const angle = index * (Math.PI / 4) + t * 1.4
-      const inner = animation.radius + 5 + easeOut * 12
-      const outer = animation.radius + 12 + easeOut * 34
+      const inner = (animation.radius + 5 + easeOut * 12) * scale
+      const outer = (animation.radius + 12 + easeOut * 34) * scale
       ctx.beginPath()
       ctx.moveTo(
         body.x + Math.cos(angle) * inner,

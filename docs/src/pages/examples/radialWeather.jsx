@@ -29,7 +29,7 @@ const dayAngle = angleScale([0, DAYS])
 
 // A domain-specific weather palette (record/average/condition hues) painted on a
 // fixed dark display — art direction this example owns rather than theme tokens.
-// The custom-layout *chrome* it draws via the recipe kit (axes, the legendSwatches
+// The custom-layout *decoration* it draws via the recipe kit (axes, the legendSwatches
 // legend) still resolves --semiotic-* defaults, and CircularBrush is a themed
 // control; the data colors below are the deliberate editorial layer.
 const colors = {
@@ -315,7 +315,7 @@ export function WeatherLegend({
       <text x="0" y="48" fontSize="18" fill={textColor}>
         {subtitle}
       </text>
-      {/* legendSwatches: the portable SVG legend from the recipe chrome kit. */}
+      {/* legendSwatches: the portable SVG legend from the recipe decoration kit. */}
       {legendSwatches({
         x: 0,
         y: 62,

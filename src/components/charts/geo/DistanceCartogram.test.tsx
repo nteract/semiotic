@@ -2,7 +2,8 @@ import type { CapturedGeoFrameProps } from "../../../test-utils/capturedFramePro
 import type { StreamGeoFrameHandle } from "../../stream/geoTypes"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { render, waitFor } from "@testing-library/react"
 import { DistanceCartogram } from "./DistanceCartogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
@@ -146,6 +147,17 @@ describe("DistanceCartogram", () => {
         </Wrapper>
       )
       expect(lastGeoFrameProps.size).toEqual([800, 500])
+    })
+
+    it("uses compact margins in sparkline mode", () => {
+      render(
+        <Wrapper>
+          <DistanceCartogram points={samplePoints} center="London" costAccessor="flightHours" mode="sparkline" width={118} height={36} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+      expect(lastGeoFrameProps.enableHover).toBe(false)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[0]).r).toBe(1.5)
     })
 
     it("forwards projectionTransform with cartogram config", () => {
@@ -297,6 +309,49 @@ describe("DistanceCartogram", () => {
       )
       // Component should render without error with default showRings=true
       expect(lastGeoFrameProps).toBeTruthy()
+    })
+
+    it.each(["context", "sparkline"] as const)(
+      "keeps rings but suppresses their labels in %s mode",
+      async (mode) => {
+        render(
+          <Wrapper>
+            <DistanceCartogram
+              points={samplePoints}
+              center="London"
+              costAccessor="flightHours"
+              costLabel="hrs"
+              mode={mode}
+              showNorth={false}
+            />
+          </Wrapper>
+        )
+        await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
+        const markup = renderToStaticMarkup(
+          <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
+        )
+        expect(markup).toContain("<circle")
+        expect(markup).not.toContain("hrs")
+      }
+    )
+
+    it("shows ring labels by default in primary mode", async () => {
+      render(
+        <Wrapper>
+          <DistanceCartogram
+            points={samplePoints}
+            center="London"
+            costAccessor="flightHours"
+            costLabel="hrs"
+            showNorth={false}
+          />
+        </Wrapper>
+      )
+      await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
+      const markup = renderToStaticMarkup(
+        <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
+      )
+      expect(markup).toContain("hrs")
     })
 
     it("accepts showRings=false without error", () => {

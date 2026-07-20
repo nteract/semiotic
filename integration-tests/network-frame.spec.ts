@@ -10,7 +10,14 @@ test.describe("Network Charts - Force-Directed", () => {
     await waitForChartReady(page, "network-force")
     const testCase = page.locator('[data-testid="network-force"]')
     await expect(testCase).toHaveScreenshot("network-force.png", {
-      maxDiffPixels: 200 // Force layouts can have slight variations
+      // Force layouts settle to deterministic positions (d3-force LCG, no
+      // intro animation here), but the canvas rasterization of the node
+      // circles + edges carries host-dependent anti-aliasing variance — the
+      // same `-noble` image renders ~500px differently across CI hosts,
+      // strongest on WebKit. This tolerance absorbs that AA jitter while
+      // staying far below the thousands of pixels a real layout regression
+      // (wrong positions) would move on this 5-node graph.
+      maxDiffPixels: 900
     })
   })
 
@@ -27,7 +34,9 @@ test.describe("Network Charts - Force-Directed", () => {
 
       await expect(testCase).toHaveScreenshot(
         "network-force-hover-state.png",
-        { maxDiffPixels: 200 }
+        // Same host-dependent AA variance as the static force graph above,
+        // plus the hover tooltip — keep the tolerance aligned.
+        { maxDiffPixels: 900 }
       )
     }
   })

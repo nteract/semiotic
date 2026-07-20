@@ -33,6 +33,16 @@ function getColorLut(schemeName: string): string[] {
   return lut
 }
 
+function applyHeatcellStyle(
+  node: HeatcellSceneNode,
+  datum: Datum,
+  ctx: XYSceneContext
+): HeatcellSceneNode {
+  const style = ctx.config.areaStyle?.(datum)
+  if (style) node.style = style
+  return node
+}
+
 export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): HeatcellSceneNode[] {
   // Streaming heatmap: 2D grid binning with aggregation
   if (ctx.config.heatmapAggregation) {
@@ -153,11 +163,12 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     const labelOpts = showValues
       ? { value: val, showValues: true as const, valueFormat }
       : undefined
-    nodes.push(buildHeatcellNode(
+    const datum = cellDatums[i]
+    nodes.push(applyHeatcellStyle(buildHeatcellNode(
       xi * cellW,
       (yCount - 1 - yi) * cellH,
-      cellW, cellH, fill, cellDatums[i], labelOpts
-    ))
+      cellW, cellH, fill, datum, labelOpts
+    ), datum, ctx))
   }
 
   return nodes
@@ -255,12 +266,22 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
       // which doesn't tell the user *where* in their data the cell sits.
       const xCenter = xMin + (xi + 0.5) * xBinSize
       const yCenter = yMin + (yi + 0.5) * yBinSize
-      nodes.push(buildHeatcellNode(
+      const datum = {
+        xi,
+        yi,
+        value: val,
+        count: counts[idx],
+        sum: sums[idx],
+        xCenter,
+        yCenter,
+        agg,
+      }
+      nodes.push(applyHeatcellStyle(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,
-        { xi, yi, value: val, count: counts[idx], sum: sums[idx], xCenter, yCenter, agg },
+        datum,
         labelOpts
-      ))
+      ), datum, ctx))
     }
   }
 

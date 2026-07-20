@@ -248,7 +248,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     chartId,
     showLegend: undefined,
     userMargin,
-    marginDefaults: { top: 50, right: 40, bottom: 60, left: 70 },
+    marginDefaults: resolved.marginDefaults,
     loading,
     loadingContent,
     emptyContent,

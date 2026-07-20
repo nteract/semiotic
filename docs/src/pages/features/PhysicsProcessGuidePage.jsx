@@ -480,10 +480,10 @@ const decisionRows = [
 
 const checklist = [
   "Use a named HOC or recipe — don't re-derive colliders in the example",
-  "Chrome encodes the claim (stages, capacity, late gutter, sockets)",
+  "Decoration encodes the claim (stages, capacity, late gutter, sockets)",
   "Settled projection still tells the story when motion is paused",
   "Domain setup for the chart itself stays under ~150 lines",
-  "Tooltips own chrome (inline background) or rely on FlippingTooltip auto-chrome",
+  "Tooltips own decoration (inline background) or rely on FlippingTooltip auto-decoration",
   "Corridor integrity: bodies spawn and settle inside walls",
   "If capacity matters, show work, wait, utilization, pressure, and overflow from controller evidence",
 ]
@@ -528,7 +528,7 @@ export default function PhysicsProcessGuidePage() {
       nextPage={{ title: "ProcessFlowChart", path: "/charts/process-flow-chart" }}
     >
       <p style={{ fontSize: "1.1rem", lineHeight: 1.55, maxWidth: 720 }}>
-        How to pick a physics HOC, keep process chrome readable, measure capacity,
+        How to pick a physics HOC, keep process decoration readable, measure capacity,
         and ship examples that stay honest when the balls stop moving.
       </p>
 
@@ -736,7 +736,7 @@ export default function PhysicsProcessGuidePage() {
 
       <h2>Contracts we test</h2>
       <p>
-        Corridor integrity, tooltip chrome (never class-only transparent), settled projection
+        Corridor integrity, tooltip decoration (never class-only transparent), settled projection
         overlays by default, capacity metrics, and seeded builder determinism live in{" "}
         <code>PhysicsContracts.test.ts</code>.
       </p>

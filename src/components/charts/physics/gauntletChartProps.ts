@@ -13,6 +13,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import type { PhysicsProcessBodyGroup } from "./physicsProcessPrimitives"
 import type {
   PhysicsHocFrameProps,
+  PhysicsRerunMS,
   PhysicsSharedChartProps,
   TooltipProp
 } from "./physicsHocUtils"
@@ -79,6 +80,12 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
     }
   ) => string
   paused?: boolean
+  /**
+   * Replay the full compound simulation this many milliseconds after it
+   * settles. Omit or pass `null` for a single run; `0` replays on the next
+   * timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   projectPlacement?: (
     project: GauntletProjectState<TDatum>,
     index: number,

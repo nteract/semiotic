@@ -148,6 +148,18 @@ describe("ProportionalSymbolMap", () => {
       expect(lastGeoFrameProps.size).toEqual([800, 500])
     })
 
+    it("uses compact margins in sparkline mode", () => {
+      render(
+        <Wrapper>
+          <ProportionalSymbolMap points={samplePoints} sizeBy="population" mode="sparkline" width={118} height={36} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+      expect(lastGeoFrameProps.enableHover).toBe(false)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[1]).r).toBe(4)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[3]).r).toBe(1)
+    })
+
     it("forwards title", () => {
       render(
         <Wrapper>

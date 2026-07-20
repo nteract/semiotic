@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizePartialMargin } from "../../types/marginType"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
@@ -67,6 +68,8 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
   graticule?: boolean | import("../../stream/geoTypes").GraticuleConfig
   /** Tooltip config */
   tooltip?: TooltipProp
+  /** Enable hover interaction. Defaults by chart mode. */
+  enableHover?: boolean
   /** Show legend @default true */
   showLegend?: boolean
   /** Legend interaction mode */
@@ -179,6 +182,8 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     width: props.width,
     height: props.height,
     showLegend: props.showLegend,
+    enableHover: props.enableHover,
+    linkedHover: props.linkedHover,
     title: props.title,
     description: props.description,
     accessibleTable: props.accessibleTable,
@@ -331,10 +336,11 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     )
   }, [valAcc])
 
+  const marginDefaults = resolveAxisFreeMarginDefaults(resolved)
   const margin = useMemo(() => ({
-    top: 10, right: 10, bottom: 10, left: 10,
+    ...marginDefaults,
     ...normalizePartialMargin(userMargin)
-  }), [userMargin])
+  }), [marginDefaults, userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   // The secondary fallback fires while `areas` is still resolving (e.g.
@@ -361,7 +367,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,
-    enableHover: true,
+    enableHover: resolved.enableHover,
     tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),

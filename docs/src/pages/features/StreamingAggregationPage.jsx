@@ -7,7 +7,7 @@ import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
-// Shared chrome
+// Shared decoration
 // ---------------------------------------------------------------------------
 
 function useContainerWidth() {

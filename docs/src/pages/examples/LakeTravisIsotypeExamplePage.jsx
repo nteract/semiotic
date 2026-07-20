@@ -433,7 +433,7 @@ export default function LakeTravisIsotypeExamplePage() {
           plumbing is not. One shared <code>GlyphDef</code> sign set renders three ways: as
           interactive <code>glyph</code> scene nodes in the watershed and basin charts (the
           pictogram is the mark — hit-tested, focus-ringed, canvas-painted), through the
-          library&rsquo;s <code>&lt;Glyph&gt;</code> for chart chrome, and via{" "}
+          library&rsquo;s <code>&lt;Glyph&gt;</code> for chart decoration, and via{" "}
           <code>unitize</code>-allocated unit rows for the capacity strip. Semiotic exposes the
           accessible table, observes hover and focus, keeps stable mark identity, and runs the
           streaming buffer without ever knowing how to draw a dam sign.

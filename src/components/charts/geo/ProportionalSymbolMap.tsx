@@ -10,6 +10,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
@@ -24,6 +25,9 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { getMinMax } from "../shared/minMax"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 
+const DEFAULT_SIZE_RANGE: [number, number] = [3, 30]
+const SPARKLINE_SIZE_RANGE: [number, number] = [1, 4]
+
 export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
   points?: TDatum[]
@@ -33,7 +37,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
   yAccessor?: ChartAccessor<TDatum, number>
   /** Field to scale point size */
   sizeBy: ChartAccessor<TDatum, number>
-  /** Min and max radius @default [3, 30] */
+  /** Min and max radius. Defaults to [3, 30], or [1, 4] in sparkline mode. */
   sizeRange?: [number, number]
   /** Field to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
@@ -55,6 +59,8 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
   areaStyle?: Style
   /** Tooltip config */
   tooltip?: TooltipProp
+  /** Enable hover interaction. Defaults by chart mode. */
+  enableHover?: boolean
   /** Show legend */
   showLegend?: boolean
   /** Legend interaction mode */
@@ -152,6 +158,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     width: props.width,
     height: props.height,
     showLegend: props.showLegend,
+    enableHover: props.enableHover,
+    linkedHover: props.linkedHover,
     title: props.title,
     description: props.description,
     accessibleTable: props.accessibleTable,
@@ -166,7 +174,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     xAccessor = "lon",
     yAccessor = "lat",
     sizeBy,
-    sizeRange = [3, 30],
+    sizeRange: sizeRangeProp,
     colorBy,
     styleRules,
     colorScheme,
@@ -202,6 +210,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     opacity,
   } = props
 
+  const sizeRange: [number, number] = sizeRangeProp
+    ?? (resolved.mode === "sparkline" ? SPARKLINE_SIZE_RANGE : DEFAULT_SIZE_RANGE)
+  const defaultPointRadius = resolved.mode === "sparkline" ? 1.5 : 6
+
   // Tile maps default to zoomable; non-tile maps default to not zoomable
   const zoomable = zoomableProp ?? (tileURL ? true : false)
 
@@ -236,7 +248,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     chartId,
     showLegend: resolved.showLegend,
     userMargin,
-    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,
@@ -263,7 +275,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       fillOpacity: 0.7,
       stroke: "#fff",
       strokeWidth: 0.5,
-      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
+      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : defaultPointRadius
     })
     const ruled = composeStyleRules(
       base,
@@ -278,7 +290,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, stroke, strokeWidth, opacity, styleRules])
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, defaultPointRadius, stroke, strokeWidth, opacity, styleRules])
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point
@@ -346,7 +358,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
     margin: setup.margin,
-    enableHover: true,
+    enableHover: resolved.enableHover,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),

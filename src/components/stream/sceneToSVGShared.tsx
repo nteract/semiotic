@@ -10,7 +10,9 @@ import type { DefaultArcObject } from "d3-shape"
 import { isHatchFill, type HatchFill } from "../charts/shared/hatchFill"
 import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
 import type { GlyphDef } from "./glyphDef"
-import type { Style } from "./types"
+import type { RectSceneNode, Style, SymbolSceneNode } from "./types"
+import { clampCornerRadii } from "./renderers/cornerRadii"
+import { symbolPathString } from "./symbolPath"
 
 /**
  * Sentinel arg for d3-shape arc generators that have all four
@@ -135,5 +137,117 @@ export function glyphNodeToSVG(
       {clip && g.ghostColor ? <g>{parts(g.ghostColor)}</g> : null}
       {clip && clipId ? <g clipPath={`url(#${clipId})`}>{parts()}</g> : parts()}
     </g>
+  )
+}
+
+// ── Shared between XY and ordinal serializers ───────────────────────────
+
+export function colorStopElements(
+  colorStops: Array<{ offset: number; color: string }>,
+): React.ReactElement[] | null {
+  const validStops = colorStops
+    .filter(stop => Number.isFinite(stop.offset))
+    .map(stop => ({
+      offset: Math.max(0, Math.min(1, stop.offset)),
+      color: stop.color,
+    }))
+  if (validStops.length < 2) return null
+  return validStops.map((stop, index) => (
+    <stop key={index} offset={stop.offset} stopColor={stop.color} />
+  ))
+}
+
+/**
+ * Build `<defs><linearGradient>` for a bar's fillGradient, mirroring the
+ * tip→base direction the canvas renderer uses (inferred from roundedEdge).
+ * Returns null when the config can't resolve (e.g. colorStops < 2), so the
+ * caller falls back to a solid fill — same parity with the canvas path.
+ *
+ * Using `gradientUnits="userSpaceOnUse"` with absolute coords keeps each bar's
+ * gradient aligned to its own rect independent of the parent viewBox.
+ */
+export function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement | null {
+  const fg = n.fillGradient
+  if (!fg || typeof fg !== "object") return null
+
+  // Tip → base coords by orientation. Default top-to-bottom for positive
+  // vertical bars (and anything without roundedEdge).
+  let x1 = n.x, y1 = n.y, x2 = n.x, y2 = n.y + n.h
+  if (n.roundedEdge === "bottom") { y1 = n.y + n.h; y2 = n.y }
+  else if (n.roundedEdge === "right") { x1 = n.x + n.w; y1 = n.y; x2 = n.x; y2 = n.y }
+  else if (n.roundedEdge === "left")  { x1 = n.x; y1 = n.y; x2 = n.x + n.w; y2 = n.y }
+
+  const stops: React.ReactElement[] = []
+  if ("colorStops" in fg) {
+    // Mirror the canvas path: filter non-finite offsets first, then require
+    // ≥2 valid stops. Without the filter a NaN offset would emit offset="NaN",
+    // which is invalid SVG and breaks the whole gradient.
+    const stopEls = colorStopElements(fg.colorStops)
+    if (!stopEls) return null
+    stops.push(...stopEls)
+  } else {
+    // Opacity form — use the resolved fill as the base color and let SVG's
+    // stop-opacity do the work. Matches the canvas path's rgba() stops.
+    const base = svgFill(n.style.fill)
+    stops.push(<stop key="0" offset={0} stopColor={base} stopOpacity={fg.topOpacity} />)
+    stops.push(<stop key="1" offset={1} stopColor={base} stopOpacity={fg.bottomOpacity} />)
+  }
+
+  return (
+    <linearGradient
+      id={id}
+      gradientUnits="userSpaceOnUse"
+      x1={x1} y1={y1} x2={x2} y2={y2}
+    >
+      {stops}
+    </linearGradient>
+  )
+}
+
+/**
+ * Emit an SVG path string for a rect with per-corner radii. Same trace
+ * order as the canvas helper (CCW from top-left); shared shape utilities
+ * (`hasAnyCornerRadius`, `clampCornerRadii`) live in
+ * `./renderers/cornerRadii.ts` so both paint paths agree on geometry.
+ */
+export function perCornerSvgPath(n: RectSceneNode): string {
+  const { x, y, w, h } = n
+  const { tl, tr, br, bl } = clampCornerRadii(n)
+  let d = `M${x + tl},${y}`
+  d += ` L${x + w - tr},${y}`
+  if (tr > 0) d += ` A${tr},${tr} 0 0 1 ${x + w},${y + tr}`
+  d += ` L${x + w},${y + h - br}`
+  if (br > 0) d += ` A${br},${br} 0 0 1 ${x + w - br},${y + h}`
+  d += ` L${x + bl},${y + h}`
+  if (bl > 0) d += ` A${bl},${bl} 0 0 1 ${x},${y + h - bl}`
+  d += ` L${x},${y + tl}`
+  if (tl > 0) d += ` A${tl},${tl} 0 0 1 ${x + tl},${y}`
+  d += " Z"
+  return d
+}
+
+/**
+ * Shared SVG serializer for the XY/ordinal `SymbolSceneNode` (x/y-based) — the
+ * sibling of the network symbol case in `networkSceneNodeToSVG` (cx/cy). Both
+ * delegate glyph-path generation to `symbolPathString`, matching the canvas
+ * renderer exactly (fill only when a fill is set, so stroke-only glyphs stay
+ * unfilled in SSR too).
+ */
+export function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: string): React.ReactNode {
+  const d = symbolPathString(n.symbolType, n.size, n.path)
+  const transform = n.rotation
+    ? `translate(${n.x},${n.y}) rotate(${(n.rotation * 180) / Math.PI})`
+    : `translate(${n.x},${n.y})`
+  return (
+    <path
+      key={`${idPrefix ?? ""}symbol-${i}`}
+      d={d}
+      transform={transform}
+      fill={n.style.fill ? svgFill(n.style.fill) : "none"}
+      fillOpacity={n.style.fillOpacity}
+      opacity={n.style.opacity}
+      stroke={n.style.stroke}
+      strokeWidth={n.style.strokeWidth}
+    />
   )
 }

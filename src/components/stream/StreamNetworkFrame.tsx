@@ -466,6 +466,44 @@ const StreamNetworkFrame = memo(forwardRef<
     [colorBy, colorScheme]
   )
 
+  // Resync the particle/hover color caches from the scene fills (authoritative:
+  // they include nodeStyle, colorBy, and theme resolution). Called after any
+  // scene rebuild — the paint loop invokes it after the mount build; the
+  // post-mount pre-build (`rebuildSceneNow`) invokes it directly.
+  const syncColorMap = useCallback(
+    (store: NetworkPipelineStore) => {
+      colorIndexRef.current = syncNetworkNodeColorMap({
+        sceneNodes: store.sceneNodes,
+        nodes: store.nodes.values(),
+        nodeColorMap: nodeColorMap.current,
+        colorScheme
+      })
+    },
+    [colorScheme]
+  )
+
+  // Ingest/layout/theme changes rebuild the scene **synchronously** so
+  // `store.sceneNodes` (and the derived `customLayoutHtmlMarks`) are current
+  // for the consumers that read them between paints — keyboard nav,
+  // hit-testing, `getData`, and the React-rendered htmlMarks layer. The async
+  // rAF paint is too late for those. Then hand the paint loop a *repaint-only*
+  // signal (`markStylePaintPending` + clearing `dirtyRef`) so it paints this
+  // freshly-built scene instead of rebuilding the same revision a second time
+  // (the duplicate `SceneRevisionDiagnostics` flagged). The one forced mount
+  // paint that would otherwise re-set `dirtyRef` — `useHydrationLifecycle` —
+  // is taught to repaint-not-rebuild when a scene already exists (see the
+  // `skipInitialCanvasPaintInvalidation` note below and `useHydration.ts`).
+  // Transition/animation frames still rebuild via the paint loop's own gates.
+  const rebuildSceneNow = useCallback(
+    (store: NetworkPipelineStore, sceneSize: [number, number]) => {
+      buildSceneWithDiagnostics(store, sceneSize)
+      syncColorMap(store)
+      dirtyRef.current = false
+      store.markStylePaintPending()
+    },
+    [buildSceneWithDiagnostics, syncColorMap]
+  )
+
   // Fallback color for edges/particles when no source or target is resolvable.
   // Chain mirrors the secondary→primary fallback used when building
   // themeSemantic: chart border > secondary > primary > hardcoded #999.
@@ -558,16 +596,9 @@ const StreamNetworkFrame = memo(forwardRef<
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
-    buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
-    colorIndexRef.current = syncNetworkNodeColorMap({
-      sceneNodes: store.sceneNodes,
-      nodes: store.nodes.values(),
-      nodeColorMap: nodeColorMap.current,
-      colorScheme
-    })
-    dirtyRef.current = true
+    rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
     scheduleRender()
-  }, [currentTheme, adjustedWidth, adjustedHeight, buildSceneWithDiagnostics, scheduleRender, colorScheme])
+  }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -576,15 +607,7 @@ const StreamNetworkFrame = memo(forwardRef<
     if (!store) return
 
     store.runLayout([adjustedWidth, adjustedHeight])
-    buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
-    dirtyRef.current = true
-
-    colorIndexRef.current = syncNetworkNodeColorMap({
-      sceneNodes: store.sceneNodes,
-      nodes: store.nodes.values(),
-      nodeColorMap: nodeColorMap.current,
-      colorScheme
-    })
+    rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
 
     setLayoutVersion(store.layoutVersion)
 
@@ -595,9 +618,8 @@ const StreamNetworkFrame = memo(forwardRef<
   }, [
     adjustedWidth,
     adjustedHeight,
-    buildSceneWithDiagnostics,
-    onTopologyChange,
-    colorScheme
+    rebuildSceneNow,
+    onTopologyChange
   ])
 
   // ── Push API ─────────────────────────────────────────────────────────
@@ -808,10 +830,9 @@ const StreamNetworkFrame = memo(forwardRef<
       // synchronous paths — a chart-type/data switch away from a pending
       // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
-      buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
+      rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
-      dirtyRef.current = true
       scheduleRender()
     } else {
       // Graph data: nodes + edges arrays
@@ -891,22 +912,10 @@ const StreamNetworkFrame = memo(forwardRef<
           .then(({ positions }) => {
             if (requestId !== layoutRequestRef.current) return
             store.applyForceLayoutPositions(positions, size)
-            buildSceneWithDiagnostics(store, size)
-
-            // Keep the hover/particle color cache in parity with the normal
-            // synchronous layout path. Scene fills are authoritative because
-            // they include nodeStyle, colorBy, and theme resolution.
-            colorIndexRef.current = syncNetworkNodeColorMap({
-              sceneNodes: store.sceneNodes,
-              nodes: store.nodes.values(),
-              nodeColorMap: nodeColorMap.current,
-              colorScheme
-            })
-
+            rebuildSceneNow(store, size)
             setLayoutPending(false)
             onLayoutStateChangeRef.current?.("ready")
             setLayoutVersion(store.layoutVersion)
-            dirtyRef.current = true
             scheduleRender()
           })
           .catch((error: Error) => {
@@ -915,17 +924,10 @@ const StreamNetworkFrame = memo(forwardRef<
             // Worker construction/runtime failures retain correctness through
             // the established synchronous plugin path.
             store.runLayout(size)
-            buildSceneWithDiagnostics(store, size)
-            colorIndexRef.current = syncNetworkNodeColorMap({
-              sceneNodes: store.sceneNodes,
-              nodes: store.nodes.values(),
-              nodeColorMap: nodeColorMap.current,
-              colorScheme
-            })
+            rebuildSceneNow(store, size)
             setLayoutPending(false)
             onLayoutStateChangeRef.current?.("error")
             setLayoutVersion(store.layoutVersion)
-            dirtyRef.current = true
             scheduleRender()
           })
 
@@ -933,20 +935,9 @@ const StreamNetworkFrame = memo(forwardRef<
       }
 
       store.ingestBounded(rawNodes, rawEdges, size)
-      buildSceneWithDiagnostics(store, size)
+      rebuildSceneNow(store, size)
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
-
-      // Sync nodeColorMap from actual scene fills so particle/hover colors
-      // match the rendered node colors exactly (same logic as runLayout sync)
-      colorIndexRef.current = syncNetworkNodeColorMap({
-        sceneNodes: store.sceneNodes,
-        nodes: store.nodes.values(),
-        nodeColorMap: nodeColorMap.current,
-        colorScheme
-      })
-
-      dirtyRef.current = true
       scheduleRender()
     }
     // Gated on `stableLayoutConfig` (layout/ingest-affecting fields only), NOT
@@ -955,7 +946,7 @@ const StreamNetworkFrame = memo(forwardRef<
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, dimension, and palette changes
     // still re-ingest. See the `stableLayoutConfig` definition above.
-  }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, colorScheme, buildSceneWithDiagnostics])
+  }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1280,7 +1271,8 @@ const StreamNetworkFrame = memo(forwardRef<
       setAnnotationFrame,
       scheduleNextFrame: () => {
         scheduleRender()
-      }
+      },
+      syncColorMap: () => syncColorMap(store)
     })
   }
 
@@ -1289,6 +1281,13 @@ const StreamNetworkFrame = memo(forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
+    // The ingest/layout/theme effects build the scene synchronously and hand
+    // the paint loop a repaint-only signal (`rebuildSceneNow`). The default
+    // mount-time canvas invalidation would re-set `dirtyRef`, forcing the
+    // paint loop to rebuild the identical scene a second time (the duplicate
+    // `SceneRevisionDiagnostics` flagged). Skip only the initial invalidation;
+    // dependency-change invalidation (dims/background/renderMode) still fires.
+    skipInitialCanvasPaintInvalidation: true,
     canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
   })
 

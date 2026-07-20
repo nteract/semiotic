@@ -182,6 +182,15 @@ describe("ConnectedScatterplot", () => {
       expect(lastXYFrameProps.size).toEqual([900, 600])
     })
 
+    it("uses chart-mode margins in sparkline mode", () => {
+      render(
+        <TooltipProvider>
+          <ConnectedScatterplot data={sampleData} mode="sparkline" width={118} height={36} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+    })
+
     it("forwards enableHover", () => {
       render(
         <TooltipProvider>

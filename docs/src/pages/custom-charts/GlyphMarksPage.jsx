@@ -87,7 +87,7 @@ export default function GlyphMarksPage() {
         { label: "Glyph Marks", path: "/custom-charts/glyph-marks" },
       ]}
       prevPage={{ title: "Custom Layouts", path: "/custom-charts/custom-layouts" }}
-      nextPage={{ title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" }}
+      nextPage={{ title: "Recipe Decoration Kit", path: "/custom-charts/recipe-kit" }}
     >
       <section>
         <p>
@@ -189,7 +189,7 @@ sceneNodes.push({
           custom-layout families emit it (network uses <code>cx</code>/<code>cy</code>; XY, ordinal,
           and geo use <code>x</code>/<code>y</code>), and the <code>&lt;Glyph&gt;</code> React
           component renders the same definition in overlays, legends, recipe icon callbacks, and
-          page chrome — one definition, no drift.
+          page decoration — one definition, no drift.
         </p>
         <p>
           For higher-level isotype and icon-array work, <code>tokenLayer</code> adds the semantic
@@ -259,7 +259,7 @@ nodes.push(
   ...serverLayer.nodes,
 )
 
-// the same definition, as React chrome (legends, overlays, prose):
+// the same definition, as React decoration (legends, overlays, prose):
 import { Glyph } from "semiotic/recipes"
 <Glyph def={SERVER_SIGN} size={14} color="#34383b" />`}</CodeBlock>
         <p>

@@ -165,7 +165,7 @@ export default function AnnotationDesignPage() {
 
       <ul>
         <li>The reader needs exact values for many points: use a table or accessible data view.</li>
-        <li>The note is application chrome or a workflow action: use a panel, tooltip, or <Link to="/annotations/advanced">widget annotation</Link>.</li>
+        <li>The note is application decoration or a workflow action: use a panel, tooltip, or <Link to="/annotations/advanced">widget annotation</Link>.</li>
         <li>Every point needs a label: reconsider the encoding, direct-label a smaller set, or split the chart.</li>
         <li>The annotation cannot be tied to a stable data target: keep it outside the plot and explain the limitation.</li>
       </ul>

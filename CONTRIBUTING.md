@@ -35,7 +35,7 @@ src/
       value/      # BigNumber
       shared/     # shared HOC helpers, validation, metadata
     server/       # static SVG, image, dashboard, and export utilities
-    recipes/      # pure custom-layout kit + chrome helpers
+    recipes/      # pure custom-layout kit + decoration helpers
     ai/           # suggestCharts, describe, navigation, provenance
     data/         # transforms, portability, adapters
   vendor/         # vendored third-party (e.g. sankey-plus)

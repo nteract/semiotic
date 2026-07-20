@@ -510,7 +510,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
 
       <p>
         The same gradient + threshold combo also works in <code>sparkline</code>
-        mode &mdash; chrome strips off but the track, gradient, and dashed
+        mode &mdash; decoration strips off but the track, gradient, and dashed
         threshold remain. Useful for inline status indicators in tables and
         dashboards.
       </p>

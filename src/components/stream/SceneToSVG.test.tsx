@@ -651,6 +651,23 @@ describe("xySceneNodeToSVG — heatcell", () => {
     expect(html).toContain('height="20"')
     expect(html).toContain('fill="rgb(255,0,0)"')
   })
+
+  it("renders explicit heatcell border styling", () => {
+    const node = {
+      type: "heatcell",
+      x: 5,
+      y: 10,
+      w: 15,
+      h: 20,
+      fill: "rgb(255,0,0)",
+      style: { stroke: "#11110e", strokeWidth: 0 },
+    }
+
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+
+    expect(html).toContain('stroke="#11110e"')
+    expect(html).toContain('stroke-width="0"')
+  })
 })
 
 describe("xySceneNodeToSVG — candlestick", () => {

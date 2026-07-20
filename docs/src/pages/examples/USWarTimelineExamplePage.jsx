@@ -309,7 +309,7 @@ function warTimelineLayout(ctx) {
   })
   const nodes = base.nodes
 
-  // Bespoke chrome: the concurrency step line, anchored to the frame's own
+  // Bespoke decoration: the concurrency step line, anchored to the frame's own
   // resolved r-scale (the same one the x-band era annotations use) so the line
   // cannot drift from the bars or bands. Era shading is supplied by native
   // x-band annotations on the frame.

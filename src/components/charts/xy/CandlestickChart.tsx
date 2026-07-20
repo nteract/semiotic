@@ -174,10 +174,10 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   // default on each side is just dead space that compresses the price range.
   const margin = useMemo(() => {
     const base = resolved.marginDefaults
-    const d = props.mode === "sparkline" ? { ...base, top: 0, bottom: 0 } : base
+    const d = resolved.mode === "sparkline" ? { ...base, top: 0, bottom: 0 } : base
     if (userMargin == null) return d
     return { ...d, ...normalizePartialMargin(userMargin) }
-  }, [userMargin, resolved.marginDefaults, props.mode])
+  }, [userMargin, resolved.marginDefaults, resolved.mode])
 
   // Tooltip: OHLC when present, range when degraded. `ChartAccessor<TDatum,
   // number>` is narrower than TooltipFieldConfig.accessor by parameter

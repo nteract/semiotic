@@ -203,7 +203,7 @@ function processChrome(width, height, mortBinDeployed) {
           strokeDasharray="4 6"
         />
       ))}
-      {/* Mort Bin chrome — click target is the HTML button overlaid on top. */}
+      {/* Mort Bin decoration — click target is the HTML button overlaid on top. */}
       <rect
         x={mort.x}
         y={mort.y}

@@ -171,7 +171,7 @@ const mobileContainerCode = `const mobileSemantics = {
 
 <ChartContainer
   title="Checkout conversion"
-  subtitle="ChartContainer owns mobile chrome; the chart owns encoding."
+  subtitle="ChartContainer owns mobile decoration; the chart owns encoding."
   actions={{ dataSummary: true, export: true }}
   mobile={{
     breakpoint: 480,
@@ -584,7 +584,7 @@ function MobilePreviewDemo() {
         <div style={{ ...styles.phoneFrame, width: previewWidth }}>
           <ChartContainer
             title="Checkout conversion"
-            subtitle="Container chrome, chart mode, and semantics adapt together."
+            subtitle="Container decoration, chart mode, and semantics adapt together."
             actions={{ dataSummary: true, export: true }}
             mobile={containerMobileConfig}
             height={300}
@@ -660,7 +660,7 @@ export default function MobileVisualizationPage() {
         It is a coordinated set of defaults and contracts across{" "}
         <code>ChartMode</code>, <code>ChartContainer</code>, annotations, and
         custom visualization components. The goal is to keep the analytical
-        task intact while reducing chrome, increasing tap affordance, preserving
+        task intact while reducing decoration, increasing tap affordance, preserving
         summaries, and letting agents understand what a mobile chart can safely
         do.
       </p>
@@ -752,7 +752,7 @@ export default function MobileVisualizationPage() {
           <ApiRow
             name="responsiveRules"
             type="ResponsiveRule[]"
-            description="Semantic responsive transforms applied before chart mode defaults across built-in HOCs and custom chart scaffolds, covering mobile mode, chrome, mobileInteraction, and mobileSemantics."
+            description="Semantic responsive transforms applied before chart mode defaults across built-in HOCs and custom chart scaffolds, covering mobile mode, decoration, mobileInteraction, and mobileSemantics."
           />
           <ApiRow
             name="mobileChartFamilyRecipe"
@@ -1238,7 +1238,7 @@ export default function MobileVisualizationPage() {
       <ul>
         <li>
           <Link to="/features/chart-container">Chart Container</Link> for
-          toolbar, export, summaries, loading, error, and notification chrome.
+          toolbar, export, summaries, loading, error, and notification decoration.
         </li>
         <li>
           <Link to="/features/chart-modes">Chart Modes</Link> for primary,

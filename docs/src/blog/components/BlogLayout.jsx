@@ -7,7 +7,7 @@ const semioticLogo = new URL("../../../public/assets/img/semiotic.png", import.m
 const semioticLogoDark = new URL("../../../public/assets/img/semiotic-darkmode.png", import.meta.url).href
 
 /**
- * BlogLayout — chrome for /blog/ and /blog/:slug/.
+ * BlogLayout — decoration for /blog/ and /blog/:slug/.
  *
  * Top strip layout:
  *   - Left:  Semiotic logo (→ "/") + "Blog" link (→ "/blog/")

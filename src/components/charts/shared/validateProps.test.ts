@@ -43,6 +43,25 @@ describe("validateProps typo-aware suggestions", () => {
   })
 })
 
+describe("validateProps chart modes", () => {
+  it("accepts the shared mobile mode on regular chart specs", () => {
+    const result = validateProps("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      mode: "mobile",
+    })
+    expect(result.valid).toBe(true)
+  })
+
+  it("rejects unknown chart modes", () => {
+    const result = validateProps("FlowMap", {
+      flows: [],
+      mode: "compact",
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors.some((error) => error.includes('"mode" value "compact" is not valid'))).toBe(true)
+  })
+})
+
 describe("validateProps — malformed input must not throw", () => {
   it("returns a result (not a TypeError) for null / non-object props", () => {
     // This validator exists to catch malformed agent input; handed malformed

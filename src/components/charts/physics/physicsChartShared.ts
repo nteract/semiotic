@@ -26,11 +26,15 @@ export interface PhysicsChartArea {
 
 export function physicsChartArea(size: [number, number]): PhysicsChartArea {
   const [width, height] = size
+  const compact = width < 160 || height < 116
+  const insetX = compact ? Math.min(12, Math.max(2, width * 0.08)) : 32
+  const insetY = compact ? Math.min(8, Math.max(2, height * 0.12)) : 24
+  const bottomInset = compact ? insetY : 34
   const plot = {
-    x: 32,
-    y: 24,
-    width: Math.max(80, width - 64),
-    height: Math.max(80, height - 58)
+    x: insetX,
+    y: insetY,
+    width: Math.max(1, width - insetX * 2),
+    height: Math.max(1, height - insetY - bottomInset)
   }
   return { width, height, plot }
 }
@@ -228,4 +232,3 @@ export function seededRandom(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
-

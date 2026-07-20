@@ -152,7 +152,7 @@ export default function NavigationTreePage() {
       <p>
         Like descriptions, structured navigation is an opt-in at the{" "}
         <Link to="/features/chart-container">ChartContainer</Link> layer — the
-        place full accessible chrome belongs — not something bolted onto every
+        place full accessible decoration belongs — not something bolted onto every
         bare chart. Give the container a <code>chartConfig</code> and set{" "}
         <code>navigable</code>:
       </p>

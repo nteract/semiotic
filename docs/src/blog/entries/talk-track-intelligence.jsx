@@ -28,7 +28,7 @@ const META = {
     "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.",
 }
 
-// ─── Shared layout chrome (mirrors other blog entries) ────────────────────
+// ─── Shared layout decoration (mirrors other blog entries) ────────────────────
 const card = {
   background: "var(--surface-1)",
   borderRadius: 10,

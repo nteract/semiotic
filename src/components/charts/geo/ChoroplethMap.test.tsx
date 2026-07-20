@@ -138,6 +138,16 @@ describe("ChoroplethMap", () => {
       expect(lastGeoFrameProps.size).toEqual([800, 500])
     })
 
+    it("uses compact margins in sparkline mode", () => {
+      render(
+        <Wrapper>
+          <ChoroplethMap areas={sampleAreas} valueAccessor="gdp" mode="sparkline" width={118} height={36} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+      expect(lastGeoFrameProps.enableHover).toBe(false)
+    })
+
     it("forwards title", () => {
       render(
         <Wrapper>

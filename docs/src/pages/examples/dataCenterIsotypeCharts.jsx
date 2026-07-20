@@ -202,7 +202,7 @@ export function dataCenterMapLayout(ctx) {
     return { site, placement, x, surfaceY, color, stack }
   })
 
-  // Scale chrome: 500 miles of longitude at the map's middle latitude, and a
+  // Scale decoration: 500 miles of longitude at the map's middle latitude, and a
   // feet wedge matched to the drawn profile scale.
   const lonProbeA = P(-100, 38)
   const lonProbeB = P(-90, 38)
@@ -390,7 +390,7 @@ export function dataCenterMapLayout(ctx) {
           </text>
         </g>
 
-        {/* Scale chrome, bottom right — feet wedge and miles bar. */}
+        {/* Scale decoration, bottom right — feet wedge and miles bar. */}
         <g transform={`translate(${bounds[1][0] - milesPx - 6} ${bounds[1][1] + 18})`}>
           <path d={`M${milesPx - 44},0 h44 v${-wedgeHeight} Z`} fill={ISOTYPE.ink} />
           <text x={milesPx - 50} y="-2" fill={ISOTYPE.ink} fontSize="8.5" fontWeight="900" textAnchor="end">

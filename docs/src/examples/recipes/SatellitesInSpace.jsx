@@ -259,12 +259,12 @@ const CONTROL_SCHEMA = [
   { name: "packPadding", label: "Pack padding (px)", type: "number", min: 0, max: 3, step: 0.1, group: "Marks" },
   { name: "iterations", label: "Relaxation passes", type: "number", min: 2, max: 14, step: 1, group: "Marks" },
   { name: "shadeStrength", label: "Shade strength", type: "number", min: 0, max: 1, step: 0.02, group: "Marks" },
-  { name: "showIcons", label: "Class icons", type: "boolean", group: "Chrome" },
-  { name: "showEnclosures", label: "Band enclosures", type: "boolean", group: "Chrome" },
-  { name: "showColumnHeaders", label: "Region headers", type: "boolean", group: "Chrome" },
-  { name: "showRowLabels", label: "Orbit labels", type: "boolean", group: "Chrome" },
-  { name: "showCallouts", label: "Callouts", type: "boolean", group: "Chrome" },
-  { name: "showMarkers", label: "U.K. dots", type: "boolean", group: "Chrome" },
+  { name: "showIcons", label: "Class icons", type: "boolean", group: "Decoration" },
+  { name: "showEnclosures", label: "Band enclosures", type: "boolean", group: "Decoration" },
+  { name: "showColumnHeaders", label: "Region headers", type: "boolean", group: "Decoration" },
+  { name: "showRowLabels", label: "Orbit labels", type: "boolean", group: "Decoration" },
+  { name: "showCallouts", label: "Callouts", type: "boolean", group: "Decoration" },
+  { name: "showMarkers", label: "U.K. dots", type: "boolean", group: "Decoration" },
 ]
 
 const CONTROL_DEFAULTS = {

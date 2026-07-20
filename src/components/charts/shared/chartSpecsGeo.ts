@@ -71,6 +71,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       nodes: { type: "array" },
       valueAccessor: { type: ["string", "function"] },
       lineIdAccessor: { type: ["string", "function"] },
+      pointRadius: { type: "number", default: 5, description: "Node radius in pixels; defaults to 1.5 in sparkline mode." },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -97,6 +98,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       points: { type: "array" },
       center: { type: "array" },
       costAccessor: { type: ["string", "function"] },
+      showRingLabels: { type: "boolean", description: "Show numeric distance-ring labels; defaults off in context and sparkline modes." },
     },
     capabilities: {
       renderModes: ["hybrid"],
