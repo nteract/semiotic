@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "3.8.3",
+  "version": "3.8.4",
   "mcpName": "io.github.nteract/semiotic",
   "description": "Verified generative visualization for React and agents, with deterministic chart validation, repair, rendering evidence, and MCP.",
   "main": "dist/semiotic.min.js",

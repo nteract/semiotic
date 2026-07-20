@@ -16,16 +16,17 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.3
+## What's New in 3.8.4
 
-3.8.3 aligns browser and server rendering while tightening the docs release gate:
+3.8.4 closes the remaining server/browser render gaps and hardens the physics and network runtimes:
 
-- Static SVG rendering now shares chart defaults, legend layout, color behavior, and specialized
-  chart paths with the browser renderers.
-- SSR parity coverage compares semantic chart output and targeted rendered geometry without
-  maintaining a second, redundant visual-snapshot matrix.
-- Two new narrative examples—Earthquakes and Europa Languages—exercise geographic and network
-  visualization paths, and every example source route is smoke-tested in CI.
+- Static SVG and `renderChart` now match the browser for line+area fills, semantic gradients, line
+  bands, pie/donut start angles, swimlane extents, treemap `colorBy`, range candlesticks,
+  streamgraph baselines, and the LineChart series features—each guarded by parity tests.
+- Physics simulations settle and rerun reliably via quiescence-based `atRest` detection, and network
+  frames rebuild scenes without the duplicate builds that could flash during hydration.
+- New `layoutSequence` and `gridObservatory` recipes, a report-style Semiotic Standard example, and
+  lazy-loaded brush overlays that trim the entry graph.
 
 ```jsx
 import { LineChart } from "semiotic/xy"

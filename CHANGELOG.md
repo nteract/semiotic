@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.4] - 2026-07-19
+
+### Added
+
+- **Sequence diagram kit.** `semiotic/recipes` now exports `layoutSequence`
+  (linear spines, span-arc packing, shared-edge partition) alongside
+  `layoutChipStrip`, `packSpanLevels`, `scaleArcBand`, `spanArcPath`, and
+  `partitionSharedEdges` for hand-built sequence and span layouts.
+- **Grid observatory recipe + example.** A new "The Grid Is the Real AI
+  Infrastructure" example ships with a reusable `gridObservatory` recipe module
+  (fuel-stack series, reserve-margin snapshots, threshold bands, and event
+  annotations) exported from `semiotic/recipes`.
+- **Report-style example.** The Semiotic Standard example gained a
+  report-oriented "Plate C" layout demonstrating inline, context, and table
+  chart deployments, and the Analyst Adventure example gained a secret-warp
+  room and expanded Forecast Vault interaction.
+- **Recipe chrome helpers.** `recipeChrome` adds `hullFromBoxes` (and the
+  `HullBox` type) for convex-hull enclosures around grouped marks.
+
+### Changed
+
+- **Physics pipeline refactor.** Overflow eviction and quiescence tracking were
+  extracted into dedicated modules. Settling now recognizes sustained
+  quiescence as `atRest` in addition to full sleep, so simulations settle and
+  rerun reliably even when a straggler or tethered body never formally sleeps
+  (GaltonBoard with many balls, GauntletChart force-held properties). Gauntlet
+  chrome now gates to a compact layout and pop bursts scale with body size.
+- **Network scene-rebuild stability.** `StreamNetworkFrame` uses a shared
+  `rebuildSceneNow` path that avoids duplicate scene builds during hydration,
+  keeps post-layout/ingest scene state current, and syncs hover/particle color
+  caches from the authoritative scene fills.
+- **Leaner entry graphs.** Brush overlays for MinimapChart and
+  ScatterplotMatrix (and the ordinal/XY brush overlays) are now lazy-loaded,
+  and a chunk-aware bundle-size gate guards the reduction.
+- **SVG serializer split.** Ordinal scene-node SVG rendering moved into
+  `SceneToSVGOrdinal` with shared helpers in `sceneToSVGShared`, keeping SSR
+  alignment intact under the file-size limits.
+- **Small-mode histograms.** Histogram sparkline category padding now defaults
+  to 0 for readability at small sizes.
+- **Schema/capability metadata.** ProcessSankey, PieChart, and related
+  capability and validation metadata were refreshed so suggestions and prop
+  validation reflect the current API.
+
+### Fixed
+
+- **SSR/CSR render parity.** `renderChart` and static SVG output now match the
+  browser for mixed line+area fills, semantic gradients, line bands, pie/donut
+  start angles, swimlane value extents and hatch fills, treemap `colorBy` and
+  parent labels, range-mode candlesticks, streamgraph (`baseline="wiggle"`)
+  stacked areas, hierarchy and network styling, open-ended band annotations,
+  and the LineChart series features (`forecast`, `anomaly`, `directLabel`,
+  `gapStrategy`, `showPoints`), Sankey `styleRules`, and top-level
+  `autoPlaceAnnotations`. Regressions are guarded by dedicated parity tests.
+- **Annotation editorial visibility.** Retracted and superseded annotations are
+  now hidden consistently across the client and server render paths.
+- **Imperative ref stability.** The shared imperative handle and ordinal
+  `replace` support were stabilized across re-renders.
+
 ## [3.8.3] - 2026-07-17
 
 ### Added
