@@ -58,6 +58,16 @@ interface GeoSVGOverlayProps {
   chartId?: string
   chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
+  /**
+   * Custom SVG annotation renderer. Same contract as XY/ordinal
+   * `svgAnnotationRules`. Runs after geographic `coordinates` are projected
+   * to pixel `x`/`y`, so rules can use the shared pixel-scale context.
+   */
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
   /** Project geographic `[longitude, latitude]` annotation coordinates. */
   geoProjection?: (longitude: number, latitude: number) => [number, number] | null
@@ -94,6 +104,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     chartId,
     chartType,
     autoPlaceAnnotations,
+    svgAnnotationRules,
     pointNodes,
     geoProjection,
   } = props
@@ -159,10 +170,10 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     return renderAnnotationPass(
       layoutAnnotations,
       createDefaultAnnotationRules("xy", annotationActivation),
-      undefined,
+      svgAnnotationRules,
       context
     )
-  }, [annotations, autoPlaceAnnotations, width, height, pointNodes, annotationActivation, geoProjection])
+  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, pointNodes, annotationActivation, geoProjection])
 
   const hasContent =
     showAxes ||
