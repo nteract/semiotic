@@ -423,11 +423,11 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
 | `import { LineChart } from "semiotic"` | browser | **147.9 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **147.9 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **148.0 KiB** |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **122.1 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **126.9 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **121.2 KiB** |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **169.5 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **127.1 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **121.3 KiB** |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **169.6 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **118.7 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
@@ -438,7 +438,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { suggestCharts } from "semiotic/ai"` | browser | **207.3 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.2 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **106.5 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **106.6 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.4 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **3.4 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **3.4 KiB** |
