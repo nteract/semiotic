@@ -7,6 +7,7 @@ import {
 import { describe, expect, it, vi } from "vitest"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendGroup } from "../types/legendTypes"
+import type { AnnotationContext } from "../realtime/types"
 import { GeoSVGOverlay } from "./GeoSVGOverlay"
 import { SVGOverlay } from "./SVGOverlay"
 
@@ -176,7 +177,7 @@ describe("GeoSVGOverlay parity", () => {
     const rule = vi.fn((
       ann: Datum,
       _i: number,
-      context: { scales?: { x?: (v: unknown) => number; y?: (v: unknown) => number } | null },
+      context: AnnotationContext,
     ) => {
       if (ann.type !== "geo-pin") return null
       // After projection, x/y are pixels and scales are identity — use both
