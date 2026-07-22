@@ -654,7 +654,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const applyEdgeBatch = useCallback(
     (edges: EdgePush[]): boolean => {
       const store = storeRef.current
-      if (!store || edges.length === 0) return false
+      if (!store) return false
 
       let ingested = false
       let needsRelayout = pendingLayoutRef.current

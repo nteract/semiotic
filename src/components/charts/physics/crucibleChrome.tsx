@@ -161,6 +161,93 @@ export function drawCrucibleBody(
   ctx.restore()
 }
 
+/**
+ * SSR sibling of `drawCrucibleBody` — the same shadowed hexagon + inner ring
+ * for settled products, and highlight dot for source components, as an SVG
+ * fragment instead of canvas draw calls. Returns `undefined` for non-crucible
+ * bodies so the SVG renderer falls back to its default circle mark.
+ */
+export function drawCrucibleBodySVG(
+  body: PhysicsBodyState,
+  style: Style,
+  index: number
+): React.ReactNode | undefined {
+  const wrapped = body.datum as CrucibleBodyDatum | undefined
+  if (!wrapped?.__crucible) return undefined
+  const radius = body.shape.type === "circle" ? body.shape.radius : 8
+  const fill =
+    typeof style.fill === "string"
+      ? style.fill
+      : wrapped.kind === "product"
+        ? "#b8792d"
+        : "#356b63"
+  const stroke = typeof style.stroke === "string" ? style.stroke : "#26323a"
+  const strokeWidth =
+    typeof style.strokeWidth === "number" ? style.strokeWidth : 1.25
+  const opacity = typeof style.opacity === "number" ? style.opacity : 0.96
+  const key = `crucible-body-${index}`
+
+  if (wrapped.kind === "product") {
+    const points = Array.from({ length: 6 }, (_, i) => {
+      const angle = -Math.PI / 2 + (i / 6) * Math.PI * 2
+      return `${body.x + Math.cos(angle) * radius},${body.y + Math.sin(angle) * radius}`
+    }).join(" ")
+    const filterId = `${key}-glow`
+    return (
+      <React.Fragment key={key}>
+        <defs>
+          <filter id={filterId} x="-60%" y="-60%" width="220%" height="220%">
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="4"
+              floodColor={fill}
+              floodOpacity="0.8"
+            />
+          </filter>
+        </defs>
+        <polygon
+          points={points}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          opacity={opacity}
+          filter={`url(#${filterId})`}
+        />
+        <circle
+          cx={body.x}
+          cy={body.y}
+          r={Math.max(2, radius * 0.36)}
+          fill="none"
+          stroke={PAPER}
+          strokeWidth={strokeWidth}
+          opacity={opacity * 0.72}
+        />
+      </React.Fragment>
+    )
+  }
+
+  return (
+    <React.Fragment key={key}>
+      <circle
+        cx={body.x}
+        cy={body.y}
+        r={radius}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        opacity={opacity}
+      />
+      <circle
+        cx={body.x - radius * 0.25}
+        cy={body.y - radius * 0.28}
+        r={Math.max(1, radius * 0.18)}
+        fill="rgba(255,255,255,0.34)"
+      />
+    </React.Fragment>
+  )
+}
+
 /** Draw supplied relations and committed source-to-product lineage. */
 export function drawCrucibleBonds<TDatum extends Datum>(
   ctx: CanvasRenderingContext2D,

@@ -44,7 +44,7 @@ export function toDataAuditNotifications(
   result: DataAuditResult,
   options: DataAuditNotificationOptions = {},
 ): DataAuditChartNotification[] {
-  const max = Math.max(0, Math.floor(options.max ?? 6))
+  const max = Number.isFinite(options.max) ? Math.max(0, Math.floor(options.max!)) : 6
   const visible = result.diagnoses
     .map((item, diagnosisIndex) => ({ item, diagnosisIndex }))
     .filter(({ item }) => !options.errorsOnly || item.severity === "error")

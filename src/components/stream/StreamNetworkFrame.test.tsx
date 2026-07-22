@@ -291,6 +291,69 @@ describe("StreamNetworkFrame", () => {
       }
     })
 
+    it("lets an empty pushMany([]) still flush a layout pending from a prior push", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        // Assert the flush happens from pushMany([]) itself — before any
+        // getter (which would flush on its own and mask the bug).
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 1 })
+          ref.current!.pushMany([])
+        })
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+
+        let topology: ReturnType<StreamNetworkFrameHandle["getTopology"]>
+        await act(async () => { topology = ref.current!.getTopology() })
+        expect(topology!.edges).toHaveLength(1)
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+
+        await act(async () => { scheduler.flush() })
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("pushMany([]) stays a no-op when no layout is pending", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        await act(async () => {
+          ref.current!.pushMany([])
+        })
+        expect(layoutSpy).not.toHaveBeenCalled()
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
     it("clear discards a pending layout so a scheduled frame cannot resurrect data", async () => {
       const scheduler = createFrameScheduler(0)
       const ref = React.createRef<StreamNetworkFrameHandle>()

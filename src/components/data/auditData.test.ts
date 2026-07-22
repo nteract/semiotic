@@ -528,6 +528,21 @@ describe("auditData", () => {
     expect(notifications[1].id).toBe("data-audit:overflow:chart")
   })
 
+  it("falls back to the default max when given a non-finite max", () => {
+    const result = auditData("BubbleChart", {
+      data: [
+        { x: 1, y: 1, size: -1 },
+        { x: 1, y: 2, size: Number.NaN },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      sizeBy: "size",
+    })
+    const notifications = toDataAuditNotifications(result, { max: Number.NaN })
+    expect(notifications).toHaveLength(2)
+    expect(notifications.some((item) => item.id === "data-audit:overflow:chart")).toBe(false)
+  })
+
   it("gives repeated code/field findings distinct deterministic notification ids", () => {
     const result = auditData("LineChart", {
       data: [{ value: 3 }, { value: 3 }],
