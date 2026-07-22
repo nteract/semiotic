@@ -28,7 +28,10 @@ const printOnly = process.argv.includes("--print")
  * Aligned loosely with Claude.md subpath gz sizes (+ headroom for d3 noise).
  */
 const ENTRY_GRAPHS = [
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 360 },
+  // Bumped 360→375: CrucibleChart + netEnsemble/wordTrails recipe growth
+  // pushed the full facade to ~362.6 KB gzip; other family budgets absorbed
+  // the same growth with headroom to spare.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 375 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   { entry: "network.module.min.js", label: "network", limitKb: 140 },
