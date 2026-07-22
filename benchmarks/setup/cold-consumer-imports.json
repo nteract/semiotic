@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "semiotic",
-    "version": "3.8.4"
+    "version": "3.8.5"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -106,8 +106,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 420201,
-      "gzipBytes": 140394,
+      "rawBytes": 420230,
+      "gzipBytes": 140400,
       "packedPackageInputFiles": 13
     },
     {
@@ -133,8 +133,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 852647,
-      "gzipBytes": 270028,
+      "rawBytes": 853017,
+      "gzipBytes": 270174,
       "packedPackageInputFiles": 6
     },
     {
@@ -142,8 +142,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 524392,
-      "gzipBytes": 169696,
+      "rawBytes": 524444,
+      "gzipBytes": 169693,
       "packedPackageInputFiles": 22
     },
     {
@@ -151,8 +151,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 853610,
-      "gzipBytes": 270458,
+      "rawBytes": 853980,
+      "gzipBytes": 270629,
       "packedPackageInputFiles": 6
     },
     {
@@ -160,8 +160,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 764415,
-      "gzipBytes": 219373,
+      "rawBytes": 764468,
+      "gzipBytes": 219401,
       "packedPackageInputFiles": 41
     },
     {
@@ -169,8 +169,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 189553,
-      "gzipBytes": 34872,
+      "rawBytes": 189606,
+      "gzipBytes": 34897,
       "packedPackageInputFiles": 2
     },
     {

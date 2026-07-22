@@ -41,6 +41,7 @@ const LIVE_EXTERNAL_DATA_HOSTS_BY_ROUTE: Record<string, string[]> = {
     "geocoding-api.open-meteo.com",
   ],
   "/examples/wikipedia-realtime": ["stream.wikimedia.org"],
+  "/examples/paris-isometric-landmarks": ["dbpedia.org"],
 }
 
 function isExpectedLiveDataNetworkProblem(

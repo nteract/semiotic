@@ -16,17 +16,21 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.4
+## What's New in 3.8.5
 
-3.8.4 closes the remaining server/browser render gaps and hardens the physics and network runtimes:
+3.8.5 adds a new physics chart and two network/word-cloud recipes, then closes another round of
+server/browser render gaps:
 
-- Static SVG and `renderChart` now match the browser for line+area fills, semantic gradients, line
-  bands, pie/donut start angles, swimlane extents, treemap `colorBy`, range candlesticks,
-  streamgraph baselines, and the LineChart series features—each guarded by parity tests.
-- Physics simulations settle and rerun reliably via quiescence-based `atRest` detection, and network
-  frames rebuild scenes without the duplicate builds that could flash during hydration.
-- New `layoutSequence` and `gridObservatory` recipes, a report-style Semiotic Standard example, and
-  lazy-loaded brush overlays that trim the entry graph.
+- New `CrucibleChart` (`semiotic/physics`): bounded peer components undergo authored phases and
+  events, form declared products, and settle into reason-labelled outlets with full source lineage.
+- New `wordTrailsLayout` and `netEnsembleLayout` recipes (`semiotic/recipes`) for quantitatively
+  anchored word clouds and small-multiple layouts of disconnected graph ensembles, plus a
+  Langren-style strip layout for `DistanceCartogram` and separate node/edge stroke controls on
+  `ForceDirectedGraph`.
+- `renderChart` now runs a chart's custom `svgAnnotationRules` server-side, honors `frameProps`
+  axis/legend/label overrides, and renders ordinal `x-threshold` annotations—closing SSR gaps that
+  used to silently drop custom overlays and chrome toggles. `renderChartWithEvidence` also exposes
+  the resolved margin and plot rectangle.
 
 ```jsx
 import { LineChart } from "semiotic/xy"
@@ -382,9 +386,9 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/realtime` | **151 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
 | `semiotic/realtime/core` | **145 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **204 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **204 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **223 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/server` | **205 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **205 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **224 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
 | `semiotic/utils` | **83 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **81 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **6 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
@@ -434,10 +438,10 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **137.1 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **263.7 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **263.8 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **165.7 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **264.1 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **214.2 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **264.3 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **214.3 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **34.1 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **107.3 KiB** |

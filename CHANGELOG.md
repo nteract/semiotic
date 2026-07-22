@@ -7,8 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.5] - 2026-07-22
+
 ### Added
 
+- **`CrucibleChart`.** A new physics-backed HOC (`semiotic/physics`) where
+  bounded peer components undergo authored `phases` and `events`, form
+  declared `products`, and settle into reason-labelled `outlets` with source
+  lineage — the ledger/projection is authoritative, motion never infers
+  classification, timing, membership, loss, or routing.
+  `buildCrucibleProductEvents(...)` is pure authoring sugar for
+  `combine → contribute* → complete-product`. The ref handle's `replay()`
+  atomically restarts the deterministic tape mid-run; `reset()`
+  restores-and-pauses. Ships with SSR support, AI/schema registration
+  (`CrucibleChart.capability.ts`), and full test coverage.
+- **Word Trails recipe.** `wordTrailsLayout` (`semiotic/recipes`) is a
+  quantitatively anchored word-cloud layout: column = category, segment =
+  ordered vertical position, weight = font size, with overlap-free stable
+  placement. `wordTrailsProgressiveReveal(...)` fades future/past segments
+  without reflow for scrollytelling-style reveals.
+- **Net Ensemble recipe.** `netEnsembleLayout` (`semiotic/recipes`) lays out
+  ensembles of disconnected/trivially-connected DAGs as small multiples in
+  motif bands — splitting into weakly-connected components, classifying each
+  by directedness (single sink vs. branching), and grouping order-isomorphic
+  motifs via Weisfeiler–Leman fingerprinting. `analyzeNetEnsemble(nodes,
+  edges)` is the pure headless census with no rendering. Demo at
+  `/recipes/net-ensemble`.
+- **DistanceCartogram strip layout.** A new `cartogramLayout: "radial" |
+  "strip"` prop adds a Langren-style 1D cost-axis layout (origin left, cost
+  right), used automatically in `mode="sparkline"` and available in any mode.
+- **ForceDirectedGraph node/edge stroke separation.** `nodeStroke`/
+  `nodeStrokeWidth` (node-only outline) and `edgeColor`/`edgeWidth`/
+  `edgeOpacity` (edge-only stroke) let a caller style nodes and edges
+  independently; the generic `stroke`/`strokeWidth`/`opacity` props continue
+  to style all marks uniformly. Precedence per property: specific > generic >
+  built-in default.
 - **`RenderEvidence` exposes the resolved margin and plot rectangle.**
   `renderChartWithEvidence` now returns `margin: {top,right,bottom,left}` and
   `plot: {x,y,width,height}` — the actual geometry Semiotic used *after*
@@ -26,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `diagnoseConfig` inherits the checks, schema-driven docs playgrounds show a
   live Data Truth Lens, and `ChartContainer dataAudit` can surface findings in
   its existing accessible notification bell.
+- **Data Viz for Dummies example.** A scrollytelling example organizes seven
+  chart families by a two-way taxonomy (data structure vs. analytical task)
+  through a fictional basketball season.
 
 ### Changed
 
@@ -43,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (endpoint bulbs, hover guides, bespoke glyphs) no longer silently vanish from
   `renderChart`/`renderChartWithEvidence` output. Passed through for XY,
   ordinal, network, and geo static render paths alike.
+- **SSR annotation context now infers `frameType` from scales/projection,
+  matching the client overlay.** A non-ordinal static render (geo, bare
+  network) no longer advertises a default vertical ordinal `projection`,
+  which could make a custom `svgAnnotationRules` rule branching on frame type
+  resolve incorrectly server-side.
 - **`frameProps` escape-hatch overrides for `showAxes`/`showLegend`/
   `showLabels`/`showGrid`/`xLabel`/`yLabel`/`categoryLabel`/`valueLabel` no
   longer silently dropped in `renderChart`.** The static common-prop builder
