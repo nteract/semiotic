@@ -30,6 +30,7 @@ function addPoints(a: Point, b: Point): Point
 function adjacencyMatrix(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: AdjacencyMatrixOptions | undefined): AdjacencyMatrix
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
 function allocateCells(weights: readonly CellWeight[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCells[]
+function analyzeNetEnsemble(nodes: readonly { id: string; }[], edges: readonly { source: string; target: string; }[], options?: { fingerprintRounds?: number; } | undefined): NetEnsembleAnalysis
 function angleScale(domain: readonly [number, number], opts?: AngleScaleOptions | undefined): (value: number) => number
 function annotationBudget(width: number, height: number, config?: AnnotationDensityConfig | undefined): number
 function annotationDensity(options: AnnotationDensityOptions): AnnotationDensityResult
@@ -127,6 +128,7 @@ function mobileOrdinalChartRecipe(options?: MobileChartFamilyRecipeOptions | und
 function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mulberry32(seed: number): () => number
+function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function nonNegativeFinite(value: number | undefined): number
@@ -194,6 +196,9 @@ function unwrapDatum<T = Datum>(value: unknown): T | null
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region" | "datum" | "observation">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 function waffleLayout( : LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
+function wordTrailsLayout(ve
+: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "wordOpacity" | "weightOpacity">
 function wrapValue(value: number, period: number, min?: number | undefined): number
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number
 interface ActiveCount
@@ -285,6 +290,10 @@ interface MobileAnnotationStrategyResult
 interface MobileBrushAlternativeOptions
 interface MobileChartFamilyRecipe
 interface MobileChartFamilyRecipeOptions
+interface NetEnsembleAnalysis
+interface NetEnsembleComponent
+interface NetEnsembleConfig
+interface NetEnsembleMotif
 interface NetworkHitTargetCircleProps
 interface NetworkHitTargetRectProps
 interface NetworkHtmlMark
@@ -384,6 +393,9 @@ interface UnitizeRangeResult
 interface UnitizeResult
 interface VisualToken<D = unknown>
 interface WaffleConfig
+interface WordTrailsConfig
+interface WordTrailsProgressiveRevealOptions
+interface WordTrailsWordInfo
 type AnnotationCohesion = "blended" | "layer"
 type AutoPlaceAnnotations = boolean | AutoPlaceAnnotationsConfig
 type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig

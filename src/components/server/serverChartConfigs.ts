@@ -16,7 +16,7 @@ import {
   quadrantChart,
   connectedScatterplot,
   heatmap,
-  temporalHistogram,
+  temporalHistogram
 } from "./serverChartConfigsXY"
 import {
   barChart,
@@ -33,7 +33,7 @@ import {
   ridgelinePlot,
   likertChart,
   funnelChart,
-  gaugeChart,
+  gaugeChart
 } from "./serverChartConfigsOrdinal"
 import {
   forceDirectedGraph,
@@ -42,18 +42,18 @@ import {
   chordDiagram,
   treeDiagram,
   treemap,
-  circlePack,
+  circlePack
 } from "./serverChartConfigsNetwork"
 import {
   choroplethMap,
   proportionalSymbolMap,
-  flowMap,
+  flowMap
 } from "./serverChartConfigsGeo"
 import {
   xyCustomChart,
   ordinalCustomChart,
   networkCustomChart,
-  geoCustomChart,
+  geoCustomChart
 } from "./serverChartConfigsCustom"
 import {
   galtonBoardChart,
@@ -62,8 +62,9 @@ import {
   collisionSwarmChart,
   processFlowChart,
   gauntletChart,
+  crucibleChart,
   physicalFlowChart,
-  physicsCustomChart,
+  physicsCustomChart
 } from "./serverChartConfigsPhysics"
 
 // ── Registry ───────────────────────────────────────────────────────────
@@ -120,6 +121,7 @@ export const CHART_CONFIGS = {
   CollisionSwarmChart: collisionSwarmChart,
   ProcessFlowChart: processFlowChart,
   GauntletChart: gauntletChart,
+  CrucibleChart: crucibleChart,
   PhysicalFlowChart: physicalFlowChart,
-  PhysicsCustomChart: physicsCustomChart,
+  PhysicsCustomChart: physicsCustomChart
 } satisfies Record<string, ChartConfig>

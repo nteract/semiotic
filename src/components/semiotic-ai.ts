@@ -76,6 +76,7 @@ export { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
 export { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
 export { ProcessFlowChart } from "./charts/physics/ProcessFlowChart"
 export { GauntletChart } from "./charts/physics/GauntletChart"
+export { CrucibleChart } from "./charts/physics/CrucibleChart"
 
 // Value Charts
 export { BigNumber } from "./charts/value/BigNumber"
@@ -98,7 +99,7 @@ export { MobileStandardControls } from "./MobileStandardControls"
 export {
   clampMobileRange,
   useMobileRangeControls,
-  zoomMobileRange,
+  zoomMobileRange
 } from "./MobileStandardControls"
 export type {
   ChartContainerProps,
@@ -122,7 +123,7 @@ export type {
   MobileStandardLegendControls,
   MobileStandardZoomControls,
   UseMobileRangeControlsOptions,
-  UseMobileRangeControlsResult,
+  UseMobileRangeControlsResult
 } from "./MobileStandardControls"
 export type {
   SmallMultipleChartProps,
@@ -162,7 +163,7 @@ export {
   diagnoseTokenEncoding,
   normalizeTokenEncoding,
   suggestTokenEncoding,
-  tokenTaskIntentToCapabilityIntents,
+  tokenTaskIntentToCapabilityIntents
 } from "./recipes/tokenEncoding"
 export type {
   PositionedToken,
@@ -182,7 +183,7 @@ export type {
   TokenSet,
   TokenTaskIntent,
   TokenType,
-  VisualToken,
+  VisualToken
 } from "./recipes/tokenEncoding"
 
 // Accessibility audit — Chartability (POUR-CAF) heuristics over a chart config
@@ -608,7 +609,10 @@ export {
 } from "./ai/chartRecipeRegistry"
 export { ChartRecipe } from "./ai/ChartRecipe"
 export type { ChartRecipeProps } from "./ai/ChartRecipe"
-export { recipeToChartCapability, resolveRecipeRoleField } from "./ai/recipeCapability"
+export {
+  recipeToChartCapability,
+  resolveRecipeRoleField
+} from "./ai/recipeCapability"
 export { describeRecipeChart } from "./ai/describeRecipeChart"
 export type { DescribeRecipeChartOptions } from "./ai/describeRecipeChart"
 export { buildRecipeNavigationTree } from "./ai/recipeNavigation"
@@ -626,7 +630,7 @@ export type {
   AuditVisualizationControlsOptions,
   ControlAuditFinding,
   ControlAuditResult,
-  ControlAuditStatus,
+  ControlAuditStatus
 } from "./controls/controlAudit"
 export type { VisualizationControlDefinition } from "./controls/controlContract"
 export { IntentMark } from "./ai/IntentMark"

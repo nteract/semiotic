@@ -104,12 +104,47 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    */
   nodeSizeRange?: [number, number]
   /**
+   * Outline color for **node** marks only, leaving edges untouched — the
+   * node half of independent node/edge stroking (the edge half is
+   * {@link ForceDirectedGraphProps.edgeColor}). Overrides the generic
+   * {@link BaseChartProps.stroke} for nodes; pass `"none"` to remove the
+   * default node outline. Precedence per property: `nodeStroke` > `stroke`
+   * > the built-in node outline.
+   * @example
+   * ```tsx
+   * // Ringless nodes, blue edges — styled separately
+   * <ForceDirectedGraph nodeStroke="none" edgeColor="#4c78a8" />
+   * // White node ring, unchanged edges
+   * <ForceDirectedGraph nodeStroke="#fff" nodeStrokeWidth={1.5} />
+   * ```
+   */
+  nodeStroke?: string
+  /**
+   * Outline width for **node** marks only. Overrides the generic
+   * {@link BaseChartProps.strokeWidth} for nodes.
+   * @default the generic `strokeWidth`
+   */
+  nodeStrokeWidth?: number
+  /**
    * Constant pixel width, or a function/field returning a numeric value
-   * scaled to a default width range.
+   * scaled to a default width range. The **edge** stroke width; overrides
+   * the generic `strokeWidth` for edges.
    * @default 1
    */
   edgeWidth?: number | ChartAccessor<TEdge, number>
+  /**
+   * Stroke color for **edge** marks only, leaving nodes untouched — the edge
+   * half of independent node/edge stroking (the node half is
+   * {@link ForceDirectedGraphProps.nodeStroke}). Overrides the generic
+   * {@link BaseChartProps.stroke} for edges. Precedence per property:
+   * `edgeColor` > `stroke` > the built-in `#999`.
+   * @default "#999"
+   */
   edgeColor?: string
+  /**
+   * Opacity for **edge** marks only. Overrides the generic `opacity` for edges.
+   * @default 0.6
+   */
   edgeOpacity?: number
   /**
    * Number of force-simulation ticks before the layout settles.
@@ -237,9 +272,15 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     styleRules,
     nodeSize = 8,
     nodeSizeRange = [5, 20],
-    edgeWidth = 1,
-    edgeColor = "#999",
-    edgeOpacity = 0.6,
+    nodeStroke,
+    nodeStrokeWidth,
+    // Edge stroke props default to `undefined` (not their built-in values) so
+    // we can resolve precedence explicitly: an edge-specific prop wins over the
+    // generic `stroke`/`strokeWidth`/`opacity`, which win over the built-in
+    // default. See `resolvedEdge*` below.
+    edgeWidth,
+    edgeColor,
+    edgeOpacity,
     iterations = 300,
     forceStrength = 0.1,
     layoutExecution = "auto",
@@ -331,45 +372,51 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     [colorBy, nodeSize],
   )
 
-  // Overlay top-level primitive props onto nodeStyle; top-level wins over base.
+  // Overlay primitive props onto nodeStyle. Node-specific `nodeStroke` /
+  // `nodeStrokeWidth` win over the generic `stroke` / `strokeWidth` for nodes,
+  // so nodes and edges can be stroked independently; both still win over base.
   const nodeStyle = useMemo(
     () => mergeShapeStyle(
       composeStyleRules(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
-      { stroke, strokeWidth, opacity },
+      { stroke: nodeStroke ?? stroke, strokeWidth: nodeStrokeWidth ?? strokeWidth, opacity },
     ),
-    [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
+    [baseNodeStyle, styleRules, nodeRuleContext, nodeStroke, stroke, nodeStrokeWidth, strokeWidth, opacity]
   )
+
+  // Edge stroke resolves precedence in one place: an edge-specific prop wins
+  // over the generic primitive, which wins over the built-in default. This is
+  // what lets `stroke` style everything by default yet an explicit `edgeColor`
+  // (or `nodeStroke`) target edges (or nodes) alone.
+  const resolvedEdgeColor = edgeColor ?? stroke ?? "#999"
+  const resolvedEdgeOpacity = edgeOpacity ?? opacity ?? 0.6
+  const fallbackEdgeWidth = strokeWidth ?? 1
 
   // Edge style function — d is a RealtimeEdge wrapper; user data lives on
   // d.data (mirrors baseNodeStyle's `d.data || d`). A field/function
   // accessor must resolve against the raw edge, not the wrapper, or the
-  // weight is never read and edge width silently falls back to 1.
-  const baseEdgeStyle = useMemo(() => {
+  // weight is never read and edge width silently falls back to the default.
+  const edgeStyle = useMemo(() => {
     return (d: Datum) => {
       const edge = d.data || d
       let resolvedWidth: number
-      if (typeof edgeWidth === "number") {
+      if (edgeWidth === undefined) {
+        resolvedWidth = fallbackEdgeWidth
+      } else if (typeof edgeWidth === "number") {
         resolvedWidth = edgeWidth
       } else if (typeof edgeWidth === "function") {
         resolvedWidth = edgeWidth(edge)
       } else {
         const raw = edge[edgeWidth]
         const n = typeof raw === "number" ? raw : Number(raw)
-        resolvedWidth = Number.isFinite(n) && n > 0 ? n : 1
+        resolvedWidth = Number.isFinite(n) && n > 0 ? n : fallbackEdgeWidth
       }
       return {
-        stroke: edgeColor,
+        stroke: resolvedEdgeColor,
         strokeWidth: resolvedWidth,
-        opacity: edgeOpacity
+        opacity: resolvedEdgeOpacity
       }
     }
-  }, [edgeWidth, edgeColor, edgeOpacity])
-
-  // Top-level primitive props also apply to edges (stroke color, width, opacity).
-  const edgeStyle = useMemo(
-    () => mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }),
-    [baseEdgeStyle, stroke, strokeWidth, opacity]
-  )
+  }, [edgeWidth, resolvedEdgeColor, resolvedEdgeOpacity, fallbackEdgeWidth])
 
   // Node label function
   const nodeLabelFn = useMemo(() => {

@@ -57,6 +57,7 @@ export const KNOWN_CHART_COMPONENTS = [
   "PhysicsPileChart",
   "CollisionSwarmChart",
   "GauntletChart",
+  "CrucibleChart",
   "ProcessFlowChart",
   "PhysicalFlowChart",
   "BigNumber"

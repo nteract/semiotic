@@ -9,9 +9,9 @@
   ],
   "version": "3.8.4",
   "components": {
-    "schema": 54,
-    "aiChartExports": 51,
-    "mcpRenderable": 48,
+    "schema": 55,
+    "aiChartExports": 52,
+    "mcpRenderable": 49,
     "browserOnly": 6,
     "categories": {
       "xy": [
@@ -72,6 +72,7 @@
       ],
       "physics": [
         "CollisionSwarmChart",
+        "CrucibleChart",
         "EventDropChart",
         "GaltonBoardChart",
         "GauntletChart",
@@ -94,6 +95,7 @@
       "CirclePack",
       "CollisionSwarmChart",
       "ConnectedScatterplot",
+      "CrucibleChart",
       "DifferenceChart",
       "DonutChart",
       "DotPlot",

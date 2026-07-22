@@ -1,6 +1,16 @@
 import { defineConfig } from 'vitest/config'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { semioticSourceAliases } from './vite.shared.mjs'
+
+const repoRoot = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
+  resolve: {
+    // Exercise the package's public import paths against current source rather
+    // than an optional, ignored, and potentially stale local dist build.
+    alias: semioticSourceAliases(repoRoot)
+  },
   test: {
     globals: true,
     environment: 'jsdom',

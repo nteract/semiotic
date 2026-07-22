@@ -79,6 +79,10 @@ export function generateSchemaToolEntry(spec, composedProps) {
     if (propSpec.enum) entry.enum = [...propSpec.enum]
     if (propSpec.description) entry.description = propSpec.description
     if (propSpec.default !== undefined) entry.default = propSpec.default
+    // Nested authoring contracts belong in JSON Schema, not in the deliberately
+    // shallow runtime validation map. Spread last so a chart spec can refine
+    // `items`, `oneOf`, bounds, and other standard schema keywords.
+    if (propSpec.schema) Object.assign(entry, propSpec.schema)
     // Runtime-only types (e.g. "function") live in an extension keyword so the
     // JSON Schema `type` stays wire-valid but agents still see the full surface.
     if (runtimeTypes) entry["x-semiotic-runtime-types"] = runtimeTypes

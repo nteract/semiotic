@@ -7,8 +7,13 @@ _Edit dist/semiotic-physics.d.ts's sources, then re-run `npm run docs:api-surfac
 class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter
 class PhysicsPipelineStore
 class PhysicsSedimentAccumulator
+const DEFAULT_CRUCIBLE_HEIGHT: 520
+const DEFAULT_CRUCIBLE_OUTLETS: readonly CrucibleOutlet[]
+const DEFAULT_CRUCIBLE_SIZE: [number, number]
+const DEFAULT_CRUCIBLE_WIDTH: 900
 function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CollisionSwarmChart(: import("../../../dist/semiotic-physics").CollisionSwarmChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
+function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function EventDropChart(: import("../../../dist/semiotic-physics").EventDropChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function GaltonBoardChart(: import("../../../dist/semiotic-physics").GaltonBoardChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -21,10 +26,19 @@ function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlow
 function StreamPhysicsFrame(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
 function absorbRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
+function applyCrucibleEvent<TDatum extends Datum>(state: CrucibleRunState<TDatum>, event: CrucibleEvent, context: CrucibleApplyContext): CrucibleApplyResult<TDatum>
 function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): { initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions; }
 function bodiesToAnnotationAnchors(bodies: readonly PhysicsBodyState[]): PhysicsAnnotationAnchorNode[]
 function bodyGroupSpec<TDatum extends Datum = Datum>(options: BodyGroupSpecOptions<TDatum>): BodyGroupSpec<TDatum>
 function buildCollisionSwarmPhysics<TDatum extends Datum>(options: CollisionSwarmPhysicsOptions<TDatum>): PhysicsChartLayout
+function buildCrucibleEvidence<TDatum extends Datum>(state: CrucibleRunState<TDatum>, options?: { projection?: CrucibleProjectionSpec; conservation?: CrucibleConservationSpec; } | undefined): { history: CrucibleHistoryItem[]; projection: CrucibleProjectionRow[]; conservation: CrucibleConservationResult; }
+function buildCrucibleInitialSpawns<TDatum extends Datum>(state: CrucibleRunState<TDatum>, layout: CrucibleLayout, options?: CrucibleSpawnOptions | undefined): PhysicsQueuedSpawn[]
+function buildCrucibleLayout(size?: [number, number] | undefined, outlets?: readonly CrucibleOutlet[] | undefined): CrucibleLayout
+function buildCruciblePhysicsConfig(seed: string | number | undefined, colliders: readonly PhysicsColliderSpec[]): PhysicsPipelineConfig
+function buildCrucibleProductEvents(options: BuildCrucibleProductEventsOptions): CrucibleEvent[]
+function buildCrucibleProjection<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
+function buildCrucibleStateSpawns<TDatum extends Datum>(state: CrucibleRunState<TDatum>, layout: CrucibleLayout, options?: CrucibleSpawnOptions | undefined): PhysicsQueuedSpawn[]
+function buildCrucibleTerminalSpawns<TDatum extends Datum>(state: CrucibleRunState<TDatum>, layout: CrucibleLayout, options?: CrucibleSpawnOptions | undefined): PhysicsQueuedSpawn[]
 function buildEventDropPhysics<TDatum extends Datum>(options: EventDropPhysicsOptions<TDatum>): PhysicsChartLayout
 function buildGaltonBoardPhysics<TDatum extends Datum>(options: GaltonBoardPhysicsOptions<TDatum>): PhysicsChartLayout
 function buildPhysicalFlowPhysics<TNode extends Datum, TLink extends Datum>(options: PhysicalFlowOptions<TNode, TLink>): PhysicsChartLayout
@@ -34,8 +48,10 @@ function buildProcessFlowPhysics<TDatum extends Datum>(options: ProcessFlowPhysi
 function calculateBlockerAmplification<TDatum extends Datum = Datum>(machine: DependencyMachine<TDatum>, blockerID: string, options?: BlockerAmplificationOptions<TDatum> | undefined): BlockerAmplification
 function capacitatedRegion(options: ProcessRegionBaseOptions & { capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
 function chargeGateRegion(options: ProcessRegionBaseOptions & { charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
+function cloneCrucibleState<TDatum extends Datum>(state: CrucibleRunState<TDatum>): CrucibleRunState<TDatum>
 function collidersFromScales<TBand = string | number>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
 function comparePhysicsTrace<TSample = PhysicsScalarTraceSample>(trace: readonly TSample[], envelope: PhysicsReferenceEnvelope, options?: PhysicsTraceComparisonOptions<TSample> | undefined): PhysicsTraceComparison
+function compileCruciblePlan<TDatum extends Datum>(options: CrucibleCompileOptions<TDatum>): CrucibleCompiledPlan<TDatum>
 function compileDependencyMachine<TDatum extends Datum = Datum>(options: CompileDependencyMachineOptions<TDatum>): DependencyMachine<TDatum>
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function compilePhysicsEncoding<TDatum extends Datum = Datum>(options: CompilePhysicsEncodingOptions<TDatum>): PhysicsEncodingCompilation<TDatum>
@@ -44,14 +60,22 @@ function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datu
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDefaultPhysicsEngineAdapter(options?: PhysicsKernelOptions | undefined): PhysicsEngineAdapter
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
+function createInitialCrucibleState<TDatum extends Datum>(options: CrucibleCompileOptions<TDatum>): CrucibleInitialStateResult<TDatum>
 function createLogicalJoin(taskID: string, incomingEdgeIDs: readonly string[], mode?: "all" | undefined): LogicalJoin
 function createPhysicsEncodingLayout<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(options: CreatePhysicsEncodingLayoutOptions<TDatum, TConfig>): PhysicsCustomLayout<TDatum, TConfig>
 function createPortalController(options: { id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void; }): PhysicsController
 function createProcessJourneyLedger(options: { stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[]; }): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
 function createServiceResourcePoolController(options: ServiceResourcePoolOptions): ServiceResourcePoolController
+function crucibleBondId(productId: string, sourceId: string): string
+function crucibleBoundaryColliders(layout: CrucibleLayout): PhysicsColliderSpec[]
+function crucibleComponentBodyId(componentId: string): string
+function crucibleProductBodyId(productId: string): string
+function crucibleProjectionRows<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
+function crucibleSemanticKey(value: unknown): string
 function default(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function evaluateCrucibleConservation<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleConservationSpec | undefined): CrucibleConservationResult
 function evaluatePhysicsBodyBudget(input: PhysicsBodyBudgetInput): PhysicsBodyBudgetDecision
 function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
@@ -80,7 +104,11 @@ function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStage
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): { label: string; value: number; }[]
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
+function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "initialState" | "events" | "products" | "outlets" | "phases" | "duration">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
 function replayStateTransitions(events: readonly DependencyReplayEvent[], clock: DependencyReplayClock): DependencyReplayState
+function resolveCrucibleSelector<TDatum extends Datum>(state: CrucibleRunState<TDatum>, selector: CrucibleSelector, path?: string | undefined): CrucibleSelectorResult
+function resolveCrucibleSnapshotAt<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, snapshotAt: number | { phaseId: string; progress?: number; } | undefined): number
+function resolveCrucibleTime<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, elapsed: number): CrucibleResolvedTime
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
@@ -99,6 +127,7 @@ interface BlockerAmplification
 interface BlockerAmplificationOptions<TDatum extends Datum = Datum>
 interface BodyGroupSpec<TDatum extends Datum = Datum>
 interface BodyGroupSpecOptions<TDatum extends Datum = Datum>
+interface BuildCrucibleProductEventsOptions
 interface CapacityQueueAbandonedInfo
 interface CapacityQueueAgeSummary
 interface CapacityQueueBlockedInfo
@@ -118,6 +147,56 @@ interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface CompilePhysicsEncodingOptions<TDatum extends Datum = Datum>
 interface ComposedPhysicsControllers
 interface CreatePhysicsEncodingLayoutOptions<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface CrucibleAccessors<TDatum extends Datum = Datum>
+interface CrucibleApplyContext
+interface CrucibleApplyResult<TDatum extends Datum = Datum>
+interface CrucibleBodyDatum<TDatum extends Datum = Datum>
+interface CrucibleChartHandle<TDatum extends Datum = Datum>
+interface CrucibleChartProps<TDatum extends Datum = Datum>
+interface CrucibleCombineEffect
+interface CrucibleCompileOptions<TDatum extends Datum = Datum>
+interface CrucibleCompiledEvent
+interface CrucibleCompiledPhase
+interface CrucibleCompiledPlan<TDatum extends Datum = Datum>
+interface CrucibleCompleteProductEffect
+interface CrucibleComponentState<TDatum extends Datum = Datum>
+interface CrucibleConservationResult
+interface CrucibleConservationSpec
+interface CrucibleContributeEffect
+interface CrucibleControls
+interface CrucibleDiagnostic
+interface CrucibleEjectEffect
+interface CrucibleEvent
+interface CrucibleHistoryItem
+interface CrucibleInitialStateResult<TDatum extends Datum = Datum>
+interface CrucibleLayout
+interface CrucibleLayoutOutlet
+interface CrucibleLoss
+interface CrucibleMaterialization
+interface CrucibleObservation
+interface CrucibleOutlet
+interface CruciblePhase
+interface CrucibleProductAllocation
+interface CrucibleProductCompletionStep
+interface CrucibleProductDefinition
+interface CrucibleProductSourceStep
+interface CrucibleProductState
+interface CrucibleProjectionRow
+interface CrucibleProjectionSpec
+interface CrucibleRelationDefinition
+interface CrucibleRelationState
+interface CrucibleReplayResult<TDatum extends Datum = Datum>
+interface CrucibleResolveRelationEffect
+interface CrucibleResolvedTime
+interface CrucibleRunState<TDatum extends Datum = Datum>
+interface CrucibleSelector
+interface CrucibleSelectorResult
+interface CrucibleSetMetricEffect
+interface CrucibleSetOutcomeEffect
+interface CrucibleSetRelationEffect
+interface CrucibleSetStateEffect
+interface CrucibleSpawnOptions
+interface CrucibleSplitEffect
 interface DependencyGateController
 interface DependencyGateOptions
 interface DependencyGateSnapshot
@@ -311,6 +390,37 @@ type ChainReactionObservation<TDatum extends Datum = Datum> = {
     downstreamTaskIDs: string[];
 } | {
     type: "machine-settled";
+}
+type CrucibleColorBy<TDatum extends Datum = Datum> = "category" | "status" | "outlet" | "product" | ChartAccessor<TDatum, string>
+type CrucibleComponentStatus = "queued" | "active" | "transformed" | "consumed" | "retained" | "ejected" | "failed" | "recovered"
+type CrucibleEffect = CrucibleSetStateEffect | CrucibleSetRelationEffect | CrucibleResolveRelationEffect | CrucibleCombineEffect | CrucibleContributeEffect | CrucibleCompleteProductEffect | CrucibleSplitEffect | CrucibleEjectEffect | CrucibleSetMetricEffect | CrucibleSetOutcomeEffect
+type CrucibleEventAt = {
+    time: number;
+    phaseId?: never;
+    progress?: never;
+} | {
+    time?: never;
+    phaseId: string;
+    progress?: number;
+}
+type CrucibleEventStep = Pick<CrucibleEvent, "at" | "label" | "description" | "summary"> & {
+    /** Optional stable event id; a deterministic id is generated when omitted. */
+    id?: string;
+}
+type CrucibleMaterializationType = "activate-relation" | "resolve-relation" | "form-product" | "update-product" | "complete-product" | "split-source" | "retarget-component" | "retarget-product"
+type CrucibleMetricMap = Record<string, number>
+type CrucibleMetricTarget = "run" | {
+    components: CrucibleSelector;
+} | {
+    productIds: readonly string[];
+}
+type CrucibleMotion = "charge" | "mix" | "hold" | "press" | "bind" | "separate" | "pour" | "quench"
+type CrucibleProductStatus = "forming" | "complete"
+type CrucibleProjectionGroupBy = "status" | "outlet" | "category" | "product"
+type CrucibleRelationResolution = "combined" | "rejected" | "expired"
+type CrucibleSnapshotAt = number | {
+    phaseId: string;
+    progress?: number;
 }
 type DependencyAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, index: number) => TValue)
 type DependencyMachineDiagnosticCode = "duplicate-task-id" | "missing-dependency" | "cycle"

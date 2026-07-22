@@ -10,6 +10,7 @@
     "src/components/semiotic-physics-matter.ts",
     "src/components/semiotic-physics-rapier.ts",
     "src/components/semiotic-realtime.ts",
+    "src/components/semiotic-recipes.ts",
     "src/components/semiotic-server.ts",
     "src/components/semiotic-ai.ts"
   ],

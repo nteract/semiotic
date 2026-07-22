@@ -1,26 +1,79 @@
 import type { ChartSpec } from "./chartSpecCore"
+import {
+  CRUCIBLE_EVENTS_SCHEMA,
+  CRUCIBLE_OUTLETS_SCHEMA,
+  CRUCIBLE_PHASES_SCHEMA,
+  CRUCIBLE_PRODUCTS_SCHEMA
+} from "./crucibleWireSchema"
 
 export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
   GaltonBoardChart: {
     name: "GaltonBoardChart",
     category: "physics",
-    description: "Physics-backed Galton board / Plinko-style dot distribution. Values enter deterministic bins and settle into a readable histogram-like projection; mechanical mode can generate a seeded no-data demonstration.",
+    description:
+      "Physics-backed Galton board / Plinko-style dot distribution. Values enter deterministic bins and settle into a readable histogram-like projection; mechanical mode can generate a seeded no-data demonstration.",
     required: [],
     dataShape: "array",
     dataAccessors: ["valueAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      valueAccessor: { type: ["string", "function"], default: "value", description: "Numeric field used to assign bodies to Galton bins." },
-      valueExtent: { type: "array", description: "Stable numeric [min, max] domain for binning and reference-line placement." },
-      bins: { type: "number", default: 21, description: "Number of landing bins / histogram columns." },
-      mode: { type: "string", enum: ["sample", "mechanical"] as const, default: "sample", description: "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied." },
-      pegRows: { type: "number", description: "Number of Bernoulli branch rows used by mechanical mode." },
-      mechanicalCount: { type: "number", description: "Number of generated bodies in mechanical mode." },
-      branchProbability: { type: "number", default: 0.5, description: "Probability that each mechanical sample branches right at a peg." },
-      referenceLines: { type: ["object", "array"], description: "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }." },
-      rerunMS: { type: ["number", "null"], description: "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
-      showProjection: { type: "boolean", description: "Whether companion docs or wrappers should show the settled projection." },
+      styleRules: {
+        type: "array",
+        omitFromSchema: true,
+        description:
+          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
+      },
+      valueAccessor: {
+        type: ["string", "function"],
+        default: "value",
+        description: "Numeric field used to assign bodies to Galton bins."
+      },
+      valueExtent: {
+        type: "array",
+        description:
+          "Stable numeric [min, max] domain for binning and reference-line placement."
+      },
+      bins: {
+        type: "number",
+        default: 21,
+        description: "Number of landing bins / histogram columns."
+      },
+      mode: {
+        type: "string",
+        enum: ["sample", "mechanical"] as const,
+        default: "sample",
+        description:
+          "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied."
+      },
+      pegRows: {
+        type: "number",
+        description: "Number of Bernoulli branch rows used by mechanical mode."
+      },
+      mechanicalCount: {
+        type: "number",
+        description: "Number of generated bodies in mechanical mode."
+      },
+      branchProbability: {
+        type: "number",
+        default: 0.5,
+        description:
+          "Probability that each mechanical sample branches right at a peg."
+      },
+      referenceLines: {
+        type: ["object", "array"],
+        description:
+          "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description:
+          "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
+      },
+      showProjection: {
+        type: "boolean",
+        description:
+          "Whether companion docs or wrappers should show the settled projection."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -31,26 +84,60 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "settled-projection", "deterministic-seed"],
-    },
+      specialFeatures: [
+        "physics-simulation",
+        "settled-projection",
+        "deterministic-seed"
+      ]
+    }
   },
 
   EventDropChart: {
     name: "EventDropChart",
     category: "physics",
-    description: "Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling.",
+    description:
+      "Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling.",
     required: ["data"],
     dataShape: "array",
     dataAccessors: ["timeAccessor", "arrivalAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      timeAccessor: { type: ["string", "function"], default: "time", description: "Event-time field used to assign drops to windows." },
-      arrivalAccessor: { type: ["string", "function"], default: "arrivalTime", description: "Arrival-time field used to pace event ingestion." },
-      windows: { type: "object", description: "Windowing config, currently { size, gapPolicy? }." },
-      watermark: { type: ["object", "function"], description: "Watermark config: { delay }, { value }, or a function of latest event time." },
-      timeExtent: { type: "array", description: "Optional stable event-time extent [min, max] for the window layout." },
-      timeScale: { type: "number", default: 1, description: "Playback speed for event-arrival pacing; higher is faster (1 = real event-time)." },
+      styleRules: {
+        type: "array",
+        omitFromSchema: true,
+        description:
+          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
+      },
+      timeAccessor: {
+        type: ["string", "function"],
+        default: "time",
+        description: "Event-time field used to assign drops to windows."
+      },
+      arrivalAccessor: {
+        type: ["string", "function"],
+        default: "arrivalTime",
+        description: "Arrival-time field used to pace event ingestion."
+      },
+      windows: {
+        type: "object",
+        description: "Windowing config, currently { size, gapPolicy? }."
+      },
+      watermark: {
+        type: ["object", "function"],
+        description:
+          "Watermark config: { delay }, { value }, or a function of latest event time."
+      },
+      timeExtent: {
+        type: "array",
+        description:
+          "Optional stable event-time extent [min, max] for the window layout."
+      },
+      timeScale: {
+        type: "number",
+        default: 1,
+        description:
+          "Playback speed for event-arrival pacing; higher is faster (1 = real event-time)."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -61,28 +148,72 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "event-time", "watermark", "arrival-pacing", "settled-projection"],
-    },
+      specialFeatures: [
+        "physics-simulation",
+        "event-time",
+        "watermark",
+        "arrival-pacing",
+        "settled-projection"
+      ]
+    }
   },
 
   PhysicsPileChart: {
     name: "PhysicsPileChart",
     category: "physics",
-    description: "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
+    description:
+      "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
     required: [],
     dataShape: "array",
     dataAccessors: ["categoryAccessor", "valueAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      categoryAccessor: { type: ["string", "function"], default: "category", description: "Categorical field that chooses the pile / bin." },
-      valueAccessor: { type: ["string", "function"], default: "value", description: "Numeric field converted into repeated unit bodies." },
-      mode: { type: "string", enum: ["sample", "mechanical"] as const, default: "sample", description: "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches." },
-      mechanicalCount: { type: "number", description: "Number of generated unit bodies in mechanical mode." },
-      mechanicalCategories: { type: "array", description: "Category labels generated by mechanical mode." },
-      unitValue: { type: "number", default: 1, description: "Value represented by one simulated body." },
-      showProjection: { type: "boolean", default: true, description: "Draw an exact settled-projection overlay behind the moving units so category totals remain readable." },
-      sediment: { type: "boolean", description: "Reserved for future sediment/aggregation mode." },
+      styleRules: {
+        type: "array",
+        omitFromSchema: true,
+        description:
+          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
+      },
+      categoryAccessor: {
+        type: ["string", "function"],
+        default: "category",
+        description: "Categorical field that chooses the pile / bin."
+      },
+      valueAccessor: {
+        type: ["string", "function"],
+        default: "value",
+        description: "Numeric field converted into repeated unit bodies."
+      },
+      mode: {
+        type: "string",
+        enum: ["sample", "mechanical"] as const,
+        default: "sample",
+        description:
+          "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches."
+      },
+      mechanicalCount: {
+        type: "number",
+        description: "Number of generated unit bodies in mechanical mode."
+      },
+      mechanicalCategories: {
+        type: "array",
+        description: "Category labels generated by mechanical mode."
+      },
+      unitValue: {
+        type: "number",
+        default: 1,
+        description: "Value represented by one simulated body."
+      },
+      showProjection: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw an exact settled-projection overlay behind the moving units so category totals remain readable."
+      },
+      sediment: {
+        type: "boolean",
+        description: "Reserved for future sediment/aggregation mode."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -93,29 +224,71 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "unitized", "settled-projection"],
-    },
+      specialFeatures: ["physics-simulation", "unitized", "settled-projection"]
+    }
   },
 
   CollisionSwarmChart: {
     name: "CollisionSwarmChart",
     category: "physics",
-    description: "Physics-backed swarm / dot-strip chart. Quantitative records spring toward an x-position while collisions separate overlapping dots into a readable distribution.",
+    description:
+      "Physics-backed swarm / dot-strip chart. Quantitative records spring toward an x-position while collisions separate overlapping dots into a readable distribution.",
     required: [],
     dataShape: "array",
     dataAccessors: ["xAccessor", "groupAccessor", "radiusAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      xAccessor: { type: ["string", "function"], default: "x", description: "Quantitative field that anchors each body along the x-axis." },
-      groupAccessor: { type: ["string", "function"], description: "Optional categorical field that creates separate swarm lanes." },
-      radiusAccessor: { type: ["string", "function"], description: "Optional numeric field used as per-body radius in pixels." },
-      pointRadius: { type: "number", default: 5, description: "Fallback radius for each simulated body." },
-      xExtent: { type: "array", description: "Optional [min, max] domain for the quantitative axis." },
-      collisionIterations: { type: "number", default: 6, description: "Collision solver iterations per fixed physics step." },
-      settle: { type: "boolean", description: "Start bodies near their target positions for a calmer first paint or reduced-motion demo." },
-      rerunMS: { type: ["number", "null"], description: "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
-      showProjection: { type: "boolean", default: true, description: "Draw x-axis and group-lane guides behind the moving bodies." },
+      styleRules: {
+        type: "array",
+        omitFromSchema: true,
+        description:
+          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
+      },
+      xAccessor: {
+        type: ["string", "function"],
+        default: "x",
+        description:
+          "Quantitative field that anchors each body along the x-axis."
+      },
+      groupAccessor: {
+        type: ["string", "function"],
+        description:
+          "Optional categorical field that creates separate swarm lanes."
+      },
+      radiusAccessor: {
+        type: ["string", "function"],
+        description: "Optional numeric field used as per-body radius in pixels."
+      },
+      pointRadius: {
+        type: "number",
+        default: 5,
+        description: "Fallback radius for each simulated body."
+      },
+      xExtent: {
+        type: "array",
+        description: "Optional [min, max] domain for the quantitative axis."
+      },
+      collisionIterations: {
+        type: "number",
+        default: 6,
+        description: "Collision solver iterations per fixed physics step."
+      },
+      settle: {
+        type: "boolean",
+        description:
+          "Start bodies near their target positions for a calmer first paint or reduced-motion demo."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description:
+          "Replay the seeded simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
+      },
+      showProjection: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw x-axis and group-lane guides behind the moving bodies."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -126,32 +299,98 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "collision-layout", "settled-projection"],
-    },
+      specialFeatures: [
+        "physics-simulation",
+        "collision-layout",
+        "settled-projection"
+      ]
+    }
   },
 
   GauntletChart: {
     name: "GauntletChart",
     category: "physics",
-    description: "Physics-backed compound-plan gauntlet. A project core carries tethered positive/negative property bodies through timed gate events; settled projection is viability and outcome, not trajectories.",
+    description:
+      "Physics-backed compound-plan gauntlet. A project core carries tethered positive/negative property bodies through timed gate events; settled projection is viability and outcome, not trajectories.",
     required: ["negativeProperties"],
     dataShape: "array",
-    dataAccessors: ["idAccessor", "positiveAccessor", "negativeAccessor", "metricsAccessor", "startTimeAccessor"],
+    dataAccessors: [
+      "idAccessor",
+      "positiveAccessor",
+      "negativeAccessor",
+      "metricsAccessor",
+      "startTimeAccessor"
+    ],
     propBags: ["physics"],
     ownProps: {
-      positiveProperties: { type: "array", default: [], description: "Optional lift/value property definitions attached to each project core. Omit or pass an empty array for negative-only compound bodies." },
-      negativeProperties: { type: "array", description: "Drag/cost property definitions attached to each project core." },
-      gates: { type: "array", description: "Named process gates along the route, with optional shared FIFO capacity." },
-      events: { type: ["array", "function"], description: "Timed gate effects that add/pop properties and set outcomes." },
-      startTimeAccessor: { type: ["string", "function"], description: "Optional per-project simulation second used as the local event-timeline origin." },
-      onCapacityChange: { type: "function", description: "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots." },
-      crashDetection: { type: "boolean", default: true, description: "Treat the crash line as a live failure trigger." },
-      rerunMS: { type: ["number", "null"], description: "Replay the full compound simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn." },
-      showChrome: { type: "boolean", default: true, description: "Draw route, socket, and graveyard chrome." },
-      showProjection: { type: "boolean", default: true, description: "Draw settled viability/outcome strip." },
-      showTethers: { type: "boolean", default: true, description: "Draw tethers between cores and property bodies." },
-      coreForceMode: { type: "string", enum: ["route", "net"] as const, default: "route", description: "Core-body vertical force model: authored route guidance or net lift/drag drift." },
-      terminalBehavior: { type: "string", enum: ["outcome", "hold-last"] as const, default: "outcome" },
+      positiveProperties: {
+        type: "array",
+        default: [],
+        description:
+          "Optional lift/value property definitions attached to each project core. Omit or pass an empty array for negative-only compound bodies."
+      },
+      negativeProperties: {
+        type: "array",
+        description:
+          "Drag/cost property definitions attached to each project core."
+      },
+      gates: {
+        type: "array",
+        description:
+          "Named process gates along the route, with optional shared FIFO capacity."
+      },
+      events: {
+        type: ["array", "function"],
+        description:
+          "Timed gate effects that add/pop properties and set outcomes."
+      },
+      startTimeAccessor: {
+        type: ["string", "function"],
+        description:
+          "Optional per-project simulation second used as the local event-timeline origin."
+      },
+      onCapacityChange: {
+        type: "function",
+        description:
+          "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots."
+      },
+      crashDetection: {
+        type: "boolean",
+        default: true,
+        description: "Treat the crash line as a live failure trigger."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description:
+          "Replay the full compound simulation this many milliseconds after it settles. Omit or pass null for a single run; zero replays on the next timer turn."
+      },
+      showChrome: {
+        type: "boolean",
+        default: true,
+        description: "Draw route, socket, and graveyard chrome."
+      },
+      showProjection: {
+        type: "boolean",
+        default: true,
+        description: "Draw settled viability/outcome strip."
+      },
+      showTethers: {
+        type: "boolean",
+        default: true,
+        description: "Draw tethers between cores and property bodies."
+      },
+      coreForceMode: {
+        type: "string",
+        enum: ["route", "net"] as const,
+        default: "route",
+        description:
+          "Core-body vertical force model: authored route guidance or net lift/drag drift."
+      },
+      terminalBehavior: {
+        type: "string",
+        enum: ["outcome", "hold-last"] as const,
+        default: "outcome"
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -162,33 +401,313 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "process-gauntlet", "settled-projection"],
+      specialFeatures: [
+        "physics-simulation",
+        "process-gauntlet",
+        "settled-projection"
+      ]
+    }
+  },
+
+  CrucibleChart: {
+    name: "CrucibleChart",
+    category: "physics",
+    description:
+      "Physics-backed authored treatment chart. A bounded source charge passes through explicit phases and events into declared product molds and reason-labelled outlets; physics presents formation and separation but never discovers the program or products.",
+    required: ["data", "phases"],
+    dataShape: "array",
+    dataAccessors: [
+      "idAccessor",
+      "labelAccessor",
+      "categoryAccessor",
+      "amountAccessor",
+      "metricsAccessor",
+      "initialStateAccessor"
+    ],
+    propBags: ["physics"],
+    ownProps: {
+      description: {
+        type: "string",
+        description:
+          "Accessible description of the authored charge, treatment, and terminal accounting."
+      },
+      summary: {
+        type: "string",
+        description:
+          "Screen-reader summary of the final products, outlets, and any conservation result."
+      },
+      phases: {
+        type: "array",
+        description:
+          "Required ordered furnace program. Supply unique phase ids, positive durations, labels, and optional authored motion/intensity; phases are never inferred from data.",
+        schema: CRUCIBLE_PHASES_SCHEMA
+      },
+      products: {
+        type: "array",
+        description:
+          "Declared product molds referenced by combine, contribute, complete-product, and split effects. Products are never inferred from collisions or flat rows.",
+        schema: CRUCIBLE_PRODUCTS_SCHEMA
+      },
+      events: {
+        type: "array",
+        description:
+          "Serializable authored event tape. Each event has a stable id, a time or phase/progress position, and explicit effects.",
+        schema: CRUCIBLE_EVENTS_SCHEMA
+      },
+      outlets: {
+        type: "array",
+        description:
+          "Explicit reason-labelled destinations referenced by product completions and eject effects.",
+        schema: CRUCIBLE_OUTLETS_SCHEMA
+      },
+      idAccessor: {
+        type: ["string", "function"],
+        default: "id",
+        description:
+          "Stable source-component id. Event selectors and product provenance reference these resolved ids."
+      },
+      labelAccessor: {
+        type: ["string", "function"],
+        default: "label",
+        description: "Human-readable source-component label."
+      },
+      categoryAccessor: {
+        type: ["string", "function"],
+        default: "category",
+        description:
+          "Categorical source field used for color and projection grouping."
+      },
+      amountAccessor: {
+        type: ["string", "function"],
+        description:
+          "Optional non-negative amount conserved through explicit product, loss, and outlet accounting."
+      },
+      metricsAccessor: {
+        type: ["string", "function"],
+        description:
+          "Optional per-source numeric metric map used by authored effects and evidence."
+      },
+      initialStateAccessor: {
+        type: ["string", "function"],
+        description:
+          "Optional initial semantic component status; defaults to active."
+      },
+      metrics: {
+        type: "object",
+        description:
+          "Run-level numeric metrics present before the event tape begins."
+      },
+      amountLabel: {
+        type: "string",
+        description:
+          "Display unit for source, product, loss, and conservation amounts."
+      },
+      conservation: {
+        type: ["boolean", "object"],
+        description:
+          "Optional exact amount/metric balance check, or false to disable it."
+      },
+      projection: {
+        type: "object",
+        description:
+          "Settled truth layer: { groupBy: status|outlet|category|product, measure: count|amount|metric, order?, showInputBaseline?, showDelta? }."
+      },
+      playback: {
+        type: "string",
+        enum: ["replay", "snapshot"] as const,
+        default: "replay",
+        description:
+          "Replay the authored tape, or render one deterministic snapshot without intermediate animation."
+      },
+      snapshotAt: {
+        type: ["number", "object"],
+        description:
+          "Snapshot time in semantic seconds or { phaseId, progress? }; used only with playback=snapshot."
+      },
+      controls: {
+        type: ["boolean", "object"],
+        default: false,
+        description:
+          "Built-in play/pause, reset, phase-step, timeline, and speed controls."
+      },
+      paused: {
+        type: "boolean",
+        default: false,
+        description:
+          "Pause semantic playback without altering authored time or terminal accounting."
+      },
+      playbackRate: {
+        type: "number",
+        default: 1,
+        description:
+          "Positive wall-clock multiplier for authored semantic playback; 0.5 is half speed and 2 is double speed."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description:
+          "Replay from a fresh deterministic mount this many milliseconds after settling. Null or omission disables looping; zero uses the next timer turn."
+      },
+      seed: {
+        type: ["number", "string"],
+        default: 1,
+        description:
+          "Deterministic placement seed. It cannot change events, products, or destinations."
+      },
+      bodyRadius: {
+        type: "number",
+        default: 7,
+        description:
+          "Fixed source-body radius. Per-row radius accessors are outside the bounded V1 contract."
+      },
+      radiusRange: {
+        type: "array",
+        default: [5, 18],
+        description:
+          "Minimum and maximum source-body radii when amountAccessor drives area."
+      },
+      colorBy: {
+        type: ["string", "function"],
+        default: "category",
+        description:
+          "Color sources by category, status, outlet, product, or a categorical accessor."
+      },
+      showBonds: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw authored provisional relations and product-member bonds."
+      },
+      showChrome: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw the phase rail, vessel, declared molds, and reason-labelled outlets."
+      },
+      showProjection: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw the exact settled projection alongside the physical treatment."
+      },
+      initialSpawnPacing: {
+        type: "object",
+        description:
+          "Optional presentation-only pacing for the initial source charge."
+      },
+      loading: {
+        type: "boolean",
+        description:
+          "Show a loading state instead of starting the authored run."
+      },
+      loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
+      emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
+      onStateChange: { type: "function", omitFromSchema: true },
+      onCrucibleObservation: { type: "function", omitFromSchema: true },
+      onDiagnostic: { type: "function", omitFromSchema: true },
+      onConservation: { type: "function", omitFromSchema: true },
+      onClick: { type: "function", omitFromSchema: true }
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false,
+      supportsSelection: false,
+      supportsLinkedHover: false,
+      supportsPush: false,
+      supportsSSR: true,
+      colorModel: "categorical",
+      layoutMode: "synthetic",
+      specialFeatures: [
+        "physics-simulation",
+        "authored-event-tape",
+        "forming-products",
+        "reason-labelled-outlets",
+        "settled-projection",
+        "deterministic-snapshot"
+      ]
+    }
   },
 
   ProcessFlowChart: {
     name: "ProcessFlowChart",
     category: "physics",
-    description: "Physics-backed multi-body process flow. Work items move through ordered stages with optional capacity, pressure, portals, absorb sinks, and feature groups that complete only when every member is absorbed.",
+    description:
+      "Physics-backed multi-body process flow. Work items move through ordered stages with optional capacity, pressure, portals, absorb sinks, and feature groups that complete only when every member is absorbed.",
     required: ["stages"],
     dataShape: "array",
-    dataAccessors: ["idAccessor", "stageAccessor", "groupBy", "workAccessor", "radiusAccessor"],
+    dataAccessors: [
+      "idAccessor",
+      "stageAccessor",
+      "groupBy",
+      "workAccessor",
+      "radiusAccessor"
+    ],
     propBags: ["physics"],
     ownProps: {
-      stages: { type: "array", description: "Ordered process stages: { id, label?, force?, damping?, capacity?, pressure?, portal?, absorb? }." },
-      stageAccessor: { type: ["string", "function"], default: "stage", description: "Field or accessor for each work item's current stage id." },
-      idAccessor: { type: ["string", "function"], description: "Stable work-item id." },
-      groupBy: { type: ["string", "function"], description: "Optional feature/group key. Groups complete when all members reach an absorb stage." },
-      groupLabelAccessor: { type: ["string", "function"], description: "Display label for group anchors." },
-      workAccessor: { type: ["string", "function"], description: "Work-units field stamped for capacity metadata." },
-      radiusAccessor: { type: ["string", "function"], description: "Optional per-body radius in pixels." },
-      ballRadius: { type: "number", default: 6, description: "Fallback body radius." },
-      groupCompletion: { type: "string", enum: ["allAbsorbed", "none"] as const, default: "allAbsorbed when groupBy is set", description: "How feature groups report completion." },
-      groupAnchorAlong: { type: "number", description: "0–1 position along the lane for group anchors." },
-      showProjection: { type: "boolean", default: true, description: "Draw settled stage-count bars." },
-      showChrome: { type: "boolean", default: true, description: "Draw stage labels, capacity notes, and group anchors." },
-      settle: { type: "boolean", description: "Start bodies at stage targets for a calmer first paint." },
-      seed: { type: "number", default: 1, description: "Deterministic seed for placement jitter." },
+      stages: {
+        type: "array",
+        description:
+          "Ordered process stages: { id, label?, force?, damping?, capacity?, pressure?, portal?, absorb? }."
+      },
+      stageAccessor: {
+        type: ["string", "function"],
+        default: "stage",
+        description: "Field or accessor for each work item's current stage id."
+      },
+      idAccessor: {
+        type: ["string", "function"],
+        description: "Stable work-item id."
+      },
+      groupBy: {
+        type: ["string", "function"],
+        description:
+          "Optional feature/group key. Groups complete when all members reach an absorb stage."
+      },
+      groupLabelAccessor: {
+        type: ["string", "function"],
+        description: "Display label for group anchors."
+      },
+      workAccessor: {
+        type: ["string", "function"],
+        description: "Work-units field stamped for capacity metadata."
+      },
+      radiusAccessor: {
+        type: ["string", "function"],
+        description: "Optional per-body radius in pixels."
+      },
+      ballRadius: {
+        type: "number",
+        default: 6,
+        description: "Fallback body radius."
+      },
+      groupCompletion: {
+        type: "string",
+        enum: ["allAbsorbed", "none"] as const,
+        default: "allAbsorbed when groupBy is set",
+        description: "How feature groups report completion."
+      },
+      groupAnchorAlong: {
+        type: "number",
+        description: "0–1 position along the lane for group anchors."
+      },
+      showProjection: {
+        type: "boolean",
+        default: true,
+        description: "Draw settled stage-count bars."
+      },
+      showChrome: {
+        type: "boolean",
+        default: true,
+        description: "Draw stage labels, capacity notes, and group anchors."
+      },
+      settle: {
+        type: "boolean",
+        description: "Start bodies at stage targets for a calmer first paint."
+      },
+      seed: {
+        type: "number",
+        default: 1,
+        description: "Deterministic seed for placement jitter."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -199,43 +718,155 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "process-flow", "capacitated-stages", "group-completion", "settled-projection"],
-    },
+      specialFeatures: [
+        "physics-simulation",
+        "process-flow",
+        "capacitated-stages",
+        "group-completion",
+        "settled-projection"
+      ]
+    }
   },
 
   PhysicalFlowChart: {
     name: "PhysicalFlowChart",
     category: "physics",
-    description: "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
+    description:
+      "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
     required: [],
     dataShape: "network",
-    dataAccessors: ["nodeIdAccessor", "nodeXAccessor", "nodeYAccessor", "sourceAccessor", "targetAccessor", "throughputAccessor", "pathAccessor"],
+    dataAccessors: [
+      "nodeIdAccessor",
+      "nodeXAccessor",
+      "nodeYAccessor",
+      "sourceAccessor",
+      "targetAccessor",
+      "throughputAccessor",
+      "pathAccessor"
+    ],
     propBags: ["common"],
     ownProps: {
       size: { type: "array", description: "[width, height] in pixels" },
-      nodes: { type: "array", description: "Route nodes with explicit x/y geometry. x/y may be normalized 0-1 coordinates or chart pixels." },
-      links: { type: "array", description: "Flow links with source, target, throughput, and optional path geometry." },
-      edges: { type: "array", description: "Alias for links, for network-shaped inputs." },
-      data: { type: "array", description: "Alias for links when using chart-generator style data props." },
-      nodeIdAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier." },
-      nodeXAccessor: { type: ["string", "function"], default: "x", description: "Node x-coordinate. Use 0-1 normalized values by default." },
-      nodeYAccessor: { type: ["string", "function"], default: "y", description: "Node y-coordinate. Use 0-1 normalized values by default." },
-      sourceAccessor: { type: ["string", "function"], default: "source", description: "Link source node id." },
-      targetAccessor: { type: ["string", "function"], default: "target", description: "Link target node id." },
-      throughputAccessor: { type: ["string", "function"], default: "value", description: "Numeric throughput field that controls pipe width and packet count." },
-      pathAccessor: { type: ["string", "function"], default: "path", description: "Optional link path as [{x,y}, ...] or [[x,y], ...]." },
-      coordinateMode: { type: "string", enum: ["auto", "normalized", "pixels"] as const, default: "auto", description: "How node and path coordinates are mapped into the plot area." },
-      particleRate: { type: "number", default: 0.16, description: "Packets generated per throughput unit before maxParticles downsampling." },
-      maxParticles: { type: "number", default: 180, description: "Maximum live packets generated for the initial flow scene." },
-      particleRadius: { type: "number", default: 4, description: "Packet body radius in pixels." },
-      flowSpeed: { type: "number", default: 90, description: "Initial packet velocity along each authored route." },
-      pathConstraint: { type: "string", enum: ["path", "none"] as const, default: "path", description: "Whether live packets are steered along authored route paths." },
-      reducedMotion: { type: "boolean", default: false, description: "Start packets on their route positions and pause the simulation." },
-      showStaticFlow: { type: "boolean", default: true, description: "Draw the route/pipe throughput layer behind animated packets." },
+      nodes: {
+        type: "array",
+        description:
+          "Route nodes with explicit x/y geometry. x/y may be normalized 0-1 coordinates or chart pixels."
+      },
+      links: {
+        type: "array",
+        description:
+          "Flow links with source, target, throughput, and optional path geometry."
+      },
+      edges: {
+        type: "array",
+        description: "Alias for links, for network-shaped inputs."
+      },
+      data: {
+        type: "array",
+        description:
+          "Alias for links when using chart-generator style data props."
+      },
+      nodeIdAccessor: {
+        type: ["string", "function"],
+        default: "id",
+        description: "Key for node unique identifier."
+      },
+      nodeXAccessor: {
+        type: ["string", "function"],
+        default: "x",
+        description: "Node x-coordinate. Use 0-1 normalized values by default."
+      },
+      nodeYAccessor: {
+        type: ["string", "function"],
+        default: "y",
+        description: "Node y-coordinate. Use 0-1 normalized values by default."
+      },
+      sourceAccessor: {
+        type: ["string", "function"],
+        default: "source",
+        description: "Link source node id."
+      },
+      targetAccessor: {
+        type: ["string", "function"],
+        default: "target",
+        description: "Link target node id."
+      },
+      throughputAccessor: {
+        type: ["string", "function"],
+        default: "value",
+        description:
+          "Numeric throughput field that controls pipe width and packet count."
+      },
+      pathAccessor: {
+        type: ["string", "function"],
+        default: "path",
+        description: "Optional link path as [{x,y}, ...] or [[x,y], ...]."
+      },
+      coordinateMode: {
+        type: "string",
+        enum: ["auto", "normalized", "pixels"] as const,
+        default: "auto",
+        description:
+          "How node and path coordinates are mapped into the plot area."
+      },
+      particleRate: {
+        type: "number",
+        default: 0.16,
+        description:
+          "Packets generated per throughput unit before maxParticles downsampling."
+      },
+      maxParticles: {
+        type: "number",
+        default: 180,
+        description:
+          "Maximum live packets generated for the initial flow scene."
+      },
+      particleRadius: {
+        type: "number",
+        default: 4,
+        description: "Packet body radius in pixels."
+      },
+      flowSpeed: {
+        type: "number",
+        default: 90,
+        description: "Initial packet velocity along each authored route."
+      },
+      pathConstraint: {
+        type: "string",
+        enum: ["path", "none"] as const,
+        default: "path",
+        description:
+          "Whether live packets are steered along authored route paths."
+      },
+      reducedMotion: {
+        type: "boolean",
+        default: false,
+        description:
+          "Start packets on their route positions and pause the simulation."
+      },
+      showStaticFlow: {
+        type: "boolean",
+        default: true,
+        description:
+          "Draw the route/pipe throughput layer behind animated packets."
+      },
       showNodeLabels: { type: "boolean", default: true },
-      showSensors: { type: "boolean", default: false, description: "Draw destination/node proximity sensors used for observation events." },
-      paused: { type: "boolean", default: false, description: "Pause the physics simulation." },
-      seed: { type: "number", default: 1, description: "Deterministic seed for packet jitter and initial flow." },
+      showSensors: {
+        type: "boolean",
+        default: false,
+        description:
+          "Draw destination/node proximity sensors used for observation events."
+      },
+      paused: {
+        type: "boolean",
+        default: false,
+        description: "Pause the physics simulation."
+      },
+      seed: {
+        type: "number",
+        default: 1,
+        description: "Deterministic seed for packet jitter and initial flow."
+      }
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -246,8 +877,13 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
-      specialFeatures: ["physics-simulation", "path-constrained-flow", "static-flow", "proximity-sensors", "settled-projection"],
-    },
-  },
-
+      specialFeatures: [
+        "physics-simulation",
+        "path-constrained-flow",
+        "static-flow",
+        "proximity-sensors",
+        "settled-projection"
+      ]
+    }
+  }
 }

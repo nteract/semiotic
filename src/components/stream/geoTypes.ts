@@ -74,6 +74,12 @@ export interface DistanceCartogramConfig {
   costAccessor: string | ((d: Datum) => number)
   strength?: number
   lineMode?: "straight" | "fractional"
+  /**
+   * Layout encoding for cost-from-center:
+   * - `"radial"` (default): polar cartogram — distance ∝ cost, bearing from geography
+   * - `"strip"`: 1D Langren-style number line — x ∝ cost, y collapsed (sparkline)
+   */
+  layout?: "radial" | "strip"
 }
 
 // ── Scene nodes ──────────────────────────────────────────────────────
@@ -395,8 +401,14 @@ export interface StreamGeoFrameHandle {
   clear(): void
   getProjection(): GeoProjection | null
   getGeoPath(): GeoPath<void, GeoPermissibleObjects> | null
-  /** Get cartogram layout info (center position, max cost, radius) */
-  getCartogramLayout(): { cx: number; cy: number; maxCost: number; availableRadius: number } | null
+  /** Get cartogram layout info (center position, max cost, radius / strip length) */
+  getCartogramLayout(): {
+    cx: number
+    cy: number
+    maxCost: number
+    availableRadius: number
+    layout?: "radial" | "strip"
+  } | null
   /** Get current zoom level (1 = default) */
   getZoom(): number
   /** Animate back to initial view */

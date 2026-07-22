@@ -242,7 +242,7 @@ export default function GauntletChartPage() {
         { label: "GauntletChart", path: "/charts/gauntlet-chart" },
       ]}
       prevPage={{ title: "ProcessFlowChart", path: "/charts/process-flow-chart" }}
-      nextPage={{ title: "PhysicsCustomChart", path: "/charts/physics-custom-chart" }}
+      nextPage={{ title: "CrucibleChart", path: "/charts/crucible-chart" }}
     >
       <ComponentMeta
         componentName="GauntletChart"

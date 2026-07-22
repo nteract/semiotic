@@ -27,28 +27,33 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PHYSICS_BAD_BINS",
         message: `bins=${bins} leaves no meaningful settled projection for a Galton board.`,
-        fix: `Use at least two bins; 8-24 bins is a practical range for physics distributions.`,
+        fix: `Use at least two bins; 8-24 bins is a practical range for physics distributions.`
       })
     }
     const branchProbability = finiteNumber(props.branchProbability)
     if (
       props.branchProbability != null &&
-      (branchProbability == null || branchProbability < 0 || branchProbability > 1)
+      (branchProbability == null ||
+        branchProbability < 0 ||
+        branchProbability > 1)
     ) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_BRANCH_PROBABILITY",
         message: `branchProbability=${String(props.branchProbability)} must be between 0 and 1.`,
-        fix: `Use branchProbability={0.5} for a balanced Galton board, or bias it within the [0, 1] range.`,
+        fix: `Use branchProbability={0.5} for a balanced Galton board, or bias it within the [0, 1] range.`
       })
     }
     const mechanicalCount = finiteNumber(props.mechanicalCount)
-    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
+    if (
+      props.mechanicalCount != null &&
+      (mechanicalCount == null || mechanicalCount <= 0)
+    ) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_MECHANICAL_COUNT",
         message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical Galton board.`,
-        fix: `Use a positive mechanicalCount, for example 96.`,
+        fix: `Use a positive mechanicalCount, for example 96.`
       })
     }
   }
@@ -56,13 +61,15 @@ export function checkPhysicsConfig(
   if (component === "EventDropChart") {
     const windows = props.windows
     const windowSize =
-      windows && typeof windows === "object" ? finiteNumber((windows as Datum).size) : null
+      windows && typeof windows === "object"
+        ? finiteNumber((windows as Datum).size)
+        : null
     if (windowSize != null && windowSize <= 0) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_WINDOW_SIZE",
         message: `windows.size=${windowSize} cannot form event-time barriers.`,
-        fix: `Set windows={{ size: positiveNumber }} so each event can settle into a real time window.`,
+        fix: `Set windows={{ size: positiveNumber }} so each event can settle into a real time window.`
       })
     }
     if (typeof props.timeScale === "number" && props.timeScale <= 0) {
@@ -70,7 +77,7 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PHYSICS_BAD_TIME_SCALE",
         message: `timeScale=${props.timeScale} prevents arrival replay from advancing.`,
-        fix: `Use a positive timeScale, or omit it for the default pace.`,
+        fix: `Use a positive timeScale, or omit it for the default pace.`
       })
     }
 
@@ -80,15 +87,19 @@ export function checkPhysicsConfig(
       const arrivalAccessor = props.arrivalAccessor || "arrivalTime"
       const hasDistinctArrival = data.some((datum: Datum) => {
         const eventTime = finiteNumber(readField(datum, timeAccessor, "time"))
-        const arrivalTime = finiteNumber(readField(datum, arrivalAccessor, "arrivalTime"))
-        return eventTime != null && arrivalTime != null && eventTime !== arrivalTime
+        const arrivalTime = finiteNumber(
+          readField(datum, arrivalAccessor, "arrivalTime")
+        )
+        return (
+          eventTime != null && arrivalTime != null && eventTime !== arrivalTime
+        )
       })
       if (!hasDistinctArrival) {
         out.push({
           severity: "warning",
           code: "PHYSICS_EVENTDROP_NO_ARRIVAL_SPREAD",
           message: `EventDropChart data does not show distinct arrival times, so the physics replay collapses to event order.`,
-          fix: `Provide an arrivalAccessor field with event-arrival times when demonstrating lateness, watermarks, or out-of-order streams.`,
+          fix: `Provide an arrivalAccessor field with event-arrival times when demonstrating lateness, watermarks, or out-of-order streams.`
         })
       }
     }
@@ -96,12 +107,15 @@ export function checkPhysicsConfig(
 
   if (component === "PhysicsPileChart") {
     const mechanicalCount = finiteNumber(props.mechanicalCount)
-    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
+    if (
+      props.mechanicalCount != null &&
+      (mechanicalCount == null || mechanicalCount <= 0)
+    ) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_MECHANICAL_COUNT",
         message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical pile chart.`,
-        fix: `Use a positive mechanicalCount, for example 80.`,
+        fix: `Use a positive mechanicalCount, for example 80.`
       })
     }
     if (
@@ -113,7 +127,7 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PHYSICS_EMPTY_MECHANICAL_CATEGORIES",
         message: `mechanicalCategories=[] leaves no containers for the generated unit pile.`,
-        fix: `Provide at least one category label, or omit mechanicalCategories for the default set.`,
+        fix: `Provide at least one category label, or omit mechanicalCategories for the default set.`
       })
     }
 
@@ -123,7 +137,7 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PHYSICS_BAD_UNIT_VALUE",
         message: `unitValue=${props.unitValue} cannot unitize values into physical bodies.`,
-        fix: `Set unitValue to a positive number represented by one body.`,
+        fix: `Set unitValue to a positive number represented by one body.`
       })
       return
     }
@@ -139,7 +153,7 @@ export function checkPhysicsConfig(
         severity: "warning",
         code: "PHYSICS_BODY_BUDGET",
         message: `PhysicsPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
-        fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`,
+        fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`
       })
     }
   }
@@ -151,16 +165,17 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PHYSICS_BAD_POINT_RADIUS",
         message: `pointRadius=${props.pointRadius} cannot produce collision bodies.`,
-        fix: `Use a positive pointRadius, for example 5.`,
+        fix: `Use a positive pointRadius, for example 5.`
       })
     }
-    const collisionIterations = finiteNumber(props.collisionIterations ?? 6) ?? 6
+    const collisionIterations =
+      finiteNumber(props.collisionIterations ?? 6) ?? 6
     if (collisionIterations <= 0) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_COLLISION_ITERATIONS",
         message: `collisionIterations=${props.collisionIterations} disables collision relaxation.`,
-        fix: `Use at least one collision iteration; 4-8 is a practical range for swarms.`,
+        fix: `Use at least one collision iteration; 4-8 is a practical range for swarms.`
       })
     }
     if (props.xExtent != null) {
@@ -172,7 +187,7 @@ export function checkPhysicsConfig(
           severity: "error",
           code: "PHYSICS_BAD_X_EXTENT",
           message: `xExtent must be a numeric [min, max] pair for CollisionSwarmChart.`,
-          fix: `Pass xExtent={[min, max]} or omit it so the chart infers the domain from data.`,
+          fix: `Pass xExtent={[min, max]} or omit it so the chart infers the domain from data.`
         })
       }
     }
@@ -183,7 +198,7 @@ export function checkPhysicsConfig(
         severity: "warning",
         code: "PHYSICS_BODY_BUDGET",
         message: `CollisionSwarmChart would create ${data.length} live bodies; collision relaxation may dominate the frame budget.`,
-        fix: `Sample, aggregate, reduce point radius, or move to a static SwarmPlot when every row does not need a physical body.`,
+        fix: `Sample, aggregate, reduce point radius, or move to a static SwarmPlot when every row does not need a physical body.`
       })
     }
     const groupAccessor = props.groupAccessor
@@ -198,7 +213,7 @@ export function checkPhysicsConfig(
           severity: "warning",
           code: "PHYSICS_TOO_MANY_SWARM_LANES",
           message: `CollisionSwarmChart has ${groups.size} group lanes, which leaves little vertical room for collision separation.`,
-          fix: `Facet or filter groups, or use an ordinary SwarmPlot/BoxPlot for dense grouped comparison.`,
+          fix: `Facet or filter groups, or use an ordinary SwarmPlot/BoxPlot for dense grouped comparison.`
         })
       }
     }
@@ -223,7 +238,7 @@ export function checkPhysicsConfig(
         severity: "warning",
         code: "PHYSICS_DATA_IN_DYNAMICS",
         message: `${component} appears to map a data field to mass/dynamics. Mass is not a readable quantitative channel.`,
-        fix: `Encode quantities in spawn position, bin, size, color, or glyph — keep mass/friction/restitution as process texture. Use showProjection for the truth layer.`,
+        fix: `Encode quantities in spawn position, bin, size, color, or glyph — keep mass/friction/restitution as process texture. Use showProjection for the truth layer.`
       })
     }
   }
@@ -232,14 +247,15 @@ export function checkPhysicsConfig(
     (component === "PhysicsPileChart" ||
       component === "GaltonBoardChart" ||
       component === "CollisionSwarmChart" ||
-      component === "ProcessFlowChart") &&
+      component === "ProcessFlowChart" ||
+      component === "CrucibleChart") &&
     props.showProjection === false
   ) {
     out.push({
       severity: "warning",
       code: "PHYSICS_NO_PROJECTION",
       message: `${component} has showProjection={false}. Without a settled projection, motion is easy to over-read as data.`,
-      fix: `Keep showProjection enabled (default) so the chart collapses to a legible static reading, or document why the process alone is the claim.`,
+      fix: `Keep showProjection enabled (default) so the chart collapses to a legible static reading, or document why the process alone is the claim.`
     })
   }
 
@@ -250,18 +266,19 @@ export function checkPhysicsConfig(
         severity: "error",
         code: "PROCESS_FLOW_MISSING_STAGES",
         message: `ProcessFlowChart requires a non-empty stages array.`,
-        fix: `Provide stages={[{ id: "coding", force: 12 }, { id: "merged", absorb: true }]}.`,
+        fix: `Provide stages={[{ id: "coding", force: 12 }, { id: "merged", absorb: true }]}.`
       })
     } else {
       const missingId = stages.some(
-        (stage: Datum) => !stage || stage.id == null || String(stage.id).trim() === ""
+        (stage: Datum) =>
+          !stage || stage.id == null || String(stage.id).trim() === ""
       )
       if (missingId) {
         out.push({
           severity: "error",
           code: "PROCESS_FLOW_BAD_STAGE",
           message: `Every ProcessFlowChart stage needs a stable id.`,
-          fix: `Use stages like { id: "review", label: "Review", capacity: { unitsPerSecond: 4 } }.`,
+          fix: `Use stages like { id: "review", label: "Review", capacity: { unitsPerSecond: 4 } }.`
         })
       }
       const absorbCount = stages.filter((stage: Datum) => stage?.absorb).length
@@ -270,7 +287,7 @@ export function checkPhysicsConfig(
           severity: "warning",
           code: "PROCESS_FLOW_GROUP_NO_ABSORB",
           message: `groupBy is set but no stage has absorb: true, so all-members completion cannot resolve.`,
-          fix: `Mark a terminal stage with absorb: true (e.g. merged), or set groupCompletion="none".`,
+          fix: `Mark a terminal stage with absorb: true (e.g. merged), or set groupCompletion="none".`
         })
       }
     }
@@ -282,7 +299,155 @@ export function checkPhysicsConfig(
         severity: "warning",
         code: "GAUNTLET_MISSING_NEGATIVE_PROPERTIES",
         message: `GauntletChart usually needs negativeProperties for drag/cost bodies (empty array is ok if intentional).`,
-        fix: `Provide negativeProperties={[{ id: "cost", label: "Cost", load: 1 }]} or explicitly pass [].`,
+        fix: `Provide negativeProperties={[{ id: "cost", label: "Cost", load: 1 }]} or explicitly pass [].`
+      })
+    }
+  }
+
+  if (component === "CrucibleChart") {
+    const phases = Array.isArray(props.phases) ? props.phases : []
+    const products = Array.isArray(props.products) ? props.products : []
+    const events = Array.isArray(props.events) ? props.events : []
+    const outlets = Array.isArray(props.outlets) ? props.outlets : []
+
+    if (phases.length === 0) {
+      out.push({
+        severity: "error",
+        code: "CRUCIBLE_MISSING_PHASES",
+        message: `CrucibleChart requires an authored, non-empty phases array; a treatment program cannot be inferred from flat data.`,
+        fix: `Provide phases={[{ id: "charge", label: "Charge", duration: 1, motion: "charge" }]}.`
+      })
+    } else {
+      const invalidPhase = phases.some(
+        (phase: Datum) =>
+          !phase ||
+          phase.id == null ||
+          String(phase.id).trim() === "" ||
+          finiteNumber(phase.duration) == null ||
+          Number(phase.duration) <= 0
+      )
+      if (invalidPhase) {
+        out.push({
+          severity: "error",
+          code: "CRUCIBLE_BAD_PHASE",
+          message: `Every CrucibleChart phase needs a stable id and a positive finite duration.`,
+          fix: `Use phases like { id: "assay", label: "Assay", duration: 2, motion: "mix" }.`
+        })
+      }
+    }
+
+    if (products.length === 0) {
+      out.push({
+        severity: "warning",
+        code: "CRUCIBLE_NO_PRODUCTS",
+        message: `CrucibleChart has no declared product molds. Products are never discovered from collisions or source fields.`,
+        fix: `Declare products={[{ id: "accepted", label: "Accepted", outletId: "product" }]} when the treatment forms an output.`
+      })
+    }
+    if (events.length === 0) {
+      out.push({
+        severity: "warning",
+        code: "CRUCIBLE_NO_EVENTS",
+        message: `CrucibleChart has no authored events, so its phases cannot transform, combine, split, or route the charge.`,
+        fix: `Supply an explicit events array; do not ask the chart or an AI layer to infer a treatment from the rows.`
+      })
+    }
+    if (!Array.isArray(props.outlets)) {
+      out.push({
+        severity: "warning",
+        code: "CRUCIBLE_IMPLICIT_OUTLETS",
+        message: `CrucibleChart is using generic default outlets rather than domain-specific destinations.`,
+        fix: `Provide reason-labelled outlets and reference their ids from products, complete-product, and eject effects.`
+      })
+    }
+
+    const productIds = new Set(
+      products
+        .map((product: Datum) => product?.id)
+        .filter((id: unknown) => id != null)
+        .map(String)
+    )
+    const outletIds = new Set([
+      "product",
+      "retained",
+      "residue",
+      "failed",
+      "recovered",
+      ...outlets
+        .map((outlet: Datum) => outlet?.id)
+        .filter((id: unknown) => id != null)
+        .map(String)
+    ])
+    const unknownProductIds = new Set<string>()
+    const unknownOutletIds = new Set<string>()
+    for (const event of events) {
+      if (!event || !Array.isArray(event.effects)) continue
+      for (const effect of event.effects) {
+        if (!effect || typeof effect !== "object") continue
+        const effectType = effect.type
+        if (
+          (effectType === "combine" ||
+            effectType === "contribute" ||
+            effectType === "complete-product") &&
+          effect.productId != null &&
+          !productIds.has(String(effect.productId))
+        ) {
+          unknownProductIds.add(String(effect.productId))
+        }
+        if (effectType === "split" && Array.isArray(effect.products)) {
+          for (const allocation of effect.products) {
+            if (
+              allocation?.productId != null &&
+              !productIds.has(String(allocation.productId))
+            ) {
+              unknownProductIds.add(String(allocation.productId))
+            }
+          }
+        }
+        if (
+          effect.outletId != null &&
+          !outletIds.has(String(effect.outletId))
+        ) {
+          unknownOutletIds.add(String(effect.outletId))
+        }
+      }
+    }
+    if (unknownProductIds.size > 0) {
+      out.push({
+        severity: "error",
+        code: "CRUCIBLE_UNKNOWN_PRODUCT",
+        message: `CrucibleChart events reference undeclared product molds: ${[...unknownProductIds].sort().join(", ")}.`,
+        fix: `Declare every referenced product id in products; do not create product definitions implicitly inside events.`
+      })
+    }
+    if (unknownOutletIds.size > 0) {
+      out.push({
+        severity: "error",
+        code: "CRUCIBLE_UNKNOWN_OUTLET",
+        message: `CrucibleChart events reference undeclared outlets: ${[...unknownOutletIds].sort().join(", ")}.`,
+        fix: `Declare every domain outlet in outlets and reuse its stable id in authored effects.`
+      })
+    }
+
+    const playbackRate = finiteNumber(props.playbackRate)
+    if (
+      props.playbackRate != null &&
+      (playbackRate == null || playbackRate <= 0)
+    ) {
+      out.push({
+        severity: "error",
+        code: "CRUCIBLE_BAD_PLAYBACK_RATE",
+        message: `playbackRate=${String(props.playbackRate)} cannot advance the authored CrucibleChart tape.`,
+        fix: `Use a positive playbackRate such as 0.5 for half speed or 2 for double speed.`
+      })
+    }
+    const rerunMS = finiteNumber(props.rerunMS)
+    if (props.rerunMS != null && (rerunMS == null || rerunMS < 0)) {
+      out.push({
+        severity: "error",
+        code: "CRUCIBLE_BAD_RERUN_MS",
+        message: `rerunMS=${String(props.rerunMS)} must be a finite non-negative delay or null.`,
+        fix: `Use rerunMS={3000}, rerunMS={0}, or omit the prop for a single run.`
       })
     }
   }
@@ -293,7 +458,8 @@ export function checkPhysicsConfig(
     component === "GaltonBoardChart" ||
     component === "CollisionSwarmChart" ||
     component === "ProcessFlowChart" ||
-    component === "EventDropChart"
+    component === "EventDropChart" ||
+    component === "CrucibleChart"
   ) {
     const data = Array.isArray(props.data) ? props.data : []
     const mechanicalCount = finiteNumber(props.mechanicalCount) ?? 0
@@ -309,7 +475,7 @@ export function checkPhysicsConfig(
         severity: "warning",
         code: "PHYSICS_BODY_BUDGET",
         message: `${component} may spawn ~${Math.round(estimated)} live bodies, which can overwhelm the simulation loop.`,
-        fix: `Lower mechanicalCount / unitize with a larger unitValue, enable sediment/windowSize, or sample the data before spawn.`,
+        fix: `Lower mechanicalCount / unitize with a larger unitValue, enable sediment/windowSize, or sample the data before spawn.`
       })
     }
   }

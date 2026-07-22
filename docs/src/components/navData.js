@@ -99,6 +99,7 @@ const navData = [
           { title: "Physical Flow Chart", path: "/charts/physical-flow-chart" },
           { title: "Process Flow Chart", path: "/charts/process-flow-chart" },
           { title: "Gauntlet Chart", path: "/charts/gauntlet-chart" },
+          { title: "Crucible Chart", path: "/charts/crucible-chart" },
           { title: "Physics Custom Chart", path: "/charts/physics-custom-chart" },
         ],
       },
@@ -303,6 +304,8 @@ const navData = [
       { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
       { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" },
       { title: "Satellites in Space", path: "/recipes/satellites-in-space" },
+      { title: "Word Trails", path: "/recipes/word-trails" },
+      { title: "Net Ensemble", path: "/recipes/net-ensemble" },
     ],
   },
   {

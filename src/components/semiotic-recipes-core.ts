@@ -85,6 +85,14 @@ export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/l
 export { mermaidDagLayout } from "./recipes/mermaidDag"
 export type { MermaidDagConfig } from "./recipes/mermaidDag"
 
+export { netEnsembleLayout, analyzeNetEnsemble } from "./recipes/netEnsembleLayout"
+export type {
+  NetEnsembleConfig,
+  NetEnsembleAnalysis,
+  NetEnsembleComponent,
+  NetEnsembleMotif,
+} from "./recipes/netEnsembleLayout"
+
 export { packedClusterMatrix } from "./recipes/packedClusterMatrix"
 export type { PackedClusterMatrixConfig } from "./recipes/packedClusterMatrix"
 
@@ -158,6 +166,13 @@ export type {
   CollisionBox,
   RectCollideOptions,
 } from "./recipes/axisFixedForce"
+
+export { wordTrailsLayout, wordTrailsProgressiveReveal } from "./recipes/wordTrails"
+export type {
+  WordTrailsConfig,
+  WordTrailsProgressiveRevealOptions,
+  WordTrailsWordInfo,
+} from "./recipes/wordTrails"
 
 // ── Custom-chart authoring kit ───────────────────────────────────────────
 // hitTarget: the invisible, interaction-bearing scene node that earns a custom

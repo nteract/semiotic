@@ -2,13 +2,13 @@ export const HIERARCHY_CHARTS = new Set([
   "TreeDiagram",
   "Treemap",
   "CirclePack",
-  "OrbitDiagram",
+  "OrbitDiagram"
 ])
 
 export const NETWORK_CHARTS = new Set([
   "ForceDirectedGraph",
   "SankeyDiagram",
-  "ChordDiagram",
+  "ChordDiagram"
 ])
 
 export const BAR_AREA_CHARTS = new Set([
@@ -16,27 +16,27 @@ export const BAR_AREA_CHARTS = new Set([
   "StackedBarChart",
   "GroupedBarChart",
   "AreaChart",
-  "StackedAreaChart",
+  "StackedAreaChart"
 ])
 
 export const TREND_SERIES_CHARTS = new Set([
   "LineChart",
   "AreaChart",
-  "StackedAreaChart",
+  "StackedAreaChart"
 ])
 
 export const ORDINAL_BAR_CHARTS = new Set([
   "BarChart",
   "StackedBarChart",
   "GroupedBarChart",
-  "FunnelChart",
+  "FunnelChart"
 ])
 
 export const CURVE_CHARTS = new Set([
   "LineChart",
   "AreaChart",
   "StackedAreaChart",
-  "ConnectedScatterplot",
+  "ConnectedScatterplot"
 ])
 
 export const PIE_CHARTS = new Set(["PieChart", "DonutChart"])
@@ -44,16 +44,16 @@ export const PIE_CHARTS = new Set(["PieChart", "DonutChart"])
 export const PART_TO_WHOLE_ACCESSORS: Record<string, string> = {
   PieChart: "valueAccessor",
   DonutChart: "valueAccessor",
-  FunnelChart: "valueAccessor",
+  FunnelChart: "valueAccessor"
 }
 
 export const PART_TO_WHOLE_CHARTS = new Set(
-  Object.keys(PART_TO_WHOLE_ACCESSORS),
+  Object.keys(PART_TO_WHOLE_ACCESSORS)
 )
 
 export const NORMALIZED_STACK_ACCESSORS: Record<string, string> = {
   StackedBarChart: "valueAccessor",
-  StackedAreaChart: "yAccessor",
+  StackedAreaChart: "yAccessor"
 }
 
 export const VALUE_CHARTS = new Set(["BigNumber"])
@@ -70,7 +70,7 @@ export const XY_WITH_AXES_CHARTS = new Set([
   "MultiAxisLineChart",
   "CandlestickChart",
   "Heatmap",
-  "MinimapChart",
+  "MinimapChart"
 ])
 
 // Charts whose default presentation animates continuously / loops.
@@ -82,12 +82,12 @@ export const PHYSICS_MOTION_CHARTS = new Set([
   "CollisionSwarmChart",
   "PhysicalFlowChart",
   "ProcessFlowChart",
-  "PhysicsCustomChart",
+  "PhysicsCustomChart"
 ])
 
 export const CONTINUOUS_MOTION_CHARTS = new Set([
   "OrbitDiagram",
-  ...PHYSICS_MOTION_CHARTS,
+  ...PHYSICS_MOTION_CHARTS
 ])
 
 // Frame-based physics data charts whose StreamPhysicsFrame always renders a
@@ -100,6 +100,7 @@ export const PHYSICS_SETTLED_CHARTS = new Set([
   "PhysicalFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
+  "CrucibleChart"
 ])
 
 export const PHYSICS_DIAGNOSTIC_CHARTS = new Set([
@@ -110,7 +111,8 @@ export const PHYSICS_DIAGNOSTIC_CHARTS = new Set([
   "PhysicalFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
-  "PhysicsCustomChart",
+  "CrucibleChart",
+  "PhysicsCustomChart"
 ])
 
 export const REALTIME_CHARTS = new Set([
@@ -119,7 +121,7 @@ export const REALTIME_CHARTS = new Set([
   "RealtimeSwarmChart",
   "RealtimeWaterfallChart",
   "RealtimeHeatmap",
-  "ProcessSankey",
+  "ProcessSankey"
 ])
 
 // Dual/secondary-axis charts: Chartability flags multiple axes as a complexity risk.
@@ -130,7 +132,7 @@ export const GEO_CHARTS = new Set([
   "ChoroplethMap",
   "ProportionalSymbolMap",
   "FlowMap",
-  "DistanceCartogram",
+  "DistanceCartogram"
 ])
 
 // Charts that draw discrete, point-like interactive marks whose hit target is
@@ -141,5 +143,5 @@ export const POINT_TARGET_RADIUS_PROP: Record<string, string> = {
   ConnectedScatterplot: "pointRadius",
   QuadrantChart: "pointRadius",
   SwarmPlot: "pointRadius",
-  DotPlot: "dotRadius",
+  DotPlot: "dotRadius"
 }

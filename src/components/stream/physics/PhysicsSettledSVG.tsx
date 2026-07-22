@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { xySceneNodeToSVG } from "../SceneToSVG"
+import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
 import type { PhysicsSettledEvidence } from "./PhysicsEvidence"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import {
@@ -15,8 +16,11 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
   title?: string
   description?: string
   background?: string
+  backgroundGraphics?: FrameGraphicsProp
   className?: string
+  foregroundGraphics?: FrameGraphicsProp
   idPrefix?: string
+  margin?: Partial<FrameMargin>
 }
 
 export interface PhysicsSettledSVGRender {
@@ -31,6 +35,16 @@ function safeSvgId(value: string): string {
   return cleaned
 }
 
+const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
+
+function resolveGraphics(
+  graphics: FrameGraphicsProp | undefined,
+  size: number[],
+  margin: FrameMargin
+): React.ReactNode {
+  return typeof graphics === "function" ? graphics({ size, margin }) : graphics
+}
+
 export function renderPhysicsSettledSVG(
   store: PhysicsPipelineStore,
   options: PhysicsSettledSVGOptions = {}
@@ -41,11 +55,18 @@ export function renderPhysicsSettledSVG(
     title,
     description,
     background,
+    backgroundGraphics,
     className,
+    foregroundGraphics,
     idPrefix = "physics",
+    margin: marginProp,
     ...sceneOptions
   } = options
   const scene = buildPhysicsSettledScene(store, sceneOptions)
+  const margin = { ...DEFAULT_MARGIN, ...marginProp }
+  const size = [width, height]
+  const resolvedBackground = resolveGraphics(backgroundGraphics, size, margin)
+  const resolvedForeground = resolveGraphics(foregroundGraphics, size, margin)
   const prefix = safeSvgId(idPrefix)
   const titleId = title ? `${prefix}-title` : undefined
   const descId = description ? `${prefix}-desc` : undefined
@@ -63,14 +84,16 @@ export function renderPhysicsSettledSVG(
     >
       {title && <title id={titleId}>{title}</title>}
       {description && <desc id={descId}>{description}</desc>}
-      {background && background !== "transparent" ? (
+      {!backgroundGraphics && background && background !== "transparent" ? (
         <rect x={0} y={0} width={width} height={height} fill={background} />
       ) : null}
+      {resolvedBackground}
       <g id={`${prefix}-data-area`}>
         {scene.sceneNodes.map((node, index) =>
           xySceneNodeToSVG(node, index, prefix)
         )}
       </g>
+      {resolvedForeground}
     </svg>
   )
 

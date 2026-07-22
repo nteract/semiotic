@@ -289,6 +289,136 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     },
   },
   {
+    id: "rhetorical-crucible",
+    path: "/examples/rhetorical-crucible",
+    sourceFile: "DebateConceptCrucibleExamplePage.jsx",
+    isPilot: true,
+    title: "The Rhetorical Crucible",
+    eyebrow: "Word Trails × physics · three debate assays",
+    description:
+      "Follow the same word as it leaves each candidate retort unalloyed or in different temporal company—without mistaking rhetoric for motive.",
+    contract: {
+      publicImports: ["semiotic/ordinal", "semiotic/physics", "semiotic/recipes", "semiotic/utils"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-real-debate-transcript-three-assay-snapshot",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Commission on Presidential Debates transcripts for 2012 and 2016, and the m-arg 2020 presidential-debate dataset",
+        capturedAt: "2026-07-21",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "An accessible ledger records every admitted word's count, temporal company, product, or unalloyed disposition",
+        navigation:
+          "Native debate, word, pace, replay, and ledger controls with a complete terminal projection",
+        keyboard: "Native buttons, select controls, disclosure controls, and ledger navigation",
+        forcedColors:
+          "Retorts, word slugs, product molds, ledger states, controls, and focus rings retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The assay opens on its terminal product and unalloyed projection; autoplay is unavailable",
+        visibility: "Deterministic replay and physics work suspend while the document is hidden",
+      },
+      responsive: {
+        status: "verified",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable debate, speaker, word-profile, temporal-alloy, product, and disposition IDs",
+      },
+      ssr: {
+        status: "deterministic-SSR-and-build-verified",
+        hydration:
+          "Checked-in transcript snapshots, stable token identities, terminal physics chrome, and projection survive the server/client boundary",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using public ordinal, physics, recipes, and utility entry points",
+          interaction:
+            "memoized word trails, temporal-company windows, concept assays, products, and ledger projections",
+          memory:
+            "three bounded transcript snapshots with a finite authored vocabulary and deterministic assay replay",
+          hiddenPage: "physics and replay work suspend while hidden",
+        },
+      },
+    },
+  },
+  {
+    id: "latent-crucible",
+    path: "/examples/latent-crucible",
+    sourceFile: "LDATopicCrucibleExamplePage.jsx",
+    isPilot: true,
+    title: "The Latent Crucible",
+    eyebrow: "LDA Topic Modeling × Word Trails",
+    description:
+      "Watch a seeded Gibbs sampler repeatedly reassign word tokens until anonymous topic distributions begin to congeal—without pretending the model has interpreted the corpus.",
+    contract: {
+      publicImports: ["semiotic/ordinal", "semiotic/physics", "semiotic/recipes", "semiotic/utils"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "seeded-collapsed-gibbs-didactic-corpus-trace",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Purpose-written miniature corpus and seeded collapsed-Gibbs trace, framed by Journal of Digital Humanities 2.1 and the original LDA literature",
+        capturedAt: "2026-07-21",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "Model assumptions, current token assignments, one exact sampling conditional, topic-word probabilities, document-topic mixtures, and the terminal projection are available as text",
+        navigation:
+          "Native iteration, playback, pace, restart, step, and terminal-settle controls with linked chart explanations",
+        keyboard: "Native buttons, a select, a range control, links, and chart navigation",
+        forcedColors:
+          "Topic columns, traces, controls, cards, focus rings, and probability bars retain system-color boundaries and labels",
+      },
+      motion: {
+        reducedMotion:
+          "The example opens on a deterministic terminal model state; autoplay and animated transport are unavailable",
+        visibility: "Iteration timers and physics work suspend while the document is hidden",
+      },
+      responsive: {
+        status: "implementation-verified",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable corpus-document, token, vocabulary-term, iteration, anonymous-topic, and topic-word allocation IDs",
+      },
+      ssr: {
+        status: "deterministic-SSR-and-build-verified",
+        hydration:
+          "Seeded snapshots, stable topic identities within one chain, terminal Crucible chrome, and textual model evidence survive the server/client boundary",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using public ordinal, physics, recipes, and utility entry points",
+          interaction:
+            "eight retained checkpoints, memoized chart projections, and a bounded deterministic token trace",
+          memory:
+            "small purpose-written corpus with finite vocabulary, four topics, and a 64-sweep recorded chain",
+          hiddenPage: "animation and physics inherit hidden-document suspension",
+        },
+      },
+    },
+  },
+  {
     id: "watermarks",
     path: "/examples/watermarks",
     sourceFile: "WatermarksExamplePage.jsx",
@@ -453,6 +583,76 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
     },
   },
+  {
+    id: "ukraine-war-history",
+    path: "/examples/ukraine-war-history",
+    sourceFile: "UkraineWarHistoryExamplePage.jsx",
+    isPilot: true,
+    title: "Ukraine: Four Clocks of a Long War",
+    eyebrow: "FlowMap · TemporalHistogram · history",
+    description:
+      "Compare yearly military, civilian, and unspecified-use aid flows with documented equipment losses, economic shocks, and coalition change.",
+    contract: {
+      publicImports: [
+        "semiotic",
+        "semiotic/geo",
+        "semiotic/ordinal",
+        "semiotic/utils",
+        "semiotic/xy",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-oryx-kiel-world-bank-un-snapshots",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Oryx-derived public archive, Kiel Ukraine Support Tracker release 29, World Bank WDI, and official UN General Assembly records",
+        capturedAt: "2026-07-20",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "quarterly",
+      },
+      accessibility: {
+        summary:
+          "Chart descriptions, summaries, accessible flow scenes, explicit source limits, and a labelled temporal histogram",
+        navigation:
+          "Native chapter, aid-type, aid-year, motion, country, time-window, donor, and source controls",
+        keyboard:
+          "Native buttons and checkbox, keyboard-navigable FlowMap marks, chart legends, and accessible tables",
+        forcedColors:
+          "Dashboard panels, controls, chart shells, focus rings, and source cards retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "Aid particles and frame transitions stop; the animation checkbox is disabled while the media preference is active",
+        visibility: "FlowMap suspends particle work while the page is hidden",
+      },
+      responsive: {
+        status: "browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable chapter, donor, aid type, allocation year, country, equipment category, and resolution IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-tested",
+        hydration: "deterministic checked-in snapshots and stable responsive minimum widths",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public frame-family entry points",
+          interaction:
+            "memoized yearly aid flows, rankings, filtered Oryx bins, and stable style callbacks",
+          memory:
+            "282 monthly loss records, 84 donor-year rollups, at most 17 visible flows, and small annual series",
+          hiddenPage: "FlowMap suspendWhenHidden default retained",
+        },
+      },
+    },
+  },
 ])
 
 const EXAMPLE_REGISTRY_METADATA = [
@@ -466,6 +666,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Deterministic replay", "Evidence lineage", "SentenceFilter", "Physics pipeline"],
     frames: ["xy", "ordinal", "network", "geo", "stream-physics", "custom"],
     topics: ["climate", "uncertainty", "realtime", "design", "accessibility"],
+  },
+  {
+    title: "Ukraine: Four Clocks of a Long War",
+    path: "/examples/ukraine-war-history",
+    eyebrow: "FlowMap · TemporalHistogram · history",
+    description:
+      "Compare yearly military, civilian, and unspecified-use aid flows with documented equipment losses, economic shocks, and coalition change.",
+    preview: "ukraine-war-history",
+    badges: ["FlowMap", "TemporalHistogram", "Oryx rollups", "Evidence boundaries"],
+    frames: ["geo", "xy", "ordinal"],
+    topics: ["history", "geography", "civic", "design", "accessibility"],
   },
   {
     title: "The Insight Forge",
@@ -499,6 +710,28 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["SentenceFilter", "Shared selection", "Authored fixtures", "Accessible structure"],
     frames: ["xy", "network", "custom"],
     topics: ["culture", "design", "accessibility"],
+  },
+  {
+    title: "The Rhetorical Crucible",
+    path: "/examples/rhetorical-crucible",
+    eyebrow: "Word Trails × physics · three debate assays",
+    description:
+      "Follow the same word as it leaves each candidate retort unalloyed or in different temporal company—without mistaking rhetoric for motive.",
+    preview: "rhetorical-crucible",
+    badges: ["Word Trails", "StreamPhysicsFrame", "Deterministic assay", "Audited lineage"],
+    frames: ["ordinal", "stream-physics", "custom"],
+    topics: ["culture", "civic", "process", "design", "accessibility"],
+  },
+  {
+    title: "The Latent Crucible",
+    path: "/examples/latent-crucible",
+    eyebrow: "LDA Topic Modeling × Word Trails",
+    description:
+      "See anonymous topics congeal as a real seeded Gibbs sampler reassigns word tokens across a small, fully inspectable corpus.",
+    preview: "latent-crucible",
+    badges: ["Word Trails", "Collapsed Gibbs", "CrucibleChart", "Audited assumptions"],
+    frames: ["ordinal", "stream-physics", "custom"],
+    topics: ["culture", "ai", "uncertainty", "process", "design", "accessibility"],
   },
   {
     title: "Watermarks, Made Physical",
@@ -890,6 +1123,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
+  "/examples/ukraine-war-history": "UkraineWarHistoryExamplePage.jsx",
   "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
   "/examples/climate-anomaly": "ClimateAnomalyExamplePage.jsx",
@@ -913,6 +1147,8 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/oregon-trail": "OregonTrailExamplePage.jsx",
   "/examples/paris-isometric-landmarks": "ParisIsometricLandmarksExamplePage.jsx",
   "/examples/port-congestion-replay": "PortCongestionReplayExamplePage.jsx",
+  "/examples/rhetorical-crucible": "DebateConceptCrucibleExamplePage.jsx",
+  "/examples/latent-crucible": "LDATopicCrucibleExamplePage.jsx",
   "/examples/scroll-youre-telling": "ScrollYoureTellingExamplePage.jsx",
   "/examples/sentence-structure": "SentenceStructureExamplePage.jsx",
   "/examples/semiotic-architecture": "SemioticArchitectureExamplePage.jsx",

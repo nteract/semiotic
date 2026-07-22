@@ -235,6 +235,67 @@ describe("ForceDirectedGraph", () => {
     expect(styleFn({ data: { source: "A", target: "B", weight: 3 } }).strokeWidth).toBe(6)
   })
 
+  describe("independent node / edge stroking", () => {
+    const renderFDG = (extra: Partial<ForceDirectedGraphProps>) =>
+      render(
+        <TooltipProvider>
+          <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} {...extra} />
+        </TooltipProvider>
+      )
+
+    it("generic `stroke` styles both nodes and edges (uniform baseline)", () => {
+      renderFDG({ stroke: "red", strokeWidth: 3 })
+      const node = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+      const edge = lastNetworkFrameProps.edgeStyle({})
+      expect(node.stroke).toBe("red")
+      expect(node.strokeWidth).toBe(3)
+      expect(edge.stroke).toBe("red")
+      expect(edge.strokeWidth).toBe(3)
+    })
+
+    it("`nodeStroke` strokes nodes only, leaving edges at their default", () => {
+      renderFDG({ nodeStroke: "none", nodeStrokeWidth: 0 })
+      const node = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+      const edge = lastNetworkFrameProps.edgeStyle({})
+      expect(node.stroke).toBe("none")
+      expect(node.strokeWidth).toBe(0)
+      // Edges untouched — still the built-in default.
+      expect(edge.stroke).toBe("#999")
+      expect(edge.strokeWidth).toBe(1)
+    })
+
+    it("`edgeColor` strokes edges only, leaving the node outline untouched", () => {
+      renderFDG({ edgeColor: "#4c78a8" })
+      const node = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+      const edge = lastNetworkFrameProps.edgeStyle({})
+      expect(edge.stroke).toBe("#4c78a8")
+      // No generic/node stroke set ⟹ node carries no stroke override.
+      expect(node.stroke).toBeUndefined()
+    })
+
+    it("node- and edge-specific props override the generic `stroke` per side", () => {
+      renderFDG({ stroke: "gray", strokeWidth: 2, nodeStroke: "white", edgeColor: "black" })
+      const node = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+      const edge = lastNetworkFrameProps.edgeStyle({})
+      // nodeStroke wins over generic stroke for nodes…
+      expect(node.stroke).toBe("white")
+      // …edgeColor wins over generic stroke for edges (fixes the clobber footgun)…
+      expect(edge.stroke).toBe("black")
+      // …and the un-overridden width still falls through from the generic prop.
+      expect(node.strokeWidth).toBe(2)
+      expect(edge.strokeWidth).toBe(2)
+    })
+
+    it("edge opacity/width fall back to the generic props, then built-ins", () => {
+      renderFDG({ opacity: 0.4 })
+      const edge = lastNetworkFrameProps.edgeStyle({})
+      // No edgeOpacity ⟹ generic opacity applies to edges.
+      expect(edge.opacity).toBe(0.4)
+      // No edgeWidth/strokeWidth ⟹ built-in edge width.
+      expect(edge.strokeWidth).toBe(1)
+    })
+  })
+
   it("applies custom width and height", () => {
     render(
       <TooltipProvider>

@@ -11206,6 +11206,14 @@
             "showRingLabels": {
               "type": "boolean",
               "description": "Show numeric distance-ring labels; defaults off in context and sparkline modes."
+            },
+            "cartogramLayout": {
+              "type": "string",
+              "enum": [
+                "radial",
+                "strip"
+              ],
+              "description": "Cost encoding: radial polar cartogram (default) or strip (Langren 1D cost axis). Sparkline mode defaults to strip."
             }
           },
           "required": [
@@ -13524,6 +13532,1001 @@
           },
           "required": [
             "stages"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CrucibleChart",
+        "description": "Physics-backed authored treatment chart. A bounded source charge passes through explicit phases and events into declared product molds and reason-labelled outlets; physics presents formation and separation but never discovers the program or products.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Color sources by category, status, outlet, product, or a categorical accessor.",
+              "default": "category",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "seed": {
+              "type": [
+                "number",
+                "string"
+              ],
+              "description": "Deterministic placement seed. It cannot change events, products, or destinations.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause semantic playback without altering authored time or terminal accounting.",
+              "default": false
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Accessible description of the authored charge, treatment, and terminal accounting."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader summary of the final products, outlets, and any conservation result."
+            },
+            "phases": {
+              "type": "array",
+              "description": "Required ordered furnace program. Supply unique phase ids, positive durations, labels, and optional authored motion/intensity; phases are never inferred from data.",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "intensity": {
+                    "type": "number"
+                  },
+                  "motion": {
+                    "type": "string",
+                    "enum": [
+                      "charge",
+                      "mix",
+                      "hold",
+                      "press",
+                      "bind",
+                      "separate",
+                      "pour",
+                      "quench"
+                    ]
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "metrics": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "id",
+                  "duration"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "products": {
+              "type": "array",
+              "description": "Declared product molds referenced by combine, contribute, complete-product, and split effects. Products are never inferred from collisions or flat rows.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "metrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    }
+                  },
+                  "outletId": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "events": {
+              "type": "array",
+              "description": "Serializable authored event tape. Each event has a stable id, a time or phase/progress position, and explicit effects.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "time"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "phaseId": {
+                            "type": "string"
+                          },
+                          "progress": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "required": [
+                          "phaseId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "effects": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "description": "Change the explicit semantic state of selected source components.",
+                          "properties": {
+                            "type": {
+                              "const": "set-state"
+                            },
+                            "select": {
+                              "type": "object",
+                              "properties": {
+                                "ids": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "categories": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "statuses": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "queued",
+                                      "active",
+                                      "transformed",
+                                      "consumed",
+                                      "retained",
+                                      "ejected",
+                                      "failed",
+                                      "recovered"
+                                    ]
+                                  },
+                                  "minItems": 1
+                                },
+                                "outletIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "string",
+                              "enum": [
+                                "queued",
+                                "active",
+                                "transformed",
+                                "retained",
+                                "ejected",
+                                "failed",
+                                "recovered"
+                              ]
+                            },
+                            "outletId": {
+                              "type": "string"
+                            },
+                            "reason": {
+                              "type": "string"
+                            },
+                            "metricsDelta": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "select",
+                            "state"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Author a visible relation; physics never discovers one.",
+                          "properties": {
+                            "type": {
+                              "const": "set-relation"
+                            },
+                            "relation": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "sourceIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 2
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "category": {
+                                  "type": "string"
+                                },
+                                "strength": {
+                                  "type": "number"
+                                },
+                                "metrics": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "number"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "sourceIds"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "relation"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Resolve previously authored relations.",
+                          "properties": {
+                            "type": {
+                              "const": "resolve-relation"
+                            },
+                            "relationIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            },
+                            "resolution": {
+                              "type": "string",
+                              "enum": [
+                                "combined",
+                                "rejected",
+                                "expired"
+                              ]
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "relationIds",
+                            "resolution"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Combine named sources into a declared product. Set complete=false before later contribute effects.",
+                          "properties": {
+                            "type": {
+                              "const": "combine"
+                            },
+                            "sourceIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            },
+                            "productId": {
+                              "type": "string"
+                            },
+                            "basisRelationIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            },
+                            "loss": {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "metrics": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "number"
+                                  }
+                                },
+                                "label": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "complete": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "sourceIds",
+                            "productId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Add named sources to an explicitly forming product.",
+                          "properties": {
+                            "type": {
+                              "const": "contribute"
+                            },
+                            "sourceIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            },
+                            "productId": {
+                              "type": "string"
+                            },
+                            "basisRelationIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            },
+                            "loss": {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "metrics": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "number"
+                                  }
+                                },
+                                "label": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "sourceIds",
+                            "productId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Complete a forming product and optionally route it to a declared outlet.",
+                          "properties": {
+                            "type": {
+                              "const": "complete-product"
+                            },
+                            "productId": {
+                              "type": "string"
+                            },
+                            "outletId": {
+                              "type": "string"
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "productId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Split one named source into explicit product allocations.",
+                          "properties": {
+                            "type": {
+                              "const": "split"
+                            },
+                            "sourceId": {
+                              "type": "string"
+                            },
+                            "products": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "productId": {
+                                    "type": "string"
+                                  },
+                                  "amount": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "metrics": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "productId"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 1
+                            },
+                            "loss": {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "metrics": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "number"
+                                  }
+                                },
+                                "label": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "sourceId",
+                            "products"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Route selected source components to a declared outlet with a reason.",
+                          "properties": {
+                            "type": {
+                              "const": "eject"
+                            },
+                            "select": {
+                              "type": "object",
+                              "properties": {
+                                "ids": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "categories": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "statuses": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "queued",
+                                      "active",
+                                      "transformed",
+                                      "consumed",
+                                      "retained",
+                                      "ejected",
+                                      "failed",
+                                      "recovered"
+                                    ]
+                                  },
+                                  "minItems": 1
+                                },
+                                "outletIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                },
+                                "count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "outletId": {
+                              "type": "string"
+                            },
+                            "state": {
+                              "type": "string",
+                              "enum": [
+                                "ejected",
+                                "failed",
+                                "retained",
+                                "recovered"
+                              ]
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "select",
+                            "outletId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Apply an explicit numeric metric delta to the run, sources, or products.",
+                          "properties": {
+                            "type": {
+                              "const": "set-metric"
+                            },
+                            "target": {
+                              "oneOf": [
+                                {
+                                  "const": "run"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "components": {
+                                      "type": "object",
+                                      "properties": {
+                                        "ids": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          },
+                                          "minItems": 1
+                                        },
+                                        "categories": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          },
+                                          "minItems": 1
+                                        },
+                                        "statuses": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string",
+                                            "enum": [
+                                              "queued",
+                                              "active",
+                                              "transformed",
+                                              "consumed",
+                                              "retained",
+                                              "ejected",
+                                              "failed",
+                                              "recovered"
+                                            ]
+                                          },
+                                          "minItems": 1
+                                        },
+                                        "outletIds": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          },
+                                          "minItems": 1
+                                        },
+                                        "count": {
+                                          "type": "integer",
+                                          "minimum": 0
+                                        }
+                                      },
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "components"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "productIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "minItems": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "productIds"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            "metricsDelta": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "target",
+                            "metricsDelta"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "description": "Record an authored run-level outcome and optional summary.",
+                          "properties": {
+                            "type": {
+                              "const": "set-outcome"
+                            },
+                            "outcome": {
+                              "type": "string"
+                            },
+                            "summary": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "minItems": 1
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "at",
+                  "effects"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "outlets": {
+              "type": "array",
+              "description": "Explicit reason-labelled destinations referenced by product completions and eject effects.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "side": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right",
+                      "bottom"
+                    ]
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "idAccessor": {
+              "type": "string",
+              "description": "Stable source-component id. Event selectors and product provenance reference these resolved ids.",
+              "default": "id",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "labelAccessor": {
+              "type": "string",
+              "description": "Human-readable source-component label.",
+              "default": "label",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Categorical source field used for color and projection grouping.",
+              "default": "category",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "amountAccessor": {
+              "type": "string",
+              "description": "Optional non-negative amount conserved through explicit product, loss, and outlet accounting.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "metricsAccessor": {
+              "type": "string",
+              "description": "Optional per-source numeric metric map used by authored effects and evidence.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "initialStateAccessor": {
+              "type": "string",
+              "description": "Optional initial semantic component status; defaults to active.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "metrics": {
+              "type": "object",
+              "description": "Run-level numeric metrics present before the event tape begins."
+            },
+            "amountLabel": {
+              "type": "string",
+              "description": "Display unit for source, product, loss, and conservation amounts."
+            },
+            "conservation": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Optional exact amount/metric balance check, or false to disable it."
+            },
+            "projection": {
+              "type": "object",
+              "description": "Settled truth layer: { groupBy: status|outlet|category|product, measure: count|amount|metric, order?, showInputBaseline?, showDelta? }."
+            },
+            "playback": {
+              "type": "string",
+              "enum": [
+                "replay",
+                "snapshot"
+              ],
+              "description": "Replay the authored tape, or render one deterministic snapshot without intermediate animation.",
+              "default": "replay"
+            },
+            "snapshotAt": {
+              "type": [
+                "number",
+                "object"
+              ],
+              "description": "Snapshot time in semantic seconds or { phaseId, progress? }; used only with playback=snapshot."
+            },
+            "controls": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Built-in play/pause, reset, phase-step, timeline, and speed controls.",
+              "default": false
+            },
+            "playbackRate": {
+              "type": "number",
+              "description": "Positive wall-clock multiplier for authored semantic playback; 0.5 is half speed and 2 is double speed.",
+              "default": 1
+            },
+            "rerunMS": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Replay from a fresh deterministic mount this many milliseconds after settling. Null or omission disables looping; zero uses the next timer turn."
+            },
+            "bodyRadius": {
+              "type": "number",
+              "description": "Fixed source-body radius. Per-row radius accessors are outside the bounded V1 contract.",
+              "default": 7
+            },
+            "radiusRange": {
+              "type": "array",
+              "description": "Minimum and maximum source-body radii when amountAccessor drives area.",
+              "default": [
+                5,
+                18
+              ]
+            },
+            "showBonds": {
+              "type": "boolean",
+              "description": "Draw authored provisional relations and product-member bonds.",
+              "default": true
+            },
+            "showChrome": {
+              "type": "boolean",
+              "description": "Draw the phase rail, vessel, declared molds, and reason-labelled outlets.",
+              "default": true
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Draw the exact settled projection alongside the physical treatment.",
+              "default": true
+            },
+            "initialSpawnPacing": {
+              "type": "object",
+              "description": "Optional presentation-only pacing for the initial source charge."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show a loading state instead of starting the authored run."
+            }
+          },
+          "required": [
+            "data",
+            "phases"
           ]
         }
       }

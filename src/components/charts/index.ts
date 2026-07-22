@@ -191,6 +191,8 @@ export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
 
+export * from "./physics/CrucibleChart"
+
 export {
   GauntletChart,
   GuantletChart,
