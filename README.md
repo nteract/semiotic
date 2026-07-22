@@ -434,9 +434,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **137.1 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **263.2 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **263.7 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **165.7 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **263.7 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **264.1 KiB** |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **214.2 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **34.1 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |

@@ -70,8 +70,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 402044,
-      "gzipBytes": 130338,
+      "rawBytes": 402030,
+      "gzipBytes": 130334,
       "packedPackageInputFiles": 20
     },
     {
@@ -88,8 +88,8 @@
       "importPath": "semiotic/realtime/core",
       "symbol": "RingBuffer",
       "platform": "browser",
-      "rawBytes": 546269,
-      "gzipBytes": 173814,
+      "rawBytes": 546255,
+      "gzipBytes": 173810,
       "packedPackageInputFiles": 16
     },
     {
@@ -106,8 +106,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 420101,
-      "gzipBytes": 140343,
+      "rawBytes": 420201,
+      "gzipBytes": 140394,
       "packedPackageInputFiles": 13
     },
     {
@@ -133,8 +133,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 851388,
-      "gzipBytes": 269542,
+      "rawBytes": 852647,
+      "gzipBytes": 270028,
       "packedPackageInputFiles": 6
     },
     {
@@ -142,8 +142,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 524367,
-      "gzipBytes": 169699,
+      "rawBytes": 524392,
+      "gzipBytes": 169696,
       "packedPackageInputFiles": 22
     },
     {
@@ -151,8 +151,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 852351,
-      "gzipBytes": 269999,
+      "rawBytes": 853610,
+      "gzipBytes": 270458,
       "packedPackageInputFiles": 6
     },
     {
@@ -160,8 +160,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 764393,
-      "gzipBytes": 219368,
+      "rawBytes": 764415,
+      "gzipBytes": 219373,
       "packedPackageInputFiles": 41
     },
     {
