@@ -1,5 +1,9 @@
 import type { ChartCapability } from "./chartCapabilityTypes"
 import {
+  registerNumericContracts,
+  unregisterNumericContracts,
+} from "../data/numericContracts"
+import {
   getRegisteredRecipeCapabilities,
   hasRegisteredRecipeCapabilities
 } from "./chartRecipeRegistry"
@@ -148,11 +152,13 @@ const userCapabilities = new Map<string, ChartCapability>()
  */
 export function registerChartCapability(capability: ChartCapability): void {
   userCapabilities.set(capability.component, capability)
+  registerNumericContracts(capability.component, capability.numericContracts)
 }
 
 /** Remove a previously-registered capability. Does not affect built-ins. */
 export function unregisterChartCapability(component: string): void {
   userCapabilities.delete(component)
+  unregisterNumericContracts(component)
 }
 
 /**

@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const ViolinPlotCapability: ChartCapability = {
   component: "ViolinPlot",
   family: "distribution",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.ViolinPlot,
 
   fits: (profile) => {
     if (!profile.primary.y) return "needs a numeric field"

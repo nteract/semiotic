@@ -1,11 +1,13 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const DotPlotCapability: ChartCapability = {
   component: "DotPlot",
   family: "categorical",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 3, accuracy: 5, precision: 5 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.DotPlot,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a category field"

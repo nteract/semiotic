@@ -1,9 +1,11 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const ProportionalSymbolMapCapability: ChartCapability = {
   component: "ProportionalSymbolMap",
   family: "geo",
   importPath: "semiotic/geo",
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.ProportionalSymbolMap,
   rubric: { familiarity: 3, accuracy: 3, precision: 3 },
 
   fits: (profile) => {

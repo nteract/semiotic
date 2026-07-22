@@ -1,5 +1,6 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 /**
  * AreaChart is treated as a strictly single-series chart. Multi-series areas
@@ -14,6 +15,7 @@ export const AreaChartCapability: ChartCapability = {
   family: "time-series",
   importPath: "semiotic/xy",
   rubric: { familiarity: 4, accuracy: 3, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.AreaChart,
 
   fits: (profile) => {
     if (profile.rowCount < 3) return "needs at least 3 rows"

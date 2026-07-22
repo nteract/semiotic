@@ -54,6 +54,29 @@ export type {
 export { validateProps } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export {
+  auditData,
+  formatDataAudit,
+  profileNumericFields,
+  toDataAuditNotifications,
+} from "./data/auditData"
+export type {
+  AuditDataOptions,
+  CheckedNumericContract,
+  DataAuditChartNotification,
+  DataAuditDiagnosis,
+  DataAuditNotificationOptions,
+  DataAuditResult,
+  NumericFieldProfile,
+  ProfileNumericFieldsOptions,
+} from "./data/auditData"
+export type {
+  NumericAggregateContract,
+  NumericContracts,
+  NumericFieldContract,
+  NumericFieldRole,
+  NumericRequirement,
+} from "./data/numericContracts"
+export {
   auditAccessibility,
   formatAccessibilityAudit,
   accessibilityCaveats

@@ -91,7 +91,6 @@ export { ThemeProvider, useTheme } from "./ThemeProvider"
 // Export utility
 export { exportChart } from "./export/exportChart"
 
-// Chart container
 export { ChartContainer } from "./ChartContainer"
 export { MobileChartContainer } from "./MobileChartContainer"
 export { SmallMultipleChart } from "./SmallMultipleChart"
@@ -371,6 +370,7 @@ export type {
   UnknownFieldSummary,
   SummarizeOptions
 } from "./data/DataSummarizer"
+export * from "./semiotic-ai-data-audit"
 
 // Chart capability layer — heuristic recommendations + intent taxonomy
 export { profileData } from "./ai/profileData"

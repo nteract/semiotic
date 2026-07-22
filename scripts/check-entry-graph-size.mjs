@@ -39,7 +39,9 @@ const ENTRY_GRAPHS = [
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
   { entry: "physics.module.min.js", label: "physics", limitKb: 160 },
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 450 },
+  // Bumped 450→460: the public numeric audit + chart contract evaluator adds
+  // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 460 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 },

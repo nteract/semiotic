@@ -1,5 +1,6 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 /**
  * LineChart capability — declares what data shapes LineChart serves well,
@@ -13,6 +14,7 @@ export const LineChartCapability: ChartCapability = {
   family: "time-series",
   importPath: "semiotic/xy",
   rubric: { familiarity: 5, accuracy: 4, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.LineChart,
 
   fits: (profile) => {
     if (profile.rowCount < 2) return "needs at least 2 rows"

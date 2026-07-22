@@ -171,6 +171,326 @@ describe("StreamNetworkFrame", () => {
   // Exercises the frame's imperative handle and the push→ingest→clear→reload
   // path — the frame-level boundary for the store's topology-diff clear() reset.
   describe("push API + clear→reload lifecycle", () => {
+    it("coalesces rapid single-edge pushes into one layout at the next frame", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        await act(async () => {
+          for (let i = 0; i < 50; i++) {
+            ref.current!.push({ source: `n${i}`, target: `n${i + 1}`, value: 1 })
+          }
+        })
+
+        expect(layoutSpy).not.toHaveBeenCalled()
+        expect(scheduler.pendingCount).toBe(1)
+
+        await act(async () => { scheduler.flush() })
+
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+        expect(ref.current!.getTopology().edges).toHaveLength(50)
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("ingests immediately while geometry reads and mutations commit one layout", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const ingestSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "ingestEdge")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        ingestSpy.mockClear()
+        layoutSpy.mockClear()
+
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 2 })
+        })
+        expect(ingestSpy).toHaveBeenCalledTimes(1)
+        expect(layoutSpy).not.toHaveBeenCalled()
+
+        let topology: ReturnType<StreamNetworkFrameHandle["getTopology"]>
+        await act(async () => {
+          topology = ref.current!.getTopology()
+        })
+        expect(topology!.edges).toHaveLength(1)
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+
+        let removed = false
+        await act(async () => {
+          ref.current!.push({ source: "B", target: "C", value: 3 })
+          removed = ref.current!.removeEdge("B", "C")
+          topology = ref.current!.getTopology()
+        })
+        expect(removed).toBe(true)
+        expect(topology!.edges).toHaveLength(1)
+        expect(layoutSpy).toHaveBeenCalledTimes(2)
+
+        await act(async () => { scheduler.flush() })
+        expect(ingestSpy).toHaveBeenCalledTimes(2)
+        expect(layoutSpy).toHaveBeenCalledTimes(2)
+      } finally {
+        ingestSpy.mockRestore()
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("lets pushMany synchronously absorb queued single pushes with one layout", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        let topology: ReturnType<StreamNetworkFrameHandle["getTopology"]>
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 1 })
+          ref.current!.pushMany([{ source: "B", target: "C", value: 1 }])
+          topology = ref.current!.getTopology()
+        })
+
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+        expect(topology!.edges).toHaveLength(2)
+
+        await act(async () => { scheduler.flush() })
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("clear discards a pending layout so a scheduled frame cannot resurrect data", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        let topology: ReturnType<StreamNetworkFrameHandle["getTopology"]>
+        await act(async () => {
+          ref.current!.push({ source: "queued", target: "discarded", value: 1 })
+          ref.current!.clear()
+          topology = ref.current!.getTopology()
+        })
+        expect(topology!).toEqual({ nodes: [], edges: [] })
+        expect(layoutSpy).not.toHaveBeenCalled()
+
+        await act(async () => { scheduler.flush() })
+        await act(async () => {
+          topology = ref.current!.getTopology()
+        })
+        expect(layoutSpy).not.toHaveBeenCalled()
+        expect(topology!).toEqual({ nodes: [], edges: [] })
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("snapshots each push through immediate ingestion when callers reuse a mutable object", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      render(
+        <StreamNetworkFrame
+          ref={ref}
+          chartType="sankey"
+          frameScheduler={scheduler.scheduler}
+        />
+      )
+      await act(async () => { scheduler.flush() })
+
+      const edge = { source: "A", target: "B", value: 1 }
+      await act(async () => {
+        ref.current!.push(edge)
+        edge.target = "C"
+        ref.current!.push(edge)
+        edge.target = "D"
+        scheduler.flush()
+      })
+
+      const topology = ref.current!.getTopology()
+      expect(topology.edges).toHaveLength(2)
+      expect(
+        topology.edges
+          .map((item) =>
+            typeof item.target === "object" ? item.target.id : item.target,
+          )
+          .sort(),
+      ).toEqual(["B", "C"])
+    })
+
+    it("commits a pending push before pause cancels its paint frame", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        const props = {
+          ref,
+          chartType: "sankey" as const,
+          frameScheduler: scheduler.scheduler,
+        }
+        const { rerender } = render(<StreamNetworkFrame {...props} />)
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 1 })
+          rerender(<StreamNetworkFrame {...props} paused />)
+        })
+
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+        expect(scheduler.pendingCount).toBe(0)
+        expect(ref.current!.getTopology().edges).toHaveLength(1)
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("lets a newer controlled replacement supersede a pending push transaction", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const base = {
+        ref,
+        chartType: "sankey" as const,
+        frameScheduler: scheduler.scheduler,
+      }
+      const { rerender } = render(<StreamNetworkFrame {...base} />)
+      await act(async () => { scheduler.flush() })
+
+      await act(async () => {
+        ref.current!.push({ source: "stale", target: "push", value: 1 })
+        rerender(
+          <StreamNetworkFrame
+            {...base}
+            nodes={[{ id: "X" }, { id: "Y" }]}
+            edges={[{ source: "X", target: "Y", value: 2 }]}
+          />
+        )
+      })
+      await act(async () => { scheduler.flush() })
+
+      let topology = ref.current!.getTopology()
+      expect(topology.edges).toHaveLength(1)
+      expect(topology.edges[0]).toMatchObject({ value: 2 })
+      expect(topology.nodes.map((node) => node.id).sort()).toEqual(["X", "Y"])
+
+      await act(async () => {
+        ref.current!.push({ source: "queued", target: "gone", value: 1 })
+        rerender(<StreamNetworkFrame {...base} nodes={[]} edges={[]} />)
+      })
+      await act(async () => { scheduler.flush() })
+      topology = ref.current!.getTopology()
+      expect(topology).toEqual({ nodes: [], edges: [] })
+    })
+
+    it("commits push-then-remove as one net layout and callback", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const onTopologyChange = vi.fn()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+            onTopologyChange={onTopologyChange}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+        onTopologyChange.mockClear()
+
+        let removed = false
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 1 })
+          removed = ref.current!.removeEdge("A", "B")
+        })
+
+        expect(removed).toBe(true)
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+        expect(onTopologyChange).toHaveBeenCalledTimes(1)
+        expect(onTopologyChange.mock.calls[0][1]).toEqual([])
+        await act(async () => { scheduler.flush() })
+        expect(layoutSpy).toHaveBeenCalledTimes(1)
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
+    it("drops an uncommitted layout on unmount", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const StoreModule = await import("./NetworkPipelineStore")
+      const layoutSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "runLayout")
+
+      try {
+        const { unmount } = render(
+          <StreamNetworkFrame
+            ref={ref}
+            chartType="sankey"
+            frameScheduler={scheduler.scheduler}
+          />
+        )
+        await act(async () => { scheduler.flush() })
+        layoutSpy.mockClear()
+
+        await act(async () => {
+          ref.current!.push({ source: "A", target: "B", value: 1 })
+          unmount()
+        })
+        scheduler.flush()
+        expect(layoutSpy).not.toHaveBeenCalled()
+      } finally {
+        layoutSpy.mockRestore()
+      }
+    })
+
     it("pushMany/clear round-trips through the store and reloads fresh", async () => {
       const ref = React.createRef<StreamNetworkFrameHandle>()
       render(

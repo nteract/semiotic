@@ -1,5 +1,6 @@
 import type { ChartCapability, ChartDataProfile } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 // Field names that signal the category axis is really a time bin. Matched at
 // token boundaries (not substrings) so ordinary words that merely contain a
@@ -48,6 +49,7 @@ export const BarChartCapability: ChartCapability = {
   family: "categorical",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 5, accuracy: 5, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.BarChart,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a category field"

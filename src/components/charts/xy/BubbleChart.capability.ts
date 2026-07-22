@@ -1,11 +1,13 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const BubbleChartCapability: ChartCapability = {
   component: "BubbleChart",
   family: "relationship",
   importPath: "semiotic/xy",
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.BubbleChart,
 
   fits: (profile) => {
     if (profile.rowCount < 4) return "needs at least 4 points"

@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const SwarmPlotCapability: ChartCapability = {
   component: "SwarmPlot",
   family: "distribution",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 3, accuracy: 4, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.SwarmPlot,
 
   fits: (profile) => {
     if (!profile.primary.y) return "needs a numeric field"

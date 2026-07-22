@@ -23,6 +23,7 @@ describe("diagnoseConfig", () => {
     })
     const codes = result.diagnoses.map((d) => d.code)
     expect(codes).toContain("EMPTY_DATA")
+    expect(codes.filter((code) => code === "EMPTY_DATA")).toHaveLength(1)
     expect(result.ok).toBe(false)
   })
 
@@ -348,6 +349,72 @@ describe("diagnoseConfig", () => {
     expect(codes).toContain("DEGENERATE_EXTENT")
     const diag = result.diagnoses.find((d) => d.code === "DEGENERATE_EXTENT")!
     expect(diag.severity).toBe("error")
+    expect(diag.domain).toBe("data")
+    expect(diag.field).toBe("y")
+    expect(result.diagnoses.filter((d) => d.code === "DEGENERATE_EXTENT")).toHaveLength(1)
+  })
+
+  it("inherits chart-aware numeric safety checks from auditData", () => {
+    const log = diagnoseConfig("LineChart", {
+      data: [
+        { x: 1, y: 10 },
+        { x: 2, y: 0 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      yScaleType: "log",
+      title: "Logarithmic response"
+    })
+    expect(log.diagnoses.find((d) => d.code === "LOG_NON_POSITIVE")).toMatchObject({
+      domain: "data",
+      field: "y",
+      rows: [1],
+      severity: "error"
+    })
+    expect(log.ok).toBe(false)
+
+    const bubble = diagnoseConfig("BubbleChart", {
+      data: [
+        { x: 1, y: 2, size: 4 },
+        { x: 2, y: 3, size: -1 }
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      sizeBy: "size",
+      title: "Unsafe size encoding"
+    })
+    expect(bubble.diagnoses.map((d) => d.code)).toContain("NEGATIVE_SIZE")
+    expect(bubble.ok).toBe(false)
+  })
+
+  it("does not duplicate signed part-to-whole findings across audit packs", () => {
+    const result = diagnoseConfig("PieChart", {
+      data: [
+        { category: "A", value: 4 },
+        { category: "B", value: -1 },
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+    })
+    expect(result.diagnoses.filter((item) =>
+      item.code === "NEGATIVE_VALUE" || item.code === "PART_TO_WHOLE_NEGATIVE"
+    )).toEqual([
+      expect.objectContaining({ code: "NEGATIVE_VALUE", rows: [1] }),
+    ])
+  })
+
+  it("warns on zero-span domains without failing an otherwise valid config", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [
+        { x: 1, y: 10 },
+        { x: 1, y: 20 }
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      title: "Vertical observations"
+    })
+    expect(result.diagnoses.map((d) => d.code)).toContain("ZERO_SPAN_DOMAIN")
+    expect(result.ok).toBe(true)
   })
 
   it("detects invisible bar padding", () => {
@@ -960,7 +1027,7 @@ describe("diagnoseConfig", () => {
       })
     })
 
-    describe("PART_TO_WHOLE_NEGATIVE", () => {
+    describe("signed part-to-whole data", () => {
       it("errors on negative pie slice values", () => {
         const result = diagnoseConfig("PieChart", {
           data: [
@@ -973,14 +1040,15 @@ describe("diagnoseConfig", () => {
           title: "Mix"
         })
         const diag = result.diagnoses.find(
-          (d) => d.code === "PART_TO_WHOLE_NEGATIVE"
+          (d) => d.code === "NEGATIVE_VALUE"
         )
         expect(diag).toBeDefined()
         expect(diag?.severity).toBe("error")
+        expect(diag?.rows).toEqual([1])
         expect(result.ok).toBe(false)
       })
 
-      it("warns on normalized stacked bars with negatives", () => {
+      it("errors on normalized stacked bars with negatives", () => {
         const result = diagnoseConfig("StackedBarChart", {
           data: [
             { category: "A", group: "g1", value: 40 },
@@ -993,10 +1061,10 @@ describe("diagnoseConfig", () => {
           title: "Stack"
         })
         const diag = result.diagnoses.find(
-          (d) => d.code === "PART_TO_WHOLE_NEGATIVE"
+          (d) => d.code === "NEGATIVE_NORMALIZED_VALUE"
         )
         expect(diag).toBeDefined()
-        expect(diag?.severity).toBe("warning")
+        expect(diag?.severity).toBe("error")
       })
 
       it("falls back to the component's default value accessor when omitted", () => {
@@ -1011,10 +1079,10 @@ describe("diagnoseConfig", () => {
           title: "Stack"
         })
         const diag = result.diagnoses.find(
-          (d) => d.code === "PART_TO_WHOLE_NEGATIVE"
+          (d) => d.code === "NEGATIVE_NORMALIZED_VALUE"
         )
         expect(diag).toBeDefined()
-        expect(diag?.message).toContain('"value"')
+        expect(diag?.field).toBe("value")
       })
 
       it("does not flag un-normalized stacks (diverging stacks are legitimate)", () => {

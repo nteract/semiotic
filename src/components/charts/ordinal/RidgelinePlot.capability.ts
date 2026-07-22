@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const RidgelinePlotCapability: ChartCapability = {
   component: "RidgelinePlot",
   family: "distribution",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 2, accuracy: 3, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.RidgelinePlot,
 
   fits: (profile) => {
     if (!profile.primary.y) return "needs a numeric field"

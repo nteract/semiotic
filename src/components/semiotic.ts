@@ -407,6 +407,8 @@ export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/use
 export type {
   ChartContainerProps,
   ChartContainerHandle,
+  ChartContainerDataAudit,
+  ChartContainerDataAuditOptions,
   ChartContainerMobileOptions,
   ChartNotification,
   ChartNotificationLevel,

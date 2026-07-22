@@ -1,5 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { DataSummary } from "../data/DataSummarizer"
+import type { NumericContracts } from "../data/numericContracts"
+import type { NumericFieldProfile } from "../data/auditData"
 import type { IntentId } from "./intents"
 import type { ChartRecipe, ChartRecipeFrameFamily, MobileDesignDefinition } from "./chartRecipes"
 import type {
@@ -86,6 +88,12 @@ export interface FieldCandidate {
 export interface ChartDataProfile extends DataSummary {
   /** Original rows (read-only); used by capabilities to compute their own stats. */
   data: ReadonlyArray<Datum>
+  /**
+   * Per-field numeric health, including invalid/missing counts and extrema.
+   * Unlike `fields`, categorical values assigned to a numeric role remain
+   * visible here as `nonNumericCount` rather than being silently discarded.
+   */
+  numericFields?: Readonly<Record<string, NumericFieldProfile>>
   /** Candidate fields per role, sorted best-first. */
   candidates: {
     x: FieldCandidate[]
@@ -216,6 +224,12 @@ export interface ChartCapability {
   importPath: ChartImportPath
   /** Base rubric, before variant/profile adjustments. */
   rubric: ChartRubric
+  /**
+   * JSON-safe Semiotic runtime declaration of the numeric assumptions this
+   * chart makes about accessor-bound data. Consumed by `auditData` and
+   * `diagnoseConfig`; not part of the library-neutral IDID v0.1 subset.
+   */
+  numericContracts?: NumericContracts
   /**
    * Hard requirements gate. Return null if the chart can render this profile,
    * or a human-readable string explaining why not (e.g. "no numeric y candidate").

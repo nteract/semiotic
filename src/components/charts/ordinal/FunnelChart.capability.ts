@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 const STAGE_HINT = /(stage|step|funnel|status|outcome|phase)/i
 
@@ -7,6 +8,7 @@ export const FunnelChartCapability: ChartCapability = {
   family: "flow",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 4, accuracy: 3, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.FunnelChart,
 
   fits: (profile) => {
     if (!profile.primary.y) return "needs a numeric value field"

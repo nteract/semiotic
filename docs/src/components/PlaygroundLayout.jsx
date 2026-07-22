@@ -4,6 +4,7 @@ import PageLayout from "./PageLayout"
 import PropControls from "./PropControls"
 import CodeBlock from "./CodeBlock"
 import { propertyToString } from "./LiveExample"
+import PlaygroundDiagnostics from "./PlaygroundDiagnostics"
 
 // Build a serializable ChartConfig from the current knob-derived props.
 // Returns null when the component isn't in the serialization registry
@@ -238,6 +239,11 @@ export default function PlaygroundLayout({
           />
         ) : null}
       </div>
+
+      <PlaygroundDiagnostics
+        componentName={componentName}
+        chartProps={chartProps}
+      />
 
       {/* Controls */}
       <PropControls

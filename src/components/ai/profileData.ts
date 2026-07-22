@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { summarizeData, type FieldSummary } from "../data/DataSummarizer"
 import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabilityTypes"
+import { profileNumericFields } from "../data/auditData"
 
 const X_FIELD_HINT = /^(x|index|rank|order|step|sequence|year|quarter|qtr|fiscal|month|week|day|date|time|timestamp)$/i
 const Y_FIELD_HINT = /^(y|value|amount|total|count|revenue|sales|price|score|rate|population|measure)$/i
@@ -339,6 +340,10 @@ export function profileData(
   return {
     ...summary,
     data: rows,
+    // summarizeData already sorts numeric columns for medians. The health pass
+    // keeps its second scan linear here; callers that need exact quartiles can
+    // request them directly from profileNumericFields().
+    numericFields: profileNumericFields(rows, { quantiles: false }),
     candidates: {
       x: xCandidates,
       y: yCandidates,

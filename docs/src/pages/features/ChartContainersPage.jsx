@@ -135,6 +135,14 @@ const containerProps = [
       "Chart-level notices surfaced as a severity-colored toolbar bell with a count badge; clicking it opens a popover with the dismissible cards (an overlay, so arriving/dismissing notices never reflow the plot). Each entry: { id?, level?, title?, message, source?, dismissible? }. Levels (info | success | warning | error | neutral) map to the theme's semantic role colors; the bell adopts the icon + color of the most severe visible notice, and an sr-only aria-live region announces the count + severity.",
   },
   {
+    name: "dataAudit",
+    type: "boolean | { checkOutliers?, errorsOnly?, max? }",
+    required: false,
+    default: "false",
+    description:
+      "Requires chartConfig. Runs the chart-aware numeric input audit and appends findings to notifications whenever the config/data identity changes. Checks finite values, scale domains, log constraints, size geometry, normalized totals, and scale-dominating outliers.",
+  },
+  {
     name: "onNotificationDismiss",
     type: "(notification, index) => void",
     required: false,
@@ -533,6 +541,40 @@ const notifications = report.findings
         <Link to="/examples/what-the-machine-sees">What the Machine Sees</Link> example for the
         two surfaces working together on a real audit report.
       </p>
+
+      <h3 id="numeric-audit-notifications">Automatic numeric audit</h3>
+      <p>
+        Set <code>dataAudit</code> alongside <code>chartConfig</code> to run the
+        Data Truth Lens whenever React receives a new config or data snapshot.
+        Intrinsic hazards—such as a zero on a log axis or a negative bubble
+        size—join authored notifications in the same bell. The scan is opt-in
+        because it reads every bound numeric value; its evaluator is loaded as
+        a separate chunk only after the prop is enabled.
+      </p>
+      <CodeBlock
+        code={`import { auditData, toDataAuditNotifications } from "semiotic/ai"
+
+const chartProps = {
+  data,
+  xAccessor: "income",
+  yAccessor: "lifeExpectancy",
+  sizeBy: "population",
+}
+
+<ChartContainer
+  chartConfig={{ component: "BubbleChart", props: chartProps }}
+  dataAudit={{ checkOutliers: true, max: 6 }}
+>
+  <BubbleChart {...chartProps} />
+</ChartContainer>
+
+// Ref-only push() mutations do not cause a React render. For a live stream,
+// audit a bounded snapshot/batch and compose explicitly:
+const report = auditData("BubbleChart", chartProps, currentWindow)
+const numericNotices = toDataAuditNotifications(report)
+<ChartContainer notifications={numericNotices}>...</ChartContainer>`}
+        language="jsx"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Loading and Error states */}
