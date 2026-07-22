@@ -108,5 +108,10 @@ describe("LDATopicCrucibleExamplePage SSR hydration", () => {
       )
     })
     expect(mismatchWarnings).toEqual([])
-  }, 20_000)
+    // This test renders + hydrates a full example page (CrucibleChart physics
+    // frame included) and settles multiple effect passes via waitFor. It
+    // finishes in a few seconds in isolation, but under a fully parallel
+    // suite run (500+ files) it can be starved by CPU contention well past
+    // 20s without anything actually being wrong — give it real headroom.
+  }, 60_000)
 })
