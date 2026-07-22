@@ -166,11 +166,17 @@ export function drawCrucibleBody(
  * for settled products, and highlight dot for source components, as an SVG
  * fragment instead of canvas draw calls. Returns `undefined` for non-crucible
  * bodies so the SVG renderer falls back to its default circle mark.
+ *
+ * `idPrefix` is the sanitized prefix the owning `PhysicsSettledSVG` document
+ * uses for its own ids — folded into this body's `<filter>` id so multiple
+ * settled Crucible SVGs on one page (SVG ids are document-global) can't
+ * collide and mis-apply each other's glow filter.
  */
 export function drawCrucibleBodySVG(
   body: PhysicsBodyState,
   style: Style,
-  index: number
+  index: number,
+  idPrefix?: string
 ): React.ReactNode | undefined {
   const wrapped = body.datum as CrucibleBodyDatum | undefined
   if (!wrapped?.__crucible) return undefined
@@ -185,7 +191,7 @@ export function drawCrucibleBodySVG(
   const strokeWidth =
     typeof style.strokeWidth === "number" ? style.strokeWidth : 1.25
   const opacity = typeof style.opacity === "number" ? style.opacity : 0.96
-  const key = `crucible-body-${index}`
+  const key = idPrefix ? `${idPrefix}-crucible-body-${index}` : `crucible-body-${index}`
 
   if (wrapped.kind === "product") {
     const points = Array.from({ length: 6 }, (_, i) => {

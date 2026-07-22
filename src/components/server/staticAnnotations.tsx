@@ -312,8 +312,16 @@ function renderAnnotation(
 
     case "x-threshold": {
       const value = ann.value
-      if (value == null || !scales.x) return null
-      const px = scales.x(value)
+      if (value == null) return null
+      // For horizontal ordinal charts (bar/swimlane/etc.), the value axis IS
+      // the x axis, so `x-threshold` must resolve against `r`, not the
+      // (always-absent, for ordinal frames) XY-style `scales.x` — this
+      // mirrors the CSR contract (`OrdinalSVGOverlay` maps
+      // `context.scales.x` to the r-scale when `projection === "horizontal"`)
+      // and the equivalent horizontal branch on `y-threshold` above.
+      const px = config.projection === "horizontal" && scales.r
+        ? scales.r(value)
+        : scales.x ? scales.x(value) : null
       if (px == null) return null
       const color = resolveAnnotationColor(ann, theme)
       const label = ann.label

@@ -5,11 +5,13 @@ import { createMockCanvasContext } from "../../../test-utils/canvasMock"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
 import { buildCrucibleProjection } from "./crucibleEffects"
 import { compileCruciblePlan } from "./cruciblePhysics"
+import { renderToStaticMarkup } from "react-dom/server"
 import {
   CrucibleChrome,
   CrucibleProjectionOverlay,
   crucibleBodySemanticItem,
   crucibleProjectionSemanticItems,
+  drawCrucibleBodySVG,
   drawCrucibleBonds
 } from "./crucibleChrome"
 
@@ -106,5 +108,39 @@ describe("CrucibleChart chrome", () => {
     })
     expect(ctx.moveTo).toHaveBeenCalled()
     expect(ctx.lineTo).toHaveBeenCalled()
+  })
+
+  it("namespaces the product glow filter id with idPrefix so multiple settled SVGs don't collide", () => {
+    const store = new PhysicsPipelineStore(plan.config)
+    store.enqueue(plan.terminalSpawns)
+    store.tick(0)
+    const bodies = store.readBodies()
+    const productBody = bodies.find((body) => String(body.id).includes("product"))!
+
+    const nodeA = drawCrucibleBodySVG(productBody, {}, 0, "chart-a")
+    const nodeB = drawCrucibleBodySVG(productBody, {}, 0, "chart-b")
+    const svgA = renderToStaticMarkup(nodeA as React.ReactElement)
+    const svgB = renderToStaticMarkup(nodeB as React.ReactElement)
+
+    // Same loop index, different idPrefix — filter ids (and their url(#...)
+    // references) must differ so embedding both documents on one page can't
+    // mis-apply one chart's glow filter to the other's product body.
+    expect(svgA).toContain('id="chart-a-crucible-body-0-glow"')
+    expect(svgB).toContain('id="chart-b-crucible-body-0-glow"')
+    expect(svgA).toContain('filter="url(#chart-a-crucible-body-0-glow)"')
+    expect(svgB).toContain('filter="url(#chart-b-crucible-body-0-glow)"')
+    expect(svgA).not.toBe(svgB)
+  })
+
+  it("falls back to the loop index alone when idPrefix is omitted", () => {
+    const store = new PhysicsPipelineStore(plan.config)
+    store.enqueue(plan.terminalSpawns)
+    store.tick(0)
+    const bodies = store.readBodies()
+    const productBody = bodies.find((body) => String(body.id).includes("product"))!
+
+    const node = drawCrucibleBodySVG(productBody, {}, 2)
+    const svg = renderToStaticMarkup(node as React.ReactElement)
+    expect(svg).toContain('id="crucible-body-2-glow"')
   })
 })

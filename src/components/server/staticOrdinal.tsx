@@ -252,6 +252,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         title: props.title, description: props.description,
         annotations: props.annotations,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
+        margin,
       })
     }
     return ReactDOMServer.renderToStaticMarkup(
@@ -322,6 +323,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       annotations: props.annotations,
       yDomain: numericDomain(store.scales.r?.domain?.()),
       categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
+      margin,
     })
   }
 

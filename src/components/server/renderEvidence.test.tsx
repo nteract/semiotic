@@ -300,3 +300,57 @@ describe("HOC prop → SSR frame parity", () => {
     expect(track).toContain("#eeeeee")
   })
 })
+
+// Semiotic auto-reserves/adjusts margin (e.g. to fit a legend), so a caller
+// hand-drawing an SSR overlay (an end-cap circle, a custom glyph positioned
+// outside `svgAnnotationRules`) can't reconstruct the actual plot rectangle
+// from the input props alone — only evidence exposes the ground truth.
+describe("RenderEvidence — resolved margin / plot rect", () => {
+  it("matches the data-area translate() for a chart with no auto-reserved chrome", () => {
+    const { svg, evidence } = renderChartWithEvidence("LineChart", {
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
+    })
+    expect(evidence.margin).toBeDefined()
+    const translateMatch = svg.match(/id="data-area" transform="translate\(([\d.]+),([\d.]+)\)"/)
+    expect(translateMatch).toBeTruthy()
+    const [, tx, ty] = translateMatch as RegExpMatchArray
+    expect(evidence.margin?.left).toBeCloseTo(Number(tx))
+    expect(evidence.margin?.top).toBeCloseTo(Number(ty))
+    expect(evidence.plot).toEqual({
+      x: evidence.margin?.left,
+      y: evidence.margin?.top,
+      width: evidence.width - (evidence.margin?.left ?? 0) - (evidence.margin?.right ?? 0),
+      height: evidence.height - (evidence.margin?.top ?? 0) - (evidence.margin?.bottom ?? 0),
+    })
+  })
+
+  it("reflects an auto-reserved legend margin, not just the caller's input margin", () => {
+    const grouped = lineData.map((d, i) => ({ ...d, series: i % 2 === 0 ? "A" : "B" }))
+    const withoutLegend = renderChartWithEvidence("LineChart", {
+      data: grouped,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      lineBy: "series",
+    })
+    const withLegend = renderChartWithEvidence("LineChart", {
+      data: grouped,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      lineBy: "series",
+      showLegend: true,
+      legendPosition: "bottom",
+    })
+    // A bottom legend grows the reserved bottom margin beyond the default —
+    // the exact "legend eats into the plot" case a hand-drawn overlay can't
+    // see without evidence, since it isn't in the input props.
+    expect(withLegend.evidence.margin?.bottom).toBeGreaterThan(
+      withoutLegend.evidence.margin?.bottom ?? 0
+    )
+    const translateMatch = withLegend.svg.match(/id="data-area" transform="translate\(([\d.]+),([\d.]+)\)"/)
+    const [, tx, ty] = translateMatch as RegExpMatchArray
+    expect(withLegend.evidence.margin?.left).toBeCloseTo(Number(tx))
+    expect(withLegend.evidence.margin?.top).toBeCloseTo(Number(ty))
+  })
+})

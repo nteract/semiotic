@@ -697,6 +697,27 @@ describe("Annotations in server SVG", () => {
     expect(svg).toContain("Goal")
   })
 
+  // Regression: on a horizontal ordinal chart the value axis IS the x axis
+  // (r maps to x), so `x-threshold` must resolve against the r-scale like
+  // its CSR counterpart (`OrdinalSVGOverlay`) does. Previously `x-threshold`
+  // unconditionally required an XY-style `scales.x`, which ordinal SSR never
+  // populates — the annotation silently vanished for every ordinal chart
+  // family (bar, swimlane, etc.) rendered horizontally.
+  it("renders x-threshold annotation on a horizontal ordinal chart", () => {
+    const svg = renderOrdinalToStaticSVG({
+      chartType: "bar",
+      data: barData,
+      oAccessor: "category",
+      rAccessor: "value",
+      projection: "horizontal",
+      size: [400, 300],
+      annotations: [{ type: "x-threshold", value: 15, label: "Goal" }],
+    } as StaticOrdinalProps)
+    expect(svg).toContain("semiotic-annotations")
+    expect(svg).toContain("Goal")
+    expect(svg).toContain("<line")
+  })
+
   it("renders multiple annotations", () => {
     const svg = renderXYToStaticSVG({
       chartType: "line",

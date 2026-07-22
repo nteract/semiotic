@@ -157,4 +157,25 @@ describe("physics settled SVG renderer", () => {
     expect(bodyIndex).toBeGreaterThan(backgroundIndex)
     expect(foregroundIndex).toBeGreaterThan(bodyIndex)
   })
+
+  it("passes the sanitized idPrefix through to renderBodySVG", () => {
+    // A custom renderBodySVG emitting `<defs>` (a filter, a gradient) needs
+    // this prefix to namespace its own ids — otherwise two settled-physics
+    // SVGs embedded in one document can collide on document-global SVG ids.
+    const store = new PhysicsPipelineStore({ fixedDt: 1 / 60 })
+    store.spawnNow(circle("custom-body", 20, 20))
+
+    const receivedPrefixes: string[] = []
+    renderPhysicsSettledSVG(store, {
+      width: 100,
+      height: 100,
+      idPrefix: "chart one!",
+      renderBodySVG: (_body, _style, index, idPrefix) => {
+        receivedPrefixes.push(idPrefix)
+        return <g data-testid={`custom-${index}`} id={`${idPrefix}-custom-${index}`} />
+      }
+    })
+
+    expect(receivedPrefixes).toEqual(["chart_one_"])
+  })
 })

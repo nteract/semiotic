@@ -82,6 +82,30 @@ describe("band annotations", () => {
     )
     expect(openBottom).toMatch(/y="60(\.\d+)?" width="400" height="140"/)
   })
+
+  // Regression: an explicit `fillOpacity` must reach the DOM proportionally —
+  // no fixed ceiling, no group `opacity` silently multiplying it back down —
+  // matching the server static renderer (`staticAnnotations.tsx`) exactly.
+  it("defaults band fillOpacity to 0.1 when unset", () => {
+    const svg = renderToStaticMarkup(
+      rules({ type: "band", y0: 30, y1: 70 }, 0, context) as React.ReactElement,
+    )
+    expect(svg).toContain('fill-opacity="0.1"')
+  })
+
+  it("honors an explicit band fillOpacity override above the default", () => {
+    const svg = renderToStaticMarkup(
+      rules({ type: "band", y0: 30, y1: 70, fillOpacity: 0.9 }, 0, context) as React.ReactElement,
+    )
+    expect(svg).toContain('fill-opacity="0.9"')
+  })
+
+  it("honors an explicit x-band fillOpacity override above the default", () => {
+    const svg = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 20, x1: 60, fillOpacity: 0.75 }, 0, context) as React.ReactElement,
+    )
+    expect(svg).toContain('fill-opacity="0.75"')
+  })
 })
 
 describe("top annotation label clearance", () => {

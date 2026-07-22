@@ -166,6 +166,39 @@ describe("SwimlaneChart — valueExtent SSR parity", () => {
   })
 })
 
+// `frameProps.showAxes: false` is the client HOC's escape hatch (frameProps
+// spreads last onto the frame, overriding the mode-resolved default) — used
+// by e.g. iris's ThresholdBar/QuotaBar to render a slim bar with no axis
+// chrome. `renderChart`'s common-prop builder used to reassert
+// `showAxes: resolvedMode.showAxes` unconditionally after spreading
+// `frameProps`, silently discarding the override and always drawing a full
+// axis server-side regardless of what the live HOC rendered.
+describe("SwimlaneChart — frameProps.showAxes SSR parity", () => {
+  const single = {
+    data: [{ category: "bar", segment: "Value", value: 40 }],
+    categoryAccessor: "category",
+    subcategoryAccessor: "segment",
+    valueAccessor: "value",
+    orientation: "horizontal" as const,
+    valueExtent: [0, 100] as [number, number],
+    width: 300,
+    height: 40,
+  }
+
+  it("renderChart honors frameProps.showAxes: false", () => {
+    const svg = renderChart("SwimlaneChart", {
+      ...single,
+      frameProps: { showAxes: false },
+    })
+    expect(svg).not.toContain("ordinal-axes")
+  })
+
+  it("without the override, renderChart still draws axes (mode default)", () => {
+    const svg = renderChart("SwimlaneChart", single)
+    expect(svg).toContain("ordinal-axes")
+  })
+})
+
 // ── TreeMap analog: colorBy tiles + hierarchy labels ──────────────────────
 // A wrapper colors leaf tiles by a categorical field and labels every tier.
 // The SSR path used to (a) collapse every tile to one fill because the network

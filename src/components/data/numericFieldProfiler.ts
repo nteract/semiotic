@@ -44,10 +44,28 @@ function observeField(data: ReadonlyArray<Datum>, field: string): FieldObservati
       continue
     }
     let value: number | undefined
-    if (typeof raw === "number") value = raw
-    else if (typeof raw === "string" && raw.trim()) {
-      const parsed = Number(raw.trim())
-      if (Number.isFinite(parsed)) value = parsed
+    if (typeof raw === "number") {
+      value = raw
+    } else if (typeof raw === "string") {
+      const trimmed = raw.trim()
+      if (trimmed === "") {
+        // Whitespace-only ("  ") is a blank cell, not a non-numeric one.
+        out.missing++
+        continue
+      }
+      const parsed = Number(trimmed)
+      if (!Number.isNaN(parsed)) {
+        // A finite number or a real ±Infinity token/overflow — both are
+        // legitimate parses; nonFinite vs. finite is decided below.
+        value = parsed
+      } else if (/^[+-]?nan$/i.test(trimmed)) {
+        // `Number()` maps both an explicit "NaN" string and unparseable
+        // garbage ("abc") to NaN. Distinguish them by the literal token so an
+        // authored "NaN" reports as a non-finite hazard, not silently as
+        // "not a number at all" alongside real garbage.
+        value = parsed
+      }
+      // Anything else (unparseable garbage) leaves `value` undefined below.
     }
     if (value === undefined) {
       out.nonNumeric++

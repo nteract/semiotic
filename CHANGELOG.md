@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`RenderEvidence` exposes the resolved margin and plot rectangle.**
+  `renderChartWithEvidence` now returns `margin: {top,right,bottom,left}` and
+  `plot: {x,y,width,height}` — the actual geometry Semiotic used *after*
+  auto-reservation (e.g. a legend), matching exactly where the SVG's
+  `data-area` group is translated. A caller hand-drawing an SSR overlay no
+  longer has to guess or conservatively bail when it can't reconstruct the
+  plot rectangle from its input margin alone.
 - **Chart-aware numeric data audit.** `semiotic/ai`, `semiotic/ai/core`,
   `semiotic/utils`, and `semiotic/utils/core` now export `auditData`,
   `formatDataAudit`, `profileNumericFields`, and `toDataAuditNotifications`.
@@ -27,6 +34,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whole layout for every edge. `pushMany()` absorbs pending single-push layout
   work into its synchronous batch; reads/mutations flush first, and `clear()`
   cancels uncommitted layout work so imperative semantics stay deterministic.
+
+### Fixed
+
+- **`renderChart` honors custom `svgAnnotationRules` server-side.** A chart's
+  `svgAnnotationRules` (top-level or `frameProps`) now runs during static/SSR
+  rendering the same way it does on the client — custom annotation shapes
+  (endpoint bulbs, hover guides, bespoke glyphs) no longer silently vanish from
+  `renderChart`/`renderChartWithEvidence` output. Passed through for XY,
+  ordinal, network, and geo static render paths alike.
+- **`frameProps` escape-hatch overrides for `showAxes`/`showLegend`/
+  `showLabels`/`showGrid`/`xLabel`/`yLabel`/`categoryLabel`/`valueLabel` no
+  longer silently dropped in `renderChart`.** The static common-prop builder
+  used to reassert each of these from the mode-resolved default *after*
+  spreading `frameProps`, clobbering an explicit override the live HOC
+  otherwise honors (frameProps spreads last there). A chart passing
+  `frameProps={{ showAxes: false }}` (or any of the above) server-side now
+  renders identically to the live component instead of always showing the
+  mode's default axis/label chrome.
+- **Ordinal `x-threshold` annotation now renders in SSR.** On a horizontal
+  ordinal chart (bar, swimlane, etc.) the value axis IS the x axis, but the
+  static renderer never populated an XY-style `scales.x` for ordinal frames,
+  so `x-threshold` always silently dropped — while the client (`OrdinalSVGOverlay`)
+  already resolved it correctly against the r-scale. `x-threshold` now mirrors
+  the same orientation-aware resolution `y-threshold` already had.
+- **`profileNumericFields` no longer misclassifies dirty-numeric strings.**
+  Whitespace-only strings (`"  "`) now count as missing rather than
+  non-numeric, and an explicit `"NaN"`/`"Infinity"`/`"-Infinity"` string now
+  counts as a non-finite hazard rather than being lumped in with unparseable
+  garbage — distinguished from garbage (which also parses to `NaN`) by the
+  literal token, not the parsed value.
+- **`PhysicsSettledSVG`'s `renderBodySVG` now receives the resolved
+  `idPrefix`.** A custom body renderer emitting its own `<defs>` (a
+  `<filter>`, a gradient) can namespace those ids — SVG ids are
+  document-global, so without this, two settled-physics SVGs embedded in one
+  document could collide and mis-apply each other's filter.
+  `CrucibleChart`'s settled-product glow filter now uses it.
 
 ## [3.8.4] - 2026-07-19
 
