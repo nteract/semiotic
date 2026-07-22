@@ -191,6 +191,7 @@ const navData = [
       { title: "The Living System of Semiotic", path: "/examples/semiotic-architecture" },
       { title: "Point Climate Anomaly", path: "/examples/climate-anomaly" },
       { title: "The Gestalt of Data Visualization", path: "/examples/gestalt-principles" },
+      { title: "Data Viz for Dummies", path: "/examples/data-viz-for-dummies" },
       { title: "Drawing Networks", path: "/examples/network-visualization" },
       { title: "Map of the Oregon Trail", path: "/examples/oregon-trail" },
     ],

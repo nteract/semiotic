@@ -40,6 +40,7 @@ const PREVIEW_COMPONENTS = {
   octopus: MiniOctopusPreview,
   gestalt: MiniGestaltPreview,
   "semiotic-standard": MiniSemioticStandardPreview,
+  "data-viz-for-dummies": MiniDataVizForDummiesPreview,
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
   oregontrail: MiniOregonTrailPreview,
@@ -1206,6 +1207,54 @@ function MiniSemioticStandardPreview() {
         </g>
       ))}
       <rect y="92" width="242" height="4" fill="#ed1c24" />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesPreview() {
+  const bars = [30, 23, 19, 14, 9]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#c7f36b"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        SCOUTING REPORT
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        01
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="7" fontWeight="900">
+        THE QUESTION
+      </text>
+      <path d="M87 20H232M87 48H232M87 76H232" stroke="#c7c4b9" strokeWidth=".7" />
+      {bars.map((width, index) => (
+        <rect
+          key={width}
+          x="92"
+          y={15 + index * 14}
+          width={width * 4}
+          height="8"
+          rx="2"
+          fill={index === 0 ? "#ff6f61" : "#5b8def"}
+        />
+      ))}
+      <path
+        d="M92 84C117 65 138 79 158 51S196 48 229 20"
+        fill="none"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <circle cx="158" cy="51" r="3.5" fill="#f1c75b" stroke="#18211b" />
+      <circle cx="229" cy="20" r="3.5" fill="#c7f36b" stroke="#18211b" />
     </svg>
   )
 }

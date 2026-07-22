@@ -1066,6 +1066,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["design", "process", "accessibility"],
   },
   {
+    title: "Data Viz for Dummies",
+    path: "/examples/data-viz-for-dummies",
+    eyebrow: "Seven chart families · two-way taxonomy",
+    description:
+      "Scout chart families like a sports roster: organize them by data or task, then learn ranking, comparison, change, distribution, relationship, flow, and hierarchy through one fictional season.",
+    preview: "data-viz-for-dummies",
+    badges: ["Scrollytelling", "Dual taxonomy", "Accessible charts", "Semiotic-only"],
+    frames: ["xy", "ordinal", "network"],
+    topics: ["design", "accessibility", "culture"],
+  },
+  {
     title: "Mobile Data Visualization That Works",
     path: "/examples/mobile-data-visualization",
     eyebrow: "Mobile-first review · Semiotic demos",
@@ -1136,6 +1147,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/erie-railroad-organization": "ErieRailroadOrganizationExamplePage.jsx",
   "/examples/gestalt-principles": "GestaltPrinciplesExamplePage.jsx",
   "/examples/semiotic-standard": "SemioticStandardExamplePage.jsx",
+  "/examples/data-viz-for-dummies": "DataVizForDummiesExamplePage.jsx",
   "/examples/hot-dog-contest-variations": "HotDogContestVariationsExamplePage.jsx",
   "/examples/insight-forge": "InsightForgeExamplePage.jsx",
   "/examples/lake-travis-isotype": "LakeTravisIsotypeExamplePage.jsx",
