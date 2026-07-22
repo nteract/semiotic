@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const StackedAreaChartCapability: ChartCapability = {
   component: "StackedAreaChart",
   family: "time-series",
   importPath: "semiotic/xy",
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.StackedAreaChart,
   rubric: { familiarity: 4, accuracy: 3, precision: 3 },
 
   fits: (profile) => {

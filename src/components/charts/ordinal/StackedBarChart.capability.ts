@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const StackedBarChartCapability: ChartCapability = {
   component: "StackedBarChart",
   family: "categorical",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 4, accuracy: 4, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.StackedBarChart,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a category field"

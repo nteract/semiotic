@@ -1,11 +1,13 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const PieChartCapability: ChartCapability = {
   component: "PieChart",
   family: "categorical",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 5, accuracy: 3, precision: 2 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.PieChart,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a category field"

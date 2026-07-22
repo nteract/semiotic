@@ -1,5 +1,6 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 /**
  * Heatmap is a matrix: categorical × categorical (or temporal × categorical),
@@ -13,6 +14,7 @@ export const HeatmapCapability: ChartCapability = {
   family: "relationship",
   importPath: "semiotic/xy",
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.Heatmap,
 
   fits: (profile) => {
     if (profile.rowCount < 4) return "needs at least 4 cells"

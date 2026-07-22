@@ -624,44 +624,87 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Push API ─────────────────────────────────────────────────────────
 
-  // Drop sparse entries before they reach `NetworkPipelineStore` —
-  // mirrors the bounded-ingest hardening. `ref.push(null)` or
-  // `ref.pushMany([null, valid])` would otherwise crash node/edge
-  // accessor reads inside `ingestEdge`.
+  // Ingest each edge synchronously so push ordering, mutable caller objects,
+  // and read-after-write data semantics stay identical to the original API.
+  // Only the expensive Sankey/force solve is deferred: a burst of N push()
+  // calls commits one net topology layout at the next animation frame.
+  const pendingLayoutRef = useRef(false)
+
+  // Clear before running: onTopologyChange can call a getter (which must not
+  // recurse) or push another edge (which must remain pending for a new frame).
+  const commitLayout = useCallback(
+    (force = false): boolean => {
+      if (!force && !pendingLayoutRef.current) return false
+      pendingLayoutRef.current = false
+      runLayout()
+      return true
+    },
+    [runLayout]
+  )
+
+  const flushPendingLayout = useCallback(
+    (): boolean => commitLayout(false),
+    [commitLayout]
+  )
+
+  // Drop sparse entries before they reach `NetworkPipelineStore` — mirrors
+  // the bounded-ingest hardening. `ref.push(null)` or
+  // `ref.pushMany([null, valid])` would otherwise crash node/edge accessor
+  // reads inside `ingestEdge`.
+  const applyEdgeBatch = useCallback(
+    (edges: EdgePush[]): boolean => {
+      const store = storeRef.current
+      if (!store) return false
+
+      let ingested = false
+      let needsRelayout = pendingLayoutRef.current
+      for (const edge of edges) {
+        if (edge == null || typeof edge !== "object") continue
+        ingested = true
+        if (store.ingestEdge(edge)) needsRelayout = true
+      }
+      const committed = commitLayout(needsRelayout)
+      return ingested || committed
+    },
+    [commitLayout]
+  )
+
   const pushEdge = useCallback(
     (edge: EdgePush) => {
       if (edge == null || typeof edge !== "object") return
       const store = storeRef.current
       if (!store) return
-      const needsRelayout = store.ingestEdge(edge)
-      if (needsRelayout) {
-        runLayout()
+      if (store.ingestEdge(edge)) pendingLayoutRef.current = true
+      if (!frameRuntime.isActive) {
+        flushPendingLayout()
+        return
       }
       scheduleRender()
     },
-    [runLayout, scheduleRender]
+    [flushPendingLayout, frameRuntime, scheduleRender]
   )
 
   const pushManyEdges = useCallback(
     (edges: EdgePush[]) => {
-      const store = storeRef.current
-      if (!store) return
-      let needsRelayout = false
-      for (const edge of edges) {
-        if (edge == null || typeof edge !== "object") continue
-        if (store.ingestEdge(edge)) {
-          needsRelayout = true
-        }
-      }
-      if (needsRelayout) {
-        runLayout()
-      }
-      scheduleRender()
+      if (applyEdgeBatch(edges)) scheduleRender()
     },
-    [runLayout, scheduleRender]
+    [applyEdgeBatch, scheduleRender]
+  )
+
+  // Canvas-host pause/visibility policy cancels paint rAFs. Commit the data
+  // transaction first so an active burst cannot be stranded by that cancel.
+  useEffect(
+    () =>
+      frameRuntime.subscribe(() => {
+        if (!frameRuntime.isActive) flushPendingLayout()
+      }),
+    [flushPendingLayout, frameRuntime]
   )
 
   const clearAll = useCallback(() => {
+    // A clear is a barrier, not a commit: the scheduled frame must not rebuild
+    // geometry for topology that was explicitly discarded.
+    pendingLayoutRef.current = false
     storeRef.current?.clear()
     nodeColorMap.current.clear()
     colorIndexRef.current = 0
@@ -679,9 +722,9 @@ const StreamNetworkFrame = memo(forwardRef<
     const store = storeRef.current
     if (!store) return
     store.tension += 999
-    runLayout()
+    commitLayout(true)
     scheduleRender()
-  }, [runLayout, scheduleRender])
+  }, [commitLayout, scheduleRender])
 
   useImperativeHandle(
     ref,
@@ -706,7 +749,8 @@ const StreamNetworkFrame = memo(forwardRef<
             setHoverData(null)
           }
           nodeColorMap.current.delete(id)
-          runLayout()
+        }
+        if (commitLayout(removed)) {
           dirtyRef.current = true
           scheduleRender()
         }
@@ -744,7 +788,8 @@ const StreamNetworkFrame = memo(forwardRef<
               setHoverData(null)
             }
           }
-          runLayout()
+        }
+        if (commitLayout(removed)) {
           dirtyRef.current = true
           scheduleRender()
         }
@@ -752,10 +797,9 @@ const StreamNetworkFrame = memo(forwardRef<
       },
       updateNode: (id: string, updater: (data: Datum) => Datum) => {
         const previous = storeRef.current?.updateNode(id, updater) ?? null
-        if (previous) {
-          // Match updateEdge/remove: node field updates (size, force weights)
-          // can change geometry; style-only paints are insufficient.
-          runLayout()
+        // Match updateEdge/remove: node field updates (size, force weights)
+        // can change geometry; style-only paints are insufficient.
+        if (commitLayout(previous !== null)) {
           dirtyRef.current = true
           scheduleRender()
         }
@@ -768,19 +812,27 @@ const StreamNetworkFrame = memo(forwardRef<
       ) => {
         const previous =
           storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
-        if (previous.length > 0) {
-          runLayout()
+        if (commitLayout(previous.length > 0)) {
           dirtyRef.current = true
           scheduleRender()
         }
         return previous
       },
       clear: clearAll,
-      getTopology: () =>
-        storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
-      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
-      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
+      getTopology: () => {
+        flushPendingLayout()
+        return storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] }
+      },
+      getCustomLayout: () => {
+        flushPendingLayout()
+        return storeRef.current?.lastCustomLayoutResult ?? null
+      },
+      getLayoutFailure: () => {
+        flushPendingLayout()
+        return storeRef.current?.lastCustomLayoutFailure ?? null
+      },
       getTopologyDiff: () => {
+        flushPendingLayout()
         const store = storeRef.current
         if (!store)
           return {
@@ -797,9 +849,12 @@ const StreamNetworkFrame = memo(forwardRef<
         }
       },
       relayout: forceRelayout,
-      getTension: () => storeRef.current?.tension ?? 0
+      getTension: () => {
+        flushPendingLayout()
+        return storeRef.current?.tension ?? 0
+      }
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, nodeIDAccessor, runLayout, scheduleRender, edgeIdAccessor]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, nodeIDAccessor, scheduleRender, edgeIdAccessor]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
@@ -826,6 +881,9 @@ const StreamNetworkFrame = memo(forwardRef<
     layoutAbortRef.current = null
 
     if (isHierarchical && hierarchyRoot) {
+      // A controlled hierarchy replacement supersedes any uncommitted push
+      // layout from the same frame transaction.
+      pendingLayoutRef.current = false
       // Hierarchy data: single root object. Emit "ready" like the other
       // synchronous paths — a chart-type/data switch away from a pending
       // worker layout must not leave consumers stuck on "pending".
@@ -838,6 +896,11 @@ const StreamNetworkFrame = memo(forwardRef<
       // Graph data: nodes + edges arrays
       const rawNodes = safeNodes
       const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
+      if (nodesProp != null || edgesProp != null) {
+        // Controlled arrays are the newer source of truth. Eager push data may
+        // exist in the store, but ingestBounded below replaces it atomically.
+        pendingLayoutRef.current = false
+      }
 
       if (rawNodes.length === 0 && rawEdges.length === 0) {
         // Controlled data went non-empty → empty: tear down the previous
@@ -1235,6 +1298,10 @@ const StreamNetworkFrame = memo(forwardRef<
 
   renderFnRef.current = () => {
     rafRef.current = null
+    // The scheduled paint is also the commit boundary for burst layout work.
+    // Commit before canvas guards so data/layout semantics do not depend on
+    // whether this particular frame has a paint surface.
+    flushPendingLayout()
     if (!frameRuntime.isActive) return
     const canvas = canvasRef.current
     if (!canvas) return

@@ -18,6 +18,9 @@ import {
   auditMobileVisualization,
   type MobileVisualizationContract,
 } from "./charts/shared/auditMobileVisualization"
+import type { ChartContainerDataAudit } from "./chartContainerDataAudit"
+export type { ChartContainerDataAudit, ChartContainerDataAuditOptions } from "./chartContainerDataAudit"
+import { useChartContainerDataAudit } from "./useChartContainerDataAudit"
 import {
   canReceiveChartProps,
   hasStandardControlsRequest,
@@ -165,6 +168,14 @@ export interface ChartContainerProps {
    * so notifications that arrive while streaming are announced.
    */
   notifications?: ChartNotification[]
+  /**
+   * Run Semiotic's numeric input audit over `chartConfig.props` and merge its
+   * findings into the notification bell. Re-evaluates when the config/data
+   * identity changes. Ref-only push mutations are intentionally not observable
+   * here; audit a bounded stream snapshot and pass its notifications instead.
+   * Requires `chartConfig`.
+   */
+  dataAudit?: ChartContainerDataAudit
   /**
    * Called when a notification's dismiss button is clicked. Dismissal state
    * is tracked internally (keyed by `notification.id`, falling back to array
@@ -644,6 +655,7 @@ export const ChartContainer = React.forwardRef<
     controls,
     banner,
     notifications,
+    dataAudit,
     onNotificationDismiss,
     loading = false,
     error,
@@ -661,6 +673,20 @@ export const ChartContainer = React.forwardRef<
   const chartBodyRef = React.useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = React.useState(false)
 
+  const automaticDataAuditNotifications = useChartContainerDataAudit(
+    chartConfig,
+    dataAudit,
+  )
+
+  // Keep caller notification indices stable by appending automatic findings.
+  const resolvedNotifications = React.useMemo<ChartNotification[]>(
+    () => [
+      ...(notifications ?? []),
+      ...automaticDataAuditNotifications,
+    ],
+    [notifications, automaticDataAuditNotifications],
+  )
+
   // Notification dismissal lives here (above the bell) so `hasHeader` can react
   // to the visible count — an all-dismissed, notifications-only container must
   // not render an empty toolbar. Keyed by `notification.id`, array-index
@@ -676,7 +702,7 @@ export const ChartContainer = React.forwardRef<
     setDismissedNotifications((prev) => {
       if (prev.size === 0) return prev
       const currentKeys = new Set(
-        (notifications ?? []).map((n, i) => n.id ?? String(i))
+        resolvedNotifications.map((n, i) => n.id ?? String(i))
       )
       let changed = false
       const next = new Set<string>()
@@ -686,11 +712,10 @@ export const ChartContainer = React.forwardRef<
       }
       return changed ? next : prev
     })
-  }, [notifications])
+  }, [resolvedNotifications])
 
   const visibleNotifications = React.useMemo<VisibleNotification[]>(() => {
-    if (!notifications) return []
-    return notifications
+    return resolvedNotifications
       .map((notification, index) => ({
         notification,
         index,
@@ -698,7 +723,7 @@ export const ChartContainer = React.forwardRef<
         level: notification.level ?? "info",
       }))
       .filter(({ key }) => !dismissedNotifications.has(key))
-  }, [notifications, dismissedNotifications])
+  }, [resolvedNotifications, dismissedNotifications])
 
   const handleNotificationDismiss = React.useCallback(
     (entry: VisibleNotification) => {

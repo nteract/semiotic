@@ -173,6 +173,7 @@ interface CategoryColorProviderProps
 interface CenterlineStyle
 interface Changeset<T = Datum>
 interface ChartConfig
+interface ChartContainerDataAuditOptions
 interface ChartContainerHandle
 interface ChartContainerMobileOptions
 interface ChartContainerProps
@@ -350,6 +351,7 @@ type CanvasRendererFn = (ctx: CanvasRenderingContext2D, nodes: SceneNode[], scal
 type CategoryColorMap = Record<string, string>
 type ChartAccessor<TDatum, T> = (keyof TDatum & string) | ((d: Datum, i?: number) => T)
 type ChartAnnotation = Datum
+type ChartContainerDataAudit = boolean | ChartContainerDataAuditOptions
 type ChartMode = "primary" | "context" | "sparkline" | "mobile"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
 type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | FocusObservation | ActivateObservation | AnnotationActivateObservation | ControlObservation | LateDataObservation

@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 
 export const QuadrantChartCapability: ChartCapability = {
@@ -6,6 +7,7 @@ export const QuadrantChartCapability: ChartCapability = {
   family: "relationship",
   importPath: "semiotic/xy",
   rubric: { familiarity: 3, accuracy: 4, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.QuadrantChart,
 
   fits: (profile) => {
     if (profile.rowCount < 4) return "needs at least 4 points"

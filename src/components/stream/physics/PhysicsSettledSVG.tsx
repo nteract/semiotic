@@ -1,7 +1,9 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { xySceneNodeToSVG } from "../SceneToSVG"
+import type { Style } from "../types"
 import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
+import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { PhysicsSettledEvidence } from "./PhysicsEvidence"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import {
@@ -21,6 +23,15 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
   foregroundGraphics?: FrameGraphicsProp
   idPrefix?: string
   margin?: Partial<FrameMargin>
+  // The SSR sibling of StreamPhysicsFrame's canvas `renderBody` prop: lets a
+  // chart substitute its own mark for a body's default circle/rect (e.g.
+  // CrucibleChart's shadowed hexagon + inner ring for settled products).
+  // Return `undefined` to fall back to the default scene-node rendering.
+  renderBodySVG?: (
+    body: PhysicsBodyState,
+    style: Style,
+    index: number
+  ) => React.ReactNode | undefined
 }
 
 export interface PhysicsSettledSVGRender {
@@ -60,6 +71,7 @@ export function renderPhysicsSettledSVG(
     foregroundGraphics,
     idPrefix = "physics",
     margin: marginProp,
+    renderBodySVG,
     ...sceneOptions
   } = options
   const scene = buildPhysicsSettledScene(store, sceneOptions)
@@ -89,9 +101,13 @@ export function renderPhysicsSettledSVG(
       ) : null}
       {resolvedBackground}
       <g id={`${prefix}-data-area`}>
-        {scene.sceneNodes.map((node, index) =>
-          xySceneNodeToSVG(node, index, prefix)
-        )}
+        {scene.sceneNodes.map((node, index) => {
+          const body = scene.bodies[index]
+          const custom = body && renderBodySVG
+            ? renderBodySVG(body, node.style ?? {}, index)
+            : undefined
+          return custom ?? xySceneNodeToSVG(node, index, prefix)
+        })}
       </g>
       {resolvedForeground}
     </svg>

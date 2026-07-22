@@ -6,6 +6,7 @@ _Edit dist/semiotic-ai-core.d.ts's sources, then re-run `npm run docs:api-surfac
 ```
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
+function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
@@ -21,6 +22,7 @@ function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataPr
 function explainCapabilityFit(data: readonly Datum[] | null | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
+function formatDataAudit(result: DataAuditResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
@@ -29,6 +31,7 @@ function inspectChart(input: ChartClinicInput, options?: ChartClinicOptions | un
 function mobileVisualizationCaveats(): string[]
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
+function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
 function repairChartConfig(component: string, data: readonly Datum[] | null | undefined, options?: RepairOptions | undefined): RepairResult
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
@@ -41,6 +44,7 @@ function suggestStretchCharts(data: readonly Datum[] | null | undefined, options
 function summarizeData(data: readonly Datum[] | null | undefined, options?: SummarizeOptions | undefined): DataSummary
 function toAnthropicTool(def: ChartToolDefinition): { name: string; description: string; input_schema: Record<string, unknown>; }
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
+function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toOpenAIResponsesTool(def: ChartToolDefinition, options?: OpenAIResponsesToolOptions | undefined): OpenAIResponsesTool
 function toOpenAITool(def: ChartToolDefinition): { type: "function"; function: { name: string; description: string; parameters: Record<string, unknown>; }; }
 function toURL(config: ChartConfig): string
@@ -48,6 +52,7 @@ function validateProps(componentName: string, props: Datum): ValidationResult
 interface A11yFinding
 interface AccessibilityAuditResult
 interface AuditAccessibilityOptions
+interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface BuildNavigationTreeOptions
 interface ChartClinicBundleGuidance
@@ -62,8 +67,13 @@ interface ChartReaderGrounding
 interface ChartReaderGroundingOptions
 interface ChartToolDefinition
 interface ChartToolOptions
+interface CheckedNumericContract
 interface DashboardPanel
 interface DashboardSuggestion
+interface DataAuditChartNotification
+interface DataAuditDiagnosis
+interface DataAuditNotificationOptions
+interface DataAuditResult
 interface DataSummary
 interface DescribeCapabilityContext
 interface DescribeChartOptions
@@ -75,12 +85,17 @@ interface ExplainCapabilityFitResult
 interface InferIntentResult
 interface MobileVisualizationAuditResult
 interface NavTreeNode
+interface NumericAggregateContract
+interface NumericContracts
+interface NumericFieldContract
+interface NumericFieldProfile
 interface OpenAIResponsesTool
 interface OpenAIResponsesToolOptions
 interface PrepareChartInput
 interface PrepareChartOptions
 interface PrepareChartResult
 interface ProfileDataOptions
+interface ProfileNumericFieldsOptions
 interface RejectedCapability
 interface RepairOptions
 interface StreamSchema
@@ -104,6 +119,8 @@ type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type FieldSummary = NumericFieldSummary | DateFieldSummary | CategoricalFieldSummary | UnknownFieldSummary
 type FieldType = "numeric" | "categorical" | "date" | "unknown"
 type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
+type NumericFieldRole = "x" | "y" | "value" | "size" | "count" | "opacity" | "time" | "lower" | "upper" | "open" | "close" | "high" | "low" | (string & {})
+type NumericRequirement = "finite" | "positive" | "non-negative" | "integer" | "unit-interval"
 type RenderFn = (component: string, props: Datum) => {
     svg: string;
     evidence: RenderEvidence;

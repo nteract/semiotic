@@ -21,7 +21,8 @@ import {
 import { buildCrucibleProjection } from "../charts/physics/crucibleEffects"
 import {
   CrucibleChrome,
-  CrucibleProjectionOverlay
+  CrucibleProjectionOverlay,
+  drawCrucibleBodySVG
 } from "../charts/physics/crucibleChrome"
 import type {
   CrucibleBodyDatum,
@@ -452,6 +453,7 @@ export const crucibleChart: ChartConfig = {
       bodyStyle: (body: PhysicsBodyState) =>
         crucibleBodyStyle(body, state, selectedColorBy, rest),
       getBodyLabel: (body: PhysicsBodyState) => crucibleBodyLabel(body, state),
+      renderBodySVG: drawCrucibleBodySVG,
       backgroundGraphics: composePhysicsGraphics(
         chrome,
         common.backgroundGraphics as FrameGraphicsProp | undefined

@@ -9,7 +9,11 @@ import type { NetworkLayoutResult } from "./networkCustomLayout"
 
 /** Imperative API exposed by `StreamNetworkFrame` refs. */
 export interface StreamNetworkFrameHandle {
+  /** Ingest one edge immediately and coalesce its expensive layout with other
+   * pushes at the next animation frame. Geometry getters commit first. */
   push(edge: EdgePush): void
+  /** Ingest and lay out an explicit edge batch synchronously, absorbing any
+   * layout pending from prior single-edge pushes. */
   pushMany(edges: EdgePush[]): void
   /** Remove a node by ID. Also removes connected edges. */
   removeNode(id: string): boolean

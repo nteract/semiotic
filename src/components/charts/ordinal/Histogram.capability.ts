@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const HistogramCapability: ChartCapability = {
   component: "Histogram",
   family: "distribution",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 4, accuracy: 4, precision: 3 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.Histogram,
 
   fits: (profile) => {
     if (profile.rowCount < 10) return "histograms need at least ~10 observations"

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Chart-aware numeric data audit.** `semiotic/ai`, `semiotic/ai/core`,
+  `semiotic/utils`, and `semiotic/utils/core` now export `auditData`,
+  `formatDataAudit`, `profileNumericFields`, and `toDataAuditNotifications`.
+  Serializable `numericContracts` on chart
+  capabilities detect non-finite/non-numeric values, zero-span or single-row
+  domains, invalid log inputs, negative size geometry, unsafe normalized or
+  part-to-whole totals, and scale-dominating outliers with bounded row evidence.
+  `diagnoseConfig` inherits the checks, schema-driven docs playgrounds show a
+  live Data Truth Lens, and `ChartContainer dataAudit` can surface findings in
+  its existing accessible notification bell.
+
+### Changed
+
+- **Frame-batched network ingestion.** Sequential `StreamNetworkFrame.push()`
+  calls now share one layout pass per animation frame instead of recomputing the
+  whole layout for every edge. `pushMany()` absorbs pending single-push layout
+  work into its synchronous batch; reads/mutations flush first, and `clear()`
+  cancels uncommitted layout work so imperative semantics stay deterministic.
+
 ## [3.8.4] - 2026-07-19
 
 ### Added

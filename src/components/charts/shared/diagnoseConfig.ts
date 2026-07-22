@@ -32,6 +32,7 @@ import {
   checkPieTooManySlices,
 } from "./diagnoseMisleadingChecks"
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
+import { auditData } from "../../data/auditData"
 
 export { contrastRatio } from "./colorContrast"
 export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
@@ -256,48 +257,6 @@ function checkNonZeroBaseline(
       message: `${component} has a non-zero baseline (${extent[0]}). Bar and area charts should start at zero to avoid exaggerating differences.`,
       fix: `Remove the custom extent minimum or set it to 0: rExtent={[0, ${extent[1] ?? "auto"}]}. For trend-focused charts, use LineChart instead.`,
     })
-  }
-}
-
-function checkDegenerateExtent(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  const spec = VALIDATION_MAP[component]
-  if (!spec || spec.dataShape !== "array") return
-  const data = props.data
-  if (!data || !Array.isArray(data) || data.length === 0) return
-
-  const accessors: Array<{ prop: string; name: string }> = []
-  if (props.xAccessor && typeof props.xAccessor === "string") {
-    accessors.push({ prop: "xAccessor", name: props.xAccessor })
-  }
-  if (props.yAccessor && typeof props.yAccessor === "string") {
-    accessors.push({ prop: "yAccessor", name: props.yAccessor })
-  }
-  if (props.valueAccessor && typeof props.valueAccessor === "string") {
-    accessors.push({ prop: "valueAccessor", name: props.valueAccessor })
-  }
-
-  const sampleSize = Math.min(data.length, 5)
-  for (const acc of accessors) {
-    let allNaN = true
-    for (let i = 0; i < sampleSize; i++) {
-      const v = data[i]?.[acc.name]
-      if (typeof v === "number" && Number.isFinite(v)) {
-        allNaN = false
-        break
-      }
-    }
-    if (allNaN) {
-      out.push({
-        severity: "error",
-        code: "DEGENERATE_EXTENT",
-        message: `${acc.prop}="${acc.name}" produces NaN or non-finite values for all sampled data points — chart extents will be invalid.`,
-        fix: `Ensure data[].${acc.name} contains finite numbers, or use a function accessor to transform values.`,
-      })
-    }
   }
 }
 
@@ -712,7 +671,20 @@ export function diagnoseConfig(
   checkNonZeroBaseline(componentName, props, diagnoses)
   checkDataGaps(componentName, props, diagnoses)
   checkMarginOverflow(componentName, props, diagnoses)
-  checkDegenerateExtent(componentName, props, diagnoses)
+  // Keep the always-on doctor pass linear. Exact IQR outlier checks remain
+  // available through auditData() and the opt-in ChartContainer dataAudit.
+  const numericDiagnoses = auditData(componentName, props, undefined, {
+    checkOutliers: false,
+  }).diagnoses
+  for (const finding of numericDiagnoses) {
+    const legacyAlreadyReportedEmpty =
+      finding.code === "EMPTY_DATA" &&
+      diagnoses.some(
+        (existing) =>
+          existing.code === "EMPTY_DATA" || existing.code === "EMPTY_EDGES",
+      )
+    if (!legacyAlreadyReportedEmpty) diagnoses.push(finding)
+  }
   checkBarPaddingInvisible(componentName, props, diagnoses)
   checkBottomMarginWithLegend(componentName, props, diagnoses)
   checkLegendMarginTight(componentName, props, diagnoses)
@@ -733,7 +705,15 @@ export function diagnoseConfig(
   checkInvertedAxis(componentName, props, diagnoses)
   checkDualAxisUnlabeled(componentName, props, diagnoses)
   checkCherryPickedWindow(componentName, props, diagnoses)
-  checkPartToWholeNegative(componentName, props, diagnoses)
+  if (
+    !diagnoses.some(
+      (finding) =>
+        finding.code === "NEGATIVE_VALUE" ||
+        finding.code === "NEGATIVE_NORMALIZED_VALUE",
+    )
+  ) {
+    checkPartToWholeNegative(componentName, props, diagnoses)
+  }
   checkNonPassingCurve(componentName, props, diagnoses)
   checkExtremeAspectRatio(componentName, props, diagnoses)
   checkPieTooManySlices(componentName, props, diagnoses)

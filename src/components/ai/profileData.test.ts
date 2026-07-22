@@ -32,6 +32,17 @@ describe("profileData", () => {
     expect(profile.primary.y).toBe("units")
     expect(profile.categoryCount).toBe(3)
     expect(profile.hasTimeAxis).toBe(false)
+    expect(profile.numericFields!.units).toMatchObject({
+      finiteCount: 3,
+      nonFiniteCount: 0,
+      nonNumericCount: 0,
+      min: 20,
+      max: 50,
+    })
+    expect(profile.numericFields!.product).toMatchObject({
+      finiteCount: 0,
+      nonNumericCount: 3,
+    })
   })
 
   it("detects monotonic x", () => {

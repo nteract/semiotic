@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const ChordDiagramCapability: ChartCapability = {
   component: "ChordDiagram",
   family: "flow",
   importPath: "semiotic/network",
   rubric: { familiarity: 2, accuracy: 3, precision: 2 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.ChordDiagram,
 
   fits: (profile) => {
     if (!profile.hasNetwork || !profile.network) return "needs a {nodes, edges} network"

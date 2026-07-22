@@ -651,6 +651,97 @@ div.page-image img {
   margin: 20px 0 24px;
 }
 
+.playground-diagnostics {
+  --diagnostic-color: var(--success, #16803c);
+  margin: -12px 0 24px;
+  border: 1px solid color-mix(in srgb, var(--diagnostic-color) 42%, var(--surface-3));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--diagnostic-color) 7%, var(--surface-1));
+  font-size: 13px;
+}
+
+.playground-diagnostics--warning {
+  --diagnostic-color: var(--warning, #b25e09);
+}
+
+.playground-diagnostics--error {
+  --diagnostic-color: var(--danger, #b42318);
+}
+
+.playground-diagnostics summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.playground-diagnostics summary::-webkit-details-marker {
+  display: none;
+}
+
+.playground-diagnostics summary::after {
+  content: "+";
+  margin-left: 2px;
+  color: var(--diagnostic-color);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.playground-diagnostics details[open] summary::after {
+  content: "−";
+}
+
+.playground-diagnostics-dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--diagnostic-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--diagnostic-color) 18%, transparent);
+}
+
+.playground-diagnostics-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playground-diagnostics-list,
+.playground-diagnostics-contracts {
+  margin: 0;
+  padding: 0 16px 14px 38px;
+  border-top: 1px solid color-mix(in srgb, var(--diagnostic-color) 22%, transparent);
+}
+
+.playground-diagnostics-list li {
+  padding: 10px 0 2px 4px;
+}
+
+.playground-diagnostics-list p,
+.playground-diagnostics-contracts p {
+  margin: 4px 0;
+  line-height: 1.45;
+}
+
+.playground-diagnostics-fix {
+  color: var(--text-secondary);
+}
+
+.playground-diagnostics-contracts {
+  padding-top: 10px;
+}
+
+.playground-diagnostics-contracts ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
 .playground-dataset-picker,
 .playground-share-toolbar,
 .playground-toolbar {

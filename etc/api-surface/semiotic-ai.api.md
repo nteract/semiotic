@@ -127,6 +127,7 @@ function applyAnnotationStatus<T>(annotations: readonly Annotated<T>[], options?
 function applyAudienceBias(baseScore: number, baseRubric: ChartRubric, component: string, audience: AudienceProfile | undefined, receivability?: ReceivabilitySignal | undefined): AudienceBiasResult
 function applyScaleBias(capability: ChartCapability, profile: ChartDataProfile, effectiveScale: EffectiveScale, scale: DataScaleProfile | undefined, quality: DataQualityProfile | undefined): ScaleBiasResult
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
+function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
@@ -169,6 +170,7 @@ function exportChart(container: HTMLElement, options?: { format?: "svg" | "png";
 function filterAnnotationsByStatus<T>(annotations: readonly Annotated<T>[], options?: AnnotationStatusVisibility | undefined): Annotated<T>[]
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
+function formatDataAudit(result: DataAuditResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromDbtArtifacts(artifacts: DbtArtifacts, options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
@@ -194,6 +196,7 @@ function mobileVisualizationCaveats(): string[]
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
+function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
 function receivabilityBias(audit: AccessibilityAuditResult, modality: ReceptionModality): ReceivabilitySignal
 function recipeToChartCapability(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): ChartCapability
@@ -232,6 +235,7 @@ function summarizeData(data: readonly Datum[] | null | undefined, options?: Summ
 function summarizeIntentManifest(manifest: IntentManifest): string
 function toAnthropicTool(def: ChartToolDefinition): { name: string; description: string; input_schema: Record<string, unknown>; }
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
+function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toOpenAIResponsesTool(def: ChartToolDefinition, options?: OpenAIResponsesToolOptions | undefined): OpenAIResponsesTool
 function toOpenAITool(def: ChartToolDefinition): { type: "function"; function: { name: string; description: string; parameters: Record<string, unknown>; }; }
 function toURL(config: ChartConfig): string
@@ -281,6 +285,7 @@ interface AudienceProfile
 interface AudienceSetEvent
 interface AudienceTarget
 interface AuditAccessibilityOptions
+interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
 interface AuditVisualizationControlsOptions
@@ -292,6 +297,7 @@ interface CategoryColorProviderProps
 interface ChartAbandonedEvent
 interface ChartCapability
 interface ChartConfig
+interface ChartContainerDataAuditOptions
 interface ChartContainerHandle
 interface ChartContainerMobileOptions
 interface ChartContainerProps
@@ -312,6 +318,7 @@ interface ChartScalePreference
 interface ChartToolDefinition
 interface ChartToolOptions
 interface ChartVariant
+interface CheckedNumericContract
 interface ClickEndObservation
 interface ClickObservation
 interface ComputeAnnotationFreshnessOptions
@@ -324,6 +331,10 @@ interface ConversationArcStore
 interface ConversationArcSummary
 interface DashboardPanel
 interface DashboardSuggestion
+interface DataAuditChartNotification
+interface DataAuditDiagnosis
+interface DataAuditNotificationOptions
+interface DataAuditResult
 interface DataQualityAnnotationOptions
 interface DataQualityAnnotationsResult
 interface DataQualityProfile
@@ -389,6 +400,10 @@ interface MobileVisualizationLabelContract
 interface NavBranchExpandedEvent
 interface NavNodeFocusedEvent
 interface NavTreeNode
+interface NumericAggregateContract
+interface NumericContracts
+interface NumericFieldContract
+interface NumericFieldProfile
 interface NumericFieldSummary
 interface ObservedAuditFinding
 interface ObservedSceneAuditResult
@@ -411,6 +426,7 @@ interface PrepareChartResult
 interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
+interface ProfileNumericFieldsOptions
 interface ReceivabilitySignal
 interface ReceptionDefinition
 interface RecipeAudienceDefinition
@@ -512,6 +528,7 @@ type CardinalityBand = "low" | "medium" | "high"
 type CategoryColorMap = Record<string, string>
 type ChartAnnotation = Datum
 type ChartCandidateKind = "built-in" | "recipe"
+type ChartContainerDataAudit = boolean | ChartContainerDataAuditOptions
 type ChartFamily = "time-series" | "categorical" | "distribution" | "relationship" | "flow" | "network" | "hierarchy" | "geo" | "realtime" | "value" | "custom"
 type ChartImportPath = "semiotic/xy" | "semiotic/ordinal" | "semiotic/network" | "semiotic/geo" | "semiotic/realtime" | "semiotic/physics" | "semiotic/value" | "semiotic/ai" | "semiotic"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
@@ -564,6 +581,8 @@ type MobileStandardControlRequest = MobileStandardControlsMode
 type MobileStandardControlsMode = boolean | "all" | MobileStandardControlKind | MobileStandardControlKind[]
 type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
 type NavigationStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => NavTreeNode
+type NumericFieldRole = "x" | "y" | "value" | "size" | "count" | "opacity" | "time" | "lower" | "upper" | "open" | "close" | "high" | "low" | (string & {})
+type NumericRequirement = "finite" | "positive" | "non-negative" | "integer" | "unit-interval"
 type ObservationInputType = "keyboard" | "pointer" | "touch" | "navigation-tree"
 type ObservedAuditStatus = "pass" | "warn" | "fail" | "manual" | "not-applicable"
 type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void

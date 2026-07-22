@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const GroupedBarChartCapability: ChartCapability = {
   component: "GroupedBarChart",
   family: "categorical",
   importPath: "semiotic/ordinal",
   rubric: { familiarity: 4, accuracy: 5, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.GroupedBarChart,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a category field"

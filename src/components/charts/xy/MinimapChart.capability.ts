@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const MinimapChartCapability: ChartCapability = {
   component: "MinimapChart",
   family: "time-series",
   importPath: "semiotic/xy",
   rubric: { familiarity: 4, accuracy: 4, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.MinimapChart,
 
   fits: (profile) => {
     if (profile.rowCount < 30) return "minimap pays off only on long sequences (30+ rows)"

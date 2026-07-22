@@ -36,6 +36,29 @@ export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from ".
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
 export { summarizeData } from "./data/DataSummarizer"
 export type { DataSummary, FieldSummary, FieldType, SummarizeOptions } from "./data/DataSummarizer"
+export {
+  auditData,
+  formatDataAudit,
+  profileNumericFields,
+  toDataAuditNotifications,
+} from "./data/auditData"
+export type {
+  AuditDataOptions,
+  CheckedNumericContract,
+  DataAuditChartNotification,
+  DataAuditDiagnosis,
+  DataAuditNotificationOptions,
+  DataAuditResult,
+  NumericFieldProfile,
+  ProfileNumericFieldsOptions,
+} from "./data/auditData"
+export type {
+  NumericAggregateContract,
+  NumericContracts,
+  NumericFieldContract,
+  NumericFieldRole,
+  NumericRequirement,
+} from "./data/numericContracts"
 
 export { profileData } from "./ai/profileData"
 export type { ProfileDataOptions } from "./ai/profileData"

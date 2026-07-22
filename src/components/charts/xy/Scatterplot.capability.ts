@@ -1,11 +1,13 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 export const ScatterplotCapability: ChartCapability = {
   component: "Scatterplot",
   family: "relationship",
   importPath: "semiotic/xy",
   rubric: { familiarity: 4, accuracy: 5, precision: 5 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.Scatterplot,
 
   fits: (profile) => {
     if (profile.rowCount < 3) return "needs at least 3 rows"

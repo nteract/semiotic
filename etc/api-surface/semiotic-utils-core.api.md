@@ -17,6 +17,7 @@ function MultiPointTooltip(): TooltipContentFn
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
+function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
@@ -35,6 +36,7 @@ function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
 function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
+function formatDataAudit(result: DataAuditResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
@@ -51,6 +53,7 @@ function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefin
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
+function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
@@ -63,6 +66,7 @@ function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
+function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toURL(config: ChartConfig): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function validateProps(componentName: string, props: Datum): ValidationResult
@@ -71,6 +75,7 @@ interface A11yFinding
 interface AccessibilityAuditResult
 interface ArcBoundingBox
 interface AuditAccessibilityOptions
+interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
 interface BuildNavigationTreeOptions
@@ -78,6 +83,11 @@ interface ChartConfig
 interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
+interface CheckedNumericContract
+interface DataAuditChartNotification
+interface DataAuditDiagnosis
+interface DataAuditNotificationOptions
+interface DataAuditResult
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
@@ -90,6 +100,10 @@ interface MobileVisualizationFinding
 interface MobileVisualizationInteractionContract
 interface MobileVisualizationLabelContract
 interface NavTreeNode
+interface NumericAggregateContract
+interface NumericContracts
+interface NumericFieldContract
+interface NumericFieldProfile
 interface ObservedAuditFinding
 interface ObservedSceneAuditResult
 interface PhysicsReaderGrounding
@@ -99,6 +113,7 @@ interface PhysicsReaderGroundingGeometry
 interface PhysicsReaderGroundingInput
 interface PhysicsReaderGroundingSediment
 interface PhysicsReaderGroundingSimulation
+interface ProfileNumericFieldsOptions
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
@@ -123,6 +138,8 @@ type MobileAuditCategory = "layout" | "density" | "interaction" | "annotation" |
 type MobileAuditImpact = "high" | "medium" | "low"
 type MobileAuditStatus = "pass" | "warn" | "manual" | "not-applicable"
 type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
+type NumericFieldRole = "x" | "y" | "value" | "size" | "count" | "opacity" | "time" | "lower" | "upper" | "open" | "close" | "high" | "low" | (string & {})
+type NumericRequirement = "finite" | "positive" | "non-negative" | "integer" | "unit-interval"
 type ResponsiveOrientation = "portrait" | "landscape"
 type SerializedFieldSelection = {
     type: "point";

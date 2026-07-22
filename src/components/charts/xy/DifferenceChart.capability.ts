@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 /**
  * DifferenceChart's native shape is two series. When the input has 2+ series
@@ -11,6 +12,7 @@ export const DifferenceChartCapability: ChartCapability = {
   family: "time-series",
   importPath: "semiotic/xy",
   rubric: { familiarity: 3, accuracy: 4, precision: 4 },
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.DifferenceChart,
 
   fits: (profile) => {
     if (profile.rowCount < 4) return "needs at least 4 rows"
