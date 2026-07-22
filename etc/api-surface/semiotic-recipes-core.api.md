@@ -128,7 +128,7 @@ function mobileOrdinalChartRecipe(options?: MobileChartFamilyRecipeOptions | und
 function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mulberry32(seed: number): () => number
-function netEnsembleLayout(Ed: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
+function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function nonNegativeFinite(value: number | undefined): number
@@ -196,7 +196,8 @@ function unwrapDatum<T = Datum>(value: unknown): T | null
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region" | "datum" | "observation">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 function waffleLayout( : LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
-function wordTrailsLayout(one: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function wordTrailsLayout(ve
+: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "wordOpacity" | "weightOpacity">
 function wrapValue(value: number, period: number, min?: number | undefined): number
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number
