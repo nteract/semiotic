@@ -27,10 +27,16 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
   // chart substitute its own mark for a body's default circle/rect (e.g.
   // CrucibleChart's shadowed hexagon + inner ring for settled products).
   // Return `undefined` to fall back to the default scene-node rendering.
+  // `idPrefix` is the same sanitized prefix the frame uses for its own
+  // `<title>`/`<desc>`/data-area ids — a custom renderer that emits `<defs>`
+  // (a `<filter>`, a gradient) should namespace its own ids with it so
+  // multiple settled-physics SVGs embedded in one document don't collide
+  // (SVG ids are document-global, not scoped to the owning `<svg>`).
   renderBodySVG?: (
     body: PhysicsBodyState,
     style: Style,
-    index: number
+    index: number,
+    idPrefix: string
   ) => React.ReactNode | undefined
 }
 
@@ -104,7 +110,7 @@ export function renderPhysicsSettledSVG(
         {scene.sceneNodes.map((node, index) => {
           const body = scene.bodies[index]
           const custom = body && renderBodySVG
-            ? renderBodySVG(body, node.style ?? {}, index)
+            ? renderBodySVG(body, node.style ?? {}, index, prefix)
             : undefined
           return custom ?? xySceneNodeToSVG(node, index, prefix)
         })}

@@ -1538,6 +1538,28 @@ const EXPLICIT_EXAMPLE_PROFILES = [
       "feature-canvas-svg",
     ],
   },
+  {
+    id: "data-viz-for-dummies",
+    shortLabel: "Data Viz for Dummies",
+    note: "A fictional basketball season scrolls through seven chart families organized by a two-way taxonomy (data structure vs. analytical task) — a Sankey routes each family, then BarChart, GroupedBarChart, LineChart, Histogram, Scatterplot, SankeyDiagram, and Treemap each carry one chapter.",
+    uses: [
+      "input-static",
+      "hoc-bar",
+      "hoc-ordinal-bars",
+      "hoc-ordinal-distribution",
+      "hoc-xy-lines",
+      "hoc-xy-points",
+      "hoc-network-flow",
+      "hoc-network-enclosure",
+      "feature-accessors",
+      "feature-annotations",
+      "feature-tooltips",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
 ]
 
 // Profiles retain their architecture-specific notes, short labels, and direct

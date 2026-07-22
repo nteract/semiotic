@@ -162,6 +162,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         title: props.title, description: props.description,
         annotations: props.annotations,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
+        margin,
       })
     }
     return ReactDOMServer.renderToStaticMarkup(
@@ -193,6 +194,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       xDomain: numericDomain(store.scales.x?.domain?.()),
       yDomain: numericDomain(store.scales.y?.domain?.()),
       legendItems: xyLegendCategories.length > 0 ? xyLegendCategories.length : undefined,
+      margin,
     })
   }
 

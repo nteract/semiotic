@@ -48,6 +48,16 @@ export interface RenderEvidence {
   ariaLabel: string
   /** Stable warning codes (EMPTY_SCENE, NO_SCALES). */
   warnings: string[]
+  /**
+   * The resolved margin Semiotic actually used — after auto-reservation for a
+   * legend, a title, or any other chrome that grows a side beyond the caller's
+   * input. This is ground truth for reconstructing the plot rectangle by
+   * hand (e.g. a caller hand-drawing an SSR overlay); it is exactly what the
+   * emitted SVG's `data-area` group is translated by.
+   */
+  margin?: { top: number; right: number; bottom: number; left: number }
+  /** The plot rectangle after resolving `margin` against the outer `width`/`height`. */
+  plot?: { x: number; y: number; width: number; height: number }
 }
 
 /**
@@ -106,6 +116,8 @@ interface BuildEvidenceInput {
   edgeCount?: number
   legendItems?: number
   extraWarnings?: string[]
+  /** The resolved margin (after auto-reservation) the caller's frame used. */
+  margin?: { top: number; right: number; bottom: number; left: number }
 }
 
 /** Assemble evidence from a computed scene. Component name is stamped later
@@ -122,6 +134,15 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     (typeof input.description === "string" && input.description) ||
     (typeof input.title === "string" && input.title) ||
     `${input.frameType} chart, ${count} marks`
+  const margin = input.margin
+  const plot = margin
+    ? {
+        x: margin.left,
+        y: margin.top,
+        width: input.width - margin.left - margin.right,
+        height: input.height - margin.top - margin.bottom,
+      }
+    : undefined
   return {
     component: "", // stamped by renderChartWithEvidence
     frameType: input.frameType,
@@ -140,5 +161,7 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     annotationCount,
     ariaLabel,
     warnings,
+    ...(margin ? { margin } : {}),
+    ...(plot ? { plot } : {}),
   }
 }

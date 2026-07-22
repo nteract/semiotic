@@ -256,6 +256,9 @@ const GestaltPrinciplesExamplePage = lazy(
 const SemioticStandardExamplePage = lazy(
   () => import("./pages/examples/SemioticStandardExamplePage"),
 )
+const DataVizForDummiesExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesExamplePage"),
+)
 const MobileDataVisualizationExamplePage = lazy(
   () => import("./pages/examples/MobileDataVisualizationExamplePage"),
 )
@@ -301,6 +304,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,
   "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
   "SemioticStandardExamplePage.jsx": SemioticStandardExamplePage,
+  "DataVizForDummiesExamplePage.jsx": DataVizForDummiesExamplePage,
   "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
   "NetworkVizExamplePage.jsx": NetworkVizExamplePage,
   "OregonTrailExamplePage.jsx": OregonTrailExamplePage,

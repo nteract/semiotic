@@ -279,20 +279,31 @@ function renderChartInternal(
     ? { top: explicitMargin, right: explicitMargin, bottom: explicitMargin, left: explicitMargin }
     : { ...defaultMargin, ...normalizedExplicitMargin }
   const topLevelFrameProps = pickDefinedProps(rest, COMMON_FRAME_PROP_KEYS)
+  // These `resolvedMode.*` fields are mode-resolved defaults that already
+  // fold in an explicit top-level prop (`CHART_MODE_PROP_KEYS`). But an
+  // override via the `frameProps` escape hatch — the client HOC's own
+  // pattern (frameProps spread last onto the frame, so e.g.
+  // `frameProps.showAxes` wins over the mode default) — was previously
+  // clobbered here: `framePropsOverrides` was spread first (line below) and
+  // then unconditionally overwritten by `resolvedMode.*`, so
+  // `frameProps.showAxes: false` (or any of its siblings) silently had no
+  // effect in SSR while correctly suppressing the axis in the live HOC.
+  const withFramePropsOverride = <K extends keyof typeof resolvedMode>(key: K) =>
+    (framePropsOverrides as Datum)[key] ?? resolvedMode[key]
   const common: Datum & ThemeAwareProps & { size: [number, number] } = {
     ...framePropsOverrides,
     ...topLevelFrameProps,
     theme,
     title: resolvedMode.title,
     description: resolvedMode.description,
-    showAxes: resolvedMode.showAxes,
-    showLegend: resolvedMode.showLegend,
-    showLabels: resolvedMode.showLabels,
-    showGrid: resolvedMode.showGrid,
-    xLabel: resolvedMode.xLabel,
-    yLabel: resolvedMode.yLabel,
-    categoryLabel: resolvedMode.categoryLabel,
-    valueLabel: resolvedMode.valueLabel,
+    showAxes: withFramePropsOverride("showAxes"),
+    showLegend: withFramePropsOverride("showLegend"),
+    showLabels: withFramePropsOverride("showLabels"),
+    showGrid: withFramePropsOverride("showGrid"),
+    xLabel: withFramePropsOverride("xLabel"),
+    yLabel: withFramePropsOverride("yLabel"),
+    categoryLabel: withFramePropsOverride("categoryLabel"),
+    valueLabel: withFramePropsOverride("valueLabel"),
     background, className, annotations,
     size,
     margin: effectiveMargin,

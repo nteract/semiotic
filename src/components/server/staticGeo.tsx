@@ -113,6 +113,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       title: props.title, description: props.description,
       annotations: props.annotations,
       legendItems: geoLegendCategories.length > 0 ? geoLegendCategories.length : undefined,
+      margin,
     })
   }
 

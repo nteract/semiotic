@@ -96,6 +96,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       title: props.title, description: props.description,
       annotations: props.annotations,
       nodeCount: 0, edgeCount: 0,
+      margin,
     })
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
@@ -349,6 +350,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       annotations: props.annotations,
       nodeCount: renderedNodes.length,
       edgeCount: renderedEdges.length,
+      margin,
     })
   }
 
