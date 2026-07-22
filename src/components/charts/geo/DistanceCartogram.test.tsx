@@ -10,8 +10,8 @@ import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamGeoFrame to capture props and expose ref handle
 let lastGeoFrameProps = {} as CapturedGeoFrameProps
-const mockGetCartogramLayout = vi.fn(() => ({
-  cx: 300, cy: 200, maxCost: 22, availableRadius: 150, layout: "radial" as const,
+const mockGetCartogramLayout = vi.fn<() => ReturnType<StreamGeoFrameHandle["getCartogramLayout"]>>(() => ({
+  cx: 300, cy: 200, maxCost: 22, availableRadius: 150, layout: "radial",
 }))
 
 vi.mock("../../stream/StreamGeoFrame", () => {

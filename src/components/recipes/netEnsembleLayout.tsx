@@ -1,17 +1,22 @@
-import * as React from "react"
-import type { ReactNode } from "react"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type {
   NetworkSceneNode,
   NetworkSceneEdge,
   NetworkSymbolNode,
   NetworkLineEdge,
-  RealtimeEdge,
+  RealtimeEdge
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { HighlightMatch } from "./recipeUtils"
-import { readField, datumFromFields, dimFor, signatureKey, LayoutCache, clamp } from "./recipeUtils"
-import { roundedEnclosure } from "./recipeChrome"
+import {
+  readField,
+  datumFromFields,
+  dimFor,
+  signatureKey,
+  LayoutCache,
+  clamp
+} from "./recipeUtils"
+import { buildNetEnsembleOverlays } from "./netEnsembleOverlays"
 
 /**
  * `netEnsembleLayout` — a layout for **ensembles of disconnected (or only
@@ -97,7 +102,7 @@ export interface NetEnsembleConfig {
 
 // ── Internal geometry types (cached; contain no theme/selection state) ─────────
 
-interface PlacedNode {
+export interface NetEnsemblePlacedNode {
   id: string
   cx: number
   cy: number
@@ -106,7 +111,7 @@ interface PlacedNode {
   category: string
 }
 
-interface PlacedEdge {
+export interface NetEnsemblePlacedEdge {
   x1: number
   y1: number
   x2: number
@@ -200,14 +205,20 @@ export function analyzeNetEnsemble(
     sourceCount: info.sourceCount,
     directed: info.directed,
     motif: info.motif,
-    descriptor: describeMotif(info),
+    descriptor: describeMotif(info)
   }))
 
   const motifMap = new Map<string, NetEnsembleMotif>()
   for (const c of components) {
     const existing = motifMap.get(c.motif)
     if (existing) existing.count += 1
-    else motifMap.set(c.motif, { motif: c.motif, descriptor: c.descriptor, count: 1, directed: c.directed })
+    else
+      motifMap.set(c.motif, {
+        motif: c.motif,
+        descriptor: c.descriptor,
+        count: 1,
+        directed: c.directed
+      })
   }
   const motifs = [...motifMap.values()].sort((a, b) => b.count - a.count)
 
@@ -215,7 +226,7 @@ export function analyzeNetEnsemble(
     components,
     motifs,
     directedCount: components.filter((c) => c.directed).length,
-    branchingCount: components.filter((c) => !c.directed).length,
+    branchingCount: components.filter((c) => !c.directed).length
   }
 }
 
@@ -227,11 +238,11 @@ interface Cell {
   cy: number
   /** Radius of the collapsed glyph. */
   glyphR: number
-  nodes: PlacedNode[]
-  edges: PlacedEdge[]
+  nodes: NetEnsemblePlacedNode[]
+  edges: NetEnsemblePlacedEdge[]
 }
 
-interface BandInfo {
+export interface BandInfo {
   motif: string
   descriptor: string
   count: number
@@ -240,7 +251,10 @@ interface BandInfo {
   y: number
   width: number
   height: number
-  exemplar: { nodes: PlacedNode[]; edges: PlacedEdge[] } | null
+  exemplar: {
+    nodes: NetEnsemblePlacedNode[]
+    edges: NetEnsemblePlacedEdge[]
+  } | null
 }
 
 interface Geom {
@@ -294,12 +308,17 @@ function motifFingerprint(
     const next = new Map<string, string>()
     for (const id of ids) {
       const outC: string[] = []
-      for (const s of outAdj.get(id) ?? []) if (member.has(s)) outC.push(colors.get(s)!)
+      for (const s of outAdj.get(id) ?? [])
+        if (member.has(s)) outC.push(colors.get(s)!)
       const inC: string[] = []
-      for (const p of inAdj.get(id) ?? []) if (member.has(p)) inC.push(colors.get(p)!)
+      for (const p of inAdj.get(id) ?? [])
+        if (member.has(p)) inC.push(colors.get(p)!)
       outC.sort()
       inC.sort()
-      next.set(id, fnv1a(`${colors.get(id)}>${outC.join(",")}<${inC.join(",")}`))
+      next.set(
+        id,
+        fnv1a(`${colors.get(id)}>${outC.join(",")}<${inC.join(",")}`)
+      )
     }
     colors = next
   }
@@ -355,7 +374,7 @@ function placeComponent(
   inAdj: Map<string, Set<string>>,
   box: { x: number; y: number; width: number; height: number },
   maxRadius: number
-): { nodes: PlacedNode[]; edges: PlacedEdge[] } {
+): { nodes: NetEnsemblePlacedNode[]; edges: NetEnsemblePlacedEdge[] } {
   const { layer, layerCount } = layerComponent(info.ids, outAdj)
   const buckets: string[][] = Array.from({ length: layerCount }, () => [])
   for (const id of info.ids) buckets[layer.get(id)!].push(id)
@@ -372,7 +391,8 @@ function placeComponent(
       order = [...order].sort((a, b) => baryX(a) - baryX(b))
     }
     const n = order.length
-    const y = box.y + pad + (layerCount === 1 ? 0.5 : li / (layerCount - 1)) * innerH
+    const y =
+      box.y + pad + (layerCount === 1 ? 0.5 : li / (layerCount - 1)) * innerH
     order.forEach((id, k) => {
       const x = box.x + pad + (n === 1 ? 0.5 : k / (n - 1)) * innerW
       pos.set(id, { x, y })
@@ -394,12 +414,16 @@ function placeComponent(
 
   const maxBucket = buckets.reduce((m, b) => Math.max(m, b.length), 1)
   const r = clamp(
-    Math.min(maxRadius, innerW / (2.4 * maxBucket), innerH / (2.4 * layerCount)),
+    Math.min(
+      maxRadius,
+      innerW / (2.4 * maxBucket),
+      innerH / (2.4 * layerCount)
+    ),
     1.4,
     maxRadius
   )
 
-  const nodes: PlacedNode[] = info.ids.map((id) => {
+  const nodes: NetEnsemblePlacedNode[] = info.ids.map((id) => {
     const p = pos.get(id)!
     return {
       id,
@@ -407,11 +431,11 @@ function placeComponent(
       cy: p.y,
       r,
       datum: nodeDatum.get(id) ?? datumFromFields({ id }),
-      category: nodeCategory.get(id) ?? "",
+      category: nodeCategory.get(id) ?? ""
     }
   })
 
-  const edges: PlacedEdge[] = []
+  const edges: NetEnsemblePlacedEdge[] = []
   for (const u of info.ids) {
     const pu = pos.get(u)!
     for (const v of outAdj.get(u) ?? []) {
@@ -428,9 +452,11 @@ function describeMotif(info: ComponentInfo): string {
   const { nodeCount, edgeCount, sinkCount, sourceCount } = info
   if (nodeCount === 1) return "isolate"
   if (nodeCount === 2 && edgeCount === 1) return "pair"
-  const chain = sourceCount === 1 && sinkCount === 1 && edgeCount === nodeCount - 1
+  const chain =
+    sourceCount === 1 && sinkCount === 1 && edgeCount === nodeCount - 1
   if (chain) return `chain of ${nodeCount}`
-  if (info.directed && sourceCount === 1 && edgeCount > nodeCount - 1) return "diamond / mesh"
+  if (info.directed && sourceCount === 1 && edgeCount > nodeCount - 1)
+    return "diamond / mesh"
   if (info.directed) return `converging (${nodeCount})`
   return `branching → ${sinkCount}`
 }
@@ -440,7 +466,11 @@ function describeMotif(info: ComponentInfo): string {
 function buildAdjacencies(
   ids: readonly string[],
   edges: ReadonlyArray<{ source: string; target: string }>
-): { outAdj: Map<string, Set<string>>; inAdj: Map<string, Set<string>>; undirected: Map<string, Set<string>> } {
+): {
+  outAdj: Map<string, Set<string>>
+  inAdj: Map<string, Set<string>>
+  undirected: Map<string, Set<string>>
+} {
   const nodeSet = new Set(ids)
   const outAdj = new Map<string, Set<string>>()
   const inAdj = new Map<string, Set<string>>()
@@ -508,7 +538,7 @@ function analyzeComponents(
       sinkCount,
       sourceCount,
       directed: sinkCount === 1,
-      motif: motifFingerprint(compIds, outAdj, inAdj, compEdges, rounds),
+      motif: motifFingerprint(compIds, outAdj, inAdj, compEdges, rounds)
     })
   }
   return components
@@ -517,7 +547,9 @@ function analyzeComponents(
 // Module-scope geometry cache — signed by content, never array identity.
 const GEOM_CACHE = new LayoutCache<Geom>(8)
 
-export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) => {
+export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
+  ctx
+) => {
   const cfg = ctx.config || {}
   const plot = ctx.dimensions.plot
   if (!ctx.nodes.length) return { sceneNodes: [] }
@@ -550,8 +582,12 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
   }
   const resolvedEdges: Array<{ source: string; target: string }> = []
   for (const edge of ctx.edges) {
-    const s = endpointId(edge.source ?? (readField(edge, sourceAcc, undefined) as string))
-    const t = endpointId(edge.target ?? (readField(edge, targetAcc, undefined) as string))
+    const s = endpointId(
+      edge.source ?? (readField(edge, sourceAcc, undefined) as string)
+    )
+    const t = endpointId(
+      edge.target ?? (readField(edge, targetAcc, undefined) as string)
+    )
     if (s == null || t == null) continue
     resolvedEdges.push({ source: s, target: t })
   }
@@ -568,18 +604,26 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
       else bandsMap.set(c.motif, [c])
     }
   } else {
-    bandsMap.set("all", [...components].sort((a, b) => b.nodeCount - a.nodeCount))
+    bandsMap.set(
+      "all",
+      [...components].sort((a, b) => b.nodeCount - a.nodeCount)
+    )
   }
   const bandGroups = [...bandsMap.entries()]
   bandGroups.sort((a, b) => {
     if (sort === "size") return b[1][0].nodeCount - a[1][0].nodeCount
-    if (sort === "directedness") return Number(b[1][0].directed) - Number(a[1][0].directed)
+    if (sort === "directedness")
+      return Number(b[1][0].directed) - Number(a[1][0].directed)
     return b[1].length - a[1].length // frequency
   })
 
   // ── Fit a global cell size, then arrange (cached geometry) ────────────────
   const fingerprint = fnv1a(
-    ids.join(",") + "|" + [...outAdj.entries()].map(([k, v]) => k + ">" + [...v].sort().join(".")).join(";")
+    ids.join(",") +
+      "|" +
+      [...outAdj.entries()]
+        .map(([k, v]) => k + ">" + [...v].sort().join("."))
+        .join(";")
   )
   const sig = signatureKey([
     Math.round(plot.x),
@@ -597,7 +641,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
     sort,
     nodeRadius,
     bandGroups.map(([k, v]) => k + ":" + v.length).join(","),
-    fingerprint,
+    fingerprint
   ])
 
   const geom = GEOM_CACHE.getOrCompute(sig, () =>
@@ -613,7 +657,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
       nodeDatum,
       nodeCategory,
       outAdj,
-      inAdj,
+      inAdj
     })
   )
 
@@ -624,7 +668,11 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
   const edgeColor = cfg.edgeColor ?? semantic.border ?? "#9aa0aa"
   const colorMode = cfg.colorMode ?? "directedness"
   const selPredicate = ctx.selection?.isActive ? ctx.selection.predicate : null
-  const dimOpts = { predicate: selPredicate, highlight: cfg.highlight ?? null, dimOpacity: 0.14 }
+  const dimOpts = {
+    predicate: selPredicate,
+    highlight: cfg.highlight ?? null,
+    dimOpacity: 0.14
+  }
 
   const componentColor = (info: ComponentInfo): string => {
     if (colorMode === "motif") return ctx.resolveColor(info.motif)
@@ -647,12 +695,15 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
           x2: e.x2,
           y2: e.y2,
           style: { stroke: edgeColor, strokeWidth: 1, opacity: 0.5 },
-          datum: null,
+          datum: null
         }
         sceneEdges.push(line)
       }
       for (const n of cell.nodes) {
-        const fill = colorMode === "category" && n.category ? ctx.resolveColor(n.category) : baseFill
+        const fill =
+          colorMode === "category" && n.category
+            ? ctx.resolveColor(n.category)
+            : baseFill
         const symbol: NetworkSymbolNode = {
           type: "symbol",
           cx: n.cx,
@@ -662,7 +713,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
           style: { fill, opacity: dimFor(n.datum, dimOpts) },
           datum: n.datum,
           id: n.id,
-          label: String(readField(n.datum, labelAcc, n.id)),
+          label: String(readField(n.datum, labelAcc, n.id))
         }
         sceneNodes.push(symbol)
       }
@@ -676,7 +727,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
         edges: info.edgeCount,
         sinks: info.sinkCount,
         sources: info.sourceCount,
-        directedness: info.directed ? "converging" : "branching",
+        directedness: info.directed ? "converging" : "branching"
       })
       const symbol: NetworkSymbolNode = {
         type: "symbol",
@@ -684,16 +735,21 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
         cy: cell.cy,
         size: Math.PI * cell.glyphR * cell.glyphR,
         symbolType: info.directed ? "circle" : "diamond",
-        style: { fill: baseFill, opacity: dimFor(compDatum, dimOpts), stroke: edgeColor, strokeWidth: 0.75 },
+        style: {
+          fill: baseFill,
+          opacity: dimFor(compDatum, dimOpts),
+          stroke: edgeColor,
+          strokeWidth: 0.75
+        },
         datum: compDatum,
         id: String(compDatum.id),
-        label: describeMotif(info),
+        label: describeMotif(info)
       }
       sceneNodes.push(symbol)
     }
   }
 
-  const overlays = buildOverlays(geom.bands, {
+  const overlays = buildNetEnsembleOverlays(geom.bands, {
     convergeColor,
     branchColor,
     edgeColor,
@@ -704,7 +760,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (ctx) =
     // actually encodes directedness (not in motif / category color modes).
     showLegend: cfg.showLegend !== false && colorMode === "directedness",
     textColor: semantic.text ?? "var(--semiotic-text, #1a1a1a)",
-    subText: semantic.textSecondary ?? "var(--semiotic-text-secondary, #888)",
+    subText: semantic.textSecondary ?? "var(--semiotic-text-secondary, #888)"
   })
 
   return { sceneNodes, sceneEdges, overlays }
@@ -727,14 +783,20 @@ interface BuildOpts {
   inAdj: Map<string, Set<string>>
 }
 
-function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpts): Geom {
+function buildGeometry(
+  bandGroups: Array<[string, ComponentInfo[]]>,
+  o: BuildOpts
+): Geom {
   const { plot } = o
   const availW = Math.max(40, plot.width)
 
   // Pick the largest cell size at which the whole ensemble fits the plot height.
   const chooseCell = (): { cell: number; cols: number } => {
     for (let cell = o.maxCellSize; cell >= o.minCellSize; cell -= 2) {
-      const cols = Math.max(1, Math.floor((availW + o.cellGap) / (cell + o.cellGap)))
+      const cols = Math.max(
+        1,
+        Math.floor((availW + o.cellGap) / (cell + o.cellGap))
+      )
       let h = 0
       for (const [, comps] of bandGroups) {
         const rows = Math.ceil(comps.length / cols)
@@ -742,7 +804,10 @@ function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpt
       }
       if (h <= plot.height) return { cell, cols }
     }
-    const cols = Math.max(1, Math.floor((availW + o.cellGap) / (o.minCellSize + o.cellGap)))
+    const cols = Math.max(
+      1,
+      Math.floor((availW + o.cellGap) / (o.minCellSize + o.cellGap))
+    )
     return { cell: o.minCellSize, cols }
   }
   const { cell, cols } = chooseCell()
@@ -780,7 +845,7 @@ function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpt
           cy: y + cell / 2,
           glyphR: 0,
           nodes: placed.nodes,
-          edges: placed.edges,
+          edges: placed.edges
         })
       } else {
         cells.push({
@@ -790,7 +855,7 @@ function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpt
           cy: y + cell / 2,
           glyphR: Math.max(2.5, cell * 0.36),
           nodes: [],
-          edges: [],
+          edges: []
         })
       }
     })
@@ -800,7 +865,7 @@ function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpt
       x: plot.x,
       y: bandTop + 2,
       width: Math.min(o.headerHeight - 6, 40),
-      height: o.headerHeight - 6,
+      height: o.headerHeight - 6
     })
 
     bands.push({
@@ -812,7 +877,7 @@ function buildGeometry(bandGroups: Array<[string, ComponentInfo[]]>, o: BuildOpt
       y: bandTop,
       width: availW,
       height: o.headerHeight + rows * (cell + o.cellGap),
-      exemplar,
+      exemplar
     })
 
     cursorY = gridTop + rows * (cell + o.cellGap) + o.bandGap
@@ -825,120 +890,15 @@ function placeExemplar(
   info: ComponentInfo,
   o: BuildOpts,
   box: { x: number; y: number; width: number; height: number }
-): { nodes: PlacedNode[]; edges: PlacedEdge[] } | null {
+): { nodes: NetEnsemblePlacedNode[]; edges: NetEnsemblePlacedEdge[] } | null {
   if (!info) return null
-  return placeComponent(info, o.nodeDatum, o.nodeCategory, o.outAdj, o.inAdj, box, 3)
-}
-
-// ── Overlays (band labels, exemplars, legend) ──────────────────────────────────
-
-interface OverlayOpts {
-  convergeColor: string
-  branchColor: string
-  edgeColor: string
-  plot: { x: number; y: number; width: number; height: number }
-  showBandLabels: boolean
-  showExemplars: boolean
-  showLegend: boolean
-  textColor: string
-  subText: string
-}
-
-function buildOverlays(bands: BandInfo[], o: OverlayOpts): ReactNode {
-  const els: ReactNode[] = []
-
-  for (const band of bands) {
-    const color = band.directed ? o.convergeColor : o.branchColor
-    els.push(
-      roundedEnclosure({
-        keyId: `band-${band.motif}`,
-        x: band.x - 6,
-        y: band.y - 4,
-        width: band.width + 12,
-        height: band.height + 4,
-        radius: 8,
-        stroke: color,
-        strokeWidth: 1,
-        opacity: 0.28,
-      })
-    )
-
-    if (o.showExemplars && band.exemplar) {
-      const ex = band.exemplar
-      els.push(
-        <g key={`ex-${band.motif}`} style={{ pointerEvents: "none" }}>
-          {ex.edges.map((e, i) => (
-            <line
-              key={`exe-${i}`}
-              x1={e.x1}
-              y1={e.y1}
-              x2={e.x2}
-              y2={e.y2}
-              stroke={o.edgeColor}
-              strokeWidth={0.75}
-              opacity={0.55}
-            />
-          ))}
-          {ex.nodes.map((n) => (
-            <circle key={`exn-${n.id}`} cx={n.cx} cy={n.cy} r={Math.max(1.6, n.r)} fill={color} />
-          ))}
-        </g>
-      )
-    }
-
-    if (o.showBandLabels) {
-      const labelX = band.x + (o.showExemplars ? 48 : 4)
-      els.push(
-        <text
-          key={`bl-${band.motif}`}
-          x={labelX}
-          y={band.y + 12}
-          fontSize={13}
-          fontWeight={600}
-          fill={o.textColor}
-          style={{ pointerEvents: "none" }}
-        >
-          {band.descriptor}
-        </text>
-      )
-      els.push(
-        <text
-          key={`bc-${band.motif}`}
-          x={labelX}
-          y={band.y + 27}
-          fontSize={11}
-          fill={o.subText}
-          style={{ pointerEvents: "none" }}
-        >
-          {`×${band.count} · ${band.directed ? "converges to 1 sink" : "branches to ≥2 sinks"}`}
-        </text>
-      )
-    }
-  }
-
-  if (o.showLegend) {
-    const lx = o.plot.x + o.plot.width - 168
-    const ly = o.plot.y - 2
-    els.push(
-      <g key="net-legend" style={{ pointerEvents: "none" }}>
-        <circle cx={lx} cy={ly} r={5} fill={o.convergeColor} />
-        <text x={lx + 10} y={ly + 4} fontSize={11} fill={o.subText}>
-          converges (1 sink)
-        </text>
-        <path
-          d={diamondPath(lx, ly + 18, 5)}
-          fill={o.branchColor}
-        />
-        <text x={lx + 10} y={ly + 22} fontSize={11} fill={o.subText}>
-          branches (≥2 sinks)
-        </text>
-      </g>
-    )
-  }
-
-  return <g className="net-ensemble-overlays">{els}</g>
-}
-
-function diamondPath(cx: number, cy: number, r: number): string {
-  return `M${cx},${cy - r} L${cx + r},${cy} L${cx},${cy + r} L${cx - r},${cy} Z`
+  return placeComponent(
+    info,
+    o.nodeDatum,
+    o.nodeCategory,
+    o.outAdj,
+    o.inAdj,
+    box,
+    3
+  )
 }

@@ -469,7 +469,6 @@ export function runCollapsedGibbsLDA(corpus = LDA_MINIATURE_CORPUS, options = {}
     }
   })
 
-  const topicById = new Map(topics.map((topic) => [topic.id, topic]))
   const documents = model.documents.map((document) => {
     const finalTopicMixture = snapshots.at(-1).documentMixtures[document.id]
     const dominantTopicId = Object.entries(finalTopicMixture).sort(

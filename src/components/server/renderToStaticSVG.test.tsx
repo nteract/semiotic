@@ -11,6 +11,7 @@ import {
   renderGeoToStaticSVG
 } from "./renderToStaticSVG"
 import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
+import type { FrameGraphicsContext } from "../stream/types"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -427,11 +428,11 @@ describe("renderToStaticSVG dispatch", () => {
       size: [200, 120],
       margin: { top: 5, right: 6, bottom: 7, left: 8 },
       _idPrefix: "server-layer-order",
-      backgroundGraphics: (context) => {
+      backgroundGraphics: (context: FrameGraphicsContext) => {
         contexts.push(context)
         return <g data-testid="server-background" />
       },
-      foregroundGraphics: (context) => {
+      foregroundGraphics: (context: FrameGraphicsContext) => {
         contexts.push(context)
         return <g data-testid="server-foreground" />
       }
