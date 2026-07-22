@@ -9,11 +9,13 @@ import { renderToStaticMarkup } from "react-dom/server"
 import {
   CrucibleChrome,
   CrucibleProjectionOverlay,
+  crucibleProjectionSemanticItems
+} from "./crucibleChrome"
+import {
   crucibleBodySemanticItem,
-  crucibleProjectionSemanticItems,
   drawCrucibleBodySVG,
   drawCrucibleBonds
-} from "./crucibleChrome"
+} from "./crucibleBodyRenderers"
 
 const plan = compileCruciblePlan({
   data: [

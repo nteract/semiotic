@@ -56,13 +56,11 @@ import {
   CrucibleChrome,
   CrucibleProjectionOverlay,
   CrucibleReplayControls,
-  crucibleBodySemanticItem,
   crucibleProjectionSemanticItems,
   defaultCrucibleTooltipContent,
-  drawCrucibleBody,
-  drawCrucibleBonds,
   resolveCrucibleBodyStyle
 } from "./crucibleChrome"
+import { crucibleBodySemanticItem, drawCrucibleBody, drawCrucibleBonds } from "./crucibleBodyRenderers"
 import type {
   CrucibleChartHandle,
   CrucibleChartProps,

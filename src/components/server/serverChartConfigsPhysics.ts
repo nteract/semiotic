@@ -21,9 +21,9 @@ import {
 import { buildCrucibleProjection } from "../charts/physics/crucibleEffects"
 import {
   CrucibleChrome,
-  CrucibleProjectionOverlay,
-  drawCrucibleBodySVG
+  CrucibleProjectionOverlay
 } from "../charts/physics/crucibleChrome"
+import { drawCrucibleBodySVG } from "../charts/physics/crucibleBodyRenderers"
 import type {
   CrucibleBodyDatum,
   CrucibleProjectionSpec,
