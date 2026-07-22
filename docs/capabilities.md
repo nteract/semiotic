@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-18 · 54 charts indexed.
+Last regen: 2026-07-21 · 55 charts indexed.
 
 **Column key**
 
@@ -92,6 +92,7 @@ Last regen: 2026-07-18 · 54 charts indexed.
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **CollisionSwarmChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
+| **CrucibleChart** | — | — | — | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
 | **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
 | **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
 | **GauntletChart** | — | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
@@ -109,8 +110,8 @@ Last regen: 2026-07-18 · 54 charts indexed.
 
 ## Aggregate counts
 
-- 46/54 charts render a top-level legend.
-- 45/54 charts expose a push API.
-- 43/54 charts SSR via the `renderChart()` registry.
-- 1/54 charts use the customLayout escape hatch.
-- 9/54 charts use synthetic (no-layout) construction.
+- 46/55 charts render a top-level legend.
+- 45/55 charts expose a push API.
+- 44/55 charts SSR via the `renderChart()` registry.
+- 1/55 charts use the customLayout escape hatch.
+- 10/55 charts use synthetic (no-layout) construction.

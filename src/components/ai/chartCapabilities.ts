@@ -1,7 +1,7 @@
 import type { ChartCapability } from "./chartCapabilityTypes"
 import {
   getRegisteredRecipeCapabilities,
-  hasRegisteredRecipeCapabilities,
+  hasRegisteredRecipeCapabilities
 } from "./chartRecipeRegistry"
 
 // XY family
@@ -59,6 +59,7 @@ import { CollisionSwarmChartCapability } from "../charts/physics/CollisionSwarmC
 import { PhysicalFlowChartCapability } from "../charts/physics/PhysicalFlowChart.capability"
 import { ProcessFlowChartCapability } from "../charts/physics/ProcessFlowChart.capability"
 import { GauntletChartCapability } from "../charts/physics/GauntletChart.capability"
+import { CrucibleChartCapability } from "../charts/physics/CrucibleChart.capability"
 
 // Value family
 import { BigNumberCapability } from "../charts/value/BigNumber.capability"
@@ -134,8 +135,9 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   PhysicalFlowChartCapability,
   ProcessFlowChartCapability,
   GauntletChartCapability,
+  CrucibleChartCapability,
   // Value
-  BigNumberCapability,
+  BigNumberCapability
 ]
 
 const userCapabilities = new Map<string, ChartCapability>()
@@ -230,4 +232,5 @@ export {
   PhysicalFlowChartCapability,
   ProcessFlowChartCapability,
   GauntletChartCapability,
+  CrucibleChartCapability
 }

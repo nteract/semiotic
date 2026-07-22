@@ -82,6 +82,7 @@
 - [PhysicsPileChart](/charts/physics-pile-chart): Physics-backed unit pile chart. _(act: comparing)_
 - [CollisionSwarmChart](/charts/collision-swarm-chart): Physics-backed swarm / dot-strip chart. _(act: characterizing)_
 - [GauntletChart](/charts/gauntlet-chart): Physics-backed compound-plan gauntlet. _(act: tracing)_
+- [CrucibleChart](/charts/crucible-chart): Physics-backed authored treatment chart. _(act: tracing)_
 - [ProcessFlowChart](/charts/process-flow-chart): Physics-backed multi-body process flow. _(act: tracing)_
 - [PhysicalFlowChart](/charts/physical-flow-chart): Experimental physics-backed flow chart. _(act: tracing)_
 

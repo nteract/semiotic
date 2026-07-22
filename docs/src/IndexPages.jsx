@@ -273,6 +273,11 @@ export function RecipesIndex() {
           title="Satellites in Space"
           thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/net-ensemble"
+          title="Net Ensemble"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
 
         <div className="sub-header">Dashboards</div>
 

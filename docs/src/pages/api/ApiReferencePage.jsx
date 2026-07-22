@@ -40,6 +40,14 @@ const CHART_CATEGORIES = [
       "RealtimeWaterfallChart", "RealtimeHeatmap",
     ],
   },
+  {
+    title: "Physics Charts",
+    components: [
+      "GaltonBoardChart", "EventDropChart", "PhysicsPileChart",
+      "CollisionSwarmChart", "GauntletChart", "CrucibleChart",
+      "ProcessFlowChart", "PhysicalFlowChart",
+    ],
+  },
 ]
 
 const ALL_COMPONENTS = CHART_CATEGORIES.flatMap((c) => c.components)

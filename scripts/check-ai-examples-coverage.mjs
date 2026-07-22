@@ -121,6 +121,8 @@ const NON_CHART_ALLOWLIST = new Set([
   "ThemeProvider", "LinkedCharts", "CategoryColorProvider", "ChartContainer",
   "ChartGrid", "ContextLayout", "Tooltip", "MultiLineTooltip", "Annotation",
   "StreamNetworkFrame", "StreamXYFrame", "StreamOrdinalFrame", "StreamGeoFrame",
+  "NetworkCustomChart", "XYCustomChart", "OrdinalCustomChart", "GeoCustomChart",
+  "PhysicsCustomChart",
   "Sparkline", "SkipToTableLink", "AccessibleDataTable", "RealtimeFrameHandle",
   "Datum", "App", "Component", "Fragment", "StrictMode", "Suspense",
 ])

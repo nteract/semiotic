@@ -624,6 +624,24 @@
         "settled-projection"
       ]
     },
+    "CrucibleChart": {
+      "category": "physics",
+      "supportsLegend": false,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "authored-event-tape",
+        "forming-products",
+        "reason-labelled-outlets",
+        "settled-projection",
+        "deterministic-snapshot"
+      ]
+    },
     "EventDropChart": {
       "category": "physics",
       "supportsLegend": true,

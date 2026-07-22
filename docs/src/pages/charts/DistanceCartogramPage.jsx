@@ -227,10 +227,12 @@ const distanceCartogramProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Field name or function for point color." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme." },
   { name: "pointRadius", type: "number", required: false, default: "5", description: "Base circle radius." },
-  { name: "showRings", type: "boolean | number | number[]", required: false, default: "true", description: "Concentric distance rings around center. true for auto, number for ring count, or number[] for explicit cost values." },
-  { name: "ringStyle", type: "object", required: false, default: null, description: "Ring style: { stroke, strokeWidth, strokeDasharray, labelColor, labelSize }." },
-  { name: "showNorth", type: "boolean", required: false, default: "true", description: "Show a north-pointing compass indicator." },
+  { name: "showRings", type: "boolean | number | number[]", required: false, default: "true", description: "Cost reference marks. Radial: concentric rings. Strip/sparkline: baseline ticks. true for auto, number for count, or number[] for explicit cost values." },
+  { name: "ringStyle", type: "object", required: false, default: null, description: "Ring / strip-tick style: { stroke, strokeWidth, strokeDasharray, labelColor, labelSize }." },
+  { name: "showNorth", type: "boolean", required: false, default: "true (false in sparkline)", description: "Show a north-pointing compass indicator. Off by default for strip/sparkline layout." },
+  { name: "cartogramLayout", type: '"radial" | "strip"', required: false, default: '"radial" (\"strip\" in sparkline)', description: "Cost encoding. radial = polar cartogram (bearing from geography). strip = Langren-style 1D cost axis (x ∝ cost). Sparkline mode defaults to strip." },
   { name: "costLabel", type: "string", required: false, default: null, description: 'Unit label for ring values (e.g. "hrs", "km").' },
+  { name: "mode", type: '"primary" | "context" | "sparkline"', required: false, default: '"primary"', description: "Display mode. sparkline collapses to a Langren 1D cost strip with no map chrome." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Tooltip configuration." },
   { name: "showLegend", type: "boolean", required: false, default: "false", description: "Show a legend." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title." },
@@ -455,13 +457,69 @@ export default function DistanceCartogramPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="sparkline">Sparkline (Langren strip)</h3>
+      <p>
+        In <code>mode=&quot;sparkline&quot;</code> the cartogram drops map chrome
+        and becomes a one-dimensional cost strip — the same idea as Michael
+        Florent van Langren&apos;s 1644 graph of longitude estimates from Toledo
+        to Rome. The center sits at the origin (left); each point&apos;s position
+        along the axis is its cost. Dense estimates of the same quantity pack
+        with a light beeswarm so collisions stay legible. Pass{" "}
+        <code>cartogramLayout=&quot;strip&quot;</code> explicitly if you want the
+        same encoding outside sparkline mode.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          points: [
+            { id: "Toledo", lon: -4.0, lat: 39.86, degrees: 0 },
+            { id: "Janssonius", lon: 12.5, lat: 41.9, degrees: 17.5 },
+            { id: "Mercator", lon: 12.5, lat: 41.9, degrees: 19.8 },
+            { id: "Schoener", lon: 12.5, lat: 41.9, degrees: 21.2 },
+            { id: "Lansberge", lon: 12.5, lat: 41.9, degrees: 22.0 },
+            { id: "Brahe", lon: 12.5, lat: 41.9, degrees: 22.4 },
+            { id: "Regiomontanus", lon: 12.5, lat: 41.9, degrees: 25.5 },
+            { id: "Orontius", lon: 12.5, lat: 41.9, degrees: 26.0 },
+            { id: "Clavius", lon: 12.5, lat: 41.9, degrees: 26.5 },
+            { id: "Ptolemy", lon: 12.5, lat: 41.9, degrees: 27.0 },
+            { id: "Argelius", lon: 12.5, lat: 41.9, degrees: 27.5 },
+            { id: "Maginus", lon: 12.5, lat: 41.9, degrees: 29.0 },
+            { id: "Origanus", lon: 12.5, lat: 41.9, degrees: 30.0 },
+          ],
+          center: "Toledo",
+          costAccessor: "degrees",
+          costLabel: "°",
+          mode: "sparkline",
+          width: 280,
+          height: 36,
+          title: "Estimates of Toledo → Rome (° longitude)",
+        }}
+        type={DistanceCartogram}
+        overrideProps={{
+          points: `[
+  { id: "Toledo", lon: -4, lat: 39.86, degrees: 0 },
+  { id: "Janssonius", degrees: 17.5 },
+  { id: "Mercator", degrees: 19.8 },
+  // …twelve historical estimates of the same distance
+]`,
+          center: '"Toledo"',
+          costAccessor: '"degrees"',
+          mode: '"sparkline"',
+          width: "280",
+          height: "36",
+          title: '"Estimates of Toledo → Rome (° longitude)"',
+        }}
+        hiddenProps={{}}
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* How It Works */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="how-it-works">How It Works</h2>
 
       <p>
-        The distance cartogram applies a post-projection transform:
+        The distance cartogram applies a post-projection transform. In the
+        default <code>radial</code> layout:
       </p>
 
       <ol>
@@ -478,6 +536,12 @@ export default function DistanceCartogramPage() {
         closer than New York, even though New York is farther geographically.
         Set <code>zoomable</code> to enable pan and zoom for exploring
         dense clusters.
+      </p>
+
+      <p>
+        In <code>layout=&quot;strip&quot;</code> (sparkline default), the transform
+        ignores bearing and places every mark on a shared cost axis — a modern
+        Langren chart. Rings become baseline ticks; north and basemap chrome stay off.
       </p>
 
       {/* ----------------------------------------------------------------- */}

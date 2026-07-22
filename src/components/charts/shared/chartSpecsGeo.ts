@@ -99,6 +99,11 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       center: { type: "array" },
       costAccessor: { type: ["string", "function"] },
       showRingLabels: { type: "boolean", description: "Show numeric distance-ring labels; defaults off in context and sparkline modes." },
+      cartogramLayout: {
+        type: "string",
+        enum: ["radial", "strip"],
+        description: "Cost encoding: radial polar cartogram (default) or strip (Langren 1D cost axis). Sparkline mode defaults to strip.",
+      },
     },
     capabilities: {
       renderModes: ["hybrid"],

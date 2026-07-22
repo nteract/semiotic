@@ -1184,6 +1184,86 @@ Key props: `y-threshold` works on vertical ordinal charts. `category-highlight` 
 
 ---
 
+## Recipe Layouts — Explicit Semantics Without Bespoke Geometry
+
+### Word Trails (source-aware color + progressive reveal)
+
+```jsx
+import { useState } from "react"
+import { OrdinalCustomChart } from "semiotic/ordinal"
+import { wordTrailsLayout, wordTrailsProgressiveReveal } from "semiotic/recipes"
+
+// One source row per topic / word / recorded model iteration.
+const topicWordRuns = [
+  { topic: "Topic A", word: "archive", iteration: 0, probability: 0.08, distinctiveness: 0.28 },
+  { topic: "Topic A", word: "archive", iteration: 1, probability: 0.14, distinctiveness: 0.56 },
+  { topic: "Topic A", word: "archive", iteration: 2, probability: 0.19, distinctiveness: 0.84 },
+  { topic: "Topic A", word: "document", iteration: 2, probability: 0.13, distinctiveness: 0.62 },
+  { topic: "Topic B", word: "labor", iteration: 0, probability: 0.09, distinctiveness: 0.35 },
+  { topic: "Topic B", word: "labor", iteration: 1, probability: 0.16, distinctiveness: 0.72 },
+  { topic: "Topic B", word: "factory", iteration: 2, probability: 0.18, distinctiveness: 0.91 },
+]
+
+const topicColors = { "Topic A": "#2563eb", "Topic B": "#db2777" }
+
+function distinctivenessColor({ datum, resolvedColumnColor }) {
+  // The callback receives the exact source row, plus canonical layout fields.
+  const strength =
+    datum.distinctiveness >= 0.75 ? 100 :
+    datum.distinctiveness >= 0.5 ? 50 :
+    datum.distinctiveness >= 0.25 ? 25 : 0
+  return `color-mix(in srgb, ${resolvedColumnColor} ${strength}%, var(--surface-0, white))`
+}
+
+export default function ProgressiveTopicTrails() {
+  const [iteration, setIteration] = useState(2)
+
+  return (
+    <>
+      <label>
+        Model iteration {iteration}
+        <input
+          type="range"
+          min={0}
+          max={2}
+          value={iteration}
+          onChange={(event) => setIteration(Number(event.target.value))}
+        />
+      </label>
+      <OrdinalCustomChart
+        data={topicWordRuns}
+        layout={wordTrailsLayout}
+        layoutConfig={{
+          textAccessor: "word",
+          weightAccessor: "probability",
+          columnAccessor: "topic",
+          segmentAccessor: "iteration",
+          segmentDomain: [0, 2],
+          columnOrder: ["Topic A", "Topic B"],
+          repeatWords: true,
+          wordColor: distinctivenessColor,
+          columnColor: (topic) => topicColors[topic],
+          ...wordTrailsProgressiveReveal({
+            currentSegment: iteration,
+            segmentDomain: [0, 2],
+            oldestOpacity: 0.25,
+          }),
+        }}
+        categoryAccessor="topic"
+        valueAccessor="probability"
+        width={760}
+        height={460}
+        tooltip
+      />
+    </>
+  )
+}
+```
+
+Key APIs: `WordTrailsWordInfo` gives `word`, `column`, `weight`, and `segment` plus the exact `datum`, `dataIndex`, `columnIndex`, and `resolvedColumnColor`. `wordTrailsProgressiveReveal` hides future segments, fades reached history, and reserves every row's layout slot so playback never reflows. Set `combineWeightOpacity: true` only when opacity should also encode word weight.
+
+---
+
 ## Physics Charts — Motion With A Settled Projection
 
 ### GaltonBoardChart (distribution drop)
@@ -1355,6 +1435,93 @@ import { GauntletChart } from "semiotic/physics"
 ```
 
 Key props: `positiveProperties` / `negativeProperties` define satellite marks on each project core, `gates` place timed obstacles along the route, and the settled projection strip summarizes viability. Prefer GauntletChart for one plan with many attached attributes; use ProcessFlowChart for many independent work items.
+
+### CrucibleChart (explicit product lifecycle + immediate replay)
+
+```jsx
+import { useRef } from "react"
+import { CrucibleChart, buildCrucibleProductEvents } from "semiotic/physics"
+
+const evidence = [
+  { id: "deploy-log", label: "Deploy log", kind: "record" },
+  { id: "trace", label: "Request trace", kind: "telemetry" },
+  { id: "rollback", label: "Rollback result", kind: "experiment" },
+  { id: "traffic", label: "Traffic spike", kind: "counterclaim" },
+]
+
+const phases = [
+  { id: "charge", label: "Charge", duration: 1, motion: "charge" },
+  { id: "test", label: "Test mechanism", duration: 2.4, motion: "mix" },
+  { id: "publish", label: "Publish", duration: 1.6, motion: "pour" },
+]
+
+const products = [
+  { id: "finding", label: "Deploy caused regression", outletId: "findings" },
+]
+
+const events = [
+  ...buildCrucibleProductEvents({
+    productId: "finding",
+    form: {
+      at: { phaseId: "test", progress: 0.25 },
+      sourceIds: ["deploy-log", "trace"],
+      label: "Chronology and mechanism agree",
+    },
+    contributions: [{
+      at: { phaseId: "test", progress: 0.7 },
+      sourceIds: ["rollback"],
+      label: "Rollback supplies the counterfactual",
+    }],
+    complete: {
+      at: { phaseId: "publish", progress: 0.55 },
+      outletId: "findings",
+      reason: "Three authored observations support the finding",
+    },
+  }),
+  {
+    id: "reject-traffic",
+    at: { phaseId: "test", progress: 0.82 },
+    effects: [{
+      type: "eject",
+      select: { ids: ["traffic"] },
+      outletId: "contradicted",
+      reason: "The regression also occurs at ordinary traffic levels",
+    }],
+  },
+]
+
+export default function IncidentEvidenceCrucible() {
+  const chartRef = useRef(null)
+
+  return (
+    <>
+      <button type="button" onClick={() => chartRef.current?.replay()}>
+        Replay evidence
+      </button>
+      <CrucibleChart
+        ref={chartRef}
+        data={evidence}
+        phases={phases}
+        products={products}
+        events={events}
+        outlets={[
+          { id: "findings", label: "Supported finding", side: "bottom" },
+          { id: "contradicted", label: "Contradicted", side: "right" },
+        ]}
+        idAccessor="id"
+        labelAccessor="label"
+        categoryAccessor="kind"
+        projection={{ groupBy: "outlet", measure: "count" }}
+        playbackRate={0.8}
+        controls={{ playPause: true, reset: true, stepPhase: true, speed: true }}
+        size={[820, 400]}
+      />
+    </>
+  )
+}
+```
+
+Key APIs: `buildCrucibleProductEvents` emits the explicit `combine → contribute* → complete-product` grammar and deterministic fallback event ids. It never infers analysis, timing, product membership, reasons, or routing. The handle's `replay()` atomically restarts the same bounded tape even during a run; `reset()` restores the origin and pauses, while `rerunMS` schedules repetition after settlement.
 
 ---
 

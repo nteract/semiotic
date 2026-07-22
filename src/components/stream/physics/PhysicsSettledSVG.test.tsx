@@ -108,4 +108,53 @@ describe("physics settled SVG renderer", () => {
     })
     expect(result.evidence.stepsRun).toBeGreaterThan(0)
   })
+
+  it("resolves graphics callbacks around the settled body layer", () => {
+    const store = new PhysicsPipelineStore({
+      fixedDt: 1 / 60,
+      kernel: {
+        seed: 23,
+        gravity: { x: 0, y: 0 },
+        sleepSpeed: 100,
+        sleepAfter: 0.01
+      }
+    })
+    store.spawnNow(circle("layered-body", 40, 50))
+
+    const contexts: Array<{
+      size: number[]
+      margin: { top: number; right: number; bottom: number; left: number }
+    }> = []
+    const result = renderPhysicsSettledSVG(store, {
+      width: 180,
+      height: 100,
+      idPrefix: "layer order",
+      margin: { top: 7, left: 11 },
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="settled-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="settled-foreground" />
+      }
+    })
+
+    expect(contexts).toEqual([
+      {
+        size: [180, 100],
+        margin: { top: 7, right: 0, bottom: 0, left: 11 }
+      },
+      {
+        size: [180, 100],
+        margin: { top: 7, right: 0, bottom: 0, left: 11 }
+      }
+    ])
+    const backgroundIndex = result.svg.indexOf('data-testid="settled-background"')
+    const bodyIndex = result.svg.indexOf('id="layer_order-data-area"')
+    const foregroundIndex = result.svg.indexOf('data-testid="settled-foreground"')
+    expect(backgroundIndex).toBeGreaterThan(-1)
+    expect(bodyIndex).toBeGreaterThan(backgroundIndex)
+    expect(foregroundIndex).toBeGreaterThan(bodyIndex)
+  })
 })

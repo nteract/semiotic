@@ -56,6 +56,7 @@ const CollisionSwarmChartPage = lazy(() => import("./pages/charts/CollisionSwarm
 const PhysicalFlowChartPage = lazy(() => import("./pages/charts/PhysicalFlowChartPage"))
 const ProcessFlowChartPage = lazy(() => import("./pages/charts/ProcessFlowChartPage"))
 const GauntletChartPage = lazy(() => import("./pages/charts/GauntletChartPage"))
+const CrucibleChartPage = lazy(() => import("./pages/charts/CrucibleChartPage"))
 const PhysicsCustomChartPage = lazy(() => import("./pages/charts/PhysicsCustomChartPage"))
 const PieChartPage = lazy(() => import("./pages/charts/PieChartPage"))
 const DonutChartPage = lazy(() => import("./pages/charts/DonutChartPage"))
@@ -170,12 +171,21 @@ const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
 const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedgerExamplePage"))
+const UkraineWarHistoryExamplePage = lazy(
+  () => import("./pages/examples/UkraineWarHistoryExamplePage"),
+)
 const InsightForgeExamplePage = lazy(() => import("./pages/examples/InsightForgeExamplePage"))
 const AnalystAdventureExamplePage = lazy(
   () => import("./pages/examples/AnalystAdventureExamplePage"),
 )
 const SentenceStructureExamplePage = lazy(
   () => import("./pages/examples/SentenceStructureExamplePage"),
+)
+const DebateConceptCrucibleExamplePage = lazy(
+  () => import("./pages/examples/DebateConceptCrucibleExamplePage"),
+)
+const LDATopicCrucibleExamplePage = lazy(
+  () => import("./pages/examples/LDATopicCrucibleExamplePage"),
 )
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
@@ -252,14 +262,15 @@ const MobileDataVisualizationExamplePage = lazy(
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
 const EarthquakesExamplePage = lazy(() => import("./pages/examples/EarthquakesExamplePage"))
-const EuropaLanguagesExamplePage = lazy(
-  () => import("./pages/examples/EuropaLanguagesExamplePage"),
-)
+const EuropaLanguagesExamplePage = lazy(() => import("./pages/examples/EuropaLanguagesExamplePage"))
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
+  "UkraineWarHistoryExamplePage.jsx": UkraineWarHistoryExamplePage,
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
   "AnalystAdventureExamplePage.jsx": AnalystAdventureExamplePage,
   "SentenceStructureExamplePage.jsx": SentenceStructureExamplePage,
+  "DebateConceptCrucibleExamplePage.jsx": DebateConceptCrucibleExamplePage,
+  "LDATopicCrucibleExamplePage.jsx": LDATopicCrucibleExamplePage,
   "WatermarksExamplePage.jsx": WatermarksExamplePage,
   "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
   "MergePressureExamplePage.jsx": MergePressureExamplePage,
@@ -311,6 +322,8 @@ const BenchmarkDashboardPage = lazy(() => import("./pages/recipes/BenchmarkDashb
 const RoslingBubbleChartPage = lazy(() => import("./pages/recipes/RoslingBubbleChartPage"))
 const SatellitesInSpacePage = lazy(() => import("./pages/recipes/SatellitesInSpacePage"))
 const StreamingMigrationMapPage = lazy(() => import("./pages/recipes/StreamingMigrationMapPage"))
+const WordTrailsPage = lazy(() => import("./pages/recipes/WordTrailsPage"))
+const NetEnsemblePage = lazy(() => import("./pages/recipes/NetEnsemblePage"))
 const BlogIndexPage = lazy(() => import("./blog/BlogIndexPage"))
 const BlogEntryPage = lazy(() => import("./blog/BlogEntryPage"))
 const UsingSSRPage = lazy(() => import("./pages/UsingSSRPage"))
@@ -599,6 +612,8 @@ export default function DocsApp() {
                 <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
                 <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
                 <Route path="satellites-in-space" element={<SatellitesInSpacePage />} />
+                <Route path="word-trails" element={<WordTrailsPage />} />
+                <Route path="net-ensemble" element={<NetEnsemblePage />} />
                 {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
                 <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
                 <Route
@@ -862,6 +877,7 @@ export default function DocsApp() {
                 <Route path="physical-flow-chart" element={<PhysicalFlowChartPage />} />
                 <Route path="process-flow-chart" element={<ProcessFlowChartPage />} />
                 <Route path="gauntlet-chart" element={<GauntletChartPage />} />
+                <Route path="crucible-chart" element={<CrucibleChartPage />} />
                 <Route path="physics-custom-chart" element={<PhysicsCustomChartPage />} />
                 {/* Categorical Charts */}
                 <Route path="bar-chart" element={<BarChartPage />} />

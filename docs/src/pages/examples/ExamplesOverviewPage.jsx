@@ -5,9 +5,12 @@ import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
   "living-ledger": MiniLivingLedgerPreview,
+  "ukraine-war-history": MiniUkraineWarHistoryPreview,
   "insight-forge": MiniInsightForgePreview,
   "analyst-adventure": MiniAnalystAdventurePreview,
   "sentence-structure": MiniSentenceStructurePreview,
+  "rhetorical-crucible": MiniRhetoricalCruciblePreview,
+  "latent-crucible": MiniLatentCruciblePreview,
   watermarks: MiniWatermarksPreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
   "merge-pressure": MiniMergePressurePreview,
@@ -147,6 +150,73 @@ function MiniLivingLedgerPreview() {
       </text>
       <text x="15" y="24" fill="#75a79d" fontSize="5.5" letterSpacing="0.7">
         SERVICE WEATHER / EVIDENCE / THRESHOLDS
+      </text>
+    </svg>
+  )
+}
+
+function MiniUkraineWarHistoryPreview() {
+  const bins = [
+    [6, 8, 3],
+    [11, 16, 5],
+    [8, 10, 4],
+    [5, 7, 3],
+    [12, 14, 5],
+    [7, 9, 3],
+    [9, 12, 4],
+    [6, 8, 2],
+    [10, 15, 5],
+    [8, 11, 4],
+    [5, 7, 3],
+    [7, 10, 3],
+    [4, 6, 2],
+  ]
+  const arcs = ["M22 24Q90 -2 150 32", "M70 17Q111 0 150 32", "M218 17Q180 2 150 32"]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#071319" />
+      <path
+        d="M0 21H242M0 42H242M0 63H242M0 84H242M30 0V96M60 0V96M90 0V96M120 0V96M150 0V96M180 0V96M210 0V96"
+        stroke="#21343b"
+        strokeWidth="0.5"
+      />
+      {arcs.map((d, index) => (
+        <path
+          key={d}
+          d={d}
+          fill="none"
+          stroke={index === 1 ? "#fff" : "#ffd166"}
+          strokeWidth={index === 1 ? 2.2 : 1.2}
+          opacity="0.8"
+        />
+      ))}
+      <circle cx="150" cy="32" r="5" fill="#f8f5ea" stroke="#5ab0d9" strokeWidth="2" />
+      <circle cx="22" cy="24" r="2.5" fill="#ffd166" />
+      <circle cx="70" cy="17" r="2.5" fill="#ffd166" />
+      <circle cx="218" cy="17" r="2.5" fill="#ffd166" />
+      {bins.map((segments, index) => {
+        const x = 9 + index * 17
+        let y = 86
+        return segments.map((height, segmentIndex) => {
+          y -= height
+          return (
+            <rect
+              key={`${index}-${segmentIndex}`}
+              x={x}
+              y={y}
+              width="13"
+              height={height}
+              fill={["#ef8354", "#ffd166", "#61a5c2"][segmentIndex]}
+              opacity="0.9"
+            />
+          )
+        })
+      })}
+      <text x="9" y="12" fill="#f5f3ea" fontSize="7" fontWeight="800" letterSpacing="0.9">
+        FOUR CLOCKS
+      </text>
+      <text x="233" y="91" textAnchor="end" fill="#718088" fontSize="5.5">
+        2022—2026
       </text>
     </svg>
   )
@@ -837,7 +907,14 @@ function MiniEuropaLanguagesPreview() {
         stroke="#2a2218"
         strokeWidth="0.8"
       />
-      <text x="200" y="88" fill="#2a2218" fontSize="9" fontStyle="italic" fontFamily="Georgia, serif">
+      <text
+        x="200"
+        y="88"
+        fill="#2a2218"
+        fontSize="9"
+        fontStyle="italic"
+        fontFamily="Georgia, serif"
+      >
         Europa
       </text>
     </svg>
@@ -1071,14 +1148,61 @@ function MiniSemioticStandardPreview() {
       {signs.map((sign) => (
         <g key={`${sign.x}-${sign.y}`} transform={`translate(${sign.x} ${sign.y})`}>
           <rect width="48" height="34" rx="5" fill="#e7e9f1" stroke="#ed1c24" strokeWidth="5" />
-          {sign.kind === "line" && <path d="M7 25 17 15 27 20 40 8" fill="none" stroke="#11110e" strokeWidth="3" />}
-          {sign.kind === "bars" && <path d="M8 26V18h6v8m5 0V9h6v17m5 0V14h6v12" stroke="#343d96" strokeWidth="5" />}
-          {sign.kind === "network" && <><path d="m10 23 12-12 15 13M22 11v15" stroke="#8f8782" /><circle cx="10" cy="23" r="3" fill="#11110e" /><circle cx="22" cy="11" r="4" fill="#ed1c24" /><circle cx="37" cy="24" r="3" fill="#343d96" /></>}
-          {sign.kind === "map" && <><path d="m7 19 8-9 8 5 7-5 11 9-8 8-10-3-8 4Z" fill="#11110e" /><circle cx="30" cy="16" r="4" fill="#ed6711" /></>}
-          {sign.kind === "dots" && <><circle cx="9" cy="24" r="2" fill="#11110e" /><circle cx="16" cy="18" r="3" fill="#11110e" /><circle cx="23" cy="12" r="2" fill="#11110e" /><circle cx="30" cy="24" r="3" fill="#ed1c24" /><circle cx="37" cy="18" r="2" fill="#11110e" /></>}
+          {sign.kind === "line" && (
+            <path d="M7 25 17 15 27 20 40 8" fill="none" stroke="#11110e" strokeWidth="3" />
+          )}
+          {sign.kind === "bars" && (
+            <path d="M8 26V18h6v8m5 0V9h6v17m5 0V14h6v12" stroke="#343d96" strokeWidth="5" />
+          )}
+          {sign.kind === "network" && (
+            <>
+              <path d="m10 23 12-12 15 13M22 11v15" stroke="#8f8782" />
+              <circle cx="10" cy="23" r="3" fill="#11110e" />
+              <circle cx="22" cy="11" r="4" fill="#ed1c24" />
+              <circle cx="37" cy="24" r="3" fill="#343d96" />
+            </>
+          )}
+          {sign.kind === "map" && (
+            <>
+              <path d="m7 19 8-9 8 5 7-5 11 9-8 8-10-3-8 4Z" fill="#11110e" />
+              <circle cx="30" cy="16" r="4" fill="#ed6711" />
+            </>
+          )}
+          {sign.kind === "dots" && (
+            <>
+              <circle cx="9" cy="24" r="2" fill="#11110e" />
+              <circle cx="16" cy="18" r="3" fill="#11110e" />
+              <circle cx="23" cy="12" r="2" fill="#11110e" />
+              <circle cx="30" cy="24" r="3" fill="#ed1c24" />
+              <circle cx="37" cy="18" r="2" fill="#11110e" />
+            </>
+          )}
           {sign.kind === "area" && <path d="M6 27V22l9-10 9 5 9-9 9 7v12Z" fill="#343d96" />}
-          {sign.kind === "flow" && <><path d="M7 9c14 0 13 15 33 15M7 24c15 0 18-15 33-15" fill="none" stroke="#ed6711" strokeWidth="4" /><path d="m36 20 5 4-6 2" fill="#ed6711" /></>}
-          {sign.kind === "pile" && <><path d="M12 27h30M15 22h24M18 17h18M21 12h12" stroke="#11110e" strokeWidth="4" strokeLinecap="round" strokeDasharray="1 5" /><circle cx="21" cy="12" r="2.6" fill="#ed1c24" /><circle cx="27" cy="12" r="2.6" fill="#ed1c24" /><circle cx="33" cy="12" r="2.6" fill="#ed1c24" /></>}
+          {sign.kind === "flow" && (
+            <>
+              <path
+                d="M7 9c14 0 13 15 33 15M7 24c15 0 18-15 33-15"
+                fill="none"
+                stroke="#ed6711"
+                strokeWidth="4"
+              />
+              <path d="m36 20 5 4-6 2" fill="#ed6711" />
+            </>
+          )}
+          {sign.kind === "pile" && (
+            <>
+              <path
+                d="M12 27h30M15 22h24M18 17h18M21 12h12"
+                stroke="#11110e"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray="1 5"
+              />
+              <circle cx="21" cy="12" r="2.6" fill="#ed1c24" />
+              <circle cx="27" cy="12" r="2.6" fill="#ed1c24" />
+              <circle cx="33" cy="12" r="2.6" fill="#ed1c24" />
+            </>
+          )}
         </g>
       ))}
       <rect y="92" width="242" height="4" fill="#ed1c24" />
@@ -2591,6 +2715,248 @@ function MiniSentenceStructurePreview() {
       ))}
       <text x="476" y="190" textAnchor="end" fill="#315f63" fontSize="8" fontWeight="900">
         9 LINKED VIEWS · 1 PERSISTENT WORD
+      </text>
+    </svg>
+  )
+}
+
+function MiniRhetoricalCruciblePreview() {
+  const wordSlugs = [
+    { x: 44, y: 49, width: 47, label: "FUTURE", color: "#173b61" },
+    { x: 101, y: 67, width: 38, label: "WORK", color: "#173b61" },
+    { x: 360, y: 49, width: 54, label: "SECURITY", color: "#842e39" },
+    { x: 416, y: 68, width: 46, label: "CHANGE", color: "#842e39" },
+  ]
+  const molds = [
+    { x: 91, label: "DUTY", accent: "#173b61" },
+    { x: 213, label: "ORDER", accent: "#5d4b3f" },
+    { x: 335, label: "PROMISE", accent: "#842e39" },
+  ]
+
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" aria-hidden="true" focusable="false">
+      <rect width="500" height="200" fill="#eee4cc" />
+      <path d="M0 17H500M0 183H500" stroke="#332d28" strokeWidth="2" />
+      <path d="M18 24H482M18 176H482" stroke="#a8997e" strokeWidth="0.8" />
+      <text x="24" y="40" fill="#332d28" fontSize="10" fontWeight="900" letterSpacing="2.4">
+        THREE DEBATES · TWO RETORTS · ONE PUBLIC LEXICON
+      </text>
+
+      <g transform="translate(22,52)">
+        <path
+          d="M0 0H124L110 47Q105 65 85 65H39Q19 65 14 47Z"
+          fill="#173b61"
+          stroke="#102a45"
+          strokeWidth="3"
+        />
+        <path d="M12 8H112" stroke="#eee4cc" strokeWidth="2" opacity="0.75" />
+        <text x="62" y="34" textAnchor="middle" fill="#f8f0dc" fontSize="11" fontWeight="900">
+          NAVY RETORT
+        </text>
+      </g>
+      <g transform="translate(354,52)">
+        <path
+          d="M0 0H124L110 47Q105 65 85 65H39Q19 65 14 47Z"
+          fill="#842e39"
+          stroke="#5f2029"
+          strokeWidth="3"
+        />
+        <path d="M12 8H112" stroke="#eee4cc" strokeWidth="2" opacity="0.75" />
+        <text x="62" y="34" textAnchor="middle" fill="#f8f0dc" fontSize="11" fontWeight="900">
+          OXBLOOD RETORT
+        </text>
+      </g>
+
+      {wordSlugs.map((slug) => (
+        <g key={slug.label} transform={`translate(${slug.x},${slug.y})`}>
+          <rect width={slug.width} height="15" rx="7.5" fill="#f8f0dc" stroke={slug.color} />
+          <text
+            x={slug.width / 2}
+            y="10.5"
+            textAnchor="middle"
+            fill={slug.color}
+            fontSize="6.5"
+            fontWeight="900"
+            letterSpacing="0.55"
+          >
+            {slug.label}
+          </text>
+        </g>
+      ))}
+
+      <path
+        d="M105 110C125 131 151 123 151 145M395 110C375 131 349 123 349 145M132 110C168 138 230 119 250 145M368 110C332 138 270 119 250 145"
+        fill="none"
+        stroke="#6a5e50"
+        strokeWidth="2"
+        strokeDasharray="3 3"
+      />
+      <circle cx="188" cy="126" r="3.5" fill="#173b61" />
+      <circle cx="312" cy="126" r="3.5" fill="#842e39" />
+      <path d="M202 128 212 132 202 136Z" fill="#a8997e" />
+      <path d="M298 128 288 132 298 136Z" fill="#a8997e" />
+
+      {molds.map((mold) => (
+        <g key={mold.label} transform={`translate(${mold.x},145)`}>
+          <path d="M18 0v-5a12 12 0 0 1 24 0v5" fill="none" stroke={mold.accent} strokeWidth="3" />
+          <rect width="60" height="25" rx="2" fill="#d8c8a7" stroke={mold.accent} strokeWidth="2" />
+          <circle cx="30" cy="8" r="2.5" fill={mold.accent} />
+          <path d="M30 10v5" stroke={mold.accent} strokeWidth="2" />
+          <text
+            x="30"
+            y="22"
+            textAnchor="middle"
+            fill="#332d28"
+            fontSize="6.5"
+            fontWeight="900"
+            letterSpacing="0.6"
+          >
+            {mold.label}
+          </text>
+        </g>
+      ))}
+
+      <g fill="#332d28" fontSize="7" fontWeight="900" letterSpacing="0.8">
+        <text x="220" y="57">
+          2012
+        </text>
+        <text x="238" y="69">
+          2016
+        </text>
+        <text x="256" y="81">
+          2020
+        </text>
+      </g>
+      <path d="M210 54h7M228 66h7M246 78h7" stroke="#b64a3d" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function MiniLatentCruciblePreview() {
+  const topics = [
+    { x: 86, label: "TOPIC 1", color: "#8f3b2f" },
+    { x: 188, label: "TOPIC 2", color: "#1f6675" },
+    { x: 290, label: "TOPIC 3", color: "#8a590e" },
+    { x: 392, label: "TOPIC 4", color: "#5e4a7f" },
+  ]
+  const terms = [
+    { topic: 0, y: 55, word: "MAP", size: 5, opacity: 0.45 },
+    { topic: 1, y: 55, word: "MODEL", size: 7, opacity: 0.55 },
+    { topic: 2, y: 55, word: "ARCHIVE", size: 6, opacity: 0.5 },
+    { topic: 3, y: 55, word: "ARTICLE", size: 5, opacity: 0.45 },
+    { topic: 0, y: 77, word: "MODEL", size: 8, opacity: 0.7 },
+    { topic: 1, y: 77, word: "ARCHIVE", size: 8, opacity: 0.7 },
+    { topic: 2, y: 77, word: "MAP", size: 6, opacity: 0.62 },
+    { topic: 3, y: 77, word: "MODEL", size: 5, opacity: 0.48 },
+    { topic: 0, y: 100, word: "MODEL", size: 9, opacity: 0.82 },
+    { topic: 1, y: 100, word: "ARTICLE", size: 8, opacity: 0.8 },
+    { topic: 2, y: 100, word: "ARCHIVE", size: 9, opacity: 0.84 },
+    { topic: 3, y: 100, word: "MAP", size: 9, opacity: 0.84 },
+    { topic: 0, y: 125, word: "MODEL", size: 11, opacity: 1 },
+    { topic: 1, y: 125, word: "ARTICLE", size: 9, opacity: 1 },
+    { topic: 2, y: 125, word: "ARCHIVE", size: 11, opacity: 1 },
+    { topic: 3, y: 125, word: "MAP", size: 10, opacity: 1 },
+  ]
+  const checkpointLabels = [
+    { y: 55, label: "R0" },
+    { y: 77, label: "R8" },
+    { y: 100, label: "R32" },
+    { y: 125, label: "R64" },
+  ]
+
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" aria-hidden="true" focusable="false">
+      <rect width="500" height="200" fill="#f3eedf" />
+      <path
+        d="M0 20H500M0 40H500M0 60H500M0 80H500M0 100H500M0 120H500M0 140H500M0 160H500M0 180H500M20 0V200M40 0V200M60 0V200M80 0V200M100 0V200M120 0V200M140 0V200M160 0V200M180 0V200M200 0V200M220 0V200M240 0V200M260 0V200M280 0V200M300 0V200M320 0V200M340 0V200M360 0V200M380 0V200M400 0V200M420 0V200M440 0V200M460 0V200M480 0V200"
+        stroke="#c8d7d2"
+        strokeWidth="0.55"
+      />
+      <rect x="12" y="10" width="476" height="180" fill="none" stroke="#253e43" strokeWidth="2" />
+      <text x="24" y="30" fill="#253e43" fontSize="12" fontWeight="900" letterSpacing="2.2">
+        THE LATENT CRUCIBLE
+      </text>
+      <text x="476" y="29" textAnchor="end" fill="#6d7772" fontSize="7" fontWeight="800">
+        COLLAPSED GIBBS TRACE · ITERATIONS ↓
+      </text>
+
+      {topics.map((topic) => (
+        <g key={topic.label}>
+          <text
+            x={topic.x}
+            y="43"
+            textAnchor="middle"
+            fill={topic.color}
+            fontSize="7"
+            fontWeight="900"
+          >
+            {topic.label}
+          </text>
+          <line
+            x1={topic.x}
+            x2={topic.x}
+            y1="48"
+            y2="137"
+            stroke={topic.color}
+            strokeOpacity="0.28"
+          />
+        </g>
+      ))}
+
+      {checkpointLabels.map((checkpoint) => (
+        <g key={checkpoint.label}>
+          <line
+            x1="48"
+            x2="438"
+            y1={checkpoint.y}
+            y2={checkpoint.y}
+            stroke="#6d7772"
+            strokeDasharray="2 4"
+            opacity="0.28"
+          />
+          <text x="42" y={checkpoint.y + 2} textAnchor="end" fill="#536267" fontSize="6">
+            {checkpoint.label}
+          </text>
+        </g>
+      ))}
+
+      {terms.map((term, index) => (
+        <text
+          key={`${term.word}-${term.topic}-${term.y}-${index}`}
+          x={topics[term.topic].x}
+          y={term.y + 2}
+          textAnchor="middle"
+          fill={topics[term.topic].color}
+          fontSize={term.size}
+          fontWeight="900"
+          opacity={term.opacity}
+        >
+          {term.word}
+        </text>
+      ))}
+
+      <path d="M56 145H444L426 177H74Z" fill="#253e43" stroke="#162a2d" strokeWidth="2" />
+      {topics.map((topic, index) => (
+        <g key={`${topic.label}-mold`} transform={`translate(${54 + index * 101},151)`}>
+          <rect width="64" height="19" rx="2" fill="#f3eedf" stroke={topic.color} strokeWidth="2" />
+          <circle cx="13" cy="9.5" r="3" fill={topic.color} />
+          <circle cx="25" cy="9.5" r="2.3" fill={topic.color} opacity="0.75" />
+          <circle cx="35" cy="9.5" r="1.8" fill={topic.color} opacity="0.55" />
+          <text x="57" y="12" textAnchor="end" fill="#253e43" fontSize="6" fontWeight="900">
+            φ
+          </text>
+        </g>
+      ))}
+      <text
+        x="250"
+        y="187"
+        textAnchor="middle"
+        fill="#253e43"
+        fontSize="7"
+        fontWeight="900"
+        letterSpacing="1.2"
+      >
+        TOPICS ARE DISTRIBUTIONS, NOT LABELS
       </text>
     </svg>
   )

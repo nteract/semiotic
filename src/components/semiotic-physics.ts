@@ -43,7 +43,10 @@ import {
   createDefaultPhysicsEngineAdapter
 } from "./stream/physics/PhysicsEngineAdapter"
 import { evaluatePhysicsBodyBudget } from "./stream/physics/PhysicsBodyBudget"
-import { PhysicsSedimentAccumulator, sedimentHeightfield } from "./stream/physics/PhysicsSediment"
+import {
+  PhysicsSedimentAccumulator,
+  sedimentHeightfield
+} from "./stream/physics/PhysicsSediment"
 import {
   composePhysicsControllers,
   createCapacityQueueController,
@@ -154,6 +157,7 @@ export default StreamPhysicsFrame
 
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
+export * from "./charts/physics/CrucibleChart"
 export type {
   GauntletChartProps,
   GauntletEffect,
@@ -339,9 +343,7 @@ export type {
   PhysicsAnnotationAnchorNode,
   PhysicsSVGOverlayProps
 } from "./stream/physics/PhysicsSVGOverlay"
-export type {
-  PhysicsExecution
-} from "./stream/physics/PhysicsWorkerProtocol"
+export type { PhysicsExecution } from "./stream/physics/PhysicsWorkerProtocol"
 export type {
   PhysicsEngineAdapter,
   PhysicsEngineAdapterFactory,
@@ -466,7 +468,24 @@ export type {
 } from "./charts/shared/motionEncoding"
 
 // Declarative threshold-aware particle style rules (GaltonBoard/Pile/CollisionSwarm/EventDrop `styleRules`) + hatch fills.
-export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver, composeStyleRules } from "./charts/shared/styleRules"
-export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
-export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export {
+  resolveStyleRules,
+  matchesThreshold,
+  ruleMatches,
+  makeRuleValueResolver,
+  composeStyleRules
+} from "./charts/shared/styleRules"
+export type {
+  StyleRule,
+  StyleRuleStyle,
+  StyleRuleThreshold,
+  StyleRuleContext,
+  StyleRulePredicate
+} from "./charts/shared/styleRules"
+export {
+  isHatchFill,
+  hatchPatternDef,
+  resolveSvgFill,
+  hatchFillId
+} from "./charts/shared/hatchFill"
 export type { HatchFill } from "./charts/shared/hatchFill"

@@ -704,12 +704,102 @@ const tieredHierarchy = {
   ],
 }
 
+// A bounded terminal ledger keeps both paths deterministic: renderChart()
+// resolves the authored tape to the same explicit snapshot the live HOC uses.
+// Bonds are disabled because settled SSR intentionally renders semantic bodies
+// and chart chrome rather than replay-only canvas strokes.
+const crucibleData = [
+  { id: "liberty", label: "Liberty", category: "principle", amount: 2 },
+  { id: "order", label: "Order", category: "principle", amount: 1 },
+  { id: "security", label: "Security", category: "policy", amount: 1.5 },
+  { id: "aside", label: "Aside", category: "residue", amount: 0.5 },
+]
+const cruciblePhases = [
+  { id: "heat", label: "Exchange", duration: 2, motion: "mix" },
+  { id: "temper", label: "Resolution", duration: 2, motion: "bind" },
+]
+const crucibleProducts = [
+  {
+    id: "civic-alloy",
+    label: "Civic alloy",
+    category: "synthesis",
+    outletId: "argument",
+    color: "#B8792D",
+  },
+]
+const crucibleOutlets = [
+  { id: "argument", label: "Argument", side: "bottom" },
+  { id: "residue", label: "Discarded", side: "left" },
+]
+const crucibleEvents = [
+  {
+    id: "form",
+    at: { phaseId: "heat", progress: 0.5 },
+    effects: [
+      {
+        type: "combine",
+        sourceIds: ["liberty", "order", "security"],
+        productId: "civic-alloy",
+        complete: false,
+      },
+    ],
+  },
+  {
+    id: "discard",
+    at: { phaseId: "temper", progress: 0.25 },
+    effects: [
+      {
+        type: "eject",
+        select: { ids: ["aside"] },
+        outletId: "residue",
+        reason: "Did not survive the exchange",
+      },
+    ],
+  },
+  {
+    id: "finish",
+    at: { phaseId: "temper", progress: 0.75 },
+    effects: [
+      {
+        type: "complete-product",
+        productId: "civic-alloy",
+        outletId: "argument",
+      },
+    ],
+  },
+]
+
 function makeSsrParityCases(React) {
   return [
     {
       id: "line",
       component: "LineChart",
       props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200 },
+    },
+    {
+      id: "crucible-terminal-snapshot",
+      component: "CrucibleChart",
+      props: {
+        data: crucibleData,
+        phases: cruciblePhases,
+        products: crucibleProducts,
+        outlets: crucibleOutlets,
+        events: crucibleEvents,
+        idAccessor: "id",
+        labelAccessor: "label",
+        categoryAccessor: "category",
+        amountAccessor: "amount",
+        projection: { groupBy: "outlet", measure: "amount" },
+        amountLabel: "mentions",
+        playback: "snapshot",
+        paused: true,
+        showBonds: false,
+        seed: 17,
+        title: "Debate crucible",
+        description: "An authored debate exchange resolved into a civic alloy and discarded residue.",
+        width: 640,
+        height: 400,
+      },
     },
     {
       id: "area",

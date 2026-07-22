@@ -125,6 +125,14 @@ export interface ChartPropSpec {
   /** Schema-side description; surfaces in LLM tool definitions. */
   description?: string
   /**
+   * Additional JSON Schema keywords for this prop. Use this for nested wire
+   * contracts (`items`, `properties`, `oneOf`, numeric bounds, and similar)
+   * that cannot be expressed by the shallow runtime validation map. These
+   * keywords are copied only to the AI/MCP schema; runtime validation still
+   * consumes the top-level `type` and `enum` above.
+   */
+  schema?: Readonly<Record<string, unknown>>
+  /**
    * When true, the prop is included in validationMap but omitted from
    * schema.json. Use for handler/callback props (`onClick`, `tooltip`)
    * and pass-through escape hatches (`frameProps`) that LLMs shouldn't

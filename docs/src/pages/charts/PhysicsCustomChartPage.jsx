@@ -587,7 +587,7 @@ export default function PhysicsCustomChartPage() {
         { label: "Physics", path: "/charts/physics-custom-chart" },
         { label: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
       ]}
-      prevPage={{ title: "GauntletChart", path: "/charts/gauntlet-chart" }}
+      prevPage={{ title: "CrucibleChart", path: "/charts/crucible-chart" }}
       nextPage={{ title: "Custom Layouts", path: "/custom-charts/custom-layouts" }}
     >
       <ComponentMeta

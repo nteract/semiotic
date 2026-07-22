@@ -1474,9 +1474,15 @@ export const StreamPhysicsFrame = memo(forwardRef<
       height: size[1],
       title: titleText,
       description,
-      background: background === "transparent" ? undefined : background,
+      background:
+        backgroundGraphics || background === "transparent"
+          ? undefined
+          : background,
+      backgroundGraphics: resolvedBackground,
       className: "stream-physics-frame__svg",
-      idPrefix: `physics-${svgInstanceId}`
+      foregroundGraphics: resolvedForeground,
+      idPrefix: `physics-${svgInstanceId}`,
+      margin
     })
     return (
       <div

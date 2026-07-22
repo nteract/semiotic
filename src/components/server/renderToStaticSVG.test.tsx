@@ -400,6 +400,61 @@ describe("renderToStaticSVG dispatch", () => {
     expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
   })
 
+  it("renders resolved physics graphics below and above settled bodies", () => {
+    const contexts: Array<{
+      size: number[]
+      margin: { top: number; right: number; bottom: number; left: number }
+    }> = []
+    const svg = renderToStaticSVG("physics", {
+      config: {
+        fixedDt: 1 / 60,
+        kernel: {
+          seed: 7,
+          gravity: { x: 0, y: 0 },
+          sleepSpeed: 100,
+          sleepAfter: 0.01
+        }
+      },
+      initialSpawns: [
+        {
+          id: "server-layer-body",
+          x: 50,
+          y: 55,
+          mass: 1,
+          shape: { type: "circle", radius: 5 }
+        }
+      ],
+      size: [200, 120],
+      margin: { top: 5, right: 6, bottom: 7, left: 8 },
+      _idPrefix: "server-layer-order",
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="server-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="server-foreground" />
+      }
+    } as unknown as StaticFrameProps)
+
+    expect(contexts).toEqual([
+      {
+        size: [200, 120],
+        margin: { top: 5, right: 6, bottom: 7, left: 8 }
+      },
+      {
+        size: [200, 120],
+        margin: { top: 5, right: 6, bottom: 7, left: 8 }
+      }
+    ])
+    const backgroundIndex = svg.indexOf('data-testid="server-background"')
+    const bodyIndex = svg.indexOf('id="server-layer-order-data-area"')
+    const foregroundIndex = svg.indexOf('data-testid="server-foreground"')
+    expect(backgroundIndex).toBeGreaterThan(-1)
+    expect(bodyIndex).toBeGreaterThan(backgroundIndex)
+    expect(foregroundIndex).toBeGreaterThan(bodyIndex)
+  })
+
   it("throws for unknown frame type", () => {
     expect(() => renderToStaticSVG("unknown" as StaticFrameType, {} as StaticFrameProps)).toThrow(
       /Unknown frame type/

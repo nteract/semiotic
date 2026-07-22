@@ -5,18 +5,58 @@
 import type { ComponentType } from "react"
 
 import {
-  LineChart, AreaChart, DifferenceChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap,
-  ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart,
-  BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
-  Histogram, ViolinPlot, RidgelinePlot,
-  PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
-  ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
+  LineChart,
+  AreaChart,
+  DifferenceChart,
+  StackedAreaChart,
+  Scatterplot,
+  ConnectedScatterplot,
+  BubbleChart,
+  Heatmap,
+  ScatterplotMatrix,
+  MinimapChart,
+  QuadrantChart,
+  MultiAxisLineChart,
+  CandlestickChart,
+  BarChart,
+  StackedBarChart,
+  GroupedBarChart,
+  SwarmPlot,
+  BoxPlot,
+  DotPlot,
+  Histogram,
+  ViolinPlot,
+  RidgelinePlot,
+  PieChart,
+  DonutChart,
+  GaugeChart,
+  FunnelChart,
+  LikertChart,
+  SwimlaneChart,
+  ForceDirectedGraph,
+  ChordDiagram,
+  SankeyDiagram,
+  ProcessSankey,
+  TreeDiagram,
+  Treemap,
+  CirclePack,
+  OrbitDiagram,
   TemporalHistogram,
-  EventDropChart, GaltonBoardChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, ProcessFlowChart, GauntletChart
+  EventDropChart,
+  GaltonBoardChart,
+  PhysicsPileChart,
+  CollisionSwarmChart,
+  PhysicalFlowChart,
+  ProcessFlowChart,
+  GauntletChart,
+  CrucibleChart
 } from "semiotic/ai"
 
 import {
-  ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
+  ChoroplethMap,
+  ProportionalSymbolMap,
+  FlowMap,
+  DistanceCartogram
 } from "semiotic/geo"
 
 export interface RegistryEntry {
@@ -77,4 +117,5 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   PhysicalFlowChart: { component: PhysicalFlowChart, category: "physics" },
   ProcessFlowChart: { component: ProcessFlowChart, category: "physics" },
   GauntletChart: { component: GauntletChart, category: "physics" },
+  CrucibleChart: { component: CrucibleChart, category: "physics" }
 }

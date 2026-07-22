@@ -46,6 +46,60 @@ const componentMetadata = require("../../../ai/componentMetadata.cjs") as {
 }
 
 describe("Chart Spec Registry round-trip", () => {
+  it("publishes Crucible's nested authored-program grammar without widening runtime validation", () => {
+    const spec = CHART_SPECS.CrucibleChart
+    const composed = composeProps(spec)
+    const generated = generateSchemaToolEntry(spec, composed)
+    const properties = generated.function.parameters.properties as Record<
+      string,
+      Record<string, unknown>
+    >
+
+    expect(properties.phases).toMatchObject({
+      type: "array",
+      minItems: 1,
+      items: {
+        required: ["id", "duration"],
+        properties: {
+          id: { type: "string" },
+          duration: { type: "number", exclusiveMinimum: 0 }
+        }
+      }
+    })
+
+    const events = properties.events as unknown as {
+      items: {
+        properties: {
+          effects: {
+            items: {
+              oneOf: Array<{ properties: { type: { const: string } } }>
+            }
+          }
+        }
+      }
+    }
+    expect(
+      events.items.properties.effects.items.oneOf.map(
+        (variant) => variant.properties.type.const
+      )
+    ).toEqual([
+      "set-state",
+      "set-relation",
+      "resolve-relation",
+      "combine",
+      "contribute",
+      "complete-product",
+      "split",
+      "eject",
+      "set-metric",
+      "set-outcome"
+    ])
+
+    expect(generateValidationMapEntry(spec, composed).props.events).toEqual({
+      type: "array"
+    })
+  })
+
   // Set-parity gate: every chart present in the canonical files must
   // have a registry entry, and the registry must not list charts that
   // aren't in the canonical files. Without this, a chart could be added

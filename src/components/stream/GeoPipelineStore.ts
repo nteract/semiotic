@@ -147,12 +147,13 @@ export class GeoPipelineStore implements UpdateResultStore {
   // Current zoom level for onZoom callbacks
   currentZoom = 1
 
-  // Cartogram layout info — exposed for overlay rendering (concentric circles, etc.)
+  // Cartogram layout info — exposed for overlay rendering (rings / strip axis)
   cartogramLayout: {
     cx: number
     cy: number
     maxCost: number
     availableRadius: number
+    layout?: "radial" | "strip"
   } | null = null
 
   // Bounded data

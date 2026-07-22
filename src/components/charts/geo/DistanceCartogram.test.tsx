@@ -11,7 +11,7 @@ import type { Datum } from "../shared/datumTypes"
 // Mock StreamGeoFrame to capture props and expose ref handle
 let lastGeoFrameProps = {} as CapturedGeoFrameProps
 const mockGetCartogramLayout = vi.fn(() => ({
-  cx: 300, cy: 200, maxCost: 22, availableRadius: 150
+  cx: 300, cy: 200, maxCost: 22, availableRadius: 150, layout: "radial" as const,
 }))
 
 vi.mock("../../stream/StreamGeoFrame", () => {
@@ -115,6 +115,7 @@ describe("DistanceCartogram", () => {
             costAccessor: "flightHours",
             lineMode: "straight",
             strength: 1,
+            layout: "radial",
           })
         )
         const hookErr = errSpy.mock.calls.some((c) =>
@@ -149,7 +150,7 @@ describe("DistanceCartogram", () => {
       expect(lastGeoFrameProps.size).toEqual([800, 500])
     })
 
-    it("uses compact margins in sparkline mode", () => {
+    it("uses compact margins and strip layout in sparkline mode", () => {
       render(
         <Wrapper>
           <DistanceCartogram points={samplePoints} center="London" costAccessor="flightHours" mode="sparkline" width={118} height={36} />
@@ -157,7 +158,10 @@ describe("DistanceCartogram", () => {
       )
       expect(lastGeoFrameProps.margin).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
       expect(lastGeoFrameProps.enableHover).toBe(false)
-      expect(lastGeoFrameProps.pointStyle(samplePoints[0]).r).toBe(1.5)
+      // Non-center marks use the sparkline radius; center is slightly larger.
+      expect(lastGeoFrameProps.pointStyle(samplePoints[1]).r).toBe(1.5)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[0]).r).toBeCloseTo(1.5 * 1.35, 5)
+      expect(lastGeoFrameProps.projectionTransform.layout).toBe("strip")
     })
 
     it("forwards projectionTransform with cartogram config", () => {
@@ -178,6 +182,7 @@ describe("DistanceCartogram", () => {
         costAccessor: "flightHours",
         strength: 0.5,
         lineMode: "fractional",
+        layout: "radial",
       })
     })
 
@@ -254,8 +259,10 @@ describe("DistanceCartogram", () => {
           <DistanceCartogram points={samplePoints} center="London" costAccessor="flightHours" pointRadius={10} />
         </Wrapper>
       )
-      const style = lastGeoFrameProps.pointStyle(samplePoints[0])
+      // Non-center marks use the raw radius; center is slightly enlarged.
+      const style = lastGeoFrameProps.pointStyle(samplePoints[1])
       expect(style.r).toBe(10)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[0]).r).toBeCloseTo(13.5, 5)
     })
 
     it("uses colorBy string field for point colors", () => {
@@ -311,29 +318,58 @@ describe("DistanceCartogram", () => {
       expect(lastGeoFrameProps).toBeTruthy()
     })
 
-    it.each(["context", "sparkline"] as const)(
-      "keeps rings but suppresses their labels in %s mode",
-      async (mode) => {
-        render(
-          <Wrapper>
-            <DistanceCartogram
-              points={samplePoints}
-              center="London"
-              costAccessor="flightHours"
-              costLabel="hrs"
-              mode={mode}
-              showNorth={false}
-            />
-          </Wrapper>
-        )
-        await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
-        const markup = renderToStaticMarkup(
-          <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
-        )
-        expect(markup).toContain("<circle")
-        expect(markup).not.toContain("hrs")
-      }
-    )
+    it("keeps concentric rings but suppresses labels in context mode", async () => {
+      render(
+        <Wrapper>
+          <DistanceCartogram
+            points={samplePoints}
+            center="London"
+            costAccessor="flightHours"
+            costLabel="hrs"
+            mode="context"
+            showNorth={false}
+          />
+        </Wrapper>
+      )
+      await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
+      const markup = renderToStaticMarkup(
+        <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
+      )
+      expect(markup).toContain("<circle")
+      expect(markup).not.toContain("hrs")
+    })
+
+    it("sparkline uses strip baseline ticks instead of concentric rings", async () => {
+      mockGetCartogramLayout.mockReturnValue({
+        cx: 4,
+        cy: 12,
+        maxCost: 22,
+        availableRadius: 110,
+        layout: "strip",
+      })
+      render(
+        <Wrapper>
+          <DistanceCartogram
+            points={samplePoints}
+            center="London"
+            costAccessor="flightHours"
+            costLabel="hrs"
+            mode="sparkline"
+            width={120}
+            height={28}
+          />
+        </Wrapper>
+      )
+      await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
+      const markup = renderToStaticMarkup(
+        <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
+      )
+      // Langren baseline + ticks are lines, not ring circles.
+      expect(markup).toContain("<line")
+      expect(markup).not.toContain("hrs")
+      // No north-compass chrome in strip mode.
+      expect(markup).not.toMatch(/>N</)
+    })
 
     it("shows ring labels by default in primary mode", async () => {
       render(

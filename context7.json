@@ -30,6 +30,8 @@
     "Categorical color precedence with `colorBy`: `CategoryColorProvider`/`LinkedCharts` map > explicit `colorScheme` > `ThemeProvider` categorical > fallback. Wrap charts in `CategoryColorProvider` for cross-chart color consistency.",
     "Geo imports must come from `semiotic/geo`, never bare `semiotic`, to avoid pulling d3-geo into non-geo bundles.",
     "Required prop combos: `StackedAreaChart` needs `areaBy`; `BubbleChart` `sizeBy`; `StackedBarChart` `stackBy`; `GroupedBarChart` `groupBy`; `SwimlaneChart` `subcategoryAccessor`; `ForceDirectedGraph` `nodes`+`edges`. Push mode preserves these.",
-    "`semiotic/server` (`renderChart`, `renderToImage`, `renderToAnimatedGif`) produces static SVG/PNG snapshots and cannot ingest pushed data. For live/streaming behavior return React HOC code with a ref instead."
+    "`semiotic/server` (`renderChart`, `renderToImage`, `renderToAnimatedGif`) produces static SVG/PNG snapshots and cannot ingest pushed data. For live/streaming behavior return React HOC code with a ref instead.",
+    "CrucibleChart is an authored ledger, not inference: supply data, phases, products, events, and outlets. buildCrucibleProductEvents expands form/contribute/complete only; callers own membership, timing, reasons, loss, and routing. replay() restarts.",
+    "Word Trails callbacks receive source datum, canonical fields, and resolvedColumnColor. Put derived encodings on rows. Spread wordTrailsProgressiveReveal({currentSegment,segmentDomain}) into layoutConfig to fade history and hide future rows without reflow."
   ]
 }

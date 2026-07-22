@@ -3,7 +3,15 @@ import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import type { AudienceProfile } from "./audienceProfile"
-import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
+import {
+  XY_FAMILY,
+  BAR_FAMILY,
+  PART_TO_WHOLE,
+  DISTRIBUTION,
+  roles,
+  seriesField,
+  fmtDim
+} from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { describeRecipeChart } from "./describeRecipeChart"
@@ -45,17 +53,17 @@ export type DescribeLevel = "l1" | "l2" | "l3" | "l4"
  * the chart family as a fallback) and used to phrase the L4 sentence.
  */
 export type CommunicativeAct =
-  | "alerting"       // surfacing anomalies / change — demands a closer look
-  | "tracking"       // a trajectory over an ordered axis — read for direction
-  | "comparing"      // values across series/categories — read for who leads
-  | "ranking"        // an ordering — read top to bottom
-  | "apportioning"   // shares of a whole — read each part's contribution
+  | "alerting" // surfacing anomalies / change — demands a closer look
+  | "tracking" // a trajectory over an ordered axis — read for direction
+  | "comparing" // values across series/categories — read for who leads
+  | "ranking" // an ordering — read top to bottom
+  | "apportioning" // shares of a whole — read each part's contribution
   | "characterizing" // a distribution — read for spread and shape
-  | "relating"       // two variables — read for whether they move together
-  | "tracing"        // movement between states — follow the flow
-  | "nesting"        // parent/child structure — read nested totals
-  | "locating"       // values bound to place — read by location
-  | "presenting"     // a single focal value — read the headline number
+  | "relating" // two variables — read for whether they move together
+  | "tracing" // movement between states — follow the flow
+  | "nesting" // parent/child structure — read nested totals
+  | "locating" // values bound to place — read by location
+  | "presenting" // a single focal value — read the headline number
 
 /**
  * Lightweight intent context for the L4 sentence. Either hand `describeChart`
@@ -124,34 +132,77 @@ export interface DescribeChartOptions {
 // ---------------------------------------------------------------------------
 
 const KIND_PHRASE: Record<string, string> = {
-  LineChart: "line chart", AreaChart: "area chart", StackedAreaChart: "stacked area chart",
-  DifferenceChart: "difference chart", Scatterplot: "scatter plot", BubbleChart: "bubble chart",
-  ConnectedScatterplot: "connected scatter plot", QuadrantChart: "quadrant chart",
-  MultiAxisLineChart: "dual-axis line chart", CandlestickChart: "candlestick chart",
-  Heatmap: "heatmap", MinimapChart: "line chart",
-  BarChart: "bar chart", StackedBarChart: "stacked bar chart", GroupedBarChart: "grouped bar chart",
-  DotPlot: "dot plot", Histogram: "histogram", BoxPlot: "box plot", ViolinPlot: "violin plot",
-  RidgelinePlot: "ridgeline plot", SwarmPlot: "swarm plot",
-  PieChart: "pie chart", DonutChart: "donut chart", FunnelChart: "funnel chart",
-  GaugeChart: "gauge", LikertChart: "Likert chart", SwimlaneChart: "swimlane chart",
-  ForceDirectedGraph: "network graph", SankeyDiagram: "Sankey diagram", ProcessSankey: "temporal Sankey diagram",
-  ChordDiagram: "chord diagram", TreeDiagram: "tree diagram", Treemap: "treemap",
-  CirclePack: "circle-packing chart", OrbitDiagram: "orbit diagram",
-  ChoroplethMap: "choropleth map", ProportionalSymbolMap: "proportional-symbol map",
-  FlowMap: "flow map", DistanceCartogram: "distance cartogram",
+  LineChart: "line chart",
+  AreaChart: "area chart",
+  StackedAreaChart: "stacked area chart",
+  DifferenceChart: "difference chart",
+  Scatterplot: "scatter plot",
+  BubbleChart: "bubble chart",
+  ConnectedScatterplot: "connected scatter plot",
+  QuadrantChart: "quadrant chart",
+  MultiAxisLineChart: "dual-axis line chart",
+  CandlestickChart: "candlestick chart",
+  Heatmap: "heatmap",
+  MinimapChart: "line chart",
+  BarChart: "bar chart",
+  StackedBarChart: "stacked bar chart",
+  GroupedBarChart: "grouped bar chart",
+  DotPlot: "dot plot",
+  Histogram: "histogram",
+  BoxPlot: "box plot",
+  ViolinPlot: "violin plot",
+  RidgelinePlot: "ridgeline plot",
+  SwarmPlot: "swarm plot",
+  PieChart: "pie chart",
+  DonutChart: "donut chart",
+  FunnelChart: "funnel chart",
+  GaugeChart: "gauge",
+  LikertChart: "Likert chart",
+  SwimlaneChart: "swimlane chart",
+  ForceDirectedGraph: "network graph",
+  SankeyDiagram: "Sankey diagram",
+  ProcessSankey: "temporal Sankey diagram",
+  ChordDiagram: "chord diagram",
+  TreeDiagram: "tree diagram",
+  Treemap: "treemap",
+  CirclePack: "circle-packing chart",
+  OrbitDiagram: "orbit diagram",
+  ChoroplethMap: "choropleth map",
+  ProportionalSymbolMap: "proportional-symbol map",
+  FlowMap: "flow map",
+  DistanceCartogram: "distance cartogram",
   BigNumber: "single value",
-  StreamPhysicsFrame: "physics stream frame", EventDropChart: "event-drop physics chart",
-  GaltonBoardChart: "Galton board chart", PhysicsPileChart: "physics pile chart",
+  StreamPhysicsFrame: "physics stream frame",
+  EventDropChart: "event-drop physics chart",
+  GaltonBoardChart: "Galton board chart",
+  PhysicsPileChart: "physics pile chart",
   CollisionSwarmChart: "collision swarm chart",
   PhysicalFlowChart: "physical flow chart",
   ProcessFlowChart: "process flow physics chart",
-  PhysicsCustomChart: "custom physics chart",
+  CrucibleChart: "crucible physics chart",
+  PhysicsCustomChart: "custom physics chart"
 }
 
 // XY_FAMILY / BAR_FAMILY / PART_TO_WHOLE / DISTRIBUTION + roles/seriesField/fmtDim
 // are shared with navigationTree via ./chartRoles. NETWORK is description-only.
-const NETWORK = new Set(["ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram"])
-const PHYSICS = new Set(["StreamPhysicsFrame", "EventDropChart", "GaltonBoardChart", "PhysicsPileChart", "CollisionSwarmChart", "PhysicalFlowChart", "ProcessFlowChart", "GauntletChart", "PhysicsCustomChart"])
+const NETWORK = new Set([
+  "ForceDirectedGraph",
+  "SankeyDiagram",
+  "ProcessSankey",
+  "ChordDiagram"
+])
+const PHYSICS = new Set([
+  "StreamPhysicsFrame",
+  "EventDropChart",
+  "GaltonBoardChart",
+  "PhysicsPileChart",
+  "CollisionSwarmChart",
+  "PhysicalFlowChart",
+  "ProcessFlowChart",
+  "GauntletChart",
+  "CrucibleChart",
+  "PhysicsCustomChart"
+])
 
 interface PhysicsProjectionRow {
   label: string
@@ -169,15 +220,27 @@ function kindPhrase(component: string): string {
 }
 
 function finiteNumber(value: unknown): number | undefined {
-  const n = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : NaN
   return Number.isFinite(n) ? n : undefined
 }
 
-function physicsProjectionRows(props: Datum, fmtNum: (n: number) => string): PhysicsProjectionRow[] | null {
-  const physics = props.physics && typeof props.physics === "object" ? (props.physics as Datum) : null
-  const settled = props.settledProjection && typeof props.settledProjection === "object"
-    ? (props.settledProjection as Datum)
-    : null
+function physicsProjectionRows(
+  props: Datum,
+  fmtNum: (n: number) => string
+): PhysicsProjectionRow[] | null {
+  const physics =
+    props.physics && typeof props.physics === "object"
+      ? (props.physics as Datum)
+      : null
+  const settled =
+    props.settledProjection && typeof props.settledProjection === "object"
+      ? (props.settledProjection as Datum)
+      : null
   const candidates = [
     props.settledProjectionRows,
     props.projectionRows,
@@ -186,7 +249,7 @@ function physicsProjectionRows(props: Datum, fmtNum: (n: number) => string): Phy
     physics?.projectionRows,
     physics?.settledProjection && typeof physics.settledProjection === "object"
       ? (physics.settledProjection as Datum).rows
-      : undefined,
+      : undefined
   ]
   const rawRows = candidates.find((candidate) => Array.isArray(candidate))
   if (!Array.isArray(rawRows)) return null
@@ -195,7 +258,9 @@ function physicsProjectionRows(props: Datum, fmtNum: (n: number) => string): Phy
     .map((row, index): PhysicsProjectionRow | null => {
       if (!row || typeof row !== "object") return null
       const d = row as Datum
-      const count = finiteNumber(d.count ?? d.value ?? d.total ?? d.bodies ?? d.events)
+      const count = finiteNumber(
+        d.count ?? d.value ?? d.total ?? d.bodies ?? d.events
+      )
       if (count == null) return null
       const rawLabel = d.label ?? d.id ?? d.name ?? `container ${index + 1}`
       const secondary = finiteNumber(d.secondary ?? d.secondaryCount)
@@ -204,8 +269,10 @@ function physicsProjectionRows(props: Datum, fmtNum: (n: number) => string): Phy
         label: fmtDim(rawLabel, fmtNum),
         count,
         ...(secondary != null ? { secondary } : {}),
-        ...(typeof d.secondaryLabel === "string" && d.secondaryLabel ? { secondaryLabel: d.secondaryLabel } : {}),
-        ...(observed != null ? { observed } : {}),
+        ...(typeof d.secondaryLabel === "string" && d.secondaryLabel
+          ? { secondaryLabel: d.secondaryLabel }
+          : {}),
+        ...(observed != null ? { observed } : {})
       }
     })
     .filter((row): row is PhysicsProjectionRow => row != null)
@@ -216,6 +283,7 @@ function physicsRowNoun(component: string): string {
   if (component === "GaltonBoardChart") return "bin"
   if (component === "CollisionSwarmChart") return "group lane"
   if (component === "PhysicalFlowChart") return "flow node"
+  if (component === "CrucibleChart") return "result group"
   return "container"
 }
 
@@ -224,6 +292,7 @@ function physicsUnitNoun(component: string): string {
   if (component === "GaltonBoardChart") return "sample"
   if (component === "CollisionSwarmChart") return "point"
   if (component === "PhysicalFlowChart") return "packet"
+  if (component === "CrucibleChart") return "settled item"
   return "body"
 }
 
@@ -242,6 +311,9 @@ function physicsL1Sentence(component: string, kind: string): string {
   }
   if (component === "PhysicalFlowChart") {
     return "A physical flow chart that keeps authored routes visible while packet bodies show throughput and proximity events."
+  }
+  if (component === "CrucibleChart") {
+    return "A crucible physics chart that replays authored phases and events into declared products and outlets; the settled ledger, not collisions, determines the result."
   }
   return `A ${kind} whose accessible reading is the settled projection rather than individual trajectories.`
 }
@@ -270,19 +342,27 @@ function applyPhysicsLevels(
   }
 
   const total = rows.reduce((sum, row) => sum + row.count, 0)
-  const populated = rows.filter((row) => row.count > 0).sort((a, b) => b.count - a.count)
-  const leader = populated[0] ?? rows.slice().sort((a, b) => b.count - a.count)[0]
+  const populated = rows
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.count - a.count)
+  const leader =
+    populated[0] ?? rows.slice().sort((a, b) => b.count - a.count)[0]
   if (!leader) return
-  const secondaryTotal = rows.reduce((sum, row) => sum + (row.secondary ?? 0), 0)
-  const secondaryLabel = rows.find((row) => row.secondaryLabel)?.secondaryLabel ?? "secondary"
+  const secondaryTotal = rows.reduce(
+    (sum, row) => sum + (row.secondary ?? 0),
+    0
+  )
+  const secondaryLabel =
+    rows.find((row) => row.secondaryLabel)?.secondaryLabel ?? "secondary"
 
   if (want.has("l2")) {
     if (populated.length === 0) {
       levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; no ${plural(2, rowNoun)} are non-empty yet.`
     } else {
-      const secondarySentence = secondaryTotal > 0
-        ? ` ${fmtNum(secondaryTotal)} ${plural(secondaryTotal, unitNoun)} ${secondaryTotal === 1 ? "is" : "are"} marked ${secondaryLabel}.`
-        : ""
+      const secondarySentence =
+        secondaryTotal > 0
+          ? ` ${fmtNum(secondaryTotal)} ${plural(secondaryTotal, unitNoun)} ${secondaryTotal === 1 ? "is" : "are"} marked ${secondaryLabel}.`
+          : ""
       levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; ${populated.length} ${plural(populated.length, rowNoun)} ${populated.length === 1 ? "is" : "are"} non-empty. The largest ${rowNoun} is ${leader.label} with ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)}.${secondarySentence}`
     }
   }
@@ -302,48 +382,62 @@ function applyPhysicsLevels(
 
 // Scatter-shaped XY charts are about relationship, not trajectory.
 const SCATTER = new Set([
-  "Scatterplot", "BubbleChart", "ConnectedScatterplot", "QuadrantChart", "ScatterplotMatrix",
+  "Scatterplot",
+  "BubbleChart",
+  "ConnectedScatterplot",
+  "QuadrantChart",
+  "ScatterplotMatrix"
 ])
 
 /** Map a built-in intent to the communicative act it implies. */
 const INTENT_ACT: Partial<Record<IntentId, CommunicativeAct>> = {
   "outlier-detection": "alerting",
   "change-detection": "alerting",
-  "trend": "tracking",
+  trend: "tracking",
   "composition-over-time": "apportioning",
   "compare-series": "comparing",
   "compare-categories": "comparing",
-  "rank": "ranking",
+  rank: "ranking",
   "part-to-whole": "apportioning",
-  "distribution": "characterizing",
-  "correlation": "relating",
-  "flow": "tracing",
-  "hierarchy": "nesting",
-  "geo": "locating",
+  distribution: "characterizing",
+  correlation: "relating",
+  flow: "tracing",
+  hierarchy: "nesting",
+  geo: "locating"
 }
 
 /** Family → default act, used when no intent scores are available. */
 const FAMILY_ACT: Record<ChartFamily, CommunicativeAct> = {
   "time-series": "tracking",
-  "categorical": "comparing",
-  "distribution": "characterizing",
-  "relationship": "relating",
-  "flow": "tracing",
-  "network": "tracing",
-  "hierarchy": "nesting",
-  "geo": "locating",
-  "realtime": "tracking",
-  "value": "presenting",
-  "custom": "presenting",
+  categorical: "comparing",
+  distribution: "characterizing",
+  relationship: "relating",
+  flow: "tracing",
+  network: "tracing",
+  hierarchy: "nesting",
+  geo: "locating",
+  realtime: "tracking",
+  value: "presenting",
+  custom: "presenting"
 }
 
 // When two intents tie on score, the chart's *primary* purpose should win over
 // a detection reading — a plain line is "tracking", and only flips to "alerting"
 // when an outlier/change scorer strictly out-scores the trend.
 const INTENT_TIEBREAK: IntentId[] = [
-  "trend", "compare-series", "compare-categories", "rank", "part-to-whole",
-  "distribution", "correlation", "flow", "hierarchy", "geo",
-  "composition-over-time", "change-detection", "outlier-detection",
+  "trend",
+  "compare-series",
+  "compare-categories",
+  "rank",
+  "part-to-whole",
+  "distribution",
+  "correlation",
+  "flow",
+  "hierarchy",
+  "geo",
+  "composition-over-time",
+  "change-detection",
+  "outlier-detection"
 ]
 
 /** Adjective placed before "chart" in the L4 frame ("an alerting chart"). */
@@ -358,21 +452,31 @@ const ACT_LABEL: Record<CommunicativeAct, string> = {
   tracing: "flow",
   nesting: "hierarchy",
   locating: "locator",
-  presenting: "single-value",
+  presenting: "single-value"
 }
 
 /** The communicative act a built-in intent implies, or undefined if unknown. */
-export function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefined {
+export function communicativeActForIntent(
+  intent: IntentId
+): CommunicativeAct | undefined {
   return INTENT_ACT[intent]
 }
 
 /** Pick the highest-scoring intent, breaking ties by primary-purpose priority. */
-function dominantIntent(scores: Partial<Record<IntentId, number>>): IntentId | undefined {
+function dominantIntent(
+  scores: Partial<Record<IntentId, number>>
+): IntentId | undefined {
   let best: IntentId | undefined
   let bestScore = 0
-  for (const [intent, s] of Object.entries(scores) as Array<[IntentId, number]>) {
+  for (const [intent, s] of Object.entries(scores) as Array<
+    [IntentId, number]
+  >) {
     if (typeof s !== "number" || !(s > 0)) continue
-    if (s > bestScore) { best = intent; bestScore = s; continue }
+    if (s > bestScore) {
+      best = intent
+      bestScore = s
+      continue
+    }
     if (s === bestScore && best !== undefined) {
       const a = INTENT_TIEBREAK.indexOf(intent)
       const b = INTENT_TIEBREAK.indexOf(best)
@@ -385,7 +489,8 @@ function dominantIntent(scores: Partial<Record<IntentId, number>>): IntentId | u
 
 /** Act implied by the component's own family classification (no descriptor needed). */
 function componentAct(component: string): CommunicativeAct | undefined {
-  if (PART_TO_WHOLE.has(component) || component === "StackedAreaChart") return "apportioning"
+  if (PART_TO_WHOLE.has(component) || component === "StackedAreaChart")
+    return "apportioning"
   if (SCATTER.has(component)) return "relating"
   if (BAR_FAMILY.has(component)) return "comparing"
   if (DISTRIBUTION.has(component)) return "characterizing"
@@ -404,13 +509,16 @@ function normalizeCapabilityContext(
   if ("fits" in cap || "buildProps" in cap) {
     const full = cap as ChartCapability
     const scores: Partial<Record<IntentId, number>> = {}
-    for (const [intent, scorer] of Object.entries(full.intentScores) as Array<[IntentId, unknown]>) {
+    for (const [intent, scorer] of Object.entries(full.intentScores) as Array<
+      [IntentId, unknown]
+    >) {
       // Only static numeric scorers can be read without a data profile.
-      if (typeof scorer === "number" && Number.isFinite(scorer)) scores[intent] = scorer
+      if (typeof scorer === "number" && Number.isFinite(scorer))
+        scores[intent] = scorer
     }
     return {
       family: full.family,
-      intentScores: Object.keys(scores).length ? scores : undefined,
+      intentScores: Object.keys(scores).length ? scores : undefined
     }
   }
   return cap as DescribeCapabilityContext
@@ -433,7 +541,8 @@ export function resolveCommunicativeAct(
     // `buildReasons` uses). A weak top score means we're looking at leftover
     // static scorers (a chart's primary intents are often function scorers we
     // can't evaluate here) — the family is the more honest signal in that case.
-    if (top && INTENT_ACT[top] && (ctx.intentScores[top] ?? 0) >= 3) return INTENT_ACT[top]
+    if (top && INTENT_ACT[top] && (ctx.intentScores[top] ?? 0) >= 3)
+      return INTENT_ACT[top]
   }
   if (ctx?.family) return FAMILY_ACT[ctx.family]
   return componentAct(component)
@@ -448,10 +557,29 @@ export function resolveCommunicativeAct(
 // driven entirely by external metadata. The gate is provenance, not mere
 // presence: a hand-placed callout doesn't turn a report into an alert.
 
-const ALERT_ANNOTATION_TYPES = new Set(["y-threshold", "x-threshold", "band", "x-band", "callout", "label"])
+const ALERT_ANNOTATION_TYPES = new Set([
+  "y-threshold",
+  "x-threshold",
+  "band",
+  "x-band",
+  "callout",
+  "label"
+])
 const GENERATED_AUTHOR_KINDS = new Set(["system", "agent", "watcher"])
-const GENERATED_SOURCES = new Set(["ai", "agent", "system", "computed", "dbt", "great-expectations"])
-const EVIDENCE_BASES = new Set(["rule", "statistical-test", "llm-inference", "computed"])
+const GENERATED_SOURCES = new Set([
+  "ai",
+  "agent",
+  "system",
+  "computed",
+  "dbt",
+  "great-expectations"
+])
+const EVIDENCE_BASES = new Set([
+  "rule",
+  "statistical-test",
+  "llm-inference",
+  "computed"
+])
 
 /** True when props carry a provenanced, system/agent-generated alert annotation. */
 export function hasGeneratedAlertAnnotation(props: Datum): boolean {
@@ -460,7 +588,8 @@ export function hasGeneratedAlertAnnotation(props: Datum): boolean {
   return anns.some((a) => {
     if (!a || typeof a !== "object") return false
     const ann = a as { type?: unknown; provenance?: Record<string, unknown> }
-    if (typeof ann.type !== "string" || !ALERT_ANNOTATION_TYPES.has(ann.type)) return false
+    if (typeof ann.type !== "string" || !ALERT_ANNOTATION_TYPES.has(ann.type))
+      return false
     const prov = ann.provenance
     if (!prov || typeof prov !== "object") return false
     return (
@@ -480,10 +609,16 @@ export function hasGeneratedAlertAnnotation(props: Datum): boolean {
 export function chartValueFormatter(locale = "en"): (n: number) => string {
   let compact: Intl.NumberFormat, plain: Intl.NumberFormat
   try {
-    compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 })
+    compact = new Intl.NumberFormat(locale, {
+      notation: "compact",
+      maximumFractionDigits: 1
+    })
     plain = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 })
   } catch {
-    compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 })
+    compact = new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1
+    })
     plain = new Intl.NumberFormat("en", { maximumFractionDigits: 2 })
   }
   return (n: number): string => {
@@ -518,31 +653,54 @@ function computeStats(
   getDim: (d: Datum) => unknown,
   fmtNum: (n: number) => string
 ): MeasureStats | null {
-  let count = 0, sum = 0
-  let min = Infinity, max = -Infinity
-  let minRow: Datum | null = null, maxRow: Datum | null = null
-  let minIndex = 0, maxIndex = 0
-  let firstRow: Datum | null = null, lastRow: Datum | null = null
-  let first = NaN, last = NaN
+  let count = 0,
+    sum = 0
+  let min = Infinity,
+    max = -Infinity
+  let minRow: Datum | null = null,
+    maxRow: Datum | null = null
+  let minIndex = 0,
+    maxIndex = 0
+  let firstRow: Datum | null = null,
+    lastRow: Datum | null = null
+  let first = NaN,
+    last = NaN
   for (const d of data) {
     const m = getMeasure(d)
     if (!Number.isFinite(m)) continue
-    if (count === 0) { first = m; firstRow = d }
-    last = m; lastRow = d
-    if (m < min) { min = m; minRow = d; minIndex = count }
-    if (m > max) { max = m; maxRow = d; maxIndex = count }
+    if (count === 0) {
+      first = m
+      firstRow = d
+    }
+    last = m
+    lastRow = d
+    if (m < min) {
+      min = m
+      minRow = d
+      minIndex = count
+    }
+    if (m > max) {
+      max = m
+      maxRow = d
+      maxIndex = count
+    }
     count++
     sum += m
   }
   if (count === 0) return null
   return {
-    count, min, max, mean: sum / count,
+    count,
+    min,
+    max,
+    mean: sum / count,
     minLabel: fmtDim(minRow != null ? getDim(minRow) : null, fmtNum),
     maxLabel: fmtDim(maxRow != null ? getDim(maxRow) : null, fmtNum),
-    first, last,
+    first,
+    last,
     firstLabel: fmtDim(firstRow != null ? getDim(firstRow) : null, fmtNum),
     lastLabel: fmtDim(lastRow != null ? getDim(lastRow) : null, fmtNum),
-    minIndex, maxIndex,
+    minIndex,
+    maxIndex
   }
 }
 
@@ -580,7 +738,7 @@ const ANNOTATION_KIND: Record<string, string> = {
   envelope: "an envelope",
   "anomaly-band": "an anomaly band",
   forecast: "a forecast",
-  "category-highlight": "a category highlight",
+  "category-highlight": "a category highlight"
 }
 
 function joinList(items: string[]): string {
@@ -594,12 +752,18 @@ function joinList(items: string[]): string {
  *  the provenance the annotation carries. Returns a phrase that *replaces* the
  *  kind's leading article ("a callout" → "an AI-suggested callout"). */
 function annotationQualifier(ann: Datum): string {
-  const prov = ann.provenance && typeof ann.provenance === "object"
-    ? (ann.provenance as { authorKind?: string; source?: string; basis?: string })
-    : null
+  const prov =
+    ann.provenance && typeof ann.provenance === "object"
+      ? (ann.provenance as {
+          authorKind?: string
+          source?: string
+          basis?: string
+        })
+      : null
   const who = prov?.authorKind ?? prov?.source ?? prov?.basis
   if (who === "watcher") return "a watcher-flagged "
-  if (who === "agent" || who === "ai" || who === "llm-inference") return "an AI-suggested "
+  if (who === "agent" || who === "ai" || who === "llm-inference")
+    return "an AI-suggested "
   return ""
 }
 
@@ -616,7 +780,12 @@ export function annotationPhrase(ann: Datum): string {
   const baseKind = ANNOTATION_KIND[type] || "an annotation"
   const qualifier = annotationQualifier(ann)
   const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
-  const label = typeof ann.label === "string" ? ann.label : typeof ann.title === "string" ? ann.title : undefined
+  const label =
+    typeof ann.label === "string"
+      ? ann.label
+      : typeof ann.title === "string"
+        ? ann.title
+        : undefined
   return label ? `${kind} labeled "${label}"` : kind
 }
 
@@ -626,7 +795,9 @@ export function annotationPhrase(ann: Datum): string {
  * remainder into "and N more" so a heavily-annotated chart stays readable.
  */
 function annotationSentence(props: Datum): string | undefined {
-  const raw = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
+  const raw = Array.isArray(props.annotations)
+    ? (props.annotations as Datum[])
+    : null
   if (!raw || raw.length === 0) return undefined
   const items = filterAnnotationsByStatus(
     raw.filter((a): a is Datum => !!a && typeof a === "object")
@@ -652,12 +823,16 @@ export function describeChart(
   // L4 is opt-in: auto-append when intent context is supplied and `levels`
   // wasn't pinned, so "pass a capability → get L4" is ergonomic without
   // changing the default L1–L3 output every existing caller relies on.
-  if (!explicitLevels && (options.capability || hasGeneratedAlertAnnotation(props))) want.add("l4")
+  if (
+    !explicitLevels &&
+    (options.capability || hasGeneratedAlertAnnotation(props))
+  )
+    want.add("l4")
 
   const recipe = resolveRecipeForChart(component, props, options.recipe)
   if (recipe) {
     const requested = (["l1", "l2", "l3", "l4"] as DescribeLevel[]).filter(
-      (level) => want.has(level),
+      (level) => want.has(level)
     )
     // Recipes carry their own L4 contract, so the default recipe path includes
     // all four layers even when no separate capability object was supplied.
@@ -666,7 +841,7 @@ export function describeChart(
       levels: requested,
       locale: options.locale,
       audience: options.audience,
-      includeCaveats: options.includeCaveats,
+      includeCaveats: options.includeCaveats
     })
     const annotations = annotationSentence(props)
     return {
@@ -674,7 +849,7 @@ export function describeChart(
       text: annotations
         ? `${annotations} ${described.text}`.trim()
         : described.text,
-      ...(annotations ? { annotations } : {}),
+      ...(annotations ? { annotations } : {})
     }
   }
 
@@ -682,15 +857,22 @@ export function describeChart(
   const kind = kindPhrase(component)
   const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
   const series = seriesField(props)
-  const physicsProjection = PHYSICS.has(component) ? physicsProjectionRows(props, fmtNum) : null
+  const physicsProjection = PHYSICS.has(component)
+    ? physicsProjectionRows(props, fmtNum)
+    : null
 
-  const { measure, measureFallback, dimension, dimensionFallback } = roles(component, props)
+  const { measure, measureFallback, dimension, dimensionFallback } = roles(
+    component,
+    props
+  )
   // Only string accessors are human-readable labels. Function accessors (common
   // in Semiotic) are truthy but would interpolate their source into the prose —
   // fall back to the generic label instead. (The raw accessor still flows to
   // `resolveAccessor` below for value extraction.)
-  const measureName = typeof measure === "string" && measure ? measure : measureFallback
-  const dimensionName = typeof dimension === "string" && dimension ? dimension : dimensionFallback
+  const measureName =
+    typeof measure === "string" && measure ? measure : measureFallback
+  const dimensionName =
+    typeof dimension === "string" && dimension ? dimension : dimensionFallback
 
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
   if (PHYSICS.has(component)) {
@@ -700,17 +882,21 @@ export function describeChart(
   // ── L1: encoding ───────────────────────────────────────────────────────
   if (want.has("l1") && !PHYSICS.has(component)) {
     if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
-      levels.l1 = `A ${kind} of ${measureName} by ${dimensionName}` + (series ? `, split by ${series}.` : ".")
+      levels.l1 =
+        `A ${kind} of ${measureName} by ${dimensionName}` +
+        (series ? `, split by ${series}.` : ".")
     } else if (PART_TO_WHOLE.has(component)) {
       levels.l1 = `A ${kind} showing ${measureName} across ${dimensionName} categories.`
     } else if (DISTRIBUTION.has(component)) {
-      levels.l1 = `A ${kind} of the distribution of ${measureName}` + (series ? ` by ${series}.` : ".")
+      levels.l1 =
+        `A ${kind} of the distribution of ${measureName}` +
+        (series ? ` by ${series}.` : ".")
     } else if (NETWORK.has(component)) {
       const nNodes = Array.isArray(props.nodes) ? props.nodes.length : undefined
       const nEdges = Array.isArray(props.edges) ? props.edges.length : undefined
       const parts = [
         nNodes != null ? `${nNodes} ${plural(nNodes, "node")}` : null,
-        nEdges != null ? `${nEdges} ${plural(nEdges, "edge")}` : null,
+        nEdges != null ? `${nEdges} ${plural(nEdges, "edge")}` : null
       ].filter(Boolean)
       levels.l1 = `A ${kind}${parts.length ? ` with ${parts.join(" and ")}` : ""}.`
     } else if (component === "BigNumber") {
@@ -722,12 +908,20 @@ export function describeChart(
   }
 
   // Families where a quantitative measure makes L2/L3 meaningful.
-  const statsFamily = XY_FAMILY.has(component) || BAR_FAMILY.has(component) ||
-    PART_TO_WHOLE.has(component) || DISTRIBUTION.has(component)
+  const statsFamily =
+    XY_FAMILY.has(component) ||
+    BAR_FAMILY.has(component) ||
+    PART_TO_WHOLE.has(component) ||
+    DISTRIBUTION.has(component)
 
   // Stats power L2, L3, and the L4 directive; compute once if we have data + a measure.
   let stats: MeasureStats | null = null
-  if ((want.has("l2") || want.has("l3") || want.has("l4")) && statsFamily && data && data.length > 0) {
+  if (
+    (want.has("l2") || want.has("l3") || want.has("l4")) &&
+    statsFamily &&
+    data &&
+    data.length > 0
+  ) {
     const getMeasure = resolveAccessor(measure, measureFallback)
     const getDim = resolveRawAccessor(dimension, dimensionFallback)
     stats = computeStats(data, getMeasure, getDim, fmtNum)
@@ -771,7 +965,16 @@ export function describeChart(
       // directive (e.g. "rises from X to Y") and let l4Sentence fall back to
       // its accurate generic phrasing ("read it for the overall direction").
       const directiveStats = series ? null : stats
-      levels.l4 = l4Sentence(act, component, props, directiveStats, measureName, dimensionName, fmtNum, options.audience)
+      levels.l4 = l4Sentence(
+        act,
+        component,
+        props,
+        directiveStats,
+        measureName,
+        dimensionName,
+        fmtNum,
+        options.audience
+      )
     }
   }
 
@@ -799,8 +1002,24 @@ function sumOf(stats: MeasureStats): number {
 /** Describe the dominant shape of an ordered series: peak/valley shapes take
  *  priority over net direction, since "rose then crashed" is more salient than
  *  "net down". Falls back to monotonic rise/fall and flat. */
-function trendSentence(stats: MeasureStats, measureName: string, fmtNum: (n: number) => string): string {
-  const { first, last, min, max, maxLabel, minLabel, firstLabel, lastLabel, minIndex, maxIndex, count } = stats
+function trendSentence(
+  stats: MeasureStats,
+  measureName: string,
+  fmtNum: (n: number) => string
+): string {
+  const {
+    first,
+    last,
+    min,
+    max,
+    maxLabel,
+    minLabel,
+    firstLabel,
+    lastLabel,
+    minIndex,
+    maxIndex,
+    count
+  } = stats
   const range = max - min
   const delta = last - first
   if (range === 0) {
@@ -860,7 +1079,7 @@ function l4Sentence(
   measureName: string,
   dimensionName: string,
   fmtNum: (n: number) => string,
-  audience: AudienceProfile | undefined,
+  audience: AudienceProfile | undefined
 ): string {
   const label = ACT_LABEL[act]
   const article = /^[aeiou]/i.test(label) ? "an" : "a"
@@ -873,7 +1092,10 @@ function l4Sentence(
       directive = "read values by location"
       break
     case "presenting": {
-      const focal = typeof props.label === "string" && props.label ? props.label : measureName
+      const focal =
+        typeof props.label === "string" && props.label
+          ? props.label
+          : measureName
       frame = "This is a single-value display"
       directive = `read ${focal} as the headline number`
       break
@@ -884,7 +1106,8 @@ function l4Sentence(
       break
     case "nesting":
       frame = `This is ${article} ${label} chart`
-      directive = "read it for nested structure and how children sum into their parents"
+      directive =
+        "read it for nested structure and how children sum into their parents"
       break
     case "relating":
       frame = `This is ${article} ${label} chart`
@@ -892,7 +1115,14 @@ function l4Sentence(
       break
     default:
       frame = `This is ${article} ${label} chart`
-      directive = directiveFor(act, stats, measureName, dimensionName, fmtNum, component)
+      directive = directiveFor(
+        act,
+        stats,
+        measureName,
+        dimensionName,
+        fmtNum,
+        component
+      )
   }
 
   return `${frame}; ${directive}.${audienceNudge(component, audience)}`
@@ -906,21 +1136,29 @@ function directiveFor(
   m: string,
   d: string,
   fmtNum: (n: number) => string,
-  component: string,
+  component: string
 ): string {
   if (!stats) {
     switch (act) {
-      case "alerting": return "watch for points that break from the rest"
-      case "tracking": return `read it for the overall direction of ${m}`
-      case "comparing": return `compare ${m} across ${d}`
-      case "ranking": return `read it top to bottom by ${m}`
-      case "apportioning": return `read each ${d}'s share of the whole`
-      case "characterizing": return `read it for the spread and shape of ${m}`
-      default: return "read the highlighted features"
+      case "alerting":
+        return "watch for points that break from the rest"
+      case "tracking":
+        return `read it for the overall direction of ${m}`
+      case "comparing":
+        return `compare ${m} across ${d}`
+      case "ranking":
+        return `read it top to bottom by ${m}`
+      case "apportioning":
+        return `read each ${d}'s share of the whole`
+      case "characterizing":
+        return `read it for the spread and shape of ${m}`
+      default:
+        return "read the highlighted features"
     }
   }
   switch (act) {
-    case "alerting": return alertingDirective(stats, fmtNum, component)
+    case "alerting":
+      return alertingDirective(stats, fmtNum, component)
     case "tracking":
       return `read it for the trajectory of ${m}, which ${netDirection(stats)} from ${fmtNum(stats.first)} (${stats.firstLabel}) to ${fmtNum(stats.last)} (${stats.lastLabel})`
     case "comparing":
@@ -940,11 +1178,26 @@ function directiveFor(
 }
 
 /** Point an alerting chart's reader at the most divergent feature. */
-function alertingDirective(stats: MeasureStats, fmtNum: (n: number) => string, component: string): string {
+function alertingDirective(
+  stats: MeasureStats,
+  fmtNum: (n: number) => string,
+  component: string
+): string {
   if (BAR_FAMILY.has(component) || PART_TO_WHOLE.has(component)) {
     return `${stats.maxLabel} stands out at ${fmtNum(stats.max)} — check it first`
   }
-  const { first, last, min, max, minLabel, maxLabel, lastLabel, minIndex, maxIndex, count } = stats
+  const {
+    first,
+    last,
+    min,
+    max,
+    minLabel,
+    maxLabel,
+    lastLabel,
+    minIndex,
+    maxIndex,
+    count
+  } = stats
   const range = max - min
   if (range > 0) {
     const maxInterior = maxIndex > 0 && maxIndex < count - 1
@@ -957,8 +1210,10 @@ function alertingDirective(stats: MeasureStats, fmtNum: (n: number) => string, c
     if (minInterior && valleyProminence > 0.15) {
       return `the dip to ${fmtNum(min)} at ${minLabel} is the point to investigate`
     }
-    if (last >= max) return `the climb to ${fmtNum(last)} at ${lastLabel} warrants a closer look`
-    if (last <= min) return `the drop to ${fmtNum(last)} at ${lastLabel} warrants a closer look`
+    if (last >= max)
+      return `the climb to ${fmtNum(last)} at ${lastLabel} warrants a closer look`
+    if (last <= min)
+      return `the drop to ${fmtNum(last)} at ${lastLabel} warrants a closer look`
   }
   return `the extremes — ${maxLabel} (${fmtNum(max)}) and ${minLabel} (${fmtNum(min)}) — are the points to check`
 }
@@ -967,12 +1222,16 @@ function alertingDirective(stats: MeasureStats, fmtNum: (n: number) => string, c
 function netDirection(stats: MeasureStats): string {
   const range = stats.max - stats.min
   const delta = stats.last - stats.first
-  if (range === 0 || Math.abs(delta) / range < 0.05) return "holds roughly steady"
+  if (range === 0 || Math.abs(delta) / range < 0.05)
+    return "holds roughly steady"
   return delta > 0 ? "rises" : "falls"
 }
 
 /** Reception nudge appended to L4 when the audience finds this chart unfamiliar. */
-function audienceNudge(component: string, audience: AudienceProfile | undefined): string {
+function audienceNudge(
+  component: string,
+  audience: AudienceProfile | undefined
+): string {
   if (!audience) return ""
   const fam = audience.familiarity?.[component]
   if (typeof fam === "number" && fam <= 2) {
