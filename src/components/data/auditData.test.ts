@@ -539,7 +539,7 @@ describe("auditData", () => {
       sizeBy: "size",
     })
     const notifications = toDataAuditNotifications(result, { max: Number.NaN })
-    expect(notifications).toHaveLength(2)
+    expect(notifications).toHaveLength(3)
     expect(notifications.some((item) => item.id === "data-audit:overflow:chart")).toBe(false)
   })
 
