@@ -527,7 +527,25 @@ describe("useChartLegendAndMargin", () => {
     expect(groups).toHaveLength(2)
     expect(groups[0].items.map(item => item.label)).toEqual(["A", "B", "C"])
     expect(groups[1].items[0].label).toBe("Threshold")
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(112)
+  })
+
+  it("carries caller legendDistance into the composed automatic legend", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        userMargin: { right: "auto" },
+        additionalLegend: { legendGroups: [], legendDistance: 24 },
+      })
+    )
+
+    const legend = result.current.legend
+    if (!isLegendConfig(legend)) throw new Error("Expected a categorical legend")
+    expect(legend.legendDistance).toBe(24)
+    expect(result.current.margin.right).toBe(124)
   })
 
   it("does not create a legend when showLegend is false", () => {
@@ -557,7 +575,7 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.legend).toBeUndefined()
   })
 
-  it("expands right margin to 110 when legend is present and right < 110", () => {
+  it("reserves the minimum right-side legend width", () => {
     const colorScale = (_v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
@@ -568,10 +586,10 @@ describe("useChartLegendAndMargin", () => {
         userMargin: undefined,
       })
     )
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(112)
   })
 
-  it("preserves right margin when already >= 110", () => {
+  it("preserves an explicitly owned right margin", () => {
     const colorScale = (_v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
@@ -596,7 +614,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: undefined },
       })
     )
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(112)
   })
 
   it("treats auto and null margin sides as explicit auto-reservation", () => {
@@ -610,7 +628,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: "auto" },
       })
     )
-    expect(rightAuto.result.current.margin.right).toBe(110)
+    expect(rightAuto.result.current.margin.right).toBe(112)
 
     const rightNull = renderHook(() =>
       useChartLegendAndMargin({
@@ -621,7 +639,77 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: null },
       })
     )
-    expect(rightNull.result.current.margin.right).toBe(110)
+    expect(rightNull.result.current.margin.right).toBe(112)
+  })
+
+  it("sizes automatic side margins from the longest legend label", () => {
+    const longLabelData = [
+      { cat: "Catch-and-shoot attempts", val: 1 },
+      { cat: "At rim", val: 2 },
+    ]
+    const right = renderHook(() =>
+      useChartLegendAndMargin({
+        data: longLabelData,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        userMargin: { right: "auto" },
+      })
+    )
+    const left = renderHook(() =>
+      useChartLegendAndMargin({
+        data: longLabelData,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        legendPosition: "left",
+        userMargin: { left: "auto" },
+      })
+    )
+
+    expect(right.result.current.margin.right).toBeGreaterThan(112)
+    expect(left.result.current.margin.left).toBe(right.result.current.margin.right)
+  })
+
+  it("grows automatic horizontal margins for wrapped or distant legends", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data: [],
+        colorBy: undefined,
+        colorScale: undefined,
+        showLegend: false,
+        legendPosition: "bottom",
+        userMargin: { bottom: "auto" },
+        chartWidth: 220,
+        additionalLegend: {
+          gradient: {
+            domain: [0, 1],
+            colorFn: () => "#ccc",
+            label: "Probability",
+          },
+          legendDistance: 70,
+        },
+      })
+    )
+
+    expect(result.current.margin.bottom).toBe(104)
+  })
+
+  it("keeps a titled top legend below the title band", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        legendPosition: "top",
+        userMargin: { top: "auto" },
+        chartWidth: 600,
+        hasTitle: true,
+      })
+    )
+
+    expect(result.current.margin.top).toBe(58)
   })
 
   it("merges user margin with defaults", () => {

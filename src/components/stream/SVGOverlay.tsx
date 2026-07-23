@@ -5,7 +5,7 @@ import { useMemo, useRef, useEffect } from "react"
 import type { StreamScales, MarginalGraphicsConfig, XYFrameAxisConfig } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
@@ -70,7 +70,7 @@ interface SVGOverlayProps {
   title?: string | ReactNode
 
   // Legend
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   /** Callback when hovering a legend item */
   legendHoverBehavior?: (item: { label: string } | null) => void
   /** Callback when clicking a legend item */

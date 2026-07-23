@@ -15,7 +15,9 @@ import type { CategoricalLegendConfig, GradientLegendConfig, LegendGroup, Legend
 import {
   DEFAULT_LEGEND_ROW_HEIGHT,
   layoutVerticalLegendGroups,
+  resolveLegendDistance,
   resolveLegendMetrics,
+  resolveSideLegendWidth,
 } from "../legendLayout"
 
 // Keep static SVG legends on the same metric grid as the interactive
@@ -71,7 +73,9 @@ export interface StaticLegendConfig {
   hasTitle?: boolean
   /** SSR legend layout controls */
   legendLayout?: LegendLayout
-  /** Client <Legend> uses a stable 100px vertical placement box. */
+  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  legendDistance?: number
+  /** Optional vertical placement-box override. Defaults to measured content. */
   reservedWidth?: number
   /** Optional id namespace used for generated SVG ids */
   idPrefix?: string
@@ -79,7 +83,7 @@ export interface StaticLegendConfig {
 
 export interface StaticLegendGroupsConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
   legendGroups: LegendGroup[]
-  /** Client <Legend> uses a stable 100px vertical placement box. */
+  /** Optional vertical placement-box override. Defaults to measured content. */
   reservedWidth?: number
 }
 
@@ -379,7 +383,6 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
     totalWidth,
     totalHeight,
     margin,
-    hasTitle = false,
   } = config
 
   if (!categories || categories.length === 0) return null
@@ -388,19 +391,24 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   const isHorizontal = position === "top" || position === "bottom"
   const metrics = computeStaticLegendLayout(config)
 
-  // Match `renderLegendFromConfig`: vertical legends use the component's
-  // stable 100px layout box and positions are derived directly from the
+  const categoricalLegend = buildStaticCategoricalLegendConfig(categories, colorScheme, theme)
+  const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(categoricalLegend, config.legendLayout)
+  const legendDistance = typeof config.legendDistance === "number"
+    ? Math.max(0, config.legendDistance)
+    : resolveLegendDistance(categoricalLegend)
+
+  // Match `renderLegendFromConfig`: positions are derived directly from the
   // resolved margin. In particular, do not clamp an explicit caller margin;
   // the client allows that layout for externally managed legends as well.
   let tx: number, ty: number
   if (position === "left") {
-    tx = Math.max(4, margin.left - (config.reservedWidth ?? 100) - 10); ty = margin.top
+    tx = margin.left - sideLegendWidth - legendDistance; ty = margin.top
   } else if (position === "top") {
-    tx = margin.left; ty = hasTitle ? 32 : 8
+    tx = margin.left; ty = margin.top - legendDistance - metrics.height
   } else if (position === "bottom") {
-    tx = margin.left; ty = totalHeight - margin.bottom + 38
+    tx = margin.left; ty = totalHeight - margin.bottom + legendDistance
   } else {
-    tx = totalWidth - margin.right + 10; ty = margin.top
+    tx = totalWidth - margin.right + legendDistance; ty = margin.top
   }
 
   if (isHorizontal) {
@@ -445,7 +453,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
 
   return (
     <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
-      <line x1={0} y1={verticalLayout.lineY} x2={config.reservedWidth ?? 100} y2={verticalLayout.lineY} stroke="gray" />
+      <line x1={0} y1={verticalLayout.lineY} x2={sideLegendWidth} y2={verticalLayout.lineY} stroke="gray" />
       {items}
     </g>
   )
@@ -456,16 +464,19 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
 
   const metrics = computeStaticLegendGroupsLayout(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
+  const legendConfig = { legendGroups: config.legendGroups, legendDistance: config.legendDistance }
+  const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(legendConfig, config.legendLayout)
+  const legendDistance = resolveLegendDistance(legendConfig)
   const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = Math.max(4, config.margin.left - (config.reservedWidth ?? 100) - 10); ty = config.margin.top
+    tx = config.margin.left - sideLegendWidth - legendDistance; ty = config.margin.top
   } else if (config.position === "top") {
-    tx = config.margin.left; ty = config.hasTitle ? 32 : 8
+    tx = config.margin.left; ty = config.margin.top - legendDistance - metrics.height
   } else if (config.position === "bottom") {
-    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + 38
+    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + legendDistance
   } else {
-    tx = config.totalWidth - config.margin.right + 10; ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + legendDistance; ty = config.margin.top
   }
 
   if (!isHorizontal) {
@@ -485,7 +496,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
           key={`legend-group-neatline-${groupIndex}`}
           x1={0}
           y1={layout.lineY}
-          x2={config.reservedWidth ?? 100}
+          x2={sideLegendWidth}
           y2={layout.lineY}
           stroke="gray"
         />,
@@ -633,17 +644,20 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
 export function renderStaticGradientLegend(config: StaticGradientLegendConfig): React.ReactNode {
   const metrics = measureStaticGradientLegend(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
+  const legendConfig = { gradient: config.gradient, legendDistance: config.legendDistance }
+  const sideLegendWidth = resolveSideLegendWidth(legendConfig)
+  const legendDistance = resolveLegendDistance(legendConfig)
   const id = `${config.idPrefix ? `${config.idPrefix}-` : ""}semiotic-static-gradient-legend`
   const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = Math.max(4, config.margin.left - 100 - 10); ty = config.margin.top
+    tx = config.margin.left - sideLegendWidth - legendDistance; ty = config.margin.top
   } else if (config.position === "top") {
-    tx = config.margin.left; ty = config.hasTitle ? 32 : 8
+    tx = config.margin.left; ty = config.margin.top - legendDistance - metrics.height
   } else if (config.position === "bottom") {
-    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + 38
+    tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + legendDistance
   } else {
-    tx = config.totalWidth - config.margin.right + 10; ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + legendDistance; ty = config.margin.top
   }
 
   const stops = Array.from({ length: 17 }, (_, i) => {
@@ -675,7 +689,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   return (
     <g className="semiotic-legend" transform={`translate(${tx},${ty + (config.gradient.label ? 12 : 0)})`}>
       <defs><linearGradient id={id} x1="0%" y1="0%" x2="0%" y2="100%">{stops}</linearGradient></defs>
-      {config.gradient.label && <text x={barWidth / 2} y={labelY} textAnchor="middle" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
+      {config.gradient.label && <text x={0} y={labelY} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
       <rect x={0} y={0} width={barWidth} height={barHeight} fill={`url(#${id})`} rx={2} />
       <text x={barWidth + 5} y={10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
       <text x={barWidth + 5} y={barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>

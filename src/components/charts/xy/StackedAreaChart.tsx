@@ -363,6 +363,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Area-series construction (data shaping, line/point style, tooltip) ─

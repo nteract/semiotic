@@ -9,7 +9,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import * as React from "react"
 import type { ReactNode } from "react"
 import { scaleLinear } from "d3-scale"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import { renderLegendFromConfig } from "../legendRenderer"
 import { ANNOTATION_DISCLOSURE_REVEAL_CSS } from "../../charts/shared/annotationHierarchy"
 import {
@@ -58,10 +58,7 @@ export interface PhysicsSVGOverlayProps {
   totalHeight: number
   margin: { top: number; right: number; bottom: number; left: number }
   title?: string | ReactNode
-  legend?:
-    | ReactNode
-    | { legendGroups: LegendGroup[] }
-    | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

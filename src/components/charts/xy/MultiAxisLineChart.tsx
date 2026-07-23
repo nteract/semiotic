@@ -420,6 +420,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Line style ────────────────────────────────────────────────────────

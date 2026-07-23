@@ -337,6 +337,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     marginDefaults: resolved.marginDefaults,
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
     emptyContent,

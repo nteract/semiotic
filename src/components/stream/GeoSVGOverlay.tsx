@@ -9,11 +9,7 @@ import * as React from "react"
 import { useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import type { AnnotationContext } from "../realtime/types"
-import type {
-  GradientLegendConfig,
-  LegendGroup,
-  LegendLayout
-} from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import {
   createDefaultAnnotationRules,
   renderAnnotationPass
@@ -42,7 +38,7 @@ interface GeoSVGOverlayProps {
 
   title?: string | ReactNode
 
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

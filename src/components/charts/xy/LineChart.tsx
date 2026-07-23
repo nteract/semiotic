@@ -802,6 +802,7 @@ export const LineChart = forwardRef(
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // Aliases so the rest of the file reads naturally — the existing render

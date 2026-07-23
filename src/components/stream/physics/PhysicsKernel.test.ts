@@ -251,6 +251,72 @@ describe("PhysicsKernelWorld", () => {
     expect(world.events().some((event) => event.type === "wake")).toBe(true)
   })
 
+  it("does not treat a vertical pile wall as support under gravity", () => {
+    const world = new PhysicsKernelWorld({
+      gravity: { x: 0, y: 120 },
+      velocityDamping: 1,
+      restitution: 0,
+      friction: 0,
+      sleepSpeed: 1000,
+      sleepAfter: 0.05
+    })
+    world.setColliders([
+      {
+        id: "tube-wall",
+        shape: { type: "aabb", x: 100, y: 100, width: 20, height: 400 }
+      }
+    ])
+    world.spawn({
+      id: "falling-ball",
+      x: 82,
+      y: 0,
+      vx: 100,
+      shape: { type: "circle", radius: 10 }
+    })
+
+    step(world, 120)
+    const [ball] = world.readState()
+    expect(ball.sleeping).toBe(false)
+    expect(ball.y).toBeGreaterThan(50)
+  })
+
+  it("does not let the side of a sleeping body support another body", () => {
+    const world = new PhysicsKernelWorld({
+      gravity: { x: 0, y: 120 },
+      velocityDamping: 1,
+      restitution: 0,
+      friction: 0,
+      sleepSpeed: 1000,
+      sleepAfter: 0.05
+    })
+    world.setColliders([
+      {
+        id: "narrow-floor",
+        shape: { type: "aabb", x: 0, y: 20, width: 8, height: 10 }
+      }
+    ])
+    world.spawn({
+      id: "anchor",
+      x: 0,
+      y: 10,
+      shape: { type: "circle", radius: 5 }
+    })
+    world.spawn({
+      id: "side-contact",
+      x: 9.5,
+      y: 10,
+      shape: { type: "circle", radius: 5 }
+    })
+
+    step(world, 120)
+    const bodies = Object.fromEntries(
+      world.readState().map((body) => [body.id, body])
+    )
+    expect(bodies.anchor.sleeping).toBe(true)
+    expect(bodies["side-contact"].sleeping).toBe(false)
+    expect(bodies["side-contact"].y).toBeGreaterThan(50)
+  })
+
   it("restores snapshots and continues deterministically", () => {
     const first = makeWorld()
     first.setColliders([

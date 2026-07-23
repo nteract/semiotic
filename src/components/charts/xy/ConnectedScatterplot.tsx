@@ -254,6 +254,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Canvas pre-renderer for connecting lines (drawn under points) ─────

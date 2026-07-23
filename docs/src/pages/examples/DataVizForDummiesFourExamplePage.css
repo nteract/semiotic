@@ -1,0 +1,165 @@
+.dvd--fourth {
+  --dvd-lime: #76e5c2;
+  --dvd-coral: #a77bea;
+}
+
+.dvd--fourth .dvd-kicker,
+.dvd--fourth .dvd-chapter__eyebrow,
+.dvd--fourth .dvd-chart-panel > header p,
+.dvd--fourth .dvd-decisions strong,
+.dvd--fourth .dvd-feature-note__flag {
+  color: #08745e;
+}
+
+[data-theme="dark"] .dvd--fourth .dvd-kicker,
+[data-theme="dark"] .dvd--fourth .dvd-chapter__eyebrow,
+[data-theme="dark"] .dvd--fourth .dvd-chart-panel > header p,
+[data-theme="dark"] .dvd--fourth .dvd-decisions strong,
+[data-theme="dark"] .dvd--fourth .dvd-feature-note__flag {
+  color: var(--dvd-lime);
+}
+
+.dvd--fourth .dvd-card {
+  background: var(--dvd-lime);
+  transform: rotate(-1.1deg);
+}
+
+.dvd--fourth .dvd-nav a.is-active::after {
+  background: var(--dvd-coral);
+}
+
+.dvd--fourth .dvd-coach {
+  border-left-color: var(--dvd-coral);
+  background: color-mix(in srgb, var(--dvd-coral) 9%, var(--surface-1));
+}
+
+.dvd--fourth .dvd-coach span,
+.dvd--fourth .dvd-nav a i {
+  color: #7950bb;
+}
+
+[data-theme="dark"] .dvd--fourth .dvd-coach span,
+[data-theme="dark"] .dvd--fourth .dvd-nav a i {
+  color: #c6a7ff;
+}
+
+.dvd4-roster {
+  align-self: stretch;
+  width: 100%;
+  margin-top: 18px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.dvd4-roster article {
+  display: grid;
+  grid-template-columns: 26px minmax(142px, 0.75fr) minmax(145px, 1fr) minmax(110px, 0.8fr);
+  gap: 13px;
+  align-items: center;
+  min-height: 70px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--surface-3);
+  background: var(--surface-0);
+}
+
+.dvd4-roster article:hover {
+  background: color-mix(in srgb, var(--dvd-lime) 10%, var(--surface-0));
+}
+
+.dvd4-roster article > span {
+  color: #7950bb;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.dvd4-roster small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dvd4-roster h4 {
+  margin: 3px 0 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  letter-spacing: -0.025em;
+}
+
+.dvd4-roster p,
+.dvd4-roster em {
+  margin: 0;
+  color: var(--text-secondary);
+  font:
+    italic 11px/1.4 Georgia,
+    "Times New Roman",
+    serif;
+}
+
+.dvd4-roster em {
+  opacity: 0.82;
+}
+
+.dvd--fourth #last-roster .dvd-chart-panel__plot {
+  align-content: start;
+  place-items: initial;
+  min-height: 570px;
+  padding-inline: 0;
+}
+
+.dvd4-toggle {
+  position: relative;
+  z-index: 2;
+  max-width: calc(100% - 24px);
+  margin: 6px auto 16px;
+}
+
+.dvd4-center-total {
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  font: 9px/1.1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dvd4-center-total strong {
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.dvd--fourth #diagnosis .dvd-chart-panel__plot,
+.dvd--fourth #systems .dvd-chart-panel__plot {
+  align-content: start;
+}
+
+@media (max-width: 780px) {
+  .dvd4-roster article {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 7px 10px;
+    padding-block: 13px;
+  }
+
+  .dvd4-roster p,
+  .dvd4-roster em {
+    grid-column: 2;
+  }
+
+  .dvd--fourth #last-roster .dvd-chart-panel__plot {
+    min-height: 0;
+  }
+
+  .dvd4-toggle {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 520px) {
+  .dvd--fourth .dvd-nav a:nth-child(n + 7) {
+    display: flex;
+  }
+
+  .dvd--fourth .dvd-card {
+    transform: rotate(-0.5deg);
+  }
+}

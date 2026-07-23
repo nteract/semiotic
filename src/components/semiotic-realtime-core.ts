@@ -65,6 +65,15 @@ export type { EventTimeConfig } from "./charts/realtime/eventTime"
 // Types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
 export type { RealtimeHistogramProps, TemporalHistogramProps } from "./charts/realtime/RealtimeHistogram"
+export type {
+  CategoricalLegendConfig,
+  GradientLegendConfig,
+  GradientLegendValue,
+  LegendGroup,
+  LegendItem,
+  LegendLayout,
+  LegendValue,
+} from "./types/legendTypes"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"

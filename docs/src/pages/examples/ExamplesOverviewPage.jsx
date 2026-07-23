@@ -41,6 +41,11 @@ const PREVIEW_COMPONENTS = {
   gestalt: MiniGestaltPreview,
   "semiotic-standard": MiniSemioticStandardPreview,
   "data-viz-for-dummies": MiniDataVizForDummiesPreview,
+  "data-viz-for-dummies-2": MiniDataVizForDummiesTwoPreview,
+  "data-viz-for-dummies-3": MiniDataVizForDummiesThreePreview,
+  "data-viz-for-dummies-4": MiniDataVizForDummiesFourPreview,
+  "data-viz-for-dummies-5": MiniDataVizForDummiesFivePreview,
+  "data-viz-for-dummies-6": MiniDataVizForDummiesSixPreview,
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
   oregontrail: MiniOregonTrailPreview,
@@ -1255,6 +1260,270 @@ function MiniDataVizForDummiesPreview() {
       />
       <circle cx="158" cy="51" r="3.5" fill="#f1c75b" stroke="#18211b" />
       <circle cx="229" cy="20" r="3.5" fill="#c7f36b" stroke="#18211b" />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesTwoPreview() {
+  const cells = [
+    [92, 18, 18],
+    [108, 18, 38],
+    [124, 18, 62],
+    [140, 18, 44],
+    [92, 34, 31],
+    [108, 34, 58],
+    [124, 34, 88],
+    [140, 34, 51],
+    [92, 50, 24],
+    [108, 50, 47],
+    [124, 50, 74],
+    [140, 50, 36],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#76e5c2"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        SECOND UNIT
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        02
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="7" fontWeight="900">
+        SPECIALISTS
+      </text>
+      {cells.map(([x, y, value], index) => (
+        <rect
+          key={`${x}-${y}`}
+          x={x}
+          y={y}
+          width="13"
+          height="13"
+          rx="1.5"
+          fill={`rgb(${245 - value}, ${218 - Math.round(value / 2)}, ${110 + value})`}
+          stroke="#f5f0df"
+        />
+      ))}
+      <path
+        d="M169 25C182 13 197 13 207 27S224 48 232 35M169 53c13-12 23-7 31 7s20 16 32 5"
+        fill="none"
+        stroke="#5b8def"
+        strokeWidth="4"
+        opacity=".7"
+      />
+      <circle cx="169" cy="25" r="5" fill="#ff8a4c" stroke="#18211b" />
+      <circle cx="207" cy="27" r="7" fill="#76e5c2" stroke="#18211b" />
+      <circle cx="232" cy="35" r="4" fill="#f1c75b" stroke="#18211b" />
+      <circle cx="169" cy="53" r="4" fill="#a77bea" stroke="#18211b" />
+      <circle cx="200" cy="60" r="6" fill="#ef78a8" stroke="#18211b" />
+      <circle cx="232" cy="65" r="5" fill="#5b8def" stroke="#18211b" />
+      <path d="M90 78H232" stroke="#c7c4b9" />
+      <path
+        d="M92 80h20l5-9h20l5 5h19l5-14h19l5 10h20l5-17h17"
+        fill="none"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesThreePreview() {
+  const dots = [
+    [96, 25],
+    [112, 19],
+    [127, 31],
+    [143, 17],
+    [159, 28],
+    [175, 14],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#ffd166"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        MATCHUP LAB
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        03
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="7" fontWeight="900">
+        MAKE THE SUB
+      </text>
+      <path d="M90 39H181M90 16H181" stroke="#c7c4b9" strokeWidth=".7" />
+      <path
+        d={dots.map(([x, y], index) => `${index ? "L" : "M"}${x} ${y}`).join(" ")}
+        fill="none"
+        stroke="#63d8ff"
+        strokeWidth="3"
+      />
+      {dots.map(([x, y], index) => (
+        <circle
+          key={`${x}-${y}`}
+          cx={x}
+          cy={y}
+          r="4"
+          fill={index === dots.length - 1 ? "#ff6f61" : "#5b8def"}
+          stroke="#18211b"
+        />
+      ))}
+      <path
+        d="M94 79c7-19 14-19 21 0 7-30 14-30 21 0 7-14 14-14 21 0 7-25 14-25 21 0"
+        fill="#a77bea"
+        fillOpacity=".55"
+        stroke="#18211b"
+        strokeWidth="1"
+      />
+      <circle cx="207" cy="57" r="25" fill="none" stroke="#18211b" strokeWidth="1.5" />
+      <circle cx="198" cy="55" r="12" fill="#63d8ff" fillOpacity=".7" stroke="#18211b" />
+      <circle cx="218" cy="51" r="8" fill="#ffd166" fillOpacity=".8" stroke="#18211b" />
+      <circle cx="216" cy="69" r="5" fill="#ff6f61" fillOpacity=".8" stroke="#18211b" />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesFourPreview() {
+  const orbiters = [
+    [189, 29, "#ffd166"],
+    [217, 43, "#63d8ff"],
+    [202, 72, "#ff6f61"],
+    [174, 67, "#a77bea"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#76e5c2"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        SPECIAL TEAMS
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        04
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="7" fontWeight="900">
+        COMPLETE ROSTER
+      </text>
+      <circle cx="111" cy="35" r="25" fill="none" stroke="#c7c4b9" />
+      <path d="M111 10A25 25 0 0 1 134 45" fill="none" stroke="#ffd166" strokeWidth="12" />
+      <path d="M134 45A25 25 0 0 1 98 57" fill="none" stroke="#63d8ff" strokeWidth="12" />
+      <path d="M98 57A25 25 0 0 1 111 10" fill="none" stroke="#a77bea" strokeWidth="12" />
+      <text x="111" y="38" textAnchor="middle" fill="#18211b" fontSize="8" fontWeight="900">
+        15
+      </text>
+      <path
+        d="M90 83c9-17 18-17 27 0 9-29 18-29 27 0"
+        fill="none"
+        stroke="#18211b"
+        strokeWidth="1.4"
+      />
+      <circle cx="195" cy="50" r="7" fill="#76e5c2" stroke="#18211b" strokeWidth="1.3" />
+      <circle cx="195" cy="50" r="27" fill="none" stroke="#18211b" strokeWidth="1" />
+      {orbiters.map(([x, y, fill]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="5" fill={fill} stroke="#18211b" />
+      ))}
+      <path d="M158 85h72" stroke="#c7c4b9" />
+      <path d="M160 83c14-2 18-14 28-13s12 10 21 8 11-14 21-18" fill="none" stroke="#5b8def" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesFivePreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#ff8a4c"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        THE ROAD MAP
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        05
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="7" fontWeight="900">
+        LOCATION EARNS INK
+      </text>
+      <g transform="translate(91 14)">
+        <path d="M0 0h41v27H0zM41 0h38v27H41zM0 27h41v33H0zM41 27h38v33H41z"
+          fill="#63d8ff" fillOpacity=".35" stroke="#18211b" />
+        <path d="M79 0h34v31H79zM79 31h34v29H79z"
+          fill="#a77bea" fillOpacity=".35" stroke="#18211b" />
+        <circle cx="55" cy="23" r="8" fill="#ffd166" stroke="#18211b" />
+        <circle cx="95" cy="44" r="5" fill="#ff6f61" stroke="#18211b" />
+        <circle cx="18" cy="45" r="4" fill="#5b8def" stroke="#18211b" />
+      </g>
+      <circle cx="211" cy="49" r="6" fill="#ffd166" stroke="#18211b" />
+      <path d="M151 25Q184 6 211 49M151 61Q184 84 211 49M171 81Q194 72 211 49"
+        fill="none" stroke="#5b8def" strokeWidth="2" />
+      <circle cx="151" cy="25" r="3" fill="#63d8ff" />
+      <circle cx="151" cy="61" r="3" fill="#a77bea" />
+      <circle cx="171" cy="81" r="3" fill="#ff6f61" />
+    </svg>
+  )
+}
+
+function MiniDataVizForDummiesSixPreview() {
+  const balls = [
+    [104, 34, "#55d6e8"],
+    [119, 52, "#f05ca9"],
+    [137, 72, "#c8f135"],
+    [159, 57, "#ff9f43"],
+    [180, 76, "#8f7cf6"],
+    [199, 47, "#55d6e8"],
+    [220, 69, "#f05ca9"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0df" />
+      <rect x="8" y="8" width="70" height="80" rx="5" fill="#c8f135" stroke="#18211b" strokeWidth="2" />
+      <path d="M8 24h70M8 40h70M8 56h70M8 72h70" stroke="#18211b" opacity=".12" strokeWidth="8" />
+      <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
+        THE LAB TECH
+      </text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">06</text>
+      <text x="15" y="73" fill="#18211b" fontSize="6.5" fontWeight="900">MECHANISM = DATA</text>
+      <g stroke="#18211b" strokeWidth="1.5" fill="none">
+        <path d="M93 18h136M93 18l20 67M229 18l-20 67M113 85h96" />
+        <path d="M118 25l12 10-12 10 12 10-12 10 12 10" opacity=".45" />
+        <path d="M204 25l-12 10 12 10-12 10 12 10-12 10" opacity=".45" />
+      </g>
+      {balls.map(([x, y, fill]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="6" fill={fill} stroke="#18211b" strokeWidth="1.2" />
+      ))}
+      <path d="M92 10h139" stroke="#f05ca9" strokeWidth="4" strokeDasharray="12 5" />
     </svg>
   )
 }

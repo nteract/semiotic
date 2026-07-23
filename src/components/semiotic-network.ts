@@ -48,6 +48,15 @@ export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
 export type { NetworkGlyphNode } from "./stream/networkTypes"
 export type { SceneAccessibilityMetadata } from "./stream/types"
+export type {
+  CategoricalLegendConfig,
+  GradientLegendConfig,
+  GradientLegendValue,
+  LegendGroup,
+  LegendItem,
+  LegendLayout,
+  LegendValue,
+} from "./types/legendTypes"
 
 // Stream Frame types
 export type {

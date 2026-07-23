@@ -171,6 +171,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const themeCategorical = useThemeCategorical()

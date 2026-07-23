@@ -37,7 +37,7 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   center: string
   /** Cost/distance accessor — numeric field or function */
   costAccessor: string | ((d: Datum) => number)
-  /** Interpolation between geographic (0) and cartogram (1) @default 1 */
+  /** Interpolation between geographic (0) and cartogram (1), clamped to [0, 1]. @default 1 */
   strength?: number
   /** Line rendering mode @default "straight" */
   lineMode?: "straight" | "fractional"
@@ -291,6 +291,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     emptyContent,
     width: resolved.width,
     height: resolved.height,
+    hasTitle: !!resolved.title,
   })
 
   const pointStyleFn = useMemo(() => {

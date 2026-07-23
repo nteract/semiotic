@@ -277,6 +277,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────

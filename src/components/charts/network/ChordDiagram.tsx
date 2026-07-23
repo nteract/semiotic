@@ -182,6 +182,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     marginDefaults: resolved.marginDefaults,
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
     emptyContent,

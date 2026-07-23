@@ -73,8 +73,8 @@ describe("renderStaticLegend", () => {
       ...baseConfig,
       margin: { ...baseConfig.margin, right: 100 },
     })
-    // Right position aligns just after chart content: totalWidth - margin.right + 10 = 510
-    expect(svg).toContain("translate(510,")
+    // Right position aligns 12px after chart content: totalWidth - margin.right + 12 = 512
+    expect(svg).toContain("translate(512,")
   })
 
   it("positions legend at top", () => {
@@ -85,7 +85,7 @@ describe("renderStaticLegend", () => {
 
   it("matches the client bottom legend placement", () => {
     const svg = renderLegendString({ ...baseConfig, position: "bottom" })
-    expect(svg).toContain("translate(40,408)")
+    expect(svg).toContain("translate(40,382)")
   })
 
   it("positions legend at left", () => {
@@ -94,7 +94,16 @@ describe("renderStaticLegend", () => {
       position: "left",
       margin: { ...baseConfig.margin, left: 100 },
     })
-    expect(svg).toContain("translate(4,")
+    expect(svg).toContain("translate(-12,")
+  })
+
+  it("uses legendDistance as the plot-to-legend gap", () => {
+    const svg = renderLegendString({
+      ...baseConfig,
+      margin: { ...baseConfig.margin, right: 140 },
+      legendDistance: 24,
+    })
+    expect(svg).toContain("translate(484,")
   })
 
   it("uses legendSize when estimating label width", () => {

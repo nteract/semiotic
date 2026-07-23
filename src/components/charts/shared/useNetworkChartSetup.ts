@@ -99,6 +99,7 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   userMargin?: PartialMargin
   width: number
   height: number
+  hasTitle?: boolean
 
   // ── Loading / empty states ───────────────────────────────────────
   loading?: boolean
@@ -241,6 +242,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     userMargin,
     width,
     height,
+    hasTitle,
     loading,
     loadingContent,
     emptyContent,
@@ -316,6 +318,8 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     userMargin,
     defaults: marginDefaults,
     categories: allCategories,
+    chartWidth: width,
+    hasTitle,
   })
   const resolvedMobileInteraction = useMemo(
     () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),

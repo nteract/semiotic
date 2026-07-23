@@ -259,6 +259,21 @@ const SemioticStandardExamplePage = lazy(
 const DataVizForDummiesExamplePage = lazy(
   () => import("./pages/examples/DataVizForDummiesExamplePage"),
 )
+const DataVizForDummiesTwoExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesTwoExamplePage"),
+)
+const DataVizForDummiesThreeExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesThreeExamplePage"),
+)
+const DataVizForDummiesFourExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesFourExamplePage"),
+)
+const DataVizForDummiesFiveExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesFiveExamplePage"),
+)
+const DataVizForDummiesSixExamplePage = lazy(
+  () => import("./pages/examples/DataVizForDummiesSixExamplePage"),
+)
 const MobileDataVisualizationExamplePage = lazy(
   () => import("./pages/examples/MobileDataVisualizationExamplePage"),
 )
@@ -305,6 +320,11 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
   "SemioticStandardExamplePage.jsx": SemioticStandardExamplePage,
   "DataVizForDummiesExamplePage.jsx": DataVizForDummiesExamplePage,
+  "DataVizForDummiesTwoExamplePage.jsx": DataVizForDummiesTwoExamplePage,
+  "DataVizForDummiesThreeExamplePage.jsx": DataVizForDummiesThreeExamplePage,
+  "DataVizForDummiesFourExamplePage.jsx": DataVizForDummiesFourExamplePage,
+  "DataVizForDummiesFiveExamplePage.jsx": DataVizForDummiesFiveExamplePage,
+  "DataVizForDummiesSixExamplePage.jsx": DataVizForDummiesSixExamplePage,
   "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
   "NetworkVizExamplePage.jsx": NetworkVizExamplePage,
   "OregonTrailExamplePage.jsx": OregonTrailExamplePage,

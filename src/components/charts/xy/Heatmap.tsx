@@ -11,7 +11,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
-import type { GradientLegendConfig } from "../../types/legendTypes"
+import type { GradientLegendConfig, GradientLegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -137,6 +137,9 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
    * @default "right"
    */
   legendPosition?: "right" | "left" | "top" | "bottom"
+
+  /** Gradient legend layout overrides. */
+  legend?: Pick<GradientLegendValue, "legendDistance">
 
   /**
    * Legend interaction mode.
@@ -271,6 +274,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     emptyContent,
     showLegend: showLegendProp,
     legendPosition: legendPositionProp,
+    legend: legendProp,
     legendInteraction,
     // Primitive styling props (BaseChartProps) — accepted-but-not-wired for
     // Heatmap. Cell fills come from the sequential LUT, and cell strokes use
@@ -297,13 +301,6 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
 
   const showLegend = showLegendProp ?? false
   const legendPosition = legendPositionProp ?? "right"
-
-  // Use a synthetic colorBy to trigger margin expansion when legend is shown
-  const { margin } = useChartLegendAndMargin({
-    data: safeData, colorBy: showLegend ? "value" : undefined, colorScale: undefined,
-    showLegend, legendPosition, userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
@@ -396,8 +393,28 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       label: typeof valueAccessor === "string" ? valueAccessor : "value",
       format: valueFormat,
     }
-    return { gradient: gradientConfig }
-  }, [showLegend, colorScale, valueDomain, valueAccessor, valueFormat])
+    return {
+      gradient: gradientConfig,
+      legendDistance: legendProp?.legendDistance,
+    }
+  }, [showLegend, colorScale, valueDomain, valueAccessor, valueFormat, legendProp?.legendDistance])
+
+  // Reserve against the legend that is actually rendered. The previous
+  // synthetic categorical legend measured the heatmap's raw values instead
+  // of the gradient label/endpoints and could disagree with legendDistance.
+  const { margin } = useChartLegendAndMargin({
+    data: [],
+    colorBy: undefined,
+    colorScale: undefined,
+    showLegend: false,
+    legendPosition,
+    userMargin,
+    defaults: resolved.marginDefaults,
+    additionalLegend: gradientLegend,
+    chartWidth: width,
+    legendLayout: frameProps.legendLayout,
+    hasTitle: !!title,
+  })
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {

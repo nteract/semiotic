@@ -292,6 +292,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     emptyContent,
     width: resolved.width,
     height: resolved.height,
+    hasTitle: !!resolved.title,
   })
 
   // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest

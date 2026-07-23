@@ -143,6 +143,14 @@ const legendProps = [
     description:
       "Which side of the frame the legend appears on. For Chart components, use the legendPosition prop instead, which also supports \"top\" and \"bottom\".",
   },
+  {
+    name: "legend.legendDistance",
+    type: "number",
+    required: false,
+    default: "12",
+    description:
+      "Gap in pixels between the nearest legend edge and the plot edge. This does not add padding at the outer SVG edge.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -377,8 +385,40 @@ export default function LegendsPage() {
         Chart components accept a <code>legendPosition</code> prop to place the
         legend on any side of the chart: <code>"right"</code> (default),{" "}
         <code>"left"</code>, <code>"top"</code>, or <code>"bottom"</code>. Top
-        and bottom legends are laid out horizontally and the chart margin adjusts
-        automatically to make room.
+        and bottom legends are laid out horizontally. Left and right legends
+        reserve space from their longest label when the legend side is omitted
+        or set to <code>"auto"</code>.
+      </p>
+
+      <p>
+        A numeric margin pins that side to an exact width and opts out of
+        automatic reservation. When passing a complete margin object, leave the
+        legend-owned side automatic so labels have room:
+      </p>
+
+      <CodeBlock
+        code={`// Right legend: Semiotic measures the labels and reserves the gutter
+<LineChart
+  {...props}
+  legendPosition="right"
+  margin={{ top: 24, right: "auto", bottom: 48, left: 64 }}
+  legend={{ legendGroups: [], legendDistance: 18 }}
+/>
+
+// The same contract works symmetrically on the left
+<LineChart
+  {...props}
+  legendPosition="left"
+  margin={{ top: 24, right: 24, bottom: 48, left: "auto" }}
+/>`}
+        language="jsx"
+      />
+
+      <p>
+        <code>legendDistance</code> belongs to the legend configuration and
+        defaults to <code>12</code> pixels. It measures the gap between the
+        nearest legend edge and the plot edge; it does not add padding at the
+        outside edge of the SVG.
       </p>
 
       <h3 id="top-legend">Top Legend</h3>

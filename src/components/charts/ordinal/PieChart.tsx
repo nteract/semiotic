@@ -192,6 +192,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const themeCategorical = useThemeCategorical()

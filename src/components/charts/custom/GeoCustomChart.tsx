@@ -158,6 +158,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     emptyContent,
     width: resolved.width,
     height: resolved.height,
+    hasTitle: !!resolved.title,
   })
 
   const effectiveSelection = setup.effectiveSelectionHook

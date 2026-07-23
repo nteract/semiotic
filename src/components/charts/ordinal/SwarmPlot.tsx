@@ -175,6 +175,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

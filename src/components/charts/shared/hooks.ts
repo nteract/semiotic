@@ -20,8 +20,13 @@ import type {
 } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
-import type { LegendValue } from "../../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
+import {
+  resolveHorizontalLegendHeight,
+  resolveLegendDistance,
+  resolveSideLegendMargin,
+} from "../../legendLayout"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
 import { resolveChartMode } from "./chartMode"
@@ -579,6 +584,9 @@ export function useChartLegendAndMargin({
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
   categories,
   additionalLegend,
+  chartWidth,
+  legendLayout,
+  hasTitle = false,
 }: {
   data: Array<Datum>
   colorBy: Accessor<string> | undefined
@@ -590,6 +598,12 @@ export function useChartLegendAndMargin({
   categories?: string[]
   /** Caller legend composed after the chart's inferred categorical groups. */
   additionalLegend?: LegendValue
+  /** Total chart width, used to estimate wrapping for top/bottom legends. */
+  chartWidth?: number
+  /** Legend metrics shared with the renderer. */
+  legendLayout?: LegendLayout
+  /** Reserve the chart-title band above a top legend. */
+  hasTitle?: boolean
 }): {
   legend: LegendValue | undefined
   margin: MarginType
@@ -647,20 +661,27 @@ export function useChartLegendAndMargin({
       bottom: resolveSide("bottom"),
       left: resolveSide("left"),
     }
-    // Auto-reserve margin for the legend ONLY on sides the user
-    // didn't set explicitly. A caller passing `margin={{ right: 30 }}`
-    // (e.g. positioning their own external legend) shouldn't get
-    // 110 px reserved out from under them. Sides the user left at
-    // the default still get the legend's standard reservation.
+    // Numeric margin sides are authoritative in 3.x. Only omitted,
+    // `"auto"`, null, or undefined sides participate in compatibility
+    // auto-reservation, sized from the legend plus legendDistance.
     const sideSet = (side: keyof MarginType): boolean => typeof userSides[side] === "number"
     if (legend) {
-      if (legendPosition === "right" && !sideSet("right") && finalMargin.right < 110) finalMargin.right = 110
-      else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < 110) finalMargin.left = 110
-      else if (legendPosition === "top" && !sideSet("top") && finalMargin.top < 50) finalMargin.top = 50
-      else if (legendPosition === "bottom" && !sideSet("bottom") && finalMargin.bottom < 80) finalMargin.bottom = 80
+      const sideLegendMargin = resolveSideLegendMargin(legend, legendLayout)
+      const plotWidth = Math.max(
+        1,
+        (chartWidth ?? 600) - finalMargin.left - finalMargin.right,
+      )
+      const horizontalLegendMargin =
+        resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
+        resolveLegendDistance(legend) +
+        (legendPosition === "top" && hasTitle ? 24 : 0)
+      if (legendPosition === "right" && !sideSet("right") && finalMargin.right < sideLegendMargin) finalMargin.right = sideLegendMargin
+      else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < sideLegendMargin) finalMargin.left = sideLegendMargin
+      else if (legendPosition === "top" && !sideSet("top")) finalMargin.top = Math.max(finalMargin.top, 50, horizontalLegendMargin)
+      else if (legendPosition === "bottom" && !sideSet("bottom")) finalMargin.bottom = Math.max(finalMargin.bottom, 80, horizontalLegendMargin)
     }
     return finalMargin
-  }, [defaults, userMargin, legend, legendPosition])
+  }, [defaults, userMargin, legend, legendPosition, chartWidth, legendLayout, hasTitle])
 
   return { legend, margin, legendPosition }
 }

@@ -151,6 +151,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     marginDefaults: resolved.marginDefaults,
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
   })

@@ -219,6 +219,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
   })

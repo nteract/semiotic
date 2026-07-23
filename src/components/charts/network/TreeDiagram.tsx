@@ -155,6 +155,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     marginDefaults: resolved.marginDefaults,
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
   })

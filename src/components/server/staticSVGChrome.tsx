@@ -27,6 +27,7 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
+import { resolveLegendDistance, resolveSideLegendMargin } from "../legendLayout"
 
 export type FrameType = RenderEvidence["frameType"]
 
@@ -114,17 +115,17 @@ function effectiveFrameLegend(
 }
 
 const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
-  right: 110,
-  left: 110,
+  right: 112,
+  left: 112,
   top: 50,
   bottom: 80,
 }
 
 /**
- * The client HOCs reserve a stable legend gutter before layout. The static
- * frame API still uses content measurement by default, but renderChart()
- * marks HOC requests so both paths share that contract. An explicitly set
- * side remains fully caller-controlled.
+ * The client HOCs reserve a minimum legend gutter before layout. The static
+ * frame API uses the same content measurement, while renderChart() marks HOC
+ * requests so both paths retain their compatibility floor. An explicitly set
+ * numeric side remains fully caller-controlled.
  */
 export function hocLegendMarginMinimum(
   props: ThemeAwareProps,
@@ -173,13 +174,14 @@ export function reserveStaticLegendMargin(
     hasTitle: options.hasTitle,
     legendLayout: options.legendLayout,
   })
-  // HOC renderChart requests use the same fixed gutter as
-  // useChartLegendAndMargin. Content measurement belongs to the lower-level
-  // static frame API; letting it expand a HOC gutter makes the SSR plot area
-  // shrink while the CSR plot retains its stable 110/50/80px contract.
-  const horizontalRequirement = options.minimumMargin ?? metrics.width + 14
-  const topRequirement = options.minimumMargin ?? (options.hasTitle ? 32 : 8) + metrics.height + 4
-  const bottomRequirement = options.minimumMargin ?? 38 + metrics.height + 4
+  const categoricalLegend = buildStaticCategoricalLegendConfig(options.categories, options.colorScheme, options.theme)
+  const legendDistance = resolveLegendDistance(categoricalLegend)
+  const horizontalRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    resolveSideLegendMargin(categoricalLegend, options.legendLayout),
+  )
+  const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
+  const bottomRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height)
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -222,9 +224,13 @@ export function reserveLegendConfigMargin(
       ? measureStaticGradientLegend({ ...base, gradient: options.legend.gradient })
       : null
   if (!metrics) return
-  const horizontalRequirement = options.minimumMargin ?? metrics.width + 14
-  const topRequirement = options.minimumMargin ?? (options.hasTitle ? 32 : 8) + metrics.height + 4
-  const bottomRequirement = options.minimumMargin ?? 38 + metrics.height + 4
+  const legendDistance = resolveLegendDistance(options.legend as LegendValue)
+  const horizontalRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    resolveSideLegendMargin(options.legend as LegendValue, options.legendLayout),
+  )
+  const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
+  const bottomRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height)
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -260,6 +266,9 @@ export function renderLegendConfig(
     legendLayout: options.legendLayout,
     idPrefix: options.idPrefix,
     reservedWidth: options.reservedWidth,
+    legendDistance: (isLegendConfig(legend) || isGradientLegendConfig(legend))
+      ? legend.legendDistance
+      : undefined,
   }
   if (isLegendConfig(legend)) {
     return renderStaticLegendGroups({ ...base, legendGroups: legend.legendGroups })
@@ -326,7 +335,6 @@ export function renderFrameLegend(options: {
     hasTitle,
     legendLayout: props.legendLayout,
     idPrefix: props._idPrefix,
-    reservedWidth: props.__autoLegendMargin ? 100 : undefined,
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
@@ -347,7 +355,6 @@ export function renderFrameLegend(options: {
     margin,
     hasTitle,
     legendLayout: props.legendLayout,
-    reservedWidth: props.__autoLegendMargin ? 100 : undefined,
     idPrefix: props._idPrefix,
   })
 }

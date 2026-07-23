@@ -31,13 +31,21 @@ export interface GradientLegendConfig {
 
 export interface CategoricalLegendConfig {
   legendGroups: LegendGroup[]
+  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  legendDistance?: number
+}
+
+export interface GradientLegendValue {
+  gradient: GradientLegendConfig
+  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  legendDistance?: number
 }
 
 /** Public legend slot accepted by stream frames and legend-aware chart HOCs. */
 export type LegendValue =
   | ReactNode
   | CategoricalLegendConfig
-  | { gradient: GradientLegendConfig }
+  | GradientLegendValue
 
 /**
  * Compose inferred and caller-supplied legends without discarding either
@@ -53,7 +61,10 @@ export function composeLegendConfigs(
   for (const value of values) {
     if (!value) continue
     if (isLegendConfig(result) && isLegendConfig(value)) {
-      result = { legendGroups: [...result.legendGroups, ...value.legendGroups] }
+      result = {
+        legendGroups: [...result.legendGroups, ...value.legendGroups],
+        legendDistance: value.legendDistance ?? result.legendDistance,
+      }
     } else {
       result = value
     }
@@ -72,7 +83,7 @@ export function isLegendConfig(value: unknown): value is CategoricalLegendConfig
 }
 
 /** Type guard: gradient legend config */
-export function isGradientLegendConfig(value: unknown): value is { gradient: GradientLegendConfig } {
+export function isGradientLegendConfig(value: unknown): value is GradientLegendValue {
   return (
     typeof value === "object" &&
     value !== null &&

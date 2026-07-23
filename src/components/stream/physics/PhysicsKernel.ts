@@ -604,8 +604,9 @@ export class PhysicsKernelWorld {
   private colliders = new Map<string, MutableCollider>()
   private springs = new Map<string, MutableSpring>()
   private activeSensors = new Set<string>()
-  // Bodies that had a resting contact with a static collider or a sleeping body
-  // this step. Only supported bodies may sleep, so nothing anchors mid-air.
+  // Bodies that had a load-bearing contact with a static collider or sleeping
+  // body this step. The contact normal must oppose gravity; side walls and
+  // lateral neighbors cannot anchor a body in mid-air.
   private supportedThisStep = new Set<string>()
   private lastEvents: PhysicsKernelEvent[] = []
   private nextBodyIndex = 0
@@ -981,10 +982,21 @@ export class PhysicsKernelWorld {
     // A sleeping body is a static anchor: zero inverse mass so it is neither
     // shoved out of position nor spread sideways by arrivals landing on it.
     // This is what lets piles grow and hold their shape instead of churning flat.
-    // Contact with an anchored neighbor also confers support (marked before the
-    // both-sleeping early return so a settled stack stays asleep).
-    if (a.sleeping) this.supportedThisStep.add(b.id)
-    if (b.sleeping) this.supportedThisStep.add(a.id)
+    // Contact with an anchored neighbor only confers support when the contact
+    // force actually opposes gravity. Side-by-side sleeping bodies must not
+    // become a mid-air shelf for newly arriving units.
+    if (
+      a.sleeping &&
+      this.contactOpposesGravity(collision.nx, collision.ny)
+    ) {
+      this.supportedThisStep.add(b.id)
+    }
+    if (
+      b.sleeping &&
+      this.contactOpposesGravity(-collision.nx, -collision.ny)
+    ) {
+      this.supportedThisStep.add(a.id)
+    }
     const invA = a.sleeping ? 0 : 1 / a.mass
     const invB = b.sleeping ? 0 : 1 / b.mass
     const invTotal = invA + invB
@@ -1071,7 +1083,11 @@ export class PhysicsKernelWorld {
         const collision = bodyColliderCollision(body, collider)
         if (!collision) continue
         this.resolveStaticCollision(body, collider, collision)
-        this.supportedThisStep.add(body.id)
+        // Floors and upward-facing ramps support a body. Vertical tube walls
+        // merely constrain x and cannot make a slow falling body sleep in air.
+        if (this.contactOpposesGravity(collision.nx, collision.ny)) {
+          this.supportedThisStep.add(body.id)
+        }
         if (emitEvents) {
           this.lastEvents.push({
             type: "contact",
@@ -1182,6 +1198,18 @@ export class PhysicsKernelWorld {
         body.sleepTime = 0
       }
     }
+  }
+
+  private contactOpposesGravity(nx: number, ny: number): boolean {
+    const { x: gx, y: gy } = this.options.gravity
+    const magnitude = Math.hypot(gx, gy)
+    // With no meaningful gravity vector there is no "down" direction, so
+    // retain the previous contact-based sleeping behavior. Even very small
+    // non-zero gravity still has a valid direction and must reject side walls.
+    if (magnitude <= 1e-9) return true
+    // Require a meaningful opposing component rather than accepting a nearly
+    // vertical wall with tiny numerical normal noise as load-bearing support.
+    return (nx * gx + ny * gy) / magnitude < -0.2
   }
 
   private wake(body: MutableBody): void {

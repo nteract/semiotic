@@ -101,6 +101,8 @@ export interface ChartSetupInput {
   width: number
   /** Resolved height from useChartMode */
   height: number
+  /** Whether the resolved chart mode includes a title. */
+  hasTitle?: boolean
 }
 
 /**
@@ -196,6 +198,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     emptyContent,
     width,
     height,
+    hasTitle,
   } = input
   const isPushMode = rawData === undefined
 
@@ -323,6 +326,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     defaults: marginDefaults,
     categories: activeCategories,
     additionalLegend,
+    chartWidth: width,
+    hasTitle,
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────

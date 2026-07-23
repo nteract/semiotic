@@ -150,6 +150,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const themeCategorical = useThemeCategorical()

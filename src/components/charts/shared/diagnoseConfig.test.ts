@@ -456,6 +456,19 @@ describe("diagnoseConfig", () => {
     expect(codes).toContain("LEGEND_MARGIN_TIGHT")
     const diag = result.diagnoses.find((d) => d.code === "LEGEND_MARGIN_TIGHT")!
     expect(diag.severity).toBe("warning")
+    expect(diag.fix).toContain('right: "auto"')
+  })
+
+  it("detects a tight authoritative left legend margin", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      showLegend: true,
+      legendPosition: "left",
+      margin: { left: 50 }
+    })
+    const diag = result.diagnoses.find((d) => d.code === "LEGEND_MARGIN_TIGHT")!
+    expect(diag.message).toContain("authoritative margin.left=50px")
+    expect(diag.fix).toContain('left: "auto"')
   })
 
   it("warns about function accessors", () => {
