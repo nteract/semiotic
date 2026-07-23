@@ -10,6 +10,7 @@ const BUILT_IN_INTENT_IDS: ReadonlySet<BuiltInIntentId>
 const BarChartCapability: ChartCapability
 const BoxPlotCapability: ChartCapability
 const BubbleChartCapability: ChartCapability
+const BumpChartCapability: ChartCapability
 const CANONICAL_FIXTURES: readonly ScorecardFixture[]
 const CandlestickChartCapability: ChartCapability
 const ChordDiagramCapability: ChartCapability

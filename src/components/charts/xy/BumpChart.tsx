@@ -630,6 +630,9 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     hoverHighlight = true,
     tooltip,
     frameProps = {},
+    xFormat,
+    yFormat,
+    onClick,
   } = props
 
   const ranked = useMemo(
@@ -700,12 +703,12 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     if (ranked.xValues.length === 0) return ""
     const numericIndex = Math.max(0, Math.min(ranked.xValues.length - 1, Math.round(Number(value))))
     const raw = ranked.xValues[numericIndex] as number | Date | string
-    return props.xFormat ? props.xFormat(raw, index) : String(raw instanceof Date ? raw.toLocaleDateString() : raw)
-  }, [ranked.xValues, props.xFormat])
+    return xFormat ? xFormat(raw, index) : String(raw instanceof Date ? raw.toLocaleDateString() : raw)
+  }, [ranked.xValues, xFormat])
 
   const formatValue = useCallback((value: number) => {
-    return props.yFormat ? props.yFormat(value) : value.toLocaleString()
-  }, [props.yFormat])
+    return yFormat ? yFormat(value) : value.toLocaleString()
+  }, [yFormat])
 
   const normalizedTooltip = useMemo(
     () => tooltip === "multi" ? undefined : normalizeTooltip(tooltip),
@@ -732,12 +735,12 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
   }, [formatValue, formatX, normalizedTooltip, tooltip])
 
   const handleClick = useMemo(() => {
-    if (!props.onClick) return undefined
+    if (!onClick) return undefined
     return (datum: Datum, event: { x: number; y: number }) => {
       const rankedDatum = datum as RankedBumpDatum<TDatum>
-      props.onClick?.(rankedDatum.__bumpRaw ?? datum, event)
+      onClick(rankedDatum.__bumpRaw ?? datum, event)
     }
-  }, [props.onClick])
+  }, [onClick])
 
   const maxRank = Math.max(1, ranked.seriesOrder.length)
   const xTickValues = ranked.xValues.map((_, index) => index)

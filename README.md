@@ -403,8 +403,8 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/physics` | **154 KB** | GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **467 KB** | All schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic/ai/core` | **77 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
+| `semiotic/ai` | **468 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai/core` | **78 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **12 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **4 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic` | **382 KB** | Everything below (full bundle) |
@@ -438,11 +438,11 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **138.0 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **266.5 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **266.6 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **165.0 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **267.0 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **219.3 KiB** |
-| `import { suggestCharts } from "semiotic/ai/core"` | browser | **34.3 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **219.7 KiB** |
+| `import { suggestCharts } from "semiotic/ai/core"` | browser | **34.7 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **108.2 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.4 KiB** |
