@@ -1203,9 +1203,9 @@ export class PhysicsKernelWorld {
   private contactOpposesGravity(nx: number, ny: number): boolean {
     const { x: gx, y: gy } = this.options.gravity
     const magnitude = Math.hypot(gx, gy)
-    // With no meaningful gravity vector there is no "down" direction, so
-    // retain the previous contact-based sleeping behavior. Even very small
-    // non-zero gravity still has a valid direction and must reject side walls.
+    // With no meaningful gravity vector there is no stable "down" direction,
+    // so retain the previous contact-based sleeping behavior. Gravity at or
+    // below this epsilon is intentionally treated as zero for support detection.
     if (magnitude <= 1e-9) return true
     // Require a meaningful opposing component rather than accepting a nearly
     // vertical wall with tiny numerical normal noise as load-bearing support.

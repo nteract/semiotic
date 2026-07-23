@@ -18,12 +18,18 @@ function renderXYToStaticSVG(props: StreamXYFrameProps<Datum> & ThemeAwareProps)
 function resolveTheme(theme: ThemeInput): SemioticTheme
 function themeStyles(theme: SemioticTheme): { background: string; text: string; textSecondary: string; grid: string; border: string; primary: string; fontFamily: string; titleSize: number; labelSize: number; tickSize: number; categorical: string[]; annotation: string; legendSize: number; titleFontSize: number; tickFontFamily: string; }
 interface AnimatedGifOptions
+interface CategoricalLegendConfig
 interface DashboardChart
 interface DashboardLayout
+interface GradientLegendConfig
+interface GradientLegendValue
+interface LegendGroup
+interface LegendItem
 interface LegendLayout
 interface PhysicsGifFrameProps
 interface PhysicsGifOptions
 interface RenderDashboardOptions
 interface RenderEvidence
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type ThemeInput = string | PartialThemeObject | undefined
 ```

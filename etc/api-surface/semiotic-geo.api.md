@@ -30,6 +30,7 @@ function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined
 function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
+interface CategoricalLegendConfig
 interface ChoroplethMapProps<TDatum extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
 interface DistanceCartogramConfig
@@ -46,9 +47,14 @@ interface GeoScales
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface GradientLegendConfig
+interface GradientLegendValue
 interface GraticuleConfig
 interface HatchFill
 interface HitTargetPointProps
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface ProportionalSymbolMapProps<TDatum extends Datum = Datum>
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
@@ -67,6 +73,7 @@ type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 type GeoCustomLayout<C extends object = Record<string, unknown>> = (ctx: GeoLayoutContext<C>) => GeoLayoutResult
 type GeoSceneNode = GeoAreaSceneNode | PointSceneNode | GlyphSceneNode | GeoLineSceneNode
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type ProjectionName = "mercator" | "equalEarth" | "albersUsa" | "orthographic" | "naturalEarth" | "equirectangular"
 type ProjectionProp = GeoProjection | ProjectionName | ProjectionConfig
 type ReferenceGeography = "world-110m" | "world-50m" | "land-110m" | "land-50m"

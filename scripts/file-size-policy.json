@@ -89,8 +89,8 @@
     },
     {
       "path": "src/components/charts/xy/LineChart.tsx",
-      "maxLines": 1115,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match — split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800."
+      "maxLines": 1116,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match — split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800. +1 (2026-07-23): passes hasTitle to useChartLegendAndMargin so a top legend reserves space below the chart title."
     },
     {
       "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
@@ -144,8 +144,8 @@
     },
     {
       "path": "src/components/stream/physics/PhysicsKernel.ts",
-      "maxLines": 1199,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1227,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +28 (2026-07-23): sleeping-body support now requires the contact normal to oppose gravity, so a side wall or a sideways sleeping neighbor can no longer anchor a body in mid-air."
     },
     {
       "path": "src/components/stream/physics/PhysicsPipelineStore.ts",

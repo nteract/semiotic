@@ -136,6 +136,7 @@ interface CapacityQueueProcessedInfo
 interface CapacityQueueSnapshot
 interface CapacityQueueVisitInfo
 interface CapacityQueueWindowSnapshot
+interface CategoricalLegendConfig
 interface ChainReactionChartHandle
 interface ChainReactionChartProps<TDatum extends Datum = Datum>
 interface ChainReactionMachineState
@@ -235,7 +236,12 @@ interface GauntletPropertyDefinition
 interface GauntletPropertyForceContext<TDatum extends Datum = Datum>
 interface GauntletPropertyWorkPlan
 interface GauntletPropertyWorkPlanOptions
+interface GradientLegendConfig
+interface GradientLegendValue
 interface HatchFill
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface LogicalJoin
 interface LogicalJoinSnapshot
 interface MotionAccessibleEncoding<TDatum>
@@ -455,6 +461,7 @@ type GauntletPopSpec = readonly string[] | {
     count?: number;
     ids?: readonly string[];
 }
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type MotionAgeOpacityType = "linear" | "exponential" | "step"
 type MotionCoordinateSpace = "data" | "world" | "screen"
 type MotionEncodingAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, index: number) => TValue) | MotionEncodingConstant<TValue>

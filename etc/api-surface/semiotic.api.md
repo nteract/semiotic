@@ -169,6 +169,7 @@ interface BoxPlotProps<TDatum extends Datum = Datum>
 interface BubbleChartProps<TDatum extends Datum = Datum>
 interface BuildNavigationTreeOptions
 interface CandlestickChartProps<TDatum extends Datum = Datum>
+interface CategoricalLegendConfig
 interface CategoryColorProviderProps
 interface CenterlineStyle
 interface Changeset<T = Datum>
@@ -204,6 +205,8 @@ interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Dat
 interface FunnelChartProps<TDatum extends Datum = Datum>
 interface GaugeChartProps
 interface GaugeThreshold
+interface GradientLegendConfig
+interface GradientLegendValue
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
 interface HatchFill
 interface HatchPatternOptions
@@ -214,6 +217,8 @@ interface HoverData
 interface IntentManifest
 interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
+interface LegendGroup
+interface LegendItem
 interface LegendLayout
 interface LikertChartProps<TDatum extends Datum = Datum>
 interface LineChartProps<TDatum extends Datum = Datum>
@@ -365,6 +370,7 @@ type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 type ForceLayoutStatus = "pending" | "ready" | "error"
 type LegendInteractionMode = "highlight" | "isolate" | "none"
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type LinkedBrushProp = string | {
     name: string;
     xField?: string;

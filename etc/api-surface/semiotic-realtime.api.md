@@ -34,11 +34,17 @@ interface AggregateConfig
 interface AggregatedWindow
 interface AnnotationContext
 interface BarStyle
+interface CategoricalLegendConfig
 interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface CrosshairStyle
 interface EventTimeConfig
+interface GradientLegendConfig
+interface GradientLegendValue
 interface HoverAnnotationConfig
 interface HoverData
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface LifecycleBandThresholds
 interface LineStyle
 interface MotionAccessibleEncoding<TDatum>
@@ -76,6 +82,7 @@ type AggregateBand = "stddev" | "minmax" | "none"
 type AggregateStat = "mean" | "sum" | "min" | "max" | "count"
 type ArrowOfTime = "up" | "down" | "left" | "right"
 type LatePolicy = "drop" | "keep"
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type LifecycleBand = "fresh" | "aging" | "stale" | "expired"
 type MotionAgeOpacityType = "linear" | "exponential" | "step"
 type MotionCoordinateSpace = "data" | "world" | "screen"

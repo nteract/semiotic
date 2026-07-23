@@ -35,6 +35,7 @@ function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): bool
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
 function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number]): ProcessSankeyIssue[]
+interface CategoricalLegendConfig
 interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface CirclePackProps<TNode extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
@@ -42,7 +43,12 @@ interface CustomLayoutSelection
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface GlyphDef
 interface GlyphPart
+interface GradientLegendConfig
+interface GradientLegendValue
 interface HatchFill
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface NetworkCustomChartProps<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface NetworkGlyphNode
 interface NetworkHitTargetCircleProps
@@ -77,6 +83,7 @@ interface UseForceLayoutResult
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 type ForceLayoutStatus = "pending" | "ready" | "error"
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type NetworkChartType = "force" | "sankey" | "chord" | "tree" | "cluster" | "treemap" | "circlepack" | "orbit" | "partition"
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSceneEdge = NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
