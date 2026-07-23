@@ -171,7 +171,15 @@ export {
 
 // ── Chart HOC prop types ───────────────────────────────────────────────
 
-export type { LegendLayout } from "./types/legendTypes"
+export type {
+  CategoricalLegendConfig,
+  GradientLegendConfig,
+  GradientLegendValue,
+  LegendGroup,
+  LegendItem,
+  LegendLayout,
+  LegendValue,
+} from "./types/legendTypes"
 export type { DirectManipulationControlProps, VisualizationControlType } from "./DirectManipulationControl"
 export {
   createControlObservationAdapter,

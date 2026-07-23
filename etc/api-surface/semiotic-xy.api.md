@@ -40,6 +40,7 @@ function useCustomLayoutSelection(): CustomLayoutSelection
 interface AreaChartProps<TDatum extends Datum = Datum>
 interface BubbleChartProps<TDatum extends Datum = Datum>
 interface CandlestickChartProps<TDatum extends Datum = Datum>
+interface CategoricalLegendConfig
 interface CenterlineStyle
 interface ConnectedScatterplotProps<TDatum extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
@@ -48,12 +49,17 @@ interface DifferenceChartProps<TDatum extends Datum = Datum>
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface GradientLegendConfig
+interface GradientLegendValue
 interface HatchFill
 interface HeatmapProps<TDatum extends Datum = Datum>
 interface HitTargetPointProps
 interface HitTargetRectProps
 interface LayoutContext<C extends object = Record<string, unknown>>
 interface LayoutResult
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface LineChartProps<TDatum extends Datum = Datum>
 interface MultiAxisLineChartProps<TDatum extends Datum = Datum>
 interface QuadrantChartProps<TDatum extends Datum = Datum>
@@ -78,6 +84,7 @@ interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends objec
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type QuadrantsConfigOverride = {
     [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;
 }

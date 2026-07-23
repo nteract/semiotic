@@ -170,6 +170,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     marginDefaults: resolved.marginDefaults,
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
     // No emptyContent gate — `data` is a hierarchy root validated

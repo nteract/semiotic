@@ -661,7 +661,7 @@ describe("Legend rendering", () => {
     } as StaticXYProps)
 
     const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
-    expect(svg).toContain('transform="translate(40,8)"')
+    expect(svg).toContain('transform="translate(40,0)"')
     expect(dataAreaTop).toBeGreaterThan(40)
   })
 })
@@ -734,4 +734,3 @@ describe("Annotations in server SVG", () => {
     expect(svg).toContain("Midpoint")
   })
 })
-

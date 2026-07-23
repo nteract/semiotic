@@ -276,6 +276,16 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const safeSeries = series
 
   const isDualAxis = series.length === 2
+  const legendLayout = useMemo(() => {
+    if (!isDualAxis) return frameProps.legendLayout
+    return {
+      ...frameProps.legendLayout,
+      // Keep the legend beyond the ticks and axis title. Callers can set
+      // sideGutter to 0 (or another value) through frameProps when they own
+      // the surrounding layout.
+      sideGutter: frameProps.legendLayout?.sideGutter ?? 70,
+    }
+  }, [frameProps.legendLayout, isDualAxis])
 
   // Warn in dev mode if not exactly 2 series
   if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production" && !isDualAxis) {
@@ -411,6 +421,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     chartType: "MultiAxisLineChart",
     chartId,
     showLegend,
+    legendLayout,
     userMargin,
     marginDefaults: isDualAxis
       ? { ...resolved.marginDefaults, left: 70, right: 70 }
@@ -420,6 +431,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Line style ────────────────────────────────────────────────────────
@@ -553,7 +565,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       customClickBehavior: setup.customClickBehavior,
     }),
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    ...(legendLayout && { legendLayout }),
   }
 
   if (loadingEl) return loadingEl

@@ -1,0 +1,264 @@
+.dvd--sixth {
+  --dvd-lime: #c8f135;
+  --dvd-coral: #f05ca9;
+}
+
+.dvd--sixth .dvd-kicker,
+.dvd--sixth .dvd-chapter__eyebrow,
+.dvd--sixth .dvd-chart-panel > header p,
+.dvd--sixth .dvd-decisions strong,
+.dvd--sixth .dvd-feature-note__flag {
+  color: #668500;
+}
+
+[data-theme="dark"] .dvd--sixth .dvd-kicker,
+[data-theme="dark"] .dvd--sixth .dvd-chapter__eyebrow,
+[data-theme="dark"] .dvd--sixth .dvd-chart-panel > header p,
+[data-theme="dark"] .dvd--sixth .dvd-decisions strong,
+[data-theme="dark"] .dvd--sixth .dvd-feature-note__flag {
+  color: var(--dvd-lime);
+}
+
+.dvd--sixth .dvd-card {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      var(--dvd-lime) 0,
+      var(--dvd-lime) 18px,
+      #b9df2e 18px,
+      #b9df2e 36px
+    );
+  transform: rotate(-1deg);
+}
+
+.dvd--sixth .dvd-card::after {
+  content: "CAUTION: ANALYTICAL MECHANISM";
+  position: absolute;
+  right: -20px;
+  bottom: 28px;
+  padding: 4px 24px;
+  background: #18211b;
+  color: #c8f135;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  transform: rotate(-9deg);
+}
+
+.dvd--sixth .dvd-nav a.is-active::after {
+  background: var(--dvd-coral);
+}
+
+.dvd--sixth .dvd-coach {
+  border-left-color: var(--dvd-coral);
+  background: color-mix(in srgb, var(--dvd-coral) 9%, var(--surface-1));
+}
+
+.dvd--sixth .dvd-coach span,
+.dvd--sixth .dvd-nav a i {
+  color: #b33278;
+}
+
+[data-theme="dark"] .dvd--sixth .dvd-coach span,
+[data-theme="dark"] .dvd--sixth .dvd-nav a i {
+  color: #ff8cc6;
+}
+
+.dvd6-roster {
+  width: 100%;
+  margin-top: 16px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.dvd6-roster article {
+  display: grid;
+  grid-template-columns: 28px minmax(130px, 0.7fr) minmax(170px, 1fr) minmax(90px, 0.55fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--surface-3);
+  background: var(--surface-0);
+}
+
+.dvd6-roster article:hover {
+  background: color-mix(in srgb, var(--dvd-lime) 8%, var(--surface-0));
+}
+
+.dvd6-roster span {
+  color: #b33278;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.dvd6-roster strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.dvd6-roster p,
+.dvd6-roster em {
+  margin: 0;
+  color: var(--text-secondary);
+  font:
+    italic 10px/1.35 Georgia,
+    "Times New Roman",
+    serif;
+}
+
+.dvd6-roster em {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dvd--sixth #lab-safety .dvd-chart-panel__plot {
+  align-content: start;
+  min-height: 650px;
+  padding-inline: 0;
+}
+
+.dvd6-toggle {
+  position: relative;
+  z-index: 2;
+  max-width: calc(100% - 24px);
+  margin: 6px auto 16px;
+}
+
+.dvd6-replay {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  margin: -7px auto 13px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--dvd-coral) 58%, var(--surface-3));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dvd-coral) 7%, var(--surface-0));
+  color: var(--text-primary);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.dvd6-replay:hover {
+  background: color-mix(in srgb, var(--dvd-coral) 14%, var(--surface-0));
+}
+
+.dvd6-replay:focus-visible {
+  outline: 2px solid var(--dvd-lime);
+  outline-offset: 2px;
+}
+
+.dvd6-replay span {
+  color: var(--dvd-coral);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.dvd6-subchart {
+  width: calc(100% - 28px);
+  margin: 12px auto 24px;
+  padding: 14px 12px 8px;
+  border: 1px solid var(--surface-3);
+  border-left: 4px solid var(--dvd-coral);
+  background: color-mix(in srgb, var(--dvd-coral) 4%, var(--surface-0));
+}
+
+.dvd6-subchart > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 3px 10px;
+}
+
+.dvd6-subchart > div:first-child strong {
+  color: var(--text-primary);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+.dvd6-subchart > div:first-child span {
+  color: var(--text-secondary);
+  font:
+    italic 10px/1.35 Georgia,
+    "Times New Roman",
+    serif;
+  text-align: right;
+}
+
+.dvd--sixth #settling .dvd-chart-panel__plot,
+.dvd--sixth #arrival .dvd-chart-panel__plot,
+.dvd--sixth #throughput .dvd-chart-panel__plot,
+.dvd--sixth #ordeal .dvd-chart-panel__plot,
+.dvd--sixth #transformation .dvd-chart-panel__plot,
+.dvd--sixth #dependency .dvd-chart-panel__plot,
+.dvd--sixth #custom-lab .dvd-chart-panel__plot {
+  align-content: start;
+}
+
+.dvd--sixth .physics-replay-controls,
+.dvd--sixth [data-testid="crucible-replay-controls"] {
+  margin-inline: auto;
+}
+
+.dvd6-wide-chart {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.dvd6-wide-chart:focus-visible {
+  outline: 2px solid var(--dvd-lime);
+  outline-offset: 2px;
+}
+
+@media (max-width: 780px) {
+  .dvd6-roster article {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 5px 9px;
+    padding-block: 11px;
+  }
+
+  .dvd6-roster p,
+  .dvd6-roster em {
+    grid-column: 2;
+  }
+
+  .dvd--sixth #lab-safety .dvd-chart-panel__plot {
+    min-height: 0;
+  }
+
+  .dvd6-toggle {
+    flex-wrap: wrap;
+  }
+
+  .dvd6-subchart > div:first-child {
+    display: block;
+  }
+
+  .dvd6-subchart > div:first-child span {
+    display: block;
+    margin-top: 4px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 520px) {
+  .dvd--sixth .dvd-nav a:nth-child(n + 7) {
+    display: flex;
+  }
+
+  .dvd--sixth .dvd-card {
+    transform: rotate(-0.4deg);
+  }
+
+  .dvd--sixth .dvd-card::after {
+    right: -10px;
+    font-size: 6px;
+  }
+}

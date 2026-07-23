@@ -348,7 +348,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     colorScale,
     showLegend,
     legendPosition: legendPositionProp,
-    userMargin
+    userMargin,
+    chartWidth: width,
+    hasTitle: !!title,
   })
 
   const minimapHeight = minimapConfig.height || 60

@@ -18,7 +18,15 @@ export type {
   DashboardLayout,
   RenderDashboardOptions,
 } from "./server/renderToStaticSVG"
-export type { LegendLayout } from "./types/legendTypes"
+export type {
+  CategoricalLegendConfig,
+  GradientLegendConfig,
+  GradientLegendValue,
+  LegendGroup,
+  LegendItem,
+  LegendLayout,
+  LegendValue,
+} from "./types/legendTypes"
 export type {
   AnimatedGifOptions,
   PhysicsGifFrameProps,
@@ -27,4 +35,3 @@ export type {
 
 export { resolveTheme, themeStyles } from "./server/themeResolver"
 export type { ThemeInput } from "./server/themeResolver"
-

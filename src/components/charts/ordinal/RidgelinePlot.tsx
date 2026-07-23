@@ -153,6 +153,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const themeCategorical = useThemeCategorical()

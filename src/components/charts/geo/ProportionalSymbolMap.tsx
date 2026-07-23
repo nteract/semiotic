@@ -254,6 +254,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     emptyContent,
     width: resolved.width,
     height: resolved.height,
+    hasTitle: !!resolved.title,
   })
 
   // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest

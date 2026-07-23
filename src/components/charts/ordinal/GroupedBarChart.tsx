@@ -170,6 +170,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const themeCategorical = useThemeCategorical()

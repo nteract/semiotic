@@ -202,6 +202,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   warnMissingField("FunnelChart", safeData, "stepAccessor", stepAccessor)

@@ -42,6 +42,15 @@ import {
   BuiltInPhysicsEngineAdapter,
   createDefaultPhysicsEngineAdapter
 } from "./stream/physics/PhysicsEngineAdapter"
+export type {
+  CategoricalLegendConfig,
+  GradientLegendConfig,
+  GradientLegendValue,
+  LegendGroup,
+  LegendItem,
+  LegendLayout,
+  LegendValue,
+} from "./types/legendTypes"
 import { evaluatePhysicsBodyBudget } from "./stream/physics/PhysicsBodyBudget"
 import {
   PhysicsSedimentAccumulator,

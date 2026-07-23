@@ -309,6 +309,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({

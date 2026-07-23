@@ -472,6 +472,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Statistical features (forecast + anomaly overlays) ────────────────

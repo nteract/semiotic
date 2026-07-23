@@ -1,0 +1,135 @@
+.dvd--second {
+  --dvd-lime: #76e5c2;
+  --dvd-coral: #ff8a4c;
+}
+
+.dvd--second .dvd-kicker,
+.dvd--second .dvd-chapter__eyebrow,
+.dvd--second .dvd-chart-panel > header p,
+.dvd--second .dvd-decisions strong,
+.dvd--second .dvd-feature-note__flag {
+  color: #16866f;
+}
+
+[data-theme="dark"] .dvd--second .dvd-kicker,
+[data-theme="dark"] .dvd--second .dvd-chapter__eyebrow,
+[data-theme="dark"] .dvd--second .dvd-chart-panel > header p,
+[data-theme="dark"] .dvd--second .dvd-decisions strong,
+[data-theme="dark"] .dvd--second .dvd-feature-note__flag {
+  color: var(--dvd-lime);
+}
+
+.dvd--second .dvd-card {
+  background: var(--dvd-lime);
+  transform: rotate(-2deg);
+}
+
+.dvd--second .dvd-nav a.is-active::after {
+  background: var(--dvd-coral);
+}
+
+.dvd2-roster {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  align-self: stretch;
+  width: 100%;
+  margin-top: 18px;
+  border-block: 1px solid var(--surface-3);
+  background: var(--surface-3);
+}
+
+.dvd2-roster article {
+  position: relative;
+  min-height: 150px;
+  padding: 17px 18px 16px 48px;
+  background: var(--surface-0);
+}
+
+.dvd2-roster article:last-child {
+  grid-column: 1 / -1;
+}
+
+.dvd2-roster article > span {
+  position: absolute;
+  left: 16px;
+  top: 19px;
+  color: var(--dvd-coral);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.dvd2-roster h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.dvd2-roster strong {
+  display: block;
+  margin-top: 9px;
+  color: #16866f;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .dvd2-roster strong {
+  color: var(--dvd-lime);
+}
+
+.dvd2-roster p,
+.dvd2-roster small {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.dvd2-roster small {
+  opacity: 0.78;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+
+.dvd--second #second-unit .dvd-chart-panel__plot {
+  align-content: start;
+  place-items: initial;
+  min-height: 550px;
+  padding-inline: 0;
+}
+
+.dvd--second #attrition .dvd-chart-panel__plot {
+  align-content: start;
+}
+
+@media (max-width: 780px) {
+  .dvd--second .dvd-card {
+    transform: rotate(-1deg);
+  }
+
+  .dvd2-roster {
+    grid-template-columns: 1fr;
+  }
+
+  .dvd2-roster article:last-child {
+    grid-column: auto;
+  }
+
+  .dvd--second #second-unit .dvd-chart-panel__plot {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .dvd--second .dvd-nav a:nth-child(n + 7) {
+    display: flex;
+  }
+
+  .dvd2-roster article {
+    min-height: 138px;
+  }
+}

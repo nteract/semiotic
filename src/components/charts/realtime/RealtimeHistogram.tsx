@@ -291,6 +291,7 @@ export const RealtimeHistogram = forwardRef(
       userMargin,
       defaults: resolved.marginDefaults,
       additionalLegend,
+      chartWidth: resolvedSize[0],
     })
     // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
     const resolvedTooltip =

@@ -146,6 +146,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // Default `innerRadius` scales with the container's min dimension so the

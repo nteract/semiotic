@@ -611,6 +611,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     marginDefaults: { top: 30, right: 80, bottom: 40, left: 80 },
     userMargin,
     width, height,
+    hasTitle: !!title,
     loading,
     loadingContent,
     emptyContent,

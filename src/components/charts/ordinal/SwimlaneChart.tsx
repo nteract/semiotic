@@ -240,6 +240,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

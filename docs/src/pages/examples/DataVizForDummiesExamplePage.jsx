@@ -374,6 +374,7 @@ export default function DataVizForDummiesExamplePage() {
                   nodePaddingRatio={0.08}
                   width={chartWidth}
                   height={compact ? 430 : 470}
+                  margin={{ right: 124 }}
                   showLabels
                   tooltip
                   title={`Chart taxonomy organized by ${taxonomyMode === "data" ? "data kind" : "analytical task"}`}
@@ -630,6 +631,7 @@ export default function DataVizForDummiesExamplePage() {
                   nodePaddingRatio={0.12}
                   width={chartWidth}
                   height={compact ? 430 : 450}
+                  margin={{ right: 124 }}
                   showLabels
                   tooltip
                   title="One hundred possessions from inbound to result"

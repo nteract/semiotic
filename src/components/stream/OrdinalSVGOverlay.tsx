@@ -5,7 +5,7 @@ import { useMemo, useRef } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import type { OnObservationCallback } from "../store/ObservationStore"
@@ -51,7 +51,7 @@ interface OrdinalSVGOverlayProps {
   title?: string | ReactNode
 
   // Legend
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

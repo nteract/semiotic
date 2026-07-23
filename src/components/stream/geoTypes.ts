@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
-import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import type {
   Style,
   DecayConfig,
@@ -72,6 +72,7 @@ export interface DistanceCartogramConfig {
   center: string
   centerAccessor?: string | ((d: Datum) => string)
   costAccessor: string | ((d: Datum) => number)
+  /** Interpolation from fitted geography (0) to the cost layout (1). Values are clamped to [0, 1]. */
   strength?: number
   lineMode?: "straight" | "fractional"
   /**
@@ -363,7 +364,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   title?: string | ReactNode
 
   // ── Legend (passed from HOCs) ──
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendLayout?: LegendLayout
   legendHoverBehavior?: (item: { label: string } | null) => void

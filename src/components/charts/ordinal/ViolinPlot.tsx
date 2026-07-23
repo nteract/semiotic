@@ -162,6 +162,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

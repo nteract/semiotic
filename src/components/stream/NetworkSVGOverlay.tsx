@@ -3,7 +3,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { ANNOTATION_DISCLOSURE_REVEAL_CSS } from "../charts/shared/annotationHierarchy"
 import {
@@ -97,7 +97,7 @@ export interface NetworkSVGOverlayProps {
   title?: string | ReactNode
 
   /** Legend configuration */
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

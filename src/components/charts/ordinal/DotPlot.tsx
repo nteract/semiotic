@@ -165,6 +165,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)

@@ -331,6 +331,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Encoding domain (sizeBy) — bounded + push-mode tracking ──────────

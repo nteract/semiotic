@@ -2,11 +2,17 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import Legend, { GradientLegend } from "../Legend"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
+import {
+  resolveHorizontalLegendHeight,
+  resolveLegendDistance,
+  resolveLegendSideGutter,
+  resolveSideLegendWidth,
+} from "../legendLayout"
 
 export interface LegendRenderConfig {
-  legend: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend: LegendValue
   totalWidth: number
   totalHeight: number
   margin: { top: number; right: number; bottom: number; left: number }
@@ -32,7 +38,6 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
     margin,
     legendPosition = "right",
     legendLayout,
-    title,
     legendHoverBehavior,
     legendClickBehavior,
     legendHighlightedCategory,
@@ -43,19 +48,26 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
   if (!legend) return null
 
   const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
-  const hasTitle = Boolean(title)
   const plotWidth = Math.max(0, totalWidth - margin.left - margin.right)
-  const legendWidth = Math.max(1, isHorizontal ? legendLayout?.maxWidth ?? plotWidth : 100)
+  const legendWidth = Math.max(
+    1,
+    isHorizontal
+      ? legendLayout?.maxWidth ?? plotWidth
+      : resolveSideLegendWidth(legend, legendLayout),
+  )
+  const legendDistance = resolveLegendDistance(legend)
+  const sideGutter = resolveLegendSideGutter(legendLayout)
+  const legendHeight = resolveHorizontalLegendHeight(legend, plotWidth, legendLayout)
   let tx: number, ty: number
   if (legendPosition === "left") {
-    tx = Math.max(4, margin.left - legendWidth - 10); ty = margin.top
+    tx = margin.left - sideGutter - legendWidth - legendDistance; ty = margin.top
   } else if (legendPosition === "top") {
-    tx = margin.left; ty = hasTitle ? 32 : 8
+    tx = margin.left; ty = margin.top - legendDistance - legendHeight
   } else if (legendPosition === "bottom") {
-    tx = margin.left; ty = totalHeight - margin.bottom + 38
+    tx = margin.left; ty = totalHeight - margin.bottom + legendDistance
   } else {
     // right (default)
-    tx = totalWidth - margin.right + 10; ty = margin.top
+    tx = totalWidth - margin.right + sideGutter + legendDistance; ty = margin.top
   }
 
   return (

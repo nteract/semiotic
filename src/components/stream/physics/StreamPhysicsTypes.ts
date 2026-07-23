@@ -11,11 +11,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { AnnotationContext } from "../../realtime/types"
-import type {
-  GradientLegendConfig,
-  LegendGroup,
-  LegendLayout
-} from "../../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import type { FocusRingProps } from "../FocusRing"
 import type {
   PhysicsBodyState,
@@ -318,10 +314,7 @@ export interface StreamPhysicsFrameProps {
     index: number,
     context: AnnotationContext
   ) => React.ReactNode
-  legend?:
-    | React.ReactNode
-    | { legendGroups: LegendGroup[] }
-    | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

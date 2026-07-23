@@ -47,6 +47,7 @@ function useCustomLayoutSelection(): CustomLayoutSelection
 interface AnnotationLabelBackgroundConfig
 interface AnnotationLabelProps
 interface BarChartProps<TDatum extends Datum = Datum>
+interface CategoricalLegendConfig
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface DonutChartProps<TDatum extends Datum = Datum>
@@ -56,11 +57,16 @@ interface GaugeThreshold
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface GradientLegendConfig
+interface GradientLegendValue
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
 interface HatchFill
 interface HatchPatternOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
+interface LegendGroup
+interface LegendItem
+interface LegendLayout
 interface LikertChartProps<TDatum extends Datum = Datum>
 interface OrdinalCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
@@ -84,6 +90,7 @@ interface SwimlaneChartProps<TDatum extends Datum = Datum>
 type AnnotationLabelBackground = boolean | "halo" | "box" | "none" | AnnotationLabelBackgroundConfig
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
+type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type OrdinalChartType = "bar" | "clusterbar" | "point" | "swarm" | "pie" | "donut" | "boxplot" | "violin" | "histogram" | "ridgeline" | "timeline" | "funnel" | "bar-funnel" | "swimlane" | "custom"
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult
 type OrdinalSceneNode = RectSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | WedgeSceneNode | BoxplotSceneNode | ViolinSceneNode | ConnectorSceneNode | TrapezoidSceneNode

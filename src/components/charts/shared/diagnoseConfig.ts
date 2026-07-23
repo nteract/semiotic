@@ -290,8 +290,8 @@ function checkBottomMarginWithLegend(
     out.push({
       severity: "warning",
       code: "BOTTOM_MARGIN_WITH_LEGEND",
-      message: `legendPosition="bottom" with margin.bottom=${bottom}px — legend may overlap axis labels.`,
-      fix: `Increase margin.bottom to at least 70, e.g. margin={{ ...margin, bottom: 80 }}.`,
+      message: `legendPosition="bottom" uses the authoritative margin.bottom=${bottom}px — the legend may be clipped or overlap axis labels.`,
+      fix: `Use margin={{ ...margin, bottom: "auto" }} or provide enough bottom margin for the legend, its legendDistance, and any desired outer padding.`,
     })
   }
 }
@@ -303,16 +303,16 @@ function checkLegendMarginTight(
 ): void {
   if (!props.showLegend) return
   const pos = props.legendPosition ?? "right"
-  if (pos !== "right") return
+  if (pos !== "right" && pos !== "left") return
   const m = props.margin
   if (!m || typeof m !== "object") return
-  const right = m.right
-  if (typeof right === "number" && right < 100) {
+  const sideMargin = m[pos]
+  if (typeof sideMargin === "number" && sideMargin < 110) {
     out.push({
       severity: "warning",
       code: "LEGEND_MARGIN_TIGHT",
-      message: `showLegend is true with legendPosition="right" but margin.right=${right}px — legend may be clipped or overlap the chart.`,
-      fix: `Increase margin.right to at least 100, e.g. margin={{ ...margin, right: 120 }}.`,
+      message: `showLegend is true with legendPosition="${pos}" and authoritative margin.${pos}=${sideMargin}px — the legend may be clipped.`,
+      fix: `Use margin={{ ...margin, ${pos}: "auto" }} or provide enough ${pos} margin for the measured legend width, its legendDistance, and any desired outer padding.`,
     })
   }
 }

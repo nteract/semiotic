@@ -316,6 +316,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Brush (Scatterplot-specific) ───────────────────────────────────────

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -854,7 +854,7 @@ export interface StreamXYFrameProps<T = Datum>
 
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

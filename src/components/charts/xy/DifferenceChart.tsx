@@ -407,6 +407,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // Custom two-item legend keyed to series labels, not the internal

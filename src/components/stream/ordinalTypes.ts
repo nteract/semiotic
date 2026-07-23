@@ -21,7 +21,7 @@ import type {
   SceneRenderMode
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type {
@@ -539,7 +539,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
 
   // Visual extras
   showGrid?: boolean
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
+  legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

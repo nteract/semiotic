@@ -1,9 +1,115 @@
-import type { LegendLayout } from "./types/legendTypes"
+import type { LegendLayout, LegendValue } from "./types/legendTypes"
+import { isGradientLegendConfig, isLegendConfig } from "./types/legendTypes"
 
 export const DEFAULT_LEGEND_SWATCH_SIZE = 16
 export const DEFAULT_LEGEND_LABEL_GAP = 6
 export const DEFAULT_LEGEND_ITEM_GAP = 10
 export const DEFAULT_LEGEND_ROW_HEIGHT = 22
+export const DEFAULT_SIDE_LEGEND_WIDTH = 100
+export const DEFAULT_LEGEND_DISTANCE = 10
+
+/**
+ * SVG text has no useful intrinsic width until after it is mounted. Keep the
+ * estimate shared by margin calculation and rendering so side legends never
+ * reserve one width and draw into another.
+ */
+export function estimateLegendTextWidth(label: string): number {
+  return Math.ceil(label.length * 7)
+}
+
+/** Resolve the layout box needed by a left/right legend. */
+export function resolveSideLegendWidth(
+  legend: LegendValue | null | undefined,
+  layout?: LegendLayout,
+): number {
+  if (isLegendConfig(legend)) {
+    const metrics = resolveLegendMetrics(layout)
+    const widths = legend.legendGroups.flatMap((group) => [
+      group.label ? estimateLegendTextWidth(group.label) : 0,
+      ...group.items.map((item) =>
+        metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label)
+      ),
+    ])
+    return Math.max(DEFAULT_SIDE_LEGEND_WIDTH, ...widths)
+  }
+
+  if (isGradientLegendConfig(legend)) {
+    const { gradient } = legend
+    const format = gradient.format || ((value: number) => String(Math.round(value * 100) / 100))
+    const endpointWidth = Math.max(
+      estimateLegendTextWidth(format(gradient.domain[0])),
+      estimateLegendTextWidth(format(gradient.domain[1])),
+    )
+    const labelWidth = gradient.label ? estimateLegendTextWidth(gradient.label) : 0
+    return Math.max(DEFAULT_SIDE_LEGEND_WIDTH, 19 + endpointWidth, labelWidth)
+  }
+
+  // Custom React nodes cannot be measured before render. Preserve the
+  // long-standing box as a predictable fallback.
+  return DEFAULT_SIDE_LEGEND_WIDTH
+}
+
+/** Resolve the requested gap between the legend edge and plot edge. */
+export function resolveLegendDistance(legend: LegendValue | null | undefined): number {
+  if ((isLegendConfig(legend) || isGradientLegendConfig(legend)) && typeof legend.legendDistance === "number") {
+    return Math.max(0, legend.legendDistance)
+  }
+  return DEFAULT_LEGEND_DISTANCE
+}
+
+/** Resolve plot-adjacent chrome reserved before a left/right legend. */
+export function resolveLegendSideGutter(layout?: LegendLayout): number {
+  return Math.max(0, layout?.sideGutter ?? 0)
+}
+
+/** Estimate the layout-box height used to place a top/bottom legend. */
+export function resolveHorizontalLegendHeight(
+  legend: LegendValue | null | undefined,
+  availableWidth: number,
+  layout?: LegendLayout,
+): number {
+  if (isGradientLegendConfig(legend)) return legend.gradient.label ? 34 : 26
+  if (!isLegendConfig(legend)) return 20
+
+  const metrics = resolveLegendMetrics(layout)
+  const maxWidth = Math.max(1, layout?.maxWidth ?? availableWidth)
+  let height = metrics.rowHeight
+
+  for (const group of legend.legendGroups) {
+    let rows = 0
+    let rowWidth = 0
+    for (const item of group.items) {
+      const itemWidth = metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label)
+      const nextWidth = rowWidth === 0 ? itemWidth : rowWidth + metrics.itemGap + itemWidth
+      if (rowWidth > 0 && nextWidth > maxWidth) {
+        rows += 1
+        rowWidth = itemWidth
+      } else {
+        rowWidth = nextWidth
+      }
+    }
+    if (group.items.length > 0) rows += 1
+    height = Math.max(
+      height,
+      rows * metrics.rowHeight,
+      group.label ? estimateLegendTextWidth(group.label) : 0,
+    )
+  }
+
+  return height
+}
+
+/** Margin required to fit a side legend and its plot-edge gap. */
+export function resolveSideLegendMargin(
+  legend: LegendValue | null | undefined,
+  layout?: LegendLayout,
+): number {
+  return (
+    resolveSideLegendWidth(legend, layout) +
+    resolveLegendDistance(legend) +
+    resolveLegendSideGutter(layout)
+  )
+}
 
 export interface LegendMetrics {
   swatchSize: number

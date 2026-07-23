@@ -545,7 +545,7 @@ export function GradientLegend({
   return (
     <g aria-label={label || "Gradient legend"}>
       {label && (
-        <text x={BAR_WIDTH / 2} y={-6} textAnchor="middle" fontSize={11} fill="var(--semiotic-text, #333)">
+        <text x={0} y={-6} textAnchor="start" fontSize={11} fill="var(--semiotic-text, #333)">
           {label}
         </text>
       )}

@@ -209,4 +209,42 @@ describe("Heatmap", () => {
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
+
+  it("passes a gradient legendDistance override to the frame legend", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <Heatmap
+          data={sampleData}
+          showLegend
+          legendPosition="bottom"
+          legend={{ legendDistance: 42 }}
+        />
+      </TooltipProvider>
+    )
+
+    const gradient = container.querySelector("[aria-label='value']")
+    expect(gradient?.parentElement?.getAttribute("transform")).toBe(
+      "translate(70, 362)"
+    )
+  })
+
+  it("reserves a side gutter from the rendered gradient label and distance", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <Heatmap
+          data={sampleData}
+          valueAccessor={() => 1}
+          showLegend
+          legend={{ legendDistance: 30 }}
+        />
+      </TooltipProvider>
+    )
+
+    const gradient = container.querySelector("[aria-label='value']")
+    const transform = gradient?.parentElement?.getAttribute("transform") ?? ""
+    const x = Number(transform.match(/translate\(([-\d.]+)/)?.[1])
+    // Plot edge + requested distance; the measured gradient itself determines
+    // the automatic right margin rather than a synthetic categorical legend.
+    expect(x).toBe(500)
+  })
 })

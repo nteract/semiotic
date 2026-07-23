@@ -1,0 +1,134 @@
+.dvd--third {
+  --dvd-lime: #ffd166;
+  --dvd-coral: #63d8ff;
+}
+
+.dvd--third .dvd-kicker,
+.dvd--third .dvd-chapter__eyebrow,
+.dvd--third .dvd-chart-panel > header p,
+.dvd--third .dvd-decisions strong,
+.dvd--third .dvd-feature-note__flag {
+  color: #9a6b00;
+}
+
+[data-theme="dark"] .dvd--third .dvd-kicker,
+[data-theme="dark"] .dvd--third .dvd-chapter__eyebrow,
+[data-theme="dark"] .dvd--third .dvd-chart-panel > header p,
+[data-theme="dark"] .dvd--third .dvd-decisions strong,
+[data-theme="dark"] .dvd--third .dvd-feature-note__flag {
+  color: var(--dvd-lime);
+}
+
+.dvd--third .dvd-card {
+  background: var(--dvd-lime);
+  transform: rotate(1.4deg);
+}
+
+.dvd--third .dvd-nav a.is-active::after {
+  background: var(--dvd-coral);
+}
+
+.dvd--third .dvd-coach {
+  border-left-color: var(--dvd-coral);
+  background: color-mix(in srgb, var(--dvd-coral) 9%, var(--surface-1));
+}
+
+.dvd--third .dvd-coach span,
+.dvd--third .dvd-nav a i {
+  color: #147d9c;
+}
+
+[data-theme="dark"] .dvd--third .dvd-coach span,
+[data-theme="dark"] .dvd--third .dvd-nav a i {
+  color: var(--dvd-coral);
+}
+
+.dvd3-matchups {
+  display: grid;
+  align-self: stretch;
+  width: 100%;
+  margin-top: 18px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.dvd3-matchups article {
+  display: grid;
+  grid-template-columns: 28px minmax(145px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 66px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--surface-3);
+  background: var(--surface-0);
+}
+
+.dvd3-matchups article:hover {
+  background: color-mix(in srgb, var(--dvd-lime) 9%, var(--surface-0));
+}
+
+.dvd3-matchups article > span {
+  color: #147d9c;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.dvd3-matchups small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dvd3-matchups h4 {
+  margin: 3px 0 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  letter-spacing: -0.025em;
+}
+
+.dvd3-matchups p {
+  margin: 0;
+  color: var(--text-secondary);
+  font:
+    italic 12px/1.4 Georgia,
+    "Times New Roman",
+    serif;
+}
+
+.dvd--third #matchup-lab .dvd-chart-panel__plot {
+  align-content: start;
+  place-items: initial;
+  min-height: 550px;
+  padding-inline: 0;
+}
+
+.dvd--third #ancestry .dvd-chart-panel__plot {
+  align-content: start;
+}
+
+@media (max-width: 780px) {
+  .dvd3-matchups article {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 8px 12px;
+    padding-block: 13px;
+  }
+
+  .dvd3-matchups p {
+    grid-column: 2;
+  }
+
+  .dvd--third #matchup-lab .dvd-chart-panel__plot {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .dvd--third .dvd-nav a:nth-child(n + 7) {
+    display: flex;
+  }
+
+  .dvd--third .dvd-card {
+    transform: rotate(0.7deg);
+  }
+}

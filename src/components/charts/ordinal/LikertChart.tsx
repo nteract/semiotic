@@ -331,6 +331,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     emptyContent,
     width,
     height,
+    hasTitle: !!title,
   })
 
   // ── Neutral color (for split halves) ────────────────────────────────
