@@ -180,6 +180,43 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("<linearGradient")
     expect(svg).toContain("#E5A800")
   }
+  // AreaChart semanticLine: the new value-banded top stroke. The fill is a
+  // semantic gradient AND the top stroke is split into hard color bands at the
+  // semanticGradient offsets — SSR must emit both the gradient fill and the
+  // three fill:none stroke segments (one per band color), or it has silently
+  // dropped the new stroke-band path.
+  if (id === "area-semantic-line") {
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toMatch(/fill="url\(#/)
+    expect(svg).toContain('stroke="#0E9AA7"')
+    expect(svg).toContain('stroke="#E5A800"')
+    expect(svg).toContain('stroke="#FF7077"')
+    expect((svg.match(/<path\b[^>]*fill="none"/g) ?? []).length).toBeGreaterThanOrEqual(3)
+  }
+  // AreaChart gradientFill via the new unified `{ stops }` config. The gradient
+  // must reach SSR (not just the boolean/legacy shorthand) and carry the
+  // requested stop color.
+  if (id === "area-gradient-stops") {
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toMatch(/fill="url\(#/)
+    expect(svg).toContain("#6C4EE8")
+  }
+  // BumpChart line mode: one constant-width ribbon (area mark) per team plus a
+  // point per team-period. SSR must emit the same area/point marks the canvas
+  // draws from the shared bump layout.
+  if (id === "bump") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.area).toBe(4)
+    expect(evidence.markCountByType.point).toBe(12)
+  }
+  // BumpChart ribbon mode — the "bump area chart". Magnitude is encoded as a
+  // variable-width perpendicular ribbon (still four area marks, no points),
+  // and the SSR ribbon boundaries must match the canvas.
+  if (id === "bump-ribbon") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.area).toBe(4)
+    expect(evidence.markCountByType.point ?? 0).toBe(0)
+  }
   // band draws a filled envelope that follows the line's curve. SSR dropped
   // the band; the ribbon also used to ignore the curve (straight edges).
   if (id === "line-band") {

@@ -550,32 +550,47 @@ export function generateAxesSVG(
   const yTickCount = props.axisExtent === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const xTicks = ticksForMode(scales.x, xTickCount, props.axisExtent).map(v => ({
+  const bottomAxis = props.axes?.find(axis => axis.orient === "bottom")
+  const leftAxis = props.axes?.find(axis => axis.orient === "left")
+  const rawXTicks = bottomAxis?.tickValues
+    ?? ticksForMode(scales.x, bottomAxis?.ticks ?? xTickCount, props.axisExtent)
+  const rawXValues = rawXTicks.map(value => value.valueOf())
+  const xFormatter = bottomAxis?.tickFormat || props.xFormat || props.tickFormatTime || defaultTickFormat
+  const xTicks = rawXTicks.map((v, index) => ({
     pixel: scales.x(v),
-    label: (props.xFormat || props.tickFormatTime || defaultTickFormat)(v)
+    label: xFormatter(v, index, rawXValues)
   }))
 
-  const yTicks = ticksForMode(scales.y, yTickCount, props.axisExtent).map(v => ({
+  const rawYTicks = leftAxis?.tickValues
+    ?? ticksForMode(scales.y, leftAxis?.ticks ?? yTickCount, props.axisExtent)
+  const yFormatter = leftAxis?.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
+  const yTicks = rawYTicks.map(v => ({
     pixel: scales.y(v),
-    label: (props.yFormat || props.tickFormatValue || defaultTickFormat)(v)
+    label: yFormatter(v)
   }))
+  const xLabel = bottomAxis?.label ?? props.xLabel
+  const yLabel = leftAxis?.label ?? props.yLabel
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
-      <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
+      {bottomAxis?.baseline !== false && (
+        <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
+      )}
       {xTicks.map((tick, i) => (
         <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
           <line y2={5} stroke={s.border} strokeWidth={1} />
           <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
         </g>
       ))}
-      {props.xLabel && (
+      {xLabel && (
         <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}>
-          {props.xLabel}
+          {xLabel}
         </text>
       )}
 
-      <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
+      {leftAxis?.baseline !== false && (
+        <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
+      )}
       {yTicks.map((tick, i) => (
         <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
           <line x2={-5} stroke={s.border} strokeWidth={1} />
@@ -584,7 +599,7 @@ export function generateAxesSVG(
           </text>
         </g>
       ))}
-      {props.yLabel && (
+      {yLabel && (
         <text
           x={-leftAxisLabelMargin + 15}
           y={layout.height / 2}
@@ -594,7 +609,7 @@ export function generateAxesSVG(
           fontFamily={s.fontFamily}
           transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${layout.height / 2})`}
         >
-          {props.yLabel}
+          {yLabel}
         </text>
       )}
     </g>

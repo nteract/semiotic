@@ -218,7 +218,11 @@ for (const e of specEntries) {
     const wired =
       /\buseChartSelection\b/.test(source) ||
       /\buseChartSetup\b/.test(source) ||
-      /\buseNetworkChartSetup\b/.test(source)
+      /\buseNetworkChartSetup\b/.test(source) ||
+      // A HOC that delegates to a custom-layout wrapper inherits selection
+      // wiring: the wrapper runs useCustomChartSetup → useChartSetup →
+      // useChartSelection. (e.g. BumpChart renders <XYCustomChart>.)
+      /\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(source)
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
@@ -236,7 +240,12 @@ for (const e of specEntries) {
     const wired =
       /\bcustomNetworkLayout\b/.test(source) ||
       /\bcustomXYLayout\b/.test(source) ||
-      /\bcustomOrdinalLayout\b/.test(source)
+      /\bcustomOrdinalLayout\b/.test(source) ||
+      // A HOC can dispatch a custom layout by rendering a *CustomChart
+      // wrapper and handing it a `layout` function — the wrapper's `layout`
+      // prop IS the escape hatch. (e.g. BumpChart → <XYCustomChart layout={…}>.)
+      (/\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(source) &&
+        /\blayout=\{/.test(source))
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.layoutMode="custom" but does not reference any customLayout ` +

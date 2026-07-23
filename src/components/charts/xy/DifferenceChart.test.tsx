@@ -468,11 +468,14 @@ describe("DifferenceChart", () => {
         />
       </TooltipProvider>
     )
-    expect(lastXYFrameProps.gradientFill).toEqual({ topOpacity: 0.85, bottomOpacity: 0.15 })
+    expect(lastXYFrameProps.gradientFill).toEqual({ stops: [
+      { offset: 0, opacity: 0.85 },
+      { offset: 1, opacity: 0.15 },
+    ] })
   })
 
-  it("forwards explicit gradientFill object unchanged", () => {
-    const stops = { colorStops: [{ offset: 0, color: "#aaa" }, { offset: 1, color: "#fff" }] }
+  it("forwards explicit gradientFill stops unchanged", () => {
+    const stops = { stops: [{ offset: 0, color: "#aaa" }, { offset: 1, color: "#fff" }] }
     render(
       <TooltipProvider>
         <DifferenceChart

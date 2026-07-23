@@ -22,17 +22,10 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "vertical" },
       sort: { type: ["boolean", "string", "function"], default: false, description: "Sort bars: false, true, 'asc', 'desc', or comparator function" },
       barPadding: { type: "number", default: 40 },
-      // `roundedTop` is in validationMap but absent from schema.json —
-      // hand-curation oversight. Phase 3 can re-baseline schema with it
-      // exposed; for now match the canonical surface.
       roundedTop: { type: "number", omitFromSchema: true },
-      // Same schema-baseline treatment as `roundedTop`. Most ordinal HOCs
-      // expose `valueExtent`; the rest still need registry entries.
       valueExtent: { type: "array", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules, last-applicable rule wins per property. A rule's fill may be a color or a HatchFill descriptor." },
-      // Same schema-baseline treatment as `roundedTop`/`valueExtent` — supported
-      // (client + SSR) but not yet re-baselined into the canonical schema.
-      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each bar; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
+      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       regression: {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale.",
@@ -66,7 +59,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware segment styling: ordered { when, style } rules (ctx.category is the stack key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each segment; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
+      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
@@ -97,7 +90,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 60 },
       roundedTop: { type: "number", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules (ctx.category is the group key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      gradientFill: { type: ["boolean", "object"], omitFromSchema: true, description: "Base→tip gradient across each bar; true uses default opacity, or pass {topOpacity, bottomOpacity} / {colorStops}." },
+      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
@@ -353,7 +346,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       min: { type: "number", default: 0 },
       max: { type: "number", default: 100 },
       thresholds: { type: "array", description: "Array of { value, color, label? } defining threshold zones. Last value should equal max." },
-      gradientFill: { type: "object", description: "Arc-length gradient for the gauge band. Color stops are sampled along the sweep from start to end." },
+      gradientFill: { type: "object", description: "Sweep gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the sweep start and offset 1 is the sweep end." },
       arcWidth: { type: "number", default: 0.3, description: "Arc thickness as fraction of radius (0-1)" },
       cornerRadius: { type: "number", description: "Pixel radius for rounded segment ends. Same semantics as DonutChart's cornerRadius. Omit for sharp corners." },
       sweep: { type: "number", default: 240, description: "Arc sweep angle in degrees (gap centered at bottom)" },
@@ -429,6 +422,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 40, description: "Padding between lanes in pixels" },
       roundedTop: { type: "number", description: "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
       trackFill: { type: ["string", "object"], omitFromSchema: true, description: "Lane background fill painted behind each swimlane. A color string, or { color, opacity? } for a translucent track." },
+      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       brush: { type: "boolean", description: "Enable value-axis brush selection" },
       onBrush: { type: "function", description: "Callback with { r: [min, max] } or null when brush clears" },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush integration name" },

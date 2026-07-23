@@ -16,6 +16,7 @@ import type {
 } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { HatchFill } from "../charts/shared/hatchFill"
+import type { ColorGradientInput, GradientConfig, GradientInput } from "../charts/shared/gradient"
 import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
@@ -200,7 +201,7 @@ export interface LineSceneNode {
   accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
   /** Horizontal gradient for the line stroke */
-  strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  strokeGradient?: GradientConfig
   /** Curve interpolation type (default: linear / straight segments) */
   curve?: CurveType
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
@@ -223,6 +224,16 @@ export interface AreaSceneNode {
   type: "area"
   topPath: [number, number][]
   bottomPath: [number, number][]
+  /** Raw y-values corresponding to each top-path point (for threshold coloring) */
+  rawValues?: number[]
+  /** Threshold-based colors for the area's top-edge stroke */
+  colorThresholds?: LineColorThreshold[]
+  /**
+   * Plot-relative horizontal clips for value-colored top strokes. Each band
+   * redraws the complete top path, preserving its configured curve exactly.
+   * An omitted color means the area's normal stroke color.
+   */
+  strokeColorBands?: Array<{ y: number; height: number; color?: string }>
   style: Style
   datum: SeriesDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
@@ -231,10 +242,10 @@ export interface AreaSceneNode {
   /** Clip the area to this rect (in plot-relative pixels). Used by horizon
    *  charts to band a single series into N slices. */
   clipRect?: { x: number; y: number; width: number; height: number }
-  /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
-  fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill from top edge to baseline. */
+  fillGradient?: GradientConfig
   /** Horizontal gradient for the line stroke */
-  strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  strokeGradient?: GradientConfig
   /** When false, skip hit testing (used for decorative bounds areas) */
   interactive?: boolean
   /** Pulse intensity 0–1 (set when aggregated group value changes) */
@@ -414,7 +425,7 @@ export interface RectSceneNode {
   cornerRadii?: { tl?: number; tr?: number; br?: number; bl?: number }
   /** Gradient fill — same shape as the area-scene version. Runs tip → base
    *  along the bar axis (inferred from `roundedEdge`). */
-  fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  fillGradient?: GradientConfig
   style: Style
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
@@ -705,15 +716,17 @@ export interface StreamXYFrameProps<T = Datum>
    */
   y0Accessor?: string | ((d: T) => number)
 
-  /**
-   * Gradient fill for area charts. The fill fades from topOpacity at the line
-   * to bottomOpacity at the baseline. Set to `true` for default (0.8 → 0.05)
-   * or `{ topOpacity, bottomOpacity }` for custom values.
-   */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill for area charts. Offset 0 is the top edge; offset 1 is the baseline. */
+  gradientFill?: GradientInput
 
-  /** Horizontal gradient for line strokes. Applied to all lines/area top-strokes. */
-  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  /** Horizontal gradient for line strokes. Offset 0 is left; offset 1 is right. */
+  lineGradient?: ColorGradientInput
+
+  /**
+   * Internal value-anchored color stops for an area's top-edge stroke.
+   * Offsets are resolved against the final y-domain by the scene builder.
+   */
+  semanticLineStops?: Array<{ offset: number; color: string }>
 
   /** Series names (matching lineBy/colorBy group keys) that render as filled areas in "mixed" chartType */
   areaGroups?: string[]

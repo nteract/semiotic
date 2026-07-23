@@ -61,7 +61,10 @@ describe("buildMixedScene", () => {
   })
 
   it("attaches gradientFill only to area nodes", () => {
-    const gradient = { topOpacity: 0.8, bottomOpacity: 0.1 }
+    const gradient = { stops: [
+      { offset: 0, opacity: 0.8 },
+      { offset: 1, opacity: 0.1 },
+    ] }
     const ctx = makeCtx({ config: { areaGroups: new Set(["A"]), gradientFill: gradient } })
     const nodes = buildMixedScene(ctx, data)
 
@@ -76,7 +79,7 @@ describe("buildMixedScene", () => {
   })
 
   it("attaches strokeGradient to both area and line nodes when lineGradient is set", () => {
-    const lineGrad = { colorStops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }
+    const lineGrad = { stops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }
     const ctx = makeCtx({ config: { areaGroups: new Set(["A"]), lineGradient: lineGrad } })
     const nodes = buildMixedScene(ctx, data)
 

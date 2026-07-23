@@ -34,6 +34,45 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
 
   const yDomain = ctx.scales.y.domain() as [number, number]
   const baseline = yDomain[0]
+  const semanticLineThresholds = ctx.config.semanticLineStops
+    ?.filter((stop) => Number.isFinite(stop.offset))
+    .map((stop) => ({
+      value: yDomain[0] + Math.max(0, Math.min(1, stop.offset)) * (yDomain[1] - yDomain[0]),
+      color: stop.color,
+      thresholdType: "greater" as const,
+    }))
+    .sort((a, b) => a.value - b.value)
+  const semanticStrokeBands = semanticLineThresholds && semanticLineThresholds.length > 0
+    ? (() => {
+        // Duplicate threshold values have the same "last matching wins"
+        // semantics as LineChart thresholds.
+        const uniqueThresholds = semanticLineThresholds.reduce<typeof semanticLineThresholds>(
+          (bands, threshold) => {
+            if (bands.at(-1)?.value === threshold.value) bands[bands.length - 1] = threshold
+            else bands.push(threshold)
+            return bands
+          },
+          [],
+        )
+        const valueBands: Array<{ from: number; to: number; color?: string }> = [
+          { from: yDomain[0], to: uniqueThresholds[0].value },
+        ]
+        for (let i = 0; i < uniqueThresholds.length; i++) {
+          valueBands.push({
+            from: uniqueThresholds[i].value,
+            to: uniqueThresholds[i + 1]?.value ?? yDomain[1],
+            color: uniqueThresholds[i].color,
+          })
+        }
+        return valueBands
+          .map(({ from, to, color }) => {
+            const fromY = ctx.scales.y(from)
+            const toY = ctx.scales.y(to)
+            return { y: Math.min(fromY, toY), height: Math.abs(toY - fromY), color }
+          })
+          .filter((band) => band.height > 0)
+      })()
+    : undefined
 
   const y0Get = ctx.getY0
     ? (d: Datum): number => {
@@ -54,6 +93,10 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
     }
     if (ctx.config.lineGradient) {
       node.strokeGradient = ctx.config.lineGradient
+    }
+    if (semanticLineThresholds && semanticLineThresholds.length > 0) {
+      node.colorThresholds = semanticLineThresholds
+      node.strokeColorBands = semanticStrokeBands
     }
     nodes.push(node)
   }

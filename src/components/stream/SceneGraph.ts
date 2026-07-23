@@ -62,7 +62,7 @@ export function buildAreaNode(
   y0Get?: (d: Datum) => number
 ): AreaSceneNode {
   // Build indexed entries so we can sort by x for binary search correctness
-  const entries: { px: number; topY: number; botY: number }[] = []
+  const entries: { px: number; topY: number; botY: number; rawY: number }[] = []
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
@@ -72,19 +72,21 @@ export function buildAreaNode(
     if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
     const px = scales.x(xVal)
     const bottomY = y0Get ? y0Get(d) : baselineY
-    entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY) })
+    entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY), rawY: yVal })
   }
   // Sort by x pixel coordinate
   entries.sort((a, b) => a.px - b.px)
 
   const topPath: [number, number][] = new Array(entries.length)
   const bottomPath: [number, number][] = new Array(entries.length)
+  const rawValues: number[] = new Array(entries.length)
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i]
     topPath[i] = [e.px, e.topY]
     bottomPath[i] = [e.px, e.botY]
+    rawValues[i] = e.rawY
   }
-  return { type: "area", topPath, bottomPath, style, datum: data, group }
+  return { type: "area", topPath, bottomPath, rawValues, style, datum: data, group }
 }
 
 /** Per-group-per-x stacked top values, keyed by group then x */

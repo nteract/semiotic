@@ -41,7 +41,8 @@ const ENTRY_GRAPHS = [
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 460 },
+  // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 462 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 },

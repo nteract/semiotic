@@ -25,6 +25,7 @@ const navData = [
         category: "xy",
         children: [
           { title: "Line Chart", path: "/charts/line-chart" },
+          { title: "Bump Chart", path: "/charts/bump-chart" },
           { title: "Area Chart", path: "/charts/area-chart" },
           { title: "Difference Chart", path: "/charts/difference-chart" },
           { title: "Stacked Area Chart", path: "/charts/stacked-area-chart" },

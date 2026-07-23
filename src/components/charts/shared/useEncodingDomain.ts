@@ -4,8 +4,7 @@
  * bounded and push-mode data.
  *
  * **Bounded mode** (`isPushMode: false`) — derive `[min, max]` from
- * the `data` array each render. This replaces the inline spread-based
- * min/max patterns the consuming HOCs used to duplicate.
+ * the `data` array each render.
  *
  * **Push mode** (`isPushMode: true`) — bounded `data` is unavailable
  * because the chart's data prop is omitted; the user pushes through
@@ -14,8 +13,7 @@
  * ref override before forwarding the push to the frame. `reset()`
  * clears the running domain (paired with a `clear()` override).
  *
- * Extracted from BubbleChart's `sizeBy` domain tracking. The
- * surface is intentionally generic — any per-datum numeric encoding
+ * The surface is generic so any per-datum numeric encoding
  * accessor can drive it. Scatterplot uses it for `sizeBy` too;
  * future charts with opacity/color-intensity encodings can adopt
  * the same hook.

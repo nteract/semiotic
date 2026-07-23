@@ -705,26 +705,38 @@ describe("BarChart", () => {
       expect(frameProps().gradientFill).toBeUndefined()
     })
 
-    it("resolves `true` to default 80%/5% opacity stops (matches AreaChart)", () => {
+    it("forwards the standard opacity stops", () => {
       render(
         <TooltipProvider>
-          <BarChart data={sampleData} gradientFill />
+          <BarChart data={sampleData} gradientFill={{ stops: [
+            { offset: 0, opacity: 0.8 },
+            { offset: 1, opacity: 0.05 },
+          ] }} />
         </TooltipProvider>
       )
-      expect(frameProps().gradientFill).toEqual({ topOpacity: 0.8, bottomOpacity: 0.05 })
+      expect(frameProps().gradientFill).toEqual({ stops: [
+        { offset: 0, opacity: 0.8 },
+        { offset: 1, opacity: 0.05 },
+      ] })
     })
 
-    it("passes explicit opacity object through unchanged", () => {
+    it("passes explicit opacity stops through unchanged", () => {
       render(
         <TooltipProvider>
-          <BarChart data={sampleData} gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.2 }} />
+          <BarChart data={sampleData} gradientFill={{ stops: [
+            { offset: 0, opacity: 0.9 },
+            { offset: 1, opacity: 0.2 },
+          ] }} />
         </TooltipProvider>
       )
-      expect(frameProps().gradientFill).toEqual({ topOpacity: 0.9, bottomOpacity: 0.2 })
+      expect(frameProps().gradientFill).toEqual({ stops: [
+        { offset: 0, opacity: 0.9 },
+        { offset: 1, opacity: 0.2 },
+      ] })
     })
 
-    it("passes colorStops object through unchanged", () => {
-      const stops = { colorStops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] }
+    it("passes colored stops through unchanged", () => {
+      const stops = { stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] }
       render(
         <TooltipProvider>
           <BarChart data={sampleData} gradientFill={stops} />

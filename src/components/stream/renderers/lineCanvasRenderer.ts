@@ -1,24 +1,9 @@
-import type { LineSceneNode, LineColorThreshold } from "../types"
+import type { LineSceneNode } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
 import { buildColorStopGradient, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
-
-function resolveColor(
-  value: number,
-  thresholds: LineColorThreshold[],
-  baseColor: string
-): string {
-  let color = baseColor
-  for (const t of thresholds) {
-    if (t.thresholdType === "lesser") {
-      if (value < t.value) color = t.color
-    } else {
-      if (value > t.value) color = t.color
-    }
-  }
-  return color
-}
+import { buildThresholdLineSegments } from "./thresholdLineSegments"
 
 /**
  * Render a line segment with edge-fade effect.
@@ -160,6 +145,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         ? buildColorStopGradient(
             ctx,
             node.strokeGradient,
+            baseColor,
             node.path[0][0], 0,
             node.path[node.path.length - 1][0], 0,
           )
@@ -185,80 +171,16 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     } else {
       // Threshold mode: segment-based drawing with interpolated crossings
       // Curves are not applied in threshold mode — fall back to linear segments
-      let prevX: number | null = null
-      let prevY: number | null = null
-      let prevValue: number | null = null
-      let prevColor: string | null = null
-      let pathStarted = false
-
-      function startSegment(color: string, x: number, y: number) {
+      const segments = buildThresholdLineSegments(node.path, rawValues!, thresholds!, baseColor)
+      for (const segment of segments) {
         ctx.beginPath()
-        ctx.strokeStyle = color
-        ctx.moveTo(x, y)
-        pathStarted = true
-      }
-
-      function endSegment() {
-        if (pathStarted) {
-          ctx.stroke()
-          pathStarted = false
+        ctx.strokeStyle = resolveCSSColor(ctx, segment.color) || segment.color
+        ctx.moveTo(segment.path[0][0], segment.path[0][1])
+        for (let i = 1; i < segment.path.length; i++) {
+          ctx.lineTo(segment.path[i][0], segment.path[i][1])
         }
+        ctx.stroke()
       }
-
-      for (let i = 0; i < node.path.length; i++) {
-        const [x, y] = node.path[i]
-        const v = rawValues![i]
-        const currColor = resolveColor(v, thresholds!, baseColor)
-
-        if (prevX === null || prevColor === null || prevValue === null) {
-          startSegment(currColor, x, y)
-          prevX = x
-          prevY = y
-          prevValue = v
-          prevColor = currColor
-          continue
-        }
-
-        if (currColor === prevColor) {
-          ctx.lineTo(x, y)
-        } else {
-          // Find threshold crossings between prevValue and v
-          const crossings: Array<{ t: number }> = []
-
-          for (const threshold of thresholds!) {
-            const tv = threshold.value
-            if ((prevValue <= tv && v >= tv) || (prevValue >= tv && v <= tv)) {
-              if (prevValue !== tv && v !== tv) {
-                const interpT = (tv - prevValue) / (v - prevValue)
-                crossings.push({ t: interpT })
-              }
-            }
-          }
-
-          crossings.sort((a, b) => a.t - b.t)
-
-          for (const crossing of crossings) {
-            const midX = prevX + (x - prevX) * crossing.t
-            const midY = prevY! + (y - prevY!) * crossing.t
-
-            const nudgedValue = prevValue + (v - prevValue) * Math.min(crossing.t + 0.0001, 1)
-            const nextColor = resolveColor(nudgedValue, thresholds!, baseColor)
-
-            ctx.lineTo(midX, midY)
-            endSegment()
-            startSegment(nextColor, midX, midY)
-          }
-
-          ctx.lineTo(x, y)
-        }
-
-        prevX = x
-        prevY = y
-        prevValue = v
-        prevColor = currColor
-      }
-
-      endSegment()
     }
 
     // Fill area under line if fillOpacity is set

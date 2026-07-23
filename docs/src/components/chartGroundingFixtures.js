@@ -119,6 +119,7 @@ const chartGroundingFixtures = {
   // XY
   LineChart: { data: xyData, xAccessor: "x", yAccessor: "y", title: "Value over time" },
   AreaChart: { data: xyData, xAccessor: "x", yAccessor: "y", title: "Value over time" },
+  BumpChart: { data: seriesData, xAccessor: "x", yAccessor: "y", lineBy: "series", title: "Ranking over time" },
   StackedAreaChart: { data: seriesData, xAccessor: "x", yAccessor: "y", areaBy: "series", title: "Composition over time" },
   Scatterplot: { data: bubbleData, xAccessor: "x", yAccessor: "y", title: "Y by X" },
   ConnectedScatterplot: { data: connectedScatterData, xAccessor: "x", yAccessor: "y", orderAccessor: "order", title: "Trajectory through X–Y space" },

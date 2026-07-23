@@ -123,7 +123,12 @@ export const AreaChartCapability: ChartCapability = {
       yAccessor: profile.primary.y,
       // Gradient is the default — single-series areas read better with a
       // top-to-baseline opacity ramp than a flat fill.
-      gradientFill: true,
+      gradientFill: {
+        stops: [
+          { offset: 0, opacity: 0.8 },
+          { offset: 1, opacity: 0.05 },
+        ],
+      },
       areaOpacity: 0.55,
     }
     if (profile.hasTimeAxis && profile.primary.x === profile.primary.time) {

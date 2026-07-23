@@ -33,6 +33,22 @@
         "regression-overlay"
       ]
     },
+    "BumpChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "custom",
+      "specialFeatures": [
+        "ranking",
+        "magnitude-ribbons",
+        "time-series",
+        "style-rules"
+      ]
+    },
     "CandlestickChart": {
       "category": "xy",
       "supportsLegend": true,

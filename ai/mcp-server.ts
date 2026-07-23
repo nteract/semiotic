@@ -3,7 +3,7 @@
  *
  * Exposes eighteen tools, eight resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
- *   2. suggestChart — legacy sample-row chart recommender
+ *   2. suggestChart — sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
  *   4. proposeChartVariants — ranks variants/alternatives for a selected chart
  *   5. suggestStreamCharts — realtime chart recommender from a stream schema

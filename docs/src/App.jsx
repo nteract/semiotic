@@ -22,6 +22,7 @@ const GettingStartedPage = lazy(() => import("./pages/GettingStartedPage"))
 const MigrationPage = lazy(() => import("./pages/MigrationPage"))
 const ChooseChartPage = lazy(() => import("./pages/ChooseChartPage"))
 const LineChartPage = lazy(() => import("./pages/charts/LineChartPage"))
+const BumpChartPage = lazy(() => import("./pages/charts/BumpChartPage"))
 const AreaChartPage = lazy(() => import("./pages/charts/AreaChartPage"))
 const DifferenceChartPage = lazy(() => import("./pages/charts/DifferenceChartPage"))
 const StackedAreaChartPage = lazy(() => import("./pages/charts/StackedAreaChartPage"))
@@ -878,6 +879,7 @@ export default function DocsApp() {
               <Route path="charts" element={<Outlet />}>
                 {/* XY Charts */}
                 <Route path="line-chart" element={<LineChartPage />} />
+                <Route path="bump-chart" element={<BumpChartPage />} />
                 <Route path="area-chart" element={<AreaChartPage />} />
                 <Route path="difference-chart" element={<DifferenceChartPage />} />
                 <Route path="stacked-area-chart" element={<StackedAreaChartPage />} />

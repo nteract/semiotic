@@ -111,8 +111,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
     case "rect": {
       const n = node as RectSceneNode
       // If the scene node carries a gradient, build the SVG defs entry and
-      // reference it via `fill="url(#id)"`. buildRectSVGGradient returns null
-      // for invalid configs (e.g. < 2 colorStops) so we fall back to solid.
+      // reference it via `fill="url(#id)"`.
       // baseKey embeds the category/group from user data — sanitize to the
       // strict ID charset so spaces or punctuation in category names can't
       // produce invalid markup or break the url(#...) reference.

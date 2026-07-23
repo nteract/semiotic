@@ -166,6 +166,57 @@ describe("Shared HOC rendering contracts", () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
+// Custom axes (generateAxesSVG via frameProps.axes)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("Custom axes SSR (generateAxesSVG)", () => {
+  // Non-Bump coverage for the custom-`axes` SSR path: BumpChart exercises it
+  // too, but this asserts the generic frameProps.axes → generateAxesSVG wiring
+  // (custom tickValues + tickFormat, axis label, baseline suppression) on a
+  // plain LineChart so the path is covered independently of BumpChart.
+  it("honors custom tickValues/tickFormat, axis label, and baseline suppression", () => {
+    const svg = renderChart("LineChart", {
+      data: [
+        { x: 0, y: 10 },
+        { x: 1, y: 40 },
+        { x: 2, y: 25 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 240,
+      frameProps: {
+        axes: [
+          {
+            orient: "left",
+            tickValues: [0, 25, 50],
+            tickFormat: (v: number) => `${v}%`,
+            label: "Utilization",
+            baseline: false,
+          },
+          {
+            orient: "bottom",
+            tickValues: [0, 1, 2],
+            tickFormat: (v: number) => `T${v}`,
+          },
+        ],
+      },
+    })
+
+    // Custom tickFormat reached the SSR axis ticks on both axes.
+    expect(svg).toContain(">0%<")
+    expect(svg).toContain(">50%<")
+    expect(svg).toContain(">T0<")
+    expect(svg).toContain(">T2<")
+    // Axis label supplied via the axes config (not a top-level yLabel prop).
+    expect(svg).toContain(">Utilization<")
+    // baseline:false suppresses the left axis' vertical baseline (x1=0 x2=0);
+    // the bottom axis (baseline not set) keeps its horizontal baseline.
+    expect(svg).not.toMatch(/<line[^>]*\bx1="0"[^>]*\bx2="0"/)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
 // Theme Inlining
 // ═══════════════════════════════════════════════════════════════════════
 

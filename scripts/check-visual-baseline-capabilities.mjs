@@ -203,6 +203,7 @@ for (const evidence of linkedHoverEvidence) {
 // intended direction is down.
 const LINKED_HOVER_BURN_DOWN = new Map([
   ["BubbleChart", "no chart-specific linked-hover interaction snapshot yet"],
+  ["BumpChart", "new in 3.8.6: no chart-specific linked-hover interaction snapshot yet"],
   ["CandlestickChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["ConnectedScatterplot", "no chart-specific linked-hover interaction snapshot yet"],
   ["DifferenceChart", "no chart-specific linked-hover interaction snapshot yet"],

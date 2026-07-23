@@ -7,6 +7,7 @@ _Edit dist/semiotic-xy.d.ts's sources, then re-run `npm run docs:api-surface` to
 const DEFAULT_HIT_RADIUS: 8
 function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -31,6 +32,7 @@ function isHatchFill(fill: unknown): boolean
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
 function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
+function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
@@ -39,6 +41,7 @@ function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): bool
 function useCustomLayoutSelection(): CustomLayoutSelection
 interface AreaChartProps<TDatum extends Datum = Datum>
 interface BubbleChartProps<TDatum extends Datum = Datum>
+interface BumpChartProps<TDatum extends Datum = Datum>
 interface CandlestickChartProps<TDatum extends Datum = Datum>
 interface CategoricalLegendConfig
 interface CenterlineStyle
@@ -49,8 +52,10 @@ interface DifferenceChartProps<TDatum extends Datum = Datum>
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface GradientConfig
 interface GradientLegendConfig
 interface GradientLegendValue
+interface GradientStop
 interface HatchFill
 interface HeatmapProps<TDatum extends Datum = Datum>
 interface HitTargetPointProps
@@ -65,6 +70,9 @@ interface MultiAxisLineChartProps<TDatum extends Datum = Datum>
 interface QuadrantChartProps<TDatum extends Datum = Datum>
 interface QuadrantConfig
 interface QuadrantsConfig
+interface RankBumpDataOptions<TDatum extends Datum = Datum>
+interface RankedBumpData<TDatum extends Datum = Datum>
+interface RankedBumpDatum<TDatum extends Datum = Datum>
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
@@ -72,7 +80,6 @@ interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<st
 interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ScatterplotProps<TDatum extends Datum = Datum>
 interface SceneAccessibilityMetadata
-interface SemanticGradientStop
 interface StackedAreaChartProps<TDatum extends Datum = Datum>
 interface StreamXYFrameHandle<T = Datum>
 interface StreamXYFrameProps<T = Datum>
@@ -89,5 +96,7 @@ type QuadrantsConfigOverride = {
     [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;
 }
 type ResponsiveOrientation = "portrait" | "landscape"
+type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
+type SemanticGradientStop = SemanticGradientStopInput
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

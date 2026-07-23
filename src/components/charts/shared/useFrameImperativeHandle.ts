@@ -174,15 +174,11 @@ function makeVariantDefaults(
   }
   if (variant === "network") {
     const r = frameRef as RefObject<NetworkFrameLike | null>
-    // `getScales` is intentionally absent. The pre-migration inline
-    // network handles in `ForceDirectedGraph`, `SankeyDiagram`, and
-    // `ChordDiagram` omitted it entirely, and `RealtimeFrameHandle`
-    // marks the method optional precisely so network/geo frames can
-    // skip it ("may not implement this method at all"). Returning a
+    // `getScales` is intentionally absent because `RealtimeFrameHandle`
+    // marks it optional for network/geo frames. Returning a
     // `() => null` stub instead would silently flip
     // `typeof handle.getScales === "function"` checks consumers may
-    // use to branch — preserve the prior runtime shape by not
-    // assigning the key at all.
+    // use to branch, so do not assign the key.
     return {
       // Network HOCs ingest edges, not points — the `RealtimeFrameHandle`
       // surface uses `Datum` for both, so the cast at the boundary is
@@ -208,11 +204,10 @@ function makeVariantDefaults(
         })
       },
       clear: () => r.current?.clear(),
-      // Preserve the pre-migration inline behavior: nodes without a
-      // `data` payload surface as `undefined` entries in the returned
+      // Nodes without a `data` payload surface as `undefined` entries in the returned
       // array. The `RealtimeFrameHandle.getData()` signature is
       // `Datum[]`, so we cast at the boundary to keep that type
-      // contract; consumers get the same runtime shape they had before.
+      // contract.
       getData: () =>
         (r.current?.getTopology()?.nodes?.map((n) => n.data) as Datum[] | undefined) ?? [],
       getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
@@ -220,9 +215,7 @@ function makeVariantDefaults(
     }
   }
   if (variant === "geo-points") {
-    // Same rationale as the network variant: pre-migration geo HOCs
-    // (`ProportionalSymbolMap`, `DistanceCartogram`) omitted `getScales`
-    // entirely, so the helper does too.
+    // Geo point handles omit the optional `getScales` method.
     const r = frameRef as RefObject<GeoPointsFrameLike | null>
     return {
       push: (point) => r.current?.push(point),

@@ -261,7 +261,10 @@ describe("buildBarScene", () => {
   })
 
   it("attaches config.gradientFill to every rect node", () => {
-    const gradientFill = { topOpacity: 0.9, bottomOpacity: 0.1 }
+    const gradientFill = { stops: [
+      { offset: 0, opacity: 0.9 },
+      { offset: 1, opacity: 0.1 },
+    ] }
     const ctx = makeCtx({
       config: makeConfig({ gradientFill }),
       columns: {

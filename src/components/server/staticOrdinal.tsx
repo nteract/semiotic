@@ -1,4 +1,5 @@
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { normalizeGradient } from "../charts/shared/gradient"
 import { ticksForMode } from "../charts/shared/axisExtent"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
@@ -49,7 +50,7 @@ export function generateOrdinalAxesSVG(
   const isVertical = scales.projection === "vertical"
   const columns = store.columns
 
-  // Prefer new-style names with legacy fallback
+  // Resolve labels and formatters.
   const catFormat = props.categoryFormat || props.oFormat
   const valFormat = props.valueFormat || props.rFormat
   const catLabel = props.categoryLabel || props.oLabel
@@ -188,9 +189,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     rExtent: props.rExtent,
     oExtent: props.oExtent,
     // axisExtent ("nice"|"exact") pins the value-axis first/last tick to
-    // the data min/max via domain resolution. Client parity: StreamOrdinalFrame
-    // passes it into its pipeline config; without it here `axisExtent: "exact"`
-    // silently no-ops in SSR (same class of bug as gradientFill).
+    // the data min/max through domain resolution.
     axisExtent: props.axisExtent,
     barPadding: props.barPadding,
     roundedTop: props.roundedTop,
@@ -209,12 +208,9 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     dynamicColumnWidth: props.dynamicColumnWidth,
     pieceStyle: props.pieceStyle,
     summaryStyle: props.summaryStyle,
-    gradientFill: props.gradientFill,
-    // Frame-level props the ordinal scene builders/store read but that this
-    // hand-maintained config previously omitted — so the low-level
-    // renderOrdinalToStaticSVG path silently dropped them (the same class as
-    // the gradientFill gap). Each is a safe passthrough: undefined for callers
-    // that don't set it, matching prior behavior. symbolAccessor/symbolMap →
+    gradientFill: normalizeGradient(props.gradientFill),
+    // Frame-level props consumed by the ordinal scene builders/store.
+    // symbolAccessor/symbolMap →
     // SwarmPlot/DotPlot glyph shapes; trackFill → SwimlaneChart lane track;
     // connectorOpacity/showLabels → FunnelChart; multiAxis/baselinePadding →
     // multi-series value axis + baseline domain.

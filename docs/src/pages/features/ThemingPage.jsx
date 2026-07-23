@@ -958,7 +958,7 @@ const theme = designTokensToTheme(brandTokens, {
   ...CARBON_LIGHT,
   colors: { ...CARBON_LIGHT.colors, diverging: "RdBu" },
 }}>
-  <Heatmap ... />  {/* Now uses diverging red-blue scale */}
+  <Heatmap ... />  {/* Uses the diverging red-blue scale */}
 </ThemeProvider>`}
         language="jsx"
       />

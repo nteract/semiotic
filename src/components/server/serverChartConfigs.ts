@@ -6,6 +6,7 @@
 import type { ChartConfig } from "./serverChartConfigShared"
 import {
   sparkline,
+  bumpChart,
   lineChart,
   areaChart,
   differenceChart,
@@ -75,6 +76,7 @@ import {
 // a chart here makes it available to renderChart() without a second edit.
 export const CHART_CONFIGS = {
   Sparkline: sparkline,
+  BumpChart: bumpChart,
   LineChart: lineChart,
   AreaChart: areaChart,
   DifferenceChart: differenceChart,

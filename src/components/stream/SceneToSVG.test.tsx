@@ -77,7 +77,7 @@ describe("xySceneNodeToSVG — line", () => {
       path: [[0, 0], [50, 25], [100, 10]],
       style: { stroke: "#999", strokeWidth: 2 },
       strokeGradient: {
-        colorStops: [
+        stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ],
@@ -305,14 +305,14 @@ describe("xySceneNodeToSVG — rect", () => {
 })
 
 describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
-  it("emits a <linearGradient> and fill=\"url(#id)\" when fillGradient.colorStops is set", () => {
+  it("emits a <linearGradient> and fill=\"url(#id)\" when fillGradient.stops is set", () => {
     const node = {
       type: "rect",
       x: 10, y: 20, w: 30, h: 40,
       roundedEdge: "top",
       style: { fill: "blue" },
       fillGradient: {
-        colorStops: [
+        stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ],
@@ -331,13 +331,16 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
     expect(html).toContain('fill="url(#')
   })
 
-  it("emits stop-opacity stops for the { topOpacity, bottomOpacity } form", () => {
+  it("emits stop-opacity values for inherited-color stops", () => {
     const node = {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       roundedEdge: "top",
       style: { fill: "#3366cc" },
-      fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+      fillGradient: { stops: [
+        { offset: 0, opacity: 0.8 },
+        { offset: 1, opacity: 0.05 },
+      ] },
       datum: { category: "B" },
     }
     const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
@@ -346,12 +349,12 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
     expect(html).toContain('stop-opacity="0.05"')
   })
 
-  it("falls back to solid fill when fillGradient has < 2 colorStops", () => {
+  it("falls back to solid fill when fillGradient has fewer than 2 stops", () => {
     const node = {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       style: { fill: "#abcdef" },
-      fillGradient: { colorStops: [{ offset: 0, color: "#ff0000" }] },
+      fillGradient: { stops: [{ offset: 0, color: "#ff0000" }] },
       datum: { category: "C" },
     }
     const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
@@ -364,7 +367,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       style: { fill: "#abcdef" },
-      fillGradient: { colorStops: [
+      fillGradient: { stops: [
         { offset: NaN, color: "#ff0000" },
         { offset: 1, color: "#0000ff" },
       ]},
@@ -381,7 +384,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       x: 10, y: 20, w: 30, h: 40,
       roundedEdge: "top",
       style: { fill: "blue" },
-      fillGradient: { colorStops: [
+      fillGradient: { stops: [
         { offset: 0, color: "#ff0000" },
         { offset: 1, color: "#0000ff" },
       ]},
@@ -405,7 +408,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       x: 10, y: 20, w: 80, h: 20,
       roundedEdge: "right",
       style: { fill: "blue" },
-      fillGradient: { colorStops: [
+      fillGradient: { stops: [
         { offset: 0, color: "#ff0000" },
         { offset: 1, color: "#0000ff" },
       ]},
@@ -581,7 +584,10 @@ describe("xySceneNodeToSVG — area", () => {
       topPath: [[0, 10], [50, 5], [100, 15]],
       bottomPath: [[0, 50], [50, 50], [100, 50]],
       style: { fill: "#3366cc", fillOpacity: 0.2 },
-      fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+      fillGradient: { stops: [
+        { offset: 0, opacity: 0.8 },
+        { offset: 1, opacity: 0.05 },
+      ] },
     }
     const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<linearGradient")
@@ -610,6 +616,41 @@ describe("xySceneNodeToSVG — area", () => {
     expect(html).toContain('stroke="#007bff"')
   })
 
+  it("serializes hard-edged value colors on an area's top stroke", () => {
+    const node = {
+      type: "area",
+      topPath: [[0, 90], [50, 40], [100, 10]],
+      bottomPath: [[0, 100], [50, 100], [100, 100]],
+      rawValues: [10, 50, 90],
+      colorThresholds: [
+        { value: 40, color: "#e5a800", thresholdType: "greater" },
+        { value: 70, color: "#ff7077", thresholdType: "greater" },
+      ],
+      strokeColorBands: [
+        { y: 60, height: 40 },
+        { y: 30, height: 30, color: "#e5a800" },
+        { y: 0, height: 30, color: "#ff7077" },
+      ],
+      strokeGradient: {
+        stops: [
+          { offset: 0, color: "#111111" },
+          { offset: 1, color: "#eeeeee" },
+        ],
+      },
+      curve: "monotoneX",
+      style: { fill: "#4e79a7", stroke: "#4e79a7", strokeWidth: 2 },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+
+    expect(html).toContain('<clipPath id="area-0-stroke-band-0"')
+    expect(html).toContain('d="M0,90C')
+    expect((html.match(/clip-path="url\(#area-0-stroke-band-/g) ?? []).length).toBe(3)
+    expect(html).toContain('stroke="#4e79a7"')
+    expect(html).toContain('stroke="#e5a800"')
+    expect(html).toContain('stroke="#ff7077"')
+    expect(html).not.toContain("stroke-gradient")
+  })
+
   it("clips both the area fill and its gradient top stroke", () => {
     const node = {
       type: "area",
@@ -618,7 +659,7 @@ describe("xySceneNodeToSVG — area", () => {
       clipRect: { x: 10, y: 0, width: 70, height: 60 },
       style: { fill: "#ddd", stroke: "#333", strokeWidth: 2 },
       strokeGradient: {
-        colorStops: [
+        stops: [
           { offset: 0, color: "#f00" },
           { offset: 1, color: "#00f" },
         ],

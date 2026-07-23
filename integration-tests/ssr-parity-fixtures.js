@@ -33,6 +33,23 @@ const groupedXyData = [
   { x: 3, y: 11, series: "B" },
 ]
 
+// BumpChart: four teams whose ranks cross over three periods, so both the
+// line and ribbon (area) modes exercise real crossings + magnitude spread.
+const bumpData = [
+  { period: "Q1", team: "North", score: 42 },
+  { period: "Q1", team: "South", score: 38 },
+  { period: "Q1", team: "East", score: 51 },
+  { period: "Q1", team: "West", score: 29 },
+  { period: "Q2", team: "North", score: 46 },
+  { period: "Q2", team: "South", score: 50 },
+  { period: "Q2", team: "East", score: 48 },
+  { period: "Q2", team: "West", score: 35 },
+  { period: "Q3", team: "North", score: 61 },
+  { period: "Q3", team: "South", score: 47 },
+  { period: "Q3", team: "East", score: 52 },
+  { period: "Q3", team: "West", score: 54 },
+]
+
 const temporalHistogramData = [
   { time: 0, value: 5, kind: "Errors" },
   { time: 350, value: 7, kind: "Warnings" },
@@ -1785,6 +1802,86 @@ function makeSsrParityCases(React) {
         margin: { top: 40, right: 24, bottom: 30, left: 48 },
         width: 460,
         height: 280,
+      },
+    },
+    {
+      // BumpChart ranking lines: each period ranks the four teams and rank is
+      // vertical position. Exercises the shared sampled centerline in
+      // fixed-width (line) mode plus endpoint labels and points.
+      id: "bump",
+      component: "BumpChart",
+      props: {
+        data: bumpData,
+        xAccessor: "period",
+        yAccessor: "score",
+        lineBy: "team",
+        showPoints: true,
+        width: 480,
+        height: 300,
+      },
+    },
+    {
+      // BumpChart ribbon mode — the "bump area chart". Magnitude is encoded as
+      // true perpendicular-offset ribbon width, so SSR must reproduce the same
+      // sampled ribbon boundaries the canvas draws (not a vertically
+      // interpolated area). Shares the centerline with the line fixture above.
+      id: "bump-ribbon",
+      component: "BumpChart",
+      props: {
+        data: bumpData,
+        xAccessor: "period",
+        yAccessor: "score",
+        lineBy: "team",
+        ribbon: true,
+        width: 480,
+        height: 300,
+      },
+    },
+    {
+      // AreaChart semanticLine: the new value-banded top stroke. semanticGradient
+      // (new `{ stops }` form, offset along the y-domain) paints the fill, and
+      // semanticLine (default true) splits the top stroke into hard color bands
+      // at the same offsets. Both backends must split the stroke identically.
+      id: "area-semantic-line",
+      component: "AreaChart",
+      props: {
+        data: semanticAreaData,
+        xAccessor: "time",
+        yAccessor: "value",
+        curve: "monotoneX",
+        semanticGradient: {
+          stops: [
+            { offset: 0, color: "#0E9AA7" },
+            { offset: 0.6, color: "#E5A800" },
+            { offset: 0.85, color: "#FF7077" },
+          ],
+        },
+        semanticLine: true,
+        yExtent: [0, 100],
+        width: 440,
+        height: 260,
+      },
+    },
+    {
+      // AreaChart gradientFill via the new unified `{ stops }` config (was a
+      // boolean / legacy shorthand). Exercises the shared gradient normalizer on
+      // both backends: a multi-stop vertical fill gradient with explicit
+      // offsets and per-stop opacity.
+      id: "area-gradient-stops",
+      component: "AreaChart",
+      props: {
+        data: xyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        curve: "monotoneX",
+        gradientFill: {
+          stops: [
+            { offset: 0, color: "#6C4EE8", opacity: 0.9 },
+            { offset: 1, color: "#6C4EE8", opacity: 0.05 },
+          ],
+        },
+        width: 400,
+        height: 220,
       },
     },
   ]

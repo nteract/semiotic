@@ -14,10 +14,7 @@
  *
  *   3. Tooltip — `tooltip === false ? () => null : normalizeTooltip(tooltip) || default`.
  *
- * These are extractions, not abstractions. The bodies were already
- * identical across ~25 HOC sites; centralizing them eliminates ~240
- * lines of mechanical boilerplate without changing a single runtime
- * behavior. NetworkCustomChart shares the metadata and behavior helpers;
+ * NetworkCustomChart shares the metadata and behavior helpers;
  * network-specific layout and interaction props remain outside their scope.
  */
 "use client"
@@ -45,8 +42,7 @@ import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
  * and the user's tooltip body reads only fields it knows about.
  *
  * Typing the helper's return at the wider `HoverData` shape lets either
- * source flow through without a cast at the call site, matching the
- * inline form HOCs used before this refactor.
+ * source flow through without a cast at the call site.
  */
 type FrameTooltipContent = (d: HoverData) => ReactNode
 

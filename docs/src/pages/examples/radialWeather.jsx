@@ -284,10 +284,8 @@ function RadialWeatherOverlay({ rows, conditionRuns, scale }) {
   )
 }
 
-// The circular brush is now the shared `CircularBrush` control (imported from
-// "semiotic") — the ~200 lines of hand-rolled brush arc, wedge handles,
-// pointer-capture drag, wrap-around day math, and keyboard nudging that used to
-// live here are all the control's responsibility now.
+// The shared `CircularBrush` control owns the brush arc, wedge handles,
+// pointer capture, wrap-around day math, and keyboard nudging.
 
 export function WeatherLegend({
   title = "New York",

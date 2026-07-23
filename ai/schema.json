@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "semiotic",
-  "version": "3.8.5",
+  "version": "3.8.6",
   "description": "React data visualization library for charts, networks, and beyond",
   "tools": [
     {
@@ -304,6 +304,10 @@
               "description": "Opacity of the filled area (0-1)",
               "default": 0.3
             },
+            "lineGradient": {
+              "type": "object",
+              "description": "Left-to-right stroke gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
+            },
             "forecast": {
               "type": "object",
               "description": "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig."
@@ -601,15 +605,21 @@
               "default": "monotoneX"
             },
             "gradientFill": {
-              "type": [
-                "boolean",
-                "object"
-              ],
-              "description": "Renderer-space area gradient. true uses default opacity; object supports opacity or colorStops."
+              "type": "object",
+              "description": "Line-to-baseline gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the line/top and offset 1 is the baseline."
             },
             "semanticGradient": {
-              "type": "array",
-              "description": "User-facing gradient stops: [{ at: 0-100, color, opacity? }], where 0 is baseline and 100 is line/top. Takes precedence over gradientFill."
+              "type": "object",
+              "description": "Value-anchored gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the y-domain minimum and offset 1 is the maximum. Takes precedence over gradientFill."
+            },
+            "semanticLine": {
+              "type": "boolean",
+              "description": "Mirror semanticGradient on the area's top-edge stroke as solid, hard-edged value bands. Set false to keep the normal stroke or lineGradient.",
+              "default": true
+            },
+            "lineGradient": {
+              "type": "object",
+              "description": "Left-to-right stroke gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
             },
             "areaOpacity": {
               "type": "number",
@@ -3224,6 +3234,10 @@
               "type": "number",
               "default": 40
             },
+            "gradientFill": {
+              "type": "object",
+              "description": "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
+            },
             "regression": {
               "type": [
                 "boolean",
@@ -3495,6 +3509,10 @@
             "barPadding": {
               "type": "number",
               "default": 40
+            },
+            "gradientFill": {
+              "type": "object",
+              "description": "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
             }
           },
           "required": [
@@ -4033,6 +4051,10 @@
             "barPadding": {
               "type": "number",
               "default": 60
+            },
+            "gradientFill": {
+              "type": "object",
+              "description": "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
             }
           },
           "required": [
@@ -6319,7 +6341,7 @@
             },
             "gradientFill": {
               "type": "object",
-              "description": "Arc-length gradient for the gauge band. Color stops are sampled along the sweep from start to end."
+              "description": "Sweep gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the sweep start and offset 1 is the sweep end."
             },
             "arcWidth": {
               "type": "number",
@@ -9835,6 +9857,10 @@
               "type": "number",
               "description": "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners."
             },
+            "gradientFill": {
+              "type": "object",
+              "description": "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
+            },
             "brush": {
               "type": "boolean",
               "description": "Enable value-axis brush selection"
@@ -11896,11 +11922,8 @@
               "default": 0.6
             },
             "gradientFill": {
-              "type": [
-                "boolean",
-                "object"
-              ],
-              "description": "Tip→base gradient across each segment; same shape as AreaChart.gradientFill"
+              "type": "object",
+              "description": "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
             },
             "xExtent": {
               "type": "array",
@@ -14527,6 +14550,354 @@
           "required": [
             "data",
             "phases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "BumpChart",
+        "description": "Ranked series trajectories across ordered or time-based columns, with optional magnitude-encoded ribbons.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": "boolean",
+              "description": "Expose the chart data through Semiotic's screen-reader data table.",
+              "default": true
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": "string",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array",
+                "object"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "object",
+                "string"
+              ],
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object",
+                "string"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": [
+                "boolean",
+                "string"
+              ],
+              "enum": [
+                "series"
+              ],
+              "default": true
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "data": {
+              "type": "array",
+              "description": "Flat observations containing one magnitude per series and ranking column."
+            },
+            "xAccessor": {
+              "type": "string",
+              "description": "Ordered or temporal ranking-column accessor.",
+              "default": "x",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "yAccessor": {
+              "type": "string",
+              "description": "Numeric magnitude used to calculate rank and ribbon width.",
+              "default": "y",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string",
+              "default": "Rank"
+            },
+            "lineBy": {
+              "type": "string",
+              "description": "Series identity accessor.",
+              "default": "series",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "rankDirection": {
+              "type": "string",
+              "enum": [
+                "descending",
+                "ascending"
+              ],
+              "default": "descending"
+            },
+            "ribbon": {
+              "type": "boolean",
+              "description": "Encode the original magnitude as trajectory width.",
+              "default": false
+            },
+            "curve": {
+              "type": "string",
+              "enum": [
+                "smooth",
+                "linear"
+              ],
+              "default": "smooth"
+            },
+            "ribbonSizeRange": {
+              "type": "array",
+              "description": "Minimum and maximum full ribbon width in pixels.",
+              "default": [
+                4,
+                28
+              ]
+            },
+            "samplesPerSegment": {
+              "type": "number",
+              "default": 12
+            },
+            "lineWidth": {
+              "type": "number",
+              "description": "Fixed trajectory width when ribbon is false.",
+              "default": 3
+            },
+            "highlightTop": {
+              "type": "number",
+              "description": "Use categorical colors for the N series with the best overall mean rank."
+            },
+            "neutralColor": {
+              "type": "string",
+              "description": "Color for trajectories outside highlightTop. Defaults to the theme's secondary text color."
+            },
+            "ribbonOpacity": {
+              "type": "number",
+              "default": 0.82
+            },
+            "lineOpacity": {
+              "type": "number",
+              "default": 0.9
+            },
+            "showPoints": {
+              "type": "boolean",
+              "default": false
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 3
+            },
+            "showLabels": {
+              "type": [
+                "boolean",
+                "string"
+              ],
+              "enum": [
+                "start",
+                "end",
+                "both"
+              ],
+              "default": true
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "default": "right"
+            }
+          },
+          "required": [
+            "data"
           ]
         }
       }

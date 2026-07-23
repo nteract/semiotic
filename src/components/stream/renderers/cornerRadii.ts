@@ -1,13 +1,6 @@
 /**
- * Per-corner radius utilities shared between the canvas (`barCanvasRenderer`)
- * and SVG (`SceneToSVG`) paint paths.
- *
- * Both paths previously carried the same `hasAnyCornerRadius` predicate
- * and the same `min(radius, w/2, h/2)` clamp inline. Splitting them by
- * renderer left two near-identical implementations that drifted in
- * comments more than once; centralizing here keeps the swimlane rounding
- * contract — and any future per-corner shape (cards, tab corners,
- * partial-stack rounding) — in one place.
+ * Per-corner radius geometry shared between the canvas
+ * (`barCanvasRenderer`) and SVG (`SceneToSVG`) paint paths.
  *
  * The actual path-tracing primitives (canvas `arcTo` vs SVG `A`) stay in
  * each renderer because their output formats differ — this module owns

@@ -21,6 +21,7 @@ function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> &
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CategoryColorProvider({ colors, categories, colorScheme, children, }: CategoryColorProviderProps): React.JSX.Element
 function ChartContainer(: import("../../../dist/semiotic-ai").ChartContainerProps & React.RefAttributes<import("../../../dist/semiotic-ai").ChartContainerHandle>): React.ReactNode
@@ -113,6 +114,7 @@ function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefin
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
+function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
@@ -168,6 +170,7 @@ interface BaseChartProps
 interface BoxPlotProps<TDatum extends Datum = Datum>
 interface BubbleChartProps<TDatum extends Datum = Datum>
 interface BuildNavigationTreeOptions
+interface BumpChartProps<TDatum extends Datum = Datum>
 interface CandlestickChartProps<TDatum extends Datum = Datum>
 interface CategoricalLegendConfig
 interface CategoryColorProviderProps
@@ -205,8 +208,10 @@ interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Dat
 interface FunnelChartProps<TDatum extends Datum = Datum>
 interface GaugeChartProps
 interface GaugeThreshold
+interface GradientConfig
 interface GradientLegendConfig
 interface GradientLegendValue
+interface GradientStop
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
 interface HatchFill
 interface HatchPatternOptions
@@ -260,6 +265,9 @@ interface ProcessSankeyTick
 interface QuadrantChartProps<TDatum extends Datum = Datum>
 interface QuadrantConfig
 interface QuadrantsConfig
+interface RankBumpDataOptions<TDatum extends Datum = Datum>
+interface RankedBumpData<TDatum extends Datum = Datum>
+interface RankedBumpDatum<TDatum extends Datum = Datum>
 interface RealtimeHeatmapProps<TDatum extends Datum = Datum>
 interface RealtimeHistogramProps<TDatum extends Datum = Datum>
 interface RealtimeLineChartProps<TDatum extends Datum = Datum>
@@ -283,7 +291,6 @@ interface SceneAccessibilityMetadata
 interface Selection
 interface SelectionClause
 interface SelectionConfig
-interface SemanticGradientStop
 interface SemioticTheme
 interface SerializedSelection
 interface SmallMultipleChartProps<TItem extends SmallMultipleItem = SmallMultipleItem>
@@ -413,6 +420,8 @@ type ResolutionMode = "union" | "intersect" | "crossfilter"
 type ResponsiveOrientation = "portrait" | "landscape"
 type RuntimeMode = "bounded" | "streaming"
 type SceneNode = LineSceneNode | AreaSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | RectSceneNode | HeatcellSceneNode | CandlestickSceneNode
+type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
+type SemanticGradientStop = SemanticGradientStopInput
 type SerializedFieldSelection = {
     type: "point";
     values: unknown[];

@@ -51,6 +51,25 @@ describe("StackedBarChart", () => {
     expect(props.stackBy).toBe("product")
   })
 
+  it("forwards normalized gradient stops", () => {
+    const gradientFill = {
+      stops: [
+        { offset: 0, opacity: 0.8 },
+        { offset: 1, opacity: 0.1 },
+      ],
+    }
+    render(
+      <TooltipProvider>
+        <StackedBarChart
+          data={sampleData}
+          stackBy="product"
+          gradientFill={gradientFill}
+        />
+      </TooltipProvider>
+    )
+    expect(frameProps().gradientFill).toEqual(gradientFill)
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

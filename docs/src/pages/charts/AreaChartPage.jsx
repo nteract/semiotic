@@ -108,11 +108,35 @@ const areaChartProps = [
   },
   {
     name: "gradientFill",
-    type: "boolean | object",
+    type: "{ stops }",
     required: false,
     default: "false",
     description:
-      "Gradient fill from line to baseline. true for defaults (80%→5%) or { topOpacity, bottomOpacity } for custom.",
+      "Gradient fill from line to baseline. Each stop uses { offset: 0–1, color?, opacity? }; omit color to inherit the area color.",
+  },
+  {
+    name: "semanticGradient",
+    type: "{ stops }",
+    required: false,
+    default: null,
+    description:
+      "Value-anchored gradient stops, where offset 0 is the resolved y-domain minimum and offset 1 is the maximum. Takes precedence over gradientFill.",
+  },
+  {
+    name: "semanticLine",
+    type: "boolean",
+    required: false,
+    default: "true with semanticGradient",
+    description:
+      "Mirror semanticGradient on the top stroke as solid, hard-edged value bands. Set false to keep the normal stroke or lineGradient.",
+  },
+  {
+    name: "lineGradient",
+    type: "{ stops }",
+    required: false,
+    default: null,
+    description:
+      "Horizontal left-to-right gradient for the top stroke. Used when semantic line coloring is not active.",
   },
   {
     name: "lineDataAccessor",
@@ -255,8 +279,7 @@ const areaChartProps = [
     type: "[min?, max?]",
     required: false,
     default: null,
-    description:
-      "Fixed x domain. Either bound may be undefined to leave that side data-derived.",
+    description: "Fixed x domain. Either bound may be undefined to leave that side data-derived.",
   },
   {
     name: "yExtent",
@@ -462,9 +485,9 @@ export default function AreaChartPage() {
 
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
-        Pass <code>tooltip="multi"</code> on multi-area charts when readers need the values for
-        every area at the same x position. The tooltip follows the cursor across the rendered x
-        range and interpolates values between sampled points.
+        Pass <code>tooltip=&quot;multi&quot;</code> on multi-area charts when readers need the
+        values for every area at the same x position. The tooltip follows the cursor across the
+        rendered x range and interpolates values between sampled points.
       </p>
 
       <LiveExample
@@ -516,8 +539,7 @@ export default function AreaChartPage() {
       <h3 id="gradient-fill">Gradient Fill</h3>
       <p>
         Set <code>gradientFill</code> to fade the fill from opaque at the line to transparent at the
-        baseline — the modern area chart look. Use <code>true</code> for defaults (80% → 5%) or pass
-        custom opacities.
+        baseline. Omit a stop color to inherit the area color.
       </p>
 
       <LiveExample
@@ -525,7 +547,12 @@ export default function AreaChartPage() {
           data: simpleData,
           xAccessor: "month",
           yAccessor: "sales",
-          gradientFill: true,
+          gradientFill: {
+            stops: [
+              { offset: 0, opacity: 0.8 },
+              { offset: 1, opacity: 0.05 },
+            ],
+          },
           curve: "monotoneX",
           xLabel: "Month",
           yLabel: "Sales ($)",
@@ -622,7 +649,7 @@ export default function AreaChartPage() {
       {/* ----------------------------------------------------------------- */}
       <h3 id="multi-color-gradient">Multi-Color Gradient Fill</h3>
       <p>
-        Use <code>gradientFill</code> with <code>colorStops</code> for semantic color bands (e.g.
+        Use <code>gradientFill</code> with <code>stops</code> for semantic color bands (e.g.
         severity zones). Each stop specifies an offset (0–1) and a color string — including{" "}
         <code>transparent</code>. Stops can be placed at any position to create non-uniform bands.
       </p>
@@ -634,7 +661,7 @@ export default function AreaChartPage() {
           yAccessor: "sales",
           color: "rgba(244,67,54,1)",
           gradientFill: {
-            colorStops: [
+            stops: [
               { offset: 0, color: "rgba(244,67,54,0.8)" },
               { offset: 0.25, color: "rgba(255,193,7,0.8)" },
               { offset: 0.5, color: "transparent" },
@@ -645,11 +672,51 @@ export default function AreaChartPage() {
         overrideProps={{
           data: `simpleData`,
           color: '"rgba(244,67,54,1)"',
-          gradientFill: `{ colorStops: [
+          gradientFill: `{ stops: [
   { offset: 0, color: "rgba(244,67,54,0.8)" },
   { offset: 0.25, color: "rgba(255,193,7,0.8)" },
   { offset: 0.5, color: "transparent" },
 ]}`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="semantic-gradient-line">Value-Anchored Fill and Line Colors</h3>
+      <p>
+        Use <code>semanticGradient</code> when stops represent positions in the resolved y-domain.
+        The fill remains a soft vertical gradient, while the top line
+        switches colors at the corresponding values. Line colors are always solid; per-stop opacity
+        is retained only by the fill. Set <code>semanticLine=false</code> to keep a simple stroke,
+        or to use a horizontal <code>lineGradient</code> instead.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "month",
+          yAccessor: "sales",
+          yExtent: [0, 12000],
+          color: "#e5a800",
+          semanticGradient: {
+            stops: [
+              { offset: 0.5, color: "#e5a800", opacity: 0.18 },
+              { offset: 0.75, color: "#ff8000", opacity: 0.28 },
+              { offset: 0.9, color: "#ff7077", opacity: 0.4 },
+            ],
+          },
+        }}
+        type={AreaChart}
+        overrideProps={{
+          data: "simpleData",
+          xAccessor: '"month"',
+          yAccessor: '"sales"',
+          yExtent: "[0, 12000]",
+          color: '"#e5a800"',
+          semanticGradient: `{ stops: [
+  { offset: 0.5, color: "#e5a800", opacity: 0.18 },
+  { offset: 0.75, color: "#ff8000", opacity: 0.28 },
+  { offset: 0.9, color: "#ff7077", opacity: 0.4 },
+] }`,
         }}
         hiddenProps={{}}
       />

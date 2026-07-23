@@ -2588,7 +2588,7 @@ export function resolveCorpusSelection(
 }
 
 /**
- * Backward-compatible name for callers that previously selected an unrelated
+ * Alternate exported name for callers selecting an unrelated
  * demonstration fixture. The returned specimen now always wraps a row inside
  * the exact active corpus intersection.
  */

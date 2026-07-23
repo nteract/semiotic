@@ -81,9 +81,7 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
       node.isRange = true
       // Endpoint bulb radius: scales with the gap-derived bodyWidth, capped by
       // canvas height so short (sparkline) rows don't get marble-sized dots,
-      // floored at 2px. Computed here — not in each renderer — so the canvas
-      // and SVG backends draw identical dumbbells (SSR previously drew a filled
-      // body rect because the SVG converter never handled range mode).
+      // floored at 2px. Computing it here keeps Canvas and SVG geometry equal.
       node.dotRadius = Math.max(2, Math.min(bodyWidth / 2, layout.height * 0.12))
     }
     nodes.push(node as CandlestickSceneNode)

@@ -11,6 +11,7 @@ import type { AreaGradientConfig } from "./areaGradient"
 import type { StreamScales, Style, CurveType, BarStyle, ThemeSemanticColors } from "../types"
 import type { SymbolName } from "../symbolPath"
 import type { ResolvedRibbon } from "./ribbonScene"
+import type { GradientConfig } from "../../charts/shared/gradient"
 
 export interface XYSceneContext {
   scales: StreamScales
@@ -60,7 +61,8 @@ export interface XYSceneConfig {
   stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
   gradientFill?: AreaGradientConfig
   areaGroups?: Set<string>
-  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  lineGradient?: GradientConfig
+  semanticLineStops?: Array<{ offset: number; color: string }>
   annotations?: Datum[]
 
   // Point/bubble

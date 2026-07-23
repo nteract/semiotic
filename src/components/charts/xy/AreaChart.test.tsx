@@ -75,17 +75,13 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.y0Accessor).toBeUndefined()
     })
 
-    it("forwards gradientFill when set to true", () => {
-      render(
-        <TooltipProvider>
-          <AreaChart data={sampleData} gradientFill={true} />
-        </TooltipProvider>
-      )
-      expect(lastXYFrameProps.gradientFill).toBe(true)
-    })
-
-    it("forwards gradientFill with custom opacity settings", () => {
-      const gradient = { topOpacity: 0.9, bottomOpacity: 0.1 }
+    it("forwards a gradient config", () => {
+      const gradient = {
+        stops: [
+          { offset: 0, opacity: 0.8 },
+          { offset: 1, opacity: 0.05 },
+        ],
+      }
       render(
         <TooltipProvider>
           <AreaChart data={sampleData} gradientFill={gradient} />
@@ -94,25 +90,59 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.gradientFill).toEqual(gradient)
     })
 
-    it("converts semanticGradient percentages to renderer colorStops", () => {
+    it("forwards gradientFill with custom opacity stops", () => {
+      const gradient = { stops: [
+        { offset: 0, opacity: 0.9 },
+        { offset: 1, opacity: 0.1 },
+      ] }
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} gradientFill={gradient} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toEqual(gradient)
+    })
+
+    it("maps value-anchored semantic stops to fill and line coordinates", () => {
       render(
         <TooltipProvider>
           <AreaChart
             data={sampleData}
-            gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.1 }}
-            semanticGradient={[
-              { at: 0, color: "#336699", opacity: 0.1 },
-              { at: 100, color: "#336699", opacity: 0.8 },
-            ]}
+            semanticGradient={{ stops: [
+              { offset: 0, color: "#336699", opacity: 0.1 },
+              { offset: 1, color: "#336699", opacity: 0.8 },
+            ] }}
           />
         </TooltipProvider>
       )
       expect(lastXYFrameProps.gradientFill).toEqual({
-        colorStops: [
-          { offset: 0, color: "rgba(51, 102, 153, 0.8)" },
-          { offset: 1, color: "rgba(51, 102, 153, 0.1)" },
+        stops: [
+          { offset: 0, color: "#336699", opacity: 0.8 },
+          { offset: 1, color: "#336699", opacity: 0.1 },
         ],
       })
+      expect(lastXYFrameProps.semanticLineStops).toEqual([
+        { offset: 0, color: "#336699" },
+        { offset: 1, color: "#336699" },
+      ])
+    })
+
+    it("can opt out of mirroring semanticGradient on the line", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={sampleData}
+            semanticGradient={{ stops: [
+              { offset: 0.5, color: "#e5a800", opacity: 0.3 },
+              { offset: 0.8, color: "#ff7077", opacity: 0.7 },
+            ] }}
+            semanticLine={false}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.gradientFill).toBeDefined()
+      expect(lastXYFrameProps.semanticLineStops).toBeUndefined()
     })
 
     it("does not include gradientFill when not set", () => {

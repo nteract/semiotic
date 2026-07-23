@@ -22,6 +22,7 @@ import type { CoercibleNumber } from "./accessorUtils"
 import type { CustomLayout } from "./customLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import type { MarginType } from "../types/marginType"
+import type { GradientConfig } from "../charts/shared/gradient"
 
 export interface PipelineConfig {
   chartType: StreamChartType
@@ -112,11 +113,13 @@ export interface PipelineConfig {
   band?: BandConfig | BandConfig[]
 
   // Area gradient fill (opacity or multi-color)
-  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  gradientFill?: GradientConfig
   // Series names rendered as areas in "mixed" chart type
   areaGroups?: Set<string>
   // Horizontal gradient for line strokes
-  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  lineGradient?: GradientConfig
+  // Value-anchored color bands for an area's top-edge stroke
+  semanticLineStops?: Array<{ offset: number; color: string }>
 
   // Style
   lineStyle?: Style | ((d: Datum, group?: string) => Style)

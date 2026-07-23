@@ -244,11 +244,11 @@ describe("barCanvasRenderer", () => {
   })
 
   describe("gradientFill", () => {
-    it("switches fillStyle to a CanvasGradient when fillGradient + colorStops are set", () => {
+    it("switches fillStyle to a CanvasGradient when fillGradient stops are set", () => {
       const ctx = createMockCanvasContext()
       const node = makeRectNode({
         roundedEdge: "top",
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -260,12 +260,12 @@ describe("barCanvasRenderer", () => {
       expect(typeof ctx.fillStyle).toBe("object")
     })
 
-    it("falls back to solid fill when fillGradient has < 2 colorStops", () => {
+    it("falls back to solid fill when fillGradient has fewer than 2 stops", () => {
       const ctx = createMockCanvasContext()
       const node = makeRectNode({
         style: { fill: "#abcdef" },
         roundedEdge: "top",
-        fillGradient: { colorStops: [{ offset: 0, color: "#ff0000" }] },
+        fillGradient: { stops: [{ offset: 0, color: "#ff0000" }] },
       })
       barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
       expect(ctx.fillStyle).toBe("#abcdef")
@@ -276,7 +276,7 @@ describe("barCanvasRenderer", () => {
       const node = makeRectNode({
         x: 10, y: 20, w: 50, h: 100,
         roundedEdge: "top",
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -291,7 +291,7 @@ describe("barCanvasRenderer", () => {
       const node = makeRectNode({
         x: 10, y: 20, w: 50, h: 100,
         roundedEdge: "bottom",
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -306,7 +306,7 @@ describe("barCanvasRenderer", () => {
       const node = makeRectNode({
         x: 10, y: 20, w: 80, h: 20,
         roundedEdge: "right",
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -321,7 +321,7 @@ describe("barCanvasRenderer", () => {
       const node = makeRectNode({
         x: 10, y: 20, w: 80, h: 20,
         roundedEdge: "left",
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: 0, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -336,7 +336,7 @@ describe("barCanvasRenderer", () => {
         style: { fill: "#abcdef" },
         roundedEdge: "top",
         // Two configured stops, but one has a NaN offset → only 1 survives.
-        fillGradient: { colorStops: [
+        fillGradient: { stops: [
           { offset: NaN, color: "#ff0000" },
           { offset: 1, color: "#0000ff" },
         ]},
@@ -355,7 +355,10 @@ describe("barCanvasRenderer", () => {
       const node = makeRectNode({
         style: { fill: fakePattern },
         roundedEdge: "top",
-        fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+        fillGradient: { stops: [
+          { offset: 0, opacity: 0.8 },
+          { offset: 1, opacity: 0.05 },
+        ] },
       })
       barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
       expect(ctx.createLinearGradient).not.toHaveBeenCalled()
@@ -368,7 +371,10 @@ describe("barCanvasRenderer", () => {
         style: { fill: "#3366cc" },
         roundedTop: 6,
         roundedEdge: "top",
-        fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+        fillGradient: { stops: [
+          { offset: 0, opacity: 0.8 },
+          { offset: 1, opacity: 0.05 },
+        ] },
       })
       barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
       expect(ctx.createLinearGradient).toHaveBeenCalled()

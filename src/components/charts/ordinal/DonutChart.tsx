@@ -163,10 +163,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
-  // Consolidated piece-style — same recipe as PieChart with
-  // per-slice color cycling enabled. Previously had a stroke-only
-  // user-overlay filter that diverged from PieChart's spread
-  // semantic; aligned with the helper.
+  // Use the PieChart piece-style recipe with per-slice color cycling.
   const pieceStyle = useOrdinalPieceStyle({
     colorBy: effectiveColorBy,
     colorScale: setup.colorScale,

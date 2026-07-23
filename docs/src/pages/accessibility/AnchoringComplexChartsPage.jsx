@@ -944,8 +944,7 @@ function TrialWithStack() {
           compound project stories, not multi-item factory floors (use{" "}
           <Link to="/charts/process-flow-chart">ProcessFlowChart</Link> for those). Keep{" "}
           <code>data</code> / <code>size</code> referentially stable (module const or{" "}
-          <code>useMemo</code>); a fresh <code>{`data={[row]}`}</code> every render used to re-seed
-          the simulation and loop with live <code>onStateChange</code> readouts.
+          <code>useMemo</code>) to avoid re-seeding the simulation on each render.
         </li>
         <li>
           <strong>Event step as x.</strong>{" "}

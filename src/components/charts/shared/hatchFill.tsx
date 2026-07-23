@@ -4,17 +4,10 @@
 // browser access; the only canvas API (resolveHatchCanvasPattern) runs at call
 // time, not module eval.
 /**
- * Declarative hatch-fill descriptor — a single value that renders as a
- * diagonal-line pattern on BOTH rendering backends.
+ * Declarative hatch-fill descriptor that renders as a diagonal-line pattern
+ * on both rendering backends.
  *
- * The library historically had two disjoint hatch primitives: a canvas
- * `createHatchPattern` (→ `CanvasPattern`) and an SVG `<pattern>` builder
- * (`hatchFill` recipe / `createSVGHatchPattern`). A caller had to know
- * which medium they were painting into and hand-produce the right thing —
- * which is why a `CanvasPattern` returned from a `pieceStyle` silently
- * collapses to a solid color in SSR (`svgFill` drops non-string fills).
- *
- * `HatchFill` closes that gap: it is a plain, serializable descriptor that
+ * `HatchFill` is a plain, serializable descriptor that
  * can be set directly as `style.fill`. The canvas renderer resolves it to a
  * `CanvasPattern` (`resolveHatchCanvasPattern`); the SVG serializer resolves
  * it to a `<pattern>` def + `url(#id)` (`hatchPatternDef` / `hatchFillId`).

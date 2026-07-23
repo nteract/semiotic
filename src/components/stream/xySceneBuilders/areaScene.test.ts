@@ -51,6 +51,44 @@ describe("buildAreaScene", () => {
     const nodes = buildAreaScene(ctx, data)
     expect(nodes.filter((n) => n.type === "point").length).toBe(0)
   })
+
+  it("maps semantic line stops through the resolved y-domain and aligns raw values", () => {
+    const yScale = Object.assign((v: number) => 210 - v, {
+      domain: () => [10, 210],
+      range: () => [200, 0],
+    })
+    const ctx = makeCtx({
+      scales: {
+        x: Object.assign((v: number) => v, { domain: () => [0, 10], range: () => [0, 100] }),
+        y: yScale,
+      } as unknown as XYSceneContext["scales"],
+      config: {
+        semanticLineStops: [
+          { offset: 0.75, color: "#critical" },
+          { offset: 0.25, color: "#warning" },
+        ],
+      },
+      resolveAreaStyle: () => ({ fill: "#base", stroke: "#base" }),
+    })
+
+    const [node] = buildAreaScene(ctx, [
+      { x: 2, y: 180 },
+      { x: 1, y: 40 },
+    ])
+
+    expect(node.type).toBe("area")
+    if (node.type !== "area") return
+    expect(node.rawValues).toEqual([40, 180])
+    expect(node.colorThresholds).toEqual([
+      { value: 60, color: "#warning", thresholdType: "greater" },
+      { value: 160, color: "#critical", thresholdType: "greater" },
+    ])
+    expect(node.strokeColorBands).toEqual([
+      { y: 150, height: 50, color: undefined },
+      { y: 50, height: 100, color: "#warning" },
+      { y: 0, height: 50, color: "#critical" },
+    ])
+  })
 })
 
 describe("buildStackedAreaScene", () => {

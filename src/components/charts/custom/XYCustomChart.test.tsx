@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import { XYCustomChart } from "./XYCustomChart"
 import type { CustomLayout } from "../../stream/customLayout"
 import type { RectSceneNode } from "../../stream/types"
@@ -19,6 +19,11 @@ let lastXYFrameProps: {
   summary?: unknown
   accessibleTable?: unknown
   animate?: unknown
+  customHoverBehavior?: (datum: Record<string, unknown> | null) => void
+  layoutSelection?: {
+    isActive: boolean
+    predicate: (datum: Record<string, unknown>) => boolean
+  }
   legend?: { legendGroups: Array<{ items: Array<{ label: string }> }> }
 } | null = null
 vi.mock("../../stream/StreamXYFrame", () => {
@@ -166,6 +171,30 @@ describe("XYCustomChart", () => {
       accessibleTable: false,
       animate: false,
     })
+  })
+
+  it("projects hoverHighlight into custom-layout selection", async () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ category: "Alpha" }, { category: "Beta" }]}
+          layout={trivialLayout}
+          colorBy="category"
+          hoverHighlight
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastXYFrameProps?.customHoverBehavior).toBeTypeOf("function")
+    act(() => {
+      lastXYFrameProps?.customHoverBehavior?.({
+        data: { category: "Alpha" },
+      })
+    })
+
+    await waitFor(() => expect(lastXYFrameProps?.layoutSelection?.isActive).toBe(true))
+    expect(lastXYFrameProps?.layoutSelection?.predicate({ category: "Alpha" })).toBe(true)
+    expect(lastXYFrameProps?.layoutSelection?.predicate({ category: "Beta" })).toBe(false)
   })
 
   it("resolves responsive metadata before explicit frame overrides", () => {

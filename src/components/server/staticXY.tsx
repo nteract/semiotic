@@ -26,6 +26,7 @@ import {
   wrapSVG,
   generateAxesSVG
 } from "./staticSVGChrome"
+import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 
 export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
@@ -79,9 +80,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     xExtent: props.xExtent,
     yExtent: props.yExtent,
     // axisExtent ("nice"|"exact") pins the first/last tick to the data
-    // min/max via domain resolution. The client frame passes it through
-    // StreamXYFrame's pipeline config; SSR must too or `axisExtent: "exact"`
-    // silently no-ops in server output (same class of bug as gradientFill).
+    // min/max through domain resolution.
     axisExtent: props.axisExtent,
     sizeRange: props.sizeRange,
     xScaleType: props.xScaleType,
@@ -110,15 +109,9 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       ? (props.areaGroups instanceof Set ? props.areaGroups : new Set(props.areaGroups as Iterable<string>))
       : undefined,
     curve: props.curve,
-    // `gradientFill === true` is the HOC's shorthand for the default
-    // top/bottom opacity stops; PipelineConfig only accepts the object
-    // form so we normalize it the same way the client frame does.
-    gradientFill: props.gradientFill === true
-      ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-      : props.gradientFill === false
-        ? undefined
-        : props.gradientFill,
-    lineGradient: props.lineGradient,
+    gradientFill: normalizeGradient(props.gradientFill),
+    lineGradient: normalizeColorGradient(props.lineGradient),
+    semanticLineStops: props.semanticLineStops,
     openAccessor: props.openAccessor,
     highAccessor: props.highAccessor,
     lowAccessor: props.lowAccessor,

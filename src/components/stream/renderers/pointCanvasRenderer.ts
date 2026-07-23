@@ -30,7 +30,11 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
       ctx.fill()
 
-      if (node.style.stroke) {
+      // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
+      // "none"`, silently keeps the default black, and still strokes — drawing a
+      // black ring where SVG (stroke="none") paints nothing. Matches the
+      // `!== "none"` guard every other canvas renderer already uses.
+      if (node.style.stroke && node.style.stroke !== "none") {
         ctx.strokeStyle = resolveCanvasFill(ctx, node.style.stroke, node.style.stroke)
         ctx.lineWidth = node.style.strokeWidth || 1
         ctx.stroke()

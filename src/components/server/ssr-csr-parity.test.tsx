@@ -33,10 +33,13 @@ import { renderToString } from "react-dom/server"
 import { renderChart } from "./renderToStaticSVG"
 
 import { LineChart } from "../charts/xy/LineChart"
+import { AreaChart } from "../charts/xy/AreaChart"
+import { BumpChart } from "../charts/xy/BumpChart"
 import { BarChart } from "../charts/ordinal/BarChart"
 import { PieChart } from "../charts/ordinal/PieChart"
 import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import { Treemap } from "../charts/network/Treemap"
+import { LIGHT_THEME } from "../ThemeProvider"
 
 const xyData = [
   { x: 0, y: 1 },
@@ -90,6 +93,64 @@ const cases: ParityCase[] = [
     }),
     inFrame: () => renderToString(
       <LineChart data={xyData} xAccessor="x" yAccessor="y" width={400} height={200} />,
+    ),
+  },
+  {
+    name: "AreaChart semantic line",
+    ssr: () => renderChart("AreaChart", {
+      data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200,
+      yExtent: [0, 6],
+      semanticGradient: [
+        { at: 50, color: "#e5a800", opacity: 0.2 },
+        { at: 75, color: "#ff7077", opacity: 0.4 },
+      ],
+    }),
+    inFrame: () => renderToString(
+      <AreaChart
+        data={xyData} xAccessor="x" yAccessor="y" width={400} height={200}
+        yExtent={[0, 6]}
+        semanticGradient={[
+          { at: 50, color: "#e5a800", opacity: 0.2 },
+          { at: 75, color: "#ff7077", opacity: 0.4 },
+        ]}
+      />,
+    ),
+  },
+  {
+    name: "BumpChart",
+    ssr: () => renderChart("BumpChart", {
+      data: [
+        { year: 2023, series: "A", value: 10 },
+        { year: 2023, series: "B", value: 7 },
+        { year: 2024, series: "A", value: 6 },
+        { year: 2024, series: "B", value: 12 },
+      ],
+      xAccessor: "year",
+      yAccessor: "value",
+      lineBy: "series",
+      highlightTop: 1,
+      ribbon: true,
+      showLabels: false,
+      width: 400,
+      height: 200,
+    }),
+    inFrame: () => renderToString(
+      <BumpChart
+        data={[
+          { year: 2023, series: "A", value: 10 },
+          { year: 2023, series: "B", value: 7 },
+          { year: 2024, series: "A", value: 6 },
+          { year: 2024, series: "B", value: 12 },
+        ]}
+        xAccessor="year"
+        yAccessor="value"
+        lineBy="series"
+        highlightTop={1}
+        ribbon
+        showLabels={false}
+        width={400}
+        height={200}
+      />,
     ),
   },
   {
@@ -180,7 +241,7 @@ describe("SSR vs CSR-first-render parity", () => {
         // What this test catches: a regression where one path produces
         // *zero* data marks while the other produces some, indicating
         // a scene-builder defect in one of the two pipelines.
-        const dominant = c.name === "LineChart" ? "path"
+        const dominant = c.name === "LineChart" || c.name === "AreaChart semantic line" || c.name === "BumpChart" ? "path"
           : c.name === "PieChart" ? "path"
           : c.name === "Treemap" ? "rect"
           : c.name === "SankeyDiagram" ? "path"
@@ -199,7 +260,7 @@ describe("SSR vs CSR-first-render parity", () => {
         // should match between the two paths. Sankey and pie need
         // ~3 data marks each (one per category/edge); a path emitting
         // 30 vs 3 is what we want to catch as divergence.
-        const dominant = c.name === "LineChart" ? "path"
+        const dominant = c.name === "LineChart" || c.name === "AreaChart semantic line" || c.name === "BumpChart" ? "path"
           : c.name === "PieChart" ? "path"
           : c.name === "Treemap" ? "rect"
           : c.name === "SankeyDiagram" ? "path"
@@ -218,4 +279,49 @@ describe("SSR vs CSR-first-render parity", () => {
       })
     })
   }
+
+  it("preserves solid semantic area-line colors in both rendering paths", () => {
+    const area = cases.find((c) => c.name === "AreaChart semantic line")!
+    for (const svg of [area.ssr(), area.inFrame()]) {
+      expect(svg).toContain('stroke="#e5a800"')
+      expect(svg).toContain('stroke="#ff7077"')
+      expect(svg).toContain('stop-color="#e5a800"')
+      expect(svg).toContain('stop-opacity="0.2"')
+    }
+  })
+})
+
+describe("BumpChart shared styling in static SVG", () => {
+  it("uses theme colors and top-level primitive overrides", () => {
+    const svg = renderChart("BumpChart", {
+      data: [
+        { year: 2023, series: "A", value: 10 },
+        { year: 2023, series: "B", value: 7 },
+        { year: 2024, series: "A", value: 6 },
+        { year: 2024, series: "B", value: 12 },
+      ],
+      xAccessor: "year",
+      yAccessor: "value",
+      lineBy: "series",
+      highlightTop: 1,
+      showLabels: false,
+      stroke: "#101010",
+      strokeWidth: 2,
+      opacity: 0.4,
+      theme: {
+        ...LIGHT_THEME,
+        colors: {
+          ...LIGHT_THEME.colors,
+          categorical: ["#123456"],
+          textSecondary: "#778899",
+        },
+      },
+    })
+
+    expect(svg).toContain('fill="#123456"')
+    expect(svg).toContain('fill="#778899"')
+    expect(svg).toContain('stroke="#101010"')
+    expect(svg).toContain('stroke-width="2"')
+    expect(svg).toContain('opacity="0.4"')
+  })
 })

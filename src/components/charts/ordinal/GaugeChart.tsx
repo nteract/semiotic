@@ -13,6 +13,7 @@ import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
 import { useChartMode } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildGaugeArcModel, type GaugeGradientFill } from "../shared/gaugeGradient"
+import { normalizeColorGradient } from "../shared/gradient"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,9 @@ export interface GaugeChartProps extends BaseChartProps {
   thresholds?: GaugeThreshold[]
   /**
    * Arc-length gradient for the gauge band.
+   *
+   * Offset 0 is the sweep start and offset 1 is the sweep end. Stops can set
+   * `color`, `opacity`, or both.
    *
    * The gradient is sampled along the visible filled arc from sweep start
    * toward the current value. If `fillZones` is false, the entire arc uses
@@ -194,8 +198,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   } = props
 
   const { width, height, title, description, summary, accessibleTable } = resolved
-  const resolvedGradientFill =
-    gradientFill && typeof gradientFill === "object" ? gradientFill : undefined
+  const resolvedGradientFill = normalizeColorGradient(gradientFill)
 
   // Clamp value to [min, max]
   const clampedValue = Math.max(min, Math.min(max, value))
@@ -235,13 +238,8 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const { sweepRad, startAngleDeg: startAngleDegFinal } = sweepToAngles(sweep)
   const arcBBox = computeArcBoundingBox(sweep)
 
-  // PAD shrinks at very small widget sizes (sparkline 120×24 etc.) so the
-  // arc isn't squeezed to zero thickness by the fixed edge inset. At
-  // 120×24 with the old PAD=10, `(height - 20)/1 = 4` forced radius=10
-  // (the floor) while innerRadius also hit 10 — resulting in a
-  // zero-thickness arc that painted nothing. Scaling PAD with the smaller
-  // dimension keeps the arc visible at sparkline sizes while leaving
-  // larger modes unchanged.
+  // Scale padding with the smaller dimension so compact gauges retain a
+  // visible arc while larger modes keep the standard inset.
   const PAD = Math.min(10, Math.max(1, Math.min(width, height) / 12))
   const arcW = arcBBox.width
   const arcH = arcBBox.height
@@ -311,9 +309,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     if (!showNeedle) return null
     // pieScene coordinate system: -π/2 = 12 o'clock, then + startAngle (in radians)
     // Needle maps pct [0,1] to [startAngle, startAngle + sweep] in the same frame.
-    // Length scales with innerRadius so sparkline gauges (innerRadius ~2px) still
-    // draw a visible needle. The old `innerRadius - 8` formula went negative at
-    // compact sizes and flipped the needle away from the dial.
+    // Length scales with innerRadius so compact gauges retain a visible needle.
     const startRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
     const needleAngle = startRad + pct * sweepRad
     // Primary/context (innerRadius > 20): traditional gauge — needle tip sits

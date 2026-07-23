@@ -20,6 +20,7 @@ import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
+import { normalizeGradient, type GradientInput } from "../shared/gradient"
 
 /**
  * BarChart component props
@@ -78,16 +79,16 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
   roundedTop?: number
   /**
-   * Gradient fill from the bar's tip (opposite the baseline) toward its base.
-   * - `true` — default opacity fade (80% → 5% of the resolved fill color).
-   * - `{ topOpacity, bottomOpacity }` — explicit opacity stops on the resolved fill.
-   * - `{ colorStops: [{offset, color}, ...] }` — arbitrary multi-color gradient.
-   *
+   * Gradient fill from the bar's tip (offset 0) toward its base (offset 1).
+   * Stops can set `color`, `opacity`, or both. Omit a stop color to inherit
+   * the resolved bar color.
+   * @example
+   * `{ stops: [{ offset: 0, opacity: 0.8 }, { offset: 1, opacity: 0.05 }] }`
    * Direction follows the bar's orientation (vertical/horizontal) and sign
    * (positive/negative bars). Same API as `AreaChart.gradientFill`.
    * @default false
    */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  gradientFill?: GradientInput
   /**
    * Declarative, threshold-aware bar styling. An ordered list of
    * `{ when, style }` rules; every rule whose condition matches a bar
@@ -397,13 +398,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     margin: effectiveMargin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
-    // Resolve boolean `true` to the same default opacities AreaChart uses
-    // (80% → 5%) so a single top-level toggle gets you a reasonable look.
-    // Object forms are passed through unchanged.
-    ...(gradientFill && {
-      gradientFill: gradientFill === true
-        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-        : gradientFill,
+    ...(normalizeGradient(gradientFill) && {
+      gradientFill: normalizeGradient(gradientFill),
     }),
     ...(dataIdAccessor && { dataIdAccessor }),
     baselinePadding,

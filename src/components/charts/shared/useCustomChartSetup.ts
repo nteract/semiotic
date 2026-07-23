@@ -23,7 +23,14 @@ import { useMemo, useRef } from "react"
 import type { Ref, RefObject, ReactElement, ReactNode } from "react"
 import { useChartMode } from "./hooks"
 import { useChartSetup, type ChartSetupResult } from "./useChartSetup"
-import type { Accessor, ChartMode, SelectionConfig, LinkedHoverProp, MobileInteractionProp } from "./types"
+import type {
+  Accessor,
+  ChartMode,
+  SelectionConfig,
+  LinkedHoverProp,
+  MobileInteractionProp,
+  HoverHighlightMode,
+} from "./types"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import type { ResponsiveRule } from "./responsiveRules"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -32,6 +39,7 @@ import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
 import type { LegendValue } from "../../types/legendTypes"
+import type { LegendInteractionMode, LegendPosition } from "./useChartLegend"
 
 /**
  * Margin shorthand → sided form. The Stream*Frame margin props only
@@ -130,9 +138,13 @@ interface DataSetupOptions extends ScaffoldOptions {
   colorBy?: Accessor<string>
   /** Caller legend appended to the inferred colorBy legend. */
   legend?: LegendValue
+  legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
   /** Pass-through chart-setup inputs. */
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
+  /** Dim sibling categories while hovering a custom-layout mark. */
+  hoverHighlight?: HoverHighlightMode
   onObservation?: OnObservationCallback
   onClick?: (datum: Datum, ev: { x: number; y: number }) => void
   mobileInteraction?: MobileInteractionProp
@@ -175,9 +187,11 @@ export function useCustomChartSetup<TFrameHandle>(
     rawData: options.data,
     colorBy: options.colorBy,
     colorScheme: options.colorScheme,
-    legendInteraction: undefined,
+    legendInteraction: options.legendInteraction,
+    legendPosition: options.legendPosition,
     selection: options.selection,
     linkedHover: options.linkedHover,
+    hoverHighlight: options.hoverHighlight,
     fallbackFields: typeof options.colorBy === "string" ? [options.colorBy] : [],
     unwrapData: options.unwrapData,
     onObservation: options.onObservation,

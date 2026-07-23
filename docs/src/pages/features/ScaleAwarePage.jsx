@@ -589,12 +589,12 @@ export const ForceDirectedGraphCapability: ChartCapability = {
         should — bend to your shop's conventions.
       </p>
 
-      <h2>The single-value gap (now filled)</h2>
+      <h2>Single-value charts</h2>
       <p>
-        At <strong>tiny</strong> scale, the engine used to only have{" "}
-        <code>GaugeChart</code>, and a gauge is misleading without an explicit
-        min / max. <code>BigNumber</code> (under <code>semiotic/value</code>)
-        ships as the honest answer for unbounded single-value data — and the
+        At <strong>tiny</strong> scale, use <code>GaugeChart</code> for values
+        with an explicit min / max. <code>BigNumber</code> (under{" "}
+        <code>semiotic/value</code>) is the honest answer for unbounded
+        single-value data, and the
         capability layer wires it into <code>suggestCharts</code> /{" "}
         <code>suggestChartsGrouped</code> with a <code>scaleFit</code> boost
         that puts it ahead of <code>GaugeChart</code> at the{" "}

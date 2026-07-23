@@ -9,6 +9,7 @@ import {
   resolveCanvasFill,
   resolveCurveFactory,
 } from "./canvasRenderHelpers"
+import { buildThresholdLineSegments } from "./thresholdLineSegments"
 
 /**
  * Canvas area renderer.
@@ -47,6 +48,25 @@ function traceAreaPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): void
   }
 }
 
+/** Trace only the area's top edge, using the same curve as its fill. */
+function traceAreaTopPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): void {
+  const curveFactory = resolveCurveFactory(node.curve)
+  ctx.beginPath()
+  if (curveFactory) {
+    const lineGenerator = d3Line<[number, number]>()
+      .x(d => d[0])
+      .y(d => d[1])
+      .curve(curveFactory)
+      .context(ctx)
+    lineGenerator(node.topPath)
+  } else {
+    ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
+    for (let i = 1; i < node.topPath.length; i++) {
+      ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+    }
+  }
+}
+
 export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const areaNodes = nodes.filter((n): n is AreaSceneNode => n.type === "area")
 
@@ -75,16 +95,18 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.clip()
     }
 
-    // `resolveCanvasFill` runs `style.fill` through `resolveCSSColor` so
-    // `var(--…)` references resolve from the canvas DOM ancestor — without
-    // it canvas silently rejects unresolved CSS-variable strings and the
-    // gradient path falls back to the sentinel blue. Same helper bars use;
-    // the area path used to skip it.
+    // Resolve CSS variables and declarative hatch fills before painting.
     const fillColor = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
     const decayOpacities = node._decayOpacities
+    const hasThresholds = Boolean(
+      node.colorThresholds?.length
+      && node.rawValues
+      && node.rawValues.length === node.topPath.length
+    )
+    const hasStrokeColorBands = Boolean(node.strokeColorBands?.length)
 
     // Decay path: render area as vertical strips with per-strip opacity
-    if (decayOpacities && decayOpacities.length === node.topPath.length) {
+    if (decayOpacities && decayOpacities.length === node.topPath.length && !hasThresholds && !hasStrokeColorBands) {
       const baseFillOpacity = node.style.fillOpacity ?? 0.7
       ctx.fillStyle = fillColor
 
@@ -125,10 +147,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     traceAreaPath(ctx, node)
 
     // Fill
-    const useGradient = node.fillGradient && (
-      ("colorStops" in node.fillGradient && node.fillGradient.colorStops.length >= 2) ||
-      ("topOpacity" in node.fillGradient)
-    )
+    const useGradient = node.fillGradient && node.fillGradient.stops.length >= 2
 
     if (useGradient && node.fillGradient) {
       let topY = Infinity
@@ -156,37 +175,64 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Stroke on top
     if (node.style.stroke && node.style.stroke !== "none") {
       ctx.globalAlpha = nodeOpacity
-      const strokeGrad = node.strokeGradient && node.topPath.length >= 2
+      const baseStroke = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+      const strokeGrad = !hasThresholds && !hasStrokeColorBands && node.strokeGradient && node.topPath.length >= 2
         ? buildColorStopGradient(
             ctx,
             node.strokeGradient,
+            baseStroke,
             node.topPath[0][0], 0,
             node.topPath[node.topPath.length - 1][0], 0,
           )
         : null
-      ctx.strokeStyle = strokeGrad || resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])
 
-      const curveFactory = resolveCurveFactory(node.curve)
-
-      ctx.beginPath()
-      if (curveFactory) {
-        // Use d3-shape line generator for curved top edge stroke
-        const lineGenerator = d3Line<[number, number]>()
-          .x(d => d[0])
-          .y(d => d[1])
-          .curve(curveFactory)
-          .context(ctx)
-        lineGenerator(node.topPath)
-      } else {
-        // Only stroke the top path (not the baseline)
-        ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
-        for (let i = 1; i < node.topPath.length; i++) {
-          ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+      if (hasStrokeColorBands) {
+        let minX = Infinity
+        let maxX = -Infinity
+        for (const [x] of node.topPath) {
+          minX = Math.min(minX, x)
+          maxX = Math.max(maxX, x)
         }
+        const clipPadding = ctx.lineWidth
+        for (const band of node.strokeColorBands!) {
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(
+            minX - clipPadding,
+            band.y,
+            maxX - minX + clipPadding * 2,
+            band.height,
+          )
+          ctx.clip()
+          const bandColor = band.color ?? baseStroke
+          ctx.strokeStyle = resolveCSSColor(ctx, bandColor) || bandColor
+          traceAreaTopPath(ctx, node)
+          ctx.stroke()
+          ctx.restore()
+        }
+      } else if (hasThresholds) {
+        const segments = buildThresholdLineSegments(
+          node.topPath,
+          node.rawValues!,
+          node.colorThresholds!,
+          baseStroke,
+        )
+        for (const segment of segments) {
+          ctx.beginPath()
+          ctx.strokeStyle = resolveCSSColor(ctx, segment.color) || segment.color
+          ctx.moveTo(segment.path[0][0], segment.path[0][1])
+          for (let i = 1; i < segment.path.length; i++) {
+            ctx.lineTo(segment.path[i][0], segment.path[i][1])
+          }
+          ctx.stroke()
+        }
+      } else {
+        ctx.strokeStyle = strokeGrad || baseStroke
+        traceAreaTopPath(ctx, node)
+        ctx.stroke()
       }
-      ctx.stroke()
     }
 
     // Restore after intro clip

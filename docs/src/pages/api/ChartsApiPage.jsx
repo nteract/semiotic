@@ -21,6 +21,16 @@ const lineChartKeyProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
+const bumpChartKeyProps = [
+  { name: "data", type: "array", required: true, default: null, description: "Flat observations ranked within each x-column." },
+  { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field or function identifying ranking columns." },
+  { name: "yAccessor", type: "string | function", required: false, default: '"y"', description: "Magnitude used for rank and optional ribbon width." },
+  { name: "lineBy", type: "string | function", required: false, default: '"series"', description: "Series identity carried across columns." },
+  { name: "ribbon", type: "boolean", required: false, default: "false", description: "Encode magnitude as perpendicular-offset ribbon area." },
+  { name: "highlightTop", type: "number", required: false, default: null, description: "Color the N best series by overall mean rank; render the rest neutrally." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Animate rank and ribbon-width changes." },
+]
+
 const areaChartKeyProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points, optionally grouped by category." },
   { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values." },
@@ -297,6 +307,13 @@ const chartCategories = [
         importStatement: 'import { LineChart } from "semiotic"',
         description: "Visualizes trends and time series as connected lines.",
         keyProps: lineChartKeyProps,
+      },
+      {
+        name: "BumpChart",
+        slug: "bump-chart",
+        importStatement: 'import { BumpChart } from "semiotic"',
+        description: "Ranking trajectories with optional magnitude-encoded, non-attenuating ribbons.",
+        keyProps: bumpChartKeyProps,
       },
       {
         name: "AreaChart",

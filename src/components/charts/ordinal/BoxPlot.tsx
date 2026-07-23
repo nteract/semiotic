@@ -156,9 +156,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
-  // Consolidated summary-style. `linkStrokeToFill` mirrors the
-  // pre-migration "stroke equals fill" behavior so the box outline
-  // matches the box body. fillOpacity is a static extra.
+  // Link stroke to fill so the box outline matches the box body.
   const summaryStyle = useOrdinalPieceStyle({
     colorBy,
     colorScale: setup.colorScale,

@@ -753,7 +753,7 @@ describe("LineChart", () => {
 
   describe("lineGradient", () => {
     it("passes lineGradient to the frame", () => {
-      const grad = { colorStops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }
+      const grad = { stops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }
       render(
         <TooltipProvider>
           <LineChart data={sampleData} lineGradient={grad} />

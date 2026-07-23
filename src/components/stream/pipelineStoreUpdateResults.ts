@@ -166,6 +166,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   boundsStyle: dependency("preserve", STYLE),
   gradientFill: dependency("preserve", STYLE),
   lineGradient: dependency("preserve", STYLE),
+  semanticLineStops: dependency("preserve", STYLE),
   colorScheme: dependency("preserve", STYLE),
   themeCategorical: dependency("preserve", STYLE),
   themeSemantic: dependency("preserve", STYLE),

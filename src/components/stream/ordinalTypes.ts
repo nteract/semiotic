@@ -29,6 +29,7 @@ import type {
   SemanticHoverBehavior
 } from "../charts/shared/semanticInteractions"
 import type { OnAnnotationActivateCallback } from "../charts/shared/annotationActivation"
+import type { GradientConfig, GradientInput } from "../charts/shared/gradient"
 
 // ── Chart types ────────────────────────────────────────────────────────
 
@@ -283,12 +284,8 @@ export interface OrdinalPipelineConfig {
   barPadding?: number
   /** Rounded top corner radius for bar charts. Only the end away from the baseline is rounded. For stacked bars, only the topmost segment gets rounded. */
   roundedTop?: number
-  /** Gradient fill for bar rects. `{ topOpacity, bottomOpacity }` fades the
-   *  resolved fill color from tip (opposite the baseline) to base; `{ colorStops }`
-   *  renders a multi-color gradient along the same axis. Direction follows the
-   *  bar's orientation (tip → base). Same shape as AreaChart.gradientFill
-   *  sans the `boolean` case — the HOC resolves `true` to default opacities. */
-  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill for bar rects. Offset 0 is the tip; offset 1 is the base. */
+  gradientFill?: GradientConfig
   /** Swimlane "track" fill — a rect drawn behind each lane spanning the
    *  full value-axis range, sized to the lane's bandwidth. Used to make
    *  budget/progress lanes read as filled vs. empty. Pass a color (CSS
@@ -424,9 +421,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   barPadding?: number
   roundedTop?: number
-  /** Gradient fill for bar rects. Same shape as AreaChart.gradientFill sans
-   *  the boolean case — resolve booleans at the HOC layer. */
-  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill for bar rects. Offset 0 is the tip; offset 1 is the base. */
+  gradientFill?: GradientInput
   /** Swimlane "track" fill — see OrdinalPipelineConfig.trackFill */
   trackFill?: string | { color: string; opacity?: number }
   baselinePadding?: boolean

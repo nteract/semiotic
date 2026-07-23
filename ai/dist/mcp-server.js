@@ -6898,6 +6898,7 @@ var require_componentMetadata = __commonJS({
     var COMPONENTS_BY_CATEGORY = {
       xy: [
         "LineChart",
+        "BumpChart",
         "AreaChart",
         "DifferenceChart",
         "StackedAreaChart",
@@ -33016,6 +33017,7 @@ var import_geo = require("semiotic/geo");
 var COMPONENT_REGISTRY = {
   LineChart: { component: import_ai.LineChart, category: "xy" },
   AreaChart: { component: import_ai.AreaChart, category: "xy" },
+  BumpChart: { component: import_ai.BumpChart, category: "xy" },
   DifferenceChart: { component: import_ai.DifferenceChart, category: "xy" },
   StackedAreaChart: { component: import_ai.StackedAreaChart, category: "xy" },
   Scatterplot: { component: import_ai.Scatterplot, category: "xy" },

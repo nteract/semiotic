@@ -151,7 +151,7 @@ const differenceChartProps = [
   { name: "pointRadius", type: "number", required: false, default: "3", description: "Radius for the overlay-line points." },
   { name: "curve", type: "string", required: false, default: '"linear"', description: "Curve interpolation: linear, monotoneX, monotoneY, step, stepAfter, stepBefore, basis, cardinal, catmullRom." },
   { name: "areaOpacity", type: "number", required: false, default: "0.6", description: "Opacity of the difference fill (0–1)." },
-  { name: "gradientFill", type: "boolean | { topOpacity, bottomOpacity } | { colorStops }", required: false, default: null, description: "Tip→base gradient across each segment. Same shape as AreaChart.gradientFill." },
+  { name: "gradientFill", type: "{ stops }", required: false, default: null, description: "Tip-to-base gradient using { stops: [{ offset: 0–1, color?, opacity? }] }." },
   { name: "xExtent", type: "[number, number]", required: false, default: null, description: "Fixed x domain. Either bound may be undefined." },
   { name: "yExtent", type: "[number, number]", required: false, default: null, description: "Fixed y domain. Either bound may be undefined." },
   { name: "axisExtent", type: '"nice" | "exact"', required: false, default: '"nice"', description: "Tick endpoint mode (see /features/axes#axis-extent)." },
@@ -340,7 +340,12 @@ export default function DifferenceChartPage() {
           seriesBAccessor: "budget",
           seriesALabel: "Spend",
           seriesBLabel: "Budget",
-          gradientFill: true,
+          gradientFill: {
+            stops: [
+              { offset: 0, opacity: 0.85 },
+              { offset: 1, opacity: 0.15 },
+            ],
+          },
           curve: "monotoneX",
           xLabel: "Week",
           yLabel: "$K",
@@ -348,7 +353,10 @@ export default function DifferenceChartPage() {
         type={DifferenceChart}
         overrideProps={{
           data: `budgetData`,
-          gradientFill: `true`,
+          gradientFill: `{ stops: [
+  { offset: 0, opacity: 0.85 },
+  { offset: 1, opacity: 0.15 },
+] }`,
           curve: '"monotoneX"',
         }}
         hiddenProps={{}}

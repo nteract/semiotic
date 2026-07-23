@@ -8,7 +8,7 @@ import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 // package entry does not ship the physics frame + kernel into every
 // `import { LineChart } from "semiotic"` consumer. Prefer:
 //   import { GaltonBoardChart } from "semiotic/physics"
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, BumpChart, rankBumpData, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -72,6 +72,8 @@ export {
   Scatterplot,
   ConnectedScatterplot,
   LineChart,
+  BumpChart,
+  rankBumpData,
   AreaChart,
   DifferenceChart,
   StackedAreaChart,
@@ -205,8 +207,15 @@ export type {
   ScatterplotProps,
   ConnectedScatterplotProps,
   LineChartProps,
+  BumpChartProps,
+  RankedBumpData,
+  RankedBumpDatum,
+  RankBumpDataOptions,
   AreaChartProps,
   SemanticGradientStop,
+  GradientConfig,
+  GradientStop,
+  SemanticGradientInput,
   DifferenceChartProps,
   StackedAreaChartProps,
   HeatmapProps,

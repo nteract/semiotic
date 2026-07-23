@@ -72,10 +72,8 @@ interface GeoSVGOverlayProps {
 /**
  * The SVG chrome used by StreamGeoFrame.
  *
- * Geo previously imported the Cartesian SVGOverlay even though it never
- * supplies scales, marginal graphics, grids, or linked-crosshair state. Keep
- * the subset Geo actually exercises here so those XY-only dependencies do not
- * enter the Geo bundle.
+ * Contains the subset Geo exercises so XY-only scale, marginal-graphics, grid,
+ * and linked-crosshair dependencies do not enter the Geo bundle.
  */
 export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
   const {
