@@ -66,6 +66,14 @@ describe("side legend measurement", () => {
     expect(resolveSideLegendMargin(legend)).toBe(124)
   })
 
+  it("reserves plot-adjacent chrome before a side legend", () => {
+    const legend = {
+      legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],
+    }
+
+    expect(resolveSideLegendMargin(legend, { sideGutter: 70 })).toBe(180)
+  })
+
   it("uses the same custom swatch and label metrics as the renderer", () => {
     const legend = {
       legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],

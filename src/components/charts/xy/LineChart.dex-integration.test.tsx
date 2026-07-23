@@ -202,6 +202,8 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     expect(capturedProps.yAccessor).toBe("__ma_unitized")
     expect(capturedProps.groupAccessor).toBe("__ma_series")
     expect(capturedProps.yExtent).toEqual([0, 1])
+    expect(capturedProps.margin.right).toBe(180)
+    expect(capturedProps.legendLayout).toMatchObject({ sideGutter: 70 })
 
     // Data should be unitized — all __ma_unitized values in [0,1]
     for (const d of capturedProps.data) {
@@ -247,5 +249,25 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     expect(leftAt1).toBeTruthy()
     // The values should be different (spanning original range)
     expect(leftAt0).not.toBe(leftAt1)
+  })
+
+  it("mirrors the axis gutter when the legend moves to the left", () => {
+    render(
+      React.createElement(MultiAxisLineChart, {
+        data: multiAxisRows,
+        xAccessor: xAsDate,
+        series: [
+          { yAccessor: "requests", label: "requests" },
+          { yAccessor: "latencyMs", label: "latencyMs" },
+        ],
+        legendPosition: "left",
+        width: 800,
+        height: 400,
+      })
+    )
+
+    expect(capturedProps.margin.left).toBe(180)
+    expect(capturedProps.legendPosition).toBe("left")
+    expect(capturedProps.legendLayout).toMatchObject({ sideGutter: 70 })
   })
 })

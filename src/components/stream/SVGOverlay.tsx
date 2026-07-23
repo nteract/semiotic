@@ -7,6 +7,7 @@ import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
+import { resolveLegendSideGutter } from "../legendLayout"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
@@ -381,6 +382,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
     chartId,
     chartType
   })
+  const sideLegendGutter = resolveLegendSideGutter(legendLayout)
+  const leftAxisLabelMargin =
+    legend && legendPosition === "left" && sideLegendGutter > 0
+      ? sideLegendGutter
+      : margin.left
+  const rightAxisLabelMargin =
+    legend && legendPosition === "right" && sideLegendGutter > 0
+      ? sideLegendGutter
+      : margin.right
 
   // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap.
   // After generating candidate ticks, filter by minimum pixel distance so labels
@@ -770,11 +780,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
               const leftLabel = leftAxis?.label || yLabel
               return leftLabel ? (
               <text
-                x={-margin.left + 15}
+                x={-leftAxisLabelMargin + 15}
                 y={height / 2}
                 textAnchor="middle"
                 fill={labelColor}
-                transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
+                transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${height / 2})`}
                 className="semiotic-axis-label"
                 style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
@@ -833,11 +843,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   })}
                   {rightLabel && (
                     <text
-                      x={width + margin.right - 15}
+                      x={width + rightAxisLabelMargin - 15}
                       y={height / 2}
                       textAnchor="middle"
                       fill={labelColor}
-                      transform={`rotate(90, ${width + margin.right - 15}, ${height / 2})`}
+                      transform={`rotate(90, ${width + rightAxisLabelMargin - 15}, ${height / 2})`}
                       className="semiotic-axis-label"
                       style={{ userSelect: "none", ...axisLabelFontStyle }}
                     >

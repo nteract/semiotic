@@ -244,6 +244,64 @@ describe("data-orient axis groups", () => {
   })
 })
 
+describe("side legends with axis labels", () => {
+  const legend = {
+    legendGroups: [{
+      label: "",
+      styleFn: () => ({ fill: "#555" }),
+      items: [{ label: "Series" }],
+    }],
+  }
+
+  it("keeps a right axis title inside the legend gutter", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        totalWidth={550}
+        margin={{ ...baseProps.margin, right: 180 }}
+        scales={makeStubScales()}
+        showAxes={true}
+        axes={[
+          { orient: "bottom" },
+          { orient: "right", label: "Right value" },
+        ]}
+        legend={legend}
+        legendPosition="right"
+        legendLayout={{ sideGutter: 70 }}
+      />,
+    )
+
+    const label = container.querySelector(
+      "[data-orient='right'] text.semiotic-axis-label"
+    )
+    expect(label?.getAttribute("x")).toBe("355")
+  })
+
+  it("keeps a left axis title inside the legend gutter", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        totalWidth={550}
+        margin={{ ...baseProps.margin, left: 180 }}
+        scales={makeStubScales()}
+        showAxes={true}
+        axes={[
+          { orient: "bottom" },
+          { orient: "left", label: "Left value" },
+        ]}
+        legend={legend}
+        legendPosition="left"
+        legendLayout={{ sideGutter: 70 }}
+      />,
+    )
+
+    const label = container.querySelector(
+      "[data-orient='left'] text.semiotic-axis-label"
+    )
+    expect(label?.getAttribute("x")).toBe("-55")
+  })
+})
+
 // ── CSS-var-driven font sizes ──────────────────────────────────────────
 
 describe("font-size CSS variables", () => {

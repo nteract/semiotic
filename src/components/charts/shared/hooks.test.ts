@@ -671,6 +671,21 @@ describe("useChartLegendAndMargin", () => {
     expect(left.result.current.margin.left).toBe(right.result.current.margin.right)
   })
 
+  it("adds a side gutter for axes or other plot-adjacent chrome", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        userMargin: { right: "auto" },
+        legendLayout: { sideGutter: 70 },
+      })
+    )
+
+    expect(result.current.margin.right).toBe(180)
+  })
+
   it("grows automatic horizontal margins for wrapped or distant legends", () => {
     const { result } = renderHook(() =>
       useChartLegendAndMargin({

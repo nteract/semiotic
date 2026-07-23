@@ -40,6 +40,7 @@ import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
 import { filterSparseArray } from "./sparseArray"
 import type { ReactElement, ReactNode } from "react"
 import type { LegendValue } from "../../types/legendTypes"
+import type { LegendLayout } from "../../types/legendTypes"
 
 /**
  * Input parameters for useChartSetup.
@@ -79,6 +80,8 @@ export interface ChartSetupInput {
   showLegend: boolean | undefined
   /** Caller legend appended to inferred categorical legend groups. */
   legend?: LegendValue
+  /** Shared legend metrics, including any side-axis gutter. */
+  legendLayout?: LegendLayout
   /** User-provided margin */
   userMargin: PartialMargin | undefined
   /** Mode-resolved margin defaults */
@@ -187,6 +190,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartId,
     showLegend,
     legend: additionalLegend,
+    legendLayout,
     userMargin,
     marginDefaults,
     onClick,
@@ -327,6 +331,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     categories: activeCategories,
     additionalLegend,
     chartWidth: width,
+    legendLayout,
     hasTitle,
   })
 
@@ -336,6 +341,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     if (legend) {
       props.legend = legend
       props.legendPosition = legendPosition
+      if (legendLayout) props.legendLayout = legendLayout
     }
     if (legendInteraction && legendInteraction !== "none") {
       props.legendHoverBehavior = legendState.onLegendHover
@@ -348,7 +354,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
       props.onCategoriesChange = onCategoriesChange
     }
     return props
-  }, [legend, legendPosition, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
+  }, [legend, legendPosition, legendLayout, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
 
   // ── Loading / empty state (computed after all hooks) ───────────────────
   // Empty-state UI is driven by `rawData` (the user's original prop) so

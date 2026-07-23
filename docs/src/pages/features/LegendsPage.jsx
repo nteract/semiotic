@@ -151,6 +151,14 @@ const legendProps = [
     description:
       "Gap in pixels between the nearest legend edge and the plot edge. This does not add padding at the outer SVG edge.",
   },
+  {
+    name: "legendLayout.sideGutter",
+    type: "number",
+    required: false,
+    default: "0",
+    description:
+      "Space reserved between the plot and a left/right legend for adjacent chrome such as axis ticks and an axis title. MultiAxisLineChart supplies this automatically.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -417,8 +425,11 @@ export default function LegendsPage() {
       <p>
         <code>legendDistance</code> belongs to the legend configuration and
         defaults to <code>10</code> pixels. It measures the gap between the
-        nearest legend edge and the plot edge; it does not add padding at the
-        outside edge of the SVG.
+        nearest legend edge and the plot, or from the outside of a configured
+        <code>legendLayout.sideGutter</code>. The side gutter is useful when an
+        axis title must remain next to its axis while the legend sits beyond it;
+        <code>MultiAxisLineChart</code> configures that ordering automatically.
+        Neither option adds padding at the outside edge of the SVG.
       </p>
 
       <h3 id="top-legend">Top Legend</h3>

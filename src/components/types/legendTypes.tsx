@@ -31,13 +31,13 @@ export interface GradientLegendConfig {
 
 export interface CategoricalLegendConfig {
   legendGroups: LegendGroup[]
-  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
+  /** Gap in pixels between the legend and the plot/side gutter. Default: 10. */
   legendDistance?: number
 }
 
 export interface GradientLegendValue {
   gradient: GradientLegendConfig
-  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
+  /** Gap in pixels between the legend and the plot/side gutter. Default: 10. */
   legendDistance?: number
 }
 
@@ -104,6 +104,12 @@ export interface LegendLayout {
   rowHeight?: number
   /** Override the alignment width used for top/bottom legends */
   maxWidth?: number
+  /**
+   * Space between the plot and a left/right legend reserved for adjacent
+   * chart chrome such as axis ticks and an axis title. Ignored for top/bottom
+   * legends. The legend is placed outside this gutter.
+   */
+  sideGutter?: number
 }
 
 export interface LegendProps {

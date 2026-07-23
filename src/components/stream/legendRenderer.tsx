@@ -4,7 +4,12 @@ import type { ReactNode } from "react"
 import Legend, { GradientLegend } from "../Legend"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
-import { resolveHorizontalLegendHeight, resolveLegendDistance, resolveSideLegendWidth } from "../legendLayout"
+import {
+  resolveHorizontalLegendHeight,
+  resolveLegendDistance,
+  resolveLegendSideGutter,
+  resolveSideLegendWidth,
+} from "../legendLayout"
 
 export interface LegendRenderConfig {
   legend: LegendValue
@@ -51,17 +56,18 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
       : resolveSideLegendWidth(legend, legendLayout),
   )
   const legendDistance = resolveLegendDistance(legend)
+  const sideGutter = resolveLegendSideGutter(legendLayout)
   const legendHeight = resolveHorizontalLegendHeight(legend, plotWidth, legendLayout)
   let tx: number, ty: number
   if (legendPosition === "left") {
-    tx = margin.left - legendWidth - legendDistance; ty = margin.top
+    tx = margin.left - sideGutter - legendWidth - legendDistance; ty = margin.top
   } else if (legendPosition === "top") {
     tx = margin.left; ty = margin.top - legendDistance - legendHeight
   } else if (legendPosition === "bottom") {
     tx = margin.left; ty = totalHeight - margin.bottom + legendDistance
   } else {
     // right (default)
-    tx = totalWidth - margin.right + legendDistance; ty = margin.top
+    tx = totalWidth - margin.right + sideGutter + legendDistance; ty = margin.top
   }
 
   return (

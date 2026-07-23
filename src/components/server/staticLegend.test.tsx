@@ -106,6 +106,23 @@ describe("renderStaticLegend", () => {
     expect(svg).toContain("translate(484,")
   })
 
+  it("matches client placement when side chrome separates plot and legend", () => {
+    const right = renderLegendString({
+      ...baseConfig,
+      margin: { ...baseConfig.margin, right: 180 },
+      legendLayout: { sideGutter: 70 },
+    })
+    const left = renderLegendString({
+      ...baseConfig,
+      position: "left",
+      margin: { ...baseConfig.margin, left: 180 },
+      legendLayout: { sideGutter: 70 },
+    })
+
+    expect(right).toContain("translate(500,")
+    expect(left).toContain("translate(0,")
+  })
+
   it("uses legendSize when estimating label width", () => {
     const compact = renderLegendString({
       ...baseConfig,

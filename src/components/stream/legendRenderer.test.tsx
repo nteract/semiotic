@@ -36,3 +36,24 @@ describe("renderLegendFromConfig legendDistance", () => {
     expect(render("bottom")).toContain('transform="translate(150, 250)"')
   })
 })
+
+describe("renderLegendFromConfig sideGutter", () => {
+  it("places right and left legends beyond plot-adjacent axis chrome", () => {
+    const renderWithGutter = (legendPosition: "right" | "left") =>
+      ReactDOMServer.renderToStaticMarkup(
+        <svg>
+          {renderLegendFromConfig({
+            legend,
+            legendPosition,
+            legendLayout: { sideGutter: 60 },
+            totalWidth: 500,
+            totalHeight: 300,
+            margin: { top: 60, right: 180, bottom: 70, left: 180 },
+          })}
+        </svg>,
+      )
+
+    expect(renderWithGutter("right")).toContain('transform="translate(400, 60)"')
+    expect(renderWithGutter("left")).toContain('transform="translate(0, 60)"')
+  })
+})

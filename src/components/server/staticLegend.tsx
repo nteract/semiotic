@@ -17,6 +17,7 @@ import {
   layoutVerticalLegendGroups,
   resolveLegendDistance,
   resolveLegendMetrics,
+  resolveLegendSideGutter,
   resolveSideLegendWidth,
 } from "../legendLayout"
 
@@ -73,7 +74,7 @@ export interface StaticLegendConfig {
   hasTitle?: boolean
   /** SSR legend layout controls */
   legendLayout?: LegendLayout
-  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
+  /** Gap in pixels between the legend and the plot/side gutter. Default: 10. */
   legendDistance?: number
   /** Optional vertical placement-box override. Defaults to measured content. */
   reservedWidth?: number
@@ -396,19 +397,20 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   const legendDistance = typeof config.legendDistance === "number"
     ? Math.max(0, config.legendDistance)
     : resolveLegendDistance(categoricalLegend)
+  const sideGutter = resolveLegendSideGutter(config.legendLayout)
 
   // Match `renderLegendFromConfig`: positions are derived directly from the
   // resolved margin. In particular, do not clamp an explicit caller margin;
   // the client allows that layout for externally managed legends as well.
   let tx: number, ty: number
   if (position === "left") {
-    tx = margin.left - sideLegendWidth - legendDistance; ty = margin.top
+    tx = margin.left - sideGutter - sideLegendWidth - legendDistance; ty = margin.top
   } else if (position === "top") {
     tx = margin.left; ty = margin.top - legendDistance - metrics.height
   } else if (position === "bottom") {
     tx = margin.left; ty = totalHeight - margin.bottom + legendDistance
   } else {
-    tx = totalWidth - margin.right + legendDistance; ty = margin.top
+    tx = totalWidth - margin.right + sideGutter + legendDistance; ty = margin.top
   }
 
   if (isHorizontal) {
@@ -467,16 +469,17 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   const legendConfig = { legendGroups: config.legendGroups, legendDistance: config.legendDistance }
   const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(legendConfig, config.legendLayout)
   const legendDistance = resolveLegendDistance(legendConfig)
+  const sideGutter = resolveLegendSideGutter(config.legendLayout)
   const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = config.margin.left - sideLegendWidth - legendDistance; ty = config.margin.top
+    tx = config.margin.left - sideGutter - sideLegendWidth - legendDistance; ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.margin.top - legendDistance - metrics.height
   } else if (config.position === "bottom") {
     tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + legendDistance
   } else {
-    tx = config.totalWidth - config.margin.right + legendDistance; ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + sideGutter + legendDistance; ty = config.margin.top
   }
 
   if (!isHorizontal) {
@@ -647,17 +650,18 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   const legendConfig = { gradient: config.gradient, legendDistance: config.legendDistance }
   const sideLegendWidth = resolveSideLegendWidth(legendConfig)
   const legendDistance = resolveLegendDistance(legendConfig)
+  const sideGutter = resolveLegendSideGutter(config.legendLayout)
   const id = `${config.idPrefix ? `${config.idPrefix}-` : ""}semiotic-static-gradient-legend`
   const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = config.margin.left - sideLegendWidth - legendDistance; ty = config.margin.top
+    tx = config.margin.left - sideGutter - sideLegendWidth - legendDistance; ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.margin.top - legendDistance - metrics.height
   } else if (config.position === "bottom") {
     tx = config.margin.left; ty = config.totalHeight - config.margin.bottom + legendDistance
   } else {
-    tx = config.totalWidth - config.margin.right + legendDistance; ty = config.margin.top
+    tx = config.totalWidth - config.margin.right + sideGutter + legendDistance; ty = config.margin.top
   }
 
   const stops = Array.from({ length: 17 }, (_, i) => {

@@ -27,7 +27,11 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
-import { resolveLegendDistance, resolveSideLegendMargin } from "../legendLayout"
+import {
+  resolveLegendDistance,
+  resolveLegendSideGutter,
+  resolveSideLegendMargin,
+} from "../legendLayout"
 
 export type FrameType = RenderEvidence["frameType"]
 
@@ -527,6 +531,13 @@ export function generateAxesSVG(
   idPrefix?: string
 ): React.ReactNode {
   const s = themeStyles(theme)
+  const sideLegendGutter = resolveLegendSideGutter(props.legendLayout)
+  const leftAxisLabelMargin =
+    props.legend &&
+    props.legendPosition === "left" &&
+    sideLegendGutter > 0
+      ? sideLegendGutter
+      : (props.margin?.left ?? 40)
   // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
   // ticks inclusive of the data min/max (the axisExtent headline behavior);
   // "nice"/undefined falls through to scale.ticks — byte-identical to before.
@@ -575,13 +586,13 @@ export function generateAxesSVG(
       ))}
       {props.yLabel && (
         <text
-          x={-(props.margin?.left ?? 40) + 15}
+          x={-leftAxisLabelMargin + 15}
           y={layout.height / 2}
           textAnchor="middle"
           fontSize={s.labelSize}
           fill={s.text}
           fontFamily={s.fontFamily}
-          transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
+          transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${layout.height / 2})`}
         >
           {props.yLabel}
         </text>

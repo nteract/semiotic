@@ -57,6 +57,11 @@ export function resolveLegendDistance(legend: LegendValue | null | undefined): n
   return DEFAULT_LEGEND_DISTANCE
 }
 
+/** Resolve plot-adjacent chrome reserved before a left/right legend. */
+export function resolveLegendSideGutter(layout?: LegendLayout): number {
+  return Math.max(0, layout?.sideGutter ?? 0)
+}
+
 /** Estimate the layout-box height used to place a top/bottom legend. */
 export function resolveHorizontalLegendHeight(
   legend: LegendValue | null | undefined,
@@ -99,7 +104,11 @@ export function resolveSideLegendMargin(
   legend: LegendValue | null | undefined,
   layout?: LegendLayout,
 ): number {
-  return resolveSideLegendWidth(legend, layout) + resolveLegendDistance(legend)
+  return (
+    resolveSideLegendWidth(legend, layout) +
+    resolveLegendDistance(legend) +
+    resolveLegendSideGutter(layout)
+  )
 }
 
 export interface LegendMetrics {
