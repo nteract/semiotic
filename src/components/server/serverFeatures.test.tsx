@@ -93,7 +93,7 @@ describe("DifferenceChart server layout", () => {
       margin: { right: 64 },
     })
 
-    expect(svg).toContain('class="semiotic-legend" transform="translate(368,50)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(366,50)"')
   })
 })
 

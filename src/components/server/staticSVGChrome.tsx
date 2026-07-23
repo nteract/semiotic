@@ -115,8 +115,8 @@ function effectiveFrameLegend(
 }
 
 const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
-  right: 112,
-  left: 112,
+  right: 110,
+  left: 110,
   top: 50,
   bottom: 80,
 }

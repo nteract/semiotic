@@ -307,7 +307,7 @@ function checkLegendMarginTight(
   const m = props.margin
   if (!m || typeof m !== "object") return
   const sideMargin = m[pos]
-  if (typeof sideMargin === "number" && sideMargin < 112) {
+  if (typeof sideMargin === "number" && sideMargin < 110) {
     out.push({
       severity: "warning",
       code: "LEGEND_MARGIN_TIGHT",

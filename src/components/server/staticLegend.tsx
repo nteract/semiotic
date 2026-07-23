@@ -73,7 +73,7 @@ export interface StaticLegendConfig {
   hasTitle?: boolean
   /** SSR legend layout controls */
   legendLayout?: LegendLayout
-  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
   legendDistance?: number
   /** Optional vertical placement-box override. Defaults to measured content. */
   reservedWidth?: number

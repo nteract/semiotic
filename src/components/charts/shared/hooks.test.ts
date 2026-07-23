@@ -527,7 +527,7 @@ describe("useChartLegendAndMargin", () => {
     expect(groups).toHaveLength(2)
     expect(groups[0].items.map(item => item.label)).toEqual(["A", "B", "C"])
     expect(groups[1].items[0].label).toBe("Threshold")
-    expect(result.current.margin.right).toBe(112)
+    expect(result.current.margin.right).toBe(110)
   })
 
   it("carries caller legendDistance into the composed automatic legend", () => {
@@ -586,7 +586,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: undefined,
       })
     )
-    expect(result.current.margin.right).toBe(112)
+    expect(result.current.margin.right).toBe(110)
   })
 
   it("preserves an explicitly owned right margin", () => {
@@ -614,7 +614,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: undefined },
       })
     )
-    expect(result.current.margin.right).toBe(112)
+    expect(result.current.margin.right).toBe(110)
   })
 
   it("treats auto and null margin sides as explicit auto-reservation", () => {
@@ -628,7 +628,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: "auto" },
       })
     )
-    expect(rightAuto.result.current.margin.right).toBe(112)
+    expect(rightAuto.result.current.margin.right).toBe(110)
 
     const rightNull = renderHook(() =>
       useChartLegendAndMargin({
@@ -639,7 +639,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: null },
       })
     )
-    expect(rightNull.result.current.margin.right).toBe(112)
+    expect(rightNull.result.current.margin.right).toBe(110)
   })
 
   it("sizes automatic side margins from the longest legend label", () => {
@@ -667,7 +667,7 @@ describe("useChartLegendAndMargin", () => {
       })
     )
 
-    expect(right.result.current.margin.right).toBeGreaterThan(112)
+    expect(right.result.current.margin.right).toBeGreaterThan(110)
     expect(left.result.current.margin.left).toBe(right.result.current.margin.right)
   })
 
@@ -709,7 +709,7 @@ describe("useChartLegendAndMargin", () => {
       })
     )
 
-    expect(result.current.margin.top).toBe(58)
+    expect(result.current.margin.top).toBe(56)
   })
 
   it("merges user margin with defaults", () => {

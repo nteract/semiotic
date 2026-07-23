@@ -147,7 +147,7 @@ const legendProps = [
     name: "legend.legendDistance",
     type: "number",
     required: false,
-    default: "12",
+    default: "10",
     description:
       "Gap in pixels between the nearest legend edge and the plot edge. This does not add padding at the outer SVG edge.",
   },
@@ -416,7 +416,7 @@ export default function LegendsPage() {
 
       <p>
         <code>legendDistance</code> belongs to the legend configuration and
-        defaults to <code>12</code> pixels. It measures the gap between the
+        defaults to <code>10</code> pixels. It measures the gap between the
         nearest legend edge and the plot edge; it does not add padding at the
         outside edge of the SVG.
       </p>

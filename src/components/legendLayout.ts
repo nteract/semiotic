@@ -6,7 +6,7 @@ export const DEFAULT_LEGEND_LABEL_GAP = 6
 export const DEFAULT_LEGEND_ITEM_GAP = 10
 export const DEFAULT_LEGEND_ROW_HEIGHT = 22
 export const DEFAULT_SIDE_LEGEND_WIDTH = 100
-export const DEFAULT_LEGEND_DISTANCE = 12
+export const DEFAULT_LEGEND_DISTANCE = 10
 
 /**
  * SVG text has no useful intrinsic width until after it is mounted. Keep the

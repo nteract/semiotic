@@ -31,13 +31,13 @@ export interface GradientLegendConfig {
 
 export interface CategoricalLegendConfig {
   legendGroups: LegendGroup[]
-  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
   legendDistance?: number
 }
 
 export interface GradientLegendValue {
   gradient: GradientLegendConfig
-  /** Gap in pixels between the legend edge and the plot edge. Default: 12. */
+  /** Gap in pixels between the legend edge and the plot edge. Default: 10. */
   legendDistance?: number
 }
 

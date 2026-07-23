@@ -15,7 +15,7 @@ describe("side legend measurement", () => {
     }
 
     expect(resolveSideLegendWidth(legend)).toBe(100)
-    expect(resolveSideLegendMargin(legend)).toBe(112)
+    expect(resolveSideLegendMargin(legend)).toBe(110)
   })
 
   it("grows to fit categorical item and group labels", () => {
@@ -75,6 +75,6 @@ describe("side legend measurement", () => {
     expect(resolveSideLegendMargin(
       legend,
       { swatchSize: 80, labelGap: 30 },
-    )).toBe(129)
+    )).toBe(127)
   })
 })
