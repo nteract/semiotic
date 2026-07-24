@@ -1,4 +1,9 @@
 import type { Datum } from "./datumTypes"
+import type {
+  ColorGradientInput,
+  GradientConfig,
+  GradientStop,
+} from "./gradient"
 
 export interface GaugeThresholdLike {
   value: number
@@ -6,14 +11,8 @@ export interface GaugeThresholdLike {
   label?: string
 }
 
-export interface GaugeGradientStop {
-  offset: number
-  color: string
-}
-
-export interface GaugeGradientFill {
-  colorStops: GaugeGradientStop[]
-}
+export type GaugeGradientStop = GradientStop
+export type GaugeGradientFill = ColorGradientInput
 
 export interface GaugeArcDatum extends Datum {
   category: string
@@ -46,7 +45,7 @@ interface BuildGaugeArcModelOptions {
   backgroundColor: string
   fillZones: boolean
   showScaleLabels: boolean
-  gradientFill?: GaugeGradientFill
+  gradientFill?: GradientConfig
   gradientSteps?: number
 }
 
@@ -84,18 +83,33 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${h(r)}${h(g)}${h(b)}`
 }
 
-function interpolateColorStops(stops: GaugeGradientStop[], t: number): string {
+function interpolateColorStops(
+  stops: GaugeGradientStop[],
+  t: number,
+  baseColor: string,
+): string {
   const validStops = stops
     .filter((stop) => Number.isFinite(stop.offset))
-    .map((stop) => ({ offset: clamp01(stop.offset), color: stop.color }))
+    .map((stop) => ({
+      offset: clamp01(stop.offset),
+      color: stop.color ?? baseColor,
+      opacity: stop.opacity == null ? 1 : clamp01(stop.opacity),
+    }))
     .sort((a, b) => a.offset - b.offset)
 
   if (validStops.length === 0) return "#999999"
-  if (validStops.length === 1) return validStops[0].color
+  const colorWithOpacity = (stop: typeof validStops[number]): string => {
+    if (stop.opacity === 1) return stop.color
+    const rgb = parseRgb(stop.color)
+    return rgb
+      ? `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${stop.opacity})`
+      : stop.color
+  }
+  if (validStops.length === 1) return colorWithOpacity(validStops[0])
 
   const clamped = clamp01(t)
-  if (clamped <= validStops[0].offset) return validStops[0].color
-  if (clamped >= validStops[validStops.length - 1].offset) return validStops[validStops.length - 1].color
+  if (clamped <= validStops[0].offset) return colorWithOpacity(validStops[0])
+  if (clamped >= validStops[validStops.length - 1].offset) return colorWithOpacity(validStops[validStops.length - 1])
 
   for (let i = 0; i < validStops.length - 1; i++) {
     const left = validStops[i]
@@ -105,17 +119,19 @@ function interpolateColorStops(stops: GaugeGradientStop[], t: number): string {
     const localT = span <= 0 ? 0 : (clamped - left.offset) / span
     const leftRgb = parseRgb(left.color)
     const rightRgb = parseRgb(right.color)
-    if (!leftRgb || !rightRgb) return localT < 0.5 ? left.color : right.color
+    if (!leftRgb || !rightRgb) return colorWithOpacity(localT < 0.5 ? left : right)
     const [r0, g0, b0] = leftRgb
     const [r1, g1, b1] = rightRgb
-    return rgbToHex(
-      r0 + (r1 - r0) * localT,
-      g0 + (g1 - g0) * localT,
-      b0 + (b1 - b0) * localT,
-    )
+    const r = r0 + (r1 - r0) * localT
+    const g = g0 + (g1 - g0) * localT
+    const b = b0 + (b1 - b0) * localT
+    const opacity = left.opacity + (right.opacity - left.opacity) * localT
+    return opacity === 1
+      ? rgbToHex(r, g, b)
+      : `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${opacity})`
   }
 
-  return validStops[validStops.length - 1].color
+  return colorWithOpacity(validStops[validStops.length - 1])
 }
 
 function makeZoneKey(kind: "fill" | "bg", zoneIndex: number, sliceIndex?: number): string {
@@ -160,7 +176,7 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
     zones.push({ value: max, color: zones[zones.length - 1].color })
   }
 
-  const hasGradient = !!gradientFill && gradientFill.colorStops.length >= 2
+  const hasGradient = !!gradientFill && gradientFill.stops.length >= 2
   const data: GaugeArcDatum[] = []
   const styles = new Map<string, { fill: string; opacity?: number }>()
   const scaleAnnotations: Datum[] = []
@@ -194,12 +210,13 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
       const sliceCount = Math.max(1, Math.min(sliceBudget, Math.round(fillEnd * sliceBudget)))
       const colors: string[] = []
       for (let s = 0; s < sliceCount; s++) {
-        // Gradient offsets map directly to arc fraction (offset 0.7 paints at
-        // arc fraction 0.7). Sample at each slice's arc-fraction midpoint
-        // so a stop sitting exactly at fillEnd lands on the band's trailing
-        // edge — same convention the old per-slice path used.
+        // Gradient offsets map directly to arc fraction.
         const t = (fillEnd * (s + 0.5)) / sliceCount
-        colors.push(interpolateColorStops(gradientFill!.colorStops, t))
+        colors.push(interpolateColorStops(
+          gradientFill!.stops,
+          t,
+          fillColor || zones[0]?.color || "#007bff",
+        ))
       }
       const bandKey = makeZoneKey("fill", 0)
       data.push({

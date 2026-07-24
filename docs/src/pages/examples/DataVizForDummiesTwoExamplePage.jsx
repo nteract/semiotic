@@ -404,7 +404,10 @@ export default function DataVizForDummiesTwoExamplePage() {
                   xAccessor="game"
                   yAccessor="attendance"
                   colorScheme={[MINT]}
-                  gradientFill={{ topOpacity: 0.82, bottomOpacity: 0.08 }}
+                  gradientFill={{ stops: [
+                    { offset: 0, opacity: 0.82 },
+                    { offset: 1, opacity: 0.08 },
+                  ] }}
                   showLine
                   lineWidth={3}
                   showPoints

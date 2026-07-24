@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.6] - 2026-07-23
+
+### Added
+
+- **`BumpChart`** (`semiotic/xy`). A ranking chart: each x-column ranks its
+  series by `yAccessor`, and rank becomes vertical position. Set `ribbon` to
+  encode the original magnitude as a true perpendicular-offset ribbon width
+  (following the d3.svg.ribbon approach) instead of a fixed-width line — both
+  modes share the same sampled centerline, so `animate` tweens only the width
+  during a line↔ribbon toggle. `highlightTop` colors just the N best series by
+  mean rank and greys the rest via `neutralColor`. Exports `BumpChart` and the
+  pure `rankBumpData` helper plus its types. Ships with SSR, AI schema/metadata
+  and MCP-registry registration, and a docs page.
+- **`AreaChart` `semanticLine`.** A new prop (default `true`) paints hard,
+  value-banded color segments along an area's top stroke wherever the value
+  crosses a `semanticGradient` threshold — the stroke counterpart to the
+  semantic fill. A shared segment-splitter guarantees canvas and SVG render
+  identical bands.
+- **`legendLayout.sideGutter`.** Reserves space between a side (left/right)
+  legend and the plot-adjacent axis chrome (ticks, titles), applied
+  consistently across the client and SSR renderers. `MultiAxisLineChart`
+  auto-sets a 70px dual-axis default; override via `frameProps.legendLayout`.
+- **`legendDistance`.** Controls the gap between the plot and its legend, with
+  dynamic content-measured side-legend width and margin estimation.
+- **Unified gradient config + exported types.** `gradientFill`, `lineGradient`,
+  and `semanticGradient` now all accept a single
+  `{ stops: [{ offset, color?, opacity? }] }` shape (legacy shorthands still
+  work); `GradientConfig`, `GradientStop`, and `SemanticGradientInput` are
+  exported from `semiotic` and `semiotic/xy`.
+- **Data Viz for Dummies II–VI.** Five new scrollytelling example pages
+  expanding coverage across advanced XY, ordinal, network, geo, and physics
+  patterns.
+
+### Changed
+
+- **Default legend distance reduced from 12px to 10px** across the client and
+  SSR paths, tightening automatic side/top margin reservations and the
+  legend-tight diagnostic threshold.
+- **Legend placement no longer clamps to a minimum on-canvas offset.** Numeric
+  margins are now authoritative for legend position (matching SSR), so a
+  numeric `margin` smaller than the legend needs can push it partly off-canvas.
+  Rely on auto-margins (omit `margin`) or size the margin to the legend.
+- **`DistanceCartogram` fractional `lineMode`** now repositions flow-line
+  endpoints and interpolates intermediate vertices by arc length; previously
+  fractional lines were left un-repositioned.
+- **Legend creation/interaction logic split** into a dedicated hook module,
+  re-exported from the shared hooks entry (no import changes).
+- **Removed the internal `semanticGradientToColorStops` export** (the
+  `SemanticGradientStop` type alias is retained).
+
+### Fixed
+
+- **`renderChart` / SSR:** `frameProps` overrides now take precedence over mode
+  defaults, so e.g. `frameProps={{ showAxes: false }}` is honored in server
+  rendering.
+- **Geo `DistanceCartogram`:** corrected radial interpolation so geography is no
+  longer pushed out of the plot at partial `strength`, and clamped `strength`
+  to `[0, 1]` with a NaN guard.
+- **Physics kernel:** a body resting only against a side wall (or a sideways
+  sleeping neighbor) no longer falsely counts as supported/sleeping, so it
+  keeps settling.
+- **SSR/static legend parity:** aligned static and client legend positioning,
+  including gradient legend label alignment; resize remaps now rescale semantic
+  area stroke color bands.
+
 ## [3.8.5] - 2026-07-22
 
 ### Added

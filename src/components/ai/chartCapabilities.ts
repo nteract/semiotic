@@ -11,6 +11,7 @@ import {
 // XY family
 import { LineChartCapability } from "../charts/xy/LineChart.capability"
 import { AreaChartCapability } from "../charts/xy/AreaChart.capability"
+import { BumpChartCapability } from "../charts/xy/BumpChart.capability"
 import { StackedAreaChartCapability } from "../charts/xy/StackedAreaChart.capability"
 import { ScatterplotCapability } from "../charts/xy/Scatterplot.capability"
 import { ConnectedScatterplotCapability } from "../charts/xy/ConnectedScatterplot.capability"
@@ -89,6 +90,7 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   // XY
   LineChartCapability,
   AreaChartCapability,
+  BumpChartCapability,
   StackedAreaChartCapability,
   ScatterplotCapability,
   ConnectedScatterplotCapability,
@@ -188,6 +190,7 @@ export {
   // XY
   LineChartCapability,
   AreaChartCapability,
+  BumpChartCapability,
   StackedAreaChartCapability,
   ScatterplotCapability,
   ConnectedScatterplotCapability,

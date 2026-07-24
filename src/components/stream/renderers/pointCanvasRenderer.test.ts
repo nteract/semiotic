@@ -66,6 +66,18 @@ describe("pointCanvasRenderer", () => {
     expect(ctx.stroke).not.toHaveBeenCalled()
   })
 
+  it("does not stroke when style.stroke is 'none' (SVG parity — no black ring)", () => {
+    const ctx = createMockCanvasContext()
+    const node = makePointNode({ style: { fill: "#4e79a7", stroke: "none" } })
+
+    pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    // "none" is truthy but not a valid canvas color: without the guard canvas
+    // rejects `strokeStyle = "none"`, keeps the default black, and still
+    // strokes a ring. SVG paints nothing for stroke="none", so canvas must skip.
+    expect(ctx.stroke).not.toHaveBeenCalled()
+  })
+
   it("uses default fill when no fill specified", () => {
     const ctx = createMockCanvasContext()
     const node = makePointNode({ style: {} })

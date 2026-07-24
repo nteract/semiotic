@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-21 · 55 charts indexed.
+Last regen: 2026-07-23 · 56 charts indexed.
 
 **Column key**
 
@@ -22,6 +22,7 @@ Last regen: 2026-07-21 · 55 charts indexed.
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` |
 | **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` |
+| **BumpChart** | ✓ | ✓ | ✓ | — | ✓ | categorical | custom | `ranking` `magnitude-ribbons` `time-series` `style-rules` |
 | **CandlestickChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `ohlc` |
 | **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
 | **DifferenceChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `crossover-segmentation` |
@@ -110,8 +111,8 @@ Last regen: 2026-07-21 · 55 charts indexed.
 
 ## Aggregate counts
 
-- 46/55 charts render a top-level legend.
-- 45/55 charts expose a push API.
-- 44/55 charts SSR via the `renderChart()` registry.
-- 1/55 charts use the customLayout escape hatch.
-- 10/55 charts use synthetic (no-layout) construction.
+- 47/56 charts render a top-level legend.
+- 45/56 charts expose a push API.
+- 45/56 charts SSR via the `renderChart()` registry.
+- 2/56 charts use the customLayout escape hatch.
+- 10/56 charts use synthetic (no-layout) construction.

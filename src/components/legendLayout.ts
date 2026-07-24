@@ -51,8 +51,11 @@ export function resolveSideLegendWidth(
 
 /** Resolve the requested gap between the legend edge and plot edge. */
 export function resolveLegendDistance(legend: LegendValue | null | undefined): number {
-  if ((isLegendConfig(legend) || isGradientLegendConfig(legend)) && typeof legend.legendDistance === "number") {
-    return Math.max(0, legend.legendDistance)
+  if (
+    (isLegendConfig(legend) || isGradientLegendConfig(legend)) &&
+    Number.isFinite(legend.legendDistance)
+  ) {
+    return Math.max(0, legend.legendDistance as number)
   }
   return DEFAULT_LEGEND_DISTANCE
 }
@@ -96,7 +99,11 @@ export function resolveHorizontalLegendHeight(
     )
   }
 
-  return height
+  // Multi-group legends draw a vertical separator between groups that
+  // overshoots the row content by 8px on each side (Legend.tsx draws it from
+  // y=-8 to y=groupHeight+8), so reserve that overflow too.
+  const separatorPad = legend.legendGroups.length > 1 ? 16 : 0
+  return height + separatorPad
 }
 
 /** Margin required to fit a side legend and its plot-edge gap. */

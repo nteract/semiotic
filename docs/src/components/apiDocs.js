@@ -6,13 +6,6 @@ const KIND_TYPE_ALIAS = 2097152
 // props type. The default lookup is `${componentName}Props`; only list
 // overrides here when the canonical interface lives under a different
 // name and the standard component-name lookup wouldn't find it.
-//
-// `RealtimeHistogram` now exports `RealtimeHistogramProps` as the
-// canonical interface and `RealtimeTemporalHistogramProps` as a
-// deprecated type alias pointing at it, so the standard
-// `${componentName}Props` lookup resolves correctly without an entry
-// here. (Earlier versions had the alias direction reversed; the
-// rename means the override is no longer needed.)
 export const COMPONENT_PROPS_NAME_MAP = {}
 
 // Per-apiData index cache. The reflection index is expensive to build

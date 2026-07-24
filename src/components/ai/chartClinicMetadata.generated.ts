@@ -30,6 +30,7 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "SwimlaneChart": {"category":"ordinal","recommendedImport":"semiotic/ordinal","serverImport":"semiotic/server"},
   "LikertChart": {"category":"ordinal","recommendedImport":"semiotic/ordinal","serverImport":"semiotic/server"},
   "LineChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server","docsRoute":"/charts/line-chart","pilot":true},
+  "BumpChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "AreaChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "DifferenceChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "StackedAreaChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},

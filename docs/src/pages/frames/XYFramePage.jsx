@@ -74,7 +74,7 @@ const xyFrameProps = [
   { name: "xExtent", type: "array", required: false, default: null, description: "Fixed x-axis domain as [min, max]." },
   { name: "yExtent", type: "array", required: false, default: null, description: "Fixed y-axis domain as [min, max]." },
   { name: "y0Accessor", type: "string | function", required: false, default: null, description: 'Per-point area baseline accessor. When set with chartType="area", fills between yAccessor (top) and y0Accessor (bottom) instead of to the axis. Use for percentile bands, confidence ribbons, or any band chart.' },
-  { name: "gradientFill", type: "boolean | object", required: false, default: null, description: 'Gradient fill for area charts. true for default (80%→5%) or { topOpacity, bottomOpacity }. Fill fades from opaque at the line to transparent at the baseline.' },
+  { name: "gradientFill", type: "{ stops }", required: false, default: null, description: 'Gradient fill for area charts using { stops: [{ offset: 0–1, color?, opacity? }] }. Offset 0 is the line/top and offset 1 is the baseline.' },
   { name: "annotations", type: "array", required: false, default: null, description: "Array of annotation objects." },
   { name: "svgAnnotationRules", type: "function", required: false, default: null, description: "Custom SVG annotation render function." },
 ]

@@ -9,6 +9,7 @@ export { StreamXYFrame }
 
 // Chart HOCs
 export { LineChart } from "./charts/xy/LineChart"
+export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
 export { AreaChart } from "./charts/xy/AreaChart"
 export { DifferenceChart } from "./charts/xy/DifferenceChart"
 export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
@@ -72,7 +73,18 @@ export type {
 
 // Chart prop types
 export type { LineChartProps } from "./charts/xy/LineChart"
+export type {
+  BumpChartProps,
+  RankedBumpData,
+  RankedBumpDatum,
+  RankBumpDataOptions,
+} from "./charts/xy/BumpChart"
 export type { AreaChartProps, SemanticGradientStop } from "./charts/xy/AreaChart"
+export type {
+  GradientConfig,
+  GradientStop,
+  SemanticGradientInput,
+} from "./charts/shared/gradient"
 export type { DifferenceChartProps } from "./charts/xy/DifferenceChart"
 export type { StackedAreaChartProps } from "./charts/xy/StackedAreaChart"
 export type { ScatterplotProps } from "./charts/xy/Scatterplot"

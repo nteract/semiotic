@@ -14,6 +14,7 @@ import type { TooltipProp } from "../../Tooltip/Tooltip"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
+import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 
 export interface XYCustomChartProps<
   TDatum extends Datum = Datum,
@@ -45,6 +46,8 @@ export interface XYCustomChartProps<
   showLegend?: boolean
   /** Additional legend content. Categorical groups follow the inferred colorBy legend. */
   legend?: LegendValue
+  legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
   annotations?: Datum[]
   /** Field or function that declares the semantic category used for custom-layout color. */
   colorBy?: ChartAccessor<TDatum, string>
@@ -96,6 +99,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     onClick,
     selection,
     linkedHover,
+    hoverHighlight,
     chartId,
     loading,
     loadingContent,
@@ -103,6 +107,8 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     colorBy,
     colorScheme,
     legend,
+    legendInteraction,
+    legendPosition,
     frameProps = {},
   } = props
 
@@ -121,8 +127,11 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     colorBy,
     colorScheme,
     legend: additionalLegend,
+    legendInteraction,
+    legendPosition,
     selection,
     linkedHover,
+    hoverHighlight,
     onObservation,
     onClick,
     chartId,
@@ -190,7 +199,8 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
       selection,
       onObservation,
       onClick,
-      hoverHighlight: false,
+      hoverRadius: props.hoverRadius,
+      hoverHighlight,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

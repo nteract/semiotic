@@ -13,6 +13,7 @@ import type { GlyphDef } from "./glyphDef"
 import type { RectSceneNode, Style, SymbolSceneNode } from "./types"
 import { clampCornerRadii } from "./renderers/cornerRadii"
 import { symbolPathString } from "./symbolPath"
+import type { GradientStop } from "../charts/shared/gradient"
 
 /**
  * Sentinel arg for d3-shape arc generators that have all four
@@ -143,24 +144,36 @@ export function glyphNodeToSVG(
 // ── Shared between XY and ordinal serializers ───────────────────────────
 
 export function colorStopElements(
-  colorStops: Array<{ offset: number; color: string }>,
+  stops: GradientStop[],
+  baseColor: string,
 ): React.ReactElement[] | null {
-  const validStops = colorStops
-    .filter(stop => Number.isFinite(stop.offset))
+  const validStops = stops
+    .filter(stop =>
+      Number.isFinite(stop.offset)
+      && (stop.opacity == null || Number.isFinite(stop.opacity)),
+    )
     .map(stop => ({
       offset: Math.max(0, Math.min(1, stop.offset)),
-      color: stop.color,
+      color: stop.color ?? baseColor,
+      opacity: stop.opacity == null
+        ? undefined
+        : Math.max(0, Math.min(1, stop.opacity)),
     }))
   if (validStops.length < 2) return null
   return validStops.map((stop, index) => (
-    <stop key={index} offset={stop.offset} stopColor={stop.color} />
+    <stop
+      key={index}
+      offset={stop.offset}
+      stopColor={stop.color}
+      stopOpacity={stop.opacity}
+    />
   ))
 }
 
 /**
  * Build `<defs><linearGradient>` for a bar's fillGradient, mirroring the
  * tip→base direction the canvas renderer uses (inferred from roundedEdge).
- * Returns null when the config can't resolve (e.g. colorStops < 2), so the
+ * Returns null when the config has fewer than two usable stops, so the
  * caller falls back to a solid fill — same parity with the canvas path.
  *
  * Using `gradientUnits="userSpaceOnUse"` with absolute coords keeps each bar's
@@ -177,21 +190,8 @@ export function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactE
   else if (n.roundedEdge === "right") { x1 = n.x + n.w; y1 = n.y; x2 = n.x; y2 = n.y }
   else if (n.roundedEdge === "left")  { x1 = n.x; y1 = n.y; x2 = n.x + n.w; y2 = n.y }
 
-  const stops: React.ReactElement[] = []
-  if ("colorStops" in fg) {
-    // Mirror the canvas path: filter non-finite offsets first, then require
-    // ≥2 valid stops. Without the filter a NaN offset would emit offset="NaN",
-    // which is invalid SVG and breaks the whole gradient.
-    const stopEls = colorStopElements(fg.colorStops)
-    if (!stopEls) return null
-    stops.push(...stopEls)
-  } else {
-    // Opacity form — use the resolved fill as the base color and let SVG's
-    // stop-opacity do the work. Matches the canvas path's rgba() stops.
-    const base = svgFill(n.style.fill)
-    stops.push(<stop key="0" offset={0} stopColor={base} stopOpacity={fg.topOpacity} />)
-    stops.push(<stop key="1" offset={1} stopColor={base} stopOpacity={fg.bottomOpacity} />)
-  }
+  const stops = colorStopElements(fg.stops, svgFill(n.style.fill))
+  if (!stops) return null
 
   return (
     <linearGradient

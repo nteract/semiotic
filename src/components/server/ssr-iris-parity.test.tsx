@@ -440,33 +440,43 @@ describe("ProportionalSymbolMap — geo svgAnnotationRules SSR parity", () => {
 })
 
 // ── AreaChart semanticGradient ────────────────────────────────────────────
-// A value-anchored gradient (`{ at, color }` on the value scale) resolves to a
-// gradientFill.colorStops before reaching the frame. SSR used to drop it.
-
 describe("AreaChart — semanticGradient SSR parity", () => {
   const props = {
     data: [
       { time: 0, value: 10 }, { time: 1, value: 45 }, { time: 2, value: 62 },
-      { time: 3, value: 80 }, { time: 4, value: 95 },
+      { time: 3, value: 80 }, { time: 4, value: 99 },
     ],
     xAccessor: "time",
     yAccessor: "value",
     curve: "step" as const,
-    semanticGradient: [
-      { at: 50, color: "#E5A800" },
-      { at: 75, color: "#FF8000" },
-      { at: 95, color: "#FF7077" },
-    ],
+    semanticGradient: { stops: [
+      { offset: 0.5, color: "#E5A800", opacity: 0.18 },
+      { offset: 0.75, color: "#FF8000", opacity: 0.28 },
+      { offset: 0.95, color: "#FF7077", opacity: 0.4 },
+    ] },
     yExtent: [0, 100] as [number, number],
     width: 440,
     height: 260,
   }
 
-  it("renderChart emits a colorStops gradient with the semantic colors", () => {
+  it("renderChart emits gradient stops with the semantic colors", () => {
     const svg = renderChart("AreaChart", props)
     expect(svg).toContain("<linearGradient")
     expect(svg).toContain("#E5A800")
     expect((svg.match(/<stop/g) ?? []).length).toBeGreaterThanOrEqual(3)
+    expect(svg).toContain('stop-color="#E5A800"')
+    expect(svg).toContain('stop-opacity="0.18"')
+    expect(svg).toContain('stroke="#E5A800"')
+    expect(svg).toContain('stroke="#FF8000"')
+    expect(svg).toContain('stroke="#FF7077"')
+  })
+
+  it("semanticLine=false keeps the fill gradient but restores the normal top stroke", () => {
+    const svg = renderChart("AreaChart", { ...props, semanticLine: false })
+    expect(svg).toContain("<linearGradient")
+    expect(svg).not.toContain('stroke="#E5A800"')
+    expect(svg).not.toContain('stroke="#FF8000"')
+    expect(svg).not.toContain('stroke="#FF7077"')
   })
 
   it("a plain AreaChart (no semanticGradient) emits no gradient", () => {

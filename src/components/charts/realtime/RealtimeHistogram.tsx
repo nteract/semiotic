@@ -207,10 +207,8 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
  */
 export const RealtimeHistogram = forwardRef(
   function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    // Thread mode-aware dimensions + axes through so `sparkline` / `context`
-    // actually strip the axis chrome they're meant to. Previously only
-    // dimensions were mode-driven, so `mode="sparkline"` rendered a 120×24
-    // histogram with full axes eating most of the canvas.
+    // Thread mode-aware dimensions and axes through so `sparkline` and
+    // `context` strip the appropriate chrome.
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,

@@ -21,6 +21,7 @@ import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
+import { normalizeColorGradient, type ColorGradientInput } from "../shared/gradient"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { LegendValue } from "../../types/legendTypes"
@@ -150,10 +151,12 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
   areaOpacity?: number
 
   /**
-   * Horizontal gradient for the line stroke. Color stops define a left-to-right gradient.
-   * `{ colorStops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }`
+   * Horizontal line-stroke gradient. Offset 0 is the left edge and offset 1
+   * is the right edge.
+   * @example
+   * `{ stops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }`
    */
-  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+  lineGradient?: ColorGradientInput
 
   /**
    * Line stroke width
@@ -1029,10 +1032,11 @@ export const LineChart = forwardRef(
   }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, frameGroupAccessor, chartData, hasGaps])
 
   // Build StreamXYFrame props
+  const normalizedLineGradient = normalizeColorGradient(lineGradient)
   const streamProps: StreamXYFrameProps = {
     chartType,
     ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
-    ...(lineGradient && { lineGradient }),
+    ...(normalizedLineGradient && { lineGradient: normalizedLineGradient }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,

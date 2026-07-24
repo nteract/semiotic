@@ -72,6 +72,7 @@ import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useXYKeyboardNavigation } from "./frameKeyboardNavigation"
+import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       band,
       gradientFill,
       lineGradient,
+      semanticLineStops,
       areaGroups,
       openAccessor,
       highAccessor,
@@ -388,13 +390,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
       // The store's streaming-mode resolution chain
       // (`timeAccessor || xAccessor || "time"`) already gives `timeAccessor`
-      // priority for the bar/swarm/waterfall families, so keeping the x/y
-      // accessors here doesn't change behavior for those chart types — but
-      // it lets a streaming scatter / bubble pass non-temporal accessors
-      // and have them honored. Stripping them previously forced the store
-      // to fall through to `d.time` and `d.value`, producing a buffer of
-      // 200 datums whose `buildPointNode` calls all returned null because
-      // y resolved to `d.value` (= undefined → NaN).
+      // priority for the bar/swarm/waterfall families. Streaming scatter and
+      // bubble charts can therefore supply non-temporal x/y accessors.
       xAccessor,
       yAccessor,
       accessorRevision,
@@ -420,13 +417,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsStyle,
       y0Accessor,
       band,
-      gradientFill: gradientFill === true
-        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-        : gradientFill === false
-          ? undefined
-          : gradientFill,
+      gradientFill: normalizeGradient(gradientFill),
       areaGroups: areaGroups ? new Set(areaGroups) : undefined,
-      lineGradient,
+      lineGradient: normalizeColorGradient(lineGradient),
+      semanticLineStops,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -462,7 +456,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this

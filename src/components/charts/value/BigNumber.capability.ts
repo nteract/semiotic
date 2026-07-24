@@ -102,11 +102,8 @@ export const BigNumberCapability: ChartCapability = {
     return props
   },
 
-  // BigNumber is the scale-aware engine's preferred answer at the tiny
-  // end of the spectrum. GaugeChart used to carry that role (see
-  // `GaugeChart.capability.ts` scaleFit boost) — keep both available but
-  // give BigNumber the stronger boost when the value isn't bounded by a
-  // declared min/max, since gauges require that bounding to be honest.
+  // Prefer BigNumber for tiny, unbounded single-value displays. Gauges remain
+  // available when a declared min/max gives the arc an honest scale.
   scaleFit: (_profile, effective) => {
     if (effective.rowBand === "tiny") {
       return { delta: 0.8, reason: "single-value displays beat charts when there is one number to show" }

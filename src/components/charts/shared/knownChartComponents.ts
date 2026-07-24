@@ -22,6 +22,7 @@ export const KNOWN_CHART_COMPONENTS = [
   "SwimlaneChart",
   "LikertChart",
   "LineChart",
+  "BumpChart",
   "AreaChart",
   "DifferenceChart",
   "StackedAreaChart",

@@ -55,10 +55,10 @@ describe("canvasRenderHelpers", () => {
   })
 
   describe("buildLinearFillGradient", () => {
-    it("returns null for a colorStops form with fewer than 2 valid stops", () => {
+    it("returns null with fewer than 2 valid stops", () => {
       const grad = buildLinearFillGradient(
         ctx,
-        { colorStops: [{ offset: 0, color: "red" }] },
+        { stops: [{ offset: 0, color: "red" }] },
         "#000",
         0, 0, 0, 100,
       )
@@ -68,7 +68,7 @@ describe("canvasRenderHelpers", () => {
     it("filters non-finite offsets before checking the 2-stop minimum", () => {
       const grad = buildLinearFillGradient(
         ctx,
-        { colorStops: [
+        { stops: [
           { offset: 0, color: "red" },
           { offset: NaN, color: "green" },
         ]},
@@ -79,10 +79,10 @@ describe("canvasRenderHelpers", () => {
       expect(grad).toBeNull()
     })
 
-    it("builds a gradient when at least 2 valid colorStops are present", () => {
+    it("builds a gradient when at least 2 valid stops are present", () => {
       const grad = buildLinearFillGradient(
         ctx,
-        { colorStops: [
+        { stops: [
           { offset: 0, color: "red" },
           { offset: 1, color: "blue" },
         ]},
@@ -92,10 +92,13 @@ describe("canvasRenderHelpers", () => {
       expect(grad).toBeTruthy()
     })
 
-    it("builds an opacity-form gradient", () => {
+    it("builds an inherited-color opacity gradient", () => {
       const grad = buildLinearFillGradient(
         ctx,
-        { topOpacity: 0.9, bottomOpacity: 0.1 },
+        { stops: [
+          { offset: 0, opacity: 0.9 },
+          { offset: 1, opacity: 0.1 },
+        ] },
         "#4e79a7",
         0, 0, 0, 100,
       )
@@ -104,10 +107,16 @@ describe("canvasRenderHelpers", () => {
 
     it("returns null for non-finite opacities (NaN-→broken-rgba protection)", () => {
       expect(
-        buildLinearFillGradient(ctx, { topOpacity: NaN, bottomOpacity: 0 }, "#000", 0, 0, 0, 100),
+        buildLinearFillGradient(ctx, { stops: [
+          { offset: 0, opacity: NaN },
+          { offset: 1, opacity: 0 },
+        ] }, "#000", 0, 0, 0, 100),
       ).toBeNull()
       expect(
-        buildLinearFillGradient(ctx, { topOpacity: 1, bottomOpacity: Infinity }, "#000", 0, 0, 0, 100),
+        buildLinearFillGradient(ctx, { stops: [
+          { offset: 0, opacity: 1 },
+          { offset: 1, opacity: Infinity },
+        ] }, "#000", 0, 0, 0, 100),
       ).toBeNull()
     })
   })
@@ -116,7 +125,8 @@ describe("canvasRenderHelpers", () => {
     it("returns null when fewer than 2 stops are present", () => {
       const grad = buildColorStopGradient(
         ctx,
-        { colorStops: [{ offset: 0, color: "red" }] },
+        { stops: [{ offset: 0, color: "red" }] },
+        "#000",
         0, 0, 100, 0,
       )
       expect(grad).toBeNull()
@@ -125,11 +135,11 @@ describe("canvasRenderHelpers", () => {
     it("builds a gradient when 2+ stops are present", () => {
       const grad = buildColorStopGradient(
         ctx,
-        { colorStops: [
+        { stops: [
           { offset: 0, color: "red" },
           { offset: 1, color: "blue" },
         ]},
-        0, 0, 100, 0,
+        "#000", 0, 0, 100, 0,
       )
       expect(grad).toBeTruthy()
     })
@@ -137,11 +147,11 @@ describe("canvasRenderHelpers", () => {
     it("filters non-finite offsets before the 2-stop minimum (avoids addColorStop IndexSizeError)", () => {
       const grad = buildColorStopGradient(
         ctx,
-        { colorStops: [
+        { stops: [
           { offset: 0, color: "red" },
           { offset: NaN, color: "green" },
         ]},
-        0, 0, 100, 0,
+        "#000", 0, 0, 100, 0,
       )
       expect(grad).toBeNull()
     })

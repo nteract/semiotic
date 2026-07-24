@@ -1210,7 +1210,10 @@ function RaceOrdinalChart({ refHandle, title, gender, width, height, totals, lea
           oSort="desc"
           barPadding={14}
           roundedTop={5}
-          gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.26 }}
+          gradientFill={{ stops: [
+            { offset: 0, opacity: 0.9 },
+            { offset: 1, opacity: 0.26 },
+          ] }}
           pieceStyle={() => ({
             fill: color,
             stroke: "rgba(255, 245, 204, 0.62)",

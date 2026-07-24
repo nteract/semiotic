@@ -32,10 +32,7 @@ export function renderNetworkParticles(
     // (the supplied `edgeColorFn`) — it has access to the node map and
     // can hand the user-supplied function a real node even when
     // `edge.source` is a string id (the case for `customNetworkLayout`
-    // charts like ProcessSankey). Previously this renderer tried to
-    // invoke `style.color` directly and only succeeded when
-    // `edge.source` happened to already be an object reference, which
-    // silently dropped the user's color function for any custom layout.
+    // charts like ProcessSankey).
     //
     // Strings flow through `resolveCSSColor` so theme tokens like
     // `var(--semiotic-primary)` paint correctly — canvas's `fillStyle`

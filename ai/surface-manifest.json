@@ -7,16 +7,17 @@
     "src/components/semiotic-ai.ts",
     "ai/mcp-server.ts"
   ],
-  "version": "3.8.5",
+  "version": "3.8.6",
   "components": {
-    "schema": 55,
-    "aiChartExports": 52,
-    "mcpRenderable": 49,
+    "schema": 56,
+    "aiChartExports": 53,
+    "mcpRenderable": 50,
     "browserOnly": 6,
     "categories": {
       "xy": [
         "AreaChart",
         "BubbleChart",
+        "BumpChart",
         "CandlestickChart",
         "ConnectedScatterplot",
         "DifferenceChart",
@@ -90,6 +91,7 @@
       "BigNumber",
       "BoxPlot",
       "BubbleChart",
+      "BumpChart",
       "CandlestickChart",
       "ChordDiagram",
       "CirclePack",

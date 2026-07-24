@@ -14,10 +14,7 @@ import * as React from "react"
 
 /**
  * Compose a user/frame `nodeStyle` on top of the HOC's built-in fill
- * encoding. Hierarchy HOCs (Treemap / CirclePack / TreeDiagram) always
- * merge this way; SSR used to *replace* the base style whenever a custom
- * `nodeStyle` was present, so hide-root / border overlays collapsed every
- * tile to the default fill (looked like a flat monochrome layout).
+ * encoding so hierarchy fill, hide-root, and border rules remain intact.
  */
 function composeHierarchyNodeStyle(
   baseNodeStyle: (d: Datum) => Record<string, unknown>,
@@ -449,8 +446,7 @@ export const sankeyDiagram: ChartConfig = {
         ...(common.opacity !== undefined && { opacity: common.opacity }),
       }
     }
-    // HOC wires styleRules into nodeStyle; SSR previously only did this for
-    // ForceDirectedGraph, so hatch/threshold fills no-op'd on Sankey SVG.
+    // Wire styleRules into nodeStyle for hatch and threshold fills.
     const ruleNodeStyle = styleRulesToNodeStyle(
       rest.styleRules,
       colorBy as string | ((d: Datum) => unknown) | undefined,
@@ -597,8 +593,7 @@ export const treeDiagram: ChartConfig = {
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()
-    // Flatten hierarchy so categorical colorBy on leaves gets a full domain
-    // (root-only scale previously produced empty/wrong domains).
+    // Flatten the hierarchy so categorical colorBy on leaves gets a full domain.
     const allNodes = flattenHierarchy(
       (data ?? null) as Datum | null,
       rest.childrenAccessor as string | ((d: Datum) => Datum[]),

@@ -78,6 +78,7 @@ import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useOrdinalKeyboardNavigation } from "./frameKeyboardNavigation"
+import { normalizeGradient } from "../charts/shared/gradient"
 
 const DEFAULT_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
 
@@ -261,7 +262,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     const wasHydratingFromSSR = useWasHydratingFromSSR()
     const safeData = useMemo(() => filterSparseArray(data), [data])
 
-    // Resolve new-style names with legacy fallback
+    // Resolve labels and formatters.
     const oLabel = categoryLabel ?? oLabelLegacy
     const rLabel = valueLabel ?? rLabelLegacy
     const oFormat = categoryFormat ?? oFormatLegacy
@@ -347,7 +348,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       axisExtent,
       barPadding,
       roundedTop,
-      gradientFill,
+      gradientFill: normalizeGradient(gradientFill),
       trackFill,
       baselinePadding,
       innerRadius,

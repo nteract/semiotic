@@ -15,6 +15,7 @@
 import * as React from "react"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
+import { buildThresholdLineSegments } from "./renderers/thresholdLineSegments"
 
 import type {
   SceneNode,
@@ -29,6 +30,7 @@ import type {
 } from "./types"
 
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
+import type { GradientConfig } from "../charts/shared/gradient"
 
 import {
   svgFill,
@@ -73,16 +75,8 @@ function buildAreaSVGGradient(n: AreaSceneNode, id: string): React.ReactElement 
   for (const [, y] of n.bottomPath) bottomY = Math.max(bottomY, y)
   if (!Number.isFinite(topY) || !Number.isFinite(bottomY)) return null
 
-  const stops: React.ReactElement[] = []
-  if ("colorStops" in fg) {
-    const colorStops = colorStopElements(fg.colorStops)
-    if (!colorStops) return null
-    stops.push(...colorStops)
-  } else {
-    if (!Number.isFinite(fg.topOpacity) || !Number.isFinite(fg.bottomOpacity)) return null
-    stops.push(<stop key="0" offset={0} stopColor={svgFill(n.style.fill)} stopOpacity={Math.max(0, Math.min(1, fg.topOpacity))} />)
-    stops.push(<stop key="1" offset={1} stopColor={svgFill(n.style.fill)} stopOpacity={Math.max(0, Math.min(1, fg.bottomOpacity))} />)
-  }
+  const stops = colorStopElements(fg.stops, svgFill(n.style.fill))
+  if (!stops) return null
 
   return (
     <linearGradient id={id} gradientUnits="userSpaceOnUse" x1={0} y1={topY} x2={0} y2={bottomY}>
@@ -92,12 +86,13 @@ function buildAreaSVGGradient(n: AreaSceneNode, id: string): React.ReactElement 
 }
 
 function buildStrokeSVGGradient(
-  gradient: { colorStops: Array<{ offset: number; color: string }> } | undefined,
+  gradient: GradientConfig | undefined,
   path: Array<[number, number]>,
   id: string,
+  baseColor: string,
 ): React.ReactElement | null {
   if (!gradient || path.length < 2) return null
-  const stops = colorStopElements(gradient.colorStops)
+  const stops = colorStopElements(gradient.stops, baseColor)
   if (!stops) return null
   return (
     <linearGradient
@@ -131,7 +126,12 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             .curve(curveFactory)(n.path) ?? ""
         : "M" + n.path.map(([x, y]) => `${x},${y}`).join("L")
       const gradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}line-${i}-stroke-gradient`)
-      const strokeGradient = buildStrokeSVGGradient(n.strokeGradient, n.path, gradientId)
+      const strokeGradient = buildStrokeSVGGradient(
+        n.strokeGradient,
+        n.path,
+        gradientId,
+        n.style.stroke || "#4e79a7",
+      )
       return (
         <React.Fragment key={`line-${i}`}>
           {strokeGradient && <defs>{strokeGradient}</defs>}
@@ -187,16 +187,85 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             .curve(curveFactory)(n.topPath) ?? ""
         : "M" + n.topPath.map(([x, y]) => `${x},${y}`).join("L")
       const strokeGradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}area-${i}-stroke-gradient`)
-      const strokeGradient = buildStrokeSVGGradient(n.strokeGradient, n.topPath, strokeGradientId)
-      const topStroke = n.style.stroke && n.style.stroke !== "none" ? (
-        <path
-          d={topStrokePath}
-          fill="none"
-          stroke={strokeGradient ? `url(#${strokeGradientId})` : svgFill(n.style.stroke)}
-          strokeWidth={n.style.strokeWidth || 2}
-          opacity={n.style.opacity}
-        />
-      ) : null
+      const hasThresholds = Boolean(
+        n.colorThresholds?.length
+        && n.rawValues
+        && n.rawValues.length === n.topPath.length
+      )
+      const hasStrokeColorBands = Boolean(n.strokeColorBands?.length)
+      const strokeGradient = hasThresholds || hasStrokeColorBands
+        ? null
+        : buildStrokeSVGGradient(
+            n.strokeGradient,
+            n.topPath,
+            strokeGradientId,
+            n.style.stroke || "#4e79a7",
+          )
+      const strokeWidth = n.style.strokeWidth || 2
+      // Loop rather than Math.min(...spread): a large area's topPath can exceed
+      // the JS argument-count limit, and the canvas renderer folds the same way.
+      let minTopX = Infinity
+      let maxTopX = -Infinity
+      for (const [x] of n.topPath) {
+        if (x < minTopX) minTopX = x
+        if (x > maxTopX) maxTopX = x
+      }
+      const thresholdClipIds = hasStrokeColorBands
+        ? n.strokeColorBands!.map((_band, bandIndex) =>
+            safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}area-${i}-stroke-band-${bandIndex}`)
+          )
+        : []
+      const thresholdClipDefs = hasStrokeColorBands
+        ? n.strokeColorBands!.map((band, bandIndex) => (
+            <clipPath id={thresholdClipIds[bandIndex]} key={thresholdClipIds[bandIndex]}>
+              <rect
+                x={minTopX - strokeWidth}
+                y={band.y}
+                width={maxTopX - minTopX + strokeWidth * 2}
+                height={band.height}
+              />
+            </clipPath>
+          ))
+        : null
+      const topStroke = n.style.stroke && n.style.stroke !== "none"
+        ? hasStrokeColorBands
+          ? n.strokeColorBands!.map((band, bandIndex) => (
+              <path
+                key={`area-${i}-stroke-band-${bandIndex}`}
+                d={topStrokePath}
+                fill="none"
+                stroke={band.color ?? svgFill(n.style.stroke)}
+                strokeWidth={strokeWidth}
+                opacity={n.style.opacity}
+                clipPath={`url(#${thresholdClipIds[bandIndex]})`}
+              />
+            ))
+          : hasThresholds
+          ? buildThresholdLineSegments(
+              n.topPath,
+              n.rawValues!,
+              n.colorThresholds!,
+              svgFill(n.style.stroke),
+            ).map((segment, segmentIndex) => (
+              <path
+                key={`area-${i}-threshold-${segmentIndex}`}
+                d={"M" + segment.path.map(([x, y]) => `${x},${y}`).join("L")}
+                fill="none"
+                stroke={segment.color}
+                strokeWidth={strokeWidth}
+                opacity={n.style.opacity}
+              />
+            ))
+          : (
+              <path
+                d={topStrokePath}
+                fill="none"
+                stroke={strokeGradient ? `url(#${strokeGradientId})` : svgFill(n.style.stroke)}
+                strokeWidth={strokeWidth}
+                opacity={n.style.opacity}
+              />
+            )
+        : null
       // User-supplied clipRect — hard-clips the area to a rect (used by
       // custom layouts for partial reveals, banding, highlight regions).
       // Inline the clipPath alongside the path so the SSR output is a
@@ -208,7 +277,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         return (
           <g key={`area-${i}`}>
             <defs>
-              {areaGradient}{!areaGradient && areaHatch}{strokeGradient}
+              {areaGradient}{!areaGradient && areaHatch}{strokeGradient}{thresholdClipDefs}
               <clipPath id={cid}>
                 <rect
                   x={n.clipRect.x}
@@ -233,7 +302,9 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
       }
       return (
         <React.Fragment key={`area-${i}`}>
-          {(areaGradient || areaHatch || strokeGradient) && <defs>{areaGradient}{!areaGradient && areaHatch}{strokeGradient}</defs>}
+          {(areaGradient || areaHatch || strokeGradient || thresholdClipDefs) && (
+            <defs>{areaGradient}{!areaGradient && areaHatch}{strokeGradient}{thresholdClipDefs}</defs>
+          )}
           <path
             d={d}
             fill={areaFill}
@@ -345,9 +416,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     case "candlestick": {
       const n = node as CandlestickSceneNode
       if (n.isRange) {
-        // Range/dumbbell mode: high→low line + endpoint bulbs, matching the
-        // canvas renderer. Previously this fell through to the body rect below,
-        // so SSR painted a filled bar where CSR drew a dumbbell.
+        // Range/dumbbell mode: high→low line + endpoint bulbs.
         const dotRadius = n.dotRadius ?? Math.max(2, n.bodyWidth / 2)
         return (
           <g key={`candle-${i}`}>

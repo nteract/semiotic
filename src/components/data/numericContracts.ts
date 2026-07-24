@@ -276,6 +276,7 @@ export const BUILT_IN_NUMERIC_CONTRACTS: Readonly<
 > = {
   LineChart: SERIES_XY_CONTRACT,
   AreaChart: SERIES_XY_CONTRACT,
+  BumpChart: SERIES_XY_CONTRACT,
   Scatterplot: SCATTER_CONTRACT,
   ConnectedScatterplot: XY_CONTRACT,
   QuadrantChart: SCATTER_CONTRACT,

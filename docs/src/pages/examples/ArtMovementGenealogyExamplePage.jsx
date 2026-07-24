@@ -430,8 +430,7 @@ function YearAxis({ x, align, height }) {
 
 // Each movement's wrapped label + box size — the label-box geometry the layout
 // feeds to rect-aware collision, and that the cover-styled overlay renders.
-// (The force settle + edge routing that used to live here are now the
-// axisFixedForcePositions + edge-router helpers from semiotic/recipes.)
+// Force settling and edge routing use helpers from semiotic/recipes.
 function nodeGeometry(node) {
   const lines = wrapMovementLabel(node.id)
   const maxChars = Math.max(...lines.map((line) => line.length))

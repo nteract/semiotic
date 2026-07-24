@@ -10,12 +10,8 @@ interface StalenessBadgeProps {
  * `staleness.showBadge` is set.
  *
  * Shared by all four Stream Frames (XY / ordinal / network / geo) so the badge
- * is pixel-identical across families. Previously each frame inlined its own
- * copy and they had drifted — the network frame used a smaller, heavier variant
- * (10px/700, tighter padding, letterSpacing). This is the canonical style: the
- * more legible 11px/600 the other three shared, plus `zIndex`/`pointerEvents`
- * hardening so the badge always sits above the canvas and never intercepts
- * pointer events.
+ * is pixel-identical across families. The badge sits above the canvas and does
+ * not intercept pointer events.
  */
 export function StalenessBadge({ isStale, position }: StalenessBadgeProps) {
   return (

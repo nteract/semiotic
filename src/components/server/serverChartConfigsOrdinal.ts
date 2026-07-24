@@ -19,18 +19,12 @@ import { composeLegendConfigs } from "../types/legendTypes"
 import { resolveTheme } from "./themeResolver"
 import { type ChartConfig, type ServerAccessor } from "./serverChartConfigShared"
 import * as React from "react"
+import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
 
-// `gradientFill === true` is the HOC's shorthand for the default top/bottom
-// opacity stops; the scene builders only accept the object form, so we
-// normalize it the same way the client frame (and staticXY.tsx) do.
 function normalizeBarGradientFill(gradientFill: unknown): unknown {
-  return gradientFill === true
-    ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-    : gradientFill === false
-      ? undefined
-      : gradientFill
+  return normalizeGradient(gradientFill as Parameters<typeof normalizeGradient>[0])
 }
 
 /**
@@ -623,11 +617,9 @@ export const gaugeChart: ChartConfig = {
     const { startAngleDeg } = sweepToAngles(sweep)
 
     const thresholds = rest.thresholds || [{ value: gMax, color: rest.color || "#4e79a7" }]
-    const gradientFillValue = common.gradientFill as unknown
-    const gradientFill =
-      gradientFillValue && typeof gradientFillValue === "object" && "colorStops" in gradientFillValue
-        ? gradientFillValue as { colorStops: Array<{ offset: number; color: string }> }
-        : undefined
+    const gradientFill = normalizeColorGradient(
+      common.gradientFill as Parameters<typeof normalizeColorGradient>[0],
+    )
     const gaugeModel = buildGaugeArcModel({
       min: gMin,
       max: gMax,

@@ -161,7 +161,7 @@ const barChartProps = [
   { name: "sort", type: "boolean | string | function", required: false, default: "false", description: 'Sort bars by value. Accepts true, "asc", "desc", or a custom comparator function.' },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bars in pixels." },
   { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on bar tops (the end away from baseline)." },
-  { name: "gradientFill", type: "boolean | { topOpacity, bottomOpacity } | { colorStops }", required: false, default: "false", description: "Gradient running from each bar's tip toward its base. `true` = default 80%→5% opacity fade; object forms mirror AreaChart.gradientFill. Direction follows orientation and sign." },
+  { name: "gradientFill", type: "{ stops }", required: false, default: null, description: "Gradient running from each bar's tip toward its base. Each stop uses { offset: 0–1, color?, opacity? }. Direction follows orientation and sign." },
   { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing, intro }` for custom. Bars grow from baseline on first render." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bars." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
@@ -451,18 +451,18 @@ export default function BarChartPage() {
         the baseline) toward its base. Same API as{" "}
         <Link to="/charts/area-chart">AreaChart</Link>:
       </p>
-      <ul>
-        <li><code>true</code> — default fade (80% → 5% of the bar's resolved color).</li>
-        <li><code>{`{ topOpacity, bottomOpacity }`}</code> — explicit opacity stops on the bar's color.</li>
-        <li><code>{`{ colorStops: [{ offset, color }, ...] }`}</code> — arbitrary multi-color gradient.</li>
-      </ul>
       <p>Default opacity fade:</p>
       <LiveExample
         frameProps={{
           data: sampleData,
           categoryAccessor: "category",
           valueAccessor: "value",
-          gradientFill: true,
+          gradientFill: {
+            stops: [
+              { offset: 0, opacity: 0.8 },
+              { offset: 1, opacity: 0.05 },
+            ],
+          },
           roundedTop: 6,
         }}
         type={BarChart}
@@ -473,18 +473,23 @@ export default function BarChartPage() {
   data={sampleData}
   categoryAccessor="category"
   valueAccessor="value"
-  gradientFill
+  gradientFill={{
+    stops: [
+      { offset: 0, opacity: 0.8 },
+      { offset: 1, opacity: 0.05 },
+    ],
+  }}
   roundedTop={6}
 />`} />
 
-      <p>Multi-color gradient via <code>colorStops</code>:</p>
+      <p>Multi-color gradient via <code>stops</code>:</p>
       <LiveExample
         frameProps={{
           data: sampleData,
           categoryAccessor: "category",
           valueAccessor: "value",
           gradientFill: {
-            colorStops: [
+            stops: [
               { offset: 0, color: "#f472b6" },
               { offset: 0.5, color: "#a855f7" },
               { offset: 1, color: "#3b82f6" },
@@ -501,7 +506,7 @@ export default function BarChartPage() {
   categoryAccessor="category"
   valueAccessor="value"
   gradientFill={{
-    colorStops: [
+    stops: [
       { offset: 0, color: "#f472b6" },   // pink at the tip
       { offset: 0.5, color: "#a855f7" }, // purple in the middle
       { offset: 1, color: "#3b82f6" },   // blue at the base
@@ -521,7 +526,7 @@ export default function BarChartPage() {
           valueAccessor: "value",
           orientation: "horizontal",
           gradientFill: {
-            colorStops: [
+            stops: [
               { offset: 0, color: "#22d3ee" },
               { offset: 1, color: "#2563eb" },
             ],

@@ -366,7 +366,7 @@ describe("GaugeChart", () => {
             value={50}
             fillZones={false}
             gradientFill={{
-              colorStops: [
+              stops: [
                 { offset: 0, color: "#ef4444" },
                 { offset: 0.5, color: "#f59e0b" },
                 { offset: 1, color: "#3b82f6" },
@@ -392,7 +392,7 @@ describe("GaugeChart", () => {
             showNeedle={false}
             cornerRadius={12}
             gradientFill={{
-              colorStops: [
+              stops: [
                 { offset: 0, color: "#ef4444" },
                 { offset: 1, color: "#3b82f6" },
               ],
@@ -433,7 +433,7 @@ describe("GaugeChart", () => {
             value={100}
             fillZones={false}
             gradientFill={{
-              colorStops: [
+              stops: [
                 { offset: 0, color: "var(--semiotic-low)" },
                 { offset: 1, color: "#3b82f6" },
               ],
@@ -464,7 +464,7 @@ describe("GaugeChart", () => {
               color: "#999999",
             }))}
             gradientFill={{
-              colorStops: [
+              stops: [
                 { offset: 0, color: "#ef4444" },
                 { offset: 1, color: "#3b82f6" },
               ],

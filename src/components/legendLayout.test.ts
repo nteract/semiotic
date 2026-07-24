@@ -1,4 +1,9 @@
-import { resolveSideLegendMargin, resolveSideLegendWidth } from "./legendLayout"
+import {
+  resolveHorizontalLegendHeight,
+  resolveLegendDistance,
+  resolveSideLegendMargin,
+  resolveSideLegendWidth,
+} from "./legendLayout"
 
 describe("side legend measurement", () => {
   const styleFn = () => ({ fill: "#555" })
@@ -84,5 +89,47 @@ describe("side legend measurement", () => {
       legend,
       { swatchSize: 80, labelGap: 30 },
     )).toBe(127)
+  })
+})
+
+describe("resolveLegendDistance", () => {
+  const styleFn = () => ({ fill: "#555" })
+
+  it("falls back to the default when legendDistance is not finite", () => {
+    const legend = {
+      legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],
+      legendDistance: NaN,
+    }
+
+    expect(resolveLegendDistance(legend)).toBe(10)
+  })
+
+  it("still honors a valid finite legendDistance", () => {
+    const legend = {
+      legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],
+      legendDistance: 24,
+    }
+
+    expect(resolveLegendDistance(legend)).toBe(24)
+  })
+})
+
+describe("resolveHorizontalLegendHeight", () => {
+  const styleFn = () => ({ fill: "#555" })
+
+  it("reserves extra height for the multi-group separator overflow", () => {
+    const singleGroup = {
+      legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],
+    }
+    const multiGroup = {
+      legendGroups: [
+        { label: "", styleFn, items: [{ label: "A" }] },
+        { label: "", styleFn, items: [{ label: "B" }] },
+      ],
+    }
+
+    expect(resolveHorizontalLegendHeight(multiGroup, 500)).toBe(
+      resolveHorizontalLegendHeight(singleGroup, 500) + 16
+    )
   })
 })

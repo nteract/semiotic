@@ -19,8 +19,21 @@ export type { ConnectedScatterplotProps } from "./xy/ConnectedScatterplot"
 export { LineChart } from "./xy/LineChart"
 export type { LineChartProps } from "./xy/LineChart"
 
+export { BumpChart, rankBumpData } from "./xy/BumpChart"
+export type {
+  BumpChartProps,
+  RankedBumpData,
+  RankedBumpDatum,
+  RankBumpDataOptions,
+} from "./xy/BumpChart"
+
 export { AreaChart } from "./xy/AreaChart"
 export type { AreaChartProps, SemanticGradientStop } from "./xy/AreaChart"
+export type {
+  GradientConfig,
+  GradientStop,
+  SemanticGradientInput,
+} from "./shared/gradient"
 
 export { DifferenceChart } from "./xy/DifferenceChart"
 export type { DifferenceChartProps } from "./xy/DifferenceChart"

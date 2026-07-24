@@ -51,7 +51,7 @@ const gaugeProps = [
     required: false,
     default: null,
     description:
-      "Arc-length gradient for the gauge band. The gradient is sampled along the visible filled portion of the arc from the sweep start toward the current value. If fillZones is false, the entire arc uses the gradient.",
+      "Arc-length gradient for the gauge band: { stops: [{ offset: 0–1, color?, opacity? }] }. Offset 0 is the sweep start and offset 1 is the sweep end.",
   },
   {
     name: "color",
@@ -450,7 +450,7 @@ export default function GaugeChartPage() {
           showNeedle: false,
           backgroundColor: "#d1d5db",
           gradientFill: {
-            colorStops: [
+            stops: [
               { offset: 0, color: "#2782d7" },
               { offset: 0.3, color: "#f4ee43" },
               { offset: 0.7, color: "#fdd961" },
@@ -468,7 +468,7 @@ export default function GaugeChartPage() {
           fillZones: "true",
           backgroundColor: `"#d1d5db"`,
           gradientFill: `{
-  colorStops: [
+  stops: [
     { offset: 0, color: "#2782d7" },
     { offset: 0.3, color: "#f4ee43" },
     { offset: 0.7, color: "#fdd961" },

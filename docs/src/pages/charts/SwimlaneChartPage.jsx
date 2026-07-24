@@ -264,7 +264,7 @@ const SwimlaneChartPropsTable = [
   { name: "brush", type: "boolean", required: false, default: null, description: "Enable value-axis brush selection." },
   { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { r: [min, max] } or null when brush clears." },
   { name: "linkedBrush", type: "string | object", required: false, default: null, description: "LinkedCharts brush integration name." },
-  { name: "gradientFill", type: "boolean | { topOpacity, bottomOpacity } | { colorStops }", required: false, default: null, description: "Gradient fill across each segment along its growth direction (left→right horizontal, bottom→top vertical). Same shape as BarChart/AreaChart gradientFill." },
+  { name: "gradientFill", type: "{ stops }", required: false, default: null, description: "Gradient fill along each segment's growth direction using { stops: [{ offset: 0–1, color?, opacity? }] }." },
   { name: "trackFill", type: "string | { color, opacity }", required: false, default: null, description: 'Lane "track" fill — a rect drawn behind each lane spanning the full value-axis range, sized to the lane\'s bandwidth. CSS vars supported (e.g. "var(--semiotic-grid)").' },
   { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects. Supports x-threshold for unlabeled dashed vertical reference lines (omit label)." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamOrdinalFrame for advanced control." },
@@ -465,7 +465,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
       <h2 id="gradient-fill">Gradient Fill + Threshold</h2>
 
       <p>
-        Pass <code>gradientFill</code> with <code>colorStops</code> to render a
+        Pass <code>gradientFill</code> with <code>stops</code> to render a
         multi-stop gradient along each segment&rsquo;s growth direction
         (left&rarr;right horizontal, bottom&rarr;top vertical). The shape
         matches <Link to="/charts/bar-chart">BarChart</Link> and{" "}
@@ -494,7 +494,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
           // and mid grey over near-black.
           trackFill="rgba(127, 127, 127, 0.25)"
           gradientFill={{
-            colorStops: [
+            stops: [
               { offset: 0, color: "#9ca3af" },
               { offset: 50 / 75, color: "#9ca3af" },
               { offset: 50 / 75, color: "#fbbf24" },
@@ -529,7 +529,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
           frameProps={{ rExtent: [0, 100] }}
           trackFill="rgba(127, 127, 127, 0.25)"
           gradientFill={{
-            colorStops: [
+            stops: [
               { offset: 0, color: "#9ca3af" },
               { offset: 50 / 75, color: "#9ca3af" },
               { offset: 50 / 75, color: "#fbbf24" },
@@ -556,7 +556,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
   // Semi-transparent grey naturally contrasts in both light and dark mode.
   trackFill="rgba(127, 127, 127, 0.25)"
   gradientFill={{
-    colorStops: [
+    stops: [
       { offset: 0,       color: "#9ca3af" }, // grey from 0%...
       { offset: 50/75,   color: "#9ca3af" }, // ...to 50% (hard transition)
       { offset: 50/75,   color: "#fbbf24" }, // yellow from 50%...

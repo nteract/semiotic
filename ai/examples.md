@@ -147,7 +147,12 @@ const data = [
   data={data}
   xAccessor="month"
   yAccessor="revenue"
-  gradientFill
+  gradientFill={{
+    stops: [
+      { offset: 0, opacity: 0.8 },
+      { offset: 1, opacity: 0.05 }
+    ]
+  }}
   xLabel="Month"
   yLabel="Revenue ($)"
 />
@@ -180,7 +185,12 @@ const data = [
     y0Accessor="p5"
     showLine={false}
     areaOpacity={0.3}
-    gradientFill
+    gradientFill={{
+      stops: [
+        { offset: 0, opacity: 0.8 },
+        { offset: 1, opacity: 0.05 }
+      ]
+    }}
     width={600}
     height={400}
   />
@@ -234,6 +244,38 @@ const tempData = [
 Fills the region between two series with a color that switches based on which series is higher at each x — `seriesAColor` where A > B, `seriesBColor` where B > A. Crossover x-values are linearly interpolated so adjacent segments meet at zero-width vertices (no jagged seams). Classic uses: temperature anomaly, forecast vs. actual, budget variance, any A/B comparison.
 
 Key props: `seriesALabel` / `seriesBLabel` (legend + tooltip), `seriesAColor` / `seriesBColor` (defaults to `var(--semiotic-danger)` / `var(--semiotic-info)`), `showLines` (default `true` — draws both series on top of the fill), `areaOpacity` (0.6), `gradientFill` (same shape as AreaChart), `windowSize` (max raw rows in push buffer; FIFO eviction). Push API: `ref.current.push({ x, a, b })` — accessor outputs coerce through a `toNumber` helper so `Date` (time series) and numeric strings (CSV/JSON) work transparently.
+
+### BumpChart
+
+```jsx
+import { BumpChart } from "semiotic/ai"
+
+const data = [
+  { quarter: "Q1", team: "North", sales: 420 },
+  { quarter: "Q1", team: "South", sales: 380 },
+  { quarter: "Q1", team: "East",  sales: 510 },
+  { quarter: "Q1", team: "West",  sales: 290 },
+  { quarter: "Q2", team: "North", sales: 460 },
+  { quarter: "Q2", team: "South", sales: 500 },
+  { quarter: "Q2", team: "East",  sales: 480 },
+  { quarter: "Q2", team: "West",  sales: 350 },
+  { quarter: "Q3", team: "North", sales: 610 },
+  { quarter: "Q3", team: "South", sales: 470 },
+  { quarter: "Q3", team: "East",  sales: 520 },
+  { quarter: "Q3", team: "West",  sales: 540 }
+]
+
+<BumpChart
+  data={data}
+  xAccessor="quarter"
+  yAccessor="sales"
+  lineBy="team"
+  highlightTop={2}
+  xLabel="Quarter"
+/>
+```
+
+Ranks every series within each x-column and connects each series' rank across columns — the classic "who's leading over time" chart. `yAccessor` is the magnitude used to rank (highest value = rank 1 by default; use `rankDirection="ascending"` when lower is better). `highlightTop` colors only the N best series by mean rank and greys the rest via `neutralColor`. Set `ribbon={true}` to encode the raw magnitude as true perpendicular-offset ribbon width instead of fixed-width lines — line and ribbon share the same centerline geometry, so `animate` tweens only the width. Endpoint labels show by default (`showLabels`).
 
 ### StackedAreaChart
 

@@ -16,6 +16,7 @@
 ## Charts — XY
 
 - [LineChart](/charts/line-chart): Line traces with curve interpolation, area fill, and point markers. _(act: tracking)_
+- [BumpChart](/charts/bump-chart): Ranked series trajectories across ordered or time-based columns, with optional magnitude-encoded ribbons. _(act: tracking)_
 - [AreaChart](/charts/area-chart): Filled area chart with optional stroke line. _(act: tracking)_
 - [DifferenceChart](/charts/difference-chart): Two-series difference chart: fills the area between series A and series B with a color that switches at each crossover — A's color where A > B, B's… _(act: alerting)_
 - [StackedAreaChart](/charts/stacked-area-chart): Stacked area chart with optional normalization to 100%. _(act: apportioning)_

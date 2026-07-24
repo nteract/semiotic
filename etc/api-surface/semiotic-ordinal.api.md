@@ -57,8 +57,10 @@ interface GaugeThreshold
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface GradientConfig
 interface GradientLegendConfig
 interface GradientLegendValue
+interface GradientStop
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
 interface HatchFill
 interface HatchPatternOptions

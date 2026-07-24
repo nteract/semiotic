@@ -5,6 +5,7 @@
 
 // XY Charts
 export { LineChart } from "./charts/xy/LineChart"
+export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
 export { AreaChart } from "./charts/xy/AreaChart"
 export { DifferenceChart } from "./charts/xy/DifferenceChart"
 export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
@@ -503,6 +504,7 @@ export {
   // XY
   LineChartCapability,
   AreaChartCapability,
+  BumpChartCapability,
   StackedAreaChartCapability,
   ScatterplotCapability,
   ConnectedScatterplotCapability,

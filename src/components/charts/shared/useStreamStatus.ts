@@ -107,9 +107,8 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
   // wraps the frame's push/pushMany so each call records its
   // timestamp.
   //
-  // Wrap-once guard: React 18 StrictMode (and any flow that re-assigns
-  // the same handle to `current`) used to double-wrap, so a single
-  // `push()` fired `markPushed()` twice. We tag the handle with a
+  // Wrap-once guard: React 18 StrictMode can reassign the same handle to
+  // `current`. We tag the handle with a
   // private symbol on first wrap; subsequent assignments of the same
   // handle short-circuit. When a *new* handle arrives we also restore
   // the previous handle's originals (if we still have them) so leaked

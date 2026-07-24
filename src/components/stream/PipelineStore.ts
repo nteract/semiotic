@@ -721,6 +721,13 @@ export class PipelineStore implements UpdateResultStore {
               height: node.clipRect.height * hRatio,
             }
           }
+          if (node.strokeColorBands) {
+            node.strokeColorBands = node.strokeColorBands.map((band) => ({
+              ...band,
+              y: band.y * hRatio,
+              height: band.height * hRatio,
+            }))
+          }
           break
         case "point":
           node.x *= wRatio; node.y *= hRatio

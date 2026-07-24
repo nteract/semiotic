@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { normalizeGradient, type GradientInput } from "../shared/gradient"
 
 export interface StackedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -37,6 +38,8 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   barPadding?: number
   /** Rounded top corner radius. Only the topmost stacked segment gets rounded. */
   roundedTop?: number
+  /** Tip-to-base segment gradient using `{ stops: [{ offset, color?, opacity? }] }`. */
+  gradientFill?: GradientInput
   /**
    * Declarative, threshold-aware segment styling. Ordered `{ when, style }`
    * rules; the last applicable rule wins per property. `when` accepts a
@@ -127,7 +130,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, styleRules, baselinePadding = false,
+    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, gradientFill, styleRules, baselinePadding = false,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -220,6 +223,11 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   // (loading skeleton, 0 bars) and then streaming in data must not change the
   // number of hooks between renders, or React throws "Rendered more hooks than
   // during the previous render."
+  // Normalize once (memoized by the raw prop), before the early returns, so a
+  // fresh gradient identity per render can't trip PipelineStore's by-reference
+  // config comparison (rules-of-hooks: must precede any early return).
+  const normalizedGradientFill = useMemo(() => normalizeGradient(gradientFill), [gradientFill])
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   const streamProps: StreamOrdinalFrameProps = {
@@ -238,6 +246,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     margin: effectiveMargin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     baselinePadding,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),

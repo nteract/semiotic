@@ -199,7 +199,7 @@ export default function TooltipsPage() {
       <p>
         When a chart can't declare tooltip fields — a{" "}
         <code>NetworkCustomChart</code> layout, a recipe like the Mermaid or
-        lineage DAG, anything "weird" — the default tooltip is no longer a dump of
+        lineage DAG, anything "weird" — the default tooltip is a concise summary of
         every property in object order. It picks a meaningful{" "}
         <strong>title</strong> (a <code>name</code>/<code>label</code>/
         <code>title</code> field, falling back to <code>id</code>), then a{" "}

@@ -54,6 +54,25 @@ describe("GroupedBarChart", () => {
     expect(props.groupBy).toBe("product")
   })
 
+  it("forwards normalized gradient stops", () => {
+    const gradientFill = {
+      stops: [
+        { offset: 0, color: "#f00" },
+        { offset: 1, color: "#00f" },
+      ],
+    }
+    render(
+      <TooltipProvider>
+        <GroupedBarChart
+          data={sampleData}
+          groupBy="product"
+          gradientFill={gradientFill}
+        />
+      </TooltipProvider>
+    )
+    expect(frameProps().gradientFill).toEqual(gradientFill)
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

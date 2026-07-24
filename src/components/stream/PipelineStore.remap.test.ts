@@ -100,6 +100,46 @@ describe("PipelineStore — Resize Remap", () => {
     }
   })
 
+  it("remaps semantic area stroke bands with the curved path", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "area",
+      xAccessor: "x",
+      yAccessor: "y",
+      yExtent: [0, 100],
+      semanticLineStops: [
+        { offset: 0.5, color: "#warning" },
+        { offset: 0.8, color: "#critical" },
+      ],
+    }))
+    ingestBounded(store, [
+      { x: 0, y: 20 },
+      { x: 5, y: 60 },
+      { x: 10, y: 90 },
+    ])
+
+    store.computeScene({ width: 100, height: 100 })
+    const area = store.scene.find(n => n.type === "area")
+    const initialBands = area?.type === "area" ? area.strokeColorBands : undefined
+    expect(initialBands?.map((band) => band.color)).toEqual([undefined, "#warning", "#critical"])
+    expect(initialBands?.map((band) => band.y)).toEqual(
+      expect.arrayContaining([expect.closeTo(50), expect.closeTo(20), expect.closeTo(0)]),
+    )
+    expect(initialBands?.map((band) => band.height)).toEqual(
+      expect.arrayContaining([expect.closeTo(50), expect.closeTo(30), expect.closeTo(20)]),
+    )
+
+    store.computeScene({ width: 200, height: 200 })
+    const resized = store.scene.find(n => n.type === "area")
+    const resizedBands = resized?.type === "area" ? resized.strokeColorBands : undefined
+    expect(resizedBands?.map((band) => band.color)).toEqual([undefined, "#warning", "#critical"])
+    expect(resizedBands?.map((band) => band.y)).toEqual(
+      expect.arrayContaining([expect.closeTo(100), expect.closeTo(40), expect.closeTo(0)]),
+    )
+    expect(resizedBands?.map((band) => band.height)).toEqual(
+      expect.arrayContaining([expect.closeTo(100), expect.closeTo(60), expect.closeTo(40)]),
+    )
+  })
+
   it("does full rebuild after new data ingestion", () => {
     const store = new PipelineStore(makeConfig({
       chartType: "scatter",

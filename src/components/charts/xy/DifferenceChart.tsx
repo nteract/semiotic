@@ -17,6 +17,7 @@ import type { HoverData } from "../../realtime/types"
 import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
 import type { SegmentRow } from "./differenceSegments"
+import { normalizeGradient, type GradientInput } from "../shared/gradient"
 
 export { computeDifferenceSegments } from "./differenceSegments"
 
@@ -52,8 +53,8 @@ export interface DifferenceChartProps<TDatum extends Datum = Datum> extends Base
   curve?: "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom"
   /** Fill opacity for the difference region. Default `0.6`. */
   areaOpacity?: number
-  /** Gradient fill across each segment, same shape as AreaChart.gradientFill. */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill from each segment's tip (offset 0) to its base (offset 1). */
+  gradientFill?: GradientInput
   /** Enable hover annotations. */
   enableHover?: boolean
   /** Show grid lines. Default `false`. */
@@ -542,6 +543,19 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
   // (loading skeleton) and then streaming in data must not change the number of
   // hooks between renders, or React throws "Rendered more hooks than during the
   // previous render."
+  // Normalize once (memoized by the raw prop), before the early returns
+  // (rules-of-hooks). Default is an opaque-top → faint-bottom fill; the memo
+  // keeps a stable identity so a `true`/legacy input can't force a rebuild.
+  const normalizedGradientFill = useMemo(
+    () => normalizeGradient(gradientFill, {
+      stops: [
+        { offset: 0, opacity: 0.85 },
+        { offset: 1, opacity: 0.15 },
+      ],
+    }),
+    [gradientFill],
+  )
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── StreamXYFrame props ─────────────────────────────────────────────
@@ -572,7 +586,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     yFormat,
     enableHover,
     showGrid,
-    ...(gradientFill && { gradientFill: gradientFill === true ? { topOpacity: 0.85, bottomOpacity: 0.15 } : gradientFill }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent,

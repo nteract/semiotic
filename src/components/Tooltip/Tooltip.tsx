@@ -484,8 +484,8 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     return (hoverData: Datum) => {
       // Unwrap Semiotic HoverData → raw datum so user functions receive
       // the data they pushed/passed. Prefer the explicit internal marker
-      // emitted by Stream Frames. Keep a narrow legacy fallback for older
-      // frame wrappers that carried frame-only metadata, but avoid guessing
+      // emitted by Stream Frames. Accept frame-only metadata as a narrow
+      // fallback, but avoid guessing
       // from common raw fields like `{ x, y, data }` — those are valid user
       // datum shapes and must not be over-unwrapped.
       const explicitlyMarked = hoverData?.__semioticHoverData === true
@@ -559,7 +559,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   // (Line/Area/StackedArea/Difference). If normalizeTooltip still sees the
   // string, the chart does not support multi mode — return a multi-series
   // content function so callers still get a useful multi tooltip, and warn
-  // in development so silent generic Tooltip() degrade is no longer free.
+  // in development when a chart does not declare multi-tooltip mode.
   if (tooltip === "multi") {
     if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
       console.warn(

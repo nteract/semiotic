@@ -10,6 +10,7 @@ const BUILT_IN_INTENT_IDS: ReadonlySet<BuiltInIntentId>
 const BarChartCapability: ChartCapability
 const BoxPlotCapability: ChartCapability
 const BubbleChartCapability: ChartCapability
+const BumpChartCapability: ChartCapability
 const CANONICAL_FIXTURES: readonly ScorecardFixture[]
 const CandlestickChartCapability: ChartCapability
 const ChordDiagramCapability: ChartCapability
@@ -57,6 +58,7 @@ function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & R
 function BigNumber(props: BigNumberProps<import("../shared/datumTypes").Datum> & { ref?: React.ForwardedRef<BigNumberHandle>; }): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CategoryColorProvider({ colors, categories, colorScheme, children, }: CategoryColorProviderProps): React.JSX.Element
 function ChartContainer(: import("../../../dist/semiotic-ai").ChartContainerProps & React.RefAttributes<import("../../../dist/semiotic-ai").ChartContainerHandle>): React.ReactNode
@@ -198,6 +200,7 @@ function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | 
 function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
 function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
+function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function receivabilityBias(audit: AccessibilityAuditResult, modality: ReceptionModality): ReceivabilitySignal
 function recipeToChartCapability(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): ChartCapability
 function recordAnnotationStatusChange(toStatus: AnnotationStatus, opts?: { annotationId?: string; fromStatus?: AnnotationStatus; chartId?: string; arcId?: string; meta?: Record<string, unknown>; } | undefined): ConversationArcEvent | null

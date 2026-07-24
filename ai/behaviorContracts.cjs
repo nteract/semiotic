@@ -27,8 +27,8 @@ const DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->"
 // diagnoseConfig as "OK" in static mode. Keying off the presence of a `data`
 // property catches them (and still includes the charts that DO list `data`).
 //
-// `STATIC_DATA_COMPONENTS` stays exported as a Set for test/legacy callers
-// that probe the surface, and is rebuilt from disk at module load time.
+// `STATIC_DATA_COMPONENTS` is exported as a Set and rebuilt from disk at
+// module load time.
 function loadStaticDataComponentsFromSchema() {
   // Source layout has this file at `<repo>/ai/behaviorContracts.cjs` and the
   // schema at `<repo>/ai/schema.json` — `__dirname` works directly.

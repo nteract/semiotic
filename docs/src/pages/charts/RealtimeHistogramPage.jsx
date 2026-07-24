@@ -308,7 +308,10 @@ function FilteredLineOverlay({ allData, chartWidth }) {
             height={200}
             color="#007bff"
             areaOpacity={0.35}
-            gradientFill
+            gradientFill={{ stops: [
+              { offset: 0, opacity: 0.8 },
+              { offset: 1, opacity: 0.05 },
+            ] }}
             showLine
             lineWidth={2}
             frameProps={{
@@ -809,7 +812,12 @@ function FilteredOverlay({ allData, width }) {
       {hasBrush && filtered.length > 1 && (
         <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <AreaChart data={filtered} xAccessor="time" yAccessor="value"
-            color="#007bff" gradientFill areaOpacity={0.35} showLine lineWidth={2}
+            color="#007bff"
+            gradientFill={{ stops: [
+              { offset: 0, opacity: 0.8 },
+              { offset: 1, opacity: 0.05 },
+            ] }}
+            areaOpacity={0.35} showLine lineWidth={2}
             width={width} height={200}
             frameProps={{ xExtent, yExtent, showAxes: false,
                           background: "transparent" }} />

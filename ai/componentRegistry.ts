@@ -7,6 +7,7 @@ import type { ComponentType } from "react"
 import {
   LineChart,
   AreaChart,
+  BumpChart,
   DifferenceChart,
   StackedAreaChart,
   Scatterplot,
@@ -67,6 +68,7 @@ export interface RegistryEntry {
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   LineChart: { component: LineChart, category: "xy" },
   AreaChart: { component: AreaChart, category: "xy" },
+  BumpChart: { component: BumpChart, category: "xy" },
   DifferenceChart: { component: DifferenceChart, category: "xy" },
   StackedAreaChart: { component: StackedAreaChart, category: "xy" },
   Scatterplot: { component: Scatterplot, category: "xy" },

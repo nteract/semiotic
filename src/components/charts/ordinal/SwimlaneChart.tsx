@@ -16,6 +16,7 @@ import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { normalizeGradient, type GradientInput } from "../shared/gradient"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -71,12 +72,9 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
   rTickValues?: number[]
   /** Align first value tick label to start, last to end. Prevents clipping at chart edges. */
   tickLabelEdgeAlign?: boolean
-  /** Gradient fill for swimlane segments. `true` uses tip→base opacity ramp;
-   *  pass `{ topOpacity, bottomOpacity }` for a uniform alpha gradient or
-   *  `{ colorStops }` for a multi-stop color ramp. Same shape as
-   *  BarChart.gradientFill / AreaChart.gradientFill. The gradient runs along
-   *  the lane's growth direction (left→right horizontal, bottom→top vertical). */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Gradient fill along the lane's growth direction. Offset 0 is the tip
+   *  and offset 1 is the base. Stops can set `color`, `opacity`, or both. */
+  gradientFill?: GradientInput
   /** Lane "track" fill — a rect drawn behind each lane spanning the full
    *  value-axis range, sized to the lane's bandwidth. Lets budget/progress
    *  lanes read as filled vs. empty. Pass a color string (CSS vars
@@ -288,6 +286,11 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   // (loading skeleton, 0 bars) and then streaming in data must not change the
   // number of hooks between renders, or React throws "Rendered more hooks than
   // during the previous render."
+  // Normalize once (memoized by the raw prop), before the early returns, so a
+  // fresh gradient identity per render can't trip PipelineStore's by-reference
+  // config comparison (rules-of-hooks: must precede any early return).
+  const normalizedGradientFill = useMemo(() => normalizeGradient(gradientFill), [gradientFill])
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   const streamProps: StreamOrdinalFrameProps = {
@@ -324,11 +327,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...(gradientFill && {
-      gradientFill: gradientFill === true
-        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-        : gradientFill
-    }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...(trackFill != null && { trackFill }),
     ...(roundedTop != null && { roundedTop }),
     ...(valueExtent && { rExtent: valueExtent }),

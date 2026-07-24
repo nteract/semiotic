@@ -1,12 +1,10 @@
 /**
- * Single source of truth for per-chart prop specifications.
- *
- * Three downstream consumers used to maintain their own per-chart entries:
+ * Single source of truth for per-chart prop specifications consumed by:
  *   - `ai/schema.json`                                    (LLM tool definitions)
  *   - `src/components/charts/shared/validationMap.ts`     (runtime prop validation)
  *   - `ai/componentMetadata.cjs`                          (category buckets)
  *
- * Today, `validationMap.generated.ts` and `ai/schema.json` are generated from
+ * `validationMap.generated.ts` and `ai/schema.json` are generated from
  * this registry — run `npm run docs:chart-specs:schema` to refresh both after
  * editing a spec. `componentMetadata.cjs` is still
  * hand-edited but gated for parity by the registry: `check:chart-specs` (run
