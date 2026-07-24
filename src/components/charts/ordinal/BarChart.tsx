@@ -367,6 +367,12 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   // (loading skeleton, 0 bars) and then streaming in data must not change the
   // number of hooks between renders, or React throws "Rendered more hooks than
   // during the previous render."
+  // Normalize once (memoized by the raw prop): normalizeGradient allocates a
+  // new object for legacy inputs, and PipelineStore.updateConfig compares
+  // config by reference, so a fresh identity each render would force rebuilds.
+  // Declared before the early returns to satisfy rules-of-hooks.
+  const normalizedGradientFill = useMemo(() => normalizeGradient(gradientFill), [gradientFill])
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   // Validate data (after all hooks)
@@ -398,9 +404,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     margin: effectiveMargin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
-    ...(normalizeGradient(gradientFill) && {
-      gradientFill: normalizeGradient(gradientFill),
-    }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...(dataIdAccessor && { dataIdAccessor }),
     baselinePadding,
     enableHover,

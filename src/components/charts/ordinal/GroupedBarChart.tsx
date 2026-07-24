@@ -222,6 +222,11 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   // (loading skeleton, 0 bars) and then streaming in data must not change the
   // number of hooks between renders, or React throws "Rendered more hooks than
   // during the previous render."
+  // Normalize once (memoized by the raw prop), before the early returns, so a
+  // fresh gradient identity per render can't trip PipelineStore's by-reference
+  // config comparison (rules-of-hooks: must precede any early return).
+  const normalizedGradientFill = useMemo(() => normalizeGradient(gradientFill), [gradientFill])
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   const streamProps: StreamOrdinalFrameProps = {
@@ -239,9 +244,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     margin: effectiveMargin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
-    ...(normalizeGradient(gradientFill) && {
-      gradientFill: normalizeGradient(gradientFill),
-    }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     baselinePadding,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),

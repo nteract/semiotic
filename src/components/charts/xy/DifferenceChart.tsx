@@ -543,6 +543,19 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
   // (loading skeleton) and then streaming in data must not change the number of
   // hooks between renders, or React throws "Rendered more hooks than during the
   // previous render."
+  // Normalize once (memoized by the raw prop), before the early returns
+  // (rules-of-hooks). Default is an opaque-top → faint-bottom fill; the memo
+  // keeps a stable identity so a `true`/legacy input can't force a rebuild.
+  const normalizedGradientFill = useMemo(
+    () => normalizeGradient(gradientFill, {
+      stops: [
+        { offset: 0, opacity: 0.85 },
+        { offset: 1, opacity: 0.15 },
+      ],
+    }),
+    [gradientFill],
+  )
+
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── StreamXYFrame props ─────────────────────────────────────────────
@@ -573,14 +586,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     yFormat,
     enableHover,
     showGrid,
-    ...(gradientFill && {
-      gradientFill: normalizeGradient(gradientFill, {
-        stops: [
-          { offset: 0, opacity: 0.85 },
-          { offset: 1, opacity: 0.15 },
-        ],
-      }),
-    }),
+    ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent,
