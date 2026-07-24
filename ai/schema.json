@@ -62,6 +62,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -234,7 +255,7 @@
             },
             "xAccessor": {
               "type": "string",
-              "description": "Key or accessor function for x-axis values",
+              "description": "Key or accessor function for x-axis values. Functions can derive a value, e.g. `d => d.timestamp`.",
               "default": "x",
               "x-semiotic-runtime-types": [
                 "string",
@@ -243,7 +264,7 @@
             },
             "yAccessor": {
               "type": "string",
-              "description": "Key or accessor function for y-axis values",
+              "description": "Key or accessor function for y-axis values. Functions support dynamic lookups, e.g. `d => d[d.metricLabel]`.",
               "default": "y",
               "x-semiotic-runtime-types": [
                 "string",
@@ -294,6 +315,14 @@
               "description": "Radius of point markers when showPoints is true",
               "default": 3
             },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
             "fillArea": {
               "type": "boolean",
               "description": "Fill the area under the line",
@@ -307,6 +336,23 @@
             "lineGradient": {
               "type": "object",
               "description": "Left-to-right stroke gradient: { stops: [{ offset: 0-1, color?, opacity? }] }."
+            },
+            "directLabel": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Place series labels at their start or end points instead of relying only on a legend."
+            },
+            "gapStrategy": {
+              "type": "string",
+              "enum": [
+                "break",
+                "interpolate",
+                "zero"
+              ],
+              "description": "How missing y values are rendered: break the line, interpolate across them, or drop to zero.",
+              "default": "break"
             },
             "forecast": {
               "type": "object",
@@ -322,6 +368,14 @@
                 "array"
               ],
               "description": "Asymmetric min/max envelope drawn under the line. `{ y0Accessor, y1Accessor, style?, perSeries?, interactive? }` or an array of those for percentile fans. Distinct from `forecast`/`anomaly` (computed) — band is pure data passthrough. Hovered datum is enriched with `band: { y0, y1 }` and `bands: [...]`."
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
             }
           },
           "required": [
@@ -387,6 +441,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -604,6 +679,14 @@
               ],
               "default": "monotoneX"
             },
+            "y0Accessor": {
+              "type": "string",
+              "description": "Lower bound accessor for a ribbon/interval area instead of the chart baseline.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
             "gradientFill": {
               "type": "object",
               "description": "Line-to-baseline gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the line/top and offset 1 is the baseline."
@@ -635,6 +718,23 @@
               "type": "number",
               "default": 2
             },
+            "showPoints": {
+              "type": "boolean",
+              "description": "Show point markers along area lines.",
+              "default": false
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 3
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
             "forecast": {
               "type": "object",
               "description": "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig."
@@ -649,6 +749,14 @@
                 "array"
               ],
               "description": "Asymmetric min/max envelope drawn under the area. See LineChart.band — same shape, same enrichment."
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
             }
           },
           "required": [
@@ -714,6 +822,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -940,10 +1069,58 @@
               "type": "number",
               "default": 2
             },
+            "showPoints": {
+              "type": "boolean",
+              "description": "Show point markers along stacked area lines.",
+              "default": false
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 3
+            },
             "normalize": {
               "type": "boolean",
               "description": "Normalize stacks to 100%",
               "default": false
+            },
+            "baseline": {
+              "type": "string",
+              "enum": [
+                "zero",
+                "wiggle",
+                "silhouette",
+                "diverging"
+              ],
+              "description": "Stack baseline; use wiggle or silhouette for a streamgraph.",
+              "default": "zero"
+            },
+            "stackOrder": {
+              "type": "string",
+              "enum": [
+                "key",
+                "input",
+                "insideOut",
+                "asc",
+                "desc"
+              ],
+              "description": "Series ordering within the stack.",
+              "default": "key"
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
             }
           },
           "required": [
@@ -1010,6 +1187,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -1234,6 +1432,22 @@
               "type": "number",
               "default": 0.8
             },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
+            },
             "regression": {
               "type": [
                 "boolean",
@@ -1314,6 +1528,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -1565,6 +1800,14 @@
             "pointOpacity": {
               "type": "number",
               "default": 0.8
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
             }
           },
           "required": []
@@ -1628,6 +1871,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -1881,6 +2145,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -2095,6 +2380,22 @@
             "candlestickStyle": {
               "type": "object",
               "description": "Style overrides."
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
             }
           },
           "required": [
@@ -2161,6 +2462,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -2375,6 +2697,22 @@
               "type": "string",
               "default": "white"
             },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
+            },
             "regression": {
               "type": [
                 "boolean",
@@ -2448,6 +2786,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position of the gradient legend",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -2664,16 +3023,21 @@
               "type": "number",
               "default": 1
             },
-            "legendPosition": {
+            "pointIdAccessor": {
               "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "top",
-                "bottom"
-              ],
-              "description": "Position of the gradient legend",
-              "default": "right"
+              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
             }
           },
           "required": [
@@ -2739,6 +3103,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -2953,6 +3338,14 @@
                 "function"
               ]
             },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`; either bound may be omitted."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`; either bound may be omitted."
+            },
             "regression": {
               "type": [
                 "boolean",
@@ -3033,6 +3426,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -3181,6 +3595,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -3312,6 +3730,27 @@
               "type": "boolean",
               "default": true
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -3459,6 +3898,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -3580,6 +4023,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -3727,6 +4191,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -3859,6 +4327,27 @@
               "type": "boolean",
               "default": true
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -4006,6 +4495,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -4122,6 +4615,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -4269,6 +4783,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -4407,6 +4925,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -4554,6 +5093,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -4666,6 +5209,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -4813,6 +5377,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -4918,6 +5486,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -5065,6 +5654,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -5183,6 +5776,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -5330,6 +5944,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -5430,6 +6048,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": true
@@ -5577,6 +6216,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -5704,6 +6347,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -5936,6 +6600,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -6180,6 +6865,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -6443,6 +7149,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -6593,7 +7320,7 @@
               "type": "array",
               "description": "Array of edge objects with source and target"
             },
-            "nodeIDAccessor": {
+            "nodeIdAccessor": {
               "type": "string",
               "description": "Key for node unique identifier",
               "default": "id",
@@ -6668,6 +7395,14 @@
             "edgeOpacity": {
               "type": "number",
               "default": 0.6
+            },
+            "nodeStroke": {
+              "type": "string",
+              "description": "Node-only outline color; overrides the generic stroke for nodes."
+            },
+            "nodeStrokeWidth": {
+              "type": "number",
+              "description": "Node-only outline width; overrides generic strokeWidth for nodes."
             },
             "iterations": {
               "type": "number",
@@ -6757,6 +7492,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -7062,6 +7818,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -7343,6 +8120,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -7628,6 +8426,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -7877,6 +8696,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -8131,6 +8971,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -9380,6 +10241,25 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ]
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -9528,6 +10408,11 @@
             "valueLabel": {
               "type": "string"
             },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category tick labels on ordinal axis",
+              "default": false
+            },
             "valueFormat": {
               "x-semiotic-runtime-types": [
                 "function"
@@ -9576,20 +10461,6 @@
               "type": "number",
               "description": "Opacity of trapezoid connectors between steps (0-1). Horizontal orientation only.",
               "default": 0.3
-            },
-            "showCategoryTicks": {
-              "type": "boolean",
-              "description": "Show category tick labels on ordinal axis",
-              "default": false
-            },
-            "legendPosition": {
-              "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "top",
-                "bottom"
-              ]
             }
           },
           "required": [
@@ -9656,6 +10527,25 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ]
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -9803,6 +10693,10 @@
             },
             "valueLabel": {
               "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show lane labels on the category axis"
             },
             "valueFormat": {
               "x-semiotic-runtime-types": [
@@ -9877,19 +10771,6 @@
                 "object"
               ],
               "description": "LinkedCharts brush integration name"
-            },
-            "showCategoryTicks": {
-              "type": "boolean",
-              "description": "Show lane labels on the category axis"
-            },
-            "legendPosition": {
-              "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "top",
-                "bottom"
-              ]
             }
           },
           "required": [
@@ -9955,6 +10836,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -10170,6 +11072,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -10379,6 +11302,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -10602,6 +11546,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -10842,6 +11807,27 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -11073,6 +12059,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -11306,6 +12313,26 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -11528,16 +12555,6 @@
                 "function"
               ]
             },
-            "legendPosition": {
-              "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "top",
-                "bottom"
-              ],
-              "default": "right"
-            },
             "pairing": {
               "type": "string",
               "enum": [
@@ -11667,6 +12684,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -12940,6 +13978,27 @@
             },
             "showLegend": {
               "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
             },
             "showGrid": {
               "type": "boolean",
@@ -14612,6 +15671,25 @@
             "showLegend": {
               "type": "boolean"
             },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "default": "right"
+            },
             "showGrid": {
               "type": "boolean",
               "default": false
@@ -14875,25 +15953,6 @@
             "showAxes": {
               "type": "boolean",
               "default": true
-            },
-            "legendInteraction": {
-              "type": "string",
-              "enum": [
-                "highlight",
-                "isolate",
-                "none"
-              ],
-              "default": "none"
-            },
-            "legendPosition": {
-              "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "top",
-                "bottom"
-              ],
-              "default": "right"
             }
           },
           "required": [

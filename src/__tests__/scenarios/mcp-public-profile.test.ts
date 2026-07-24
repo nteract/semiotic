@@ -12,6 +12,11 @@ const REQUIRED_BUNDLES = [
   path.resolve(__dirname, "../../../dist/server.min.js"),
 ]
 const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
+// The JSON-RPC helper intentionally allows a cold child process up to ten
+// seconds to load the bundled MCP server. Keep Vitest's outer deadline above
+// that budget so a busy CI worker cannot fail a valid startup halfway through
+// the request window.
+const MCP_PROCESS_TEST_TIMEOUT_MS = 15_000
 
 function spawnPublicServer(): ChildProcess {
   return spawn("node", [SERVER_PATH, "--profile", "public"], {
@@ -92,7 +97,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
     } finally {
       publicProc.kill()
     }
-  })
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 
   it("returns schema-shaped structured content for every getChartSchema outcome", async () => {
     const publicProc = spawnPublicServer()
@@ -121,7 +126,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
     } finally {
       publicProc.kill()
     }
-  })
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 
   it("keeps improveChart repairs schema-valid and returns accessibility prose separately", async () => {
     const publicProc = spawnPublicServer()
@@ -148,7 +153,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
     } finally {
       publicProc.kill()
     }
-  })
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 
   it("creates only renderable charts without echoing bulk data", async () => {
     const publicProc = spawnPublicServer()
@@ -169,5 +174,5 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
     } finally {
       publicProc.kill()
     }
-  })
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 })

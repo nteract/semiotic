@@ -77,6 +77,31 @@ describe("validateProps — network component validation", () => {
     expect(result.errors).toHaveLength(0)
   })
 
+  it("uses nodeIdAccessor as the canonical ForceDirectedGraph accessor", () => {
+    const result = validateProps("ForceDirectedGraph", {
+      nodes: [{ nodeKey: "A" }, { nodeKey: "B" }],
+      edges: [{ source: "A", target: "B" }],
+      nodeIdAccessor: "nodeKey",
+      nodeStroke: "white",
+      nodeStrokeWidth: 2,
+      layoutLoadingContent: false,
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it("validates the canonical ForceDirectedGraph node accessor against nodes", () => {
+    const result = validateProps("ForceDirectedGraph", {
+      nodes: [{ id: "A" }, { id: "B" }],
+      edges: [{ source: "A", target: "B" }],
+      nodeIdAccessor: "nodeKey",
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContainEqual(
+      expect.stringContaining('nodeIdAccessor "nodeKey" not found in node data'),
+    )
+  })
+
   it("validates SankeyDiagram requires edges but not nodes", () => {
     const result = validateProps("SankeyDiagram", {})
     expect(result.valid).toBe(false)
@@ -215,6 +240,107 @@ describe("validateProps — ordinal component validation", () => {
     expect(
       result.errors.some((e) => e.includes("categoryAccessor") && e.includes("not found"))
     ).toBe(true)
+  })
+
+  it("suggests an accessor function when a field lookup is missing", () => {
+    const result = validateProps("LineChart", {
+      data: [{ timestamp: 1, valueA: 10, metricLabel: "valueA" }],
+      xAccessor: "timestamp",
+      yAccessor: "value",
+    })
+    const error = result.errors.find((entry) => entry.includes('yAccessor "value"'))
+    expect(error).toContain('Try yAccessor="valueA".')
+    expect(error).toContain("Or use a function: yAccessor={d => d.myValue}.")
+  })
+
+  it.each([
+    [
+      "LineChart",
+      {
+        data: [{ x: 1, y: 10, series: "actual", id: "a" }],
+        lineBy: "series",
+        pointIdAccessor: "id",
+        directLabel: { position: "end" },
+        gapStrategy: "interpolate",
+        xExtent: [0, 2],
+        yExtent: [0, 20],
+        legendInteraction: "highlight",
+        legendPosition: "bottom",
+      },
+    ],
+    [
+      "AreaChart",
+      {
+        data: [{ x: 1, high: 10, low: 4, id: "a" }],
+        yAccessor: "high",
+        y0Accessor: "low",
+        showPoints: true,
+        pointRadius: 4,
+        pointIdAccessor: "id",
+        xExtent: [0, 2],
+        yExtent: [0, 20],
+        legendPosition: "left",
+      },
+    ],
+    [
+      "StackedAreaChart",
+      {
+        data: [{ x: 1, y: 10, series: "actual", id: "a" }],
+        areaBy: "series",
+        showPoints: true,
+        pointRadius: 4,
+        pointIdAccessor: "id",
+        baseline: "wiggle",
+        stackOrder: "insideOut",
+        xExtent: [0, 2],
+        yExtent: [0, 20],
+        legendInteraction: "isolate",
+      },
+    ],
+    [
+      "Scatterplot",
+      {
+        data: [{ x: 1, y: 10, id: "a" }],
+        pointIdAccessor: "id",
+        marginalGraphics: {},
+        xExtent: [0, 2],
+        yExtent: [0, 20],
+        legendPosition: "top",
+      },
+    ],
+    [
+      "BarChart",
+      {
+        data: [{ category: "A", value: 10 }],
+        showCategoryTicks: true,
+        legendInteraction: "none",
+      },
+    ],
+  ])("accepts documented runtime props for %s", (componentName, props) => {
+    const result = validateProps(componentName, props)
+    expect(result.errors).not.toContainEqual(expect.stringContaining("Unknown prop"))
+  })
+
+  it.each([
+    ["StackedBarChart", { stackBy: "series" }],
+    ["GroupedBarChart", { groupBy: "series" }],
+    ["SwarmPlot", {}],
+    ["BoxPlot", {}],
+    ["Histogram", {}],
+    ["ViolinPlot", {}],
+    ["RidgelinePlot", {}],
+    ["DotPlot", {}],
+    ["SwimlaneChart", { subcategoryAccessor: "series" }],
+    ["LikertChart", {}],
+  ])("accepts valueExtent for %s", (componentName, requiredProps) => {
+    const result = validateProps(componentName, {
+      data: [{ category: "A", value: 10, series: "one", question: "Q1", score: 3 }],
+      valueExtent: [0, 100],
+      ...requiredProps,
+    })
+    expect(result.errors).not.toContainEqual(
+      expect.stringContaining('Unknown prop "valueExtent"'),
+    )
   })
 })
 

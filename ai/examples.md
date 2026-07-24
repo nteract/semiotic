@@ -57,6 +57,34 @@ const data = [
 
 Key props: `lineBy` groups flat array into separate lines, `colorBy` colors them
 
+### LineChart (dynamic value accessor)
+
+When each row identifies which numeric field to plot, use an accessor function
+instead of forcing the value through a single field name. This is especially
+useful for multi-line data with a different metric per series.
+
+```jsx
+import { LineChart } from "semiotic/ai"
+
+const data = [
+  { timestamp: 1, metricLabel: "valueA", valueA: 12, valueB: 60 },
+  { timestamp: 2, metricLabel: "valueA", valueA: 18, valueB: 55 },
+  { timestamp: 1, metricLabel: "valueB", valueA: 12, valueB: 60 },
+  { timestamp: 2, metricLabel: "valueB", valueA: 18, valueB: 55 }
+]
+
+<LineChart
+  data={data}
+  xAccessor="timestamp"
+  yAccessor={(d) => d[d.metricLabel]}
+  lineBy="metricLabel"
+  colorBy="metricLabel"
+/>
+```
+
+Key props: accessors accept a field-name string or a function. Prefer a string
+for a direct lookup; use a function for a computed or dynamic value.
+
 ### Scatterplot
 
 ```jsx
