@@ -202,6 +202,21 @@ const commonProps: Record<string, ChartPropSpec> = {
   },
   enableHover: { type: "boolean", default: true },
   showLegend: { type: "boolean" },
+  legendInteraction: {
+    type: "string",
+    enum: ["highlight", "isolate", "none"] as const,
+    default: "none",
+    description: "Legend interaction mode: highlight on hover, isolate on click, or none.",
+  },
+  legendPosition: {
+    type: "string",
+    enum: ["right", "left", "top", "bottom"] as const,
+    default: "right",
+    description: "Position the legend beside or above/below the plot.",
+  },
+  // Advanced legend content can contain React nodes or custom group objects;
+  // validate it at runtime without asking schema-driven callers to construct it.
+  legend: { type: ["array", "object"], omitFromSchema: true },
   showGrid: { type: "boolean", default: false },
   colorBy: { type: ["string", "function"] },
   // Object maps are first-class at runtime (createColorScale); accept them
@@ -265,6 +280,7 @@ const xyAxisProps: Record<string, ChartPropSpec> = {
 const ordinalAxisProps: Record<string, ChartPropSpec> = {
   categoryLabel: { type: "string" },
   valueLabel: { type: "string" },
+  showCategoryTicks: { type: "boolean", description: "Show category labels on the ordinal axis." },
   // `valueFormat` surfaces in schema as a function type — canonical
   // GaugeChart already uses this shape. LLMs use it as a hint that
   // numeric formatting is overridable; they can't populate it directly.

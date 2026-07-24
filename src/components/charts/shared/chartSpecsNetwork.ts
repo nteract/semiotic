@@ -10,13 +10,16 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     description: "Physics-based node-link diagram. Use for relationships, social networks, knowledge graphs.",
     required: ["nodes", "edges"],
     dataShape: "network",
-    dataAccessors: ["nodeIDAccessor", "sourceAccessor", "targetAccessor"],
+    dataAccessors: ["nodeIdAccessor", "sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       nodes: { type: "array", description: "Array of node objects" },
       edges: { type: "array", description: "Array of edge objects with source and target" },
-      nodeIDAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
+      nodeIdAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
+      // Legacy casing remains accepted by the HOC through the 3.x line, but
+      // schema-driven callers should use the canonical camelCase spelling.
+      nodeIDAccessor: { type: ["string", "function"], omitFromSchema: true, description: "Deprecated alias for nodeIdAccessor." },
       sourceAccessor: { type: ["string", "function"], default: "source", description: "Key for edge source node ID" },
       targetAccessor: { type: ["string", "function"], default: "target", description: "Key for edge target node ID" },
       nodeLabel: { type: ["string", "function"], description: "Key or accessor for node labels" },
@@ -25,9 +28,13 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       edgeWidth: { type: ["number", "string", "function"], default: 1, description: "Fixed edge width or key for variable width" },
       edgeColor: { type: "string", default: "#999" },
       edgeOpacity: { type: "number", default: 0.6 },
+      nodeStroke: { type: "string", description: "Node-only outline color; overrides the generic stroke for nodes." },
+      nodeStrokeWidth: { type: "number", description: "Node-only outline width; overrides generic strokeWidth for nodes." },
       iterations: { type: "number", default: 300, description: "Force simulation iterations" },
       forceStrength: { type: "number", default: 0.1 },
       layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] as const, default: "auto", description: "Force layout execution: auto, worker, or sync" },
+      layoutLoadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "Content rendered while a worker layout is pending; false suppresses it." },
+      onLayoutStateChange: { type: "function", omitFromSchema: true },
       showLabels: { type: "boolean", default: false },
     },
     capabilities: {

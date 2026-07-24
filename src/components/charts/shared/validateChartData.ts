@@ -41,6 +41,16 @@ function suggestField(target: string, available: string[]): string | null {
   return closestMatch(target, available, 3) ?? null
 }
 
+/**
+ * String accessors are convenient for a direct field lookup, but HOC charts
+ * also accept functions for computed or dynamic values. Keep that escape hatch
+ * in every missing-field diagnosis so a suggested field name does not imply
+ * that strings are the only supported accessor form.
+ */
+function accessorFunctionHint(label: string): string {
+  return ` Or use a function: ${label}={d => d.myValue}.`
+}
+
 interface ArrayDataValidation {
   componentName: string
   data: ChartDataInput
@@ -111,7 +121,8 @@ export function validateArrayData({
             : ""
           return (
             `${componentName}: ${label} "${accessor}" not found in data. ` +
-            `Available fields: ${available.join(", ")}.${fix}`
+            `Available fields: ${available.join(", ")}.${fix}` +
+            accessorFunctionHint(label)
           )
         }
       }
@@ -188,7 +199,8 @@ export function validateNetworkData({
             : ""
           return (
             `${componentName}: ${label} "${accessor}" not found in node data. ` +
-            `Available fields: ${available.join(", ")}.${fix}`
+            `Available fields: ${available.join(", ")}.${fix}` +
+            accessorFunctionHint(label)
           )
         }
       }
