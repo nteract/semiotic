@@ -67,4 +67,16 @@ describe("gradient normalization", () => {
       ],
     })
   })
+
+  it("returns undefined for malformed runtime input (non-array stops/colorStops)", () => {
+    // Untyped SSR / JSON callers can pass a non-array where a stops array is
+    // expected; normalize must return undefined rather than let a downstream
+    // .filter(...) throw.
+    expect(normalizeGradient({ stops: null } as never)).toBeUndefined()
+    expect(normalizeGradient({ colorStops: "nope" } as never)).toBeUndefined()
+    expect(normalizeSemanticGradient({ stops: null } as never)).toBeUndefined()
+    // A well-formed stops object still passes through unchanged.
+    const valid = { stops: [{ offset: 0, color: "#f00" }] }
+    expect(normalizeGradient(valid)).toBe(valid)
+  })
 })
