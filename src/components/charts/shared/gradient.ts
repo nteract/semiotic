@@ -48,11 +48,16 @@ export function normalizeGradient(
 ): GradientConfig | undefined {
   if (!input) return undefined
   if (input === true) return defaultGradient
-  if ("stops" in input) return input
+  // Guard the array shape at runtime: an untyped caller (SSR / JSON config)
+  // can pass { stops: null } or { colorStops: "…" }, which would otherwise
+  // reach a downstream `.filter(...)` and throw. Return undefined instead.
+  if ("stops" in input) {
+    return Array.isArray(input.stops) ? input : undefined
+  }
   if ("colorStops" in input) {
-    return {
-      stops: input.colorStops.map(({ offset, color }) => ({ offset, color })),
-    }
+    return Array.isArray(input.colorStops)
+      ? { stops: input.colorStops.map(({ offset, color }) => ({ offset, color })) }
+      : undefined
   }
   return {
     stops: [
@@ -72,7 +77,9 @@ export function normalizeSemanticGradient(
   input: SemanticGradientInput | null | undefined,
 ): GradientConfig | undefined {
   if (!input) return undefined
-  if (!Array.isArray(input)) return input
+  // Same runtime array guard as normalizeGradient: the `{ stops }` branch must
+  // carry a real array before downstream renderers/serializers filter it.
+  if (!Array.isArray(input)) return Array.isArray(input.stops) ? input : undefined
   return {
     stops: input.map(({ at, color, opacity }) => ({
       offset: at / 100,

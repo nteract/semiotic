@@ -1032,12 +1032,11 @@ export const LineChart = forwardRef(
   }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, frameGroupAccessor, chartData, hasGaps])
 
   // Build StreamXYFrame props
+  const normalizedLineGradient = normalizeColorGradient(lineGradient)
   const streamProps: StreamXYFrameProps = {
     chartType,
     ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
-    ...(normalizeColorGradient(lineGradient) && {
-      lineGradient: normalizeColorGradient(lineGradient),
-    }),
+    ...(normalizedLineGradient && { lineGradient: normalizedLineGradient }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,

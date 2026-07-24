@@ -50,15 +50,24 @@ export const BumpChartCapability: ChartCapability = {
       // notch lower.
       return orderedX ? 5 : 4
     },
-    "compare-series": (p) => {
-      if (!p.seriesCount || p.seriesCount < 2) return 1
-      return p.seriesCount > 12 ? 3 : 4
+    // Bump compares series *ranks*, not their values — LineChart / GroupedBar /
+    // DifferenceChart own value comparison, so keep this modest and let `rank`
+    // stay BumpChart's headline intent instead of displacing the value charts.
+    "compare-series": (p) => (p.seriesCount && p.seriesCount >= 2 ? 2 : 1),
+    // Rank crossings are a genuine change signal along an ordered axis; over
+    // categorical columns there's no temporal change to detect.
+    "change-detection": (p) =>
+      (p.primary.x || p.primary.time) && p.seriesCount && p.seriesCount >= 2 ? 3 : 1,
+    // Shows the trend of *rank*, not of value, and only along a genuine
+    // ordered/temporal axis. LineChart / AreaChart own value-trend; a
+    // scatter-fallback numeric x ("just the other measure") or a purely
+    // categorical ranking column is NOT a trend axis (same scatter guard
+    // LineChart uses), so score those 0 so they can't falsely "cover" trend.
+    "trend": (p) => {
+      if (p.primary.time) return 2
+      if (p.primary.x && !(p.xProvenance === "scatter" && !p.monotonicX)) return 2
+      return 0
     },
-    // Rank crossings ARE the change signal a bump chart is built to surface.
-    "change-detection": (p) => (p.seriesCount && p.seriesCount >= 2 ? 4 : 1),
-    // Shows the trend of *rank*, not of value (unless ribbon) — a supporting
-    // read, not the headline.
-    "trend": 3,
   },
 
   caveats: (p) => {
@@ -81,7 +90,9 @@ export const BumpChartCapability: ChartCapability = {
         "Encodes the ranked value as ribbon width, so the chart shows both order and magnitude instead of order alone.",
       props: { ribbon: true },
       tags: ["ribbon", "magnitude"],
-      intentDeltas: { "trend": +1, "compare-series": +1 },
+      // Magnitude ribbons are a precision refinement; they must not push
+      // BumpChart above the value charts on compare-series/trend, so no
+      // intent deltas here (see qualityScorecard canonical set).
       rubricDeltas: { precision: +1 },
     },
   ],
