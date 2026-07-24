@@ -58,6 +58,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
+      valueExtent: { type: "array", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware segment styling: ordered { when, style } rules (ctx.category is the stack key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       // Canonical schema flags `true` for stacked bars to surface the legend.
@@ -89,6 +90,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
       barPadding: { type: "number", default: 60 },
       roundedTop: { type: "number", omitFromSchema: true },
+      valueExtent: { type: "array", omitFromSchema: true },
       styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules (ctx.category is the group key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
       gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       // Canonical schema flags `true` for grouped bars to surface the legend.
@@ -123,6 +125,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       pointRadius: { type: "number", default: 4 },
       pointOpacity: { type: "number", default: 0.7 },
       categoryPadding: { type: "number", default: 20 },
+      valueExtent: { type: "array", omitFromSchema: true },
       // Brush props are runtime-only — schema.json hides them from LLMs.
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
@@ -153,6 +156,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       showOutliers: { type: "boolean", default: true, description: "Show outlier points" },
       outlierRadius: { type: "number", default: 3 },
       categoryPadding: { type: "number", default: 20 },
+      valueExtent: { type: "array", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -178,6 +182,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       bins: { type: "number", default: 25, description: "Number of bins for the histogram" },
       relative: { type: "boolean", default: false, description: "Normalize counts per category to show relative frequency" },
       categoryPadding: { type: "number", default: 20 },
+      valueExtent: { type: "array", omitFromSchema: true },
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
@@ -208,6 +213,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       curve: { type: "string", default: "catmullRom", description: "Interpolation curve for the violin shape" },
       showIQR: { type: "boolean", default: true, description: "Show interquartile range lines" },
       categoryPadding: { type: "number", default: 20 },
+      valueExtent: { type: "array", omitFromSchema: true },
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
@@ -236,6 +242,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       bins: { type: "number", description: "Number of bins for density estimation" },
       amplitude: { type: "number", default: 1.5, description: "Unitless multiplier of row height (>1 creates overlap)" },
       categoryPadding: { type: "number", omitFromSchema: true },
+      valueExtent: { type: "array", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -262,6 +269,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], default: true, description: "Sort dots: true, false, 'asc', 'desc'" },
       dotRadius: { type: "number", default: 5 },
       categoryPadding: { type: "number", default: 10 },
+      valueExtent: { type: "array", omitFromSchema: true },
       // Canonical schema flags showGrid `true` for DotPlot — grid lines help
       // readers eyeball values along the value axis.
       showGrid: { type: "boolean", default: true },
@@ -421,6 +429,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: HORIZONTAL_VERTICAL_ENUM, default: "horizontal", description: "Horizontal renders lanes as rows; vertical as columns." },
       barPadding: { type: "number", default: 40, description: "Padding between lanes in pixels" },
       roundedTop: { type: "number", description: "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
+      valueExtent: { type: "array", omitFromSchema: true },
       trackFill: { type: ["string", "object"], omitFromSchema: true, description: "Lane background fill painted behind each swimlane. A color string, or { color, opacity? } for a translucent track." },
       gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
       brush: { type: "boolean", description: "Enable value-axis brush selection" },
@@ -462,6 +471,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // passes; the schema test relies on schema's value being identical.
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       barPadding: { type: "number", default: 20 },
+      valueExtent: { type: "array", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],

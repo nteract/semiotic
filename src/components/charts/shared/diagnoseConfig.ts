@@ -137,7 +137,7 @@ function checkAccessorFieldMissing(
         severity: "error",
         code: "ACCESSOR_MISSING",
         message: `${accProp}="${accValue}" not found in data. Available fields: ${available.join(", ")}.`,
-        fix: `Change ${accProp} to one of: ${available.map(f => `"${f}"`).join(", ")}.`,
+        fix: `Change ${accProp} to one of: ${available.map(f => `"${f}"`).join(", ")}, or use a function: ${accProp}={d => d.myValue}.`,
       })
     }
   }
@@ -408,7 +408,7 @@ const ACCESSOR_PROPS = [
   "xAccessor", "yAccessor", "timeAccessor", "valueAccessor",
   "categoryAccessor", "colorBy", "sizeBy", "lineBy", "areaBy",
   "stackBy", "groupBy", "orderAccessor", "y0Accessor",
-  "sourceAccessor", "targetAccessor", "nodeIDAccessor",
+  "sourceAccessor", "targetAccessor", "nodeIdAccessor", "nodeIDAccessor",
   "childrenAccessor", "costAccessor",
 ]
 

@@ -198,12 +198,21 @@ export function validateProps(
     })
     if (dataError) errors.push(dataError)
   } else if (spec.dataShape === "network") {
+    // Network validation checks node fields only; source/target accessors
+    // belong to edge records and must not be tested against a node sample.
+    // ForceDirectedGraph accepts its old nodeIDAccessor spelling through the
+    // 3.x line, but nodeIdAccessor is canonical and wins when both exist.
+    const nodeIdAccessor = props.nodeIdAccessor ?? props.nodeIDAccessor ?? "id"
+    const nodeAccessors = typeof nodeIdAccessor === "string"
+      ? { nodeIdAccessor }
+      : undefined
     const dataError = validateNetworkData({
       componentName,
       nodes: props.nodes,
       edges: props.edges,
       nodesRequired: spec.required.includes("nodes"),
       edgesRequired: spec.required.includes("edges"),
+      accessors: nodeAccessors,
     })
     if (dataError) errors.push(dataError)
   } else if (spec.dataShape === "none") {

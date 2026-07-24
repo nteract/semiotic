@@ -497,6 +497,16 @@ describe("diagnoseConfig", () => {
     expect(codes).not.toContain("FUNCTION_ACCESSOR")
   })
 
+  it("suggests function accessors when a requested field is missing", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ timestamp: 1, valueA: 2 }],
+      xAccessor: "timestamp",
+      yAccessor: "value",
+    })
+    const diagnosis = result.diagnoses.find((d) => d.code === "ACCESSOR_MISSING")
+    expect(diagnosis?.fix).toContain("yAccessor={d => d.myValue}")
+  })
+
   it("diagnoses invalid physics chart parameters", () => {
     const galton = diagnoseConfig("GaltonBoardChart", {
       data: [{ value: 1 }],
