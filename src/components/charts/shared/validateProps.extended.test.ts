@@ -102,6 +102,17 @@ describe("validateProps — network component validation", () => {
     )
   })
 
+  it("validates ForceDirectedGraph's default node id accessor against nodes", () => {
+    const result = validateProps("ForceDirectedGraph", {
+      nodes: [{ nodeKey: "A" }, { nodeKey: "B" }],
+      edges: [{ source: "A", target: "B" }],
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContainEqual(
+      expect.stringContaining('nodeIdAccessor "id" not found in node data'),
+    )
+  })
+
   it("validates SankeyDiagram requires edges but not nodes", () => {
     const result = validateProps("SankeyDiagram", {})
     expect(result.valid).toBe(false)
