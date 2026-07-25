@@ -454,7 +454,6 @@ export function checkPhysicsConfig(
 
   // Live body budget heuristic for value-encoding physics charts.
   if (
-    component === "UnitPileChart" ||
     component === "GaltonBoardChart" ||
     component === "CollisionSwarmChart" ||
     component === "ProcessFlowChart" ||
@@ -465,10 +464,7 @@ export function checkPhysicsConfig(
     const mechanicalCount = finiteNumber(props.mechanicalCount) ?? 0
     const estimated =
       data.length > 0
-        ? data.length *
-          (component === "UnitPileChart"
-            ? Math.max(1, finiteNumber(props.unitValue) ? 1 : 1)
-            : 1)
+        ? data.length
         : mechanicalCount
     if (estimated > 2500) {
       out.push({

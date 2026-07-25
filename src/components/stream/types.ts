@@ -281,7 +281,7 @@ export interface PointSceneNode {
   r: number
   style: Style
   datum: SceneDatum
-  /** Exclude a decorative point from hit testing and spatial indexing. @default true */
+  /** Whether this point participates in hit testing and spatial indexing. Set to false for decorative points. @default true */
   interactive?: boolean
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]

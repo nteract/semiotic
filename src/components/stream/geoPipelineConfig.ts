@@ -19,7 +19,7 @@ export function normalizeFitPadding(value: unknown): number {
     return value
   }
   throw new RangeError(
-    `[semiotic] fitPadding must be a finite fraction in [0, ${MAX_FIT_PADDING}); received ${String(value)}.`,
+    `[semiotic] fitPadding must be a finite fraction in [0, ${MAX_FIT_PADDING}); received ${String(value)}.`
   )
 }
 
