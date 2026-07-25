@@ -354,12 +354,44 @@ function rounded(value: number): number {
   return Math.round(value * 10_000) / 10_000
 }
 
-function coordinateFingerprint(
-  value: [number, number] | null | undefined
-): string {
-  return value
-    ? `${rounded(value[0])},${rounded(value[1])}`
+function coordinateFingerprint(value: unknown): string {
+  return Array.isArray(value)
+    && value.length >= 2
+    && Number.isFinite(value[0])
+    && Number.isFinite(value[1])
+    ? `${rounded(Number(value[0]))},${rounded(Number(value[1]))}`
     : "null"
+}
+
+type ProjectionGetter =
+  | "scale"
+  | "translate"
+  | "center"
+  | "rotate"
+  | "clipAngle"
+  | "precision"
+
+/** Composite projections such as geoAlbersUsa do not expose every D3 getter. */
+function projectionGetter(
+  projection: GeoScales["projection"],
+  name: ProjectionGetter
+): unknown {
+  const getter = (projection as unknown as Partial<Record<ProjectionGetter, unknown>>)[name]
+  return typeof getter === "function" ? getter.call(projection) : undefined
+}
+
+function numericFingerprint(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value)
+    ? String(rounded(value))
+    : value === null
+      ? "null"
+      : "unavailable"
+}
+
+function numericListFingerprint(value: unknown): string {
+  return Array.isArray(value) && value.every(Number.isFinite)
+    ? value.map((entry) => rounded(Number(entry))).join(",")
+    : "unavailable"
 }
 
 function projectionFingerprint(ctx: GeoLayoutContext<GeographicDotGridConfig>): string {
@@ -371,12 +403,12 @@ function projectionFingerprint(ctx: GeoLayoutContext<GeographicDotGridConfig>): 
     [120, -30],
   ]
   return [
-    rounded(projection.scale()),
-    coordinateFingerprint(projection.translate() as [number, number]),
-    coordinateFingerprint(projection.center() as [number, number]),
-    (projection.rotate() as number[]).map(rounded).join(","),
-    projection.clipAngle?.() ?? "clip",
-    projection.precision?.() ?? "precision",
+    numericFingerprint(projectionGetter(projection, "scale")),
+    coordinateFingerprint(projectionGetter(projection, "translate")),
+    coordinateFingerprint(projectionGetter(projection, "center")),
+    numericListFingerprint(projectionGetter(projection, "rotate")),
+    numericFingerprint(projectionGetter(projection, "clipAngle")),
+    numericFingerprint(projectionGetter(projection, "precision")),
     ...samples.map(([longitude, latitude]) =>
       coordinateFingerprint(ctx.scales.projectedPoint(longitude, latitude))
     ),

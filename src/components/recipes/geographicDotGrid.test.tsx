@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  geoAlbersUsa,
   geoContains,
   geoEquirectangular,
   geoPath,
@@ -174,5 +175,28 @@ describe("geographicDotGridLayout", () => {
       },
     })
     expect(filterCalls).toBeGreaterThan(callsAfterSampling)
+  })
+
+  it("does not require optional getters on composite projections", () => {
+    const usa: GeoJSON.Feature = {
+      type: "Polygon",
+      coordinates: [[
+        [-124, 25], [-124, 49], [-67, 49], [-67, 25], [-124, 25],
+      ]],
+    }
+    const ctx = { ...context({ columns: 18 }), areas: [usa] }
+    const projection = geoAlbersUsa().fitSize([400, 220], usa)
+    expect((projection as unknown as { center?: unknown }).center).not.toBeTypeOf("function")
+    expect(() => geographicDotGridLayout({
+      ...ctx,
+      scales: {
+        ...ctx.scales,
+        projection,
+        geoPath: geoPath(projection),
+        projectedPoint: (longitude, latitude) =>
+          projection([longitude, latitude]) as [number, number] | null,
+        invertedPoint: (x, y) => projection.invert?.([x, y]) ?? null,
+      },
+    })).not.toThrow()
   })
 })
