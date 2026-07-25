@@ -146,10 +146,10 @@
 }
 
 .nimby-example__chart-shell {
-  --semiotic-accent: var(--nimby-blue);
-  --semiotic-background: var(--nimby-feature-text);
-  --semiotic-negative: var(--nimby-red);
-  --semiotic-positive: var(--nimby-green);
+  --semiotic-primary: var(--nimby-blue);
+  --semiotic-bg: var(--nimby-feature-text);
+  --semiotic-danger: var(--nimby-red);
+  --semiotic-success: var(--nimby-green);
   --semiotic-text-secondary: var(--nimby-muted);
   position: relative;
   overflow: hidden;

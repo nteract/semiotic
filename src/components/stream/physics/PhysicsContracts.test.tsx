@@ -19,7 +19,7 @@ import { beforeEach, afterEach } from "vitest"
 import { GauntletChart, clampGauntletPoint, GAUNTLET_WALL } from "../../charts/physics/GauntletChart"
 import { ProcessFlowChart } from "../../charts/physics/ProcessFlowChart"
 import { GaltonBoardChart } from "../../charts/physics/GaltonBoardChart"
-import { PhysicsPileChart } from "../../charts/physics/PhysicsPileChart"
+import { UnitPileChart } from "../../charts/physics/UnitPileChart"
 import { buildProcessFlowPhysics, buildGaltonBoardPhysics } from "../../charts/physics/physicsChartUtils"
 import { createCapacityQueueController } from "./PhysicsControllers"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
@@ -95,9 +95,9 @@ describe("physics contracts — settled projection defaults", () => {
     expect(getByTestId("galton-board-structure-overlay")).not.toBeNull()
   })
 
-  it("PhysicsPileChart mounts projection overlay by default", () => {
+  it("UnitPileChart mounts projection overlay by default", () => {
     const { getByTestId } = render(
-      <PhysicsPileChart
+      <UnitPileChart
         data={[{ category: "A", value: 3 }]}
         categoryAccessor="category"
         valueAccessor="value"

@@ -6956,12 +6956,13 @@ var require_componentMetadata = __commonJS({
       physics: [
         "GaltonBoardChart",
         "EventDropChart",
-        "PhysicsPileChart",
+        "UnitPileChart",
         "CollisionSwarmChart",
-        "PhysicalFlowChart",
+        "PacketFlowChart",
         "ProcessFlowChart",
         "GauntletChart",
-        "CrucibleChart"
+        "CrucibleChart",
+        "ChainReactionChart"
       ],
       value: [
         "BigNumber"
@@ -33059,12 +33060,13 @@ var COMPONENT_REGISTRY = {
   DistanceCartogram: { component: import_geo.DistanceCartogram, category: "geo" },
   GaltonBoardChart: { component: import_ai.GaltonBoardChart, category: "physics" },
   EventDropChart: { component: import_ai.EventDropChart, category: "physics" },
-  PhysicsPileChart: { component: import_ai.PhysicsPileChart, category: "physics" },
+  UnitPileChart: { component: import_ai.UnitPileChart, category: "physics" },
   CollisionSwarmChart: { component: import_ai.CollisionSwarmChart, category: "physics" },
-  PhysicalFlowChart: { component: import_ai.PhysicalFlowChart, category: "physics" },
+  PacketFlowChart: { component: import_ai.PacketFlowChart, category: "physics" },
   ProcessFlowChart: { component: import_ai.ProcessFlowChart, category: "physics" },
   GauntletChart: { component: import_ai.GauntletChart, category: "physics" },
-  CrucibleChart: { component: import_ai.CrucibleChart, category: "physics" }
+  CrucibleChart: { component: import_ai.CrucibleChart, category: "physics" },
+  ChainReactionChart: { component: import_ai.ChainReactionChart, category: "physics" }
 };
 
 // ai/renderHOCToSVG.tsx

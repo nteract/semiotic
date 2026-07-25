@@ -423,7 +423,7 @@ export default function ScaleAwarePage() {
       <p>
         Semiotic doesn't profile the data to figure out its production scale, the same way it
         doesn't profile your team to figure out their chart literacy. Both are descriptive, not
-        observational. Three reasons it matters:
+        observational. Declaring the scale matters because:
       </p>
       <ul>
         <li>

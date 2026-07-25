@@ -380,7 +380,7 @@ const comparisonCards = [
   {
     title: "Fixed physics chart HOCs",
     path: "/charts/galton-board-chart",
-    summary: "Use GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, or PhysicalFlowChart when their data model is already your chart.",
+    summary: "Use GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, or PacketFlowChart when their data model is already your chart.",
   },
   {
     title: "StreamPhysicsFrame",
@@ -598,10 +598,10 @@ export default function PhysicsCustomChartPage() {
         wrapsPath="/dev/physics-frame"
         related={[
           { name: "StreamPhysicsFrame", path: "/dev/physics-frame" },
-          { name: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
+          { name: "UnitPileChart", path: "/charts/unit-pile-chart" },
           { name: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" },
           { name: "GauntletChart", path: "/charts/gauntlet-chart" },
-          { name: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
+          { name: "PacketFlowChart", path: "/charts/packet-flow-chart" },
           { name: "Custom Layouts", path: "/custom-charts/custom-layouts" },
         ]}
       />

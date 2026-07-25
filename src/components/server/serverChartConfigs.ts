@@ -59,12 +59,12 @@ import {
 import {
   galtonBoardChart,
   eventDropChart,
-  physicsPileChart,
+  unitPileChart,
   collisionSwarmChart,
   processFlowChart,
   gauntletChart,
   crucibleChart,
-  physicalFlowChart,
+  packetFlowChart,
   physicsCustomChart
 } from "./serverChartConfigsPhysics"
 
@@ -119,11 +119,11 @@ export const CHART_CONFIGS = {
   GeoCustomChart: geoCustomChart,
   GaltonBoardChart: galtonBoardChart,
   EventDropChart: eventDropChart,
-  PhysicsPileChart: physicsPileChart,
+  UnitPileChart: unitPileChart,
   CollisionSwarmChart: collisionSwarmChart,
   ProcessFlowChart: processFlowChart,
   GauntletChart: gauntletChart,
   CrucibleChart: crucibleChart,
-  PhysicalFlowChart: physicalFlowChart,
+  PacketFlowChart: packetFlowChart,
   PhysicsCustomChart: physicsCustomChart
 } satisfies Record<string, ChartConfig>

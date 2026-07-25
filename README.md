@@ -83,7 +83,7 @@ semantics. Built-in decay, pulse, and staleness encoding for monitoring dashboar
 
 **Coordinated views.** `LinkedCharts` provides hover cross-highlighting,
 brush cross-filtering, coordinate-based linked crosshairs, and selection
-synchronization across any combination of chart types — zero wiring.
+synchronization across any combination of chart types through shared selection state.
 
 **Geographic visualization.** Choropleth maps, proportional symbol maps, flow
 maps with animated particles, and distance cartograms — all canvas-rendered
@@ -100,11 +100,11 @@ paths. Opt into placement, hierarchy, density, progressive disclosure,
 audience-aware amount, provenance, and editorial lifecycle when the chart
 needs to communicate more than its encoding alone.
 
-### Start simple, go deep
+### Choose the API layer
 
 | Layer | For | Example |
 |---|---|---|
-| **Charts** | Common visualizations with sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
+| **Charts** | Common chart forms with chart-level props | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
 | **Frames** | Full control over rendering, interaction, and layout | `<StreamXYFrame chartType="line" lineStyle={...} />` |
 
 Every Chart component accepts a `frameProps` prop to access the underlying
@@ -181,7 +181,7 @@ Requires React 18.1+ or React 19.
 
 ### Coordinated Dashboard
 
-Hover one chart, highlight the same data in another — zero wiring:
+Hover one chart and highlight the same data in another through a shared selection:
 
 ```jsx
 import { LinkedCharts, Scatterplot, BarChart } from "semiotic"
@@ -287,7 +287,7 @@ chartRef.current.push({ source: "API", target: "Orders", value: 15 })
 
 ### Standard Charts
 
-Line, bar, scatter, area — all the basics, with sensible defaults:
+Line, bar, scatter, and area charts share the same accessor-driven API:
 
 ```jsx
 import { LineChart, BarChart } from "semiotic"

@@ -401,12 +401,11 @@ const byName = mergeData(world, data, {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need full control — custom area styles, mixed points and
-        areas, streaming, zoom — graduate to{" "}
-        <Link to="/frames/geo-frame">StreamGeoFrame</Link>.
+        Use <Link to="/frames/geo-frame">StreamGeoFrame</Link> for custom area styles, mixed points
+        and areas, streaming, or zoom.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

@@ -87,7 +87,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "LivingLedgerExamplePage.jsx",
     isPilot: true,
     title: "The Living Ledger",
-    eyebrow: "Six views · one evidence chain",
+    eyebrow: "Evidence lineage · ecosystem services",
     description:
       "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
     contract: {
@@ -152,6 +152,73 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
           memory:
             "180 bounded replay days, nine service systems, and a bounded 72-particle observation stream",
           hiddenPage: "physics suspendWhenHidden enabled and replay interval cleaned up",
+        },
+      },
+    },
+  },
+  {
+    id: "equal-places-atlas",
+    path: "/examples/equal-places-atlas",
+    sourceFile: "EqualPlacesAtlasExamplePage.jsx",
+    isPilot: true,
+    title: "The Equal Places Atlas",
+    eyebrow: "Gridified geography · sampled land",
+    description:
+      "Sample U.S. and world land onto dense projected dot lattices, then compare the silhouette-preserving result with equal-place tile cartograms.",
+    contract: {
+      publicImports: ["semiotic/geo"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-2020-census-state-grid-and-bundled-natural-earth",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "U.S. Census Bureau 2020 resident population; Natural Earth country geometry via world-atlas; authored U.S. state grid",
+        capturedAt: "2026-07-24",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "Dynamic chart summaries state the geography, representation, mark, and density; place-tile marks also appear in an accessible table",
+        navigation:
+          "Native segmented controls; place tiles add GeoCustomChart spatial keyboard navigation, touch selection, tooltips, and a persistent field note",
+        keyboard:
+          "Tab and native button activation for controls; place tiles add Arrow keys, Home, End, Enter, and Space for chart marks",
+        forcedColors:
+          "Controls, editorial panels, chart shell, detail card, and focus states retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "StreamGeoFrame resolves transitions immediately and the CSS loading indicator stops under prefers-reduced-motion",
+        visibility:
+          "No timers or continuous simulation; Natural Earth resolves once and layouts update only from reader input or resize",
+      },
+      responsive: {
+        status: "browser-tested",
+        viewports: [390, 1440],
+        selectionIdentity:
+          "stable lattice row/column for land samples; state abbreviation or Natural Earth feature id for place tiles",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "The authored U.S. fixture is deterministic on first render; optional Natural Earth geometry resolves after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route; the optional 110m world reference is dynamically imported",
+          interaction:
+            "bounded projected lattice or 50 authored U.S. cells / 177 Natural Earth centroids with memoized responsive layout configuration",
+          memory:
+            "one bounded state table, one cached 110m feature collection, and no retained sampling history",
+          hiddenPage: "no background work after the one-time geography resolution",
         },
       },
     },
@@ -234,7 +301,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "SentenceStructureExamplePage.jsx",
     isPilot: true,
     title: "The Sentence Is Not the Words",
-    eyebrow: "Nine linked linguistic views · natural-language controls",
+    eyebrow: "Linked linguistic views · natural-language controls",
     description:
       "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
     contract: {
@@ -414,6 +481,65 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
           memory:
             "small purpose-written corpus with finite vocabulary, four topics, and a 64-sweep recorded chain",
           hiddenPage: "animation and physics inherit hidden-document suspension",
+        },
+      },
+    },
+  },
+  {
+    id: "chain-reaction",
+    path: "/examples/chain-reaction",
+    sourceFile: "ChainReactionExamplePage.jsx",
+    isPilot: true,
+    title: "The Release Machine",
+    eyebrow: "Which blocker is really costing you?",
+    description:
+      "Two blockers are both 90% done and both late. A swimlane says when and who; a dependency machine says which one keeps nine unfinished tasks from even becoming possible.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/ordinal", "semiotic/physics", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "deterministic-local-scenarios",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Purpose-written 20-task release plan across five work lanes; dependency edges and blockers are authored, not inferred",
+        capturedAt: "2026-07-24",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "Blocker-amplification comparison, settled task table, and a live observation log",
+        navigation:
+          "Selected task drives both views; keyboard-reachable task marks in the swimlane and the machine",
+        keyboard: "Native buttons plus canvas keyboard navigation in both charts",
+        forcedColors: "not-reviewed",
+      },
+      motion: {
+        reducedMotion:
+          "prefers-reduced-motion switches the machine to its derived settled state; no replay animation runs",
+        visibility: "Physics work suspends while the document is hidden",
+      },
+      responsive: {
+        status: "declared-not-measured",
+        viewports: [320, 768, 1440],
+        selectionIdentity: "selected task ID",
+      },
+      ssr: {
+        status: "not-assessed",
+        hydration: "not-assessed",
+      },
+      performance: {
+        status: "unmeasured",
+        budgets: {
+          bundle: "lazy example route using public root, ordinal, physics, and recipes entry points",
+          interaction: "unmeasured",
+          memory: "20-task dependency machine with a bounded 6-event observation log",
+          hiddenPage: "physics suspendWhenHidden inherited from the frame",
         },
       },
     },
@@ -659,7 +785,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Living Ledger",
     path: "/examples/living-ledger",
-    eyebrow: "Six views · one evidence chain",
+    eyebrow: "Evidence lineage · ecosystem services",
     description:
       "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
     preview: "living-ledger",
@@ -681,9 +807,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Insight Forge",
     path: "/examples/insight-forge",
-    eyebrow: "Portable analytical artifacts · five chart rooms",
+    eyebrow: "Portable evidence · packaging failure",
     description:
-      "Investigate a packaging failure across five chart rooms. Evidence you accept becomes a portable artifact that can filter and annotate the next view.",
+      "Investigate a packaging failure room by room. Evidence you accept becomes a portable artifact that can filter and annotate the next view.",
     preview: "insight-forge",
     badges: ["Portable artifacts", "Deterministic recipes", "Audited lineage"],
     frames: ["xy", "ordinal", "network"],
@@ -703,7 +829,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Sentence Is Not the Words",
     path: "/examples/sentence-structure",
-    eyebrow: "Nine linked linguistic views · natural-language controls",
+    eyebrow: "Linked linguistic views · natural-language controls",
     description:
       "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
     preview: "sentence-structure",
@@ -732,6 +858,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Word Trails", "Collapsed Gibbs", "CrucibleChart", "Audited assumptions"],
     frames: ["ordinal", "stream-physics", "custom"],
     topics: ["culture", "ai", "uncertainty", "process", "design", "accessibility"],
+  },
+  {
+    title: "The Release Machine",
+    path: "/examples/chain-reaction",
+    eyebrow: "Which blocker is really costing you?",
+    description:
+      "Two blockers are both 90% done and both late. A swimlane says when and who; a dependency machine says which one keeps nine unfinished tasks from even becoming possible.",
+    preview: "chain-reaction",
+    badges: ["ChainReactionChart", "intervalLanesLayout", "Blocker amplification"],
+    frames: ["ordinal", "stream-physics", "custom"],
+    topics: ["process", "design", "accessibility"],
   },
   {
     title: "Watermarks, Made Physical",
@@ -800,11 +937,11 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["climate", "geography", "accessibility"],
   },
   {
-    title: "Nathan's Hot Dog Contest, Four Ways",
+    title: "Nathan's Hot Dog Contest, Recounted",
     path: "/examples/hot-dog-contest-variations",
     eyebrow: "TemporalHistogram · ISOTYPE · source audit",
     description:
-      "Read Nathan's winning counts four ways, then use the pace view to see how contest-duration changes alter the historical comparison.",
+      "Compare annual winners, count totals in repeated units, inspect rule changes, and separate eating pace from contest duration.",
     preview: "hotdog-variations",
     badges: ["TemporalHistogram", "ISOTYPE", "Source-audited"],
     frames: ["xy", "ordinal", "custom"],
@@ -1068,7 +1205,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies",
     path: "/examples/data-viz-for-dummies",
-    eyebrow: "Seven chart families · two-way taxonomy",
+    eyebrow: "Chart families · data and task taxonomy",
     description:
       "Scout chart families like a sports roster: organize them by data or task, then learn ranking, comparison, change, distribution, relationship, flow, and hierarchy through one fictional season.",
     preview: "data-viz-for-dummies",
@@ -1079,9 +1216,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies II",
     path: "/examples/data-viz-for-dummies-2",
-    eyebrow: "Seven more chart families · the second unit",
+    eyebrow: "Composition, spread, attrition, and networks",
     description:
-      "Call in seven chart specialists for composition, volume, spread, two-dimensional patterns, attrition, reciprocal exchange, and network topology—all through one fictional arena.",
+      "Call in chart specialists for composition, volume, spread, two-dimensional patterns, attrition, reciprocal exchange, and network topology—all through one fictional arena.",
     preview: "data-viz-for-dummies-2",
     badges: ["Scrollytelling", "Chart selection", "Accessible charts", "Semiotic-only"],
     frames: ["xy", "ordinal", "network"],
@@ -1090,7 +1227,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies III",
     path: "/examples/data-viz-for-dummies-3",
-    eyebrow: "Seven chart matchups · the substitution lab",
+    eyebrow: "Chart substitutions · tradeoff lab",
     description:
       "Study when to substitute dot, violin, ridgeline, difference, connected scatter, tree, and circle-pack charts for familiar starters—and name the tradeoff each switch accepts.",
     preview: "data-viz-for-dummies-3",
@@ -1101,7 +1238,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies IV",
     path: "/examples/data-viz-for-dummies-4",
-    eyebrow: "Fifteen remaining core charts · seven specialist rotations",
+    eyebrow: "Specialist charts · decision-led rotation",
     description:
       "Complete the core Semiotic roster by matching pie, donut, gauge, Likert, swarm, bubble, multivariate, layered-time, navigation, orbit, and temporal-flow charts to the specific questions that earn them a place.",
     preview: "data-viz-for-dummies-4",
@@ -1112,7 +1249,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies V",
     path: "/examples/data-viz-for-dummies-5",
-    eyebrow: "Six geo formations · location earns its ink",
+    eyebrow: "Geographic charts · location earns its ink",
     description:
       "Take the fictional Rookie City season on the road and learn when regional color, located magnitude, geographic flow, experienced distance, tiled context, and custom projected geometry make a map necessary.",
     preview: "data-viz-for-dummies-5",
@@ -1123,7 +1260,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies VI",
     path: "/examples/data-viz-for-dummies-6",
-    eyebrow: "Ten physics instruments · mechanisms earn their motion",
+    eyebrow: "Physics instruments · mechanisms earn their motion",
     description:
       "Enter the basement laboratory for a rigorous, lightly unhinged guide to settling, arrival, capacity, compound bodies, transformation, dependency, and custom physics charts.",
     preview: "data-viz-for-dummies-6",
@@ -1145,9 +1282,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Drawing Networks",
     path: "/examples/network-visualization",
-    eyebrow: "Eight chapters + an interactive toy",
+    eyebrow: "Network forms + an interactive toy",
     description:
-      "Work through eight ways to draw and inspect a network, from arc diagrams and matrices to communities, Sankey, and chord. The final playground adds pathfinding, centrality, and ego-network tools.",
+      "Compare arc diagrams, matrices, communities, Sankey, and chord, then use the playground for pathfinding, centrality, and ego-network inspection.",
     preview: "networkviz",
     frames: ["network", "xy", "ordinal", "custom"],
     topics: ["design", "accessibility"],
@@ -1162,6 +1299,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["geo", "custom"],
     topics: ["history", "geography", "accessibility"],
+  },
+  {
+    title: "The Equal Places Atlas",
+    path: "/examples/equal-places-atlas",
+    eyebrow: "Gridified geography · sampled land",
+    description:
+      "Sample U.S. and world land onto dense projected dot lattices, then compare the silhouette-preserving result with equal-place tile cartograms.",
+    preview: "equal-places-atlas",
+    badges: ["GeoCustomChart", "Dot fields", "Grid cartograms"],
+    frames: ["geo", "custom"],
+    topics: ["geography", "design", "accessibility"],
   },
   {
     title: "Earthquakes",
@@ -1233,6 +1381,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/world-of-funnels": "WorldOfFunnelsExamplePage.jsx",
   "/examples/earthquakes": "EarthquakesExamplePage.jsx",
   "/examples/europa-languages": "EuropaLanguagesExamplePage.jsx",
+  "/examples/equal-places-atlas": "EqualPlacesAtlasExamplePage.jsx",
 })
 
 const PILOT_EXAMPLE_DEFINITIONS_BY_PATH = new Map(

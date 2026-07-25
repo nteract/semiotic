@@ -366,6 +366,50 @@ export function applyBodyForces(
   return applied
 }
 
+export interface PhysicsPostTickOutcome {
+  regionEffectsApplied: boolean
+  bodyForcesApplied: boolean
+  snapshot: ReturnType<PhysicsPipelineStore["snapshot"]>
+  result: PhysicsPipelineTickResult
+}
+
+/**
+ * How many settle → `onTick` → settle passes the reduced-motion path runs before
+ * giving up. Event-tape charts spawn bodies from `onTick`, so one pass is never
+ * enough; a small bound keeps a controller that always reports work from
+ * blocking the main thread.
+ */
+export const REDUCED_MOTION_SETTLE_PASSES = 4
+
+/**
+ * The reduced-motion / snapshot render pass.
+ *
+ * Reduced motion never schedules a second frame, so any work a settle hands to
+ * `onTick` — an event tape spawning gate bodies, a capacity controller
+ * releasing queued items — would be enqueued and never simulated. Settle
+ * repeatedly while the store still reports pending work so the scene reaches
+ * the same end state an animated run would.
+ */
+export function runPhysicsReducedMotionPasses(
+  store: PhysicsPipelineStore,
+  postTick: (result: PhysicsPipelineTickResult) => Omit<PhysicsPostTickOutcome, "result">,
+  maxPasses = REDUCED_MOTION_SETTLE_PASSES
+): PhysicsPostTickOutcome {
+  let outcome: PhysicsPostTickOutcome
+  let regionEffectsApplied = false
+  let bodyForcesApplied = false
+  let pass = 0
+  do {
+    const result = store.settleWithObservations()
+    const post = postTick(result)
+    regionEffectsApplied = regionEffectsApplied || post.regionEffectsApplied
+    bodyForcesApplied = bodyForcesApplied || post.bodyForcesApplied
+    outcome = { ...post, regionEffectsApplied, bodyForcesApplied, result }
+    pass += 1
+  } while (pass < maxPasses && store.hasPendingWork())
+  return outcome
+}
+
 /**
  * Shared post-tick pipeline: region forces → body forces → controllers → onTick.
  * Used by the main RAF path and the worker-fallback path (DRY + one snapshot).

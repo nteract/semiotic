@@ -342,11 +342,10 @@ export default function PieChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom annotations, label positioning,
-        exploded slices — graduate to{" "}
+        For custom annotations, label positioning, or exploded slices, use{" "}
         <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
         <code>PieChart</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         with <code>projection="radial"</code>.

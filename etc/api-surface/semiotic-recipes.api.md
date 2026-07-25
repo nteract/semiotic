@@ -75,6 +75,7 @@ function cyclicRangeContains(value: number, start: number, end: number): boolean
 function dagreLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").DagreConfig>): import("../semiotic-network").NetworkLayoutResult
 function degree(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function demandForecastRows(hours: readonly GridHour[]): DemandForecastRow[]
+function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: { charge?: string; apparatus?: string; destination?: string; } | undefined): string
 function diagnoseTokenEncoding(encoding: Partial<TokenEncoding>, context?: TokenDiagnosticsContext | undefined): TokenDiagnostic[]
 function dimFor(datum: Datum, opts?: DimOptions | undefined): number
 function egoNetwork(nodes: readonly GraphNode[], edges: readonly GraphEdge[], id: string, depth?: number | undefined): Set<string>
@@ -92,10 +93,13 @@ function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
 function generateTokens<D = unknown>(input: number | readonly number[] | TokenGeneratorInput<D>, encoding: TokenEncoding): TokenSet<D>
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
+function geographicDotGridLayout(ce: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicGridLayout(d a: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "vertical" | "horizontal" | undefined): { x: number; y: number; width: number; height: number; } | null
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function gridEventAnnotations(events: readonly GridEventWindow[], options?: { now?: number; author?: string; source?: string; } | undefined): Record<string, unknown>[]
+function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]
 function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]>
 function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: readonly string[] | ReadonlySet<string>): { id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[]; }[]
 function hatchFill(opts: HatchFillOptions): { def: ReactElement; fill: string; }
@@ -143,7 +147,11 @@ function packSpanLevels<T extends SpanInterval>(spans: readonly T[]): PackSpanLe
 function packedClusterMatrix(do: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
 function parallelCoordinatesLayout(*: OrdinalLayoutContext<import("../semiotic-recipes-core").ParallelCoordinatesConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function partitionSharedEdges<T>(edgeSets: readonly (readonly T[])[], keyOf?: EdgeKeyFn<T> | undefined): { shared: T[]; exclusive: T[][]; }
+function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): { x: number; y: number; }
+function physicsDestination(geography: PhysicsStageGeography, id: string): PhysicsDestinationZone | undefined
 function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: PhysicsReferenceEnvelopeOptions<TSample>): PhysicsReferenceEnvelope
+function physicsStageColliders(geography: PhysicsStageGeography, options?: PhysicsStageColliderOptions | undefined): PhysicsColliderSpec[]
+function physicsStageGeography(options: PhysicsStageGeographyOptions): PhysicsStageGeography
 function pointMagnitude(a: Point): number
 function polarToXY(angle: number, radius: number, opts?: PolarOptions | undefined): Point
 function portalRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string; }): StreamPhysicsRegionEffect
@@ -167,6 +175,7 @@ function roundedEnclosure(p: RoundedEnclosureProps): ReactElement<unknown, strin
 function routeSurfaceRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; }): StreamPhysicsRegionEffect
 function runLengthEncode<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
 function runs<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
+function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: { width: number; height: number; }, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
 function scaleArcBand(options: ScaleArcBandOptions): ScaleArcBandResult
 function scalePoint(a: Point, k: number): Point
 function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBakeOptions | undefined): SedimentBakeResult
@@ -260,12 +269,19 @@ interface ForceLayoutAsyncOptions
 interface ForceLayoutOptions
 interface GaltonPegsOptions
 interface GeoAreaHitTargetProps
+interface GeographicDotGridConfig
+interface GeographicDotGridDatum
+interface GeographicDotGridSampleOptions
+interface GeographicGridConfig
+interface GeographicGridInput<T = Datum>
 interface GlyphDef
 interface GlyphPart
 interface GlyphPlacement
 interface GlyphProps
 interface GraphEdge
 interface GraphNode
+interface GridifiedGeographicPoint<T = Datum>
+interface GridifyGeographicPointsOptions
 interface HatchFillOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
@@ -316,6 +332,7 @@ interface PhysicsBandColliderOptions<TBand = string | number>
 interface PhysicsColliderSpec
 interface PhysicsController
 interface PhysicsControllerTickContext
+interface PhysicsDestinationZone
 interface PhysicsPlotBounds
 interface PhysicsQueuedSpawn
 interface PhysicsReferenceEnvelope
@@ -328,9 +345,13 @@ interface PhysicsSedimentBinSnapshot
 interface PhysicsSedimentColumn
 interface PhysicsSedimentHeightfieldOptions
 interface PhysicsSpawnPacingOptions
+interface PhysicsStageColliderOptions
+interface PhysicsStageGeography
+interface PhysicsStageGeographyOptions
 interface PhysicsTraceComparison
 interface PhysicsTraceComparisonOptions<TSample>
 interface PhysicsTraceComparisonPoint
+interface PhysicsZone
 interface Point
 interface PolarOptions
 interface PositionedNode
@@ -429,6 +450,10 @@ type FuelStackRow = {
     mw: number;
     ba: string;
 }
+type GeographicDotGridAccessor = string | ((datum: GeographicDotGridDatum, index: number) => unknown)
+type GeographicDotGridShape = "circle" | "square" | "hexagon"
+type GeographicGridShape = "circle" | "square" | "hexagon"
+type GeographicGridSource = "auto" | "areas" | "points"
 type GridEventWindow = {
     id: string;
     /** Inclusive start epoch ms. */

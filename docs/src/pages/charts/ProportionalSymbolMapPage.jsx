@@ -221,8 +221,8 @@ export default function ProportionalSymbolMapPage() {
       <p>
         ProportionalSymbolMap places sized circles at geographic coordinates,
         encoding a numeric value as circle area. Optionally color circles by
-        category and overlay them on a real-world basemap. Think of it as a
-        geographic BubbleChart.
+        category and overlay them on a real-world basemap. It applies the
+        BubbleChart's visual grammar to geography.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -510,11 +510,10 @@ function WorldSymbolMap() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        Graduate to{" "}
-        <Link to="/frames/geo-frame">StreamGeoFrame</Link> when you need
+        Use <Link to="/frames/geo-frame">StreamGeoFrame</Link> when you need
         mixed areas + points, streaming data, or custom renderers.
       </p>
 

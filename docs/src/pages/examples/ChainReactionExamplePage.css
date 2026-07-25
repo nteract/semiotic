@@ -10,7 +10,17 @@
 }
 
 .release-machine h2,
-.release-machine h3 { color: var(--rm-ink); font-family: Georgia, "Times New Roman", serif; }
+.release-machine h3 { color: var(--text-primary); font-family: Georgia, "Times New Roman", serif; }
+
+/* The cream panels are light in every theme, so their headings and body copy
+   need the dark ink instead of the page's text color. */
+.release-machine__inspector h2,
+.release-machine__inspector p,
+.release-machine__method h2,
+.release-machine__method p,
+.release-machine__reach p { color: var(--rm-ink); }
+.release-machine__inspector p,
+.release-machine__method p { opacity: 0.82; }
 .release-machine__kicker,
 .release-machine__section-heading > span,
 .release-machine__question > span,
@@ -49,7 +59,7 @@
 .release-machine__bridge > div { padding: 16px; background: var(--surface-1); }
 .release-machine__bridge > div { display: grid; gap: 3px; }
 .release-machine__bridge b { color: var(--rm-rust); font-size: 0.68rem; text-transform: uppercase; }
-.release-machine__bridge strong { color: var(--rm-ink); font-family: Georgia, "Times New Roman", serif; }
+.release-machine__bridge strong { color: var(--text-primary); font-family: Georgia, "Times New Roman", serif; }
 .release-machine__bridge small { color: var(--text-secondary); }
 
 .release-machine__controls { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin: 18px 0 12px; padding: 10px; border: 1px solid color-mix(in srgb, var(--rm-pine) 25%, transparent); background: color-mix(in srgb, var(--rm-paper) 72%, var(--surface-1)); }
@@ -87,7 +97,7 @@
 .release-machine__table td { padding: 9px 11px; border-top: 1px solid var(--surface-3); text-align: left; vertical-align: top; }
 .release-machine__table thead th { color: var(--text-secondary); font-size: 0.62rem; text-transform: uppercase; }
 .release-machine__table tr.is-highlighted { background: color-mix(in srgb, var(--rm-rust) 8%, transparent); }
-.release-machine__table button { border: 0; background: transparent; color: var(--rm-ink); cursor: pointer; font-weight: 750; text-align: left; }
+.release-machine__table button { border: 0; background: transparent; color: var(--text-primary); cursor: pointer; font-weight: 750; text-align: left; }
 .release-machine__method { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 30px; padding: 26px; border-left: 8px solid var(--rm-pine); background: color-mix(in srgb, var(--rm-paper) 75%, var(--surface-1)); }
 .release-machine__method h2 { margin: 6px 0; font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: 1.06; }
 .release-machine__method p { line-height: 1.62; }

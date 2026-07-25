@@ -58,6 +58,32 @@ export type {
   GeoLayoutContext,
   GeoLayoutResult
 } from "./stream/geoCustomLayout"
+// Geographic grid/cartogram recipe. Re-exported here for discoverability; it
+// is also available from `semiotic/recipes`.
+export {
+  geographicGridLayout,
+  gridifyGeographicPoints,
+} from "./recipes/geographicGrid"
+export type {
+  GeographicGridConfig,
+  GeographicGridInput,
+  GeographicGridShape,
+  GeographicGridSource,
+  GridifiedGeographicPoint,
+  GridifyGeographicPointsOptions,
+} from "./recipes/geographicGrid"
+// Projected polygon masks sampled onto a regular dot/pixel lattice.
+export {
+  geographicDotGridLayout,
+  sampleGeographicDotGrid,
+} from "./recipes/geographicDotGrid"
+export type {
+  GeographicDotGridAccessor,
+  GeographicDotGridConfig,
+  GeographicDotGridDatum,
+  GeographicDotGridSampleOptions,
+  GeographicDotGridShape,
+} from "./recipes/geographicDotGrid"
 export type {
   CustomLayoutFailureDiagnostic,
   CustomLayoutFailureRecovery,

@@ -54,7 +54,7 @@ export type CrucibleColorBy<TDatum extends Datum = Datum> =
   "category" | "status" | "outlet" | "product" | ChartAccessor<TDatum, string>
 
 export interface CrucibleChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "onClick">, PhysicsSharedChartProps {
+  extends Omit<BaseChartProps, "margin" | "onClick" | "selection">, PhysicsSharedChartProps {
   /** Controlled, bounded source charge. CrucibleChart has no live push API. */
   data: TDatum[]
   /** Ordered furnace program. Every phase must have a unique id and duration. */

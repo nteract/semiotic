@@ -12,6 +12,7 @@ const PREVIEW_COMPONENTS = {
   "rhetorical-crucible": MiniRhetoricalCruciblePreview,
   "latent-crucible": MiniLatentCruciblePreview,
   watermarks: MiniWatermarksPreview,
+  "chain-reaction": MiniChainReactionPreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
   "merge-pressure": MiniMergePressurePreview,
   nimby: MiniNimbyPreview,
@@ -51,6 +52,7 @@ const PREVIEW_COMPONENTS = {
   oregontrail: MiniOregonTrailPreview,
   earthquakes: MiniEarthquakesPreview,
   "europa-languages": MiniEuropaLanguagesPreview,
+  "equal-places-atlas": MiniEqualPlacesAtlasPreview,
   maup: MiniMaupPreview,
 }
 
@@ -78,6 +80,59 @@ function MissingExamplePreview({ preview }) {
       />
       <text x="121" y="86" textAnchor="middle" fill="var(--text-secondary)" fontSize="9">
         Preview unavailable
+      </text>
+    </svg>
+  )
+}
+
+function MiniEqualPlacesAtlasPreview() {
+  const mask = [
+    "............................##",
+    "..##########..........########",
+    ".############################.",
+    ".###########################..",
+    "..########################....",
+    "....####################......",
+    "......###############.........",
+    "..........######..............",
+  ]
+  const dots = mask.flatMap((row, rowIndex) =>
+    [...row].flatMap((cell, columnIndex) =>
+      cell === "#"
+        ? [[12 + columnIndex * 7.2, 13 + rowIndex * 8.1]]
+        : []
+    )
+  )
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <defs>
+        <linearGradient id="equal-places-preview-bg" x1="0" x2="1">
+          <stop stopColor="#10242d" />
+          <stop offset="1" stopColor="#1b3037" />
+        </linearGradient>
+      </defs>
+      <rect width="242" height="96" rx="6" fill="url(#equal-places-preview-bg)" />
+      <path
+        d="M8 18H234M8 34H234M8 50H234M8 66H234M8 82H234"
+        stroke="rgba(255,255,255,0.05)"
+      />
+      {dots.map(([x, y], index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r="1.75"
+          fill={x < 86 ? "#9cf0e6" : x < 154 ? "#55d7d3" : "#ef9b76"}
+          opacity={0.62 + (index % 5) * 0.08}
+        />
+      ))}
+      <circle cx="28" cy="81" r="1.75" fill="#9cf0e6" />
+      <circle cx="36" cy="84" r="1.75" fill="#9cf0e6" />
+      <circle cx="45" cy="82" r="1.75" fill="#9cf0e6" />
+      <circle cx="78" cy="86" r="1.75" fill="#55d7d3" />
+      <circle cx="86" cy="84" r="1.75" fill="#55d7d3" />
+      <text x="231" y="89" textAnchor="end" fill="#f0eadc" fontSize="6" fontWeight="800">
+        LAND / GRID
       </text>
     </svg>
   )
@@ -367,6 +422,77 @@ function FilterOption({ label, count, selected, onClick }) {
   )
 }
 
+function MiniChainReactionPreview() {
+  // Five work lanes as columns; a task's row is its dependency depth. One
+  // blocked decision (red) leaves everything below it unarmed (hollow).
+  const lanes = [0, 1, 2, 3, 4]
+  const tasks = [
+    // [lane, depth, state]  state: done | blocked | stalled
+    [0, 0, "done"], [0, 1, "done"], [0, 2, "blocked"],
+    [1, 0, "done"], [1, 2, "stalled"], [1, 3, "stalled"],
+    [2, 0, "done"], [2, 1, "done"], [2, 3, "stalled"],
+    [3, 1, "done"], [3, 3, "stalled"],
+    [4, 2, "stalled"], [4, 4, "stalled"],
+  ]
+  const laneX = (lane) => 20 + lane * 41
+  const depthY = (depth) => 34 + depth * 13
+  const fillFor = (state) =>
+    state === "done" ? "#23735d" : state === "blocked" ? "#a73b45" : "#eef3f4"
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#eef3f4" />
+      <text x="12" y="18" fill="#1d2730" fontSize="11" fontWeight="900" fontFamily="sans-serif">
+        RELEASE MACHINE
+      </text>
+      {lanes.map((lane) => (
+        <line
+          key={`lane-${lane}`}
+          x1={laneX(lane) + 7}
+          x2={laneX(lane) + 7}
+          y1="28"
+          y2="88"
+          stroke="#c3ced4"
+          strokeWidth="1"
+        />
+      ))}
+      {/* Delivery balls: prerequisites that did arrive, above the blocker. */}
+      {[[0, 0], [1, 1], [2, 2]].map(([lane, depth]) => (
+        <circle
+          key={`ball-${lane}`}
+          cx={laneX(lane) + 7}
+          cy={depthY(depth) + 7}
+          r="2.4"
+          fill="#d39b2a"
+        />
+      ))}
+      {tasks.map(([lane, depth, state], index) => (
+        <rect
+          key={index}
+          x={laneX(lane)}
+          y={depthY(depth)}
+          width="14"
+          height="8"
+          rx="1.5"
+          fill={fillFor(state)}
+          stroke={state === "stalled" ? "#a73b45" : "#1d2730"}
+          strokeWidth={state === "blocked" ? 1.6 : 0.7}
+          strokeDasharray={state === "stalled" ? "2 1.5" : undefined}
+        />
+      ))}
+      {/* The blocker's reach, called out as the reading. */}
+      <text x="150" y="52" fill="#a73b45" fontSize="8" fontWeight="800" fontFamily="sans-serif">
+        1 blocker
+      </text>
+      <text x="150" y="63" fill="#4a5560" fontSize="7.5" fontFamily="sans-serif">
+        9 tasks stalled
+      </text>
+      <text x="150" y="73" fill="#4a5560" fontSize="7.5" fontFamily="sans-serif">
+        4 lanes affected
+      </text>
+    </svg>
+  )
+}
+
 function MiniWatermarksPreview() {
   const events = [
     [24, 25, "#244f72"],
@@ -462,7 +588,7 @@ function MiniHotDogPreview() {
       <rect width="242" height="96" fill="#fbf4e4" />
       <rect x="0" y="0" width="242" height="9" fill="#1f292b" />
       <text x="12" y="25" fill="#1f292b" fontSize="12" fontWeight="900" fontFamily="sans-serif">
-        NATHAN&apos;S FOUR WAYS
+        NATHAN&apos;S RECORD LEDGER
       </text>
       {[18, 34, 50, 66].map((y) => (
         <line key={y} x1="12" x2="230" y1={y} y2={y} stroke="#d7c59d" strokeWidth="1" />

@@ -164,7 +164,7 @@ export default function ProcessFlowChartPage() {
         { label: "Physics", path: "/charts/process-flow-chart" },
         { label: "ProcessFlowChart", path: "/charts/process-flow-chart" },
       ]}
-      prevPage={{ title: "PhysicalFlowChart", path: "/charts/physical-flow-chart" }}
+      prevPage={{ title: "PacketFlowChart", path: "/charts/packet-flow-chart" }}
       nextPage={{ title: "GauntletChart", path: "/charts/gauntlet-chart" }}
     >
       <ComponentMeta
@@ -176,7 +176,7 @@ export default function ProcessFlowChartPage() {
         related={[
           { name: "GauntletChart", path: "/charts/gauntlet-chart" },
           { name: "EventDropChart", path: "/charts/event-drop-chart" },
-          { name: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
+          { name: "PacketFlowChart", path: "/charts/packet-flow-chart" },
           { name: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
           { name: "Merge Pressure", path: "/examples/merge-pressure" },
         ]}

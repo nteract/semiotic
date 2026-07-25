@@ -658,7 +658,7 @@ export default function DataVizForDummiesTwoExamplePage() {
         <section id="film-room" className="dvd-overtime">
           <div className="dvd-overtime__head">
             <p className="dvd-kicker">Film room · matchup notes</p>
-            <h2>Specialists are powerful because their contracts are narrow.</h2>
+            <h2>A specialist earns its place by answering a narrow question.</h2>
             <p>
               Call the chart whose tradeoffs preserve the thing your reader must notice. Then tell
               them what the geometry cannot prove.

@@ -260,6 +260,11 @@ export function RecipesIndex() {
           title="Streaming Migration Map"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/geographic-grid-maps"
+          title="Geographic Grid Maps"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
+        />
 
         <div className="sub-header">Narrative Visualization</div>
 

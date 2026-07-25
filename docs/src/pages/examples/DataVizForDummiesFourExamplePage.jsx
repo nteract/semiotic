@@ -352,7 +352,7 @@ export default function DataVizForDummiesFourExamplePage() {
             <GuideChapter
               id="last-roster"
               number="00"
-              eyebrow="Completion board · fifteen charts, seven jobs"
+              eyebrow="Completion board · specialist rotations"
               title="Specialists make sense when the question arrives before the chart."
               lead="The remaining roster is easiest to remember in rotations, not alphabetically. Each group protects one kind of structure: a whole, a judgment scale, a population, a multivariate decision, layered time, navigation, or a moving system."
               avoid="Do not treat this page as permission to use the most elaborate available chart. Specific charts have narrow winning conditions—and unusually clear reasons to stay seated."
@@ -572,7 +572,7 @@ export default function DataVizForDummiesFourExamplePage() {
               id="diagnosis"
               number="04"
               eyebrow="Quadrant + scatterplot matrix · multivariate film room"
-              title="One view makes a decision; the other searches for the reason."
+              title="Decide with the quadrant; investigate with the matrix."
               lead="Quadrants impose meaningful cut lines on two measures and name the resulting actions. A scatterplot matrix compares every pair in a small metric set to expose correlations, clusters, and redundant variables."
               avoid="Quadrant lines are policy, not natural law. Matrix cells multiply quickly, so three or four purposeful fields beat a wall of tiny plots."
               stats={CHAPTER_STATS.diagnosis}

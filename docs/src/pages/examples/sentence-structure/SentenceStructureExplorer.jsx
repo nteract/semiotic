@@ -751,7 +751,7 @@ export default function SentenceStructureExplorer() {
         <header>
           <div>
             <p className="sentence-kicker">The active Shakespeare intersection</p>
-            <h2 id="specimen-title">Choose the canonical sentence all nine views will share.</h2>
+            <h2 id="specimen-title">Choose the canonical sentence shared by every view.</h2>
           </div>
           <p>
             The subject and work filters define this list. Word paths and phrase relationships use

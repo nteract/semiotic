@@ -25,8 +25,9 @@ const COMPONENTS_BY_CATEGORY = {
     "RealtimeWaterfallChart", "RealtimeHeatmap",
   ],
   physics: [
-    "GaltonBoardChart", "EventDropChart", "PhysicsPileChart", "CollisionSwarmChart",
-    "PhysicalFlowChart", "ProcessFlowChart", "GauntletChart", "CrucibleChart",
+    "GaltonBoardChart", "EventDropChart", "UnitPileChart", "CollisionSwarmChart",
+    "PacketFlowChart", "ProcessFlowChart", "GauntletChart", "CrucibleChart",
+    "ChainReactionChart",
   ],
   value: [
     "BigNumber",

@@ -9,13 +9,23 @@ import {
 } from "../shared/withChartWrapper"
 import type { FrameGraphicsProp } from "../../stream/useFrame"
 import type {
+  PhysicsBodySelection,
   PhysicsSemanticItem,
   StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsFrame"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps, ChartMode } from "../shared/types"
-import { useChartMode, type ChartModeResult } from "../shared/hooks"
+import type {
+  BaseChartProps,
+  ChartMode,
+  LinkedHoverProp,
+  SelectionConfig
+} from "../shared/types"
+import {
+  useChartMode,
+  useChartSelection,
+  type ChartModeResult
+} from "../shared/hooks"
 
 export type PhysicsHocFrameProps<
   TOmitted extends keyof StreamPhysicsFrameProps = never
@@ -38,6 +48,82 @@ export type PhysicsSharedChartProps = {
   legendPosition?: StreamPhysicsFrameProps["legendPosition"]
   legendLayout?: StreamPhysicsFrameProps["legendLayout"]
   svgAnnotationRules?: StreamPhysicsFrameProps["svgAnnotationRules"]
+  /**
+   * Shared selection. Pass a `{ name }` config to join the selection store
+   * (cross-highlight inside `LinkedCharts`), or a resolved
+   * `{ isActive, predicate }` body predicate directly.
+   */
+  selection?: PhysicsChartSelection
+  /** Emit hover into the shared selection store for cross-chart highlighting. */
+  linkedHover?: LinkedHoverProp
+}
+
+/**
+ * What a physics HOC's `selection` prop accepts.
+ *
+ * `SelectionConfig` (`{ name }`) joins the shared selection store, so physics
+ * bodies cross-highlight inside `LinkedCharts` like every other family.
+ * `PhysicsBodySelection` (`{ isActive, predicate }`) stays available as the
+ * direct escape hatch for hosts that resolve a body predicate themselves.
+ */
+export type PhysicsChartSelection =
+  | SelectionConfig
+  | PhysicsBodySelection
+  | null
+
+function isSelectionConfig(
+  value: PhysicsChartSelection | undefined
+): value is SelectionConfig {
+  return !!value && typeof (value as SelectionConfig).name === "string"
+}
+
+export interface PhysicsSelectionOptions {
+  selection?: PhysicsChartSelection
+  linkedHover?: LinkedHoverProp
+  colorBy?: unknown
+  chartType: string
+  chartId?: string
+  onObservation?: BaseChartProps["onObservation"]
+  onClick?: BaseChartProps["onClick"]
+}
+
+/**
+ * Wire a physics HOC into the shared selection store.
+ *
+ * The store resolves a predicate over *data*, while the frame wants a predicate
+ * over *bodies*, so the resolved predicate is lifted through `body.datum`.
+ * Bodies with no datum (walls, pegs, chrome) never match a data selection.
+ */
+export function usePhysicsSelection(
+  options: PhysicsSelectionOptions
+): PhysicsBodySelection | null {
+  const { selection, linkedHover, colorBy, chartType, chartId } = options
+  const colorByField = typeof colorBy === "string" ? colorBy : undefined
+  const storeSelection = isSelectionConfig(selection) ? selection : undefined
+
+  const { activeSelectionHook } = useChartSelection({
+    selection: storeSelection,
+    linkedHover,
+    fallbackFields: colorByField ? [colorByField] : undefined,
+    onObservation: options.onObservation,
+    onClick: options.onClick,
+    chartType,
+    chartId,
+    colorByField
+  })
+
+  const direct = isSelectionConfig(selection) ? null : (selection ?? null)
+
+  return useMemo<PhysicsBodySelection | null>(() => {
+    if (direct) return direct
+    if (!activeSelectionHook?.isActive) return null
+    const predicate = activeSelectionHook.predicate
+    return {
+      isActive: true,
+      predicate: (body) =>
+        body.datum == null ? false : predicate(body.datum as Datum)
+    }
+  }, [activeSelectionHook?.isActive, activeSelectionHook?.predicate, direct])
 }
 
 /** Galton / pile sampling mode (orthogonal to ChartMode display modes). */
@@ -420,6 +506,8 @@ export function resolvePhysicsFrameSharedProps(
   frameProps: Partial<StreamPhysicsFrameProps> | undefined,
   semanticItems?: PhysicsSemanticItem[],
   modeExtras?: {
+    /** Resolved body predicate from {@link usePhysicsSelection}. */
+    selection?: PhysicsBodySelection | null
     chartMode?: ChartMode
     className?: string
     title?: string
@@ -463,6 +551,7 @@ export function resolvePhysicsFrameSharedProps(
     onObservation: props.onObservation ?? frameProps?.onObservation,
     onAnnotationActivate: frameProps?.onAnnotationActivate,
     opacity: props.opacity ?? frameProps?.opacity,
+    selection: modeExtras?.selection ?? frameProps?.selection,
     semanticItems: frameProps?.semanticItems ?? semanticItems,
     stroke: props.stroke ?? frameProps?.stroke,
     strokeWidth: props.strokeWidth ?? frameProps?.strokeWidth,

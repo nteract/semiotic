@@ -456,7 +456,7 @@ export default function WhereYouDrawTheLineExamplePage() {
         <section className="maup-hero" aria-labelledby="maup-deck">
           <p className="maup-kicker">An explorable explanation of the modifiable areal unit problem</p>
           <p id="maup-deck" className="maup-deck">Nothing beneath the boundary changes. The answer does.</p>
-          <p className="maup-intro">Cedar Bend is a constructed city with a fixed heat field and a fixed population. Group it one way and its districts tell one story. Move a border and the policy answer can move with it.</p>
+          <p className="maup-intro">Cedar Bend is a constructed city with a fixed heat field and a fixed population. Its districts tell a tidy story until a border moves; then the policy answer can move with it.</p>
           <div className="maup-hero-proof"><span>fixture {checksum()}</span><span>{MAP_CELLS.length} fixed microcells</span><span>28 fixed days</span><button type="button" onClick={reset}>Reset the argument</button></div>
         </section>
 

@@ -816,7 +816,6 @@
 
 .ltc-chart-paper {
   --semiotic-bg: var(--ltc-trail-paper);
-  --semiotic-background: var(--ltc-trail-paper);
   --semiotic-text: var(--ltc-trail-ink);
   --semiotic-text-secondary: var(--ltc-trail-muted);
   --semiotic-border: var(--ltc-trail-border);
@@ -1010,10 +1009,10 @@
 }
 
 .ltc-crucible-shell {
-  --semiotic-accent: #8a590e;
-  --semiotic-background: #faf8ef;
-  --semiotic-negative: #8f3b2f;
-  --semiotic-positive: #1f6675;
+  --semiotic-primary: #8a590e;
+  --semiotic-bg: #faf8ef;
+  --semiotic-danger: #8f3b2f;
+  --semiotic-success: #1f6675;
   --semiotic-text: var(--ltc-ink);
   --semiotic-text-secondary: var(--ltc-muted);
   min-height: 500px;

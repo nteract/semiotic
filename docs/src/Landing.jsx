@@ -86,7 +86,7 @@ const features = [
   {
     title: "Coordinated Views",
     description:
-      "Hover one chart, highlight matching data in others. Brush a scatterplot, filter a bar chart. Union, intersect, and crossfilter resolution modes — no custom state management.",
+      "Hover a chart and matching data lights up elsewhere. Brush a scatterplot and the bar chart filters with it. Union, intersect, and crossfilter modes share the same selection state.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -934,7 +934,7 @@ export default function Landing() {
         <div style={styles.heroInner}>
           <h1 style={styles.heroHeadline}>Streaming-First Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            Push data at 60fps with decay, pulse, and staleness encoding. Or just pass an array — static data is the simple case. 40+ chart types, network graphs, coordinated dashboards, and AI tooling built in.
+            Push data at 60fps with decay, pulse, and staleness encoding, or pass an array for a static chart. Semiotic covers more than 40 chart types, network graphs, coordinated dashboards, and AI-assisted authoring.
           </p>
 
           <div style={styles.heroButtons}>
@@ -962,10 +962,10 @@ export default function Landing() {
           THREE TIERS SECTION
           ================================================================ */}
       <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>One Library, Three Levels</h2>
+        <h2 style={styles.sectionTitle}>Choose Your Level of Control</h2>
         <p style={styles.sectionSubtitle}>
-          Start simple and add complexity only when you need it. Semiotic grows with your
-          requirements.
+          Start with a chart component. Reach for a Frame or the lower-level utilities when the
+          design calls for them.
         </p>
 
         <div style={styles.tierGrid} className="landing-tier-grid">
@@ -984,10 +984,10 @@ export default function Landing() {
             >
               Charts
             </span>
-            <h3 style={styles.tierHeading}>Simple Props, Instant Results</h3>
+            <h3 style={styles.tierHeading}>Start With the Chart</h3>
             <p style={styles.tierDescription}>
-              20 ready-to-use chart components. Pass your data, set a few props, get a beautiful
-              visualization.
+              Ready-to-use components handle common chart forms. Pass data, name the accessors,
+              and adjust the props that matter.
             </p>
             <MiniCodeBlock code={tierSnippets.charts} />
           </div>
@@ -1007,10 +1007,10 @@ export default function Landing() {
             >
               Frames
             </span>
-            <h3 style={styles.tierHeading}>Full Creative Control</h3>
+            <h3 style={styles.tierHeading}>Shape the Frame</h3>
             <p style={styles.tierDescription}>
-              Four powerful Frame components give you complete control over every aspect of your
-              visualization.
+              Frames expose marks, layout, interaction, annotation, and rendering when a chart
+              component is too prescriptive.
             </p>
             <MiniCodeBlock code={tierSnippets.frames} />
           </div>

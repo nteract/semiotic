@@ -77,8 +77,8 @@
         "EventDropChart",
         "GaltonBoardChart",
         "GauntletChart",
-        "PhysicalFlowChart",
-        "PhysicsPileChart",
+        "PacketFlowChart",
+        "UnitPileChart",
         "ProcessFlowChart"
       ],
       "value": [
@@ -115,9 +115,9 @@
       "MinimapChart",
       "MultiAxisLineChart",
       "OrbitDiagram",
-      "PhysicalFlowChart",
+      "PacketFlowChart",
       "PhysicsCustomChart",
-      "PhysicsPileChart",
+      "UnitPileChart",
       "PieChart",
       "ProcessFlowChart",
       "ProcessSankey",

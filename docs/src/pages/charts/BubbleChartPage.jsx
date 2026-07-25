@@ -330,11 +330,10 @@ export default function BubbleChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom marks, complex annotations,
-        force-directed layouts — graduate to{" "}
+        For custom marks, complex annotations, or force-directed layouts, use{" "}
         <Link to="/frames/xy-frame">StreamXYFrame</Link> directly. Every{" "}
         <code>BubbleChart</code> is just a configured <code>StreamXYFrame</code> under
         the hood.

@@ -705,7 +705,7 @@
         "settled-projection"
       ]
     },
-    "PhysicalFlowChart": {
+    "PacketFlowChart": {
       "category": "physics",
       "supportsLegend": true,
       "supportsSelection": false,
@@ -722,7 +722,7 @@
         "settled-projection"
       ]
     },
-    "PhysicsPileChart": {
+    "UnitPileChart": {
       "category": "physics",
       "supportsLegend": true,
       "supportsSelection": false,

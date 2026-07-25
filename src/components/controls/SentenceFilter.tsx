@@ -211,7 +211,7 @@ const popoverStyle: React.CSSProperties = {
   maxHeight: "min(24rem, calc(100vh - 2rem))",
   overflow: "auto",
   padding: 12,
-  color: "var(--sentence-filter-text-color, var(--semiotic-fg, #1f2933))",
+  color: "var(--sentence-filter-text-color, var(--semiotic-text, #1f2933))",
   backgroundColor: "var(--semiotic-bg, #fff)",
   border: "1px solid var(--semiotic-border, #cbd5e1)",
   borderRadius: 6,

@@ -198,8 +198,8 @@ export type {
 export { EventDropChart } from "./physics/EventDropChart"
 export type { EventDropChartProps } from "./physics/EventDropChart"
 
-export { PhysicsPileChart } from "./physics/PhysicsPileChart"
-export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
+export { UnitPileChart, PhysicsPileChart } from "./physics/UnitPileChart"
+export type { UnitPileChartProps } from "./physics/UnitPileChart"
 
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
@@ -296,8 +296,8 @@ export type {
   ProcessJourneyUpdateOptions
 } from "../recipes/processJourney"
 
-export { PhysicalFlowChart } from "./physics/PhysicalFlowChart"
-export type { PhysicalFlowChartProps } from "./physics/PhysicalFlowChart"
+export { PacketFlowChart, PhysicalFlowChart } from "./physics/PacketFlowChart"
+export type { PacketFlowChartProps } from "./physics/PacketFlowChart"
 
 export { ProcessFlowChart } from "./physics/ProcessFlowChart"
 export type {

@@ -17,6 +17,28 @@ export const GaltonBoardChartCapability: ChartCapability = {
     "outlier-detection": 1,
   },
 
+  // Settings change what this chart is for: showing an observed distribution is
+  // a different communicative act from demonstrating how sampling produces one.
+  variants: [
+    {
+      key: "observed",
+      label: "Observed samples",
+      description: "Drop the supplied rows through the board and read the settled bins.",
+      props: { simulationMode: "sample" },
+      tags: ["observed"],
+    },
+    {
+      key: "mechanical",
+      label: "Mechanical demonstration",
+      description:
+        "Seeded Bernoulli draws with no input data — explains where a bell curve comes from rather than reporting one.",
+      props: { simulationMode: "mechanical" },
+      tags: ["explainer", "no-data"],
+      intentDeltas: { distribution: -2, "outlier-detection": -1 },
+      rubricDeltas: { accuracy: -2, precision: -1 },
+    },
+  ],
+
   caveats: () => [
     "The settled projection is the chart; motion is explanatory context and should not be used for exact value reading",
   ],

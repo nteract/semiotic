@@ -95,7 +95,7 @@ export default function CustomChartsExamplesPage() {
       </section>
 
       <section>
-        <h2>The same chart, two ways</h2>
+        <h2>Compare the Layout and DisplayList Versions</h2>
         <p>
           This boba chart also appears in the{" "}
           <Link to="/interoperability/gofish">GoFish DisplayList gallery</Link>, where it is{" "}

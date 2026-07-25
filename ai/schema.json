@@ -13664,7 +13664,7 @@
     {
       "type": "function",
       "function": {
-        "name": "PhysicsPileChart",
+        "name": "UnitPileChart",
         "description": "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
         "parameters": {
           "type": "object",
@@ -13924,7 +13924,7 @@
     {
       "type": "function",
       "function": {
-        "name": "PhysicalFlowChart",
+        "name": "PacketFlowChart",
         "description": "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
         "parameters": {
           "type": "object",
@@ -15957,6 +15957,234 @@
           },
           "required": [
             "data"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ChainReactionChart",
+        "description": "Physics-backed dependency chain reaction. Tasks are placed by workstream lane and dependency depth; a completed task releases one delivery ball per outgoing dependency, and a downstream task arms only once every prerequisite ball has arrived. The settled reading is task state plus each blocker's downstream reach.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic seed for delivery-ball motion.",
+              "default": 31
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "taskIDAccessor": {
+              "type": "string",
+              "description": "Stable task id. Dependency arrays reference these resolved ids.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "labelAccessor": {
+              "type": "string",
+              "description": "Human-readable task name used in labels and the data table.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "laneAccessor": {
+              "type": "string",
+              "description": "Workstream the task belongs to. Lanes become the chart's columns.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "dependencyAccessor": {
+              "type": "string",
+              "description": "Array of prerequisite task ids. Edges are never inferred; a task with the wrong prerequisites reads as a different claim.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "startAccessor": {
+              "type": "string",
+              "description": "Planned start time (number or Date).",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "endAccessor": {
+              "type": "string",
+              "description": "Planned end time (number or Date).",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "progressAccessor": {
+              "type": "string",
+              "description": "Fractional completion 0–1, shown on the task body.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "statusAccessor": {
+              "type": "string",
+              "description": "Authored task status (done / blocked / waiting / active). Completion is an explicit data event, never something the simulation discovers.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "completionTimeAccessor": {
+              "type": "string",
+              "description": "When the task actually completed. Drives replay ordering against currentTime.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "blockerAccessor": {
+              "type": "string",
+              "description": "Reason this task is blocked. A blocked task never arms its downstream dependents.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "milestoneAccessor": {
+              "type": "string",
+              "description": "Marks a task as a milestone for emphasis.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "snapshot",
+                "replay",
+                "mechanical"
+              ],
+              "description": "snapshot derives the settled state at currentTime without animating; replay animates deliveries forward from the earliest recorded completion; mechanical demonstrates the apparatus.",
+              "default": "snapshot"
+            },
+            "insight": {
+              "type": "string",
+              "enum": [
+                "none",
+                "blocker-amplification"
+              ],
+              "description": "Which derived reading to surface. blocker-amplification reports how many unfinished tasks and lanes each blocker reaches.",
+              "default": "blocker-amplification"
+            },
+            "currentTime": {
+              "type": [
+                "number",
+                "object"
+              ],
+              "description": "Clock position used to derive the settled state (number or Date)."
+            },
+            "controls": {
+              "type": [
+                "boolean",
+                "array"
+              ],
+              "description": "Replay control buttons: true for all, or a subset of play / pause / step / reset / settle."
+            },
+            "mechanism": {
+              "type": "string",
+              "enum": [
+                "domino-ball"
+              ],
+              "description": "Delivery mechanism used to represent a satisfied prerequisite.",
+              "default": "domino-ball"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": [
+                "vertical"
+              ],
+              "description": "Lane orientation. Lanes run as vertical columns.",
+              "default": "vertical"
+            },
+            "reducedMotion": {
+              "type": "string",
+              "enum": [
+                "settle"
+              ],
+              "description": "Force the settled reading instead of a replay. The frame also honors prefers-reduced-motion automatically."
+            }
+          },
+          "required": [
+            "data",
+            "taskIDAccessor",
+            "labelAccessor",
+            "laneAccessor",
+            "dependencyAccessor"
           ]
         }
       }

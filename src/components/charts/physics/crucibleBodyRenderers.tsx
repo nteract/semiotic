@@ -12,7 +12,7 @@ import type {
   CrucibleRunState
 } from "./crucibleTypes"
 
-const PAPER = "var(--semiotic-background, #fffaf0)"
+const PAPER = "var(--semiotic-bg, #fffaf0)"
 
 function canvasColor(
   ctx: CanvasRenderingContext2D,

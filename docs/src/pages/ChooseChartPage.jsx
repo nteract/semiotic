@@ -272,15 +272,15 @@ export default function ChooseChartPage() {
         </>
       )}
 
-      {/* Reshape to unlock — the generative / distinctive rail */}
+      {/* Reshaping suggestions — the generative / distinctive rail */}
       {reshapes.length > 0 && (
         <>
-          <h2 id="reshape">Reshape to unlock</h2>
+          <h2 id="reshape">Charts a Reshape Makes Possible</h2>
           <p>
             Direct recommendations only cover charts your data <em>already</em>{" "}
-            fits. But a flat table can often be reshaped into something more
-            powerful — these are the distinctive charts Semiotic draws that your
-            data could become, with the transform that unlocks each.
+            fits. A flat table can often support a more revealing chart after a
+            deliberate transform. These suggestions pair each chart with the
+            reshape it requires.
           </p>
           <div style={styles.cards}>
             {reshapes.map((r, i) => {

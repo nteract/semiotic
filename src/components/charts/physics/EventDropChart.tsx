@@ -27,7 +27,10 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
@@ -39,7 +42,7 @@ type ProjectionRow = {
 }
 
 export interface EventDropChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin">,
+  extends Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -60,6 +63,11 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   timeScale?: number
   showProjection?: boolean
   tooltip?: TooltipProp
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   paused?: boolean
   frameProps?: PhysicsHocFrameProps<"config">
 }
@@ -128,7 +136,7 @@ function eventDropOverlay(
               y={gutterTop}
               width={gutter.width}
               height={yBottom - gutterTop}
-              fill="var(--semiotic-negative, #e15759)"
+              fill="var(--semiotic-danger, #e15759)"
               fillOpacity={0.07}
               stroke="var(--semiotic-border, #d1d5db)"
               strokeOpacity={0.55}
@@ -138,7 +146,7 @@ function eventDropOverlay(
               x={gutter.x + gutter.width / 2}
               y={gutterTop - 8}
               textAnchor="middle"
-              fill="var(--semiotic-negative, #e15759)"
+              fill="var(--semiotic-danger, #e15759)"
               fontSize={10}
               fontWeight={700}
             >
@@ -160,8 +168,8 @@ function eventDropOverlay(
                 height={yBottom - windowTop}
                 fill={
                   closed
-                    ? "var(--semiotic-negative, #e15759)"
-                    : "var(--semiotic-accent, #4e79a7)"
+                    ? "var(--semiotic-danger, #e15759)"
+                    : "var(--semiotic-primary, #4e79a7)"
                 }
                 fillOpacity={closed ? 0.08 : 0.06}
                 stroke="var(--semiotic-border, #d1d5db)"
@@ -178,7 +186,7 @@ function eventDropOverlay(
                       x2={segment.x2}
                       y1={segment.y1}
                       y2={segment.y2}
-                      stroke="var(--semiotic-negative, #e15759)"
+                      stroke="var(--semiotic-danger, #e15759)"
                       strokeOpacity={0.78}
                       strokeWidth={2}
                       strokeLinecap="round"
@@ -217,7 +225,7 @@ function eventDropOverlay(
               x2={segment.x2}
               y1={segment.y1}
               y2={segment.y2}
-              stroke="var(--semiotic-negative, #e15759)"
+              stroke="var(--semiotic-danger, #e15759)"
               strokeOpacity={0.62}
               strokeWidth={2}
               strokeLinecap="round"
@@ -255,7 +263,7 @@ function eventDropOverlay(
             x={gutter.x + gutter.width / 2}
             y={plot.y + 32}
             textAnchor="middle"
-            fill="var(--semiotic-negative, #e15759)"
+            fill="var(--semiotic-danger, #e15759)"
             fontSize={10}
             fontWeight={700}
           >
@@ -339,6 +347,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     loading,
     loadingContent,
     paused,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
@@ -390,6 +399,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
       windows
     ]
   )
+  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
 
   const metadata = layout.metadata as EventDropProjectionMetadata | undefined
   const spawnDatum = useCallback(
@@ -440,6 +450,16 @@ export const EventDropChart = forwardRef(function EventDropChart<
     [chartSize, layout.projectionRows, metadata]
   )
 
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "EventDropChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -459,6 +479,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle,
@@ -478,7 +499,8 @@ export const EventDropChart = forwardRef(function EventDropChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      config={layout.config}
+      key={rerun.rerunKey}
+      config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
         frameProps?.foregroundGraphics

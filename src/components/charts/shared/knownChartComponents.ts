@@ -55,12 +55,13 @@ export const KNOWN_CHART_COMPONENTS = [
   "RealtimeHeatmap",
   "GaltonBoardChart",
   "EventDropChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
   "GauntletChart",
   "CrucibleChart",
   "ProcessFlowChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
+  "ChainReactionChart",
   "BigNumber"
 ] as const
 

@@ -15,7 +15,7 @@ function statusColor<TDatum extends Datum>(
   if (runtime.blockers.has(node.id)) return "var(--semiotic-error, #c64035)"
   if (node.status === "in-progress") return "var(--semiotic-warning, #d18a22)"
   if (runtime.armed.has(node.id)) return "var(--semiotic-primary, #2474a6)"
-  return "var(--semiotic-muted, #75818a)"
+  return "var(--semiotic-text-secondary, #75818a)"
 }
 
 export interface ChainReactionOverlayProps<TDatum extends Datum = Datum> {
@@ -48,6 +48,15 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
   reduced,
   onSelectTask
 }: ChainReactionOverlayProps<TDatum>): React.ReactElement {
+  // Lane labels used to sit at a fixed y=23, which is the same band the frame
+  // draws the chart title in — they collided. Derive them from the topmost task
+  // so they always sit just above the first row of tiles and clear of the title.
+  const topTaskTop = layout.tasks.length
+    ? Math.min(...layout.tasks.map((task) => task.y - task.height / 2))
+    : 60
+  const laneLabelY = Math.max(20, topTaskTop - 12)
+  const laneRailTop = Math.max(26, topTaskTop - 6)
+
   return (
     <svg
       aria-hidden="true"
@@ -69,7 +78,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
             <line
               x1={x}
               x2={x}
-              y1={32}
+              y1={laneRailTop}
               y2={height - 24}
               stroke="var(--semiotic-grid, #d7dde0)"
               strokeWidth={1}
@@ -77,7 +86,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
             />
             <text
               x={x}
-              y={23}
+              y={laneLabelY}
               textAnchor="middle"
               fontSize={12}
               fontWeight={700}
@@ -99,7 +108,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
             points={points}
             fill="none"
             stroke={highlighted
-              ? "var(--semiotic-highlight, #e08a1e)"
+              ? "var(--semiotic-selection-color, #e08a1e)"
               : delivered
                 ? "var(--semiotic-success, #2b8a66)"
                 : "var(--semiotic-grid, #aeb8bd)"}
@@ -118,7 +127,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
               cx={socket.x}
               cy={socket.y}
               r={socket.radius + 2}
-              fill="var(--semiotic-background, #fff)"
+              fill="var(--semiotic-bg, #fff)"
               stroke="var(--semiotic-text, #243039)"
               strokeWidth={1.5}
             />
@@ -162,8 +171,8 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
                 width={task.width}
                 height={task.height}
                 rx={node.milestone ? 12 : 4}
-                fill="var(--semiotic-background, #fff)"
-                stroke={selected || downstream ? "var(--semiotic-highlight, #e08a1e)" : color}
+                fill="var(--semiotic-bg, #fff)"
+                stroke={selected || downstream ? "var(--semiotic-selection-color, #e08a1e)" : color}
                 strokeWidth={selected ? 4 : downstream ? 3 : 2}
               />
               <rect
@@ -210,7 +219,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
                 y={task.y + 12}
                 textAnchor="middle"
                 fontSize={9.5}
-                fill="var(--semiotic-text-muted, #5f6b72)"
+                fill="var(--semiotic-text-secondary, #5f6b72)"
               >
                 {Math.round(node.progress * 100)}% · {completed ? "done" : blocked ? "blocked" : runtime.armed.has(node.id) ? "ready" : "waiting"}
               </text>

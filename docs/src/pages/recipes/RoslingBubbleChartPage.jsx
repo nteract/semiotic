@@ -149,7 +149,7 @@ export default function RoslingBubbleChartPage() {
         { label: "Recipes", path: "/recipes" },
         { label: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" },
       ]}
-      prevPage={{ title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" }}
+      prevPage={{ title: "Geographic Grid Maps", path: "/recipes/geographic-grid-maps" }}
       dependencies={["semiotic", "react"]}
       fullSourceCode={fullSourceCode}
     >

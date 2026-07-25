@@ -14,8 +14,11 @@ function StreamGeoFrame(: import("../../../dist/semiotic-geo").StreamGeoFramePro
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
+function geographicDotGridLayout(ce: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicGridLayout(d a: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
@@ -30,6 +33,7 @@ function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined
 function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
+function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: { width: number; height: number; }, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
 interface CategoricalLegendConfig
 interface ChoroplethMapProps<TDatum extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
@@ -44,12 +48,19 @@ interface GeoLayoutResult
 interface GeoParticleStyle
 interface GeoPipelineConfig
 interface GeoScales
+interface GeographicDotGridConfig
+interface GeographicDotGridDatum
+interface GeographicDotGridSampleOptions
+interface GeographicGridConfig
+interface GeographicGridInput<T = Datum>
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
 interface GradientLegendConfig
 interface GradientLegendValue
 interface GraticuleConfig
+interface GridifiedGeographicPoint<T = Datum>
+interface GridifyGeographicPointsOptions
 interface HatchFill
 interface HitTargetPointProps
 interface LegendGroup
@@ -73,6 +84,10 @@ type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 type GeoCustomLayout<C extends object = Record<string, unknown>> = (ctx: GeoLayoutContext<C>) => GeoLayoutResult
 type GeoSceneNode = GeoAreaSceneNode | PointSceneNode | GlyphSceneNode | GeoLineSceneNode
+type GeographicDotGridAccessor = string | ((datum: GeographicDotGridDatum, index: number) => unknown)
+type GeographicDotGridShape = "circle" | "square" | "hexagon"
+type GeographicGridShape = "circle" | "square" | "hexagon"
+type GeographicGridSource = "auto" | "areas" | "points"
 type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
 type ProjectionName = "mercator" | "equalEarth" | "albersUsa" | "orthographic" | "naturalEarth" | "equirectangular"
 type ProjectionProp = GeoProjection | ProjectionName | ProjectionConfig

@@ -457,11 +457,27 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
   }
   for (const group of grouped.values()) group.sort((a, b) => compareText(a.id, b.id))
 
+  // Tasks that share a lane *and* a dependency depth stack inside their level
+  // band. The stack has to be sized from the tile height, not a fixed nudge:
+  // offsetting full-height tiles by a fraction of their own height leaves them
+  // visibly overlapping (a 58px tile shifted 17px overlaps by 41px). So shrink
+  // the tiles to fit the group, then step by the shrunk height plus a gap.
+  const SLOT_GAP = 4
+  const bandHeight = levelStep * 0.86
+  const slotHeightFor = (count: number): number =>
+    count <= 1
+      ? taskHeight
+      : Math.max(
+          22,
+          Math.min(taskHeight, (bandHeight - SLOT_GAP * (count - 1)) / count)
+        )
+
   const tasks: DependencyTaskPlacement[] = machine.nodes.map((node) => {
     const group = grouped.get(`${node.laneIndex}:${node.level}`) ?? [node]
     const slot = Math.max(0, group.findIndex((candidate) => candidate.id === node.id))
     const centeredSlot = slot - (group.length - 1) / 2
-    const slotOffset = centeredSlot * Math.min(18, taskHeight * 0.3)
+    const slotHeight = slotHeightFor(group.length)
+    const slotOffset = centeredSlot * (slotHeight + SLOT_GAP)
     return {
       taskID: node.id,
       lane: node.lane,
@@ -470,7 +486,7 @@ export function routeDependencyTracks<TDatum extends Datum = Datum>(
       x: paddingX + laneWidth * (node.laneIndex + 0.5),
       y: paddingTop + levelStep * (node.level + 0.5) + slotOffset,
       width: taskWidth,
-      height: taskHeight
+      height: slotHeight
     }
   })
   const taskByID = new Map(tasks.map((task) => [task.taskID, task]))

@@ -27,8 +27,8 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(false)
   })
 
-  it("allows mechanical PhysicsPileChart without data", () => {
-    const result = diagnoseConfig("PhysicsPileChart", {
+  it("allows mechanical UnitPileChart without data", () => {
+    const result = diagnoseConfig("UnitPileChart", {
       mode: "mechanical",
       mechanicalCount: 48,
       mechanicalCategories: ["Backlog", "Active", "Done"],
@@ -38,8 +38,8 @@ describe("diagnoseConfig", () => {
     expect(result.diagnoses).toHaveLength(0)
   })
 
-  it("rejects unusable mechanical PhysicsPileChart settings", () => {
-    const result = diagnoseConfig("PhysicsPileChart", {
+  it("rejects unusable mechanical UnitPileChart settings", () => {
+    const result = diagnoseConfig("UnitPileChart", {
       mode: "mechanical",
       mechanicalCount: 0,
       mechanicalCategories: []
@@ -540,7 +540,7 @@ describe("diagnoseConfig", () => {
   })
 
   it("warns when physics piles exceed the live body budget", () => {
-    const result = diagnoseConfig("PhysicsPileChart", {
+    const result = diagnoseConfig("UnitPileChart", {
       data: [{ category: "A", value: 1800 }],
       categoryAccessor: "category",
       valueAccessor: "value",
@@ -592,7 +592,7 @@ describe("diagnoseConfig", () => {
   })
 
   it("warns when physics projection is disabled", () => {
-    const result = diagnoseConfig("PhysicsPileChart", {
+    const result = diagnoseConfig("UnitPileChart", {
       data: [{ category: "A", value: 3 }],
       categoryAccessor: "category",
       valueAccessor: "value",

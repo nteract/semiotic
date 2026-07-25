@@ -83,7 +83,7 @@ export function IntentMark({
             overflow: "auto",
             margin: "10px 0 0",
             padding: 10,
-            background: "var(--semiotic-background, #f5f5f5)",
+            background: "var(--semiotic-bg, #f5f5f5)",
             fontSize: 11,
             lineHeight: 1.45,
             whiteSpace: "pre-wrap",

@@ -589,3 +589,21 @@ export type {
   ProcessJourneyStage,
   ProcessJourneyUpdateOptions
 } from "./processJourney"
+
+// The shared charge → apparatus → destinations vocabulary every physics chart
+// has been re-inventing under a local name. Authoring kit for new charts and
+// PhysicsCustomChart layouts; existing charts keep their own layouts.
+export {
+  describePhysicsStageGeography,
+  physicsChargePoint,
+  physicsDestination,
+  physicsStageColliders,
+  physicsStageGeography
+} from "./physicsStageGeography"
+export type {
+  PhysicsDestinationZone,
+  PhysicsStageColliderOptions,
+  PhysicsStageGeography,
+  PhysicsStageGeographyOptions,
+  PhysicsZone
+} from "./physicsStageGeography"

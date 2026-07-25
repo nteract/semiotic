@@ -323,7 +323,7 @@ describe("PhysicsPipelineStore", () => {
       },
       observation: {
         chartId: "sediment",
-        chartType: "PhysicsPileChart",
+        chartType: "UnitPileChart",
         onObservation: (event) => observations.push(event)
       },
       kernel: {
@@ -431,7 +431,7 @@ describe("PhysicsPipelineStore", () => {
       sediment: { binAccessor: "lane" },
       observation: {
         chartId: "budget",
-        chartType: "PhysicsPileChart",
+        chartType: "UnitPileChart",
         onObservation: (event) => observations.push(event)
       },
       kernel: {
@@ -507,7 +507,7 @@ describe("PhysicsPipelineStore", () => {
       maxSubsteps: 4,
       observation: {
         chartId: "soak",
-        chartType: "PhysicsPileChart",
+        chartType: "UnitPileChart",
         onObservation: (event) => observations.push(event)
       },
       kernel: {

@@ -52,12 +52,13 @@ const RealtimeWaterfallChartPage = lazy(() => import("./pages/charts/RealtimeWat
 const RealtimeHeatmapPage = lazy(() => import("./pages/charts/RealtimeHeatmapPage"))
 const GaltonBoardChartPage = lazy(() => import("./pages/charts/GaltonBoardChartPage"))
 const EventDropChartPage = lazy(() => import("./pages/charts/EventDropChartPage"))
-const PhysicsPileChartPage = lazy(() => import("./pages/charts/PhysicsPileChartPage"))
+const UnitPileChartPage = lazy(() => import("./pages/charts/UnitPileChartPage"))
 const CollisionSwarmChartPage = lazy(() => import("./pages/charts/CollisionSwarmChartPage"))
-const PhysicalFlowChartPage = lazy(() => import("./pages/charts/PhysicalFlowChartPage"))
+const PacketFlowChartPage = lazy(() => import("./pages/charts/PacketFlowChartPage"))
 const ProcessFlowChartPage = lazy(() => import("./pages/charts/ProcessFlowChartPage"))
 const GauntletChartPage = lazy(() => import("./pages/charts/GauntletChartPage"))
 const CrucibleChartPage = lazy(() => import("./pages/charts/CrucibleChartPage"))
+const ChainReactionChartPage = lazy(() => import("./pages/charts/ChainReactionChartPage"))
 const PhysicsCustomChartPage = lazy(() => import("./pages/charts/PhysicsCustomChartPage"))
 const PieChartPage = lazy(() => import("./pages/charts/PieChartPage"))
 const DonutChartPage = lazy(() => import("./pages/charts/DonutChartPage"))
@@ -189,6 +190,7 @@ const LDATopicCrucibleExamplePage = lazy(
   () => import("./pages/examples/LDATopicCrucibleExamplePage"),
 )
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
+const ChainReactionExamplePage = lazy(() => import("./pages/examples/ChainReactionExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
 const StakeholderJourneyExamplePage = lazy(
   () => import("./pages/examples/StakeholderJourneyExamplePage"),
@@ -282,6 +284,9 @@ const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExam
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
 const EarthquakesExamplePage = lazy(() => import("./pages/examples/EarthquakesExamplePage"))
 const EuropaLanguagesExamplePage = lazy(() => import("./pages/examples/EuropaLanguagesExamplePage"))
+const EqualPlacesAtlasExamplePage = lazy(
+  () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
+)
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "UkraineWarHistoryExamplePage.jsx": UkraineWarHistoryExamplePage,
@@ -290,6 +295,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "SentenceStructureExamplePage.jsx": SentenceStructureExamplePage,
   "DebateConceptCrucibleExamplePage.jsx": DebateConceptCrucibleExamplePage,
   "LDATopicCrucibleExamplePage.jsx": LDATopicCrucibleExamplePage,
+  "ChainReactionExamplePage.jsx": ChainReactionExamplePage,
   "WatermarksExamplePage.jsx": WatermarksExamplePage,
   "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
   "MergePressureExamplePage.jsx": MergePressureExamplePage,
@@ -331,6 +337,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "OregonTrailExamplePage.jsx": OregonTrailExamplePage,
   "EarthquakesExamplePage.jsx": EarthquakesExamplePage,
   "EuropaLanguagesExamplePage.jsx": EuropaLanguagesExamplePage,
+  "EqualPlacesAtlasExamplePage.jsx": EqualPlacesAtlasExamplePage,
 })
 
 // ExampleDefinition owns route paths and source-file identity. The lazy
@@ -347,6 +354,7 @@ const BenchmarkDashboardPage = lazy(() => import("./pages/recipes/BenchmarkDashb
 const RoslingBubbleChartPage = lazy(() => import("./pages/recipes/RoslingBubbleChartPage"))
 const SatellitesInSpacePage = lazy(() => import("./pages/recipes/SatellitesInSpacePage"))
 const StreamingMigrationMapPage = lazy(() => import("./pages/recipes/StreamingMigrationMapPage"))
+const GeographicGridMapsPage = lazy(() => import("./pages/recipes/GeographicGridMapsPage"))
 const WordTrailsPage = lazy(() => import("./pages/recipes/WordTrailsPage"))
 const NetEnsemblePage = lazy(() => import("./pages/recipes/NetEnsemblePage"))
 const BlogIndexPage = lazy(() => import("./blog/BlogIndexPage"))
@@ -635,6 +643,7 @@ export default function DocsApp() {
                 <Route path="kstreams" element={<KstreamsPage />} />
                 <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
                 <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
+                <Route path="geographic-grid-maps" element={<GeographicGridMapsPage />} />
                 <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
                 <Route path="satellites-in-space" element={<SatellitesInSpacePage />} />
                 <Route path="word-trails" element={<WordTrailsPage />} />
@@ -898,12 +907,17 @@ export default function DocsApp() {
                 {/* Physics Charts */}
                 <Route path="galton-board-chart" element={<GaltonBoardChartPage />} />
                 <Route path="event-drop-chart" element={<EventDropChartPage />} />
-                <Route path="physics-pile-chart" element={<PhysicsPileChartPage />} />
+                <Route path="unit-pile-chart" element={<UnitPileChartPage />} />
+                {/* Pre-3.9.0 path; kept so existing links and bookmarks resolve. */}
+                <Route path="physics-pile-chart" element={<UnitPileChartPage />} />
                 <Route path="collision-swarm-chart" element={<CollisionSwarmChartPage />} />
-                <Route path="physical-flow-chart" element={<PhysicalFlowChartPage />} />
+                <Route path="packet-flow-chart" element={<PacketFlowChartPage />} />
+                {/* Pre-3.9.0 path; kept so existing links and bookmarks resolve. */}
+                <Route path="physical-flow-chart" element={<PacketFlowChartPage />} />
                 <Route path="process-flow-chart" element={<ProcessFlowChartPage />} />
                 <Route path="gauntlet-chart" element={<GauntletChartPage />} />
                 <Route path="crucible-chart" element={<CrucibleChartPage />} />
+                <Route path="chain-reaction-chart" element={<ChainReactionChartPage />} />
                 <Route path="physics-custom-chart" element={<PhysicsCustomChartPage />} />
                 {/* Categorical Charts */}
                 <Route path="bar-chart" element={<BarChartPage />} />

@@ -71,7 +71,7 @@ export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBod
     }
     ctx.fill()
     ctx.stroke()
-    ctx.fillStyle = resolveCanvasColor(ctx, "var(--semiotic-background, #07111f)", "#07111f")
+    ctx.fillStyle = resolveCanvasColor(ctx, "var(--semiotic-bg, #07111f)", "#07111f")
     ctx.font = `900 ${datum.kind === NEGATIVE_KIND ? 9 : 8}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
@@ -134,9 +134,9 @@ function GauntletGates({ layout, compact, showLabels }: { layout: GauntletLayout
             width={gate.width}
             height={gateHeight}
             rx={compact ? 2 : 12}
-            fill={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
+            fill={gate.color ?? "var(--semiotic-primary, #38bdf8)"}
             fillOpacity={0.1}
-            stroke={gate.color ?? "var(--semiotic-accent, #38bdf8)"}
+            stroke={gate.color ?? "var(--semiotic-primary, #38bdf8)"}
             strokeDasharray="5 5"
             strokeOpacity={0.7}
           />
@@ -172,7 +172,7 @@ export function GauntletChrome({
       <path
         d={`M ${layout.startX - 42} ${layout.routeY} C ${layout.width * 0.24} ${layout.routeY - 70}, ${layout.width * 0.42} ${layout.routeY + 78}, ${layout.width * 0.58} ${layout.routeY} S ${layout.width * 0.78} ${layout.routeY - 82}, ${layout.socketX + 36} ${layout.routeY}`}
         fill="none"
-        stroke="var(--semiotic-accent, #38bdf8)"
+        stroke="var(--semiotic-primary, #38bdf8)"
         strokeDasharray="18 12"
         strokeLinecap="round"
         strokeOpacity={0.45}
@@ -183,19 +183,19 @@ export function GauntletChrome({
         x2={Math.round(layout.width * 0.94)}
         y1={layout.crashY}
         y2={layout.crashY}
-        stroke="var(--semiotic-negative, #ef4444)"
+        stroke="var(--semiotic-danger, #ef4444)"
         strokeDasharray="3 7"
         strokeOpacity={0.64}
       />
-      <text x={Math.round(layout.width * 0.07)} y={layout.crashY - 8} fill="var(--semiotic-negative, #ef4444)" fontSize={9} fontWeight={800}>CRASH LINE</text>
+      <text x={Math.round(layout.width * 0.07)} y={layout.crashY - 8} fill="var(--semiotic-danger, #ef4444)" fontSize={9} fontWeight={800}>CRASH LINE</text>
       <GauntletGates layout={layout} compact={false} showLabels />
       <g>
-        <rect x={layout.socketX - 52} y={layout.routeY - 56} width={104} height={112} rx={13} fill="var(--semiotic-positive, #22c55e)" fillOpacity={0.12} stroke="var(--semiotic-positive, #22c55e)" strokeWidth={1.5} />
+        <rect x={layout.socketX - 52} y={layout.routeY - 56} width={104} height={112} rx={13} fill="var(--semiotic-success, #22c55e)" fillOpacity={0.12} stroke="var(--semiotic-success, #22c55e)" strokeWidth={1.5} />
         <text x={layout.socketX} y={layout.routeY - 72} fill="var(--semiotic-text-secondary, #64748b)" fontSize={10} fontWeight={800} textAnchor="middle">SOCKET</text>
       </g>
       <g>
-        <rect x={layout.graveyardX - 82} y={layout.graveyardY - 34} width={164} height={58} rx={11} fill="var(--semiotic-negative, #ef4444)" fillOpacity={0.16} stroke="var(--semiotic-negative, #ef4444)" strokeOpacity={0.7} />
-        <text x={layout.graveyardX} y={layout.graveyardY - 8} fill="var(--semiotic-negative, #ef4444)" fontSize={10} fontWeight={800} textAnchor="middle">GRAVEYARD</text>
+        <rect x={layout.graveyardX - 82} y={layout.graveyardY - 34} width={164} height={58} rx={11} fill="var(--semiotic-danger, #ef4444)" fillOpacity={0.16} stroke="var(--semiotic-danger, #ef4444)" strokeOpacity={0.7} />
+        <text x={layout.graveyardX} y={layout.graveyardY - 8} fill="var(--semiotic-danger, #ef4444)" fontSize={10} fontWeight={800} textAnchor="middle">GRAVEYARD</text>
         <text x={layout.graveyardX} y={layout.graveyardY + 12} fill="var(--semiotic-text-secondary, #64748b)" fontSize={9} fontWeight={700} textAnchor="middle">{states.some((state) => state.killed) ? "lift shut off" : "too heavy or too small"}</text>
       </g>
     </svg>

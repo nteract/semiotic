@@ -208,14 +208,12 @@ export default function TreeDiagramPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom node rendering, animations, or
-        mixed layouts — graduate to{" "}
-        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly. Every{" "}
-        <code>TreeDiagram</code> is just a configured{" "}
-        <code>StreamNetworkFrame</code> under the hood.
+        Use <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly for custom node
+        rendering, animations, or mixed layouts. <code>TreeDiagram</code> delegates to a configured{" "}
+        <code>StreamNetworkFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

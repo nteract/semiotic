@@ -44,8 +44,8 @@ export default function CanvasInteractionPage() {
         The entire trick is the <code>canvasPoints</code> prop. When set to{" "}
         <code>true</code>, StreamXYFrame draws points to a canvas element instead of
         creating individual SVG circles. The interaction layer still uses an SVG
-        overlay with a Voronoi tessellation, so hover and click behaviors work
-        seamlessly:
+        overlay with a Voronoi tessellation, so hover and click retain the same
+        behavior:
       </p>
       <CodeBlock
         code={`const frameProps = {

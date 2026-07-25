@@ -150,7 +150,7 @@ export default function GaltonBoardChartPage() {
         wrapsPath="/dev/physics-frame"
         related={[
           { name: "EventDropChart", path: "/charts/event-drop-chart" },
-          { name: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
+          { name: "UnitPileChart", path: "/charts/unit-pile-chart" },
           { name: "Histogram", path: "/charts/histogram" },
         ]}
       />

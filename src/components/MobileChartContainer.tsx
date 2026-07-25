@@ -237,8 +237,8 @@ export function MobileChartContainer({
           cursor: pointer;
         }
         .semiotic-mobile-chip[aria-pressed="true"] {
-          border-color: var(--semiotic-accent, #1f7a6d);
-          background: color-mix(in srgb, var(--semiotic-accent, #1f7a6d) 14%, transparent);
+          border-color: var(--semiotic-primary, #1f7a6d);
+          background: color-mix(in srgb, var(--semiotic-primary, #1f7a6d) 14%, transparent);
         }
         .semiotic-mobile-chip:disabled {
           cursor: not-allowed;

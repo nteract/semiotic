@@ -333,7 +333,7 @@ export default function PhysicsFramePage() {
         related={[
           { name: "GaltonBoardChart", path: "/charts/galton-board-chart" },
           { name: "EventDropChart", path: "/charts/event-drop-chart" },
-          { name: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
+          { name: "PacketFlowChart", path: "/charts/packet-flow-chart" },
           { name: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
         ]}
       />
@@ -524,7 +524,7 @@ const snapshot = frameRef.current?.snapshot()`}
           wrapper for arrival windows, watermarks, and late events.
         </li>
         <li>
-          <Link to="/charts/physical-flow-chart">PhysicalFlowChart</Link> -
+          <Link to="/charts/packet-flow-chart">PacketFlowChart</Link> -
           chart wrapper for route-level packet flow, sensors, and fluid shapes.
         </li>
         <li>

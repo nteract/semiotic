@@ -568,14 +568,14 @@ export default function CandlestickChartPage() {
       <h2 id="props">Props</h2>
       <PropTable props={candlestickProps} />
 
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
         CandlestickChart is a thin wrapper over{" "}
         <Link to="/frames/xy-frame">StreamXYFrame</Link> with{" "}
         <code>chartType=&quot;candlestick&quot;</code>. Drop to the frame when
-        you need axis customization beyond what the HOC surfaces — everything
-        under the hood is the same accessor/scene pipeline.
+        you need axis customization beyond what the HOC surfaces — both APIs use
+        the same accessor and scene pipeline.
       </p>
 
       <CodeBlock

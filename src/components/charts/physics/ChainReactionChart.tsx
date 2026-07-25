@@ -559,7 +559,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         initialSpawns={EMPTY_SPAWNS}
         bodyForces={dependencyBodyForce}
         bodyStyle={{
-          fill: "var(--semiotic-accent, #f0a329)",
+          fill: "var(--semiotic-primary, #f0a329)",
           stroke: "var(--semiotic-text, #243039)",
           strokeWidth: 1.25
         }}

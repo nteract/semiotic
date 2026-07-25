@@ -45,12 +45,13 @@ import {
   TemporalHistogram,
   EventDropChart,
   GaltonBoardChart,
-  PhysicsPileChart,
+  UnitPileChart,
   CollisionSwarmChart,
-  PhysicalFlowChart,
+  PacketFlowChart,
   ProcessFlowChart,
   GauntletChart,
-  CrucibleChart
+  CrucibleChart,
+  ChainReactionChart
 } from "semiotic/ai"
 
 import {
@@ -114,10 +115,11 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
 
   GaltonBoardChart: { component: GaltonBoardChart, category: "physics" },
   EventDropChart: { component: EventDropChart, category: "physics" },
-  PhysicsPileChart: { component: PhysicsPileChart, category: "physics" },
+  UnitPileChart: { component: UnitPileChart, category: "physics" },
   CollisionSwarmChart: { component: CollisionSwarmChart, category: "physics" },
-  PhysicalFlowChart: { component: PhysicalFlowChart, category: "physics" },
+  PacketFlowChart: { component: PacketFlowChart, category: "physics" },
   ProcessFlowChart: { component: ProcessFlowChart, category: "physics" },
   GauntletChart: { component: GauntletChart, category: "physics" },
-  CrucibleChart: { component: CrucibleChart, category: "physics" }
+  CrucibleChart: { component: CrucibleChart, category: "physics" },
+  ChainReactionChart: { component: ChainReactionChart, category: "physics" }
 }

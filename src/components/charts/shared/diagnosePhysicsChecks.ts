@@ -105,7 +105,7 @@ export function checkPhysicsConfig(
     }
   }
 
-  if (component === "PhysicsPileChart") {
+  if (component === "UnitPileChart") {
     const mechanicalCount = finiteNumber(props.mechanicalCount)
     if (
       props.mechanicalCount != null &&
@@ -152,7 +152,7 @@ export function checkPhysicsConfig(
       out.push({
         severity: "warning",
         code: "PHYSICS_BODY_BUDGET",
-        message: `PhysicsPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
+        message: `UnitPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
         fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`
       })
     }
@@ -222,7 +222,7 @@ export function checkPhysicsConfig(
   // Process / frame physics honesty rules (pre-release DX gate).
   if (
     component === "GaltonBoardChart" ||
-    component === "PhysicsPileChart" ||
+    component === "UnitPileChart" ||
     component === "CollisionSwarmChart" ||
     component === "ProcessFlowChart" ||
     component === "EventDropChart"
@@ -244,7 +244,7 @@ export function checkPhysicsConfig(
   }
 
   if (
-    (component === "PhysicsPileChart" ||
+    (component === "UnitPileChart" ||
       component === "GaltonBoardChart" ||
       component === "CollisionSwarmChart" ||
       component === "ProcessFlowChart" ||
@@ -454,7 +454,7 @@ export function checkPhysicsConfig(
 
   // Live body budget heuristic for value-encoding physics charts.
   if (
-    component === "PhysicsPileChart" ||
+    component === "UnitPileChart" ||
     component === "GaltonBoardChart" ||
     component === "CollisionSwarmChart" ||
     component === "ProcessFlowChart" ||
@@ -466,7 +466,7 @@ export function checkPhysicsConfig(
     const estimated =
       data.length > 0
         ? data.length *
-          (component === "PhysicsPileChart"
+          (component === "UnitPileChart"
             ? Math.max(1, finiteNumber(props.unitValue) ? 1 : 1)
             : 1)
         : mechanicalCount

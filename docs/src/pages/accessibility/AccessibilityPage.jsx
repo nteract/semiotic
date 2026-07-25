@@ -94,7 +94,7 @@ export default function AccessibilityPage() {
         Semiotic renders charts on canvas for performance. Canvas-based rendering
         presents challenges because the visual output has no DOM structure for
         assistive technology to traverse. This page documents what Semiotic
-        provides out of the box and what you should add in your application.
+        provides and what remains your application's responsibility.
       </p>
 
       <p>

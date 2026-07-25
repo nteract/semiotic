@@ -411,14 +411,12 @@ export default function SwarmPlotPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom point marks, mixed summary types,
-        annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
-        <code>SwarmPlot</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
-        under the hood.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom point
+        marks, mixed summary types, or annotations. <code>SwarmPlot</code> delegates to a configured{" "}
+        <code>StreamOrdinalFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

@@ -352,8 +352,8 @@ ranked.find(s => s.component === "PieChart")
       </CodeBlock>
       <p>
         The visual path is unchanged and pays no audit cost — receivability only
-        engages for a non-visual channel. Under the hood, <code>applyAudienceBias</code>{" "}
-        folds a <code>receivabilityBias</code> penalty derived from the audit, and the
+        engages for a non-visual channel. <code>applyAudienceBias</code> folds a{" "}
+        <code>receivabilityBias</code> penalty derived from the audit, and the
         receivability findings are distilled by <code>accessibilityCaveats</code> into
         the suggestion's <code>caveats[]</code> — so an agent reads perceptual and
         reception caveats from one array, not two. See the{" "}

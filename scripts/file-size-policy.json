@@ -1,8 +1,15 @@
 {
   "$schema": "./file-size-policy.schema.json",
   "description": "Source file size policy for Semiotic. New or growing files must stay under the hard limits. Existing oversized files are listed with a ratchet ceiling (maxLines). Prefer splitting modules over raising maxLines.",
-  "roots": ["src"],
-  "extensions": [".ts", ".tsx", ".js", ".jsx"],
+  "roots": [
+    "src"
+  ],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx"
+  ],
   "exclude": [
     "**/vendor/**",
     "**/*.generated.*",
@@ -19,8 +26,8 @@
   "allowlist": [
     {
       "path": "src/components/charts/physics/CrucibleChart.tsx",
-      "maxLines": 1065,
-      "reason": "Cohesive public React orchestrator for the controlled Crucible runtime: imperative replay, reduced-motion/snapshot handling, semantic playback, physics reconciliation, and frame wiring share one state boundary. Keep the public component together; do not grow past this reviewed ceiling."
+      "maxLines": 1074,
+      "reason": "Cohesive public React orchestrator for the controlled Crucible runtime: imperative replay, reduced-motion/snapshot handling, semantic playback, physics reconciliation, and frame wiring share one state boundary. Keep the public component together; do not grow past this reviewed ceiling. +9 (usePhysicsSelection wiring, joining the shared selection store so physics bodies cross-highlight in LinkedCharts like every other family)."
     },
     {
       "path": "src/components/charts/physics/crucibleEffects.ts",
@@ -34,8 +41,8 @@
     },
     {
       "path": "src/components/charts/shared/chartSpecsPhysics.ts",
-      "maxLines": 889,
-      "reason": "Single registry object for the physics family. Keeping the seven chart contracts adjacent makes completeness and generated schema review straightforward; the Crucible wire-schema is already factored into its own module. Do not grow past this reviewed ceiling."
+      "maxLines": 1037,
+      "reason": "Single registry object for the physics family. Keeping the seven chart contracts adjacent makes completeness and generated schema review straightforward; the Crucible wire-schema is already factored into its own module. Do not grow past this reviewed ceiling. +148 (ChainReactionChart spec, landing a chart that shipped exported but unregistered). This is now NINE contracts at 1037 lines \u2014 past the point where adjacency pays for itself. Split by sub-family (settling/arrival vs process/tape) on the next chart addition; do not grow past this ceiling again."
     },
     {
       "path": "src/components/recipes/netEnsembleLayout.tsx",
@@ -44,8 +51,8 @@
     },
     {
       "path": "src/components/semiotic-ai.ts",
-      "maxLines": 803,
-      "reason": "Deliberately flat public AI entry-point barrel. It is three lines above the hard limit (+2 for 3.8.6's BumpChart component and BumpChartCapability exports) and splitting exports would make import discovery less useful; do not grow past this reviewed ceiling."
+      "maxLines": 804,
+      "reason": "Deliberately flat public AI entry-point barrel. It is three lines above the hard limit (+2 for 3.8.6's BumpChart component and BumpChartCapability exports) and splitting exports would make import discovery less useful; do not grow past this reviewed ceiling. +1 (ChainReactionChart export, required by the surface-parity gate)."
     },
     {
       "path": "src/components/ai/conversationArc.ts",
@@ -80,7 +87,7 @@
     {
       "path": "src/components/charts/shared/auditAccessibility.ts",
       "maxLines": 1358,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +6 (2026-07-17): honest navigable-structure message for hierarchy/network (root-only tree, not false full chart→series→datum claim)."
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +6 (2026-07-17): honest navigable-structure message for hierarchy/network (root-only tree, not false full chart\u2192series\u2192datum claim)."
     },
     {
       "path": "src/components/charts/value/BigNumber.tsx",
@@ -90,7 +97,7 @@
     {
       "path": "src/components/charts/xy/LineChart.tsx",
       "maxLines": 1121,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match — split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800. +6 (2026-07-23): top-legend reservation below the chart title plus the legend side-gutter/distance layout refactor."
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match \u2014 split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800. +6 (2026-07-23): top-legend reservation below the chart title plus the legend side-gutter/distance layout refactor."
     },
     {
       "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
@@ -100,7 +107,7 @@
     {
       "path": "src/components/charts/xy/BumpChart.tsx",
       "maxLines": 831,
-      "reason": "New in 3.8.6: cohesive ranking-chart HOC — the pure rankBumpData transform, the bumpLayout scene builder, color/annotation resolution, and the XYCustomChart wiring share one series-identity contract (ribbon geometry is already factored into bumpRibbonGeometry.ts). Split plan on meaningful touch: extract rankBumpData + resolveBumpColorScheme into a bumpData.ts helper to drop back under 800. Do not grow past this reviewed ceiling."
+      "reason": "New in 3.8.6: cohesive ranking-chart HOC \u2014 the pure rankBumpData transform, the bumpLayout scene builder, color/annotation resolution, and the XYCustomChart wiring share one series-identity contract (ribbon geometry is already factored into bumpRibbonGeometry.ts). Split plan on meaningful touch: extract rankBumpData + resolveBumpColorScheme into a bumpData.ts helper to drop back under 800. Do not grow past this reviewed ceiling."
     },
     {
       "path": "src/components/server/serverChartConfigsXY.ts",
@@ -195,7 +202,7 @@
     {
       "path": "src/components/stream/SVGOverlay.tsx",
       "maxLines": 1024,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +2 (2026-07-10): factored two rotated-bottom-tick offsets into named constants (bottomTickLabelY/bottomAxisLabelY) instead of repeating the ternary — net-positive readability, not worth a structural split for 2 lines."
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +2 (2026-07-10): factored two rotated-bottom-tick offsets into named constants (bottomTickLabelY/bottomAxisLabelY) instead of repeating the ternary \u2014 net-positive readability, not worth a structural split for 2 lines."
     },
     {
       "path": "src/components/stream/types.ts",

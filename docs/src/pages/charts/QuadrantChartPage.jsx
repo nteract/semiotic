@@ -348,7 +348,7 @@ export default function QuadrantChartPage() {
       <h2 id="props">Props</h2>
       <PropTable props={quadrantChartProps} />
 
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
       <p>
         QuadrantChart uses <code>canvasPreRenderers</code> to draw quadrant fills and labels
         on the canvas layer under the scatter points. You can achieve the same result directly

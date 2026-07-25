@@ -372,13 +372,12 @@ export default function HeatmapPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom bin functions, hexbins, contour
-        plots — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link> directly.
-        Every <code>Heatmap</code> is just a configured <code>StreamXYFrame</code>{" "}
-        under the hood.
+        Use <Link to="/frames/xy-frame">StreamXYFrame</Link> directly for custom bin functions,
+        hexbins, or contour plots. <code>Heatmap</code> delegates to a configured{" "}
+        <code>StreamXYFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

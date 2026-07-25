@@ -112,11 +112,10 @@ export default function HotDogContestVariationsExamplePage() {
   }
 
   return (
-    <ExamplePageLayout title="Nathan's Hot Dog Contest, Four Ways">
+    <ExamplePageLayout title="Nathan's Hot Dog Contest, Recounted">
       <p className="hotdog-page__lede">
-        Four views of the same source-audited Nathan&apos;s contest record. Compare annual winners,
-        count totals in five-HDB units, inspect rule changes, and separate eating pace from contest
-        duration.
+        The same source-audited Nathan&apos;s record, recounted as annual winners, five-HDB units,
+        rule changes, and eating pace adjusted for contest duration.
       </p>
 
       <div className="hotdog" ref={pageRef}>

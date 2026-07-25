@@ -932,7 +932,7 @@ export class GeoPipelineStore implements UpdateResultStore {
     let maxR = 0
     let pointCount = 0
     for (const node of this.scene) {
-      if (node.type === "point") {
+      if (node.type === "point" && node.interactive !== false) {
         pointCount++
         if (node.r > maxR) maxR = node.r
       }
@@ -947,7 +947,9 @@ export class GeoPipelineStore implements UpdateResultStore {
     const points: PointSceneNode[] = new Array(pointCount)
     let i = 0
     for (const node of this.scene) {
-      if (node.type === "point") points[i++] = node
+      if (node.type === "point" && node.interactive !== false) {
+        points[i++] = node
+      }
     }
     this._quadtree = d3Quadtree<PointSceneNode>()
       .x(n => n.x)

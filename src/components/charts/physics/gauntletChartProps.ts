@@ -27,7 +27,7 @@ import type {
 } from "./gauntletTypes"
 
 export interface GauntletChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin">,
+  extends Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -80,6 +80,11 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
     }
   ) => string
   paused?: boolean
+  /**
+   * Deterministic seed, matching every other physics HOC. An explicit
+   * `frameProps.config.kernel.seed` still wins so existing snapshots hold.
+   */
+  seed?: number
   /**
    * Replay the full compound simulation this many milliseconds after it
    * settles. Omit or pass `null` for a single run; `0` replays on the next

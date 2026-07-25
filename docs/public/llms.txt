@@ -80,12 +80,13 @@
 
 - [GaltonBoardChart](/charts/galton-board-chart): Physics-backed Galton board / Plinko-style dot distribution. _(act: characterizing)_
 - [EventDropChart](/charts/event-drop-chart): Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling. _(act: alerting)_
-- [PhysicsPileChart](/charts/physics-pile-chart): Physics-backed unit pile chart. _(act: comparing)_
+- [UnitPileChart](/charts/unit-pile-chart): Physics-backed unit pile chart. _(act: comparing)_
 - [CollisionSwarmChart](/charts/collision-swarm-chart): Physics-backed swarm / dot-strip chart. _(act: characterizing)_
 - [GauntletChart](/charts/gauntlet-chart): Physics-backed compound-plan gauntlet. _(act: tracing)_
 - [CrucibleChart](/charts/crucible-chart): Physics-backed authored treatment chart. _(act: tracing)_
 - [ProcessFlowChart](/charts/process-flow-chart): Physics-backed multi-body process flow. _(act: tracing)_
-- [PhysicalFlowChart](/charts/physical-flow-chart): Experimental physics-backed flow chart. _(act: tracing)_
+- [PacketFlowChart](/charts/packet-flow-chart): Experimental physics-backed flow chart. _(act: tracing)_
+- [ChainReactionChart](/charts/chain-reaction-chart): Physics-backed dependency chain reaction. _(act: tracing)_
 
 ## Intelligence (AI surface)
 

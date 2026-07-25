@@ -27,6 +27,7 @@ import {
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
   usePhysicsRerun,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
   type PhysicsRerunMS,
   type PhysicsSharedChartProps,
@@ -51,7 +52,7 @@ export interface GaltonBoardReferenceLine {
 }
 
 export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode">,
+  extends Omit<BaseChartProps, "margin" | "mode" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -175,7 +176,7 @@ function galtonBoardOverlay(
             <path
               d={curve}
               fill="none"
-              stroke="var(--semiotic-accent, #4e79a7)"
+              stroke="var(--semiotic-primary, #4e79a7)"
               strokeOpacity={0.7}
               strokeWidth={2}
               strokeLinejoin="round"
@@ -403,6 +404,16 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     [chartSize, layout.projectionRows]
   )
 
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "GaltonBoardChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
@@ -424,6 +435,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className,
       title: modeTitle,

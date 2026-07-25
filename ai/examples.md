@@ -1380,12 +1380,12 @@ import { EventDropChart } from "semiotic/physics"
 
 Key props: `timeAccessor` assigns the event-time window, `arrivalAccessor` controls arrival replay, `windows.size` creates barriers, and `watermark.delay` sends late events to the late path.
 
-### PhysicsPileChart (unitized category piles)
+### UnitPileChart (unitized category piles)
 
 ```jsx
-import { PhysicsPileChart } from "semiotic/physics"
+import { UnitPileChart } from "semiotic/physics"
 
-<PhysicsPileChart
+<UnitPileChart
   data={[
     { category: "Orders", value: 18 },
     { category: "Queued", value: 11 },
@@ -1425,12 +1425,12 @@ import { CollisionSwarmChart } from "semiotic/physics"
 Key props: `xAccessor` preserves the quantitative position, `groupAccessor` creates lanes, and collision settings separate overlapping records without losing the axis.
 
 
-### PhysicalFlowChart (packet flow over routes)
+### PacketFlowChart (packet flow over routes)
 
 ```jsx
-import { PhysicalFlowChart } from "semiotic/physics"
+import { PacketFlowChart } from "semiotic/physics"
 
-<PhysicalFlowChart
+<PacketFlowChart
   nodes={[
     { id: "Inbound", x: 0.08, y: 0.5 },
     { id: "Queue", x: 0.45, y: 0.32 },

@@ -7,9 +7,9 @@ import {
   EventDropChart,
   GaltonBoardChart,
   GauntletChart,
-  PhysicalFlowChart,
+  PacketFlowChart,
   PhysicsCustomChart,
-  PhysicsPileChart,
+  UnitPileChart,
   ProcessFlowChart,
   buildCrucibleProductEvents,
 } from "semiotic/physics"
@@ -491,7 +491,7 @@ export default function DataVizForDummiesSixExamplePage() {
               stats={CHAPTER_STATS["lab-safety"]}
             >
               <ChartPanel
-                eyebrow="Ten instruments · five defensible physical verbs"
+                eyebrow="Physics instruments · defensible physical verbs"
                 title="Settle, arrive, queue, transform, unlock."
                 note="Start with the verb the data actually contains. Motion without a semantic verb is merely a screensaver with tenure."
                 feature="Keep a static projection beside the simulation"
@@ -590,7 +590,7 @@ export default function DataVizForDummiesSixExamplePage() {
               number="02"
               eyebrow="Event drop + physics pile · time and inventory become tangible"
               title="Show bodies arriving when arrival order changes what the system knows."
-              lead="EventDropChart separates event time from arrival time, exposing late data against windows and a watermark. PhysicsPileChart turns category totals into countable units, useful when accumulation, capacity, or composition matters more than a clean bar."
+              lead="EventDropChart separates event time from arrival time, exposing late data against windows and a watermark. UnitPileChart turns category totals into countable units, useful when accumulation, capacity, or composition matters more than a clean bar."
               avoid="Do not animate historical rows merely because they have timestamps. Arrival motion earns its place only when lateness, closure, or build-up affects interpretation."
               stats={CHAPTER_STATS.arrival}
             >
@@ -632,7 +632,7 @@ export default function DataVizForDummiesSixExamplePage() {
                     <span>The ghost bars remain the exact totals; the balls make roster capacity countable.</span>
                   </div>
                   <ReplayButton onClick={() => replayChart("pile")} />
-                  <PhysicsPileChart
+                  <UnitPileChart
                     key={chartKey("pile")}
                     data={PILE_DATA}
                     categoryAccessor="category"
@@ -656,7 +656,7 @@ export default function DataVizForDummiesSixExamplePage() {
               number="03"
               eyebrow="Physical flow + process flow · traffic is not the same as capacity"
               title="Packets explain routes; queues explain service constraints."
-              lead="PhysicalFlowChart sends particles along authored links whose widths carry throughput. ProcessFlowChart goes further: stage controllers can enforce finite work-per-second capacity, so congestion is computed rather than decorated."
+              lead="PacketFlowChart sends particles along authored links whose widths carry throughput. ProcessFlowChart goes further: stage controllers can enforce finite work-per-second capacity, so congestion is computed rather than decorated."
               avoid="Particles are samples of a rate, not individual people unless you explicitly make them so. And a bottleneck created only by a strong force is force theater; use a capacity controller for a capacity claim."
               stats={CHAPTER_STATS.throughput}
             >
@@ -665,7 +665,7 @@ export default function DataVizForDummiesSixExamplePage() {
                 title={flowMotion ? "Packets reveal direction along the concourse routes" : "Reduced motion leaves the throughput network readable"}
                 note="Pipe width and labels preserve the route totals. Particles communicate active movement and can be paused without erasing the network."
                 feature="Keep a static flow layer under moving packets"
-                featureCopy="PhysicalFlowChart shares path geometry between throughput pipes and particles, allowing reduced motion without changing the data story."
+                featureCopy="PacketFlowChart shares path geometry between throughput pipes and particles, allowing reduced motion without changing the data story."
               >
                 <ChartToggle
                   label="Choose flow motion"
@@ -674,7 +674,7 @@ export default function DataVizForDummiesSixExamplePage() {
                   options={[["still", "Reduced motion"], ["move", "Moving packets"]]}
                 />
                 <ReplayButton onClick={() => replayChart("physical-flow")} />
-                <PhysicalFlowChart
+                <PacketFlowChart
                   key={chartKey("physical-flow", flowMotion ? "move" : "still")}
                   nodes={FLOW_NODES}
                   links={FLOW_LINKS}

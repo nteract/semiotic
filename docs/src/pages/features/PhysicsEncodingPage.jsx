@@ -171,7 +171,7 @@ export default function PhysicsEncodingPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Channel lab */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="lab">One dataset, eight channel families</h2>
+      <h2 id="lab">Test the Channel Families</h2>
 
       <p>
         Select a family to change the compiled initial world. The readout names what is data, what

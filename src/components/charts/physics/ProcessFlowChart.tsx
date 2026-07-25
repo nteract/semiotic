@@ -3,7 +3,6 @@
 import * as React from "react"
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import StreamPhysicsFrame, {
-  type PhysicsBodySelection,
   type PhysicsBodyStyleContext,
   type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle,
@@ -43,9 +42,12 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type TooltipProp,
-  usePhysicsChartMode
+  usePhysicsChartMode,
+  usePhysicsRerun,
+  usePhysicsSelection
 } from "./physicsHocUtils"
 
 export type { ProcessFlowStageDef, ProcessFlowProjectionMetadata }
@@ -79,6 +81,11 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
   springDamping?: number
   tooltip?: TooltipProp
   paused?: boolean
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   initialSpawnPacing?: StreamPhysicsFrameProps["initialSpawnPacing"]
   /**
    * When true (default), stages with `capacity` install live FIFO queue
@@ -87,8 +94,6 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
   liveCapacity?: boolean
   /** Live capacity metrics callback (queue depth, processed count per region). */
   onCapacityChange?: (stats: CapacityQueueSnapshot[]) => void
-  /** Shared selection (process body restyle without relayout). */
-  selection?: PhysicsBodySelection | null
   /**
    * Soft body budget: caps live bodies via pipeline bodyLimit (evict oldest).
    * Use for infinite/long streams with sediment-style history in the readout.
@@ -312,6 +317,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     loadingContent,
     paused,
     radiusAccessor,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     route = "horizontal",
@@ -526,6 +532,26 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     }
   }, [bodyMark, bodyStyle, frameProps.bodyStyle])
 
+  const resolvedConfig = useMemo(
+    () => ({
+      ...layout.config,
+      ...(bodyLimit != null ? { bodyLimit, eviction: "oldest" as const } : {}),
+      ...frameProps.config
+    }),
+    [bodyLimit, frameProps.config, layout.config]
+  )
+  const rerun = usePhysicsRerun(resolvedConfig, rerunMS, paused)
+
+  const bodySelection = usePhysicsSelection({
+    selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "ProcessFlowChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -604,7 +630,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
       ref={frameRef}
       controllers={capacityControllers}
       regionEffects={regionEffects}
-      selection={selection ?? frameProps.selection}
+      selection={bodySelection ?? frameProps.selection}
       backgroundGraphics={composePhysicsFrameGraphics(
         chrome,
         frameProps.backgroundGraphics
@@ -623,11 +649,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
       responsiveWidth={responsiveWidth}
       size={chartSize}
       bodyStyle={resolvedBodyStyle}
-      config={{
-        ...layout.config,
-        ...(bodyLimit != null ? { bodyLimit, eviction: "oldest" as const } : {}),
-        ...frameProps.config
-      }}
+      config={rerun.config}
     />
   )
 })

@@ -196,8 +196,8 @@ export default function GettingStartedPage() {
       <p style={styles.sectionIntro}>
         Semiotic is a streaming-first visualization library for React. Every chart is backed by a
         canvas rendering engine with a push API, ring buffer windowing, and visual encodings for
-        live data (decay, pulse, staleness). But you don't need streaming to use it — pass an array
-        and you get a beautiful static chart with sensible defaults. This guide covers both paths.
+        live data (decay, pulse, staleness). Streaming is optional: pass an array and the same
+        pipeline renders a static chart. This guide covers both paths.
       </p>
 
       {/* --------------------------------------------------------------- */}
@@ -226,15 +226,15 @@ export default function GettingStartedPage() {
       <h2 id="your-first-chart">Your First Chart</h2>
 
       <p>
-        Here is a complete example that renders a line chart showing monthly sales data. Just import{" "}
+        This example renders a line chart of monthly sales. Import{" "}
         <code>LineChart</code>, pass your data, and specify which fields map to the x and y axes:
       </p>
 
       <CodeBlock code={firstChartSnippet} language="jsx" />
 
       <p>
-        That is it — Semiotic handles axes, scales, hover interactions, and responsive sizing with
-        sensible defaults. When you need to customize, every aspect can be controlled through props.
+        Semiotic supplies the axes, scales, hover interactions, and responsive sizing. Props expose
+        each of those choices when the defaults no longer fit.
       </p>
 
       {/* --------------------------------------------------------------- */}
@@ -243,10 +243,9 @@ export default function GettingStartedPage() {
       <h2 id="streaming-data">Streaming Data</h2>
 
       <p>
-        Under the hood, every Semiotic chart is a canvas-rendered streaming pipeline. When you pass
-        a <code>data</code> array, Semiotic ingests it through the same pipeline that handles live
-        push data — chunking large datasets automatically and rendering progressively to keep the UI
-        responsive.
+        Every Semiotic chart uses the same canvas-rendered streaming pipeline. A <code>data</code>{" "}
+        array enters the pipeline used for live pushes, with automatic chunking and progressive
+        rendering to keep the UI responsive.
       </p>
 
       <p>
@@ -298,11 +297,11 @@ export default function GettingStartedPage() {
       {/* --------------------------------------------------------------- */}
       {/* Core Concepts */}
       {/* --------------------------------------------------------------- */}
-      <h2 id="core-concepts">Core Concepts: Three Tiers</h2>
+      <h2 id="core-concepts">Choose the Right Layer</h2>
 
       <p>
-        Semiotic is organized into three tiers of abstraction. Start at the top with Charts and drop
-        down to Frames or Utilities when you need more control.
+        Start with Charts. Move to Frames or Utilities when the design needs control that the chart
+        component does not expose.
       </p>
 
       <div style={styles.cardGrid}>
@@ -322,10 +321,10 @@ export default function GettingStartedPage() {
           </h3>
           <p style={styles.cardDescription}>
             <strong>
-              StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, and StreamXYFrame.
+              StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, and StreamGeoFrame.
             </strong>{" "}
-            Full creative control over every aspect of rendering, interaction, and layout. Use when
-            Charts are not enough.
+            Frames expose rendering, interaction, and layout directly. Use one when a Chart keeps
+            a decision you need to make for yourself.
           </p>
         </div>
 
@@ -352,9 +351,8 @@ export default function GettingStartedPage() {
       <CodeBlock code={framePropsSnippet} language="jsx" />
 
       <p>
-        This means you can start simple with a Chart and progressively customize it. If you
-        eventually outgrow the Chart API entirely, you can graduate to using the underlying Frame
-        directly.
+        Start with a Chart and customize it as the design develops. If the Chart API becomes the
+        constraint, use the underlying Frame directly.
       </p>
 
       {/* --------------------------------------------------------------- */}
@@ -543,8 +541,7 @@ export default function GettingStartedPage() {
 
       <div style={styles.note}>
         <strong>Tip:</strong> Start with a Chart. Use <code>frameProps</code> for one-off
-        customizations. Only graduate to a Frame when you need full control over marks, layout, or
-        rendering.
+        customizations. Reach for a Frame when you need to control the marks, layout, or rendering.
       </div>
 
       {/* --------------------------------------------------------------- */}

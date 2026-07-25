@@ -28,7 +28,7 @@ import { StreamPhysicsFrame } from "../../../../src/components/stream/physics/St
 import { EventDropChart } from "../../../../src/components/charts/physics/EventDropChart"
 import { GaltonBoardChart } from "../../../../src/components/charts/physics/GaltonBoardChart"
 import { PhysicsCustomChart } from "../../../../src/components/charts/physics/PhysicsCustomChart"
-import { PhysicsPileChart } from "../../../../src/components/charts/physics/PhysicsPileChart"
+import { UnitPileChart } from "../../../../src/components/charts/physics/UnitPileChart"
 import { useFrame } from "../../../../src/components/stream/useFrame"
 import "./PhysicsFrameSandboxPage.css"
 
@@ -2634,8 +2634,8 @@ function HocGallerySandbox() {
           />
         </div>
         <div>
-          <h3>PhysicsPileChart</h3>
-          <PhysicsPileChart
+          <h3>UnitPileChart</h3>
+          <UnitPileChart
             data={pileData}
             categoryAccessor="category"
             valueAccessor="value"

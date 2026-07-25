@@ -163,9 +163,8 @@ export default function ObservablePlotPage() {
         expensive part of the rewrite was never the marks; it was re-acquiring the accessible table,
         the keyboard navigation, the description, the theme tokens, the SSR path. Semiotic already
         has all of that. So the adapter's job is narrow and high-leverage: translate the encoding
-        faithfully, and let everything past the bare picture come along for free. That's the
-        Land→Expand move made concrete — meet the analyst where they already work, then hand them
-        the capabilities they'd otherwise rebuild.
+        faithfully, and carry the surrounding chart contract into production. The analyst keeps the
+        specification they already use without rebuilding the infrastructure around it.
       </p>
 
       <h2>From a Plot spec to an accessible component</h2>

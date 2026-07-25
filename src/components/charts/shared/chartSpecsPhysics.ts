@@ -158,8 +158,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     }
   },
 
-  PhysicsPileChart: {
-    name: "PhysicsPileChart",
+  UnitPileChart: {
+    name: "UnitPileChart",
     category: "physics",
     description:
       "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
@@ -728,8 +728,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     }
   },
 
-  PhysicalFlowChart: {
-    name: "PhysicalFlowChart",
+  PacketFlowChart: {
+    name: "PacketFlowChart",
     category: "physics",
     description:
       "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
@@ -883,6 +883,154 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         "static-flow",
         "proximity-sensors",
         "settled-projection"
+      ]
+    }
+  },
+
+  ChainReactionChart: {
+    name: "ChainReactionChart",
+    category: "physics",
+    description:
+      "Physics-backed dependency chain reaction. Tasks are placed by workstream lane and dependency depth; a completed task releases one delivery ball per outgoing dependency, and a downstream task arms only once every prerequisite ball has arrived. The settled reading is task state plus each blocker's downstream reach.",
+    required: [
+      "data",
+      "taskIDAccessor",
+      "labelAccessor",
+      "laneAccessor",
+      "dependencyAccessor"
+    ],
+    dataShape: "array",
+    dataAccessors: [
+      "taskIDAccessor",
+      "labelAccessor",
+      "laneAccessor",
+      "dependencyAccessor",
+      "startAccessor",
+      "endAccessor",
+      "progressAccessor",
+      "statusAccessor",
+      "completionTimeAccessor",
+      "blockerAccessor",
+      "milestoneAccessor"
+    ],
+    propBags: ["physics"],
+    ownProps: {
+      taskIDAccessor: {
+        type: ["string", "function"],
+        description:
+          "Stable task id. Dependency arrays reference these resolved ids."
+      },
+      labelAccessor: {
+        type: ["string", "function"],
+        description: "Human-readable task name used in labels and the data table."
+      },
+      laneAccessor: {
+        type: ["string", "function"],
+        description:
+          "Workstream the task belongs to. Lanes become the chart's columns."
+      },
+      dependencyAccessor: {
+        type: ["string", "function"],
+        description:
+          "Array of prerequisite task ids. Edges are never inferred; a task with the wrong prerequisites reads as a different claim."
+      },
+      startAccessor: {
+        type: ["string", "function"],
+        description: "Planned start time (number or Date)."
+      },
+      endAccessor: {
+        type: ["string", "function"],
+        description: "Planned end time (number or Date)."
+      },
+      progressAccessor: {
+        type: ["string", "function"],
+        description: "Fractional completion 0–1, shown on the task body."
+      },
+      statusAccessor: {
+        type: ["string", "function"],
+        description:
+          "Authored task status (done / blocked / waiting / active). Completion is an explicit data event, never something the simulation discovers."
+      },
+      completionTimeAccessor: {
+        type: ["string", "function"],
+        description:
+          "When the task actually completed. Drives replay ordering against currentTime."
+      },
+      blockerAccessor: {
+        type: ["string", "function"],
+        description:
+          "Reason this task is blocked. A blocked task never arms its downstream dependents."
+      },
+      milestoneAccessor: {
+        type: ["string", "function"],
+        description: "Marks a task as a milestone for emphasis."
+      },
+      mode: {
+        type: "string",
+        enum: ["snapshot", "replay", "mechanical"] as const,
+        default: "snapshot",
+        description:
+          "snapshot derives the settled state at currentTime without animating; replay animates deliveries forward from the earliest recorded completion; mechanical demonstrates the apparatus."
+      },
+      insight: {
+        type: "string",
+        enum: ["none", "blocker-amplification"] as const,
+        default: "blocker-amplification",
+        description:
+          "Which derived reading to surface. blocker-amplification reports how many unfinished tasks and lanes each blocker reaches."
+      },
+      currentTime: {
+        type: ["number", "object"],
+        description:
+          "Clock position used to derive the settled state (number or Date)."
+      },
+      controls: {
+        type: ["boolean", "array"],
+        description:
+          "Replay control buttons: true for all, or a subset of play / pause / step / reset / settle."
+      },
+      mechanism: {
+        type: "string",
+        enum: ["domino-ball"] as const,
+        default: "domino-ball",
+        description: "Delivery mechanism used to represent a satisfied prerequisite."
+      },
+      orientation: {
+        type: "string",
+        enum: ["vertical"] as const,
+        default: "vertical",
+        description: "Lane orientation. Lanes run as vertical columns."
+      },
+      reducedMotion: {
+        type: "string",
+        enum: ["settle"] as const,
+        description:
+          "Force the settled reading instead of a replay. The frame also honors prefers-reduced-motion automatically."
+      },
+      seed: {
+        type: "number",
+        default: 31,
+        description: "Deterministic seed for delivery-ball motion."
+      },
+      selectedTaskIDs: { type: "array", omitFromSchema: true },
+      onSelectionChange: { type: "function", omitFromSchema: true },
+      onObservation: { type: "function", omitFromSchema: true }
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false,
+      supportsSelection: true,
+      supportsLinkedHover: false,
+      supportsPush: false,
+      supportsSSR: true,
+      colorModel: "categorical",
+      layoutMode: "synthetic",
+      specialFeatures: [
+        "physics-simulation",
+        "dependency-machine",
+        "blocker-amplification",
+        "settled-projection",
+        "deterministic-snapshot"
       ]
     }
   }

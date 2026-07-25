@@ -708,7 +708,7 @@ export default function SemanticColorsPage() {
       </table>
 
       {/* ------------------------------------------------------------- */}
-      <h2 id="how-it-works">How it works under the hood</h2>
+      <h2 id="how-it-works">How Theme Resolution Works</h2>
 
       <p>
         Semiotic resolves theme colors through a layered pipeline. The layers

@@ -400,14 +400,12 @@ export default function FunnelChartPage() {
       {/* ================================================================= */}
       {/* Graduating to the Frame */}
       {/* ================================================================= */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom canvas renderers, mixed chart types,
-        or advanced interaction — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
-        <code>FunnelChart</code> is a configured <code>StreamOrdinalFrame</code>{" "}
-        under the hood.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom canvas
+        renderers, mixed chart types, or advanced interaction. <code>FunnelChart</code> delegates
+        to a configured <code>StreamOrdinalFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

@@ -108,9 +108,9 @@ for (const chart of ssrParityCharts) {
 const SSR_PARITY_BURN_DOWN = new Map([
   ["CollisionSwarmChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["EventDropChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
-  ["PhysicalFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
+  ["PacketFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
   ["GaltonBoardChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
-  ["PhysicsPileChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
+  ["UnitPileChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["ProcessFlowChart", "process-flow physics HOC SSR/CSR parity needs a settled-capacity fixture"],
   ["GauntletChart", "gauntlet physics HOC SSR/CSR parity needs a deterministic gate-route fixture"],
 ])

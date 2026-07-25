@@ -421,12 +421,10 @@ export default function StreamingSystemModelPage() {
       prevPage={{ title: "Vega-Lite Translator", path: "/features/vega-lite" }}
     >
       <p>
-        Four features that turn a streaming Sankey diagram into a system
-        monitoring tool: a generic <strong>details panel</strong> for
-        click-to-inspect, <strong>proportional particle speed</strong> for
-        flow rate visualization, <strong>threshold alerting</strong> for
-        metric-based node highlighting, and <strong>topology diffing</strong>{" "}
-        for tracking infrastructure changes over time.
+        A streaming Sankey becomes a system monitor when readers can inspect a
+        node, read flow rate from particle speed, see threshold alerts, and
+        distinguish topology changes from ordinary movement. This page builds
+        those behaviors into the same diagram.
       </p>
 
       <p>

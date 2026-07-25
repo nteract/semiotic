@@ -28,6 +28,7 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsSelection,
   usePhysicsRerun
 } from "./physicsHocUtils"
 import {
@@ -183,6 +184,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     rerunMS,
     responsiveHeight,
     responsiveWidth,
+    seed,
     showTethers = true,
     terminalBehavior = "outcome",
     viability
@@ -220,6 +222,16 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     summary: modeSummary,
     accessibleTable: modeAccessibleTable
   } = layoutMode
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy: undefined,
+    chartType: "GauntletChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -374,6 +386,9 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         maxVelocity: 520,
         sleepAfter: 0.8,
         sleepSpeed: 7,
+        // Top-level `seed` matches every other physics HOC; an explicit
+        // frameProps kernel seed still wins so existing snapshots hold.
+        ...(seed != null && { seed }),
         ...(frameProps.config?.kernel ?? {})
       },
       colliders: [
@@ -381,7 +396,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         ...(frameProps.config?.colliders ?? [])
       ]
     }),
-    [frameProps.config?.colliders, frameProps.config?.kernel, layout]
+    [frameProps.config?.colliders, frameProps.config?.kernel, layout, seed]
   )
   const rerun = usePhysicsRerun(
     physicsConfig,
@@ -596,8 +611,8 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       return {
         fill:
           datum.kind === CORE_KIND
-            ? "var(--semiotic-accent, #0f766e)"
-            : datum.property?.color ?? "var(--semiotic-accent, #38bdf8)",
+            ? "var(--semiotic-primary, #0f766e)"
+            : datum.property?.color ?? "var(--semiotic-primary, #38bdf8)",
         stroke: datum.kind === CORE_KIND ? "#f8fafc" : "#0f172a",
         opacity: 0.96,
         ...frameStyle
@@ -672,6 +687,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle,

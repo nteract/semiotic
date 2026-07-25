@@ -14,14 +14,14 @@ import {
 } from "./GauntletChart"
 import { GaltonBoardChart } from "./GaltonBoardChart"
 import { CollisionSwarmChart } from "./CollisionSwarmChart"
-import { PhysicalFlowChart } from "./PhysicalFlowChart"
+import { PacketFlowChart } from "./PacketFlowChart"
 import { ProcessFlowChart } from "./ProcessFlowChart"
 import {
   PhysicsCustomChart,
   type PhysicsCustomLayout,
   type PhysicsCustomLayoutContext
 } from "./PhysicsCustomChart"
-import { PhysicsPileChart } from "./PhysicsPileChart"
+import { UnitPileChart } from "./UnitPileChart"
 
 describe("physics chart HOCs", () => {
   let cleanupCanvas: () => void
@@ -266,9 +266,9 @@ describe("physics chart HOCs", () => {
     expect(ref.current?.getData().some((datum) => datum.id === "c")).toBe(true)
   })
 
-  it("renders PhysicsPileChart mechanical mode without data", () => {
+  it("renders UnitPileChart mechanical mode without data", () => {
     const { container } = render(
-      <PhysicsPileChart
+      <UnitPileChart
         mode="mechanical"
         mechanicalCategories={["Backlog", "Active", "Done"]}
         mechanicalCount={36}
@@ -495,10 +495,10 @@ describe("physics chart HOCs", () => {
   })
 
 
-  it("renders PhysicalFlowChart with static pipes, sensors, and row push", () => {
+  it("renders PacketFlowChart with static pipes, sensors, and row push", () => {
     const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getAllByTestId } = render(
-      <PhysicalFlowChart
+      <PacketFlowChart
         ref={ref}
         nodes={[
           { id: "source", label: "Source", x: 0.08, y: 0.5 },
@@ -521,9 +521,9 @@ describe("physics chart HOCs", () => {
     expect(ref.current?.getData().some((datum) => datum.id === "b")).toBe(true)
   })
 
-  it("renders exact projection overlay for PhysicsPileChart by default", () => {
+  it("renders exact projection overlay for UnitPileChart by default", () => {
     const { getByTestId, getByText } = render(
-      <PhysicsPileChart
+      <UnitPileChart
         data={[
           { id: "a", category: "A", value: 2 },
           { id: "b", category: "B", value: 3 }
@@ -540,9 +540,9 @@ describe("physics chart HOCs", () => {
     expect(getByText("3")).toBeTruthy()
   })
 
-  it("allows PhysicsPileChart projection overlay to be disabled", () => {
+  it("allows UnitPileChart projection overlay to be disabled", () => {
     const { queryByTestId } = render(
-      <PhysicsPileChart
+      <UnitPileChart
         data={[{ id: "a", category: "A", value: 2 }]}
         showProjection={false}
         valueAccessor="value"
@@ -553,9 +553,9 @@ describe("physics chart HOCs", () => {
     expect(queryByTestId("physics-pile-projection-overlay")).toBeNull()
   })
 
-  it("composes PhysicsPileChart projection overlay with caller foreground graphics", () => {
+  it("composes UnitPileChart projection overlay with caller foreground graphics", () => {
     const { getByTestId } = render(
-      <PhysicsPileChart
+      <UnitPileChart
         data={[{ id: "a", category: "A", value: 2 }]}
         valueAccessor="value"
         size={[260, 160]}
@@ -571,7 +571,7 @@ describe("physics chart HOCs", () => {
     expect(getByTestId("user-pile-foreground")).not.toBeNull()
   })
 
-  it("renders EventDropChart and PhysicsPileChart without the full Semiotic bundle", () => {
+  it("renders EventDropChart and UnitPileChart without the full Semiotic bundle", () => {
     const eventRef = React.createRef<PhysicsFrameHandle>()
     const pileRef = React.createRef<PhysicsFrameHandle>()
     const { container } = render(
@@ -582,7 +582,7 @@ describe("physics chart HOCs", () => {
           windows={{ size: 10 }}
           size={[260, 160]}
         />
-        <PhysicsPileChart
+        <UnitPileChart
           ref={pileRef}
           data={[{ id: "x", category: "X", value: 2 }]}
           valueAccessor="value"
@@ -625,7 +625,7 @@ describe("physics chart HOCs", () => {
           loadingContent={<span>Loading events</span>}
           size={[240, 160]}
         />
-        <PhysicsPileChart
+        <UnitPileChart
           data={[{ id: "c", category: "C", value: 1 }]}
           loading
           loadingContent={<span>Loading pile</span>}
@@ -857,9 +857,9 @@ describe("physics chart HOCs", () => {
         more: [{ id: "g2", value: 4 }]
       },
       {
-        name: "PhysicsPileChart",
+        name: "UnitPileChart",
         render: (ref) => (
-          <PhysicsPileChart
+          <UnitPileChart
             ref={ref}
             categoryAccessor="category"
             valueAccessor="value"
@@ -905,9 +905,9 @@ describe("physics chart HOCs", () => {
         more: [{ id: "f2", stage: "coding" }]
       },
       {
-        name: "PhysicalFlowChart",
+        name: "PacketFlowChart",
         render: (ref) => (
-          <PhysicalFlowChart
+          <PacketFlowChart
             ref={ref}
             nodes={[
               { id: "source", x: 0.1, y: 0.5 },
