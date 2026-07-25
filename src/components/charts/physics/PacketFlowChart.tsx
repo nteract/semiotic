@@ -87,16 +87,12 @@ export interface PacketFlowChartProps<
 }
 
 /** @deprecated Renamed to {@link PacketFlowChartProps} in 3.9.0. */
-export type PhysicalFlowChartProps<
-  TNode extends Datum = Datum,
-  TLink extends Datum = Datum
-> = PacketFlowChartProps<TNode, TLink>
-
+export type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> =
+  PacketFlowChartProps<TNode, TLink>
 function formatThroughput(value: number): string {
-  if (Math.abs(value) >= 1000) {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  }
-  return value.toLocaleString(undefined, { maximumFractionDigits: 1 })
+  return Math.abs(value) >= 1000
+    ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
+    : value.toLocaleString(undefined, { maximumFractionDigits: 1 })
 }
 
 function pathD(points: PhysicalFlowProjectionMetadata["links"][number]["path"]): string {
