@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-23 · 56 charts indexed.
+Last regen: 2026-07-25 · 57 charts indexed.
 
 **Column key**
 
@@ -92,14 +92,15 @@ Last regen: 2026-07-23 · 56 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| **ChainReactionChart** | — | ✓ | — | — | — | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `hoc-ssr-only` |
 | **CollisionSwarmChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
 | **CrucibleChart** | — | — | — | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
 | **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
 | **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
 | **GauntletChart** | — | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
-| **PhysicalFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
-| **PhysicsPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
+| **PacketFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
 | **ProcessFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
+| **UnitPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
 
 ## Value
 
@@ -111,8 +112,8 @@ Last regen: 2026-07-23 · 56 charts indexed.
 
 ## Aggregate counts
 
-- 47/56 charts render a top-level legend.
-- 45/56 charts expose a push API.
-- 45/56 charts SSR via the `renderChart()` registry.
-- 2/56 charts use the customLayout escape hatch.
-- 10/56 charts use synthetic (no-layout) construction.
+- 47/57 charts render a top-level legend.
+- 45/57 charts expose a push API.
+- 45/57 charts SSR via the `renderChart()` registry.
+- 2/57 charts use the customLayout escape hatch.
+- 11/57 charts use synthetic (no-layout) construction.

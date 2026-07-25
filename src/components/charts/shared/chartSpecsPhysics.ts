@@ -1022,7 +1022,9 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: false,
-      supportsSSR: true,
+      // The chart SSRs safely as a React HOC, but its overlay-led settled
+      // reading does not route through the Stream Frame server config.
+      supportsSSR: false,
       colorModel: "categorical",
       layoutMode: "synthetic",
       specialFeatures: [
@@ -1030,7 +1032,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         "dependency-machine",
         "blocker-amplification",
         "settled-projection",
-        "deterministic-snapshot"
+        "deterministic-snapshot",
+        "hoc-ssr-only"
       ]
     }
   }

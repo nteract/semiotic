@@ -69,6 +69,6 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "CrucibleChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "ProcessFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "PacketFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
-  "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
+  "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics"},
   "BigNumber": {"category":"value","recommendedImport":"semiotic/value","docsRoute":"/charts/big-number","pilot":true}
 }
