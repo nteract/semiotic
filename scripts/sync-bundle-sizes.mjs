@@ -8,7 +8,7 @@
  * Source of truth: stable `package.json#exports` entries → resolves each
  *   subpath to its `*.module.min.js` artifact under `dist/`. The script
  *   intentionally ignores unstable preview exports such as
- *   `semiotic/experimental`.
+ *   `semiotic/experimental` and `semiotic/experimental/vacp`.
  *
  * Marker blocks (same pattern as `generate-ai-behavior-contracts.mjs`):
  *   <!-- semiotic-bundle-sizes:start -->
@@ -47,10 +47,15 @@ const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
 const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
 // Exports with no measurable JS bundle are intentionally omitted from the
 // consumer-facing bundle-size table and CI drift gate:
-//   - `./experimental` is an unstable preview bundle packaged for collaborators.
+//   - `./experimental` and `./experimental/vacp` are unstable preview bundles
+//     packaged for collaborators, not stable consumer-facing entry points.
 //   - `./spec/*` is a wildcard export of raw JSON-Schema asset files (the
 //     portability spec) with no corresponding `dist/*.module.min.js` to gzip.
-const IGNORED_EXPORTS = new Set(["./experimental", "./spec/*"])
+const IGNORED_EXPORTS = new Set([
+  "./experimental",
+  "./experimental/vacp",
+  "./spec/*",
+])
 
 // Subpath → short "what's inside" blurb shown in the README table.
 // Keep these short and stable; they describe *which charts/utilities*
