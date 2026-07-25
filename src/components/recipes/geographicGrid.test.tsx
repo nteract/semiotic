@@ -155,7 +155,11 @@ describe("geographicGridLayout", () => {
 
     expect(result.nodes).toHaveLength(2)
     const x = result.nodes?.map((node) =>
-      node.type === "point" ? node.x : node.centroid[0]
+      node.type === "geoarea"
+        ? node.centroid[0]
+        : node.type === "point"
+          ? node.x
+          : 0
     ) ?? []
     expect(x[0]).toBeLessThan(x[1])
   })
