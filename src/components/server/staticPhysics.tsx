@@ -22,9 +22,9 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
     ...props,
     width: size[0],
     height: size[1],
-    // Every spawn the caller supplied is a body this chart claims entered the
-    // apparatus, so it is the charge the settled ledger must account for.
-    charge: props.charge ?? props.initialSpawns?.length,
+    // A spawn can be decorative or expand into several semantic bodies. Only
+    // an explicit charge can state the ledger claim being checked.
+    charge: props.charge,
     idPrefix: props.idPrefix ?? props._idPrefix ?? "physics"
   })
   if (sink) {
