@@ -1477,6 +1477,36 @@ import { ProcessFlowChart } from "semiotic/physics"
 
 Key props: `stages` declare force / capacity / absorb behavior, `groupBy` forms feature sockets that complete when every member is absorbed, and `liveCapacity` installs FIFO queue controllers for capacitated stages. Prefer ProcessFlowChart for many independent work items; use GauntletChart for one compound project degraded by gates.
 
+### ChainReactionChart (dependency reach and blockers)
+
+```jsx
+import { ChainReactionChart } from "semiotic/physics"
+
+const releaseTasks = [
+  { id: "brief", title: "Brief", lane: "Product", dependsOn: [], status: "done", completedAt: 1 },
+  { id: "privacy", title: "Privacy review", lane: "Product", dependsOn: ["brief"], status: "blocked", blocker: "Legal review" },
+  { id: "schema", title: "Schema", lane: "Data", dependsOn: ["privacy"], status: "waiting" },
+  { id: "ingest", title: "Ingest", lane: "Data", dependsOn: ["schema"], status: "waiting" },
+]
+
+<ChainReactionChart
+  data={releaseTasks}
+  taskIDAccessor="id"
+  labelAccessor="title"
+  laneAccessor="lane"
+  dependencyAccessor="dependsOn"
+  statusAccessor="status"
+  completionTimeAccessor="completedAt"
+  blockerAccessor="blocker"
+  currentTime={10}
+  mode="snapshot"
+  insight="blocker-amplification"
+  size={[800, 420]}
+/>
+```
+
+Key props: `dependencyAccessor` must name explicit prerequisite ids — the chart never invents edges from a flat table. `statusAccessor` and `completionTimeAccessor` are authored task facts; delivery balls only enact satisfied prerequisites. Use `insight="blocker-amplification"` to expose how many unfinished downstream tasks and lanes each blocker reaches.
+
 ### GauntletChart (compound project through timed gates)
 
 ```jsx
