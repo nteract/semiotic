@@ -65,6 +65,10 @@ export interface SemioticVACPChart {
   title?: string
   description?: string
   audience?: AudienceProfile
+  /**
+   * Reader-grounding presentation settings. The bridge's internal grounding
+   * pass caps navigation structure at one representative leaf per branch.
+   */
   grounding?: Omit<ChartReaderGroundingOptions, "audience">
   selections?: SemioticVACPSelectionBinding[]
   navigation?: SemioticVACPNavigationBinding

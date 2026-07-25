@@ -190,6 +190,11 @@ describe("SemioticVACPBridge", () => {
             fields: ["__proto__"],
             mode: "point",
           },
+          {
+            name: "reserved-range",
+            fields: ["__proto__"],
+            mode: "interval",
+          },
         ],
       },
     ]
@@ -216,6 +221,20 @@ describe("SemioticVACPBridge", () => {
         fields,
       }
     )
+    const intervalFields = Object.create(null) as Record<
+      string,
+      [number, number]
+    >
+    intervalFields.__proto__ = [2, 9]
+    await execute(
+      bridge,
+      "reserved-interval",
+      SEMIOTIC_VACP_SET_INTERVAL_SELECTION_ACTION,
+      {
+        selectionRef: bridge.refs.selection("reserved-range"),
+        fields: intervalFields,
+      }
+    )
 
     const state = await bridge.getState()
     const selection = state.state[
@@ -232,6 +251,21 @@ describe("SemioticVACPBridge", () => {
     expect(selection.clauses[0].fields.__proto__).toEqual({
       type: "point",
       values: ["B"],
+    })
+    const intervalSelection = state.state[
+      bridge.refs.selection("reserved-range")
+    ] as {
+      clauses: Array<{ fields: Record<string, unknown> }>
+    }
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        intervalSelection.clauses[0].fields,
+        "__proto__"
+      )
+    ).toBe(true)
+    expect(intervalSelection.clauses[0].fields.__proto__).toEqual({
+      type: "interval",
+      range: [2, 9],
     })
   })
 

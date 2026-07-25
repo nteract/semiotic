@@ -44,23 +44,21 @@ interface LiveBridgeValues extends SemioticVACPBridgeProps {
 function pointFields(
   fields: Record<string, unknown[]>
 ): Record<string, FieldSelection> {
-  return Object.fromEntries(
-    Object.entries(fields).map(([field, values]) => [
-      field,
-      { type: "point", values: new Set(values) },
-    ])
-  )
+  const result = Object.create(null) as Record<string, FieldSelection>
+  for (const [field, values] of Object.entries(fields)) {
+    result[field] = { type: "point", values: new Set(values) }
+  }
+  return result
 }
 
 function intervalFields(
   fields: Record<string, [number, number]>
 ): Record<string, FieldSelection> {
-  return Object.fromEntries(
-    Object.entries(fields).map(([field, range]) => [
-      field,
-      { type: "interval", range: [range[0], range[1]] },
-    ])
-  )
+  const result = Object.create(null) as Record<string, FieldSelection>
+  for (const [field, range] of Object.entries(fields)) {
+    result[field] = { type: "interval", range: [range[0], range[1]] }
+  }
+  return result
 }
 
 /**

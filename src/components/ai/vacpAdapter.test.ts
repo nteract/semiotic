@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { SerializedSelections } from "../export/selectionSerializer"
 import { buildNavigationTree } from "./navigationTree"
+import { buildRuntimeModelBase, createRefs } from "./vacpAdapterModel"
 import {
   SEMIOTIC_VACP_ACTIVATE_NAVIGATION_ACTION,
   SEMIOTIC_VACP_CLEAR_SELECTION_ACTION,
@@ -128,6 +129,22 @@ describe("createSemioticVACPBridge capabilities", () => {
     })
     expect(JSON.stringify(snapshot.graph)).not.toContain(
       '"month":"Jan","sales":4200'
+    )
+  })
+
+  it("caps capability grounding at one representative leaf per branch", () => {
+    const options = {
+      appId: "bounded-grounding",
+      charts: [chart({ grounding: { maxLeaves: 100 } })],
+      now: () => NOW,
+    }
+    const model = buildRuntimeModelBase(
+      options,
+      createRefs(options.appId, "main")
+    )
+
+    expect(JSON.stringify(model.charts[0]?.grounding.structure)).toContain(
+      "…and 1 more points"
     )
   })
 

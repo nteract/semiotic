@@ -107,7 +107,7 @@ if (Array.isArray(manifest.folders)) {
 const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
 // Experimental preview subpaths are intentionally omitted from Context7 so
 // agents do not treat temporary collaborator APIs as stable import guidance.
-const IGNORED_SUBPATHS = new Set(["experimental"])
+const IGNORED_SUBPATHS = new Set(["experimental", "experimental/vacp"])
 const exportedSubpaths = Object.keys(pkg.exports || {})
   .filter((k) => k.startsWith("./") && k !== "./package.json")
   .map((k) => k.slice(2))

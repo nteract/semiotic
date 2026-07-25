@@ -1,6 +1,7 @@
 /**
  * Bind a library-neutral IDID capability descriptor to a Semiotic runtime
- * capability.
+ * capability. A portable `intentScores` field is authoritative when present;
+ * omission retains the host's ranking policy.
  *
  * The portable descriptor intentionally cannot contain executable `fits` or
  * `buildProps` functions. Treating it as a complete runtime capability would
@@ -213,7 +214,9 @@ export function bindPortableCapability(
   const capability: BoundPortableChartCapability = {
     ...host,
     rubric: { ...portable.rubric },
-    intentScores: { ...(portable.intentScores ?? {}) },
+    intentScores: portable.intentScores
+      ? { ...portable.intentScores }
+      : { ...host.intentScores },
     // The portable descriptor is the source of variant-level scoring policy.
     // Omission means the transported descriptor did not declare variants.
     variants: portable.variants?.map(bindVariant),

@@ -53,6 +53,12 @@ const ACCESSOR_CHANNELS = [
   ["nodeIDAccessor", "id"],
 ] as const
 
+// VACP derives a navigation tree here only to extract semantic axis labels;
+// traversal itself is advertised only through an explicitly supplied durable
+// navigation binding. One representative leaf per branch keeps that internal
+// grounding pass bounded regardless of a chart-local reader-grounding option.
+const VACP_GROUNDING_MAX_LEAVES = 1
+
 function segment(value: string, label: string): string {
   const normalized = value.trim()
   if (!normalized) throw new Error(`${label} must be a non-empty string.`)
@@ -148,7 +154,7 @@ function chartGrounding(chart: SemioticVACPChart) {
     ...chart.grounding,
     audience: chart.audience,
     includeStructure: true,
-    maxLeaves: Math.min(chart.grounding?.maxLeaves ?? 1, 1),
+    maxLeaves: VACP_GROUNDING_MAX_LEAVES,
   })
 }
 

@@ -103,6 +103,16 @@ describe("bindPortableCapability", () => {
     ])
   })
 
+  it("retains host intent scores when the portable descriptor omits them", () => {
+    const host = hostCapability()
+    const { intentScores: _intentScores, ...withoutIntentScores } = portable
+    const result = bindPortableCapability(withoutIntentScores, host)
+    expectBound(result)
+
+    expect(result.capability.intentScores).toEqual(host.intentScores)
+    expect(result.capability.intentScores).not.toBe(host.intentScores)
+  })
+
   it("routes carried scores through suggestCharts without bypassing host fit", () => {
     const enriched = attachIDID(
       { mark: "bar", data: { values: rows } },
