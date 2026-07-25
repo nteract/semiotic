@@ -1,3 +1,5 @@
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.nteract%2Fsemiotic.svg)](https://mcptoplist.com/server/io.github.nteract%2Fsemiotic)
+
 [![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://semiotic.nteract.io)
 
 [![CI](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
