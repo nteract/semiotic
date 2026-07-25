@@ -86,6 +86,12 @@ export interface PacketFlowChartProps<
   frameProps?: PhysicsHocFrameProps<"config">
 }
 
+/** @deprecated Renamed to {@link PacketFlowChartProps} in 3.9.0. */
+export type PhysicalFlowChartProps<
+  TNode extends Datum = Datum,
+  TLink extends Datum = Datum
+> = PacketFlowChartProps<TNode, TLink>
+
 function formatThroughput(value: number): string {
   if (Math.abs(value) >= 1000) {
     return value.toLocaleString(undefined, { maximumFractionDigits: 0 })

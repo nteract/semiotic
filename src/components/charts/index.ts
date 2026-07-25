@@ -199,7 +199,10 @@ export { EventDropChart } from "./physics/EventDropChart"
 export type { EventDropChartProps } from "./physics/EventDropChart"
 
 export { UnitPileChart, PhysicsPileChart } from "./physics/UnitPileChart"
-export type { UnitPileChartProps } from "./physics/UnitPileChart"
+export type {
+  UnitPileChartProps,
+  PhysicsPileChartProps
+} from "./physics/UnitPileChart"
 
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
@@ -297,7 +300,10 @@ export type {
 } from "../recipes/processJourney"
 
 export { PacketFlowChart, PhysicalFlowChart } from "./physics/PacketFlowChart"
-export type { PacketFlowChartProps } from "./physics/PacketFlowChart"
+export type {
+  PacketFlowChartProps,
+  PhysicalFlowChartProps
+} from "./physics/PacketFlowChart"
 
 export { ProcessFlowChart } from "./physics/ProcessFlowChart"
 export type {

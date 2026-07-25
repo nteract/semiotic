@@ -225,7 +225,10 @@ export type {
   GaltonBoardChartProps,
   GaltonBoardReferenceLine
 } from "./charts/physics/GaltonBoardChart"
-export type { PacketFlowChartProps } from "./charts/physics/PacketFlowChart"
+export type {
+  PacketFlowChartProps,
+  PhysicalFlowChartProps
+} from "./charts/physics/PacketFlowChart"
 export type {
   ProcessFlowChartProps,
   ProcessFlowProjectionMetadata,
@@ -238,7 +241,10 @@ export type {
   PhysicsCustomLayoutResult,
   PhysicsCustomSpawnDatumResult
 } from "./charts/physics/PhysicsCustomChart"
-export type { UnitPileChartProps } from "./charts/physics/UnitPileChart"
+export type {
+  UnitPileChartProps,
+  PhysicsPileChartProps
+} from "./charts/physics/UnitPileChart"
 export type {
   CompilePhysicsEncodingOptions,
   CreatePhysicsEncodingLayoutOptions,

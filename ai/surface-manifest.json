@@ -9,9 +9,9 @@
   ],
   "version": "3.8.6",
   "components": {
-    "schema": 56,
-    "aiChartExports": 53,
-    "mcpRenderable": 50,
+    "schema": 57,
+    "aiChartExports": 54,
+    "mcpRenderable": 51,
     "browserOnly": 6,
     "categories": {
       "xy": [
@@ -72,14 +72,15 @@
         "TemporalHistogram"
       ],
       "physics": [
+        "ChainReactionChart",
         "CollisionSwarmChart",
         "CrucibleChart",
         "EventDropChart",
         "GaltonBoardChart",
         "GauntletChart",
         "PacketFlowChart",
-        "UnitPileChart",
-        "ProcessFlowChart"
+        "ProcessFlowChart",
+        "UnitPileChart"
       ],
       "value": [
         "BigNumber"
@@ -93,6 +94,7 @@
       "BubbleChart",
       "BumpChart",
       "CandlestickChart",
+      "ChainReactionChart",
       "ChordDiagram",
       "CirclePack",
       "CollisionSwarmChart",
@@ -117,7 +119,6 @@
       "OrbitDiagram",
       "PacketFlowChart",
       "PhysicsCustomChart",
-      "UnitPileChart",
       "PieChart",
       "ProcessFlowChart",
       "ProcessSankey",
@@ -138,6 +139,7 @@
       "TemporalHistogram",
       "TreeDiagram",
       "Treemap",
+      "UnitPileChart",
       "ViolinPlot"
     ],
     "geoExcludedFromAIExports": [

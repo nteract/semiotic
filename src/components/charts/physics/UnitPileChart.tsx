@@ -77,6 +77,10 @@ export interface UnitPileChartProps<TDatum extends Datum = Datum>
   frameProps?: PhysicsHocFrameProps<"config">
 }
 
+/** @deprecated Renamed to {@link UnitPileChartProps} in 3.9.0. */
+export type PhysicsPileChartProps<TDatum extends Datum = Datum> =
+  UnitPileChartProps<TDatum>
+
 function pileProjectionOverlay(
   rows: ProjectionRow[],
   ballRadius: number,
