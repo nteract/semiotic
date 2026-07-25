@@ -179,10 +179,14 @@ describe("geographicDotGridLayout", () => {
 
   it("does not require optional getters on composite projections", () => {
     const usa: GeoJSON.Feature = {
-      type: "Polygon",
-      coordinates: [[
-        [-124, 25], [-124, 49], [-67, 49], [-67, 25], [-124, 25],
-      ]],
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-124, 25], [-124, 49], [-67, 49], [-67, 25], [-124, 25],
+        ]],
+      },
     }
     const ctx = { ...context({ columns: 18 }), areas: [usa] }
     const projection = geoAlbersUsa().fitSize([400, 220], usa)
