@@ -330,7 +330,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   },
   {
     id: "hoc-physics-pile",
-    label: "PhysicsPileChart",
+    label: "UnitPileChart",
     detail: "Categorical piles where bodies settle into bounded category regions.",
     layer: "leaf",
     cluster: "physics",
@@ -348,7 +348,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   },
   {
     id: "hoc-physical-flow",
-    label: "PhysicalFlowChart",
+    label: "PacketFlowChart",
     detail:
       "Packets move along route paths with sensors, accessible flow regions, and optional fluid envelopes.",
     layer: "leaf",
@@ -904,6 +904,27 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "chain-reaction",
+    shortLabel: "Release Machine",
+    note: "Two coordinate systems over one authored dependency graph: an intervalLanesLayout swimlane answers when and who, then a ChainReactionChart re-plots the same rows by dependency depth so a blocker's downstream reach becomes the reading. Completion stays an explicit data event; balls only deliver prerequisites.",
+    uses: [
+      "input-static",
+      "hoc-chain-reaction",
+      "hoc-ordinal-custom",
+      "feature-accessors",
+      "feature-axes",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "watermarks",
     shortLabel: "Watermarks",
     note: "A physics-backed EventDropChart turns event-time windows into bounded bins: the watermark closes old windows, late arrivals collect in a gutter, and observation/status copy keeps the process readable.",
@@ -1358,6 +1379,24 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "equal-places-atlas",
+    shortLabel: "Equal Places Atlas",
+    note: "A GeoCustomChart samples U.S. and world polygons through geographicDotGridLayout, then contrasts those projected dot fields with geographicGridLayout state tiles and automatically gridified country centroids.",
+    uses: [
+      "input-static",
+      "hoc-geo-custom",
+      "hoc-geo-reference",
+      "feature-accessors",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "earthquakes",
     shortLabel: "Earthquakes",
     note: "An orthographic ProportionalSymbolMap with dragRotate filters a deterministic M6+ catalog; facing events drive KPI tiles, ranked magnitude/region bars, and a quarterly LineChart.",
@@ -1658,7 +1697,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   {
     id: "data-viz-for-dummies-6",
     shortLabel: "Data Viz for Dummies VI",
-    note: "A basement-lab field guide explains ten physics contracts through GaltonBoardChart, CollisionSwarmChart, EventDropChart, PhysicsPileChart, PhysicalFlowChart, ProcessFlowChart, GauntletChart, CrucibleChart, ChainReactionChart, and PhysicsCustomChart.",
+    note: "A basement-lab field guide explains ten physics contracts through GaltonBoardChart, CollisionSwarmChart, EventDropChart, UnitPileChart, PacketFlowChart, ProcessFlowChart, GauntletChart, CrucibleChart, ChainReactionChart, and PhysicsCustomChart.",
     uses: [
       "input-static",
       "hoc-galton-board",

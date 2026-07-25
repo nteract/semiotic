@@ -134,7 +134,7 @@ const scenarioCases = [
     findings: [
       "A reader who shares before finishing is not a failure case.",
       "Returning later is a loop in time, not a smaller bar.",
-      "The diagram has two jobs: retention for some readers, exit ramp for others.",
+      "The diagram tracks retention while preserving an exit ramp for other readers.",
     ],
   },
   {
@@ -655,8 +655,7 @@ export default function WorldOfFunnelsExamplePage() {
             onSelect={setSelectedCaseId}
           />
           <p>
-            Same case file, two charting attitudes. The first is excellent at comparison.
-            The second admits that behavior has loops.
+            The funnel is excellent at comparison. The flow view admits that behavior has loops.
           </p>
         </div>
 

@@ -18,12 +18,14 @@ function EventDropChart(: import("../../../dist/semiotic-physics").EventDropChar
 function GaltonBoardChart(: import("../../../dist/semiotic-physics").GaltonBoardChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function GuantletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PhysicalFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicsPileChart(: import("../../../dist/semiotic-physics").PhysicsPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
+function PhysicsPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): React.JSX.Element
 function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlowChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function StreamPhysicsFrame(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
+function UnitPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function absorbRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
 function applyCrucibleEvent<TDatum extends Datum>(state: CrucibleRunState<TDatum>, event: CrucibleEvent, context: CrucibleApplyContext): CrucibleApplyResult<TDatum>
@@ -75,6 +77,7 @@ function crucibleProjectionRows<TDatum extends Datum>(state: CrucibleRunState<TD
 function crucibleSemanticKey(value: unknown): string
 function default(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: { charge?: string; apparatus?: string; destination?: string; } | undefined): string
 function evaluateCrucibleConservation<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleConservationSpec | undefined): CrucibleConservationResult
 function evaluatePhysicsBodyBudget(input: PhysicsBodyBudgetInput): PhysicsBodyBudgetDecision
 function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
@@ -88,11 +91,15 @@ function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: Styl
 function membraneRegion(options: ProcessRegionBaseOptions & { cost: number; dampingScale?: number; energyScale?: number; color?: string; }): StreamPhysicsRegionEffect
 function normalizePhysicsAnnotations(annotations: Datum[] | undefined): Datum[] | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
+function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): { x: number; y: number; }
+function physicsDestination(geography: PhysicsStageGeography, id: string): PhysicsDestinationZone | undefined
 function physicsProcessBoundaryColliders(shape: PhysicsColliderShape, options?: PhysicsProcessBoundaryOptions | undefined): PhysicsColliderSpec[]
 function physicsProcessGroupSemanticItems<TDatum extends Datum>(groups: readonly PhysicsProcessBodyGroup<TDatum>[]): PhysicsSemanticItem[]
 function physicsProcessRegionSemanticItem(region: StreamPhysicsRegionEffect): PhysicsSemanticItem | null
 function physicsProcessStageSemanticItems(stages: readonly PhysicsProcessStage[]): PhysicsSemanticItem[]
 function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: PhysicsReferenceEnvelopeOptions<TSample>): PhysicsReferenceEnvelope
+function physicsStageColliders(geography: PhysicsStageGeography, options?: PhysicsStageColliderOptions | undefined): PhysicsColliderSpec[]
+function physicsStageGeography(options: PhysicsStageGeographyOptions): PhysicsStageGeography
 function planGauntletPropertyWork(options: GauntletPropertyWorkPlanOptions): GauntletPropertyWorkPlan
 function portalRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string; }): StreamPhysicsRegionEffect
 function pressureFieldRegion(options: ProcessRegionBaseOptions & { pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
@@ -109,6 +116,8 @@ function replayStateTransitions(events: readonly DependencyReplayEvent[], clock:
 function resolveCrucibleSelector<TDatum extends Datum>(state: CrucibleRunState<TDatum>, selector: CrucibleSelector, path?: string | undefined): CrucibleSelectorResult
 function resolveCrucibleSnapshotAt<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, snapshotAt: number | { phaseId: string; progress?: number; } | undefined): number
 function resolveCrucibleTime<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, elapsed: number): CrucibleResolvedTime
+function resolveGauntletTerminalState<TDatum extends Datum = Datum>(project: GauntletProjectState<TDatum>, options: GauntletTerminalOptions<TDatum>): GauntletProjectState<TDatum>
+function resolveGauntletTerminalStates<TDatum extends Datum = Datum>(options: GauntletTerminalOptions<TDatum>): GauntletProjectState<TDatum>[]
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
@@ -236,6 +245,7 @@ interface GauntletPropertyDefinition
 interface GauntletPropertyForceContext<TDatum extends Datum = Datum>
 interface GauntletPropertyWorkPlan
 interface GauntletPropertyWorkPlanOptions
+interface GauntletTerminalOptions<TDatum extends Datum = Datum>
 interface GradientLegendConfig
 interface GradientLegendValue
 interface HatchFill
@@ -254,7 +264,7 @@ interface MotionPlacementEncoding<TDatum>
 interface MotionPoint
 interface MotionProcessEncoding<TDatum>
 interface MotionTimeEncoding<TDatum>
-interface PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum>
+interface PacketFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum>
 interface PhysicalFlowOptions<TNode extends Datum = Datum, TLink extends Datum = Datum>
 interface PhysicalFlowPoint
 interface PhysicalFlowProjectionMetadata
@@ -277,6 +287,7 @@ interface PhysicsControllerTickContext
 interface PhysicsCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface PhysicsCustomLayoutContext<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface PhysicsCustomLayoutResult
+interface PhysicsDestinationZone
 interface PhysicsDynamicsEncoding<TDatum>
 interface PhysicsEncoding<TDatum extends Datum = Datum>
 interface PhysicsEncodingCompilation<TDatum extends Datum = Datum>
@@ -285,7 +296,6 @@ interface PhysicsEngineAdapter
 interface PhysicsEngineCapabilities
 interface PhysicsFrameHandle
 interface PhysicsKernelOptions
-interface PhysicsPileChartProps<TDatum extends Datum = Datum>
 interface PhysicsPileOptions<TDatum extends Datum = Datum>
 interface PhysicsPipelineConfig
 interface PhysicsPipelineControlSurface
@@ -310,10 +320,14 @@ interface PhysicsSedimentHeightfieldOptions
 interface PhysicsSedimentTotals
 interface PhysicsSpawnPacingOptions
 interface PhysicsSpringSpec
+interface PhysicsStageColliderOptions
+interface PhysicsStageGeography
+interface PhysicsStageGeographyOptions
 interface PhysicsTimeEncoding<TDatum>
 interface PhysicsTraceComparison
 interface PhysicsTraceComparisonOptions<TSample>
 interface PhysicsTraceComparisonPoint
+interface PhysicsZone
 interface ProcessChromeGroup
 interface ProcessChromeLayout
 interface ProcessChromeOptions
@@ -369,6 +383,7 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface UnitPileChartProps<TDatum extends Datum = Datum>
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {
     bandwidth?: () => number;
 }
@@ -468,6 +483,7 @@ type MotionEncodingAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, in
 type MotionTimeBasis = "event" | "ingest" | "simulation" | "presentation" | "buffer-index"
 type MotionTimeUnit = "milliseconds" | "seconds" | "frames" | "index"
 type NumericScale = (value: number) => number
+type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> = PacketFlowChartProps<TNode, TLink>
 type PhysicalFlowCoordinateMode = "auto" | "normalized" | "pixels"
 type PhysicalFlowPathConstraint = "path" | "none"
 type PhysicalFlowRawPath = ReadonlyArray<PhysicalFlowPoint | readonly [number, number]>
@@ -516,6 +532,7 @@ type PhysicsEngineAdapterInput = PhysicsEngineAdapter | PhysicsEngineAdapterFact
 type PhysicsEngineDeterminism = "strict" | "tolerance" | "none"
 type PhysicsExecution = "auto" | "worker" | "sync"
 type PhysicsKinematicsEncoding<TDatum> = MotionKinematicsEncoding<TDatum>
+type PhysicsPileChartProps<TDatum extends Datum = Datum> = UnitPileChartProps<TDatum>
 type PhysicsPlacementEncoding<TDatum> = MotionPlacementEncoding<TDatum>
 type PhysicsProcessEncoding<TDatum> = MotionProcessEncoding<TDatum>
 type PhysicsReferenceBandSelector = "min" | "median" | "max" | number

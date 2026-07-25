@@ -118,9 +118,9 @@ export default function ChartGrounding({ component, props }) {
     : "No mobile visualization issues found at 390px — click for mobile guidance."
 
   return (
-    <aside className="chart-grounding" style={styles.panel} aria-label={`${component} at a glance`}>
+    <aside className="chart-grounding" style={styles.panel} aria-label={`${component} chart contract`}>
       <div style={styles.headerRow}>
-        <span style={styles.kicker}>At a glance</span>
+        <span style={styles.kicker}>Chart contract</span>
         {a11y && (
           <Link
             to="/accessibility/audit"

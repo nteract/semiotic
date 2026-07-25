@@ -46,6 +46,7 @@ export function findNearestGeoNode(
 
     for (const node of nodes) {
       if (node.type !== "point") continue
+      if (node.interactive === false) continue
       const dx = node.x - mouseX
       const dy = node.y - mouseY
       const dist = Math.sqrt(dx * dx + dy * dy)

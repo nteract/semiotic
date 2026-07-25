@@ -44,8 +44,8 @@ const hocRows = [
     settled: "Window counts, late counts, and closed/open state.",
   },
   {
-    name: "PhysicsPileChart",
-    path: "/charts/physics-pile-chart",
+    name: "UnitPileChart",
+    path: "/charts/unit-pile-chart",
     when: "Unitized counting, category bins, sedimented totals, and materialized denominators.",
     settled: "Category totals and represented value.",
   },
@@ -68,8 +68,8 @@ const hocRows = [
     settled: "Property inventory, viability, and outcome state.",
   },
   {
-    name: "PhysicalFlowChart",
-    path: "/charts/physical-flow-chart",
+    name: "PacketFlowChart",
+    path: "/charts/packet-flow-chart",
     when: "Packets on authored routes where throughput stays readable as a static layer.",
     settled: "Route throughput and node totals.",
   },
@@ -83,7 +83,7 @@ const hocRows = [
 
 const budgetRows = [
   ["Autoplay", "Short enough to understand in one pass; provide pause and replay when motion continues."],
-  ["Reduced motion", "Render the settled projection first, then let users opt into replay where appropriate."],
+  ["Reduced motion", "Handled by the frame: a reduced-motion reader gets the settled end state in one pass — every paced arrival admitted and every authored event applied — with no animation. Verify it with the settled ledger rather than assuming."],
   ["Time scale", "Use replay time scale for arrival pacing, not to slow gravity or the physics clock."],
   ["Body count", "Keep live bodies within a readable range; aggregate, evict, or sediment long streams."],
   ["Accessibility", "Expose the settled chart, aggregate rows, and milestone observations as the accessible object."],
@@ -98,6 +98,68 @@ const ledgerCode = `const displacementLedger = {
   projection: "window totals and late counts",
   accessibleReadout: "settled table + live milestone observations",
 }`
+
+const settledLedgerCode = `import { unstable_buildPhysicsSettledEvidence } from "semiotic/experimental"
+
+const evidence = unstable_buildPhysicsSettledEvidence(store.snapshot(), {
+  bodies,
+  projectionRows,
+  charge: rows.length,   // what the chart claims entered
+})
+
+evidence.ledger
+// { charge: 60, live: 60, queued: 0, sedimented: 0,
+//   unaccounted: 0, balanced: true }
+
+evidence.warnings
+// [] — or ["PHYSICS_QUEUE_UNDRAINED"] when the apparatus never
+// received bodies the projection already counted, and
+// ["PHYSICS_LEDGER_MISMATCH"] when bodies simply vanished.`
+
+const terminalStateCode = `// CrucibleChart — compiles both ends of the run as data
+const plan = compileCruciblePlan({ data, phases, products, outlets, events })
+plan.initialState      // before the tape
+plan.terminalState     // after the tape, no clock advanced
+plan.terminalSpawns
+
+// ChainReactionChart — derives task state at a clock position
+const runtime = initialRuntime(machine, "snapshot", currentTime, true)
+runtime.completed / runtime.blockers / runtime.armed
+
+// GauntletChart — folds the authored tape over the initial states
+const terminal = resolveGauntletTerminalStates({
+  projects, events, layout, positiveProperties, negativeProperties,
+})
+// Caveat: with crashDetection armed, physics can still override the
+// outcome. The pure fold is "what the plan earns on paper".`
+
+const geographyCode = `import {
+  physicsStageGeography,
+  physicsStageColliders,
+  physicsChargePoint,
+  describePhysicsStageGeography,
+} from "semiotic/physics"   // also from semiotic/recipes
+
+const stage = physicsStageGeography({
+  size: [700, 420],
+  flow: "down",                 // or "right" for process lanes
+  destinations: 21,             // or [{ id, label }, …]
+  destinationExtent: 0.55,
+  channelRatio: 0.7,            // < 1 leaves gutters (tubes, not bins)
+})
+
+stage.charge         // where bodies enter
+stage.apparatus      // pegs / gates / phases / stages / barriers
+stage.destinations   // [{ id, label, order, centerX, centerY, … }]
+stage.projection     // strip reserved for the settled reading
+
+physicsStageColliders(stage)          // floor + one divider per boundary
+physicsChargePoint(stage, i, count)   // spread a burst, don't co-locate
+describePhysicsStageGeography(stage, {
+  charge: "Events", apparatus: "a watermark barrier", destination: "windows",
+})
+// → "Events enter at the top, travel downward through a watermark
+//    barrier, and come to rest in 21 windows: 0, 1, 2, …"`
 
 const budgetCode = `<EventDropChart
   data={events}
@@ -168,7 +230,7 @@ export default function WhenPhysicsPage() {
       </section>
 
       <section>
-        <h2>Four Modes</h2>
+        <h2>Pick the Mode</h2>
         <p>
           Pick the mode before picking the component. Most confusion comes from
           putting texture-style particles on a layout chart and asking readers to
@@ -207,7 +269,7 @@ export default function WhenPhysicsPage() {
             animates event arrivals, then exposes settled window counts and late counts.
           </li>
           <li>
-            <Link to="/charts/physics-pile-chart">PhysicsPileChart</Link>{" "}
+            <Link to="/charts/unit-pile-chart">UnitPileChart</Link>{" "}
             treats bodies as unitized value carriers, then reads the piled result by category.
           </li>
           <li>
@@ -230,6 +292,87 @@ export default function WhenPhysicsPage() {
           and <code>accessibleReadout</code>, the chart probably does not need physics.
         </p>
         <CodeBlock language="js" code={ledgerCode} />
+      </section>
+
+      <section>
+        <h2>Settled Ledger</h2>
+        <p>
+          The displacement ledger above is an authoring discipline. The settled
+          ledger is how the finished chart proves it kept that promise at runtime.
+        </p>
+        <p>
+          Every physics chart shares one deep structure: a <strong>charge</strong>{" "}
+          enters, an <strong>apparatus</strong> routes it, and it comes to rest in{" "}
+          <strong>destinations</strong>. Balls into bins, units into category
+          piles, arrivals into windows and a late gutter, properties into a socket
+          or a graveyard, components into reason-labelled outlets. So they all owe
+          the same invariant: <em>every charged body is accounted for in exactly
+          one place.</em> That invariant is this family's{" "}
+          <em>bars start at zero</em> — it is what makes a settled projection an
+          auditable reading rather than a claim about a movie.
+        </p>
+        <p>
+          Declare the charge and the evidence checks it. Omit it and no ledger is
+          reported — the total is never guessed.
+        </p>
+        <CodeBlock language="js" code={settledLedgerCode} />
+        <div style={styles.callout}>
+          <strong>Why it matters:</strong> a projection overlay is drawn from your
+          data, while the bodies come from the simulation. When those two numbers
+          disagree, the chart is stating a total it is not showing. The ledger is
+          the only thing that notices.
+        </div>
+      </section>
+
+      <section>
+        <h2>Terminal State</h2>
+        <p>
+          Some physics charts are driven by an authored <em>event tape</em> —
+          gates that strip a property, phases that form a product, a completed
+          task that releases its dependents. Those charts owe one more thing:
+        </p>
+        <div style={styles.callout}>
+          <strong>The end state must be computable from the authored inputs
+          alone.</strong> If the outcome only exists as the residue of a
+          simulation, then reduced motion, server rendering, snapshot export, and{" "}
+          <code>describeChart</code> cannot state it — and the chart is a movie,
+          not a reading.
+        </div>
+        <p>
+          Tape-driven charts satisfy this in the shape that suits each one. The
+          pure result is what a non-visual reader receives, so it is not an
+          optimization — it is the accessible object.
+        </p>
+        <CodeBlock language="js" code={terminalStateCode} />
+        <p>
+          This is also the sharpest test when you are designing a new physics
+          chart. Ask: <strong>Can you state its ledger in one sentence?</strong>{" "}
+          (No → it is an animation.){" "}
+          <strong>Does its terminal state exist without simulating?</strong> (No →
+          it is a movie.) <strong>Would a reader who has never seen it guess the
+          reading protocol from the apparatus?</strong> (No → the name is wrong.)
+        </p>
+      </section>
+
+      <section>
+        <h2>Stage Geography</h2>
+        <p>
+          The charge → apparatus → destinations structure is also a layout you
+          can build with. Every shipped physics chart names the zones differently —
+          Gauntlet has <code>startX</code>/<code>socketX</code>/
+          <code>graveyardX</code>, Crucible has <code>chamber</code>/
+          <code>mouth</code>/<code>outlets</code>, and Galton and Pile
+          independently wrote the <em>same</em> lane formula. Naming it once
+          gives subsequent physics charts a common starting point.
+        </p>
+        <CodeBlock language="js" code={geographyCode} />
+        <p>
+          This is authoring vocabulary for a new chart or a{" "}
+          <Link to="/charts/physics-custom-chart">PhysicsCustomChart</Link>{" "}
+          layout — the existing charts keep their own layouts, and a regression
+          test pins the builder to their lane math so anything you build on it
+          lands in the same visual family.
+        </p>
       </section>
 
       <section>

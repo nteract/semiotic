@@ -59,12 +59,13 @@ import { DistanceCartogramCapability } from "../charts/geo/DistanceCartogram.cap
 // Physics family
 import { GaltonBoardChartCapability } from "../charts/physics/GaltonBoardChart.capability"
 import { EventDropChartCapability } from "../charts/physics/EventDropChart.capability"
-import { PhysicsPileChartCapability } from "../charts/physics/PhysicsPileChart.capability"
+import { UnitPileChartCapability } from "../charts/physics/UnitPileChart.capability"
 import { CollisionSwarmChartCapability } from "../charts/physics/CollisionSwarmChart.capability"
-import { PhysicalFlowChartCapability } from "../charts/physics/PhysicalFlowChart.capability"
+import { PacketFlowChartCapability } from "../charts/physics/PacketFlowChart.capability"
 import { ProcessFlowChartCapability } from "../charts/physics/ProcessFlowChart.capability"
 import { GauntletChartCapability } from "../charts/physics/GauntletChart.capability"
 import { CrucibleChartCapability } from "../charts/physics/CrucibleChart.capability"
+import { ChainReactionChartCapability } from "../charts/physics/ChainReactionChart.capability"
 
 // Value family
 import { BigNumberCapability } from "../charts/value/BigNumber.capability"
@@ -136,12 +137,13 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   // Physics
   GaltonBoardChartCapability,
   EventDropChartCapability,
-  PhysicsPileChartCapability,
+  UnitPileChartCapability,
   CollisionSwarmChartCapability,
-  PhysicalFlowChartCapability,
+  PacketFlowChartCapability,
   ProcessFlowChartCapability,
   GauntletChartCapability,
   CrucibleChartCapability,
+  ChainReactionChartCapability,
   // Value
   BigNumberCapability
 ]
@@ -236,10 +238,11 @@ export {
   // Physics
   GaltonBoardChartCapability,
   EventDropChartCapability,
-  PhysicsPileChartCapability,
+  UnitPileChartCapability,
   CollisionSwarmChartCapability,
-  PhysicalFlowChartCapability,
+  PacketFlowChartCapability,
   ProcessFlowChartCapability,
   GauntletChartCapability,
-  CrucibleChartCapability
+  CrucibleChartCapability,
+  ChainReactionChartCapability
 }

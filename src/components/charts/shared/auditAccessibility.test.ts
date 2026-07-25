@@ -357,8 +357,8 @@ describe("auditAccessibility — operability", () => {
     expect(status(without, "operable.single-input-modality")).toBe("pass")
   })
 
-  it("treats PhysicalFlowChart as keyboard-operable through route semantics", () => {
-    const result = auditAccessibility("PhysicalFlowChart", {
+  it("treats PacketFlowChart as keyboard-operable through route semantics", () => {
+    const result = auditAccessibility("PacketFlowChart", {
       nodes: [
         { id: "source", x: 0.1, y: 0.5 },
         { id: "sink", x: 0.9, y: 0.5 }

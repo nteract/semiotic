@@ -757,14 +757,12 @@ chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom node rendering, drag
-        interactions, or complex Sankey configuration — graduate to{" "}
-        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly.
-        Every <code>SankeyDiagram</code> is just a configured{" "}
-        <code>StreamNetworkFrame</code> under the hood.
+        Use <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly for custom node
+        rendering, drag interactions, or complex Sankey configuration. <code>SankeyDiagram</code>{" "}
+        delegates to a configured <code>StreamNetworkFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

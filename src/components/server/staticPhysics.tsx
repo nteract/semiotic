@@ -22,6 +22,9 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
     ...props,
     width: size[0],
     height: size[1],
+    // A spawn can be decorative or expand into several semantic bodies. Only
+    // an explicit charge can state the ledger claim being checked.
+    charge: props.charge,
     idPrefix: props.idPrefix ?? props._idPrefix ?? "physics"
   })
   if (sink) {
@@ -33,7 +36,10 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
       title: props.title,
       description: props.description,
       annotations: [],
-      extraWarnings: result.scene.sceneNodes.length === 0 ? ["PHYSICS_EMPTY_SCENE"] : []
+      extraWarnings: [
+        ...(result.scene.sceneNodes.length === 0 ? ["PHYSICS_EMPTY_SCENE"] : []),
+        ...result.scene.evidence.warnings
+      ]
     })
   }
   return result.svg

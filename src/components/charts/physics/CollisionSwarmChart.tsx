@@ -26,6 +26,7 @@ import {
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
   usePhysicsRerun,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
   type PhysicsRerunMS,
   type PhysicsSharedChartProps,
@@ -33,7 +34,7 @@ import {
 } from "./physicsHocUtils"
 
 export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin">,
+  extends Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -342,6 +343,16 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     [resolvedColorBy, styleRules, xAccessor]
   )
 
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "CollisionSwarmChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -364,6 +375,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle,

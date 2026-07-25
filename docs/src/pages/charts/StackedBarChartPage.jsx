@@ -192,8 +192,8 @@ export default function StackedBarChartPage() {
       <p>
         StackedBarChart visualizes part-to-whole relationships by stacking
         subcategories within each category bar. Pass your data, specify a{" "}
-        <code>stackBy</code> field, and get a publication-ready stacked bar chart
-        with color-coded segments, legends, and hover interactions out of the box.
+        <code>stackBy</code> field, and the component handles color-coded segments,
+        legends, and hover interactions.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -421,14 +421,12 @@ export default function StackedBarChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom marks, mixed piece types,
-        annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
-        <code>StackedBarChart</code> is just a configured{" "}
-        <code>StreamOrdinalFrame</code> under the hood.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom marks,
+        mixed piece types, or annotations. <code>StackedBarChart</code> delegates to a configured{" "}
+        <code>StreamOrdinalFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

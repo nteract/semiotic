@@ -762,12 +762,12 @@ export default function AreaChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom marks, complex annotations, dual-axis layouts — graduate
-        to <Link to="/frames/xy-frame">StreamXYFrame</Link> directly. Every <code>AreaChart</code>{" "}
-        is just a configured <code>StreamXYFrame</code> under the hood.
+        Use <Link to="/frames/xy-frame">StreamXYFrame</Link> directly for custom marks, complex
+        annotations, or dual-axis layouts. <code>AreaChart</code> delegates to a configured{" "}
+        <code>StreamXYFrame</code>.
       </p>
 
       <div

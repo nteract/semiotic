@@ -309,14 +309,12 @@ export default function ChordDiagramPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom arc rendering, complex
-        interactions, or advanced chord configuration — graduate to{" "}
-        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly. Every{" "}
-        <code>ChordDiagram</code> is just a configured{" "}
-        <code>StreamNetworkFrame</code> under the hood.
+        Use <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly for custom arc
+        rendering, complex interactions, or advanced chord configuration. <code>ChordDiagram</code>{" "}
+        delegates to a configured <code>StreamNetworkFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

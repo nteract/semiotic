@@ -33,15 +33,18 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
 
-export interface PhysicalFlowChartProps<
+export interface PacketFlowChartProps<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
-> extends Omit<BaseChartProps, "margin">,
+> extends Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   nodes?: TNode[]
   links?: TLink[]
@@ -74,15 +77,22 @@ export interface PhysicalFlowChartProps<
   styleRules?: StyleRule[]
   seed?: number
   tooltip?: TooltipProp
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   paused?: boolean
   frameProps?: PhysicsHocFrameProps<"config">
 }
 
+/** @deprecated Renamed to {@link PacketFlowChartProps} in 3.9.0. */
+export type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> =
+  PacketFlowChartProps<TNode, TLink>
 function formatThroughput(value: number): string {
-  if (Math.abs(value) >= 1000) {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  }
-  return value.toLocaleString(undefined, { maximumFractionDigits: 1 })
+  return Math.abs(value) >= 1000
+    ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
+    : value.toLocaleString(undefined, { maximumFractionDigits: 1 })
 }
 
 function pathD(points: PhysicalFlowProjectionMetadata["links"][number]["path"]): string {
@@ -381,7 +391,7 @@ function physicalFlowOverlay(
                   <path
                     d={pathD(link.path)}
                     fill="none"
-                    stroke="var(--semiotic-accent, #4e79a7)"
+                    stroke="var(--semiotic-primary, #4e79a7)"
                     strokeWidth={strokeWidth}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -435,7 +445,7 @@ function physicalFlowOverlay(
                 x={node.x}
                 y={node.y - 14}
                 textAnchor="middle"
-                fill="var(--semiotic-text-primary, #111827)"
+                fill="var(--semiotic-text, #111827)"
                 fontSize={11}
                 fontWeight={800}
               >
@@ -459,7 +469,7 @@ function withPhysicalFlowObservation(
     observation: {
       ...config.observation,
       chartId: chartId ?? config.observation?.chartId ?? "physical-flow",
-      chartType: "PhysicalFlowChart",
+      chartType: "PacketFlowChart",
       onObservation:
         (onObservation as NonNullable<
           PhysicsPipelineConfig["observation"]
@@ -473,7 +483,7 @@ function withPhysicalFlowObservation(
  *
  * @example
  * ```tsx
- * <PhysicalFlowChart
+ * <PacketFlowChart
  *   nodes={[{ id: "in", x: 0.1, y: 0.5 }, { id: "out", x: 0.9, y: 0.5 }]}
  *   links={[{ source: "in", target: "out", value: 40 }]}
  *   coordinateMode="normalized"
@@ -482,7 +492,7 @@ function withPhysicalFlowObservation(
  *
  * @example
  * ```tsx
- * <PhysicalFlowChart
+ * <PacketFlowChart
  *   nodes={ports}
  *   edges={routes}
  *   pathAccessor="path"
@@ -491,11 +501,11 @@ function withPhysicalFlowObservation(
  * />
  * ```
  */
-export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
+export const PacketFlowChart = forwardRef(function PacketFlowChart<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
 >(
-  props: PhysicalFlowChartProps<TNode, TLink>,
+  props: PacketFlowChartProps<TNode, TLink>,
   ref: React.Ref<PhysicsFrameHandle>
 ) {
   const {
@@ -522,6 +532,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     pathConstraint = "path",
     paused,
     reducedMotion = false,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
@@ -679,6 +690,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     () => withPhysicalFlowObservation(layout.config, chartId, onObservation),
     [chartId, layout.config, onObservation]
   )
+  const rerun = usePhysicsRerun(observedConfig, rerunMS, paused)
   const userOnTickRef = useRef(frameProps?.onTick)
   userOnTickRef.current = frameProps?.onTick
   const flowOnTick = useCallback<NonNullable<StreamPhysicsFrameProps["onTick"]>>(
@@ -690,6 +702,16 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     },
     [flowSpeed, pathConstraint, reducedMotion]
   )
+
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "PacketFlowChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
 
   const stateEl = renderPhysicsChartState({
     data:
@@ -716,6 +738,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle,
@@ -728,14 +751,15 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
   )
 
   return renderPhysicsFrame(
-    "PhysicalFlowChart",
+    "PacketFlowChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
+      key={rerun.rerunKey}
       ref={frameRef}
-      config={observedConfig}
+      config={rerun.config}
       continuous={!reducedMotion && pathConstraint !== "none"}
       foregroundGraphics={composePhysicsFrameGraphics(
         overlay,
@@ -758,12 +782,19 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
   )
 }) as unknown as {
   <TNode extends Datum = Datum, TLink extends Datum = Datum>(
-    props: PhysicalFlowChartProps<TNode, TLink> &
+    props: PacketFlowChartProps<TNode, TLink> &
       React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }
 
-PhysicalFlowChart.displayName = "PhysicalFlowChart"
+PacketFlowChart.displayName = "PacketFlowChart"
 
-export default PhysicalFlowChart
+/**
+ * @deprecated Renamed to {@link PacketFlowChart} in 3.9.0. Sends discrete packets along authored routes; "Physical" named the substrate and told a reader nothing about the reading protocol.
+ * The alias stays exported indefinitely for existing imports; new code and
+ * every registry (schema, capabilities, MCP, server configs) use `PacketFlowChart`.
+ */
+export const PhysicalFlowChart = PacketFlowChart
+
+export default PacketFlowChart

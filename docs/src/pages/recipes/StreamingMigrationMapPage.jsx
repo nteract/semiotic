@@ -115,7 +115,7 @@ export default function StreamingMigrationMapPage() {
         { label: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
       ]}
       prevPage={{ title: "Minard's Map", path: "/recipes/minards-map" }}
-      nextPage={{ title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" }}
+      nextPage={{ title: "Geographic Grid Maps", path: "/recipes/geographic-grid-maps" }}
       dependencies={["semiotic", "semiotic/geo", "react"]}
       fullSourceCode={fullSourceCode}
     >
@@ -246,8 +246,8 @@ export default function StreamingMigrationMapPage() {
         a visual representation of how the character of the data stream changes over time.
       </p>
       <p>
-        Under the hood, <code>FlowMap</code> converts each flow edge into a projected
-        line on <code>StreamGeoFrame</code>'s canvas. The <code>GeoParticlePool</code> spawns
+        <code>FlowMap</code> converts each flow edge into a projected line on{" "}
+        <code>StreamGeoFrame</code>'s canvas. The <code>GeoParticlePool</code> spawns
         particles along each polyline path, recycling them when they
         reach <code>t=1</code>. Because <code>FlowMap</code> is a bounded HOC, swapping
         the <code>flows</code> prop is all that's needed — no imperative push API required.

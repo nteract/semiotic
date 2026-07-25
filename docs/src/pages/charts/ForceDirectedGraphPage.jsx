@@ -194,8 +194,8 @@ export default function ForceDirectedGraphPage() {
         ForceDirectedGraph visualizes network relationships by simulating
         physical forces that push and pull connected nodes into a stable layout.
         Pass your nodes and edges, optionally map color and size to data fields,
-        and get an interactive network diagram with hover annotations and
-        legends — all with sensible defaults.
+        and the component supplies the interactive layout, hover annotations,
+        and legends.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -377,14 +377,12 @@ export default function ForceDirectedGraphPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom node icons, complex interactions,
-        or advanced force parameters — graduate to{" "}
-        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly. Every{" "}
-        <code>ForceDirectedGraph</code> is just a configured{" "}
-        <code>StreamNetworkFrame</code> under the hood.
+        Use <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly for custom node
+        icons, complex interactions, or advanced force parameters. <code>ForceDirectedGraph</code>{" "}
+        delegates to a configured <code>StreamNetworkFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

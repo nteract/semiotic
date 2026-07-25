@@ -21,6 +21,11 @@ export interface PhysicsSettledSceneOptions {
   projectionRows?: PhysicsSettledProjectionRow[]
   bodyStyle?: Style | ((body: PhysicsBodyState) => Style)
   getBodyLabel?: (body: PhysicsBodyState) => string | undefined
+  /**
+   * Total bodies the chart claims entered. Enables the settled ledger check
+   * (see {@link PhysicsSettledEvidence.ledger}); omitted means no ledger.
+   */
+  charge?: number
 }
 
 export interface PhysicsSettledScene {
@@ -117,7 +122,8 @@ export function buildPhysicsSettledScene(
   const evidence = buildPhysicsSettledEvidence(snapshot, {
     bodies,
     projectionRows: options.projectionRows,
-    stepsRun
+    stepsRun,
+    charge: options.charge
   })
 
   return {

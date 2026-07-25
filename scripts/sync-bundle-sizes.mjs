@@ -78,7 +78,7 @@ const BLURBS = {
   "./server/edge": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
   "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
-  "./physics":  "GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, PhysicsCustomChart",
+  "./physics":  "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart",
   "./physics/matter": "Matter.js migration helpers + optional peer guard (no chart components)",
   "./physics/rapier": "Rapier peer guard + adapter decision metadata (no chart components)",
   "./ai":       "All schema-backed charts + validation — optimized for LLM code generation",

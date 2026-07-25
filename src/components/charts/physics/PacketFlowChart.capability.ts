@@ -25,8 +25,8 @@ function throughputField(edges: ReadonlyArray<Record<string, unknown>>): string 
   ) ?? "value"
 }
 
-export const PhysicalFlowChartCapability: ChartCapability = {
-  component: "PhysicalFlowChart",
+export const PacketFlowChartCapability: ChartCapability = {
+  component: "PacketFlowChart",
   family: "flow",
   importPath: "semiotic/physics",
   rubric: { familiarity: 2, accuracy: 2, precision: 1 },
@@ -50,7 +50,7 @@ export const PhysicalFlowChartCapability: ChartCapability = {
   },
 
   caveats: () => [
-    "PhysicalFlowChart is experimental: keep showStaticFlow enabled so throughput remains readable when animation is paused or reduced",
+    "PacketFlowChart is experimental: keep showStaticFlow enabled so throughput remains readable when animation is paused or reduced",
     "Requires explicit route geometry; it does not infer physical pipe paths from a flat source-target table",
   ],
 

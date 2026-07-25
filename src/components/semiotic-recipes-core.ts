@@ -11,6 +11,13 @@ export { waffleLayout, allocateCells } from "./recipes/waffle"
 // fractional final sign (allocateCells divides fixed cells; unitize counts).
 export { unitize, unitizeRange } from "./recipes/unitize"
 export type {
+  PhysicsDestinationZone,
+  PhysicsStageColliderOptions,
+  PhysicsStageGeography,
+  PhysicsStageGeographyOptions,
+  PhysicsZone
+} from "./recipes/physicsStageGeography"
+export type {
   UnitSign,
   RangeUnitSign,
   UnitizeOptions,
@@ -71,6 +78,35 @@ export type {
   IsometricTerrainKind,
   LandmarkKind,
 } from "./recipes/isometricLandmarks"
+
+// Geographic tables/cartograms — explicit tile-grid placement or automatic
+// centroid gridification, rendered as native Geo scene nodes.
+export {
+  geographicGridLayout,
+  gridifyGeographicPoints,
+} from "./recipes/geographicGrid"
+export type {
+  GeographicGridConfig,
+  GeographicGridInput,
+  GeographicGridShape,
+  GeographicGridSource,
+  GridifiedGeographicPoint,
+  GridifyGeographicPointsOptions,
+} from "./recipes/geographicGrid"
+
+// Geographic dot fields — sample a projected polygon mask onto a regular
+// screen-space lattice while retaining native Geo scene primitives.
+export {
+  geographicDotGridLayout,
+  sampleGeographicDotGrid,
+} from "./recipes/geographicDotGrid"
+export type {
+  GeographicDotGridAccessor,
+  GeographicDotGridConfig,
+  GeographicDotGridDatum,
+  GeographicDotGridSampleOptions,
+  GeographicDotGridShape,
+} from "./recipes/geographicDotGrid"
 
 // ── Network recipes (use with StreamNetworkFrame's customNetworkLayout) ──
 export { flextreeLayout } from "./recipes/flextree"
@@ -428,6 +464,11 @@ export {
   processLaneWalls,
   processJourneyRows,
   processStageLayout,
+  describePhysicsStageGeography,
+  physicsChargePoint,
+  physicsDestination,
+  physicsStageColliders,
+  physicsStageGeography,
   processStageRegions,
   processVolumePolygons,
   physicsReferenceEnvelope,

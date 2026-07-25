@@ -63,11 +63,12 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "RealtimeHeatmap": {"category":"realtime","recommendedImport":"semiotic/realtime"},
   "GaltonBoardChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server","docsRoute":"/charts/galton-board-chart","pilot":true},
   "EventDropChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
-  "PhysicsPileChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
+  "UnitPileChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "CollisionSwarmChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "GauntletChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "CrucibleChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "ProcessFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
-  "PhysicalFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
+  "PacketFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
+  "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics"},
   "BigNumber": {"category":"value","recommendedImport":"semiotic/value","docsRoute":"/charts/big-number","pilot":true}
 }

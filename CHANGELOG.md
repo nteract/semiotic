@@ -7,6 +7,142 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`PhysicsPileChart` → `UnitPileChart`, `PhysicalFlowChart` → `PacketFlowChart`.**
+  Both leaked the substrate into the user-facing name — nothing else in Semiotic
+  is `SVGLineChart` — and "Physical" told a reader nothing about the reading
+  protocol. The new names carry it: values *unitize* into countable bodies, and
+  discrete *packets* travel authored routes. `PacketFlowChart` also gives the four
+  flow names a rule: Packet = discrete items on routes, Process = stages with
+  capacity, `FlowMap` = geographic, `SankeyDiagram` = static proportional.
+  **The old names stay exported indefinitely** as deprecated aliases (same shape
+  as the existing `GuantletChart` alias), and the pre-3.9.0 docs routes
+  `/charts/physics-pile-chart` and `/charts/physical-flow-chart` still resolve.
+  Registries (schema, validation, capabilities, MCP, server configs) carry only
+  the canonical name, so `suggestCharts` can't recommend one chart under two
+  names. `PhysicsChartNames.test.ts` pins all of this.
+
+  Two names I did **not** change, correcting my own earlier claim:
+  `ProcessFlowChart` — "Process" names the domain being visualized, not the
+  substrate, exactly like `FunnelChart`; and `PhysicsCustomChart` — the four
+  custom-layout escape hatches are named by frame family (XY / Ordinal / Network
+  / Geo / Physics), which is the correct axis.
+
+### Fixed
+
+- **`ChainReactionChart` task tiles no longer overlap.** Tasks sharing a lane
+  *and* a dependency depth were nudged apart by `min(18, taskHeight * 0.3)` while
+  staying full height, so a 58px tile shifted 17px overlapped its neighbour by
+  41px — unreadable in any real plan, where several lanes carry 2–3 tasks at the
+  same depth. The stack is now sized from the tile height: tiles shrink to fit
+  their level band (floor 22px) and step by that height plus a gap, so they never
+  collide and never drift into the neighbouring depth.
+- **`ChainReactionChart` lane labels no longer collide with the chart title.**
+  They were pinned at `y=23`, the same band the frame draws the title in. They
+  now derive from the topmost task, so they sit just above the first row of tiles
+  regardless of size.
+- **Physics: `prefers-reduced-motion` now reaches the settled end state.** A
+  settle only admitted the spawns already due at `t=0` and never advanced
+  simulated time, so a reduced-motion reader of a paced physics chart saw one
+  body while the projection overlay reported the full count (measured:
+  `GaltonBoardChart` with 60 rows rendered 1 ball), and elapsed-time event tapes
+  — `GauntletChart`'s gates, `ChainReactionChart`'s dependencies — never fired
+  at all, leaving the settled projection reporting the *authored start* rather
+  than the outcome. `PhysicsPipelineStore` settles now advance `elapsedSeconds`
+  per step and re-check due spawns inside the loop, so `initialSpawnPacing`,
+  per-datum `spawnAt`, and time-driven event tapes all complete. Both settle
+  entry points share one loop (`physicsPipelineSettle.ts`) so they cannot drift
+  apart again. `StreamPhysicsFrame` additionally re-settles while the store
+  reports pending work (bounded), because reduced motion never schedules a
+  second frame and event-tape charts spawn bodies from `onTick`.
+- **Physics chrome and projections now track the theme.** Ten physics modules
+  (plus `MobileChartContainer`, `SentenceFilter`, `IntentMark`) referenced CSS
+  variables the library never emits — `--semiotic-accent`, `-negative`,
+  `-positive`, `-background`, `-text-primary`, `-text-muted`, `-muted`,
+  `-highlight`, `-fg` — a shadow vocabulary for real roles (`primary`, `danger`,
+  `success`, `bg`, `text`, `text-secondary`, `selection-color`). Their fallback
+  hex always won, so the settled projection — the layer the docs designate as
+  *the chart* — was the one layer that ignored `ThemeProvider` and dark mode.
+  All now point at real roles, keeping their previous hex as the fallback so
+  untouched (unthemed) rendering is unchanged. A new vocabulary test diffs every
+  referenced `--semiotic-*` name against what `themeToCSS` emits, with an
+  allowlist for genuinely consumer-set knobs, so the class can't return. The last
+  holdout, `--semiotic-on-primary` in `MobileStandardControls`, now reads
+  `--semiotic-bg` — the contrasting surface for text on a primary-filled pill,
+  which inverts correctly in dark themes instead of pinning white against a light
+  primary. No phantom tokens remain.
+
+### Added
+
+- **`ChainReactionChart` is now a registered chart.** It shipped exported from
+  `semiotic/physics` with zero registry presence — no chart spec, capability
+  descriptor, `semiotic/ai` export, MCP registry entry, docs page, nav entry, or
+  CLAUDE.md mention — so it silently skipped schema validation, `suggestCharts`,
+  MCP, and the docs-coverage gate. All of those now exist, plus an SSR test
+  asserting the HOC path derives the *settled* task state (a blocked prerequisite
+  leaves its dependents unarmed) with no simulation. Its `serverChartConfigs`
+  exclusion is documented: the settled reading is an authored overlay over zero
+  bodies, so a body-counting config would report an empty scene.
+- **`/examples/chain-reaction` — "The Release Machine".** The page existed but was
+  routed nowhere, so it never shipped. It now does: two coordinate systems over
+  one authored dependency graph — an `intervalLanesLayout` swimlane answering
+  *when and who*, then `ChainReactionChart` re-plotting the same rows by
+  dependency depth so a blocker's downstream reach becomes the reading. Its
+  centerpiece swimlane was ~20 lines of hand-rolled SVG (hardcoded palette, 7px
+  labels, a magic `/17` day scale, `index % 3` fake sub-track packing); that is
+  now the shipped recipe, so bars are real hit-tested marks with keyboard nav,
+  tooltips, a data table, and correct interval packing. Landed through all five
+  example registries plus the nav.
+- **Registry-independent chart-registration gate.** `check:surface-parity` now
+  walks entry-point chart exports from the filesystem and requires each to be in
+  `CHART_SPECS` or explicitly allowlisted. Every other check in that script
+  derives its expectations *from* the registry, so a chart absent from the
+  registry was invisible to all of them. This is the check that would have caught
+  `ChainReactionChart` on day one.
+- **Terminal-state contract for event-tape physics charts.** A tape-driven chart's
+  end state must be computable from authored inputs with no simulation, because
+  that pure result is what reduced motion, SSR, snapshot export, and
+  `describeChart` receive. `CrucibleChart` and `ChainReactionChart` already
+  satisfied it; `GauntletChart` did not. New
+  **`resolveGauntletTerminalStates`** / `resolveGauntletTerminalState`
+  (`semiotic/physics`) fold the authored tape, mirroring the live tick's effect
+  order — with a regression test asserting the pure result equals a real
+  simulated run. That test also surfaced and now documents a real property of the
+  metaphor: with `crashDetection` armed (the default), physics is a *second*
+  outcome source no pure fold can predict, so the pure result is "what the plan
+  earns on paper". Pass `crashDetection={false}` for a fully authored reading.
+- **Physics stage-geography kit** (`semiotic/physics` + `semiotic/recipes`).
+  `physicsStageGeography` names the **charge → apparatus → destinations**
+  structure every physics chart had been re-inventing locally (Gauntlet
+  `startX`/`socketX`/`graveyardX`, Crucible `chamber`/`mouth`/`outlets`; Galton
+  bins and Pile tubes independently wrote the *same* lane formula). Companions:
+  `physicsStageColliders`, `physicsChargePoint`, `physicsDestination`,
+  `describePhysicsStageGeography`. Authoring vocabulary for new charts and
+  `PhysicsCustomChart` layouts — shipped charts keep their layouts, and tests pin
+  the builder to their exact lane math so anything built on it lands in the same
+  visual family.
+- **Physics family contracts filled in.** `seed` on `GauntletChart` (the only
+  physics HOC missing it); `rerunMS` on `EventDropChart`, `PhysicsPileChart`,
+  `ProcessFlowChart`, and `PhysicalFlowChart` (it was on 4 of 8); and
+  `selection` + `linkedHover` on **every** physics HOC — previously only
+  `ProcessFlowChart` had it, so physics bodies could not cross-highlight inside
+  `LinkedCharts` like every other family. `selection` accepts either a `{ name }`
+  store config or a resolved `{ isActive, predicate }` body predicate; the
+  store's datum predicate is lifted over `body.datum`, so chrome bodies (walls,
+  pegs, tubes) never match a data selection. `GaltonBoardChart` and
+  `PhysicsPileChart` also declare capability `variants` (observed vs mechanical;
+  projected vs units-only) — no physics chart had any.
+- **Settled ledger (`semiotic/experimental`).** `buildPhysicsSettledEvidence`
+  now reports `queuedCount`, `sedimentedCount`, and a `warnings` array, plus an
+  optional `ledger` when the caller declares its `charge` (the total bodies the
+  chart claims entered). Every physics chart shares one deep structure — a
+  charge enters, an apparatus routes it, destinations hold it at rest — so they
+  all owe the same invariant: every charged body is accounted for in exactly one
+  place. `PHYSICS_QUEUE_UNDRAINED` and `PHYSICS_LEDGER_MISMATCH` surface a
+  violation, and the SSR renderer declares `initialSpawns.length` as its charge
+  so `renderChartWithEvidence` reports both warnings for physics charts.
+
 ## [3.8.6] - 2026-07-23
 
 ### Added

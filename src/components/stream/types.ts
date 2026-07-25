@@ -281,6 +281,8 @@ export interface PointSceneNode {
   r: number
   style: Style
   datum: SceneDatum
+  /** Whether this point participates in hit testing and spatial indexing. Set to false for decorative points. @default true */
+  interactive?: boolean
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional unique identifier for point-anchored annotations */

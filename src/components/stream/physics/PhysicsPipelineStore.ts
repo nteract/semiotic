@@ -71,6 +71,12 @@ import {
 } from "./physicsPipelineObservations"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
+import {
+  runPhysicsSettleSteps,
+  type PhysicsSettleHost,
+  type PhysicsSettleRun,
+  type PhysicsSettleSink
+} from "./physicsPipelineSettle"
 
 // Re-export public API for stable import paths
 export type {
@@ -418,90 +424,81 @@ export class PhysicsPipelineStore {
     return result
   }
 
+  /** Steps-only settle. Kernel/sensor transitions are stepped but not observed. */
   settle(maxSteps = this.config.settleStepLimit): number {
-    const revisionBefore = this.revision
-    this.spawnDue([], [])
-    const steps = this.world.settle(maxSteps, this.config.fixedDt)
-    if (steps > 0) this.revision += 1
-    this.syncSimulationState()
-    this.updateResults.record(
-      { kind: "settle", count: steps },
-      this.revision !== revisionBefore ? PHYSICS_MOTION_INVALIDATIONS : []
-    )
-    return steps
+    return this.runSettle(maxSteps, false).steps
   }
 
   settleWithObservations(
     maxSteps = this.config.settleStepLimit
   ): PhysicsPipelineTickResult {
+    return this.runSettle(maxSteps, true)
+  }
+
+  /** Bind this store to the shared settle loop (see physicsPipelineSettle). */
+  private settleHost(): PhysicsSettleHost {
+    return {
+      fixedDt: this.config.fixedDt,
+      queueSize: () => this.queue.length,
+      atRest: () => this.atRest(),
+      advanceTime: (s) => { this.elapsedSeconds += s },
+      spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
+      observeBodyBudget: (obs) => this.observeBodyBudget(obs),
+      evictOverflow: (obs) => this.evictOverflow(obs),
+      step: (dt) => this.world.step(dt),
+      drainEvents: () => this.world.events(),
+      observeKernelEvents: (evts, obs) => this.observeKernelEvents(evts, obs),
+      observeSensorTransitions: (obs) => this.observeSensorTransitions(obs),
+      refreshQuiescence: (dt, n) => this.quiescence.refresh(this.world, dt, n)
+    }
+  }
+
+  /**
+   * One settle implementation for both entry points, so "run to completion"
+   * can't mean two different things. `observe` adds kernel/sensor observation
+   * and the collected tick result; the stepping itself is identical.
+   */
+  private runSettle(maxSteps: number, observe: boolean): PhysicsPipelineTickResult {
     const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
     const sedimented: string[] = []
     const events: PhysicsKernelEvent[] = []
-    const observations: PhysicsObservationEvent[] = []
+    const observations: PhysicsObservationEvent[] | undefined = observe ? [] : undefined
 
-    if (this.paused || !this.visible) {
-      const result = this.result(
-        0,
-        spawned,
-        evicted,
-        sedimented,
-        events,
-        observations,
-        false
-      )
+    if (observe && (this.paused || !this.visible)) {
+      const result = this.result(0, spawned, evicted, sedimented, events, observations ?? [], false)
       this.updateResults.record({ kind: "settle", count: 0 }, [])
       return result
     }
 
     this.spawnDue(spawned, observations)
-    const budget = this.observeBodyBudget(observations)
+    const initialBudget = this.observeBodyBudget(observations)
     const overflow = this.evictOverflow(observations)
     evicted.push(...overflow.evicted)
     sedimented.push(...overflow.sedimented)
     this.syncSimulationState(observations)
-
-    let steps = 0
     if (spawned.length > 0) this.quiescence.reset()
-    while (steps < maxSteps && !this.atRest()) {
-      this.world.step(this.config.fixedDt)
-      const stepEvents = this.world.events()
-      events.push(...stepEvents)
-      this.observeKernelEvents(stepEvents, observations)
-      this.observeSensorTransitions(observations)
-      steps += 1
-      // Break early on sustained quiescence so a bounded settle doesn't spin to
-      // the step limit on stragglers that never formally sleep.
-      this.quiescence.refresh(this.world, this.config.fixedDt, 0)
-    }
 
-    if (
-      steps > 0 ||
-      spawned.length > 0 ||
-      evicted.length > 0 ||
-      sedimented.length > 0 ||
-      events.length > 0
-    ) {
-      this.revision += 1
-    }
+    const sink: PhysicsSettleSink = observe
+      ? { spawned, evicted, sedimented, events, observations }
+      : { spawned }
+    const { steps, budget }: PhysicsSettleRun =
+      runPhysicsSettleSteps(this.settleHost(), maxSteps, sink)
+
+    const bodiesChanged = spawned.length + evicted.length + sedimented.length > 0
+    if (steps > 0 || bodiesChanged || events.length > 0) this.revision += 1
     const result = this.result(
-      steps,
-      spawned,
-      evicted,
-      sedimented,
-      events,
-      observations,
-      undefined,
-      budget
+      steps, spawned, evicted, sedimented, events, observations ?? [],
+      undefined, budget ?? initialBudget
     )
     this.updateResults.record(
       { kind: "settle", count: steps },
-      this.revision !== revisionBefore
-        ? spawned.length || evicted.length || sedimented.length
+      this.revision === revisionBefore
+        ? []
+        : bodiesChanged
           ? PHYSICS_BODY_INVALIDATIONS
           : PHYSICS_MOTION_INVALIDATIONS
-        : []
     )
     return result
   }
@@ -744,7 +741,7 @@ export class PhysicsPipelineStore {
 
   private spawnDue(
     spawned: string[],
-    observations: PhysicsObservationEvent[]
+    observations?: PhysicsObservationEvent[]
   ): void {
     while (
       this.queue.length > 0 &&
@@ -818,13 +815,13 @@ export class PhysicsPipelineStore {
 
   private observeKernelEvents(
     events: PhysicsKernelEvent[],
-    observations: PhysicsObservationEvent[]
+    observations?: PhysicsObservationEvent[]
   ): void {
     observePhysicsKernelEvents(this.world, events, this.observationContext(observations))
   }
 
   private observeSensorTransitions(
-    observations: PhysicsObservationEvent[]
+    observations?: PhysicsObservationEvent[]
   ): void {
     this.activeSensorPairs = observePhysicsSensorTransitions(
       this.world,

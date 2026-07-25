@@ -87,7 +87,9 @@ import {
   resolveRegionVector,
   resolveStyle,
   runPhysicsPostTick,
-  type InternalStreamPhysicsBodyRegionState
+  runPhysicsReducedMotionPasses,
+  type InternalStreamPhysicsBodyRegionState,
+  type PhysicsPostTickOutcome
 } from "./physicsRegionRuntime"
 import type {
   PhysicsHoverData,
@@ -1215,29 +1217,27 @@ export const StreamPhysicsFrame = memo(forwardRef<
       return
     }
 
-    let result: PhysicsPipelineTickResult
-    if (reducedMotionRef.current) {
-      result = store.settleWithObservations()
-    } else {
-      const now = logicalClockRef.current()
-      const deltaSeconds = lastFrameTimeRef.current !== null
-        ? (now - lastFrameTimeRef.current) / 1000
-        : 0
-      lastFrameTimeRef.current = now
-      result = store.tick(deltaSeconds)
-    }
-
     const composed = composedControllersRef.current
-    const { regionEffectsApplied, bodyForcesApplied, snapshot: latest } =
+    const runPostTick = (result: PhysicsPipelineTickResult) =>
       runPhysicsPostTick({
-        store,
-        result,
+        store, result, composed,
         regionEffects: regionEffectsRef.current,
         regionState: regionStateRef.current,
         bodyForces: bodyForcesRef.current,
-        composed,
         onTick: onTickRef.current
       })
+
+    let outcome: PhysicsPostTickOutcome
+    if (reducedMotionRef.current) {
+      outcome = runPhysicsReducedMotionPasses(store, runPostTick)
+    } else {
+      const now = logicalClockRef.current()
+      const last = lastFrameTimeRef.current
+      lastFrameTimeRef.current = now
+      const result = store.tick(last === null ? 0 : (now - last) / 1000)
+      outcome = { ...runPostTick(result), result }
+    }
+    const { result, regionEffectsApplied, bodyForcesApplied, snapshot: latest } = outcome
     paint()
 
     const popAnimationsActive = popAnimationsRef.current.size > 0

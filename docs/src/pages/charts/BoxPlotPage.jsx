@@ -341,14 +341,12 @@ export default function BoxPlotPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom summary rendering, overlaid swarm
-        points, annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
-        <code>BoxPlot</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
-        under the hood.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom summary
+        rendering, overlaid swarm points, or annotations. <code>BoxPlot</code> delegates to a
+        configured <code>StreamOrdinalFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

@@ -217,12 +217,11 @@ export default function TreemapPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        For full control — custom node rendering, filtered nodes, edge
-        display — graduate to{" "}
-        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly with{" "}
+        Use <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly for custom node
+        rendering, filtered nodes, or edge display, with{" "}
         <code>{`networkType={{ type: "treemap" }}`}</code>.
       </p>
 

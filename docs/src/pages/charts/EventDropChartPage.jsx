@@ -47,7 +47,7 @@ export default function EventDropChartPage() {
         { label: "EventDropChart", path: "/charts/event-drop-chart" },
       ]}
       prevPage={{ title: "GaltonBoardChart", path: "/charts/galton-board-chart" }}
-      nextPage={{ title: "PhysicsPileChart", path: "/charts/physics-pile-chart" }}
+      nextPage={{ title: "UnitPileChart", path: "/charts/unit-pile-chart" }}
     >
       <ComponentMeta
         componentName="EventDropChart"
@@ -57,7 +57,7 @@ export default function EventDropChartPage() {
         wrapsPath="/dev/physics-frame"
         related={[
           { name: "GaltonBoardChart", path: "/charts/galton-board-chart" },
-          { name: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
+          { name: "UnitPileChart", path: "/charts/unit-pile-chart" },
           { name: "RealtimeHistogram", path: "/charts/realtime-histogram" },
         ]}
       />

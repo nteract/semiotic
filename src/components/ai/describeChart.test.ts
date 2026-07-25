@@ -391,7 +391,7 @@ describe("describeChart — physics settled projection", () => {
 
   it("degrades cleanly when a physics chart has not exposed projection rows yet", () => {
     const r = describeChart(
-      "PhysicsPileChart",
+      "UnitPileChart",
       {},
       { levels: ["l1", "l2", "l3"] }
     )

@@ -320,10 +320,10 @@ export default function MultiAxisLineChartPage() {
       </p>
       <PropTable props={seriesConfigProps} />
 
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
       <p>
-        Under the hood, MultiAxisLineChart unitizes both series into a shared
-        [0,1] y-range and uses <code>lineBy</code> grouping. You can achieve
+        MultiAxisLineChart unitizes both series into a shared [0,1] y-range and
+        uses <code>lineBy</code> grouping. You can achieve
         the same result on <code>StreamXYFrame</code> with manual unitization
         and a right-axis config via the <code>axes</code> prop:
       </p>

@@ -78,9 +78,9 @@ export const PHYSICS_MOTION_CHARTS = new Set([
   "StreamPhysicsFrame",
   "GaltonBoardChart",
   "EventDropChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
   "ProcessFlowChart",
   "PhysicsCustomChart"
 ])
@@ -95,9 +95,9 @@ export const CONTINUOUS_MOTION_CHARTS = new Set([
 export const PHYSICS_SETTLED_CHARTS = new Set([
   "GaltonBoardChart",
   "EventDropChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
   "CrucibleChart"
@@ -106,9 +106,9 @@ export const PHYSICS_SETTLED_CHARTS = new Set([
 export const PHYSICS_DIAGNOSTIC_CHARTS = new Set([
   "GaltonBoardChart",
   "EventDropChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
   "CrucibleChart",

@@ -71,6 +71,23 @@ describe("findNearestGeoNode", () => {
     expect(result).toBeNull()
   })
 
+  it("skips decorative non-interactive point nodes", () => {
+    const pointNode: PointSceneNode = {
+      type: "point",
+      x: 100,
+      y: 100,
+      r: 8,
+      style: { fill: "red" },
+      datum: { id: "texture-dot" },
+      interactive: false
+    }
+
+    const hitCtx = createMockHitCtx()
+    const result = findNearestGeoNode([pointNode], 100, 100, 30, hitCtx)
+
+    expect(result).toBeNull()
+  })
+
   it("prefers points over areas (z-order)", () => {
     const pointNode: PointSceneNode = {
       type: "point",

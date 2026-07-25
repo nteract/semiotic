@@ -220,7 +220,7 @@ function Body() {
         mutate it, pass the new tree as the <code>data</code> prop. The chart's animated transitions
         still pick up: orbit radii ease, nodes that survive between trees keep their angular
         position, new nodes fade in, removed nodes fade out. Same visual result as push for charts
-        that support it; just a different mechanism under the hood.
+        that support it; the mechanism is different, but the result is the same.
       </p>
       <pre
         style={{

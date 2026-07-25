@@ -570,7 +570,7 @@ export default function QueueWeatherExamplePage() {
         <section className="queue-weather__method" aria-labelledby="player-support-method-heading">
           <div>
             <span>How the rules work</span>
-            <h2 id="player-support-method-heading">Three operational rules on one queue</h2>
+            <h2 id="player-support-method-heading">How the queue behaves</h2>
           </div>
           <p>
             Finite staff can only handle so many cases at once. Deadlines and care credits mark who

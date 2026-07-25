@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react"
-import { PhysicsPileChart } from "semiotic/physics"
+import { UnitPileChart } from "semiotic/physics"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -15,7 +15,7 @@ const pileData = [
 
 const mechanicalCategoryOptions = ["Intake", "Triage", "Review", "Build", "Verify", "Ship"]
 
-const physicsPileChartProps = [
+const unitPileChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Rows to unitize into category piles. Optional when mode is mechanical." },
   { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Categorical field that chooses the pile." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Numeric field converted into unit bodies." },
@@ -92,7 +92,7 @@ const inputStyle = {
   padding: "0 8px",
 }
 
-export default function PhysicsPileChartPage() {
+export default function UnitPileChartPage() {
   const [mode, setMode] = useState("sample")
   const [mechanicalCount, setMechanicalCount] = useState(80)
   const [mechanicalCategoryCount, setMechanicalCategoryCount] = useState(4)
@@ -123,19 +123,19 @@ export default function PhysicsPileChartPage() {
 
   return (
     <PageLayout
-      title="PhysicsPileChart"
+      title="UnitPileChart"
       tier="charts"
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
-        { label: "Physics", path: "/charts/physics-pile-chart" },
-        { label: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
+        { label: "Physics", path: "/charts/unit-pile-chart" },
+        { label: "UnitPileChart", path: "/charts/unit-pile-chart" },
       ]}
       prevPage={{ title: "EventDropChart", path: "/charts/event-drop-chart" }}
       nextPage={{ title: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" }}
     >
       <ComponentMeta
-        componentName="PhysicsPileChart"
-        importStatement='import { PhysicsPileChart } from "semiotic/physics"'
+        componentName="UnitPileChart"
+        importStatement='import { UnitPileChart } from "semiotic/physics"'
         tier="charts"
         wraps="StreamPhysicsFrame"
         wrapsPath="/dev/physics-frame"
@@ -149,7 +149,7 @@ export default function PhysicsPileChartPage() {
       />
 
       <ChartGrounding
-        component="PhysicsPileChart"
+        component="UnitPileChart"
         props={{
           data: pileData,
           categoryAccessor: "category",
@@ -213,7 +213,7 @@ export default function PhysicsPileChartPage() {
         )}
       </div>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
-        <PhysicsPileChart
+        <UnitPileChart
           key={chartKey}
           {...demoProps}
           unitValue={1}
@@ -232,7 +232,7 @@ export default function PhysicsPileChartPage() {
       </p>
 
       <h2 id="props">Props</h2>
-      <PropTable componentName="PhysicsPileChart" props={physicsPileChartProps} />
+      <PropTable componentName="UnitPileChart" props={unitPileChartProps} />
     </PageLayout>
   )
 }

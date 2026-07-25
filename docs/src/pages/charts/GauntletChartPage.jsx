@@ -252,7 +252,7 @@ export default function GauntletChartPage() {
         wrapsPath="/frames/physics-frame"
         related={[
           { name: "StreamPhysicsFrame", path: "/frames/physics-frame" },
-          { name: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
+          { name: "PacketFlowChart", path: "/charts/packet-flow-chart" },
           { name: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
           { name: "ProcessFlowChart", path: "/charts/process-flow-chart" },
           { name: "Merge Pressure", path: "/examples/merge-pressure" },
@@ -367,7 +367,7 @@ export default function GauntletChartPage() {
         through a staged process. Use{" "}
         <Link to="/charts/process-flow-chart">ProcessFlowChart</Link> for many independent work
         items with capacitated stages and all-members feature completion. Use{" "}
-        <Link to="/charts/physical-flow-chart">PhysicalFlowChart</Link>{" "}
+        <Link to="/charts/packet-flow-chart">PacketFlowChart</Link>{" "}
         for repeated packets on fixed routes, and <Link to="/charts/physics-custom-chart">PhysicsCustomChart</Link>{" "}
         when the process needs a fully custom layout function.
       </p>

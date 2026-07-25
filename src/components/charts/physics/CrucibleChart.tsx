@@ -33,6 +33,7 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsSelection,
   usePhysicsRerun
 } from "./physicsHocUtils"
 import {
@@ -803,13 +804,13 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     (body: PhysicsBodyState): string => {
       if (props.color) return props.color
       const wrapped = body.datum as CrucibleBodyDatum<TDatum> | undefined
-      if (!wrapped?.__crucible) return "var(--semiotic-accent, #b8792d)"
+      if (!wrapped?.__crucible) return "var(--semiotic-primary, #b8792d)"
       if (wrapped.kind === "product") {
         const product = runtimeRef.current.state.products[wrapped.semanticId]
         return product?.color ?? colorForKey(product?.id ?? wrapped.semanticId)
       }
       const component = runtimeRef.current.state.components[wrapped.semanticId]
-      if (!component) return "var(--semiotic-accent, #356b63)"
+      if (!component) return "var(--semiotic-primary, #356b63)"
       const key = colorKeyForComponent(
         component,
         colorBy,
@@ -904,11 +905,21 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     [amountLabel, plan.layout, projection, projectionRows, showProjection]
   )
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy: colorBy,
+    chartType: "CrucibleChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     { ...props, onClick: undefined },
     frameProps,
     projectionItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle ?? "Crucible",

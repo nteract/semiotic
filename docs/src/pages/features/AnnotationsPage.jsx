@@ -378,12 +378,10 @@ export default function AnnotationsPage() {
       nextPage={{ title: "Design Guidance", path: "/annotations/design-guidance" }}
     >
       <p>
-        Annotations are first-class citizens in Semiotic. Every chart component
-        accepts an <code>annotations</code> prop — an array of annotation
-        objects that are rendered automatically based on their{" "}
-        <code>type</code>. Built-in types like thresholds, labels, callouts,
-        enclosures, trend lines, and bands all work out of the box. No{" "}
-        <code>frameProps</code> wrapping needed.
+        Annotations are data-bound objects in Semiotic. Every chart component
+        accepts an <code>annotations</code> array and renders each object according
+        to its <code>type</code>. Thresholds, labels, callouts, enclosures, trend
+        lines, and bands work without a <code>frameProps</code> wrapper.
       </p>
 
       {/* ----------------------------------------------------------------- */}

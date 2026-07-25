@@ -74,7 +74,7 @@ describe("physics worker protocol", () => {
       bodyLimit: 10,
       observation: {
         chartId: "chart-1",
-        chartType: "PhysicsPileChart",
+        chartType: "UnitPileChart",
         onObservation: () => undefined,
         sensors: {
           lane: { binId: "lane-a" }
@@ -90,7 +90,7 @@ describe("physics worker protocol", () => {
       bodyLimit: 10,
       observation: {
         chartId: "chart-1",
-        chartType: "PhysicsPileChart",
+        chartType: "UnitPileChart",
         sensors: {
           lane: { binId: "lane-a" }
         }

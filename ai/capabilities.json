@@ -625,6 +625,24 @@
         "brush"
       ]
     },
+    "ChainReactionChart": {
+      "category": "physics",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "dependency-machine",
+        "blocker-amplification",
+        "settled-projection",
+        "deterministic-snapshot",
+        "hoc-ssr-only"
+      ]
+    },
     "CollisionSwarmChart": {
       "category": "physics",
       "supportsLegend": true,
@@ -705,7 +723,7 @@
         "settled-projection"
       ]
     },
-    "PhysicalFlowChart": {
+    "PacketFlowChart": {
       "category": "physics",
       "supportsLegend": true,
       "supportsSelection": false,
@@ -719,21 +737,6 @@
         "path-constrained-flow",
         "static-flow",
         "proximity-sensors",
-        "settled-projection"
-      ]
-    },
-    "PhysicsPileChart": {
-      "category": "physics",
-      "supportsLegend": true,
-      "supportsSelection": false,
-      "supportsLinkedHover": false,
-      "supportsPush": true,
-      "supportsSSR": true,
-      "colorModel": "categorical",
-      "layoutMode": "synthetic",
-      "specialFeatures": [
-        "physics-simulation",
-        "unitized",
         "settled-projection"
       ]
     },
@@ -751,6 +754,21 @@
         "process-flow",
         "capacitated-stages",
         "group-completion",
+        "settled-projection"
+      ]
+    },
+    "UnitPileChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "unitized",
         "settled-projection"
       ]
     },

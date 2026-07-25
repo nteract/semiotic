@@ -87,9 +87,9 @@ export default function InteractionPage() {
       <h2 id="with-charts">With Charts</h2>
 
       <p>
-        Chart components support basic hover interaction out of the box.
-        For highlighting behavior, use the <code>frameProps</code> escape
-        hatch to configure <code>hoverAnnotation</code> with highlight types:
+        Chart components handle basic hover interaction. For highlighting,
+        use <code>frameProps</code> to configure <code>hoverAnnotation</code>{" "}
+        with highlight types:
       </p>
 
       <LiveExample

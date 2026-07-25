@@ -221,7 +221,7 @@ export function buildPhysicsPile<TDatum extends Datum>(
   }
 
   return {
-    config: baseConfig(seed, colliders, "PhysicsPileChart"),
+    config: baseConfig(seed, colliders, "UnitPileChart"),
     initialSpawns: spawns,
     // Rain units in so each tube fills from the bottom without a mouth jam.
     initialSpawnPacing: { pacing: { ratePerSec: 20 } },

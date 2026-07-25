@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ChartContainer } from "semiotic"
-import { PhysicalFlowChart } from "semiotic/physics"
+import { PacketFlowChart } from "semiotic/physics"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 
-const physicalFlowChartProps = [
+const packetFlowChartProps = [
   { name: "nodes", type: "array", required: false, default: "[]", description: "Route nodes with explicit x/y geometry." },
   { name: "links", type: "array", required: false, default: "[]", description: "Flow links with source, target, throughput, and optional path geometry." },
   { name: "edges", type: "array", required: false, default: null, description: "Alias for links." },
@@ -166,7 +166,7 @@ const buttonStyle = {
   fontWeight: 800,
 }
 
-export default function PhysicalFlowChartPage() {
+export default function PacketFlowChartPage() {
   const [scenarioKey, setScenarioKey] = useState("service")
   const [particleRate, setParticleRate] = useState(0.16)
   const [maxParticles, setMaxParticles] = useState(160)
@@ -223,19 +223,19 @@ export default function PhysicalFlowChartPage() {
 
   return (
     <PageLayout
-      title="PhysicalFlowChart"
+      title="PacketFlowChart"
       tier="charts"
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
-        { label: "Physics", path: "/charts/physical-flow-chart" },
-        { label: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
+        { label: "Physics", path: "/charts/packet-flow-chart" },
+        { label: "PacketFlowChart", path: "/charts/packet-flow-chart" },
       ]}
       prevPage={{ title: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" }}
       nextPage={{ title: "ProcessFlowChart", path: "/charts/process-flow-chart" }}
     >
       <ComponentMeta
-        componentName="PhysicalFlowChart"
-        importStatement='import { PhysicalFlowChart } from "semiotic/physics"'
+        componentName="PacketFlowChart"
+        importStatement='import { PacketFlowChart } from "semiotic/physics"'
         tier="charts"
         wraps="StreamPhysicsFrame"
         wrapsPath="/dev/physics-frame"
@@ -248,7 +248,7 @@ export default function PhysicalFlowChartPage() {
         ]}
       />
 
-      <ChartGrounding component="PhysicalFlowChart" props={groundingProps} />
+      <ChartGrounding component="PacketFlowChart" props={groundingProps} />
 
       <h2 id="example">Example</h2>
       <div style={controlPanelStyle} aria-label="Physical flow controls">
@@ -333,7 +333,7 @@ export default function PhysicalFlowChartPage() {
             actions={{ dataSummary: true }}
             height={440}
           >
-            <PhysicalFlowChart
+            <PacketFlowChart
               key={chartKey}
               chartId={chartId}
               nodes={scenario.nodes}
@@ -390,7 +390,7 @@ export default function PhysicalFlowChartPage() {
         </div>
       </div>
       <p>
-        Use PhysicalFlowChart when route geometry is already authored and throughput is easier to
+        Use PacketFlowChart when route geometry is already authored and throughput is easier to
         understand as movement through a system. Keep the static flow layer on for the measured
         quantities; packets add texture, congestion, and observation events as they travel each route.
       </p>
@@ -405,7 +405,7 @@ export default function PhysicalFlowChartPage() {
       </p>
 
       <h2 id="props">Props</h2>
-      <PropTable componentName="PhysicalFlowChart" props={physicalFlowChartProps} />
+      <PropTable componentName="PacketFlowChart" props={packetFlowChartProps} />
     </PageLayout>
   )
 }

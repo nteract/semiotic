@@ -428,14 +428,12 @@ export default function ScatterplotPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom marks, fully bespoke layouts,
-        per-mark scene primitives — graduate to{" "}
-        <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
-        directly. Every <code>Scatterplot</code> is just a configured{" "}
-        <code>StreamXYFrame</code> under the hood. Common analytical
+        Use <Link to="/frames/xy-frame">StreamXYFrame</Link> directly for custom marks, bespoke
+        layouts, or per-mark scene primitives. <code>Scatterplot</code> delegates to a configured{" "}
+        <code>StreamXYFrame</code>. Common analytical
         overlays (regression lines, trend bands, anomaly markers) are
         already first-class on <code>Scatterplot</code> via the{" "}
         <code>regression</code> prop and the <code>annotations</code> array

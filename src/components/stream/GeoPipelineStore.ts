@@ -53,49 +53,14 @@ import {
 import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
 import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { buildBuiltInGeoScene } from "./geoSceneBuilder"
+import {
+  normalizeGeoPipelineConfigUpdate,
+  normalizeInitialGeoPipelineConfig
+} from "./geoPipelineConfig"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
 const DEFAULT_STREAM_WINDOW_SIZE = 500
-const MAX_FIT_PADDING = 0.5
-
-/**
- * `fitPadding` is applied to both sides of the plot, so 0.5 would leave a
- * zero-sized extent (and a clipped globe with radius zero). Normalize nullish
- * values at the public config boundary, and reject invalid values before they
- * can reach d3 with a negative or non-finite projection extent.
- */
-function normalizeFitPadding(value: unknown): number {
-  if (value == null) return 0
-  if (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    value >= 0 &&
-    value < MAX_FIT_PADDING
-  ) {
-    return value
-  }
-  throw new RangeError(
-    `[semiotic] fitPadding must be a finite fraction in [0, ${MAX_FIT_PADDING}); received ${String(value)}.`,
-  )
-}
-
-function normalizeInitialConfig(config: GeoPipelineConfig): GeoPipelineConfig {
-  return {
-    ...config,
-    fitPadding: normalizeFitPadding(config.fitPadding)
-  }
-}
-
-function normalizeConfigUpdate(
-  config: Partial<GeoPipelineConfig>
-): Partial<GeoPipelineConfig> {
-  if (!("fitPadding" in config)) return config
-  return {
-    ...config,
-    fitPadding: normalizeFitPadding(config.fitPadding)
-  }
-}
 
 export class GeoPipelineStore implements UpdateResultStore {
   declare getLastUpdateResult: () => UpdateResult
@@ -175,7 +140,7 @@ export class GeoPipelineStore implements UpdateResultStore {
   private _hasRenderedOnce = false
 
   constructor(config: GeoPipelineConfig) {
-    this.config = normalizeInitialConfig(config)
+    this.config = normalizeInitialGeoPipelineConfig(config)
   }
 
   /** Keep Geo transitions and pulse lifecycle on the host's logical clock
@@ -227,7 +192,7 @@ export class GeoPipelineStore implements UpdateResultStore {
     // Normalize before observing or changing any store state so an invalid
     // update is atomic: no config, retained data, version, or update result
     // changes if validation throws.
-    const normalizedConfig = normalizeConfigUpdate(config)
+    const normalizedConfig = normalizeGeoPipelineConfigUpdate(config)
     const previous = this.config
     const previousWindowSize = this.getConfiguredWindowSize()
     const changedConfigKeys = Object.keys(normalizedConfig).filter(
@@ -932,7 +897,7 @@ export class GeoPipelineStore implements UpdateResultStore {
     let maxR = 0
     let pointCount = 0
     for (const node of this.scene) {
-      if (node.type === "point") {
+      if (node.type === "point" && node.interactive !== false) {
         pointCount++
         if (node.r > maxR) maxR = node.r
       }
@@ -947,7 +912,9 @@ export class GeoPipelineStore implements UpdateResultStore {
     const points: PointSceneNode[] = new Array(pointCount)
     let i = 0
     for (const node of this.scene) {
-      if (node.type === "point") points[i++] = node
+      if (node.type === "point" && node.interactive !== false) {
+        points[i++] = node
+      }
     }
     this._quadtree = d3Quadtree<PointSceneNode>()
       .x(n => n.x)

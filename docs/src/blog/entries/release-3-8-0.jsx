@@ -141,7 +141,7 @@ function Body() {
       <p>
         Physics chart HOCs no longer ride along with the root{" "}
         <code>semiotic</code> entry. Import <code>GaltonBoardChart</code>,{" "}
-        <code>GauntletChart</code>, <code>PhysicsPileChart</code>, and related
+        <code>GauntletChart</code>, <code>UnitPileChart</code>, and related
         charts from <code>semiotic/physics</code>. That change cuts the measured
         full root package substantially while keeping the specialized family
         available as an explicit subpath. The misspelled{" "}

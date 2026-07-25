@@ -43,9 +43,9 @@ const CHART_CATEGORIES = [
   {
     title: "Physics Charts",
     components: [
-      "GaltonBoardChart", "EventDropChart", "PhysicsPileChart",
+      "GaltonBoardChart", "EventDropChart", "UnitPileChart",
       "CollisionSwarmChart", "GauntletChart", "CrucibleChart",
-      "ProcessFlowChart", "PhysicalFlowChart",
+      "ProcessFlowChart", "PacketFlowChart",
     ],
   },
 ]

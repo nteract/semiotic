@@ -5,7 +5,10 @@
 
 import { GaltonBoardChart } from "./charts/physics/GaltonBoardChart"
 import { EventDropChart } from "./charts/physics/EventDropChart"
-import { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
+import {
+  UnitPileChart,
+  PhysicsPileChart
+} from "./charts/physics/UnitPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
 import {
@@ -18,7 +21,14 @@ import {
   planGauntletPropertyWork,
   replaceGauntletNegative
 } from "./charts/physics/GauntletChart"
-import { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
+import {
+  resolveGauntletTerminalState,
+  resolveGauntletTerminalStates
+} from "./charts/physics/gauntletTerminal"
+import {
+  PacketFlowChart,
+  PhysicalFlowChart
+} from "./charts/physics/PacketFlowChart"
 import { ProcessFlowChart } from "./charts/physics/ProcessFlowChart"
 import {
   physicsProcessBoundaryColliders,
@@ -84,6 +94,11 @@ import {
   processLaneWalls,
   processJourneyRows,
   processStageLayout,
+  describePhysicsStageGeography,
+  physicsChargePoint,
+  physicsDestination,
+  physicsStageColliders,
+  physicsStageGeography,
   processStageRegions,
   processVolumePolygons,
   physicsReferenceEnvelope,
@@ -102,9 +117,11 @@ export {
   GauntletChart,
   GaltonBoardChart,
   GuantletChart,
+  PacketFlowChart,
   PhysicalFlowChart,
   PhysicsCustomChart,
   PhysicsPileChart,
+  UnitPileChart,
   PhysicsPipelineStore,
   PhysicsSedimentAccumulator,
   ProcessFlowChart,
@@ -148,11 +165,18 @@ export {
   processLaneWalls,
   processJourneyRows,
   processStageLayout,
+  describePhysicsStageGeography,
+  physicsChargePoint,
+  physicsDestination,
+  physicsStageColliders,
+  physicsStageGeography,
   processStageRegions,
   processVolumePolygons,
   physicsReferenceEnvelope,
   regionCountsToProjectionRows,
   replaceGauntletNegative,
+  resolveGauntletTerminalState,
+  resolveGauntletTerminalStates,
   routeSurfaceRegion,
   sedimentBake,
   sedimentHeightfield,
@@ -167,6 +191,14 @@ export default StreamPhysicsFrame
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
 export * from "./charts/physics/CrucibleChart"
+export type { GauntletTerminalOptions } from "./charts/physics/gauntletTerminal"
+export type {
+  PhysicsDestinationZone,
+  PhysicsStageColliderOptions,
+  PhysicsStageGeography,
+  PhysicsStageGeographyOptions,
+  PhysicsZone
+} from "./recipes/physicsStageGeography"
 export type {
   GauntletChartProps,
   GauntletEffect,
@@ -193,7 +225,10 @@ export type {
   GaltonBoardChartProps,
   GaltonBoardReferenceLine
 } from "./charts/physics/GaltonBoardChart"
-export type { PhysicalFlowChartProps } from "./charts/physics/PhysicalFlowChart"
+export type {
+  PacketFlowChartProps,
+  PhysicalFlowChartProps
+} from "./charts/physics/PacketFlowChart"
 export type {
   ProcessFlowChartProps,
   ProcessFlowProjectionMetadata,
@@ -206,7 +241,10 @@ export type {
   PhysicsCustomLayoutResult,
   PhysicsCustomSpawnDatumResult
 } from "./charts/physics/PhysicsCustomChart"
-export type { PhysicsPileChartProps } from "./charts/physics/PhysicsPileChart"
+export type {
+  UnitPileChartProps,
+  PhysicsPileChartProps
+} from "./charts/physics/UnitPileChart"
 export type {
   CompilePhysicsEncodingOptions,
   CreatePhysicsEncodingLayoutOptions,

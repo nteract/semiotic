@@ -9,7 +9,7 @@ function Body() {
         3.5.4 lands a real envelope encoding on <Link to="/charts/line-chart">LineChart</Link> and{" "}
         <Link to="/charts/area-chart">AreaChart</Link>, sharpens the axis surface (edge-anchored
         ticks, CSS-variable font sizes, per-axis class names), and gives every HOC a sibling to{" "}
-        <code>emptyContent</code> with the new <code>loadingContent</code> slot. Under the hood,{" "}
+        <code>emptyContent</code> with the new <code>loadingContent</code> slot.{" "}
         <code>boundsAccessor</code> and <code>band</code> now share a single ribbon primitive — one
         scene builder, one y-extent pass, one style cascade. Full release notes are on{" "}
         <a

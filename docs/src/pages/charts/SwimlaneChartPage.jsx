@@ -626,12 +626,11 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        For full control — custom item rendering, mixed chart types, or
-        advanced annotation logic — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom item
+        rendering, mixed chart types, or advanced annotation logic.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

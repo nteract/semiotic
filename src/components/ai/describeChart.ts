@@ -175,9 +175,9 @@ const KIND_PHRASE: Record<string, string> = {
   StreamPhysicsFrame: "physics stream frame",
   EventDropChart: "event-drop physics chart",
   GaltonBoardChart: "Galton board chart",
-  PhysicsPileChart: "physics pile chart",
+  UnitPileChart: "physics pile chart",
   CollisionSwarmChart: "collision swarm chart",
-  PhysicalFlowChart: "physical flow chart",
+  PacketFlowChart: "physical flow chart",
   ProcessFlowChart: "process flow physics chart",
   CrucibleChart: "crucible physics chart",
   PhysicsCustomChart: "custom physics chart"
@@ -195,9 +195,9 @@ const PHYSICS = new Set([
   "StreamPhysicsFrame",
   "EventDropChart",
   "GaltonBoardChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
   "CrucibleChart",
@@ -282,7 +282,7 @@ function physicsRowNoun(component: string): string {
   if (component === "EventDropChart") return "time window"
   if (component === "GaltonBoardChart") return "bin"
   if (component === "CollisionSwarmChart") return "group lane"
-  if (component === "PhysicalFlowChart") return "flow node"
+  if (component === "PacketFlowChart") return "flow node"
   if (component === "CrucibleChart") return "result group"
   return "container"
 }
@@ -291,7 +291,7 @@ function physicsUnitNoun(component: string): string {
   if (component === "EventDropChart") return "event"
   if (component === "GaltonBoardChart") return "sample"
   if (component === "CollisionSwarmChart") return "point"
-  if (component === "PhysicalFlowChart") return "packet"
+  if (component === "PacketFlowChart") return "packet"
   if (component === "CrucibleChart") return "settled item"
   return "body"
 }
@@ -303,13 +303,13 @@ function physicsL1Sentence(component: string, kind: string): string {
   if (component === "GaltonBoardChart") {
     return "A Galton board chart that collapses falling samples into a settled histogram projection."
   }
-  if (component === "PhysicsPileChart") {
+  if (component === "UnitPileChart") {
     return "A physics pile chart that collapses moving bodies into a settled bar-style projection by container."
   }
   if (component === "CollisionSwarmChart") {
     return "A collision swarm chart that separates overlapping points while preserving their quantitative axis position."
   }
-  if (component === "PhysicalFlowChart") {
+  if (component === "PacketFlowChart") {
     return "A physical flow chart that keeps authored routes visible while packet bodies show throughput and proximity events."
   }
   if (component === "CrucibleChart") {

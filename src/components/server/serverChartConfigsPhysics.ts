@@ -204,7 +204,7 @@ export const eventDropChart: ChartConfig = {
   }
 }
 
-export const physicsPileChart: ChartConfig = {
+export const unitPileChart: ChartConfig = {
   frameType: "physics",
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 400]
@@ -466,7 +466,7 @@ export const crucibleChart: ChartConfig = {
   }
 }
 
-export const physicalFlowChart: ChartConfig = {
+export const packetFlowChart: ChartConfig = {
   frameType: "physics",
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [760, 420]

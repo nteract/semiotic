@@ -96,8 +96,8 @@ invertR: true`}
           lower values should appear on the "better" side.
         </li>
         <li>
-          Converting data into annotation objects is a powerful pattern for
-          creating derived visual marks that depend on the computed layout.
+          Converting data into annotation objects lets derived marks use the
+          layout the frame has already computed.
         </li>
       </ul>
 

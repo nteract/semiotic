@@ -1380,12 +1380,12 @@ import { EventDropChart } from "semiotic/physics"
 
 Key props: `timeAccessor` assigns the event-time window, `arrivalAccessor` controls arrival replay, `windows.size` creates barriers, and `watermark.delay` sends late events to the late path.
 
-### PhysicsPileChart (unitized category piles)
+### UnitPileChart (unitized category piles)
 
 ```jsx
-import { PhysicsPileChart } from "semiotic/physics"
+import { UnitPileChart } from "semiotic/physics"
 
-<PhysicsPileChart
+<UnitPileChart
   data={[
     { category: "Orders", value: 18 },
     { category: "Queued", value: 11 },
@@ -1425,12 +1425,12 @@ import { CollisionSwarmChart } from "semiotic/physics"
 Key props: `xAccessor` preserves the quantitative position, `groupAccessor` creates lanes, and collision settings separate overlapping records without losing the axis.
 
 
-### PhysicalFlowChart (packet flow over routes)
+### PacketFlowChart (packet flow over routes)
 
 ```jsx
-import { PhysicalFlowChart } from "semiotic/physics"
+import { PacketFlowChart } from "semiotic/physics"
 
-<PhysicalFlowChart
+<PacketFlowChart
   nodes={[
     { id: "Inbound", x: 0.08, y: 0.5 },
     { id: "Queue", x: 0.45, y: 0.32 },
@@ -1476,6 +1476,36 @@ import { ProcessFlowChart } from "semiotic/physics"
 ```
 
 Key props: `stages` declare force / capacity / absorb behavior, `groupBy` forms feature sockets that complete when every member is absorbed, and `liveCapacity` installs FIFO queue controllers for capacitated stages. Prefer ProcessFlowChart for many independent work items; use GauntletChart for one compound project degraded by gates.
+
+### ChainReactionChart (dependency reach and blockers)
+
+```jsx
+import { ChainReactionChart } from "semiotic/physics"
+
+const releaseTasks = [
+  { id: "brief", title: "Brief", lane: "Product", dependsOn: [], status: "done", completedAt: 1 },
+  { id: "privacy", title: "Privacy review", lane: "Product", dependsOn: ["brief"], status: "blocked", blocker: "Legal review" },
+  { id: "schema", title: "Schema", lane: "Data", dependsOn: ["privacy"], status: "waiting" },
+  { id: "ingest", title: "Ingest", lane: "Data", dependsOn: ["schema"], status: "waiting" },
+]
+
+<ChainReactionChart
+  data={releaseTasks}
+  taskIDAccessor="id"
+  labelAccessor="title"
+  laneAccessor="lane"
+  dependencyAccessor="dependsOn"
+  statusAccessor="status"
+  completionTimeAccessor="completedAt"
+  blockerAccessor="blocker"
+  currentTime={10}
+  mode="snapshot"
+  insight="blocker-amplification"
+  size={[800, 420]}
+/>
+```
+
+Key props: `dependencyAccessor` must name explicit prerequisite ids — the chart never invents edges from a flat table. `statusAccessor` and `completionTimeAccessor` are authored task facts; delivery balls only enact satisfied prerequisites. Use `insight="blocker-amplification"` to expose how many unfinished downstream tasks and lanes each blocker reaches.
 
 ### GauntletChart (compound project through timed gates)
 

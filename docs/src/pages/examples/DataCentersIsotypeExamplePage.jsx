@@ -293,7 +293,7 @@ export default function DataCentersIsotypeExamplePage() {
             <PanelHeading
               number="03"
               eyebrow="ENERGY, HEAT, WATER"
-              title="One system, three linked concerns"
+              title="Power becomes heat; cooling chooses the bill"
               note="Nearly all electricity leaves as low-grade heat—of which the IEA puts 70–80% within reach of heat pumps. The cooling design then decides whether that heat is shed with water or with more electricity. Every arrow is 25 TWh or 25 billion gallons; both water bundles rise from one baseline so the gap cannot hide."
             />
             <NetworkCustomChart

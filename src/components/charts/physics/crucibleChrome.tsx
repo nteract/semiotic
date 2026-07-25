@@ -27,9 +27,9 @@ import {
 
 const INK = "var(--semiotic-text, #26323a)"
 const MUTED_INK = "var(--semiotic-text-secondary, #6c7377)"
-const ACCENT = "var(--semiotic-accent, #b8792d)"
-const NEGATIVE = "var(--semiotic-negative, #9f3d35)"
-const POSITIVE = "var(--semiotic-positive, #356b63)"
+const ACCENT = "var(--semiotic-primary, #b8792d)"
+const NEGATIVE = "var(--semiotic-danger, #9f3d35)"
+const POSITIVE = "var(--semiotic-success, #356b63)"
 
 /** Default tooltip preserves the distinction between source and product. */
 export function defaultCrucibleTooltipContent<TDatum extends Datum>(
@@ -523,7 +523,7 @@ export function resolveCrucibleBodyStyle(
   return {
     fill: defaultFill,
     stroke:
-      wrapped?.kind === "product" ? "var(--semiotic-background, #fffaf0)" : INK,
+      wrapped?.kind === "product" ? "var(--semiotic-bg, #fffaf0)" : INK,
     strokeWidth: wrapped?.kind === "product" ? 1.8 : 1.1,
     opacity: 0.96,
     ...userStyle

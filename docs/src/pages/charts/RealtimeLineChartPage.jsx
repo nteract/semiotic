@@ -476,14 +476,12 @@ function StreamingLine() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need full control — custom canvas rendering, multiple
-        overlapping chart types, or advanced annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
-        Every <code>RealtimeLineChart</code> is just a configured{" "}
-        <code>StreamXYFrame</code> under the hood.
+        Use <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly for custom canvas
+        rendering, overlapping chart types, or advanced annotation logic.{" "}
+        <code>RealtimeLineChart</code> delegates to a configured <code>StreamXYFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

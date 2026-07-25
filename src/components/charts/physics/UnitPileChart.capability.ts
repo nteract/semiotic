@@ -1,7 +1,7 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
-export const PhysicsPileChartCapability: ChartCapability = {
-  component: "PhysicsPileChart",
+export const UnitPileChartCapability: ChartCapability = {
+  component: "UnitPileChart",
   family: "categorical",
   importPath: "semiotic/physics",
   rubric: { familiarity: 2, accuracy: 3, precision: 2 },
@@ -18,6 +18,29 @@ export const PhysicsPileChartCapability: ChartCapability = {
     "part-to-whole": 2,
     distribution: 1,
   },
+
+  // `showProjection` decides whether the exact totals are stated alongside the
+  // countable units, which changes what the reader can actually do.
+  variants: [
+    {
+      key: "projected",
+      label: "Piles with stated totals",
+      description:
+        "Countable units plus the exact per-category total, so accumulation is dramatized without losing precision.",
+      props: { showProjection: true },
+      tags: ["observed"],
+    },
+    {
+      key: "units-only",
+      label: "Units only",
+      description:
+        "Piles without the totals overlay — reads as texture, and the reader must count.",
+      props: { showProjection: false },
+      tags: ["narrative"],
+      intentDeltas: { "compare-categories": -1, "part-to-whole": -1 },
+      rubricDeltas: { precision: -1 },
+    },
+  ],
 
   caveats: () => [
     "Physics piles dramatize accumulation; use bars or dots when exact rank or precise value comparison is the task",

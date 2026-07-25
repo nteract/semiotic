@@ -6,6 +6,8 @@ import React, {
   useState,
 } from "react"
 import { ChartContainer } from "semiotic"
+import { OrdinalCustomChart } from "semiotic/ordinal"
+import { intervalLanesLayout } from "semiotic/recipes"
 import {
   ChainReactionChart,
   calculateBlockerAmplification,
@@ -74,7 +76,19 @@ const implementationCode = `const commonTaskProps = {
   blockerAccessor: "blockerReason",
 }
 
-<ProjectSwimlane {...commonTaskProps} currentTime={11} />
+// View 1 — conventional swimlane, via the shipped recipe.
+<OrdinalCustomChart
+  data={cityPulseTasks}
+  layout={intervalLanesLayout}
+  categoryAccessor="lane"
+  oExtent={LANES}
+  layoutConfig={{
+    laneAccessor: "lane", startAccessor: "startDay", endAccessor: "endDay",
+    domain: [0, 18], lanes: LANES, axisTicks: [0, 3, 6, 9, 12, 15, 18],
+    periods: [{ start: 0, end: 11, name: "Elapsed through day 11" }],
+    color: (task) => STATUS_FILL[task.status],
+  }}
+/>
 
 <ChainReactionChart
   {...commonTaskProps}
@@ -346,31 +360,72 @@ export default function ChainReactionExamplePage() {
   )
 }
 
+/** Status → fill. Semantic theme roles, so the swimlane tracks light/dark. */
+const STATUS_FILL = {
+  done: "var(--semiotic-success, #4f7767)",
+  "in-progress": "var(--semiotic-warning, #c5963d)",
+  blocked: "var(--semiotic-danger, #b45143)",
+  waiting: "var(--semiotic-text-secondary, #a8aca4)",
+}
+
+/**
+ * View 1 — the conventional project swimlane, built on the shipped
+ * `intervalLanesLayout` recipe rather than hand-rolled SVG. The recipe owns
+ * sub-track packing (real interval packing, not `index % 3`), the time axis,
+ * lane labels, and period bands; every bar is a real hit-tested scene node, so
+ * it inherits hover, keyboard navigation, tooltips, and the data table.
+ */
 function ProjectSwimlane({ data, width, height, currentTime, selectedTaskID, highlighted, onSelect }) {
-  const margin = { top: 34, right: 20, bottom: 32, left: width < 600 ? 76 : 112 }
-  const plotWidth = width - margin.left - margin.right
-  const laneHeight = (height - margin.top - margin.bottom) / LANES.length
-  const dayX = (day) => margin.left + (Number(day) / 17) * plotWidth
+  const layoutConfig = useMemo(
+    () => ({
+      laneAccessor: "lane",
+      startAccessor: "startDay",
+      endAccessor: "endDay",
+      idAccessor: "id",
+      domain: [0, 18],
+      unit: 0.5,
+      lanes: LANES,
+      minBarWidth: 6,
+      maxBarHeight: 16,
+      lanePadding: 10,
+      axisTicks: [0, 3, 6, 9, 12, 15, 18],
+      tickFormat: (value) => `d${value}`,
+      // The snapshot day is the reader's "now" — band it so the two views share
+      // the same temporal anchor. Unnamed: the band label would collide with the
+      // first lane, and the ChartContainer subtitle already states the day.
+      periods: [{ start: 0, end: currentTime }],
+      color: (task) => {
+        const base = STATUS_FILL[task.status] ?? STATUS_FILL.waiting
+        if (task.id === selectedTaskID) return "var(--semiotic-focus, #192b23)"
+        return base
+      },
+    }),
+    [currentTime, selectedTaskID],
+  )
+
   return (
-    <svg className="release-machine__swimlane" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="City Pulse Live interval swimlane through project day 11">
-      <rect width={width} height={height} fill="#f5f0e5" />
-      {Array.from({ length: 18 }, (_, day) => <g key={day}><line x1={dayX(day)} x2={dayX(day)} y1={margin.top} y2={height - margin.bottom} stroke={day === currentTime ? "#b24f42" : "#7a817b"} strokeWidth={day === currentTime ? 2 : 1} opacity={day === currentTime ? 0.9 : 0.16} /><text x={dayX(day)} y={height - 12} textAnchor="middle" fontSize="8" fill="#69736c">{day}</text></g>)}
-      {LANES.map((lane, laneIndex) => {
-        const laneTasks = data.filter((task) => task.lane === lane)
-        const y0 = margin.top + laneIndex * laneHeight
-        return <g key={lane}><rect x="0" y={y0} width={width} height={laneHeight} fill={laneIndex % 2 ? "#ffffff" : "#ebeadf"} opacity="0.42" /><text x={margin.left - 8} y={y0 + 15} textAnchor="end" fontSize={width < 600 ? "8" : "10"} fontWeight="800" fill="#354c40">{lane}</text>{laneTasks.map((task, taskIndex) => {
-          const start = dayX(task.startDay)
-          const end = dayX(Math.max(task.startDay + 0.45, task.endDay))
-          const y = y0 + 22 + (taskIndex % 3) * Math.max(14, (laneHeight - 30) / 3)
-          const taskWidth = Math.max(8, end - start)
-          const active = task.id === selectedTaskID
-          const related = highlighted.has(task.id)
-          const fill = task.status === "blocked" ? "#b45143" : task.status === "done" ? "#4f7767" : task.status === "in-progress" ? "#c5963d" : "#a8aca4"
-          return <g key={task.id} className="release-machine__timeline-task" onClick={() => onSelect(task.id)} role="button" tabIndex="0" onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelect(task.id) }}><title>{task.title}. {Math.round(task.progress * 100)}% complete. {task.status}.</title><rect x={start} y={y} width={taskWidth} height="11" rx="2" fill="#d8d8cf" stroke={active ? "#192b23" : related ? "#b45143" : "#747b75"} strokeWidth={active ? 2.5 : related ? 1.8 : 0.7} /><rect x={start} y={y} width={taskWidth * task.progress} height="11" rx="2" fill={fill} />{task.blockerReason ? <path d={`M${end - 4},${y - 3} l7,17 M${end + 3},${y - 3} l-7,17`} stroke="#7f3029" strokeWidth="2" /> : null}{taskWidth > 58 ? <text x={start + 4} y={y + 8.2} fontSize="7" fill={task.progress > 0.55 ? "#fff" : "#26382f"}>{truncate(task.title, 22)}</text> : null}</g>
-        })}</g>
-      })}
-      <text x={dayX(currentTime) + 5} y="22" fill="#a43e34" fontSize="9" fontWeight="800">SNAPSHOT DAY {currentTime}</text>
-    </svg>
+    <OrdinalCustomChart
+      data={data}
+      layout={intervalLanesLayout}
+      layoutConfig={layoutConfig}
+      categoryAccessor="lane"
+      valueAccessor="startDay"
+      oExtent={LANES}
+      width={width}
+      height={height}
+      margin={{ top: 34, right: 24, bottom: 28, left: width < 600 ? 84 : 116 }}
+      onClick={(datum) => datum?.id && onSelect(datum.id)}
+      opacity={0.92}
+      title="City Pulse Live project swimlane"
+      description={`Planned task intervals for twenty tasks across five work lanes, through snapshot day ${currentTime}. Bar color is task status; the selected task and its downstream reach are emphasized.`}
+      summary={`${data.filter((task) => highlighted.has(task.id)).length} of ${data.length} tasks are the selected blocker and its downstream reach.`}
+      tooltip={(datum) =>
+        datum
+          ? `${datum.title} — ${Math.round((datum.progress ?? 0) * 100)}% complete, ${datum.status}${datum.blockerReason ? ` (${datum.blockerReason})` : ""}`
+          : null
+      }
+      accessibleTable
+    />
   )
 }
 
@@ -381,10 +436,6 @@ function observationLabel(event) {
   if (event.type === "task-completed") return `${event.taskID}: recorded completion`
   if (event.type === "blocker-previewed") return `${event.blockerID}: mechanical preview opened`
   return event.type
-}
-
-function truncate(value, length) {
-  return value.length <= length ? value : `${value.slice(0, length - 1)}...`
 }
 
 function useReducedMotion() {

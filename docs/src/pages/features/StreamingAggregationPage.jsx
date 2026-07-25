@@ -375,10 +375,9 @@ export default function StreamingAggregationPage() {
       <p style={{ marginTop: 16 }}>
         Watch the readout. Tens of thousands of events collapse to a couple of
         dozen window marks — and because <code>retain</code> caps the live window
-        count, memory stays flat for an unbounded stream. That single mechanism
-        is the answer to four things people usually treat separately: bounded
-        memory, level-of-detail downsampling, backpressure, and windowing
-        semantics.
+        count, memory stays flat for an unbounded stream. The same windowing
+        mechanism supplies bounded memory, level-of-detail downsampling,
+        backpressure, and explicit time semantics.
       </p>
 
       <CodeBlock

@@ -66,7 +66,7 @@ function allowsGeneratedArrayData(componentName: string, props: Datum): boolean 
   return (
     props.mode === "mechanical" &&
     (componentName === "GaltonBoardChart" ||
-      componentName === "PhysicsPileChart")
+      componentName === "UnitPileChart")
   )
 }
 

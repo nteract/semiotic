@@ -46,6 +46,7 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
   type PhysicsSharedChartProps,
   type TooltipProp
@@ -127,7 +128,7 @@ export type PhysicsCustomSpawnDatumResult =
 export interface PhysicsCustomChartProps<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
-> extends Omit<BaseChartProps, "margin">,
+> extends Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   layout: PhysicsCustomLayout<TDatum, TConfig>
@@ -237,6 +238,16 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const topologySpawnsRef = useRef<PhysicsQueuedSpawn[] | null>(null)
   const topologyKeyRef = useRef<string>("")
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy: colorBy,
+    chartType: "PhysicsCustomChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -425,6 +436,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     frameProps,
     resolved.result.semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className: modeClassName,
       title: modeTitle ?? title,

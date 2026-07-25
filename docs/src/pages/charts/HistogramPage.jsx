@@ -375,12 +375,11 @@ export default function HistogramPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom bin rendering, overlaid annotations,
-        mixed summary types — graduate to{" "}
-        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly.
+        Use <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly for custom bin
+        rendering, overlaid annotations, or mixed summary types.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

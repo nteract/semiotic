@@ -195,7 +195,11 @@ function buttonStyle(targetSize: number, active?: boolean): React.CSSProperties 
       ? "var(--semiotic-primary, #0969da)"
       : "var(--semiotic-bg, #fff)",
     color: active
-      ? "var(--semiotic-on-primary, #fff)"
+      // Text on a primary-filled pill: the contrasting surface is the chart
+      // background, which inverts correctly in dark themes. (This used to read
+      // a `--semiotic-on-primary` var the library never emits, so it was always
+      // the hardcoded white — wrong against a light primary.)
+      ? "var(--semiotic-bg, #fff)"
       : "var(--semiotic-text, #24292f)",
     fontSize: 13,
     fontWeight: 650,

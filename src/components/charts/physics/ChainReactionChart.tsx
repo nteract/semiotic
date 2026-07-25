@@ -63,6 +63,35 @@ const hiddenTableStyle: React.CSSProperties = {
   width: 1
 }
 
+/**
+ * Physics-backed dependency chart whose settled reading exposes task state and each blocker's downstream reach.
+ *
+ * @example
+ * <ChainReactionChart
+ *   data={[
+ *     { id: "brief", label: "Brief", lane: "Product", dependsOn: [], status: "done" },
+ *     { id: "release", label: "Release", lane: "Product", dependsOn: ["brief"], status: "waiting" }
+ *   ]}
+ *   taskIDAccessor="id"
+ *   labelAccessor="label"
+ *   laneAccessor="lane"
+ *   dependencyAccessor="dependsOn"
+ *   statusAccessor="status"
+ * />
+ *
+ * @example
+ * <ChainReactionChart
+ *   data={releaseTasks}
+ *   taskIDAccessor="id"
+ *   labelAccessor="title"
+ *   laneAccessor="workstream"
+ *   dependencyAccessor="prerequisites"
+ *   completionTimeAccessor="completedAt"
+ *   mode="replay"
+ *   controls
+ *   insight="blocker-amplification"
+ * />
+ */
 export const ChainReactionChart = forwardRef(function ChainReactionChart<
   TDatum extends Datum = Datum
 >(
@@ -559,7 +588,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         initialSpawns={EMPTY_SPAWNS}
         bodyForces={dependencyBodyForce}
         bodyStyle={{
-          fill: "var(--semiotic-accent, #f0a329)",
+          fill: "var(--semiotic-primary, #f0a329)",
           stroke: "var(--semiotic-text, #243039)",
           strokeWidth: 1.25
         }}

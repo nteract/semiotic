@@ -50,6 +50,7 @@ const SERVER_CONFIG_EXCLUDED = new Map([
   ["MinimapChart", "interactive composite with overview/detail brush; renderable through the HOC SSR path"],
   ["OrbitDiagram", "animated hierarchy HOC; MCP HOC render path is the supported static snapshot"],
   ["DistanceCartogram", "stateful geo HOC; MCP HOC render path is the supported static snapshot"],
+  ["ChainReactionChart", "settled reading is an authored overlay over zero bodies (delivery balls exist only mid-replay), so a body-counting serverChartConfigs entry would report an empty scene; renderable through the HOC SSR path"],
 ])
 
 function read(file) {
@@ -86,6 +87,50 @@ function parseValidationComponents() {
     }
   }
   return names
+}
+
+/**
+ * Every chart component that ships from a public entry point.
+ *
+ * This is the one check that does NOT start from the Chart Spec Registry, and
+ * that is the whole point. Every other gate here derives its expectations from
+ * the registry, so a chart exported to users but never registered is invisible
+ * to all of them — it silently skips schema validation, `suggestCharts`, MCP,
+ * server rendering, and the docs-coverage gate. (ChainReactionChart shipped that
+ * way.) Walking the filesystem and the entry points instead catches it.
+ */
+function parsePubliclyExportedCharts() {
+  const exported = new Map()
+  const entryDir = path.join(ROOT, "src/components")
+  const entryFiles = fs
+    .readdirSync(entryDir)
+    .filter(name => /^semiotic(-[a-z-]+)?\.ts$/.test(name))
+    .filter(name => !name.includes("experimental"))
+  const entrySources = entryFiles.map(name => [
+    name,
+    read(path.join(entryDir, name)),
+  ])
+
+  const families = fs
+    .readdirSync(files.chartsDir)
+    .filter(name => name !== "shared")
+    .filter(name => fs.statSync(path.join(files.chartsDir, name)).isDirectory())
+
+  for (const family of families) {
+    for (const file of fs.readdirSync(path.join(files.chartsDir, family))) {
+      // Chart components are PascalCase single-component modules; lowercase
+      // siblings are helpers and *.test.* are specs.
+      if (!/^[A-Z][A-Za-z0-9]*\.tsx$/.test(file)) continue
+      if (file.includes(".test.")) continue
+      const name = file.replace(/\.tsx$/, "")
+      const needle = `./charts/${family}/${name}"`
+      const entries = entrySources
+        .filter(([, source]) => source.includes(needle))
+        .map(([entry]) => entry)
+      if (entries.length) exported.set(name, entries)
+    }
+  }
+  return exported
 }
 
 function loadSchemaDocument() {
@@ -211,6 +256,18 @@ assertNoMissing("serverChartConfigs", serverConfigs, expectedServerConfigs)
 const allowedServerConfigs = new Set([...expectedServerConfigs, ...SERVER_ONLY])
 assertNoUnexpected("serverChartConfigs", serverConfigs, allowedServerConfigs)
 
+// Registry-independent sweep: anything users can import must be registered, or
+// the registry-derived gates above never see it at all.
+const publiclyExported = parsePubliclyExportedCharts()
+for (const [name, entries] of publiclyExported) {
+  if (validation.has(name) || SERVER_ONLY.has(name)) continue
+  errors.push(
+    `${name} is exported from ${entries.join(", ")} but has no CHART_SPECS entry, ` +
+      `so it skips schema validation, suggestCharts, MCP, and the docs-coverage gate. ` +
+      `Add a spec (plus a .capability.ts), or add it to SERVER_ONLY with a reason.`
+  )
+}
+
 for (const name of mcpRegistry) {
   if (!schema.has(name)) {
     errors.push(`MCP component registry includes ${name}, but schema.json does not`)
@@ -236,3 +293,4 @@ console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} g
 console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime + ${valueCharts.size} value chart(s) intentionally excluded)`)
 console.log(`  ${metadataComponents.size} shared AI metadata components`)
 console.log(`  ${serverConfigs.size} server render configs (+ ${SERVER_CONFIG_EXCLUDED.size} documented HOC-SSR exclusions)`)
+console.log(`  ${publiclyExported.size} publicly exported chart components, all registered (${SERVER_ONLY.size} layout-function escape hatches excluded)`)

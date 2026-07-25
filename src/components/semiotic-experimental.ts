@@ -287,7 +287,8 @@ export type {
 export type {
   PhysicsEvidenceBinCount as UnstablePhysicsEvidenceBinCount,
   PhysicsSettledEvidence as UnstablePhysicsSettledEvidence,
-  PhysicsSettledEvidenceOptions as UnstablePhysicsSettledEvidenceOptions
+  PhysicsSettledEvidenceOptions as UnstablePhysicsSettledEvidenceOptions,
+  PhysicsSettledLedger as UnstablePhysicsSettledLedger
 } from "./stream/physics/PhysicsEvidence"
 export type {
   PhysicsSettledScene as UnstablePhysicsSettledScene,

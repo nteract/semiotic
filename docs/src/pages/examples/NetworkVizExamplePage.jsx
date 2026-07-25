@@ -339,7 +339,7 @@ function ChapterWhat() {
       <ChapterHead
         num="1"
         title="What a Network Is"
-        lead="We visualize networks to reason about systems and relationships, not because they look cool — and the kind of network decides how hard the picture will be to read. Three families recur, in rising order of difficulty."
+        lead="We visualize networks to reason about systems and relationships, not because they look cool — and the kind of network decides how hard the picture will be to read. The chapters begin with the common families, arranged in rising order of difficulty."
       />
       <p>
         Networks also vary along three axes worth naming before you draw one:

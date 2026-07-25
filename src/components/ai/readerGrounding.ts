@@ -165,9 +165,9 @@ const PHYSICS_COMPONENTS = new Set([
   "StreamPhysicsFrame",
   "EventDropChart",
   "GaltonBoardChart",
-  "PhysicsPileChart",
+  "UnitPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart",
+  "PacketFlowChart",
   "ProcessFlowChart",
   "PhysicsCustomChart",
 ])

@@ -136,8 +136,8 @@ sceneNodes.push({
       </section>
 
       <section>
-        <h2>Two encoding models</h2>
-        <p>There are two ways to use shape, and they answer different design questions:</p>
+        <h2>Shape as Mark or Decoration</h2>
+        <p>The role of shape determines which encoding model to use:</p>
         <ul>
           <li>
             <strong>Shape replaces the mark</strong> (<code>symbolAccessor</code> /{" "}

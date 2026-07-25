@@ -554,7 +554,7 @@ export default function DistanceCartogramPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
         Use{" "}

@@ -166,7 +166,7 @@ describe("buildReaderGrounding", () => {
 
   it("can omit physics grounding for token-budget mode", () => {
     const g = buildReaderGrounding(
-      "PhysicsPileChart",
+      "UnitPileChart",
       {
         projectionRows: [{ id: "a", label: "A", count: 2 }],
         physics: { snapshot: { simulationState: "settled" } },
@@ -178,7 +178,7 @@ describe("buildReaderGrounding", () => {
   })
 
   it("does not invent a physics runtime block without runtime evidence", () => {
-    const g = buildReaderGrounding("PhysicsPileChart", {})
+    const g = buildReaderGrounding("UnitPileChart", {})
     expect(g.physics).toBeUndefined()
     expect(g.text).not.toContain("Physics simulation:")
   })

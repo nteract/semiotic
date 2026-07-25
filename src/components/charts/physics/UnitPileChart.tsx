@@ -26,7 +26,10 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
+  usePhysicsSelection,
   type PhysicsHocFrameProps,
+  type PhysicsRerunMS,
   type PhysicsSharedChartProps,
   type PhysicsSimulationMode,
   type TooltipProp
@@ -37,8 +40,8 @@ type ProjectionRow = {
   value: number
 }
 
-export interface PhysicsPileChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode">,
+export interface UnitPileChartProps<TDatum extends Datum = Datum>
+  extends Omit<BaseChartProps, "margin" | "mode" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -65,9 +68,18 @@ export interface PhysicsPileChartProps<TDatum extends Datum = Datum>
   showProjection?: boolean
   sediment?: boolean
   tooltip?: TooltipProp
+  /**
+   * Replay the seeded simulation this many milliseconds after it settles.
+   * Omit or pass `null` for a single run; `0` replays on the next timer turn.
+   */
+  rerunMS?: PhysicsRerunMS
   paused?: boolean
   frameProps?: PhysicsHocFrameProps<"config">
 }
+
+/** @deprecated Renamed to {@link UnitPileChartProps} in 3.9.0. */
+export type PhysicsPileChartProps<TDatum extends Datum = Datum> =
+  UnitPileChartProps<TDatum>
 
 function pileProjectionOverlay(
   rows: ProjectionRow[],
@@ -121,9 +133,9 @@ function pileProjectionOverlay(
                 width={barWidth}
                 height={barHeight}
                 rx={3}
-                fill="var(--semiotic-accent, #4e79a7)"
+                fill="var(--semiotic-primary, #4e79a7)"
                 fillOpacity={0.08}
-                stroke="var(--semiotic-accent, #4e79a7)"
+                stroke="var(--semiotic-primary, #4e79a7)"
                 strokeOpacity={0.42}
                 strokeWidth={1}
                 strokeDasharray="4 3"
@@ -160,7 +172,7 @@ function pileProjectionOverlay(
  *
  * @example
  * ```tsx
- * <PhysicsPileChart
+ * <UnitPileChart
  *   data={[{ category: "A", value: 12 }, { category: "B", value: 8 }]}
  *   categoryAccessor="category"
  *   valueAccessor="value"
@@ -170,7 +182,7 @@ function pileProjectionOverlay(
  *
  * @example
  * ```tsx
- * <PhysicsPileChart
+ * <UnitPileChart
  *   mode="mechanical"
  *   mechanicalCategories={["North", "South", "West"]}
  *   mechanicalCount={90}
@@ -178,9 +190,9 @@ function pileProjectionOverlay(
  * />
  * ```
  */
-export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
+export const UnitPileChart = forwardRef(function UnitPileChart<
   TDatum extends Datum = Datum
->(props: PhysicsPileChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
+>(props: UnitPileChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     ballRadius = 8,
     categoryAccessor = "category" as ChartAccessor<TDatum, string>,
@@ -193,6 +205,7 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     mechanicalCategories,
     mechanicalCount,
     paused,
+    rerunMS,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
@@ -261,6 +274,7 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
       unitValue,
     ]
   )
+  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {
@@ -325,6 +339,16 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     [chartSize, layout.projectionRows]
   )
 
+  const bodySelection = usePhysicsSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    colorBy,
+    chartType: "UnitPileChart",
+    chartId: props.chartId,
+    onObservation: props.onObservation,
+    onClick: props.onClick
+  })
+
   const stateEl = renderPhysicsChartState({
     data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
@@ -344,6 +368,7 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     frameProps,
     semanticItems,
     {
+      selection: bodySelection,
       chartMode,
       className,
       title: modeTitle,
@@ -356,14 +381,15 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   )
 
   return renderPhysicsFrame(
-    "PhysicsPileChart",
+    "UnitPileChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      config={layout.config}
+      key={rerun.rerunKey}
+      config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
         frameProps?.foregroundGraphics
@@ -379,4 +405,11 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   )
 })
 
-export default PhysicsPileChart
+/**
+ * @deprecated Renamed to {@link UnitPileChart} in 3.9.0. Unitizes category values into countable bodies; the substrate is an implementation detail, not the reading.
+ * The alias stays exported indefinitely for existing imports; new code and
+ * every registry (schema, capabilities, MCP, server configs) use `UnitPileChart`.
+ */
+export const PhysicsPileChart = UnitPileChart
+
+export default UnitPileChart

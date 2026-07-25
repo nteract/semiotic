@@ -61,6 +61,7 @@ function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatu
 function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CategoryColorProvider({ colors, categories, colorScheme, children, }: CategoryColorProviderProps): React.JSX.Element
+function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ChartContainer(: import("../../../dist/semiotic-ai").ChartContainerProps & React.RefAttributes<import("../../../dist/semiotic-ai").ChartContainerHandle>): React.ReactNode
 function ChartGrid({ children, columns, minCellWidth, gap, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, chartDefaults, className, style, }: ChartGridProps): React.JSX.Element
 function ChartRecipe(props: ChartRecipeProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
@@ -94,9 +95,8 @@ function MobileStandardControls({ controls, targetSize, compact, className, styl
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
-function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PhysicalFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicsPileChart(: import("../../../dist/semiotic-physics").PhysicsPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlowChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -120,6 +120,7 @@ function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Eleme
 function TooltipProvider(: import("../../../dist/components/store/createStore").StoreProviderProps<TooltipStoreState>): import("react").ReactNode | Promise<import("react").ReactNode>
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
+function UnitPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
 function annotationFreshnessFor<T>(annotation: Annotated<T>, nowMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand

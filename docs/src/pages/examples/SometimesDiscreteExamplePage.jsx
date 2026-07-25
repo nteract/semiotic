@@ -1460,9 +1460,8 @@ function SometimesDiscreteExamplePage() {
             ))}
           </div>
           <p className="discrete-example__fine-print">
-            One idea connects pictograms, infographics, icon arrays, and uncertainty visualization:
-            replace an abstract magnitude with things a reader can count—units, cases, and possible
-            worlds.
+            Pictograms, infographics, icon arrays, and uncertainty displays share a useful move:
+            replace an abstract magnitude with things a reader can count—units, cases, and possible worlds.
           </p>
         </section>
 

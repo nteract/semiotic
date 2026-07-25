@@ -194,7 +194,7 @@ const GEO_CHART_PAGES = new Set([
 const PHYSICS_CHART_PAGES = new Set([
   "GaltonBoardChartPage",
   "EventDropChartPage",
-  "PhysicsPileChartPage"
+  "UnitPileChartPage"
 ])
 
 const CUSTOM_CHART_PAGES = new Set([

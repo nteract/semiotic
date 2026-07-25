@@ -455,7 +455,7 @@ export function buildPhysicalFlowPhysics<
     ),
     ...sensorColliders
   ]
-  const config = baseConfig(seed, colliders, "PhysicalFlowChart", {
+  const config = baseConfig(seed, colliders, "PacketFlowChart", {
     gravity: { x: 0, y: 0 },
     cellSize: Math.max(24, radius * 7),
     collisionIterations: 3,

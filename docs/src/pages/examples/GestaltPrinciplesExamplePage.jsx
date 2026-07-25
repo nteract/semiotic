@@ -235,7 +235,7 @@ const SIMILARITY_CAPTIONS = {
   0: "All forty marks share the same neutral gray, so the field has no grouping signal yet.",
   1: "Shared visual properties read as a shared category. Hue is poor at quantity but excellent at category, so the highlighted marks now belong together.",
   2: "Open a gap and proximity alone splits the field into two groups — ten on the left, thirty on the right — though nothing else changed. It is why sorted or grouped bars 'just read right.'",
-  3: "Enclosure is the strongest of the three signals and the rarest in practice — a clean border around algorithm-placed marks is hard to compute. Here a rect-enclose annotation does it.",
+  3: "Enclosure is the strongest grouping signal here and the rarest in practice — a clean border around algorithm-placed marks is hard to compute. Here a rect-enclose annotation does it.",
 }
 
 function ChapterSimilarity() {
@@ -289,15 +289,15 @@ function ChapterSimilarity() {
 
   return (
     <section className="gz-chapter">
-      <ChapterHead roman="I" title="Similarity, Proximity & Enclosure">
-        The three most basic grouping principles. Once you name how a graphic
-        signals category — even something as plain as shared color — you also
-        start noticing the signals it sends by accident.
+      <ChapterHead roman="I" title="How Marks Become Groups">
+        Similarity, proximity, and enclosure all signal category. Once you name
+        the intended signal — even something as plain as shared color — you also
+        start noticing the groups a graphic creates by accident.
       </ChapterHead>
 
       <Exhibit
         plate="1"
-        title="Three ways to say 'these belong together'"
+        title="Color, distance, and boundary establish a group"
         steps={SIMILARITY_STEPS}
         active={step}
         onStep={setStep}
@@ -703,7 +703,7 @@ function ChapterFigureGround() {
 
       <Exhibit
         plate="5"
-        title="One square, two charts"
+        title="Figure and ground trade places"
         steps={FG_STEPS}
         active={stepA}
         onStep={setStepA}
@@ -728,7 +728,7 @@ function ChapterFigureGround() {
 
       <Exhibit
         plate="6"
-        title="Three figures hiding in one chart"
+        title="Approval as lines, areas, or difference"
         steps={APPROVAL_STEPS}
         active={stepB}
         onStep={setStepB}

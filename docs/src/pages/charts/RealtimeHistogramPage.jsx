@@ -913,14 +913,12 @@ function FilteredMultiLineOverlay({ allData, width }) {
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="graduating">Graduating to the Frame</h2>
+      <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
-        When you need more control — custom bin aggregation, mixed chart
-        types, or advanced annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
-        Every <code>RealtimeHistogram</code> is just a configured{" "}
-        <code>StreamXYFrame</code> under the hood.
+        Use <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly for custom bin
+        aggregation, mixed chart types, or advanced annotation logic.{" "}
+        <code>RealtimeHistogram</code> delegates to a configured <code>StreamXYFrame</code>.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
