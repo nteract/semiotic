@@ -628,7 +628,7 @@
     "ChainReactionChart": {
       "category": "physics",
       "supportsLegend": false,
-      "supportsSelection": true,
+      "supportsSelection": false,
       "supportsLinkedHover": false,
       "supportsPush": false,
       "supportsSSR": false,
@@ -646,7 +646,7 @@
     "CollisionSwarmChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -661,7 +661,7 @@
     "CrucibleChart": {
       "category": "physics",
       "supportsLegend": false,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": false,
       "supportsSSR": true,
@@ -679,7 +679,7 @@
     "EventDropChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -696,7 +696,7 @@
     "GaltonBoardChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -711,7 +711,7 @@
     "GauntletChart": {
       "category": "physics",
       "supportsLegend": false,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -726,7 +726,7 @@
     "PacketFlowChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -743,7 +743,7 @@
     "ProcessFlowChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,
@@ -760,7 +760,7 @@
     "UnitPileChart": {
       "category": "physics",
       "supportsLegend": true,
-      "supportsSelection": false,
+      "supportsSelection": true,
       "supportsLinkedHover": false,
       "supportsPush": true,
       "supportsSSR": true,

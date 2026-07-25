@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 import Ajv2020 from "ajv/dist/2020.js"
@@ -36,6 +36,11 @@ interface PublishedSchema {
 function loadSchema(name: string): PublishedSchema {
   // vitest runs with cwd at the repo root, where /spec lives.
   const path = join(process.cwd(), "spec", "v0.1", name)
+  return JSON.parse(readFileSync(path, "utf8"))
+}
+
+function loadExample(name: string): object {
+  const path = join(process.cwd(), "spec", "v0.1", "examples", name)
   return JSON.parse(readFileSync(path, "utf8"))
 }
 
@@ -152,6 +157,63 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
       const validateSchema = ajv.compile(schema)
       for (const value of values) {
         expect(validate(value).valid).toBe(validateSchema(value))
+      }
+    }
+  })
+
+  it("ships exactly two worked examples per schema and validates each in both validators", () => {
+    const fixtureGroups = [
+      {
+        schema: capability,
+        validate: validatePortableCapability,
+        files: [
+          "chart-capability-bar-comparison.json",
+          "chart-capability-service-flow.json",
+        ],
+      },
+      {
+        schema: audience,
+        validate: validatePortableAudienceProfile,
+        files: [
+          "audience-profile-executive-review.json",
+          "audience-profile-incident-operators.json",
+        ],
+      },
+      {
+        schema: annotation,
+        validate: validatePortableAnnotation,
+        files: [
+          "annotation-provenance-watcher-threshold.json",
+          "annotation-provenance-reviewed-revision.json",
+        ],
+      },
+    ]
+    const expectedFiles = fixtureGroups.flatMap(({ files }) => files).sort()
+    const examplesPath = join(process.cwd(), "spec", "v0.1", "examples")
+    const publishedFiles = readdirSync(examplesPath)
+      .filter((name) => name.endsWith(".json"))
+      .sort()
+
+    expect(publishedFiles).toEqual(expectedFiles)
+
+    for (const { schema, validate, files } of fixtureGroups) {
+      expect(files).toHaveLength(2)
+      const ajv = createSchemaValidator()
+      const validateSchema = ajv.compile(schema)
+
+      for (const file of files) {
+        const example = loadExample(file)
+        const schemaValid = validateSchema(example)
+        expect(
+          schemaValid,
+          `${file} failed JSON Schema validation: ${JSON.stringify(validateSchema.errors)}`,
+        ).toBe(true)
+
+        const structuralResult = validate(example)
+        expect(
+          structuralResult.valid,
+          `${file} failed structural validation: ${structuralResult.errors.join("; ")}`,
+        ).toBe(true)
       }
     }
   })

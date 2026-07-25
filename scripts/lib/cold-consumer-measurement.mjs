@@ -43,10 +43,16 @@ export const COLD_CONSUMER_SIZE_TOLERANCE = Object.freeze({
   gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.01 }),
 })
 
-// `./experimental` is intentionally unpublished as a stable contract. Package
-// metadata and the schema-resource wildcard are public exports but cannot each
-// be represented by one JavaScript named import; smoke-pack verifies them.
-export const EXCLUDED_EXPORTS = new Set(["./experimental", "./package.json", "./spec/*"])
+// Experimental subpaths are intentionally unpublished as stable contracts.
+// Package metadata and the schema-resource wildcard are public exports but
+// cannot each be represented by one JavaScript named import; smoke-pack
+// verifies them.
+export const EXCLUDED_EXPORTS = new Set([
+  "./experimental",
+  "./experimental/vacp",
+  "./package.json",
+  "./spec/*",
+])
 
 // The consumer intentionally treats host/runtime peers and optional adapters
 // as external. Semiotic's regular dependencies (including d3) are part of the

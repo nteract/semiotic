@@ -1,0 +1,27 @@
+{
+  "type": "callout",
+  "x": "2026-07-25T14:18:00Z",
+  "y": 1280,
+  "label": "Database pool saturation confirmed after trace review.",
+  "provenance": {
+    "author": "operator-17",
+    "authorKind": "human",
+    "source": "user",
+    "basis": "manual-review",
+    "confidence": 1,
+    "createdAt": "2026-07-25T14:31:00Z",
+    "dataVersion": "incident-1842-window-8",
+    "stableId": "annotation:incident-1842:confirmed-cause"
+  },
+  "lifecycle": {
+    "freshness": "fresh",
+    "status": "accepted",
+    "supersedes": "annotation:incident-1842:suspected-cause",
+    "ttlHint": 86400000,
+    "anchor": "fixed"
+  },
+  "x-example-context": {
+    "review": "incident-1842-postmortem",
+    "decisionUse": "retain as the accepted causal note"
+  }
+}

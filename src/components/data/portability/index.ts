@@ -39,6 +39,11 @@ export type {
   PortableAnnotated,
   ValidationResult,
 } from "./spec"
+export { bindPortableCapability } from "./capabilityBinding"
+export type {
+  BoundPortableChartCapability,
+  PortableCapabilityBindingResult,
+} from "./capabilityBinding"
 export {
   toVegaLite,
   toVegaLiteResult,

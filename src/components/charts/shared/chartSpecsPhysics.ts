@@ -78,7 +78,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -142,7 +142,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -218,7 +218,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -293,7 +293,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -395,7 +395,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: false,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -610,7 +610,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: false,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: false,
       supportsSSR: true,
@@ -712,7 +712,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -871,7 +871,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true,
-      supportsSelection: false,
+      supportsSelection: true,
       supportsLinkedHover: false,
       supportsPush: true,
       supportsSSR: true,
@@ -1019,7 +1019,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: false,
-      supportsSelection: true,
+      supportsSelection: false,
       supportsLinkedHover: false,
       supportsPush: false,
       // The chart SSRs safely as a React HOC, but its overlay-led settled

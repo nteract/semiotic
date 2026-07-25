@@ -186,6 +186,12 @@
       "require": "./dist/semiotic-experimental.min.js",
       "default": "./dist/semiotic-experimental.module.min.js"
     },
+    "./experimental/vacp": {
+      "types": "./dist/semiotic-experimental-vacp.d.ts",
+      "import": "./dist/semiotic-experimental-vacp.module.min.js",
+      "require": "./dist/semiotic-experimental-vacp.min.js",
+      "default": "./dist/semiotic-experimental-vacp.module.min.js"
+    },
     "./value": {
       "types": "./dist/semiotic-value.d.ts",
       "import": "./dist/semiotic-value.module.min.js",

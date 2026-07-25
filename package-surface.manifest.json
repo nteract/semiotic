@@ -200,6 +200,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./experimental/vacp",
+      "path": "dist/semiotic-experimental-vacp.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-experimental-vacp.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-experimental-vacp.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-experimental-vacp.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-experimental-vacp.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-experimental-vacp.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./geo",
       "path": "dist/geo.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1031,6 +1062,13 @@
         "path": "dist/semiotic-data.d.ts",
         "exports": [
           "./data"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-experimental-vacp.d.ts",
+        "exports": [
+          "./experimental/vacp"
         ],
         "reason": "Public type entry from `exports` map"
       },

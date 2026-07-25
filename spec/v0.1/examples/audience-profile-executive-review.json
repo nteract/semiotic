@@ -1,0 +1,24 @@
+{
+  "specVersion": "0.1",
+  "name": "Quarterly executive review",
+  "familiarity": {
+    "BarChart": 5,
+    "LineChart": 5,
+    "PieChart": 5,
+    "BoxPlot": 2
+  },
+  "targets": {
+    "PieChart": {
+      "direction": "decrease",
+      "weight": 2,
+      "reason": "Prefer position and length when exact category comparison matters."
+    },
+    "BoxPlot": {
+      "direction": "increase",
+      "weight": 1,
+      "reason": "Build familiarity with distribution rather than reporting only averages."
+    }
+  },
+  "exposureLevel": 1,
+  "receptionModality": "visual"
+}

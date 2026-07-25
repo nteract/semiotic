@@ -27,6 +27,7 @@ describe("cold-consumer named import manifest", () => {
       new Set(stableModuleExportKeys(packageJson)),
     )
     expect(EXCLUDED_EXPORTS).toContain("./experimental")
+    expect(EXCLUDED_EXPORTS).toContain("./experimental/vacp")
     expect(EXCLUDED_EXPORTS).toContain("./spec/*")
   })
 

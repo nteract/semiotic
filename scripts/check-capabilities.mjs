@@ -20,11 +20,13 @@
  *      standardized push-API surface; charts claiming push support
  *      without it would expose an inconsistent ref API.
  *
- *   3. `supportsLinkedHover: true` ↔ standardized selection wiring.
+ *   3. Physics `supportsSelection` ↔ a direct `usePhysicsSelection` call.
  *
- *   4. `layoutMode: "custom"` ↔ custom-layout dispatch.
+ *   4. `supportsLinkedHover: true` ↔ standardized selection wiring.
  *
- *   5. `ai/capabilities.json` mirrors chartSpecs.
+ *   5. `layoutMode: "custom"` ↔ custom-layout dispatch.
+ *
+ *   6. `ai/capabilities.json` mirrors chartSpecs.
  *
  * Usage:
  *   node scripts/check-capabilities.mjs
@@ -188,6 +190,25 @@ for (const e of specEntries) {
   // charts whose ref API legitimately needs custom plumbing. All
   // three signal that the chart exposes a working `ref.current.push`.
   const source = hocSources.get(e.name)
+
+  // Lock 3: physics selection claims are bidirectionally tied to the public
+  // HOC bridge. Scope this deliberately to chartSpecs' physics category and a
+  // direct hook call in that HOC's source. A generic useSelection-style hook
+  // elsewhere in the implementation is not the standard PhysicsSharedChartProps
+  // contract, and network charts such as ProcessSankey must not qualify merely
+  // because their internals also reason about selection.
+  if (e.category === "physics") {
+    const wiresPhysicsSelection =
+      source !== undefined && /\busePhysicsSelection\s*\(/.test(source)
+    if (e.supportsSelection !== wiresPhysicsSelection) {
+      errors.push(
+        `✗ ${e.name}: capabilities.supportsSelection=${e.supportsSelection} but ` +
+        `direct usePhysicsSelection wiring=${wiresPhysicsSelection}. ` +
+        `Physics HOCs must claim selection exactly when they call the shared physics selection bridge.`,
+      )
+    }
+  }
+
   if (e.supportsPush) {
     if (!source) {
       // Couldn't find the HOC source — skip rather than false-positive.
@@ -207,7 +228,7 @@ for (const e of specEntries) {
     }
   }
 
-  // Lock 3: linkedHover claim ↔ useChartSelection or useChartSetup
+  // Lock 4: linkedHover claim ↔ useChartSelection or useChartSetup
   // (which calls useChartSelection internally) or useNetworkChartSetup
   // (also wraps useChartSelection). The hook is the only standardized
   // way to wire `linkedHover` into the frame's hover-selection
@@ -232,7 +253,7 @@ for (const e of specEntries) {
     }
   }
 
-  // Lock 4: layoutMode === "custom" ↔ customNetworkLayout /
+  // Lock 5: layoutMode === "custom" ↔ customNetworkLayout /
   // customXYLayout / customOrdinalLayout reference. The escape-hatch
   // claim must be backed by a real customLayout dispatch.
   if (e.layoutMode === "custom") {
@@ -263,7 +284,7 @@ for (const e of specEntries) {
   //     produce a categorical interaction surface.
 }
 
-// ── Lock 5: ai/capabilities.json mirrors chartSpecs ───────────────
+// ── Lock 6: ai/capabilities.json mirrors chartSpecs ───────────────
 //
 // `ai/capabilities.json` is consumed by `ai/chartSuggestions.cjs` so
 // the AI suggestion path can filter recommendations by capability

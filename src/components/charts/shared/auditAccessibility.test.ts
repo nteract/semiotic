@@ -160,8 +160,50 @@ describe("auditAccessibility — color-only encoding", () => {
       title: "x",
       colorBy: "series"
     })
-    expect(status(r, "perceivable.color-alone")).toBe("warn")
+    const colorAlone = find(r, "perceivable.color-alone")
+    expect(colorAlone?.status).toBe("warn")
+    expect(colorAlone?.message).toContain("supports author-supplied HatchFill")
+    expect(colorAlone?.message).toContain(
+      "no automatic per-category texture assignment"
+    )
     expect(status(r, "perceivable.cvd-safe")).toBe("manual")
+  })
+
+  it("recognizes an authored HatchFill without claiming full category coverage", () => {
+    const r = auditAccessibility("LineChart", {
+      data: LINE_DATA,
+      title: "x",
+      colorBy: "series",
+      styleRules: [
+        {
+          when: { field: "series", eq: "North" },
+          style: {
+            fill: {
+              type: "hatch",
+              background: "#0072b2",
+              stroke: "#ffffff"
+            }
+          }
+        }
+      ]
+    })
+    const colorAlone = find(r, "perceivable.color-alone")
+    expect(colorAlone?.status).toBe("warn")
+    expect(colorAlone?.message).toContain(
+      "authors a HatchFill through styleRules"
+    )
+    expect(colorAlone?.message).toContain(
+      "cannot prove those rules give every category"
+    )
+
+    const textures = find(r, "flexible.textures-adjustable")
+    expect(textures?.status).toBe("warn")
+    expect(textures?.message).toContain(
+      "uses an author-supplied HatchFill through styleRules"
+    )
+    expect(textures?.message).toContain(
+      "no automatic, theme-aware per-category texture channel"
+    )
   })
 
   it("omits color-only checks when no color encoding is present", () => {
@@ -454,13 +496,18 @@ describe("auditAccessibility — expanded heuristics", () => {
     expect(status(r, "perceivable.cvd-safe")).toBe("pass")
   })
 
-  it("warns textures cannot be adjusted whenever color encodes meaning", () => {
+  it("warns the texture channel is not automatic or adjustable", () => {
     const r = auditAccessibility("LineChart", {
       data: LINE_DATA,
       title: "x",
       colorBy: "series"
     })
-    expect(status(r, "flexible.textures-adjustable")).toBe("warn")
+    const textures = find(r, "flexible.textures-adjustable")
+    expect(textures?.status).toBe("warn")
+    expect(textures?.message).toContain("supports author-supplied HatchFill")
+    expect(textures?.message).toContain(
+      "no automatic, theme-aware per-category texture channel"
+    )
   })
 
   it("warns on dual-axis information complexity", () => {

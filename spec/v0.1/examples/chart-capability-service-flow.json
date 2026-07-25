@@ -1,0 +1,54 @@
+{
+  "specVersion": "0.1",
+  "component": "SankeyDiagram",
+  "family": "flow",
+  "importPath": "semiotic/network",
+  "rubric": {
+    "familiarity": 3,
+    "accuracy": 4,
+    "precision": 2
+  },
+  "intentScores": {
+    "flow": 5,
+    "change-detection": 3
+  },
+  "caveats": [
+    "Link width supports flow comparison but is not a precise lookup channel.",
+    "Cycles require a host-specific layout strategy."
+  ],
+  "mobile": {
+    "strategy": "summary-cards",
+    "responsive": true,
+    "minViewportWidth": 320,
+    "maxMarks": 40,
+    "summary": "Lead with the largest sources, destinations, and bottlenecks.",
+    "interaction": {
+      "primary": "select-flow",
+      "alternatives": [
+        "accessible-flow-table"
+      ],
+      "hoverFallback": "focus-or-tap",
+      "targetSize": 24
+    },
+    "custom": {
+      "dataBearingSceneNodes": true,
+      "stableIds": true,
+      "navigationGranularity": "source, target, then link"
+    }
+  },
+  "tags": [
+    "flow",
+    "operations"
+  ],
+  "x-example-context": {
+    "domainEntities": [
+      "service",
+      "request"
+    ],
+    "domainScale": {
+      "entityLevel": "service",
+      "measure": "requests-per-minute"
+    },
+    "communicativeAct": "diagnose"
+  }
+}

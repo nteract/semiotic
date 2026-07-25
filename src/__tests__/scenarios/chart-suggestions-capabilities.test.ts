@@ -97,6 +97,12 @@ describe("chartSuggestions — capability filter", () => {
       expect(chartSatisfiesCapabilities("ChoroplethMap", { push: true })).toBe(false)
     })
 
+    it("distinguishes standard physics selection from ChainReaction task selection", () => {
+      expect(chartSatisfiesCapabilities("UnitPileChart", { selection: true })).toBe(true)
+      expect(chartSatisfiesCapabilities("ChainReactionChart", { selection: true })).toBe(false)
+      expect(chartSatisfiesCapabilities("ChainReactionChart", { selection: false })).toBe(true)
+    })
+
     it("returns true when all multi-key requirements pass", () => {
       expect(chartSatisfiesCapabilities("Scatterplot", { push: true, ssr: true, linkedHover: true })).toBe(true)
     })
