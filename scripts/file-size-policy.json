@@ -41,8 +41,8 @@
     },
     {
       "path": "src/components/charts/shared/chartSpecsPhysics.ts",
-      "maxLines": 1037,
-      "reason": "Single registry object for the physics family. Keeping the seven chart contracts adjacent makes completeness and generated schema review straightforward; the Crucible wire-schema is already factored into its own module. Do not grow past this reviewed ceiling. +148 (ChainReactionChart spec, landing a chart that shipped exported but unregistered). This is now NINE contracts at 1037 lines \u2014 past the point where adjacency pays for itself. Split by sub-family (settling/arrival vs process/tape) on the next chart addition; do not grow past this ceiling again."
+      "maxLines": 1040,
+      "reason": "Single registry object for the physics family. Keeping the seven chart contracts adjacent makes completeness and generated schema review straightforward; the Crucible wire-schema is already factored into its own module. Do not grow past this reviewed ceiling. +148 (ChainReactionChart spec, landing a chart that shipped exported but unregistered). +3 (2026-07-24): ChainReactionChart HOC-SSR-only capability metadata corrects its generated runtime contract. This is now NINE contracts at 1040 lines \u2014 past the point where adjacency pays for itself. Split by sub-family (settling/arrival vs process/tape) on the next chart addition; do not grow past this ceiling again."
     },
     {
       "path": "src/components/recipes/netEnsembleLayout.tsx",
