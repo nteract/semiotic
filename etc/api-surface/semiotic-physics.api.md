@@ -483,6 +483,7 @@ type MotionEncodingAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, in
 type MotionTimeBasis = "event" | "ingest" | "simulation" | "presentation" | "buffer-index"
 type MotionTimeUnit = "milliseconds" | "seconds" | "frames" | "index"
 type NumericScale = (value: number) => number
+type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> = PacketFlowChartProps<TNode, TLink>
 type PhysicalFlowCoordinateMode = "auto" | "normalized" | "pixels"
 type PhysicalFlowPathConstraint = "path" | "none"
 type PhysicalFlowRawPath = ReadonlyArray<PhysicalFlowPoint | readonly [number, number]>
@@ -531,6 +532,7 @@ type PhysicsEngineAdapterInput = PhysicsEngineAdapter | PhysicsEngineAdapterFact
 type PhysicsEngineDeterminism = "strict" | "tolerance" | "none"
 type PhysicsExecution = "auto" | "worker" | "sync"
 type PhysicsKinematicsEncoding<TDatum> = MotionKinematicsEncoding<TDatum>
+type PhysicsPileChartProps<TDatum extends Datum = Datum> = UnitPileChartProps<TDatum>
 type PhysicsPlacementEncoding<TDatum> = MotionPlacementEncoding<TDatum>
 type PhysicsProcessEncoding<TDatum> = MotionProcessEncoding<TDatum>
 type PhysicsReferenceBandSelector = "min" | "median" | "max" | number
