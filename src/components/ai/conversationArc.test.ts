@@ -11,6 +11,8 @@ import {
   registerConversationArcSink,
   type AnnotationStatusChangedEvent,
   type ConversationArcEvent,
+  type ProposalRefusedEvent,
+  type RenderEvidenceEvent,
 } from "./conversationArc"
 import { summarizeArc } from "./useConversationArc"
 
@@ -117,6 +119,39 @@ describe("conversationArc — enable / record / subscribe", () => {
 
     expect(event?.timestamp).toBe(12345)
     expect(event?.sessionId).toBe("override")
+  })
+
+  it("records typed refusal and render-evidence beats", () => {
+    enableConversationArc({ sessionId: "proof-loop" })
+    const store = getConversationArcStore()
+
+    const refusal = store.record({
+      type: "proposal-refused",
+      component: "Scatterplot",
+      stage: "diagnosis",
+      codes: ["DEGENERATE_EXTENT"],
+      alternatives: ["BoxPlot"],
+    }) as ProposalRefusedEvent
+    const evidence = store.record({
+      type: "render-evidence",
+      component: "BoxPlot",
+      chartId: "latency",
+      markCount: 21,
+      empty: false,
+      warnings: [],
+    }) as RenderEvidenceEvent
+
+    expect(refusal).toMatchObject({
+      sessionId: "proof-loop",
+      stage: "diagnosis",
+      alternatives: ["BoxPlot"],
+    })
+    expect(evidence).toMatchObject({
+      sessionId: "proof-loop",
+      chartId: "latency",
+      markCount: 21,
+      empty: false,
+    })
   })
 
   it("broadcasts to subscribers in registration order", () => {

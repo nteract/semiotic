@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { LineChart } from "semiotic"
 import {
   applyAnnotationLifecycle,
+  annotationFreshnessFor,
   bandFromAge,
-  withCurrentProvenance,
+  withProvenance,
 } from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import staleNotesFixture from "../../../public/talk-demo-fixtures/stale-notes.json"
 
 // ── Live "now" scrubber demo using the shared bandFromAge primitive ──
 
@@ -106,30 +108,74 @@ function BandScrubber() {
 
 // ── Live streaming demo: data-driven aging via dataExtent ────────────
 
-const STREAM_TICK = 1500 // ms between data points
-const STREAM_WINDOW = 12
-const ANNOTATION_TTL_MS = 3000 // 3s TTL keeps the demo fast: aging at 3s, stale at 4.5s, expired at 9s
+const STREAM_FIXTURE = staleNotesFixture.stream
+const STREAM_TICK = STREAM_FIXTURE.tickMs
+const STREAM_WINDOW = STREAM_FIXTURE.window
+const ANNOTATION_TTL_MS = STREAM_FIXTURE.annotationTtlMs
+const STREAM_START = Date.parse(STREAM_FIXTURE.start)
+
+const streamPoint = (index) => ({
+  t: STREAM_START + index * STREAM_TICK,
+  value: STREAM_FIXTURE.values[index],
+})
+
+const initialStreamData = () =>
+  STREAM_FIXTURE.values
+    .slice(0, STREAM_FIXTURE.annotationIndex + 1)
+    .map((_, index) => streamPoint(index))
+
+const annotationAt = (point) =>
+  withProvenance(
+    {
+      type: "callout",
+      t: point.t,
+      value: point.value,
+      label: "Fixture note",
+      dx: -50,
+      dy: -45,
+    },
+    {
+      provenance: {
+        author: "offline-watcher",
+        source: "ai",
+        confidence: 0.91,
+        createdAt: new Date(point.t).toISOString(),
+      },
+      lifecycle: { ttlHint: ANNOTATION_TTL_MS, anchor: "semantic" },
+    }
+  )
 
 function StreamingAgingDemo() {
-  const startTimeRef = useRef(Date.now())
-  const [data, setData] = useState(() => [{ t: Date.now(), value: 50 }])
-  const [annotation, setAnnotation] = useState(null)
+  const startTimeRef = useRef(STREAM_START)
+  const tickIndexRef = useRef(STREAM_FIXTURE.annotationIndex)
+  const [data, setData] = useState(initialStreamData)
+  const [annotation, setAnnotation] = useState(() =>
+    annotationAt(streamPoint(STREAM_FIXTURE.annotationIndex))
+  )
   const playingRef = useRef(true)
   const [playing, setPlaying] = useState(true)
+
+  const advanceStream = useCallback(() => {
+    const nextIndex = tickIndexRef.current + 1
+    if (nextIndex >= STREAM_FIXTURE.values.length) {
+      playingRef.current = false
+      setPlaying(false)
+      return
+    }
+    tickIndexRef.current = nextIndex
+    setData((prev) => {
+      const next = [...prev, streamPoint(nextIndex)]
+      return next.length > STREAM_WINDOW ? next.slice(-STREAM_WINDOW) : next
+    })
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (!playingRef.current) return
-      const t = Date.now()
-      const tickIndex = (t - startTimeRef.current) / STREAM_TICK
-      const value = 50 + Math.sin(tickIndex * 0.4) * 18 + (Math.random() - 0.5) * 10
-      setData((prev) => {
-        const next = [...prev, { t, value }]
-        return next.length > STREAM_WINDOW ? next.slice(-STREAM_WINDOW) : next
-      })
+      advanceStream()
     }, STREAM_TICK)
     return () => clearInterval(interval)
-  }, [])
+  }, [advanceStream])
 
   const togglePlay = () => {
     playingRef.current = !playingRef.current
@@ -139,23 +185,16 @@ function StreamingAgingDemo() {
   const markLatest = () => {
     const latest = data[data.length - 1]
     if (!latest) return
-    // `withCurrentProvenance` stamps `provenance.createdAt = currentTimestamp()`.
-    // Combined with the short ttlHint below, the annotation will age as
-    // the chart's data extent advances past it.
-    setAnnotation(
-      withCurrentProvenance(
-        {
-          type: "callout",
-          t: latest.t,
-          value: latest.value,
-          label: "Marked here",
-          dx: -50,
-          dy: -45,
-          lifecycle: { ttlHint: ANNOTATION_TTL_MS },
-        },
-        { author: "you", source: "user" }
-      )
-    )
+    setAnnotation(annotationAt(latest))
+  }
+
+  const resetFixture = () => {
+    tickIndexRef.current = STREAM_FIXTURE.annotationIndex
+    const initialData = initialStreamData()
+    setData(initialData)
+    setAnnotation(annotationAt(initialData[initialData.length - 1]))
+    playingRef.current = false
+    setPlaying(false)
   }
 
   // The chart's data extent IS its clock. Passing dataExtent makes
@@ -168,19 +207,25 @@ function StreamingAgingDemo() {
         dataExtent: [data[0].t, data[data.length - 1].t],
       })
     : []
+  const freshness = annotation
+    ? annotationFreshnessFor(annotation, data[data.length - 1].t)
+    : null
 
   const xFormat = (t) => `${((t - startTimeRef.current) / 1000).toFixed(1)}s`
 
   return (
-    <div style={{
-      border: "1px solid var(--surface-3)",
-      borderRadius: 12,
-      padding: 20,
-      background: "var(--surface-1)",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-    }}>
+    <div
+      data-demo="stale-note-stream"
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 12,
+        padding: 20,
+        background: "var(--surface-1)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
       <LineChart
         data={data}
         xAccessor="t"
@@ -219,6 +264,37 @@ function StreamingAgingDemo() {
         >
           Mark latest point
         </button>
+        <button
+          onClick={advanceStream}
+          style={{
+            padding: "5px 12px",
+            borderRadius: 14,
+            background: "var(--surface-2)",
+            color: "var(--text)",
+            border: "1px solid var(--surface-3)",
+            cursor: "pointer",
+          }}
+        >
+          Advance one tick
+        </button>
+        <button
+          onClick={resetFixture}
+          style={{
+            padding: "5px 12px",
+            borderRadius: 14,
+            background: "var(--surface-2)",
+            color: "var(--text)",
+            border: "1px solid var(--surface-3)",
+            cursor: "pointer",
+          }}
+        >
+          Reset fixture
+        </button>
+        {freshness && (
+          <strong style={{ color: BAND_COLOR[freshness] }} data-demo-freshness={freshness}>
+            {freshness}
+          </strong>
+        )}
         {annotation && (
           <button
             onClick={() => setAnnotation(null)}
@@ -237,8 +313,9 @@ function StreamingAgingDemo() {
         )}
       </div>
       <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-        Stamp the latest point, then let the stream run. The annotation
-        has a 3-second TTL — at 3s past the latest data point it goes{" "}
+        This demo starts cold from the committed talk fixture with a note already
+        attached; every tick is deterministic. The annotation has a 3-second TTL —
+        at 3s past the marked point it goes{" "}
         <strong>aging</strong>, at 4.5s <strong>stale</strong> (dashed),
         at 9s it's filtered out. Pause the stream and the annotation
         stops aging too: chart-time is the data, not the wall.

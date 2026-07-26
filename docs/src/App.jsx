@@ -148,6 +148,7 @@ const ReaderGroundingPage = lazy(() => import("./pages/features/ReaderGroundingP
 const DataPitfallsBridgePage = lazy(() => import("./pages/features/DataPitfallsBridgePage"))
 const ScaleAwarePage = lazy(() => import("./pages/features/ScaleAwarePage"))
 const ConversationArcPage = lazy(() => import("./pages/features/ConversationArcPage"))
+const ConferenceDemoPage = lazy(() => import("./pages/features/ConferenceDemoPage"))
 const TemporalLifecyclePage = lazy(() => import("./pages/features/TemporalLifecyclePage"))
 const PortabilitySpecPage = lazy(() => import("./pages/features/PortabilitySpecPage"))
 const VACPPage = lazy(() => import("./pages/features/VACPPage"))
@@ -792,6 +793,7 @@ export default function DocsApp() {
                 <Route path="interrogation" element={<InterrogationPage />} />
                 <Route path="reader-grounding" element={<ReaderGroundingPage />} />
                 <Route path="data-pitfalls" element={<DataPitfallsBridgePage />} />
+                <Route path="conference-demo" element={<ConferenceDemoPage />} />
                 <Route path="conversation-arc" element={<ConversationArcPage />} />
                 <Route path="temporal-lifecycle" element={<TemporalLifecyclePage />} />
                 <Route path="serialization" element={<SerializationPage />} />

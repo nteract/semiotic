@@ -5,7 +5,6 @@
 [![CI](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
 [![npm version](https://img.shields.io/npm/v/semiotic.svg)](https://www.npmjs.com/package/semiotic)
 [![TypeScript](https://img.shields.io/badge/TypeScript-built--in-blue.svg)](https://www.typescriptlang.org/)
-[![semiotic MCP server](https://glama.ai/mcp/servers/nteract/semiotic/badges/card.svg)](https://glama.ai/mcp/servers/nteract/semiotic)
 [![MseeP.ai Security Assessment Badge](https://mseep.net/pr/nteract-semiotic-badge.png)](https://mseep.ai/app/nteract-semiotic)
 
 A React data visualization library designed for AI-assisted development.
@@ -71,6 +70,19 @@ warnings with typo suggestions, and accessibility features (canvas
 `aria-label`, keyboard-navigable legends, `aria-live` tooltips, SVG
 `<title>`/`<desc>`) so AI-generated code fails gracefully with
 actionable diagnostics instead of a blank screen.
+
+### Accessibility is a release surface
+
+The [European Accessibility Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=legissum%3A4403933)
+has applied to covered products and services since 28 June 2025. A chart
+library cannot certify an application's legal compliance: scope, content,
+surrounding controls, testing, and national enforcement remain the
+application owner's responsibility. Semiotic supplies testable infrastructure
+for that work: keyboard interaction, accessible data tables, layered
+descriptions, structured navigation, reduced-motion and forced-colors paths,
+and WCAG-derived contrast tests for shipped theme presets. See the
+[Accessibility docs](https://semiotic.nteract.io/accessibility/overview) and
+run the application's own assistive-technology and user testing.
 
 ### Beyond standard charts
 
@@ -492,15 +504,23 @@ interface Sale { month: number; revenue: number }
 ## Server-Side Rendering
 
 All chart components render SVG automatically in server environments — no
-special imports or configuration needed:
+special imports or configuration needed. Non-streaming chart HOCs can be
+imported and rendered directly from a Next.js Server Component: Semiotic's
+`"use client"` directive defines the package boundary, so the importing page
+does not need its own wrapper or directive. Props crossing that boundary must
+remain serializable; add an app-owned client wrapper only when you introduce
+hooks, callback props, browser state, or a push-driven streaming chart.
 
 ```jsx
-// Works in Next.js App Router, Remix, Astro — same component, same props
-import { LineChart } from "semiotic"
+// app/dashboard/page.tsx — a Next.js Server Component
+import { LineChart } from "semiotic/xy"
 
 // Server: renders <svg> with path/circle/rect elements
 // Client: renders <canvas> with SVG overlay for axes
-<LineChart data={data} xAccessor="date" yAccessor="value" />
+export default async function DashboardPage() {
+  const data = await fetchMetrics()
+  return <LineChart data={data} xAccessor="date" yAccessor="value" />
+}
 ```
 
 For standalone SVG/PNG/GIF generation (email, OG images, PDF, Slack), use the server entry point:
@@ -695,7 +715,11 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 - **DeepWiki** — [deepwiki.com/nteract/semiotic](https://deepwiki.com/nteract/semiotic)
 - **GitMCP** — [gitmcp.io/nteract/semiotic](https://gitmcp.io/nteract/semiotic) (exposes the repo as an MCP endpoint directly)
 - **Official MCP Registry** — search "semiotic" at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io)
-- **Smithery** — [smithery.ai/server/nteract/semiotic](https://smithery.ai/server/nteract/semiotic)
+
+The Official MCP Registry is the canonical MCP directory record; it is distinct
+from acceptance into any assistant vendor's curated connector directory.
+Secondary-directory freshness and release ownership are tracked in
+[MCP_DISTRIBUTION.md](https://github.com/nteract/semiotic/blob/main/MCP_DISTRIBUTION.md).
 
 Agent-facing API surface:
 

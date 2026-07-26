@@ -13,6 +13,8 @@
  *   3. `README.md` must contain a literal `mcp-name: <SERVER_NAME>`
  *      string. The validator does a substring search; missing this is
  *      the most common publish-time rejection.
+ *   4. The Registry publisher must derive its version from `package.json`,
+ *      and the release workflow must call it after npm publication.
  *
  * Drift between these three is silently fine in development (nothing
  * else reads them at build time) but fails the publish step, which is
@@ -37,13 +39,20 @@ function fail(msg) { errors.push(msg) }
 const serverPath = join(repoRoot, "server.json")
 const packagePath = join(repoRoot, "package.json")
 const readmePath = join(repoRoot, "README.md")
+const publisherWorkflowPath = join(
+  repoRoot,
+  ".github",
+  "workflows",
+  "publish-mcp-registry.yml",
+)
+const releaseWorkflowPath = join(repoRoot, ".github", "workflows", "release.yml")
 
 if (!existsSync(serverPath)) {
   console.error("✗ server.json missing — required for MCP Registry publishes")
   process.exit(1)
 }
 
-let server, pkg, readme
+let server, pkg, readme, publisherWorkflow, releaseWorkflow
 try {
   server = JSON.parse(readFileSync(serverPath, "utf8"))
 } catch (e) {
@@ -60,6 +69,18 @@ try {
   readme = readFileSync(readmePath, "utf8")
 } catch (e) {
   console.error(`✗ README.md not readable: ${e.message}`)
+  process.exit(1)
+}
+try {
+  publisherWorkflow = readFileSync(publisherWorkflowPath, "utf8")
+} catch (e) {
+  console.error(`✗ MCP Registry publisher workflow not readable: ${e.message}`)
+  process.exit(1)
+}
+try {
+  releaseWorkflow = readFileSync(releaseWorkflowPath, "utf8")
+} catch (e) {
+  console.error(`✗ release workflow not readable: ${e.message}`)
   process.exit(1)
 }
 
@@ -151,17 +172,55 @@ if (server.name) {
   }
 }
 
+// ── Release workflow derives and publishes the exact package version ──
+const derivedVersionCommand =
+  `EXPECTED_VERSION=$(node -p "require('./package.json').version")`
+if (!publisherWorkflow.includes(derivedVersionCommand)) {
+  fail(
+    "publish-mcp-registry.yml must derive EXPECTED_VERSION from package.json " +
+      "inside the checked-out release commit.",
+  )
+}
+if (/^\s*EXPECTED_VERSION:\s*["']?\d/m.test(publisherWorkflow)) {
+  fail(
+    "publish-mcp-registry.yml must not pin EXPECTED_VERSION to a literal release number.",
+  )
+}
+if (!publisherWorkflow.includes("workflow_call:")) {
+  fail(
+    "publish-mcp-registry.yml must remain reusable through workflow_call.",
+  )
+}
+if (
+  !releaseWorkflow.includes(
+    "uses: ./.github/workflows/publish-mcp-registry.yml",
+  )
+) {
+  fail(
+    "release.yml must call publish-mcp-registry.yml after the npm publish job.",
+  )
+}
+if (
+  !/publish-mcp-registry:\s*\n(?:[^\n]*\n)*?\s+needs:\s+publish\b/.test(
+    releaseWorkflow,
+  )
+) {
+  fail(
+    "release.yml Registry publication job must depend on the npm publish job.",
+  )
+}
+
 // ── Output ────────────────────────────────────────────────────────────
 if (errors.length) {
   console.error("\n✗ MCP Registry submission would fail:\n")
   for (const msg of errors) console.error(`  - ${msg}`)
   console.error(
-    "\nFix the cross-references between server.json, package.json, and README.md " +
-      "before running the `mcp-publisher publish` step. See README.md#where-to-find-semiotic-for-ai-assistants.",
+    "\nFix the manifest cross-references and release publication path before " +
+      "running the `mcp-publisher publish` step. See MCP_DISTRIBUTION.md.",
   )
   process.exit(1)
 }
 
 console.log(
-  `✓ MCP Registry prereqs clean (server "${server.name}" v${server.version}; npm "${pkg.name}"; README cross-reference present)`,
+  `✓ MCP Registry prereqs clean (server "${server.name}" v${server.version}; npm "${pkg.name}"; README and release workflow linked)`,
 )

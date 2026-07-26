@@ -1,0 +1,69 @@
+{
+  "id": "streaming-annotation-lifecycle",
+  "slider": {
+    "min": "2026-02-15T00:00:00Z",
+    "max": "2026-08-15T00:00:00Z",
+    "initial": "2026-03-10T00:00:00Z"
+  },
+  "stream": {
+    "start": "2026-10-01T12:00:00Z",
+    "tickMs": 1500,
+    "window": 12,
+    "annotationTtlMs": 3000,
+    "annotationIndex": 2,
+    "values": [50, 56, 63, 69, 72, 68, 61, 54, 47, 42, 39, 43, 51, 60, 67, 71]
+  },
+  "data": [
+    { "month": 1, "value": 280 },
+    { "month": 2, "value": 310 },
+    { "month": 3, "value": 420 },
+    { "month": 4, "value": 350 },
+    { "month": 5, "value": 360 },
+    { "month": 6, "value": 370 },
+    { "month": 7, "value": 510 },
+    { "month": 8, "value": 390 },
+    { "month": 9, "value": 400 },
+    { "month": 10, "value": 420 },
+    { "month": 11, "value": 450 },
+    { "month": 12, "value": 470 }
+  ],
+  "annotations": [
+    {
+      "annotation": {
+        "type": "callout",
+        "id": "alice-spike",
+        "month": 3,
+        "value": 420,
+        "label": "Hand-placed spike",
+        "note": "Marked when the product launched.",
+        "dx": 50,
+        "dy": -45
+      },
+      "provenance": {
+        "author": "alice",
+        "source": "user",
+        "createdAt": "2026-02-15T12:00:00Z"
+      },
+      "lifecycle": { "ttlHint": "P30D", "anchor": "semantic" }
+    },
+    {
+      "annotation": {
+        "type": "callout",
+        "id": "ai-anomaly",
+        "month": 7,
+        "value": 510,
+        "label": "AI anomaly tag",
+        "note": "Flagged by model-v3 (confidence 0.62).",
+        "dx": -55,
+        "dy": -45
+      },
+      "provenance": {
+        "author": "model-v3",
+        "source": "ai",
+        "confidence": 0.62,
+        "createdAt": "2026-03-10T09:00:00Z"
+      },
+      "lifecycle": { "ttlHint": "P14D", "anchor": "fixed" }
+    }
+  ]
+}

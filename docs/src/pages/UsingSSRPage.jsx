@@ -16,12 +16,13 @@ export default function UsingSSRPage() {
       <p>
         Semiotic works in server-side rendering environments like Next.js App
         Router, Remix, Astro, and any framework that uses React Server
-        Components. All interactive components include{" "}
-        <code>"use client"</code> directives, so they automatically run on the
-        client where browser APIs are available. For situations where you need
-        chart output without a browser at all — static site generation, email
-        rendering, OG image previews — Semiotic also provides a dedicated server
-        rendering API.
+        Components. Non-streaming chart HOCs can be imported and rendered
+        directly from a Server Component. Their package modules include{" "}
+        <code>"use client"</code>, so Next.js recognizes the boundary without
+        requiring a wrapper or turning the importing page into a Client
+        Component. For output without a browser at all — static site generation,
+        email rendering, OG image previews — Semiotic also provides a dedicated
+        server rendering API.
       </p>
 
       {/* -------------------------------------------------------------- */}
@@ -31,19 +32,21 @@ export default function UsingSSRPage() {
         Every Semiotic component that touches the browser (Frames, Charts,
         ResponsiveFrames, SparkFrames, tooltips, interaction layers) ships with
         a <code>"use client"</code> directive at the top of its module. This
-        means you can import and render Semiotic components from your own client
-        components without any special configuration:
+        directive defines the package boundary. Your Server Component may import
+        and render a non-streaming chart directly as long as the props crossing
+        that boundary are serializable:
       </p>
 
       <CodeBlock
-        code={`"use client"
+        code={`// app/dashboard/page.tsx — Server Component
+import { LineChart } from "semiotic/xy"
 
-import { LineChart } from "semiotic"
-
-export default function Dashboard() {
+export default async function Dashboard() {
+  const revenueData = await fetchRevenue()
   return (
     <LineChart
-      size={[800, 400]}
+      width={800}
+      height={400}
       data={revenueData}
       xAccessor="month"
       yAccessor="revenue"
@@ -54,10 +57,9 @@ export default function Dashboard() {
       />
 
       <p>
-        Your component file needs <code>"use client"</code> at the top because
-        it renders a Semiotic chart — which is an interactive, browser-dependent
-        component. This is standard Next.js App Router practice for any component
-        that uses hooks, event handlers, or browser APIs.
+        Add <code>"use client"</code> to an app-owned wrapper only when your own
+        code uses hooks, browser APIs, push refs, or non-serializable callback
+        props. Merely rendering a Semiotic HOC does not require that ceremony.
       </p>
 
       <h3 id="turbopack-workaround">Bundler note: Turbopack subpath resolution</h3>
@@ -98,12 +100,13 @@ export default function Dashboard() {
         behavior breaks resolution under both bundlers.
       </p>
 
-      <h3 id="importing-from-server-components">Importing from Server Components</h3>
+      <h3 id="importing-from-server-components">When to add a client wrapper</h3>
 
       <p>
-        You cannot import Semiotic charts directly in a Server Component (a file
-        without <code>"use client"</code>). Instead, create a thin client
-        wrapper and import that:
+        A thin client wrapper is useful when chart behavior belongs to the
+        application: local state, event handlers, function accessors, browser
+        APIs, or a push-driven stream. Keep the Server Component responsible for
+        data fetching and pass serializable data into that wrapper:
       </p>
 
       <CodeBlock
@@ -115,10 +118,12 @@ import { BarChart } from "semiotic"
 export default function Chart({ data }) {
   return (
     <BarChart
-      size={[600, 400]}
+      width={600}
+      height={400}
       data={data}
-      oAccessor="category"
-      rAccessor="value"
+      categoryAccessor="category"
+      valueAccessor="value"
+      onClick={(datum) => console.log(datum)}
     />
   )
 }`}
@@ -142,10 +147,8 @@ export default async function DashboardPage() {
       />
 
       <p>
-        This is the standard pattern for using any client-side library in the
-        App Router. Your server component handles data fetching and layout, then
-        passes serializable data as props to the client component that renders
-        the chart.
+        Here the wrapper is required by the app-owned <code>onClick</code>
+        callback, not by the chart import itself.
       </p>
 
       <h3 id="sub-path-imports">Tree-Shakeable Sub-Path Imports</h3>
@@ -169,7 +172,8 @@ import { StreamNetworkFrame } from "semiotic/network"`}
 
       <p>
         Each sub-path bundle includes the <code>"use client"</code> directive,
-        so they work in App Router the same way as the main import.
+        so Next.js recognizes the client boundary whether a sub-path is imported
+        by a Server Component or another Client Component.
       </p>
 
       {/* -------------------------------------------------------------- */}

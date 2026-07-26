@@ -4,42 +4,29 @@ import { BarChart, LineChart, Scatterplot } from "semiotic"
 import { prepareChart, chartGenerationTool } from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import trustLoopFixture from "../../../public/talk-demo-fixtures/trust-loop-proposals.json"
 
 // ── Demo data ────────────────────────────────────────────────────────────────
 
-const REGIONS = [
-  { region: "North", revenue: 128 },
-  { region: "South", revenue: 92 },
-  { region: "East", revenue: 145 },
-  { region: "West", revenue: 71 },
-]
+const REGIONS = trustLoopFixture.data
 
 const CHART_COMPONENTS = { BarChart, LineChart, Scatterplot }
 
 // ── LLM "proposals" — what a model might emit, good and bad ─────────────────
 
-const PROPOSALS = {
-  "A valid bar chart": {
-    input: { component: "BarChart", props: { data: REGIONS, categoryAccessor: "region", valueAccessor: "revenue", title: "Revenue by region" } },
-    data: REGIONS,
-    note: "A well-formed proposal: it validates, carries no error diagnostics, and fits the data. The loop returns ok — and only then do we paint.",
-  },
-  "Missing a required prop": {
-    input: { component: "StackedBarChart", props: { data: REGIONS, categoryAccessor: "region", valueAccessor: "revenue" } },
-    data: REGIONS,
-    note: "A stacked bar with no stackBy. Validation rejects it before render — the agent gets a precise reason to retry, not a chart that paints as a plain bar and silently drops the stacking the user asked for.",
-  },
-  "Wrong chart for the data": {
-    input: { component: "Scatterplot", props: { data: REGIONS, xAccessor: "region", yAccessor: "revenue" } },
-    data: REGIONS,
-    note: "A scatterplot wants two numeric axes; region is categorical. The fit check refuses and ranks alternatives, so the agent re-proposes the right chart instead of misleading the reader with a degenerate scatter.",
-  },
-  "An invented component": {
-    input: { component: "SunburstFlowChart", props: { data: REGIONS } },
-    data: REGIONS,
-    note: "A hallucinated component name. It isn't in the registry, so no config is built and no JSX is emitted — the loop hands back alternatives instead.",
-  },
-}
+const PROPOSALS = Object.fromEntries(
+  trustLoopFixture.proposals.map(({ label, input, note }) => [
+    label,
+    {
+      input: {
+        ...input,
+        props: { ...input.props, data: REGIONS },
+      },
+      data: REGIONS,
+      note,
+    },
+  ])
+)
 
 const pretty = (v) => JSON.stringify(v, null, 2)
 

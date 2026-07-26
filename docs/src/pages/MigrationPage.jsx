@@ -149,20 +149,12 @@ interface SalesPoint {
   yAccessor="revenue"
 />`
 
-const ssrSnippet = `// app/dashboard/Chart.tsx — client component
-"use client"
+const ssrSnippet = `// app/dashboard/page.tsx — Server Component
 import { LineChart } from "semiotic/xy"
-
-export default function Chart({ data }) {
-  return <LineChart data={data} xAccessor="month" yAccessor="revenue" />
-}
-
-// app/dashboard/page.tsx — server component
-import Chart from "./Chart"
 
 export default async function DashboardPage() {
   const data = await fetchMetrics()
-  return <Chart data={data} />
+  return <LineChart data={data} xAccessor="month" yAccessor="revenue" />
 }`
 
 const staticSvgSnippet = `import { renderChart } from "semiotic/server"
@@ -757,9 +749,11 @@ npx prettier --write ./src`}
       <h2 id="ssr">Next.js, Remix, and SSR frameworks</h2>
 
       <p>
-        v3 charts include a <code>"use client"</code> directive at the top of each module, so the
-        App Router treats them as client components automatically. The standard pattern is a thin
-        client wrapper that the server component imports:
+        v3 charts include a <code>"use client"</code> directive at their package boundary, so a
+        Server Component can import and render a non-streaming HOC directly while Next.js keeps
+        the page itself on the server. Add a thin app-owned client wrapper only for hooks,
+        callbacks, browser state, or push-driven streaming; props crossing the boundary must be
+        serializable:
       </p>
 
       <CodeBlock code={ssrSnippet} language="tsx" />
