@@ -431,6 +431,7 @@ interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
 interface ProfileNumericFieldsOptions
+interface ProposalRefusedEvent
 interface ReceivabilitySignal
 interface ReceptionDefinition
 interface RecipeAudienceDefinition
@@ -442,6 +443,7 @@ interface RecipePortabilityConfig
 interface RecipeStrategyContext<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface RegisteredRecipeLayout
 interface RejectedCapability
+interface RenderEvidenceEvent
 interface RepairAlternativeResult
 interface RepairOkResult
 interface RepairOptions
@@ -541,9 +543,9 @@ type ChartRecipeFrameFamily = "XYFrame" | "OrdinalFrame" | "NetworkFrame" | "Geo
 type ChartRecipePortability = "portable" | "local"
 type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
 type ControlAuditStatus = "pass" | "warn" | "fail"
-type ConversationArcEvent = SuggestionShownEvent | SuggestionChosenEvent | AudienceSetEvent | ChartRenderedEvent | ChartEditedEvent | ChartReplacedEvent | ChartExportedEvent | ChartAbandonedEvent | InterrogationAskedEvent | InterrogationAnsweredEvent | NavNodeFocusedEvent | NavBranchExpandedEvent | AnnotationStatusChangedEvent
+type ConversationArcEvent = SuggestionShownEvent | SuggestionChosenEvent | AudienceSetEvent | ProposalRefusedEvent | ChartRenderedEvent | RenderEvidenceEvent | ChartEditedEvent | ChartReplacedEvent | ChartExportedEvent | ChartAbandonedEvent | InterrogationAskedEvent | InterrogationAnsweredEvent | NavNodeFocusedEvent | NavBranchExpandedEvent | AnnotationStatusChangedEvent
 type ConversationArcEventInput = ConversationArcEvent extends infer E ? E extends ConversationArcEvent ? Omit<E, "timestamp" | "sessionId"> & Partial<Pick<E, "timestamp" | "sessionId">> : never : never
-type ConversationArcEventType = "suggestion-shown" | "suggestion-chosen" | "audience-set" | "chart-rendered" | "chart-edited" | "chart-replaced" | "chart-exported" | "chart-abandoned" | "interrogation-asked" | "interrogation-answered" | "nav-node-focused" | "nav-branch-expanded" | "annotation-status-changed"
+type ConversationArcEventType = "suggestion-shown" | "suggestion-chosen" | "audience-set" | "proposal-refused" | "chart-rendered" | "render-evidence" | "chart-edited" | "chart-replaced" | "chart-exported" | "chart-abandoned" | "interrogation-asked" | "interrogation-answered" | "nav-node-focused" | "nav-branch-expanded" | "annotation-status-changed"
 type ConversationArcListener = (event: ConversationArcEvent) => void
 type ConversationArcWebhookFetch = (input: string, init?: RequestInit) => Promise<unknown>
 type CopyFormat = "json" | "jsx"
