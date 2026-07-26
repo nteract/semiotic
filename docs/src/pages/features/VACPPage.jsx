@@ -411,7 +411,10 @@ export default function VACPPage() {
         title: "Portability Spec",
         path: "/interoperability/portability-spec",
       }}
-      nextPage={{ title: "Vega-Lite", path: "/interoperability/vega-lite" }}
+      nextPage={{
+        title: "HRA/WPP Typology Pilot",
+        path: "/interoperability/hra-wpp",
+      }}
     >
       <p>
         The{" "}

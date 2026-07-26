@@ -420,7 +420,13 @@ function parseBuildInfoResource(step, result) {
   }
 }
 
-function assertNightlyInitialize(step, result, identity, requestedProtocolVersion) {
+function assertInitialize(
+  step,
+  result,
+  identity,
+  expectedChannel,
+  requestedProtocolVersion,
+) {
   const protocolVersion = requireString(step, result.protocolVersion, "protocolVersion")
   if (!/^\d{4}-\d{2}-\d{2}$/.test(protocolVersion)) {
     throw new SmokeFailure(step, `${step} returned an unsupported protocol version format`)
@@ -435,11 +441,22 @@ function assertNightlyInitialize(step, result, identity, requestedProtocolVersio
     "protocolVersion",
   )
   const serverInfo = requireRecord(step, result.serverInfo, "serverInfo")
-  requireExactString(step, serverInfo.name, "semiotic-nightly", "serverInfo.name")
+  const expectedName =
+    expectedChannel === "nightly" ? "semiotic-nightly" : "semiotic"
+  requireExactString(step, serverInfo.name, expectedName, "serverInfo.name")
   const version = requireString(step, serverInfo.version, "serverInfo.version")
-  const expectedSuffix = `-nightly+${identity.commitSha.slice(0, 7)}`
-  if (!new RegExp(`^\\d+\\.\\d+\\.\\d+${escapeRegex(expectedSuffix)}$`, "i").test(version)) {
-    throw new SmokeFailure(step, `${step} serverInfo.version did not identify the nightly commit`)
+  if (expectedChannel === "nightly") {
+    const expectedSuffix = `-nightly+${identity.commitSha.slice(0, 7)}`
+    if (!new RegExp(`^\\d+\\.\\d+\\.\\d+${escapeRegex(expectedSuffix)}$`, "i").test(version)) {
+      throw new SmokeFailure(step, `${step} serverInfo.version did not identify the nightly commit`)
+    }
+  } else {
+    requireExactString(
+      step,
+      version,
+      identity.packageVersion,
+      "serverInfo.version",
+    )
   }
   return protocolVersion
 }
@@ -475,10 +492,11 @@ export async function runHostedMcpSmoke(options) {
     options.protocolVersion,
     deadline,
   )
-  const protocolVersion = assertNightlyInitialize(
+  const protocolVersion = assertInitialize(
     "initialize",
     initialized.result,
     health.identity,
+    options.expectedChannel,
     options.protocolVersion,
   )
   checks.push("initialize")

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The HRA/WPP typology pilot now runs on the real kidney ASCT+B v1.6
+  digital object.** A pinned generator produces a checked-in, workshop-ready
+  artifact for the observed direct children of kidney, with ontology IDs kept
+  as semantic keys, provisional cell-type review signals kept separate from
+  measured counts, and a public `/interoperability/hra-wpp` walkthrough. The
+  actual data exposed the pilot's first failure case: distinct ontology concepts
+  share labels, while mixing parent and descendant rows turns hierarchy into a
+  misleading rank. A focused regression test pins both corrections.
+- **MCP `3.8.6` distribution is verified end to end.** The official
+  `io.github.nteract/semiotic` Registry entry marks `3.8.6` latest, and stable
+  Cloud Run revision `semiotic-mcp-server-00071-2rw` now serves the exact
+  release with commit/build identity. The production smoke passes health,
+  initialize, public tools, resources/build-info, render evidence, and schema
+  retrieval. Its initialize assertion is now channel-aware: stable requires
+  `semiotic` plus the exact package version, while nightly retains the
+  commit-qualified `semiotic-nightly` contract.
 - **MCP Registry publication now follows every release instead of one pinned
   version.** The reusable publisher derives the exact version from the checked-out
   package manifest, runs only after npm publication, and remains manually
