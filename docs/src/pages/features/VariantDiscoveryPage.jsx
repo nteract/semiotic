@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { BoxPlot, RidgelinePlot } from "semiotic"
+import { BoxPlot, RidgelinePlot } from "semiotic/ordinal"
 import {
   getCapability,
   profileData,

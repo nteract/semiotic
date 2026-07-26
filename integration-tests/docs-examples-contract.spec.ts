@@ -301,6 +301,10 @@ test.describe("docs example local contract evidence", () => {
 
   test("captures manifest-driven semantic and viewport evidence", async ({ page }, testInfo) => {
     const definitions = exampleDefinitionList(EXAMPLE_DEFINITIONS)
+    // This deliberately visits every manifest route (currently 50), including
+    // cold lazy-module transforms. Its route-level waits remain bounded, but
+    // the suite-wide default is sized for the smaller focused contracts.
+    testInfo.setTimeout(8 * 60_000)
     const configuredBaseURL = testInfo.project.use.baseURL
     if (typeof configuredBaseURL !== "string") {
       throw new Error("The docs example contract suite requires a configured baseURL")
@@ -327,7 +331,7 @@ test.describe("docs example local contract evidence", () => {
         await page.goto(route, { waitUntil: "domcontentloaded" })
 
         const h1 = page.locator("h1").first()
-        await expect(h1).toBeVisible()
+        await expect(h1, `${route} must expose an H1`).toBeVisible()
         await settleDocument(page)
 
         const semantic = await page.evaluate(() => ({
