@@ -280,6 +280,7 @@ describe("smoke-hosted-mcp", () => {
       const result = await runSmoke(fixture.endpoint, [], "stable")
       assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
       assert.match(result.stdout, /hosted MCP smoke passed/)
+      assert.equal(result.stderr, "")
     })
   })
 

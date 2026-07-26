@@ -35,15 +35,19 @@ const tableCellStyle = {
 
 const sourceCode = `import { BarChart } from "semiotic/ordinal"
 
-<BarChart
-  data={kidneyDirectChildren}
-  categoryAccessor="displayLabel"
-  valueAccessor="cellTypeCount"
-  colorBy={row =>
+const chartRows = kidneyDirectChildren.map(row => ({
+  ...row,
+  reviewStatus:
     row.temporaryCellTypeCount > 0
       ? "Contains provisional cell type"
-      : "No provisional cell type"
-  }
+      : "No provisional cell type",
+}))
+
+<BarChart
+  data={chartRows}
+  categoryAccessor="displayLabel"
+  valueAccessor="cellTypeCount"
+  colorBy="reviewStatus"
   orientation="horizontal"
   sort={false}
   categoryLabel="Anatomical structure · ontology ID"

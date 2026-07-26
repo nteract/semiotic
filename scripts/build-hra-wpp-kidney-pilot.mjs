@@ -70,7 +70,8 @@ function aggregateObservedStructures(records) {
           aggregate.cellTypeIds.add(cellType.source_concept)
         }
       }
-      aggregate.recordIds.add(record.id || String(record.record_number))
+      const recordKey = record.id ?? record.record_number
+      if (recordKey != null) aggregate.recordIds.add(String(recordKey))
       structures.set(id, aggregate)
     }
   }

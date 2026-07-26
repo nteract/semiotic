@@ -108,6 +108,26 @@ test("buildKidneyPilot is deterministic and validates the pinned version", () =>
   )
 })
 
+test("records without an identifier do not create an undefined record key", () => {
+  const sourceWithMissingRecordId = {
+    ...source,
+    data: {
+      ...source.data,
+      asctb_record: [
+        {
+          anatomical_structure_list: [
+            { source_concept: "AS:A", ccf_pref_label: "Shared label" },
+          ],
+          cell_type_list: [{ source_concept: "CT:CURATED" }],
+        },
+      ],
+    },
+  }
+
+  const artifact = buildKidneyPilot(sourceWithMissingRecordId)
+  assert.equal(artifact.chartRows[0].recordCount, 0)
+})
+
 test("the checked-in kidney v1.6 fixture pins the reviewed workshop evidence", () => {
   const artifact = JSON.parse(
     readFileSync(
