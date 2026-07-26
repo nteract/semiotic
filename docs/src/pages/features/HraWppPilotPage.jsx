@@ -53,7 +53,7 @@ const sourceCode = `import { BarChart } from "semiotic/ordinal"
 
 function ExternalLink({ href, children }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer">
+    <a href={href} target="_blank" rel="noreferrer noopener">
       {children}
     </a>
   )
