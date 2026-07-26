@@ -18,6 +18,18 @@ const GROUPS = [
     ],
   },
   {
+    heading: "Agent protocol bridge — chart state becomes semantic control",
+    blurb:
+      "Expose chart meaning, live state, and allowlisted interactions without making pixels, DOM order, or framework internals the primary agent API.",
+    items: [
+      {
+        title: "VACP Bridge",
+        path: "/interoperability/vacp",
+        what: "unstable_createSemioticVACPBridge / unstable_SemioticVACPBridge — an experimental, dependency-free structural bridge to VACP schema 0.1.0.",
+      },
+    ],
+  },
+  {
     heading: "Inbound spec adapters — a format becomes a chart",
     blurb:
       "Parse another tool's chart description and compile it to a Semiotic ChartConfig. The chart arrives with the accessibility, navigation, theming, and provenance the source never had.",

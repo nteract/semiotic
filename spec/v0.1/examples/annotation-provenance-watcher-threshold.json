@@ -1,0 +1,21 @@
+{
+  "type": "y-threshold",
+  "value": 1000,
+  "label": "SLA breach threshold",
+  "provenance": {
+    "author": "latency-watcher",
+    "authorKind": "watcher",
+    "source": "computed",
+    "basis": "statistical-test",
+    "confidence": 0.82,
+    "createdAt": "2026-07-25T14:00:00Z",
+    "dataVersion": "incident-1842-window-7",
+    "stableId": "annotation:incident-1842:latency-threshold"
+  },
+  "lifecycle": {
+    "freshness": "fresh",
+    "status": "proposed",
+    "ttlHint": "PT6H",
+    "anchor": "semantic"
+  }
+}

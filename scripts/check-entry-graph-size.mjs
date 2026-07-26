@@ -44,7 +44,10 @@ const ENTRY_GRAPHS = [
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
   // Bumped 462→475 (3.8.6): ChainReactionChart's physics runtime, schema, and
   // capability wiring join the AI surface. Keep the canonical AI catalog whole.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 475 },
+  // Bumped 475→480 (3.8.6): the current shared capability/accessibility graph
+  // measures 477.3 KB gzip after the portable-policy and audit work; this keeps
+  // a narrow 2.7 KB headroom without changing the canonical AI catalog.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 480 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 },

@@ -27,13 +27,16 @@ export type SerializedSelections = Record<string, SerializedSelection>
 export function serializeSelections(
   selections: Map<string, Selection>
 ): SerializedSelections {
-  const result: SerializedSelections = {}
+  const result = Object.create(null) as SerializedSelections
 
   for (const [name, sel] of selections) {
     const clauses: SerializedSelection["clauses"] = []
 
     for (const [, clause] of sel.clauses) {
-      const fields: Record<string, SerializedFieldSelection> = {}
+      const fields = Object.create(null) as Record<
+        string,
+        SerializedFieldSelection
+      >
 
       for (const [fieldName, constraint] of Object.entries(clause.fields)) {
         if (constraint.type === "point") {
@@ -67,7 +70,7 @@ export function deserializeSelections(
     const clauses = new Map<string, SelectionClause>()
 
     for (const sClause of sSel.clauses) {
-      const fields: Record<string, FieldSelection> = {}
+      const fields = Object.create(null) as Record<string, FieldSelection>
 
       for (const [fieldName, sConstraint] of Object.entries(sClause.fields)) {
         if (sConstraint.type === "point") {

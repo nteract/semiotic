@@ -31,6 +31,56 @@ const quietKernel = {
   sleepAfter: 0.01
 }
 
+type MediaQueryChangeListener = (event: MediaQueryListEvent) => void
+
+function mutableReducedMotionPreference(initial = false) {
+  const original = window.matchMedia
+  const listeners = new Set<MediaQueryChangeListener>()
+  let matches = initial
+  const media = "(prefers-reduced-motion: reduce)"
+  const mql = {
+    get matches() {
+      return matches
+    },
+    media,
+    onchange: null,
+    addEventListener: (_type: string, listener: MediaQueryChangeListener) => {
+      listeners.add(listener)
+    },
+    removeEventListener: (_type: string, listener: MediaQueryChangeListener) => {
+      listeners.delete(listener)
+    },
+    addListener: (listener: MediaQueryChangeListener) => {
+      listeners.add(listener)
+    },
+    removeListener: (listener: MediaQueryChangeListener) => {
+      listeners.delete(listener)
+    },
+    dispatchEvent: () => true
+  } as unknown as MediaQueryList
+
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn(() => mql)
+  })
+
+  return {
+    set(next: boolean) {
+      matches = next
+      const event = { matches, media } as MediaQueryListEvent
+      for (const listener of listeners) listener(event)
+    },
+    restore() {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        writable: true,
+        value: original
+      })
+    }
+  }
+}
+
 function circle(id: string, x = 30, y = 30): PhysicsQueuedSpawn {
   return {
     id,
@@ -1105,6 +1155,66 @@ describe("StreamPhysicsFrame", () => {
     })
 
     expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.1)
+  })
+
+  it("resumes with a zero delta after reduced motion toggles at runtime", () => {
+    const preference = mutableReducedMotionPreference(false)
+    const scheduler = createFrameScheduler(0)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+    let now = 0
+
+    try {
+      render(
+        <StreamPhysicsFrame
+          ref={frameRef}
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          clock={() => now}
+          continuous
+          initialSpawns={[circle("runtime-motion-toggle")]}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+        />
+      )
+
+      act(() => {
+        scheduler.flush()
+      })
+      now = 100
+      act(() => {
+        scheduler.flush()
+      })
+
+      act(() => {
+        preference.set(true)
+      })
+      const settledElapsed = frameRef.current!.snapshot().elapsedSeconds
+      expect(scheduler.pendingCount).toBe(0)
+
+      // A long wall-clock gap while reduced motion is active must not become a
+      // simulation delta when the animated path resumes.
+      now = 10_000
+      act(() => {
+        preference.set(false)
+      })
+      expect(scheduler.pendingCount).toBe(1)
+
+      act(() => {
+        scheduler.flush()
+      })
+      expect(frameRef.current!.snapshot().elapsedSeconds).toBeCloseTo(
+        settledElapsed
+      )
+
+      now = 10_100
+      act(() => {
+        scheduler.flush()
+      })
+      expect(frameRef.current!.snapshot().elapsedSeconds).toBeCloseTo(
+        settledElapsed + 0.1
+      )
+    } finally {
+      preference.restore()
+    }
   })
 
   it("freezes logical simulation time across imperative pause and resume", () => {

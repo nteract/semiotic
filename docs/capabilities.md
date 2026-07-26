@@ -92,15 +92,15 @@ Last regen: 2026-07-25 · 57 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **ChainReactionChart** | — | ✓ | — | — | — | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `hoc-ssr-only` |
-| **CollisionSwarmChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
-| **CrucibleChart** | — | — | — | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
-| **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
-| **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
-| **GauntletChart** | — | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
-| **PacketFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
-| **ProcessFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
-| **UnitPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
+| **ChainReactionChart** | — | — | — | — | — | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `hoc-ssr-only` |
+| **CollisionSwarmChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
+| **CrucibleChart** | — | ✓ | — | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
+| **EventDropChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
+| **GaltonBoardChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
+| **GauntletChart** | — | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
+| **PacketFlowChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
+| **ProcessFlowChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
+| **UnitPileChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
 
 ## Value
 

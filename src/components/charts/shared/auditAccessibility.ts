@@ -26,6 +26,10 @@ import type { Datum } from "./datumTypes"
 
 import { VALIDATION_MAP } from "./validateProps"
 import { assessAccessibilityText, isNonEmptyString } from "./auditAccessibilityText"
+import {
+  hasDeclaredHatchFill,
+  usesCvdSafePalette
+} from "./auditAccessibilityStyles"
 import { contrastRatio } from "./colorContrast"
 import {
   annotationDrawsConnector,
@@ -125,21 +129,6 @@ export interface AuditAccessibilityOptions {
    */
   navigable?: boolean
 }
-
-// The Wong colorblind-safe palette Semiotic ships (COLOR_BLIND_SAFE_CATEGORICAL,
-// mirrored here as a literal so the audit stays a light, dependency-free pure
-// function). Used to upgrade the CVD heuristic from "manual" to "pass" when a
-// config opts into it.
-const CVD_SAFE_PALETTE = new Set([
-  "#0072b2",
-  "#e69f00",
-  "#009e73",
-  "#cc79a7",
-  "#56b4e9",
-  "#d55e00",
-  "#f0e442",
-  "#000000"
-])
 
 const REFERENCE =
   "Chartability (POUR-CAF) — https://chartability.github.io/POUR-CAF/. Not a pass/fail cert; pair with manual screen-reader testing (NVDA+Firefox, JAWS+Chrome, VoiceOver+Safari)."
@@ -423,6 +412,7 @@ export function auditAccessibility(
     // series' own position. We can only see explicit label opt-ins here.
     const hasDirectLabel =
       props.directLabel === true || props.showLabels === true
+    const hasAuthoredTexture = hasDeclaredHatchFill(props)
     f.push({
       id: "perceivable.color-alone",
       principle: "perceivable",
@@ -436,24 +426,16 @@ export function auditAccessibility(
           }
         : {
             status: "warn" as A11yStatus,
-            message:
-              "Categories are encoded by color (colorBy) with no redundant channel — Semiotic does not yet ship texture/pattern fills.",
-            fix: "Add direct labels (directLabel on LineChart/AreaChart, showLabels on network/hierarchy), keep categories ≤ ~7, and use a CVD-safe palette."
+            message: hasAuthoredTexture
+              ? "Categories use colorBy and this config authors a HatchFill through styleRules, but a static audit cannot prove those rules give every category a distinct non-color cue. Semiotic does not automatically assign per-category textures."
+              : "Categories are encoded by color (colorBy) with no declared redundant channel. Semiotic supports author-supplied HatchFill patterns through styleRules, but this config has no statically visible HatchFill descriptor and there is no automatic per-category texture assignment.",
+            fix: hasAuthoredTexture
+              ? "Verify every category remains distinguishable with color removed; add direct labels where hatching is incomplete, keep categories ≤ ~7, and use a CVD-safe palette."
+              : "Add direct labels (directLabel on LineChart/AreaChart, showLabels on network/hierarchy) or category-targeted styleRules with distinct HatchFill descriptors; keep categories ≤ ~7 and use a CVD-safe palette."
           })
     })
 
-    const scheme = Array.isArray(props.colorScheme) ? props.colorScheme : null
-    const schemeHexes = scheme
-      ? scheme
-          .filter(
-            (c: unknown): c is string =>
-              typeof c === "string" && c.startsWith("#")
-          )
-          .map((c) => c.toLowerCase())
-      : []
-    const usesSafePalette =
-      schemeHexes.length > 0 &&
-      schemeHexes.every((c) => CVD_SAFE_PALETTE.has(c))
+    const usesSafePalette = usesCvdSafePalette(props.colorScheme)
     f.push({
       id: "perceivable.cvd-safe",
       principle: "perceivable",
@@ -477,9 +459,12 @@ export function auditAccessibility(
       heuristic: "Contrast and textures cannot be adjusted",
       critical: false,
       status: "warn",
-      message:
-        "There's no per-category texture/pattern channel to toggle as an alternative to color.",
-      fix: "Until texture fills land, ensure the encoding survives color removal: direct labels + a CVD-safe palette. Contrast itself is themeable via CSS variables."
+      message: hasAuthoredTexture
+        ? "This config uses an author-supplied HatchFill through styleRules, but Semiotic has no automatic, theme-aware per-category texture channel or user-facing texture toggle."
+        : "Semiotic supports author-supplied HatchFill patterns through styleRules, but this config has no statically visible HatchFill descriptor; there is no automatic, theme-aware per-category texture channel or user-facing texture toggle.",
+      fix: hasAuthoredTexture
+        ? "Verify the authored hatches cover every meaningful category and remain legible in the active theme; pair them with direct labels and a CVD-safe palette."
+        : "Use category-targeted styleRules with distinct HatchFill descriptors or direct labels so the encoding survives color removal. Contrast itself is themeable via CSS variables."
     })
   }
 

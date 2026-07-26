@@ -1,0 +1,48 @@
+{
+  "specVersion": "0.1",
+  "component": "BarChart",
+  "family": "categorical",
+  "importPath": "semiotic/ordinal",
+  "rubric": {
+    "familiarity": 5,
+    "accuracy": 5,
+    "precision": 4
+  },
+  "intentScores": {
+    "compare-categories": 5,
+    "rank": 4
+  },
+  "variants": [
+    {
+      "key": "ranked",
+      "label": "Ranked bars",
+      "description": "Sort categories by value when rank is the primary task.",
+      "intentDeltas": {
+        "rank": 1
+      },
+      "props": {
+        "sort": "descending"
+      }
+    }
+  ],
+  "caveats": [
+    "Dense category sets should be filtered or grouped before rendering."
+  ],
+  "mobile": {
+    "strategy": "direct-labels",
+    "responsive": true,
+    "breakpoints": [
+      480
+    ],
+    "maxMarks": 12,
+    "minimumHitTarget": 24,
+    "labels": {
+      "strategy": "direct",
+      "minFontSize": 12
+    }
+  },
+  "tags": [
+    "comparison",
+    "categorical"
+  ]
+}

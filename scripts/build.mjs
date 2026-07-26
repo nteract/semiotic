@@ -387,6 +387,14 @@ const generatedBundleMetadata = {
     stability: "experimental",
     loading: "eager",
   },
+  "semiotic-experimental-vacp": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "experimental",
+    loading: "eager",
+  },
   "semiotic-value": {
     platform: "browser",
     rsc: false,
@@ -463,7 +471,7 @@ function buildDeclarations() {
     "semiotic-server", "semiotic-server-node", "semiotic-server-edge", "semiotic-geo", "semiotic-rough", "semiotic-controls", "semiotic-physics",
     "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-themes-core", "semiotic-themes-react",
     "semiotic-utils", "semiotic-utils-core", "semiotic-utils-react", "semiotic-recipes", "semiotic-recipes-core", "semiotic-recipes-react",
-    "semiotic-experimental", "semiotic-value"
+    "semiotic-experimental", "semiotic-experimental-vacp", "semiotic-value"
   ]
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
@@ -551,10 +559,11 @@ async function build() {
     { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify },
     { input: "src/components/semiotic-recipes-core.ts", name: "semiotic-recipes-core", analyze: false, minify },
     { input: "src/components/semiotic-recipes-react.ts", name: "semiotic-recipes-react", analyze: false, minify, clientOnly: true },
-    // Unstable preview surface for adapters such as GoFish. It is packaged so
-    // collaborators can test it, but CI/docs gates intentionally ignore it as a
-    // stable API contract.
-    { input: "src/components/semiotic-experimental.ts", name: "semiotic-experimental", analyze: false, minify },
+    // Unstable browser preview surface for adapters and React components.
+    // The pure VACP subpath stays in the neutral graph for headless/server
+    // hosts without making the mixed experimental facade RSC-callable.
+    { input: "src/components/semiotic-experimental.ts", name: "semiotic-experimental", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-experimental-vacp.ts", name: "semiotic-experimental-vacp", analyze: false, minify },
     // `semiotic-value` is a plain-React HOC bundle — single component
     // (BigNumber) plus pure formatting/threshold helpers. Client-only
     // because BigNumber uses useState/useEffect/useImperativeHandle.
@@ -636,7 +645,7 @@ async function build() {
  *   is not defined", etc.).
  *
  * - **Neither** — agnostic. Pure-function or preview bundles
- *   (`semiotic/data`, `semiotic/recipes`, `semiotic/experimental`) contain
+ *   (`semiotic/data`, `semiotic/recipes`, `semiotic/experimental/vacp`) contain
  *   no client-only React component code, so they neither need nor harm from
  *   the directive. Skip them.
  *

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Physics capability claims now distinguish selection consumption from linked-hover
+  production.** The eight standard physics HOCs advertise `supportsSelection`
+  because they resolve named selection stores over `body.datum`;
+  `ChainReactionChart`, whose `selectedTaskIDs` is chart-specific, does not.
+  All nine remain `supportsLinkedHover: false` until their body-hover path
+  actually publishes to the linked store. The capability gate now checks the
+  physics source in both directions so metadata cannot outrun behavior again.
+- **Accessibility audits now report the shipped texture surface accurately.**
+  `perceivable.color-alone` and `flexible.textures-adjustable` recognize
+  serializable `HatchFill` descriptors authored through `styleRules`, without
+  treating one rule as proof every category has a redundant cue. The remaining
+  warning is precise: texture assignment is not yet automatic, theme-aware, or
+  exposed as a reader-controlled toggle.
 - **`PhysicsPileChart` → `UnitPileChart`, `PhysicalFlowChart` → `PacketFlowChart`.**
   Both leaked the substrate into the user-facing name — nothing else in Semiotic
   is `SVGLineChart` — and "Physical" told a reader nothing about the reading
@@ -31,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Runtime reduced-motion changes no longer fast-forward physics simulations.**
+  Entering the settled path clears the animation clock in both synchronous and
+  worker modes; a preference change that arrives during worker work is replayed
+  afterward. Returning to animation therefore starts with a zero delta instead
+  of applying all wall-clock time elapsed while reduced motion was active.
 - **`ChainReactionChart` task tiles no longer overlap.** Tasks sharing a lane
   *and* a dependency depth were nudged apart by `min(18, taskHeight * 0.3)` while
   staying full height, so a 58px tile shifted 17px overlapped its neighbour by
@@ -75,6 +93,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Experimental VACP 0.1.0 interoperability bridge.**
+  `unstable_createSemioticVACPBridge` at the neutral
+  `semiotic/experimental/vacp` subpath exposes Semiotic chart grounding as a
+  dependency-free, structurally typed VACP capability/state/action surface:
+  stable graph references, scoped full-or-delta state, complete column
+  discovery with bounded summaries, validated point/interval selection,
+  unambiguous navigation, and explicitly registered custom actions.
+  `unstable_SemioticVACPBridge` binds that facade to live `LinkedCharts`
+  selection and observation stores without rendering UI. The React binding
+  installs only after a client commit; the explicit installer refuses a server
+  process global and any foreign page global, then removes only the bridge it
+  installed.
+- **Adopter-ready IDID v0.1 portability kit.** The three library-neutral JSON
+  Schemas and six canonical worked fixtures ship at documented
+  `semiotic/spec/v0.1/*` resource paths, with Draft 2020-12 and dependency-free
+  validation coverage. The spec guide now documents the
+  paper/runtime annotation union, exact stretch-pick admission rule, npm
+  CJS/ESM imports, and a core-vs-extension typology crosswalk. The standalone
+  Vega-Lite binding preserves capability/audience metadata and annotation
+  provenance through its strict attach/read round trip while ordinary
+  Vega-Lite renderers safely ignore the namespaced `usermeta.idid` block.
+- **Safe activation of transported capability policy.**
+  `unstable_bindPortableCapability` validates a carried descriptor, resolves it
+  against an explicitly supplied host capability, and overlays its rubric,
+  intent scores, variants, caveats, and mobile contract while retaining the
+  host's executable `fits`, `buildProps`, numeric, scale, and quality gates.
+  Structured refusal diagnostics cover invalid, unresolved, and mismatched
+  descriptors. The Vega-Lite portability demo now routes both carried
+  capability policy and audience metadata through `suggestCharts`.
 - **`ChainReactionChart` is now a registered chart.** It shipped exported from
   `semiotic/physics` with zero registry presence — no chart spec, capability
   descriptor, `semiotic/ai` export, MCP registry entry, docs page, nav entry, or
@@ -124,13 +171,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   visual family.
 - **Physics family contracts filled in.** `seed` on `GauntletChart` (the only
   physics HOC missing it); `rerunMS` on `EventDropChart`, `PhysicsPileChart`,
-  `ProcessFlowChart`, and `PhysicalFlowChart` (it was on 4 of 8); and
-  `selection` + `linkedHover` on **every** physics HOC — previously only
-  `ProcessFlowChart` had it, so physics bodies could not cross-highlight inside
-  `LinkedCharts` like every other family. `selection` accepts either a `{ name }`
-  store config or a resolved `{ isActive, predicate }` body predicate; the
-  store's datum predicate is lifted over `body.datum`, so chrome bodies (walls,
-  pegs, tubes) never match a data selection. `GaltonBoardChart` and
+  `ProcessFlowChart`, and `PhysicalFlowChart` (it was on 4 of 8); plus standard
+  `selection` inputs across all eight registered physics HOCs. `selection`
+  accepts either a `{ name }` store config or a resolved
+  `{ isActive, predicate }` body predicate; the store's datum predicate is
+  lifted over `body.datum`, so chrome bodies (walls, pegs, tubes) never match a
+  data selection. The `linkedHover` prop is retained as groundwork, but the
+  capability remains false until body hover is wired to its producer callback.
+  `GaltonBoardChart` and
   `PhysicsPileChart` also declare capability `variants` (observed vs mechanical;
   projected vs units-only) — no physics chart had any.
 - **Settled ledger (`semiotic/experimental`).** `buildPhysicsSettledEvidence`

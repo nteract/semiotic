@@ -29,6 +29,10 @@ const { default: GaltonBoardChart } = await import("./GaltonBoardChart")
 const { default: UnitPileChart } = await import("./UnitPileChart")
 const { default: CollisionSwarmChart } = await import("./CollisionSwarmChart")
 const { default: EventDropChart } = await import("./EventDropChart")
+const { default: GauntletChart } = await import("./GauntletChart")
+const { default: CrucibleChart } = await import("./CrucibleChart")
+const { default: ProcessFlowChart } = await import("./ProcessFlowChart")
+const { default: PacketFlowChart } = await import("./PacketFlowChart")
 
 const pileRows = [
   { id: "n1", category: "North", value: 3 },
@@ -136,6 +140,61 @@ describe("physics HOCs and the shared selection store", () => {
         arrivalAccessor="arrivalTime"
         colorBy="category"
         windows={{ size: 4 }}
+        size={[240, 160]}
+        selection={{ name: "physics-link" }}
+      />,
+      <GauntletChart
+        key="gauntlet"
+        data={[{ id: "a", category: "North", positives: ["signal"], negatives: [] }]}
+        positiveAccessor="positives"
+        negativeAccessor="negatives"
+        positiveProperties={[{ id: "signal", radius: 4 }]}
+        negativeProperties={[]}
+        size={[240, 160]}
+        selection={{ name: "physics-link" }}
+      />,
+      <CrucibleChart
+        key="crucible"
+        data={[{ id: "a", label: "A", category: "North", amount: 1 }]}
+        phases={[{ id: "mix", label: "Mix", duration: 1, motion: "mix" }]}
+        idAccessor="id"
+        labelAccessor="label"
+        categoryAccessor="category"
+        amountAccessor="amount"
+        colorBy="category"
+        playback="snapshot"
+        size={[240, 160]}
+        selection={{ name: "physics-link" }}
+      />,
+      <ProcessFlowChart
+        key="process"
+        data={[{ id: "a", category: "North", stage: "work" }]}
+        stages={[
+          { id: "work", label: "Work", force: 8 },
+          { id: "done", label: "Done", absorb: true }
+        ]}
+        idAccessor="id"
+        stageAccessor="stage"
+        colorBy="category"
+        size={[240, 160]}
+        selection={{ name: "physics-link" }}
+      />,
+      <PacketFlowChart
+        key="packet"
+        nodes={[
+          { id: "source", x: 0.1, y: 0.5 },
+          { id: "sink", x: 0.9, y: 0.5 }
+        ]}
+        links={[
+          {
+            id: "a",
+            category: "North",
+            source: "source",
+            target: "sink",
+            value: 1
+          }
+        ]}
+        colorBy="category"
         size={[240, 160]}
         selection={{ name: "physics-link" }}
       />,

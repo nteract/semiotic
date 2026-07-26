@@ -1,0 +1,42 @@
+{
+  "specVersion": "0.1",
+  "name": "Incident review operators",
+  "familiarity": {
+    "LineChart": 5,
+    "Heatmap": 4,
+    "SankeyDiagram": 3,
+    "ForceDirectedGraph": 2
+  },
+  "targets": {
+    "SankeyDiagram": {
+      "direction": "increase",
+      "weight": 2,
+      "reason": "Practice tracing affected traffic through service dependencies."
+    }
+  },
+  "exposureLevel": 2,
+  "receptionModality": "screen-reader",
+  "x-example-context": {
+    "roles": [
+      "on-call operator",
+      "incident commander"
+    ],
+    "visualizationLiteracy": {
+      "mastered": [
+        "ordered-series",
+        "threshold"
+      ],
+      "learning": [
+        "flow"
+      ]
+    },
+    "domainKnowledge": [
+      "service topology",
+      "latency objectives"
+    ],
+    "useContext": {
+      "decision": "incident triage",
+      "cadence": "live"
+    }
+  }
+}

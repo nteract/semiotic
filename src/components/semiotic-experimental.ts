@@ -1,3 +1,5 @@
+"use client"
+
 /**
  * Experimental entry point for temporary adapters and unstable previews.
  *
@@ -78,6 +80,20 @@ export type {
   DataPitfallsTextInput as UnstableDataPitfallsTextInput
 } from "./ai/dataPitfallsBridge"
 
+// VACP 0.1.0 live-application bridge. This independently implements the
+// documented structural contract because the canonical VACP packages are not
+// yet public dependencies. It maps Semiotic grounding/configuration, named
+// LinkedCharts selections, navigation, observations, and bounded data handles
+// onto capabilities → state → validated execution. Kept experimental while
+// both the protocol and an external integration settle.
+export * from "./semiotic-experimental-vacp"
+export {
+  SemioticVACPBridge as unstable_SemioticVACPBridge
+} from "./ai/SemioticVACPBridge"
+export type {
+  SemioticVACPBridgeProps as UnstableSemioticVACPBridgeProps
+} from "./ai/SemioticVACPBridge"
+
 // ── IDID portability spec (v0.1) ────────────────────────────────────────────
 // The library-neutral schema surface that carries the IDID primitives —
 // chart capability, audience profile, annotation provenance/lifecycle — into
@@ -91,6 +107,7 @@ export {
   validatePortableCapability as unstable_validatePortableCapability,
   validatePortableAudienceProfile as unstable_validatePortableAudienceProfile,
   validatePortableAnnotation as unstable_validatePortableAnnotation,
+  bindPortableCapability as unstable_bindPortableCapability,
   toVegaLite as unstable_toVegaLite,
   toVegaLiteResult as unstable_toVegaLiteResult,
   fromVegaLiteResult as unstable_fromVegaLiteResult,
@@ -312,6 +329,8 @@ export type {
   PortableIntentId as UnstablePortableIntentId,
   PortableChartRubric as UnstablePortableChartRubric,
   PortableChartVariant as UnstablePortableChartVariant,
+  BoundPortableChartCapability as UnstableBoundPortableChartCapability,
+  PortableCapabilityBindingResult as UnstablePortableCapabilityBindingResult,
   PortableMobileInteractionCapability as UnstablePortableMobileInteractionCapability,
   PortableMobileLabelCapability as UnstablePortableMobileLabelCapability,
   PortableMobileCustomCapability as UnstablePortableMobileCustomCapability,

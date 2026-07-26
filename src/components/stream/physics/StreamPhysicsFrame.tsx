@@ -19,7 +19,6 @@ import {
 import { CanvasFrameBackground, useFrameCanvasHost } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
-import type { Datum } from "../../charts/shared/datumTypes"
 import { isInteractiveKeyboardTarget } from "../../charts/shared/semanticInteractions"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import { resolvePhysicsCanvasTheme } from "./PhysicsCanvasTheme"
@@ -28,15 +27,10 @@ import {
   bodiesToAnnotationAnchors,
   type PhysicsAnnotationAnchorNode
 } from "./PhysicsSVGOverlay"
-import {
-  collidersFromPhysicsAnnotations,
-  type PhysicsStaticAnnotation
-} from "./PhysicsAnnotations"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import { PhysicsWorkerSession, canUsePhysicsWorker } from "./PhysicsWorkerClient"
 import {
   PhysicsPipelineStore,
-  type PhysicsPipelineConfig,
   type PhysicsObservationEvent,
   type PhysicsPipelineSnapshot,
   type PhysicsPipelineTickResult,
@@ -79,7 +73,6 @@ import {
   ensureInternalRegionState,
   mergeRegionAttributes,
   publicRegionState,
-  regionBoundaryColliders,
   regionSensorId,
   regionToSemanticItem,
   regionRuntimeEffectsRequireSync,
@@ -103,6 +96,7 @@ import type {
   StreamPhysicsRegionVector
 } from "./StreamPhysicsTypes"
 import { usePhysicsFrameObservationEmitter } from "./physicsFrameObservations"
+import { resolvePhysicsFramePipelineConfig } from "./physicsFramePipelineConfig"
 
 export type {
   PhysicsBodyMark,
@@ -395,100 +389,28 @@ export const StreamPhysicsFrame = memo(forwardRef<
     [applyRegionImpulse, emitRegionEvent, regionBySensorId]
   )
 
-  const annotationColliders = React.useMemo(() => {
-    if (!annotations?.length) return []
-    const staticPhysicsNotes = annotations.filter(
-      (ann): ann is PhysicsStaticAnnotation & Datum =>
-        ann.physics === "barrier" || ann.physics === "sensor"
-    )
-    if (!staticPhysicsNotes.length) return []
-    return collidersFromPhysicsAnnotations(staticPhysicsNotes, {
-      idPrefix: chartId ? `${chartId}-ann` : "physics-ann",
-      plotBounds: {
-        x: 0,
-        y: 0,
-        width: sizeProp?.[0] ?? DEFAULT_SIZE[0],
-        height: sizeProp?.[1] ?? DEFAULT_SIZE[1]
-      }
-    })
-  }, [annotations, chartId, sizeProp])
-
-  const augmentedConfig = React.useMemo(() => {
-    const effectiveConfig =
-      seed === undefined || config?.kernel?.seed !== undefined
-        ? config
-        : {
-            ...config,
-            kernel: {
-              ...config?.kernel,
-              seed
-            }
-          }
-    const regionColliders: NonNullable<PhysicsPipelineConfig["colliders"]> =
-      regionEffects.flatMap((region) => {
-        const sensorCollider = {
-          id: regionSensorId(region),
-          sensor: true,
-          shape: region.shape,
-          bodyFilter: region.bodyFilter,
-          friction: region.friction,
-          restitution: region.restitution
-        }
-        return [sensorCollider, ...regionBoundaryColliders(region)]
-      })
-    const regionSensors = Object.fromEntries(
-      regionEffects.map((region) => [
-        regionSensorId(region),
-        {
-          binId: region.binId ?? region.id,
-          enterType: "physics-proximity-enter",
-          exitType: "physics-proximity-exit"
-        }
-      ])
-    ) as NonNullable<
-      NonNullable<PhysicsPipelineConfig["observation"]>["sensors"]
-    >
-    const previousObservation = effectiveConfig?.observation
-    const hasRegionWiring = regionEffects.length > 0
-    const hasExtraColliders =
-      regionColliders.length > 0 || annotationColliders.length > 0
-    if (
-      !hasRegionWiring &&
-      !hasExtraColliders &&
-      chartId == null &&
-      !previousObservation
-    ) {
-      return effectiveConfig
-    }
-    return {
-      ...effectiveConfig,
-      colliders: [
-        ...(effectiveConfig?.colliders ?? []),
-        ...regionColliders,
-        ...annotationColliders
-      ],
-      observation: {
-        ...previousObservation,
-        chartId: chartId ?? previousObservation?.chartId,
-        chartType: previousObservation?.chartType ?? CHART_TYPE,
-        sensors: {
-          ...(previousObservation?.sensors ?? {}),
-          ...regionSensors
-        },
-        onObservation: (event: PhysicsObservationEvent) => {
-          if (hasRegionWiring) handleRegionObservation(event)
-          previousObservation?.onObservation?.(event)
-        }
-      }
-    }
-  }, [
-    annotationColliders,
-    chartId,
-    config,
-    handleRegionObservation,
-    regionEffects,
-    seed
-  ])
+  const augmentedConfig = React.useMemo(
+    () =>
+      resolvePhysicsFramePipelineConfig({
+        annotations,
+        chartId,
+        chartType: CHART_TYPE,
+        config,
+        onRegionObservation: handleRegionObservation,
+        regionEffects,
+        seed,
+        size: sizeProp
+      }),
+    [
+      annotations,
+      chartId,
+      config,
+      handleRegionObservation,
+      regionEffects,
+      seed,
+      sizeProp
+    ]
+  )
 
   if (!storeRef.current) {
     const store = createPhysicsFrameStore(augmentedConfig, initialSpawns, initialSpawnPacing)
@@ -507,6 +429,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
   const workerFailedRef = useRef(false)
   const workerGenerationRef = useRef(0)
   const workerPendingRef = useRef(false)
+  const workerRenderRequestedRef = useRef(false)
   const workerSessionRef = useRef<PhysicsWorkerSession | null>(null)
   const workerStartingRef = useRef(false)
   const frame = useFrame({
@@ -527,6 +450,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
   const {
     margin,
     rafRef,
+    reducedMotion,
     reducedMotionRef,
     renderFnRef,
     cancelRender,
@@ -952,6 +876,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       workerGenerationRef.current += 1
       workerActiveRef.current = false
       workerPendingRef.current = false
+      workerRenderRequestedRef.current = false
       workerStartingRef.current = false
       workerSessionRef.current?.terminate()
       workerSessionRef.current = null
@@ -1173,10 +1098,25 @@ export const StreamPhysicsFrame = memo(forwardRef<
     const store = storeRef.current
     if (!store) return
 
+    // A reduced-motion settle does not advance from the RAF clock. Clear the
+    // animated-path timestamp before both worker and sync settles so the first
+    // frame after the preference is disabled resumes with a zero delta.
+    const reducedMotionForFrame = reducedMotionRef.current
+    if (reducedMotionForFrame) {
+      lastFrameTimeRef.current = null
+    }
+
     if (workerActiveRef.current && workerSessionRef.current) {
-      if (workerPendingRef.current) return
+      if (workerPendingRef.current) {
+        // A media-query change can arrive while the previous worker frame is
+        // in flight. Remember the request so entering reduced motion still
+        // settles, and leaving it still restarts the RAF path after the worker
+        // response lands.
+        workerRenderRequestedRef.current = true
+        return
+      }
       let deltaSeconds = 0
-      if (!reducedMotionRef.current) {
+      if (!reducedMotionForFrame) {
         const now = logicalClockRef.current()
         deltaSeconds = lastFrameTimeRef.current !== null
           ? (now - lastFrameTimeRef.current) / 1000
@@ -1186,21 +1126,26 @@ export const StreamPhysicsFrame = memo(forwardRef<
       const session = workerSessionRef.current
       const generation = workerGenerationRef.current
       workerPendingRef.current = true
-      const request = reducedMotionRef.current
+      const request = reducedMotionForFrame
         ? session.settle()
         : session.tick(deltaSeconds)
       request
         .then((frame) => {
           workerPendingRef.current = false
+          const renderRequested = workerRenderRequestedRef.current
+          workerRenderRequestedRef.current = false
           if (workerGenerationRef.current !== generation) return
           finishWorkerFrame(frame)
+          if (renderRequested) requestRender()
         })
         .catch((error) => {
           workerPendingRef.current = false
+          const renderRequested = workerRenderRequestedRef.current
+          workerRenderRequestedRef.current = false
           if (workerGenerationRef.current !== generation) return
           handleWorkerError(error)
 
-          const result = reducedMotionRef.current
+          const result = reducedMotionForFrame
             ? store.settleWithObservations()
             : store.tick(deltaSeconds)
           runPhysicsPostTick({
@@ -1213,6 +1158,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
             onTick: onTickRef.current
           })
           paint()
+          if (renderRequested) requestRender()
         })
       return
     }
@@ -1228,7 +1174,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       })
 
     let outcome: PhysicsPostTickOutcome
-    if (reducedMotionRef.current) {
+    if (reducedMotionForFrame) {
       outcome = runPhysicsReducedMotionPasses(store, runPostTick)
     } else {
       const now = logicalClockRef.current()
@@ -1259,6 +1205,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     handleWorkerError,
     paint,
     cancelRender,
+    requestRender,
     scheduleRender,
     reducedMotionRef,
     rafRef,
@@ -1281,6 +1228,13 @@ export const StreamPhysicsFrame = memo(forwardRef<
     requestRender()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, simulationExecution, workerBodyThreshold])
+
+  useEffect(() => {
+    // `reducedMotionRef` keeps frame closures current, while this reactive
+    // value makes a runtime media-query change actively enter the settle path
+    // or restart RAF work when motion is allowed again.
+    requestRender()
+  }, [reducedMotion, requestRender])
 
   usePhysicsFrameLifecyclePolicy({ cancelRender, frameRuntime, lastFrameTimeRef, paused, postWorkerCommand, requestRender, storeRef, suspendWhenHidden })
 

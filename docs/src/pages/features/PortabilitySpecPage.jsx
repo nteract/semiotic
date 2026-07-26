@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react"
 import { BarChart, LineChart, PieChart, Scatterplot } from "semiotic"
 import { fromVegaLite } from "semiotic/data"
-import { suggestCharts } from "semiotic/ai"
+import { getCapabilities, getCapability, suggestCharts } from "semiotic/ai"
 import {
   unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
+  unstable_bindPortableCapability as bindPortableCapability,
   unstable_readIDID as readIDID,
   IDID_SPEC_VERSION,
 } from "semiotic/experimental"
@@ -226,15 +227,30 @@ export default function PortabilitySpecPage() {
     return spec
   }, [config, capability, annotation])
 
-  // Route the carried audience profile through the suggestion engine — proof
-  // that the metadata is actionable, not decorative.
-  const suggestions = useMemo(() => {
+  // Bind the carried capability policy to host safety logic, then route both it
+  // and the carried audience through the suggestion engine.
+  const { suggestions, capabilityBinding } = useMemo(() => {
     const meta = readIDID(enrichedSpec)
-    return suggestCharts(dataValues, {
-      intent: PRESET_INTENT[presetName],
-      audience: meta?.audience,
-      maxResults: 3,
-    })
+    const host = meta?.capability
+      ? getCapability(meta.capability.component)
+      : undefined
+    const binding = bindPortableCapability(meta?.capability, host)
+    const capabilities = binding.capability
+      ? getCapabilities().map((candidate) =>
+          candidate.component === binding.capability.component
+            ? binding.capability
+            : candidate
+        )
+      : getCapabilities()
+    return {
+      capabilityBinding: binding,
+      suggestions: suggestCharts(dataValues, {
+        intent: PRESET_INTENT[presetName],
+        audience: meta?.audience,
+        capabilities,
+        maxResults: 3,
+      }),
+    }
   }, [enrichedSpec, dataValues, presetName])
 
   const displayedSpec = enriched ? enrichedSpec : roundTrip
@@ -396,7 +412,10 @@ export default function PortabilitySpecPage() {
   unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
+  unstable_bindPortableCapability as bindPortableCapability,
+  unstable_readIDID as readIDID,
 } from "semiotic/experimental"
+import { getCapability, suggestCharts } from "semiotic/ai"
 
 const result = toVegaLiteResult(config)                 // chart → Vega-Lite
 if (result.status === "refused") throw new Error(result.diagnostics[0].message)
@@ -405,24 +424,42 @@ spec = attachIDID(spec, { capability, audience })       // ride under usermeta.i
 spec = attachIDIDAnnotations(spec, [provenancedNote])   // + a note with its evidence
 
 // A plain Vega-Lite renderer ignores usermeta and still draws the chart.
-// An IDID-aware host reads readIDID(spec) and acts on it — see below.`}
+// An IDID-aware host binds portable policy to executable host safety logic:
+const carried = readIDID(spec)
+const binding = bindPortableCapability(
+  carried.capability,
+  getCapability(carried.capability.component)
+)
+if (binding.status === "refused") throw new Error(binding.diagnostics[0].message)
+const suggestions = suggestCharts(data, {
+  intent,
+  audience: carried.audience,
+  capabilities: [binding.capability],
+})`}
       </CodeBlock>
 
       <h2>The metadata is actionable, not decorative</h2>
 
       <p>
-        Because the audience profile travels on the spec, any IDID-aware host can
-        read it back and route it through the suggestion engine — the same audience
-        that shipped with the chart now calibrates what else to recommend. Here the
-        carried <strong>{AUDIENCE.name}</strong> profile (which de-prioritizes pie
-        charts in favor of exact comparison) is read off the enriched spec and fed to{" "}
-        <code>suggestCharts</code> for the intent{" "}
+        Because the capability and audience profile travel on the spec, an
+        IDID-aware host can activate both in its suggestion engine. The portable
+        descriptor deliberately contains no executable data-fit or prop-building
+        functions, so <code>bindPortableCapability</code> overlays its rubric and
+        intent scores onto the host's registered capability while preserving the
+        host's safety gates. Here the carried <strong>{AUDIENCE.name}</strong>{" "}
+        profile and carried <strong>{capability.component}</strong> descriptor are
+        both fed to <code>suggestCharts</code> for the intent{" "}
         <code>{PRESET_INTENT[presetName]}</code>:
       </p>
 
       <div style={{ ...panelStyle }}>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8 }}>
-          <code>suggestCharts(data, {"{"} intent, audience: readIDID(spec).audience {"}"})</code>
+          capability binding:{" "}
+          <strong>{capabilityBinding.status}</strong>
+          {" · "}
+          <code>
+            suggestCharts(data, {"{"} intent, audience, capabilities: [bound, …registry] {"}"})
+          </code>
         </div>
         <ol style={{ margin: 0, paddingLeft: 20 }}>
           {suggestions.map((s, i) => (

@@ -6,6 +6,7 @@ export function semioticSourceAliases(repoRoot) {
     { find: /^semiotic\/ai\/core$/, replacement: resolve(repoRoot, "src/components/semiotic-ai-core.ts") },
     { find: /^semiotic\/controls$/, replacement: resolve(repoRoot, "src/components/semiotic-controls.ts") },
     { find: /^semiotic\/data$/, replacement: resolve(repoRoot, "src/components/semiotic-data.ts") },
+    { find: /^semiotic\/experimental\/vacp$/, replacement: resolve(repoRoot, "src/components/semiotic-experimental-vacp.ts") },
     { find: /^semiotic\/experimental$/, replacement: resolve(repoRoot, "src/components/semiotic-experimental.ts") },
     { find: /^semiotic\/geo$/, replacement: resolve(repoRoot, "src/components/semiotic-geo.ts") },
     { find: /^semiotic\/network$/, replacement: resolve(repoRoot, "src/components/semiotic-network.ts") },
