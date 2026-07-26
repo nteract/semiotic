@@ -1,7 +1,90 @@
-import React from "react"
+import React, { useEffect, useMemo, useState } from "react"
+import { BoxPlot, RidgelinePlot } from "semiotic"
+import {
+  getCapability,
+  profileData,
+  proposeVariant,
+  registerVariantDiscovery,
+} from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
+import {
+  BIMODAL_PROPOSAL_ID,
+  bimodalFixture,
+  proposeBimodalRidgeline,
+} from "../../talkDemos/bimodalVariant"
+
+function BimodalVariantDemo() {
+  const [proposerReady, setProposerReady] = useState(false)
+  const [showVariant, setShowVariant] = useState(false)
+  const profile = useMemo(() => profileData(bimodalFixture.data), [])
+
+  useEffect(() => {
+    const unregister = registerVariantDiscovery(proposeBimodalRidgeline)
+    setProposerReady(true)
+    return () => unregister()
+  }, [])
+
+  const proposal = useMemo(() => {
+    if (!proposerReady) return null
+    const capability = getCapability("BoxPlot")
+    if (!capability) return null
+    return proposeVariant("BoxPlot", capability, {
+      profile,
+      intent: "distribution",
+    }).find(({ id }) => id === BIMODAL_PROPOSAL_ID)
+  }, [profile, proposerReady])
+
+  const proposalProps = useMemo(
+    () => proposal?.buildProps?.(profile),
+    [profile, proposal]
+  )
+  const baselineProps = {
+    data: bimodalFixture.data,
+    categoryAccessor: bimodalFixture.categoryAccessor,
+    valueAccessor: bimodalFixture.valueAccessor,
+    height: 320,
+    title: "Box plot baseline",
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 10,
+        background: "var(--surface-1)",
+        padding: 16,
+      }}
+      data-demo-variant-source={proposal?.source ?? "registering"}
+    >
+      {showVariant && proposalProps ? (
+        <RidgelinePlot
+          {...proposalProps}
+          height={320}
+          title="Ridgeline reveals the separated latency modes"
+        />
+      ) : (
+        <BoxPlot {...baselineProps} />
+      )}
+      <p style={{ margin: "8px 0", color: "var(--text-secondary)" }}>
+        <strong>{proposal?.label ?? "Registering proposer…"}</strong>
+        {proposal ? ` — ${proposal.rationale}` : ""}
+      </p>
+      <button
+        type="button"
+        disabled={!proposalProps}
+        onClick={() => setShowVariant((value) => !value)}
+      >
+        {showVariant ? "Show BoxPlot baseline" : "Render proposed RidgelinePlot"}
+      </button>
+      <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 0 }}>
+        Hand-written proposer · source <code>{proposal?.source ?? "model"}</code> ·
+        confidence {bimodalFixture.modelAssessment.confidence}
+      </p>
+    </div>
+  )
+}
 
 export default function VariantDiscoveryPage() {
   return (
@@ -24,6 +107,18 @@ export default function VariantDiscoveryPage() {
         generate-then-admit split: a proposer (heuristic or model) suggests; the
         scorer decides whether the suggestion is coherent, safe, and useful.
       </p>
+
+      <h2 id="talk-fixture">Offline model-proposal fixture</h2>
+      <p>
+        This committed bimodal latency fixture makes the full plug point visible:
+        a hand-written external-model result enters through{" "}
+        <code>registerVariantDiscovery</code>, proposes{" "}
+        <code>RidgelinePlot</code> over the <code>BoxPlot</code> baseline, and
+        renders without a model call or network request. The{" "}
+        <code>source: "model"</code> field is provenance, not a claim that a live
+        frontier model generated this replay.
+      </p>
+      <BimodalVariantDemo />
 
       <h2 id="propose">Proposing variants</h2>
       <p>
@@ -87,18 +182,36 @@ const score = evaluateVariantProposal(proposal, profile, audience, {
         <code>proposal.id</code>. It returns an unregister callback.
       </p>
       <CodeBlock language="ts">{`import {
-  registerVariantDiscovery,
-  getRegisteredVariantDiscovery,
-  clearVariantDiscovery,
+  proposeVariant, registerVariantDiscovery,
 } from "semiotic/ai"
 
-const unregister = registerVariantDiscovery((component, capability, context) => {
-  // propose from your own model / rules
-  return [{ id: \`\${component}:my-variant\`, baseComponent: component, source: "model" }]
+// A captured external-model judgment over the committed fixture.
+const modelAssessment = {
+  shape: "bimodal",
+  rationale: "Two separated latency clusters are hidden by the summary.",
+}
+
+const unregister = registerVariantDiscovery((component, _capability, { profile }) => {
+  const isFixture =
+    profile.primary.category === "service" &&
+    profile.primary.y === "latencyMs"
+  if (component !== "BoxPlot" || !isFixture || modelAssessment.shape !== "bimodal") return []
+  return [{
+    id: "RidgelinePlot:bimodal-talk-fixture",
+    baseComponent: "RidgelinePlot",
+    source: "model",
+    intentDeltas: { distribution: 1 },
+    buildProps: () => ({
+      data, categoryAccessor: "service", valueAccessor: "latencyMs", bins: 40,
+    }),
+    rationale: modelAssessment.rationale,
+  }]
 })
 
-getRegisteredVariantDiscovery() // inspect registered proposers
-unregister()                    // or clearVariantDiscovery() to reset all`}</CodeBlock>
+const proposals = proposeVariant("BoxPlot", capability, {
+  profile, intent: "distribution",
+})
+unregister()`}</CodeBlock>
       <p>
         This preserves the split between <em>generation</em> and{" "}
         <em>admission</em>: a model proposes freely, and{" "}

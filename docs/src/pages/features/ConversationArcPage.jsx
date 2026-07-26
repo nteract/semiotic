@@ -20,7 +20,8 @@ import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
-import replayFixture from "../../../public/data/conversation-arc-replay.json"
+import replayFixture from "../../../public/talk-demo-fixtures/conference-arc.json"
+import staleNotesFixture from "../../../public/talk-demo-fixtures/stale-notes.json"
 
 // ── Live event log driven by the actual ConversationArcStore ─────────
 
@@ -55,12 +56,35 @@ const EVENT_PRESETS = [
     }),
   },
   {
+    type: "proposal-refused",
+    label: "Refuse proposal",
+    payload: () => ({
+      type: "proposal-refused",
+      component: "Scatterplot",
+      stage: "diagnosis",
+      codes: ["DEGENERATE_EXTENT"],
+      alternatives: ["ViolinPlot", "BoxPlot", "DotPlot"],
+    }),
+  },
+  {
     type: "chart-rendered",
     label: "Render chart",
     payload: () => ({
       type: "chart-rendered",
       component: "LineChart",
       chartId: "demo-1",
+    }),
+  },
+  {
+    type: "render-evidence",
+    label: "Record render proof",
+    payload: () => ({
+      type: "render-evidence",
+      component: "LineChart",
+      chartId: "demo-1",
+      markCount: 16,
+      empty: false,
+      warnings: [],
     }),
   },
   {
@@ -107,7 +131,9 @@ const TYPE_COLORS = {
   "suggestion-shown": "var(--semiotic-info, #3a8eff)",
   "suggestion-chosen": "var(--semiotic-info, #3a8eff)",
   "audience-set": "var(--semiotic-warning, #d49a00)",
+  "proposal-refused": "var(--semiotic-danger, #c43d3d)",
   "chart-rendered": "var(--semiotic-success, #2d8a4a)",
+  "render-evidence": "var(--semiotic-success, #2d8a4a)",
   "chart-edited": "var(--semiotic-success, #2d8a4a)",
   "chart-replaced": "var(--semiotic-warning, #d49a00)",
   "chart-exported": "var(--semiotic-secondary, #6a52d9)",
@@ -126,7 +152,9 @@ const TYPE_COLORS_HEX = {
   "suggestion-shown": "#3a8eff",
   "suggestion-chosen": "#3a8eff",
   "audience-set": "#d49a00",
+  "proposal-refused": "#c43d3d",
   "chart-rendered": "#2d8a4a",
+  "render-evidence": "#2d8a4a",
   "chart-edited": "#2d8a4a",
   "chart-replaced": "#d49a00",
   "chart-exported": "#6a52d9",
@@ -148,7 +176,7 @@ const EVENT_ORDER = [
 ]
 
 const PERSISTENCE_STORAGE_KEY = "semiotic-docs:conversation-arc"
-const REPLAY_FIXTURE_PATH = "docs/public/data/conversation-arc-replay.json"
+const REPLAY_FIXTURE_PATH = "docs/public/talk-demo-fixtures/conference-arc.json"
 
 // Categories on the y-axis appear in the order the first event of
 // each type arrives. That's `sort: "auto"`'s streaming behavior on
@@ -1101,49 +1129,10 @@ function AutoInstrumentDemo() {
 // Two callouts pointing at real data spikes. Annotation fields use the
 // chart's accessor names (`month`, `value`) — that's how the annotation
 // system resolves screen coordinates from data.
-const ANNOTATIONS_RAW = [
-  withProvenance(
-    {
-      type: "callout",
-      id: "alice-spike",
-      month: 3,
-      value: 420,
-      label: "Hand-placed spike",
-      note: "Marked when the product launched.",
-      dx: 50,
-      dy: -45,
-    },
-    {
-      provenance: {
-        author: "alice",
-        source: "user",
-        createdAt: "2026-02-15T12:00:00Z",
-      },
-      lifecycle: { ttlHint: "P30D", anchor: "semantic" },
-    },
-  ),
-  withProvenance(
-    {
-      type: "callout",
-      id: "ai-anomaly",
-      month: 7,
-      value: 510,
-      label: "AI anomaly tag",
-      note: "Flagged by model-v3 (confidence 0.62).",
-      dx: -55,
-      dy: -45,
-    },
-    {
-      provenance: {
-        author: "model-v3",
-        source: "ai",
-        confidence: 0.62,
-        createdAt: "2026-03-10T09:00:00Z",
-      },
-      lifecycle: { ttlHint: "P14D", anchor: "fixed" },
-    },
-  ),
-]
+const ANNOTATIONS_RAW = staleNotesFixture.annotations.map(
+  ({ annotation, provenance, lifecycle }) =>
+    withProvenance(annotation, { provenance, lifecycle })
+)
 
 // Per-source brand color flows through `color` on each annotation.
 // applyAnnotationLifecycle handles the opacity + dashing per band, so
@@ -1163,26 +1152,12 @@ const FRESHNESS_BADGE_COLOR = {
 
 // Hand-tuned data so the spikes the annotations point at are clearly
 // visible peaks rather than getting lost in a noisy sine wave.
-const SAMPLE_DATA = [
-  { month: 1, value: 280 },
-  { month: 2, value: 310 },
-  { month: 3, value: 420 }, // alice's spike
-  { month: 4, value: 350 },
-  { month: 5, value: 360 },
-  { month: 6, value: 370 },
-  { month: 7, value: 510 }, // AI's anomaly
-  { month: 8, value: 390 },
-  { month: 9, value: 400 },
-  { month: 10, value: 420 },
-  { month: 11, value: 450 },
-  { month: 12, value: 470 },
-]
-
-const SLIDER_MIN = Date.parse("2026-02-15T00:00:00Z")
-const SLIDER_MAX = Date.parse("2026-08-15T00:00:00Z")
+const SAMPLE_DATA = staleNotesFixture.data
+const SLIDER_MIN = Date.parse(staleNotesFixture.slider.min)
+const SLIDER_MAX = Date.parse(staleNotesFixture.slider.max)
 
 function FreshnessDemo() {
-  const [nowIso, setNowIso] = useState("2026-03-10T00:00:00Z")
+  const [nowIso, setNowIso] = useState(staleNotesFixture.slider.initial)
   const nowMs = Date.parse(nowIso)
 
   // Each annotation keeps its author's brand color via `color`. The
@@ -1484,15 +1459,18 @@ unregisterLocal()`}
 
       <h3>Event vocabulary</h3>
       <p>
-        Thirteen variants in a discriminated union: <code>suggestion-shown</code>,{" "}
-        <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
-        <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
+        Fifteen variants in a discriminated union: <code>suggestion-shown</code>,{" "}
+        <code>suggestion-chosen</code>, <code>audience-set</code>,{" "}
+        <code>proposal-refused</code>, <code>chart-rendered</code>,{" "}
+        <code>render-evidence</code>, <code>chart-edited</code>,{" "}
+        <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
         <code>chart-abandoned</code>, <code>interrogation-asked</code>,{" "}
         <code>interrogation-answered</code>, and the reception pair{" "}
         <code>nav-node-focused</code> / <code>nav-branch-expanded</code>, plus{" "}
         <code>annotation-status-changed</code>. Each carries the fields a downstream analytics or
-        replay system would actually consume (component name, rank, format, reason; node id, role,
-        and level for the nav events; annotation id and status transition for contested notes). The{" "}
+        replay system would actually consume (component name, refusal codes, render mark count,
+        format, reason; node id, role, and level for the nav events; annotation id and status
+        transition for contested notes). The{" "}
         <code>arcId</code> field threads multiple events into a single named arc when you need it.
       </p>
 

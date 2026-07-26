@@ -1,0 +1,57 @@
+{
+  "id": "trust-loop-regional-revenue",
+  "data": [
+    { "region": "North", "revenue": 128 },
+    { "region": "South", "revenue": 92 },
+    { "region": "East", "revenue": 145 },
+    { "region": "West", "revenue": 71 }
+  ],
+  "proposals": [
+    {
+      "label": "A valid bar chart",
+      "input": {
+        "component": "BarChart",
+        "props": {
+          "categoryAccessor": "region",
+          "valueAccessor": "revenue",
+          "title": "Revenue by region"
+        }
+      },
+      "expected": "accepted",
+      "note": "A well-formed proposal: it validates, carries no error diagnostics, and fits the data. The loop returns ok — and only then do we paint."
+    },
+    {
+      "label": "Missing a required prop",
+      "input": {
+        "component": "StackedBarChart",
+        "props": {
+          "categoryAccessor": "region",
+          "valueAccessor": "revenue"
+        }
+      },
+      "expected": "refused",
+      "note": "A stacked bar with no stackBy. Validation rejects it before render — the agent gets a precise reason to retry, not a chart that paints as a plain bar and silently drops the stacking the user asked for."
+    },
+    {
+      "label": "Wrong chart for the data",
+      "input": {
+        "component": "Scatterplot",
+        "props": {
+          "xAccessor": "region",
+          "yAccessor": "revenue"
+        }
+      },
+      "expected": "refused",
+      "note": "A scatterplot wants two numeric axes; region is categorical. The fit check refuses and ranks alternatives, so the agent re-proposes the right chart instead of misleading the reader with a degenerate scatter."
+    },
+    {
+      "label": "An invented component",
+      "input": {
+        "component": "SunburstFlowChart",
+        "props": {}
+      },
+      "expected": "refused",
+      "note": "A hallucinated component name. It isn't in the registry, so no config is built and no JSX is emitted — the loop hands back alternatives instead."
+    }
+  ]
+}

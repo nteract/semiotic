@@ -1,0 +1,140 @@
+[
+  {
+    "type": "proposal-refused",
+    "timestamp": 1792000000000,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "Scatterplot",
+    "stage": "diagnosis",
+    "codes": ["DEGENERATE_EXTENT"],
+    "alternatives": ["ViolinPlot", "BoxPlot", "DotPlot"]
+  },
+  {
+    "type": "suggestion-shown",
+    "timestamp": 1792000001400,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "intent": ["distribution", "compare-categories"],
+    "components": ["BoxPlot", "ViolinPlot", "SwarmPlot", "RidgelinePlot"],
+    "topScore": 4.5,
+    "audience": "general"
+  },
+  {
+    "type": "suggestion-chosen",
+    "timestamp": 1792000002600,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "rank": 1,
+    "source": "agent"
+  },
+  {
+    "type": "audience-set",
+    "timestamp": 1792000005200,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "audience": "ai-tooling-developer",
+    "previous": "general"
+  },
+  {
+    "type": "chart-rendered",
+    "timestamp": 1792000006900,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "chartId": "service-latency"
+  },
+  {
+    "type": "render-evidence",
+    "timestamp": 1792000007600,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "chartId": "service-latency",
+    "markCount": 3,
+    "empty": false,
+    "warnings": []
+  },
+  {
+    "type": "chart-edited",
+    "timestamp": 1792000009000,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "chartId": "service-latency",
+    "changedProps": ["valueExtent"],
+    "meta": {
+      "beat": "scale",
+      "decision": "retain-linear-domain"
+    }
+  },
+  {
+    "type": "chart-replaced",
+    "timestamp": 1792000010500,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "from": "BoxPlot",
+    "to": "RidgelinePlot",
+    "reason": "variant-discovery"
+  },
+  {
+    "type": "chart-rendered",
+    "timestamp": 1792000012100,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "chartId": "service-latency"
+  },
+  {
+    "type": "render-evidence",
+    "timestamp": 1792000012800,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "chartId": "service-latency",
+    "markCount": 3,
+    "empty": false,
+    "warnings": []
+  },
+  {
+    "type": "interrogation-asked",
+    "timestamp": 1792000014300,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "query": "Which services have a second latency mode?"
+  },
+  {
+    "type": "interrogation-answered",
+    "timestamp": 1792000015600,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "answer": "Ingest and export each split into two separated latency clusters.",
+    "annotationCount": 0,
+    "latencyMs": 1300,
+    "meta": {
+      "source": "offline-grounding-replay",
+      "pixelsSeen": false
+    }
+  },
+  {
+    "type": "nav-node-focused",
+    "timestamp": 1792000016700,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "chartId": "service-latency",
+    "nodeId": "chart:service-latency/series:ingest",
+    "role": "series",
+    "level": 2,
+    "label": "Ingest latency distribution"
+  },
+  {
+    "type": "chart-exported",
+    "timestamp": 1792000018300,
+    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "format": "jsx"
+  }
+]

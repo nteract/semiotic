@@ -34,6 +34,14 @@ describe("summarizeArc", () => {
       },
       { type: "audience-set", timestamp: 200, sessionId: "s", audience: "analyst" },
       { type: "suggestion-chosen", timestamp: 300, sessionId: "s", component: "LineChart" },
+      {
+        type: "proposal-refused",
+        timestamp: 350,
+        sessionId: "s",
+        component: "Scatterplot",
+        stage: "diagnosis",
+        codes: ["DEGENERATE_EXTENT"],
+      },
       { type: "audience-set", timestamp: 400, sessionId: "s", audience: "executive" },
       {
         type: "chart-replaced",
@@ -42,19 +50,30 @@ describe("summarizeArc", () => {
         from: "LineChart",
         to: "StackedAreaChart",
       },
+      {
+        type: "render-evidence",
+        timestamp: 550,
+        sessionId: "s",
+        component: "StackedAreaChart",
+        markCount: 12,
+        empty: false,
+        warnings: [],
+      },
       { type: "chart-exported", timestamp: 600, sessionId: "s", component: "StackedAreaChart", format: "jsx" },
     ])
 
-    expect(summary.total).toBe(6)
+    expect(summary.total).toBe(8)
     expect(summary.byType).toEqual({
       "suggestion-shown": 1,
       "audience-set": 2,
       "suggestion-chosen": 1,
+      "proposal-refused": 1,
       "chart-replaced": 1,
+      "render-evidence": 1,
       "chart-exported": 1,
     })
     expect(summary.componentsSeen.sort()).toEqual(
-      ["AreaChart", "LineChart", "StackedAreaChart"].sort()
+      ["AreaChart", "LineChart", "Scatterplot", "StackedAreaChart"].sort()
     )
     expect(summary.audiencesSeen).toEqual(["analyst", "executive"])
     expect(summary.startedAt).toBe(100)

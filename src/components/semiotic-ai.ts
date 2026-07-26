@@ -767,7 +767,7 @@ export type {
   InterrogationAnsweredEvent,
   NavNodeFocusedEvent,
   NavBranchExpandedEvent,
-  AnnotationStatusChangedEvent
+  AnnotationStatusChangedEvent, ProposalRefusedEvent, RenderEvidenceEvent
 } from "./ai/conversationArc"
 
 // AI Observation hooks

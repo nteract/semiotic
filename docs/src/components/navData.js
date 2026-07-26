@@ -248,6 +248,7 @@ const navData = [
       { title: "Interrogation", path: "/intelligence/interrogation" },
       { title: "Agent-Reader Grounding", path: "/intelligence/reader-grounding" },
       { title: "Experimental Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" },
+      { title: "Conference Demo", path: "/intelligence/conference-demo" },
       { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
       { title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" },
       { title: "Serialization", path: "/intelligence/serialization" },

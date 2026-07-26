@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **MCP Registry publication now follows every release instead of one pinned
+  version.** The reusable publisher derives the exact version from the checked-out
+  package manifest, runs only after npm publication, and remains manually
+  dispatchable for backfills. The local Registry gate now rejects a reintroduced
+  literal version or a release workflow that stops calling the publisher. A
+  source-controlled distribution inventory records canonical paths, stale
+  secondary cards, and the distinction between Registry publication and
+  assistant-vendor acceptance; the broken Smithery link and stale Glama badge
+  are no longer promoted in the README.
+- **SSR/RSC and accessibility positioning now matches the shipped surface.**
+  README, SSR, and migration guidance consistently show non-streaming chart HOCs
+  imported directly by a Next.js Server Component through Semiotic's client
+  boundary; an app-owned wrapper is reserved for hooks, callbacks, browser
+  state, or push-driven streaming. Accessibility language now states the EAA
+  date and the infrastructure Semiotic supplies without claiming that a chart
+  library certifies application-level legal compliance.
 - **Physics capability claims now distinguish selection consumption from linked-hover
   production.** The eight standard physics HOCs advertise `supportsSelection`
   because they resolve named selection stores over `body.datum`;
@@ -93,6 +109,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **One-surface Stage C conference demo.** The local
+  `/intelligence/conference-demo` route now composes the October talk's full
+  “question to a chart you can defend” path: ranked suggestions, deterministic
+  refusal, declared production scale, governed audience, captured-model variant,
+  the KStreams custom-chart escape, pinned server-render evidence, live reader
+  grounding, and JSX handoff. Interactions record a fresh typed conversation arc
+  that can be downloaded for rehearsal review, while the committed hand-authored
+  arc stays visibly labeled as recovery rather than benchmark evidence. The
+  talk-demo browser contract exercises every beat with external requests and
+  sockets blocked.
+- **Offline conference-demo hardening packet.** `docs/strategy/talk-demos.md`
+  now inventories the selected Stage C path, fused reader-grounding beat, and
+  Stage B fallback with inputs, interactions, dependency class, timing, and a
+  recovery cue for every beat. Four committed fixtures drive the trust-loop
+  proposals, BoxPlot → RidgelinePlot bimodal discovery, deterministic
+  stale-note stream, and a hand-authored Stage C recovery replay. The recovery
+  artifact replaces the unrelated synthetic revenue arc and includes
+  suggestion, refusal, repair, audience, scale, variant, render evidence,
+  grounding, and export; it remains explicitly distinct from an arc recorded
+  from the future composed stage app. A browser contract prevents external
+  network access, locally neutralizes the optional font stylesheet, and
+  exercises the newly hardened fixture-backed beats; the stale-note stream can
+  also advance one committed tick at a time through
+  `fresh → aging → stale → expired`.
+- **Typed refusal and render-proof conversation events.**
+  `proposal-refused` records the deterministic gate, reason codes, and repair
+  alternatives; `render-evidence` records mark count, emptiness, and render
+  warning codes separately from the weaker fact that a render was attempted. The
+  event vocabulary moved into a focused type module while the existing store,
+  sinks, replay, and import path remain backward compatible. The Variant
+  Discovery docs now install and clean up a real hand-written
+  `registerVariantDiscovery` proposer over committed bimodal data, explicitly
+  distinguishing `source: "model"` provenance from a live model call.
 - **Experimental VACP 0.1.0 interoperability bridge.**
   `unstable_createSemioticVACPBridge` at the neutral
   `semiotic/experimental/vacp` subpath exposes Semiotic chart grounding as a
