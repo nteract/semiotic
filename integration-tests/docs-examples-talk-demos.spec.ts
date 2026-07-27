@@ -75,7 +75,7 @@ test.describe("talk demos stay browser-local and deterministic", () => {
       waitUntil: "domcontentloaded",
     })
     await page.getByRole("button", { name: "Replay fixture" }).click()
-    await expect(page.getByText(/Loaded 13 events from .*conference-arc\.json/)).toBeVisible()
+    await expect(page.getByText(/Loaded 14 events from .*conference-arc\.json/)).toBeVisible()
     await expect(page.getByText("proposal-refused · 1").first()).toBeVisible()
     await expect(page.getByText("render-evidence · 2").first()).toBeVisible()
 
