@@ -1,0 +1,765 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-sol",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-26",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "bar-static-custom-fields",
+      "proposal": {
+        "component": "BarChart",
+        "props": {
+          "data": [
+            {
+              "market_name": "North",
+              "net_revenue": 12
+            },
+            {
+              "market_name": "South",
+              "net_revenue": 8
+            }
+          ],
+          "categoryAccessor": "market_name",
+          "valueAccessor": "net_revenue",
+          "title": "Revenue by Region",
+          "description": "Bar chart comparing net revenue across the North and South regions.",
+          "summary": "North has net revenue of 12, compared with 8 for South.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "fc04ae983159eafe65a23afeae1c719853ad9f4d793e0717bdad6e50d734185c"
+    },
+    {
+      "fixtureId": "grouped-bar-static",
+      "proposal": {
+        "component": "GroupedBarChart",
+        "props": {
+          "data": [
+            {
+              "region": "North",
+              "channel": "Web",
+              "value": 12
+            },
+            {
+              "region": "North",
+              "channel": "Retail",
+              "value": 7
+            },
+            {
+              "region": "South",
+              "channel": "Web",
+              "value": 9
+            },
+            {
+              "region": "South",
+              "channel": "Retail",
+              "value": 11
+            }
+          ],
+          "categoryAccessor": "region",
+          "groupBy": "channel",
+          "valueAccessor": "value",
+          "colorBy": "channel",
+          "sort": false,
+          "title": "Web and retail revenue by region",
+          "description": "Grouped bar chart comparing web and retail revenue within the North and South regions.",
+          "summary": "In North, web revenue is 12 and retail revenue is 7. In South, web revenue is 9 and retail revenue is 11.",
+          "showLegend": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "076d0901af14143bdd3bb7966acd7156a2e5e687e9d66cf44a1c544a711e21cd"
+    },
+    {
+      "fixtureId": "stacked-bar-static",
+      "proposal": {
+        "component": "StackedBarChart",
+        "props": {
+          "data": [
+            {
+              "quarter": "Q1",
+              "product": "Core",
+              "value": 14
+            },
+            {
+              "quarter": "Q1",
+              "product": "Plus",
+              "value": 6
+            },
+            {
+              "quarter": "Q2",
+              "product": "Core",
+              "value": 16
+            },
+            {
+              "quarter": "Q2",
+              "product": "Plus",
+              "value": 9
+            }
+          ],
+          "categoryAccessor": "quarter",
+          "valueAccessor": "value",
+          "stackBy": "product",
+          "colorBy": "product",
+          "sort": false,
+          "showLegend": true,
+          "title": "Product mix by quarter",
+          "description": "Stacked bars showing the Core and Plus product values within each quarter."
+        }
+      },
+      "rawOutputSha256": "614a748c772b765c2a2e8351039746e2c63447180d7a751ffcfd8af36aea6eb4"
+    },
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "title": "Active Users by Week",
+          "description": "Line chart showing active users by week."
+        }
+      },
+      "rawOutputSha256": "7fd2b49f954eefe2e1aec19faeb185907657c217797615e13a9862c0b40f8c41"
+    },
+    {
+      "fixtureId": "area-static",
+      "proposal": {
+        "component": "AreaChart",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "used": 40
+            },
+            {
+              "day": 2,
+              "used": 47
+            },
+            {
+              "day": 3,
+              "used": 53
+            },
+            {
+              "day": 4,
+              "used": 51
+            }
+          ],
+          "xAccessor": "day",
+          "yAccessor": "used",
+          "title": "Storage Used Over Seven Days",
+          "description": "Area chart showing storage used by day.",
+          "summary": "Storage used rises from 40 on day 1 to 53 on day 3, then falls slightly to 51 on day 4.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "9112f6cf7dc8f9a16e52c954c430affea6fd855ab82a6ea26eb3d9fb2b1a94c0"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "title": "Response Time by Payload Size",
+          "description": "Scatterplot of response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time increases as payload size grows. The chart supports additional observations through ref-based push.",
+          "accessibleTable": true,
+          "enableHover": true
+        }
+      },
+      "rawOutputSha256": "0dea3a65c012ccdbcca69e4d12d02365c2b3a273a621d046f6d774100109d801"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "title": "Company Growth vs. Retention",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customers.",
+          "summary": "Company B has the highest growth, Company C has the highest retention and largest customer base, and Company A falls between them.",
+          "showLegend": true,
+          "tooltip": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "af6810bb4aee319db74a1e4355826ed979ff520200656bb00473fd6fe89619d3"
+    },
+    {
+      "fixtureId": "box-static",
+      "proposal": {
+        "component": "BoxPlot",
+        "props": {
+          "data": [
+            {
+              "service": "API",
+              "latency": 90
+            },
+            {
+              "service": "API",
+              "latency": 110
+            },
+            {
+              "service": "API",
+              "latency": 160
+            },
+            {
+              "service": "Worker",
+              "latency": 55
+            },
+            {
+              "service": "Worker",
+              "latency": 75
+            },
+            {
+              "service": "Worker",
+              "latency": 120
+            }
+          ],
+          "categoryAccessor": "service",
+          "valueAccessor": "latency",
+          "title": "Latency Distribution by Service",
+          "description": "Box plots comparing latency distributions for API and Worker services.",
+          "summary": "API latency ranges from 90 to 160, while Worker latency ranges from 55 to 120.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "57506961ac82086f638023a10e2ca780f7ea428ab8170169bec6868380a97f73"
+    },
+    {
+      "fixtureId": "violin-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "cohort": "Control",
+              "score": 42
+            },
+            {
+              "cohort": "Control",
+              "score": 55
+            },
+            {
+              "cohort": "Control",
+              "score": 68
+            },
+            {
+              "cohort": "Treatment",
+              "score": 51
+            },
+            {
+              "cohort": "Treatment",
+              "score": 70
+            },
+            {
+              "cohort": "Treatment",
+              "score": 83
+            }
+          ],
+          "categoryAccessor": "cohort",
+          "valueAccessor": "score"
+        }
+      },
+      "rawOutputSha256": "dedcfdda19bcbd745f8ab63e1de9260a33e0345aae93f42f1e452e71a322f47b"
+    },
+    {
+      "fixtureId": "ridgeline-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "job": "Import",
+              "duration": 40
+            },
+            {
+              "job": "Import",
+              "duration": 90
+            },
+            {
+              "job": "Import",
+              "duration": 150
+            },
+            {
+              "job": "Export",
+              "duration": 35
+            },
+            {
+              "job": "Export",
+              "duration": 80
+            },
+            {
+              "job": "Export",
+              "duration": 145
+            },
+            {
+              "job": "Index",
+              "duration": 20
+            },
+            {
+              "job": "Index",
+              "duration": 45
+            },
+            {
+              "job": "Index",
+              "duration": 75
+            }
+          ],
+          "categoryAccessor": "job",
+          "valueAccessor": "duration",
+          "title": "Duration Distributions by Job Type",
+          "description": "Violin plots comparing the distribution of durations for Import, Export, and Index jobs.",
+          "summary": "Each job type has observations at shorter, middle, and longer durations, suggesting potentially multimodal distributions; the small sample sizes make the distribution shapes tentative.",
+          "showIQR": true,
+          "accessibleTable": true,
+          "enableHover": true
+        }
+      },
+      "rawOutputSha256": "3a2a2e9aab00c34439943768d8f26240c24d86a2061670cb0d0b5411c31d70e8"
+    },
+    {
+      "fixtureId": "dot-static",
+      "proposal": {
+        "component": "DotPlot",
+        "props": {
+          "data": [
+            {
+              "team": "Blue",
+              "satisfaction": 82
+            },
+            {
+              "team": "Green",
+              "satisfaction": 74
+            },
+            {
+              "team": "Red",
+              "satisfaction": 91
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "satisfaction",
+          "width": 420,
+          "height": 240,
+          "sort": false,
+          "title": "Satisfaction by team",
+          "description": "Compact dot plot comparing satisfaction scores for Blue, Green, and Red teams.",
+          "summary": "Red has the highest satisfaction score at 91, followed by Blue at 82 and Green at 74.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "fccb9af57abb62e2fccfc4144d4c6dcad9d18c7340273414b37073a1c6bb4933"
+    },
+    {
+      "fixtureId": "heatmap-static",
+      "proposal": {
+        "component": "Heatmap",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "hour": 9,
+              "load": 18
+            },
+            {
+              "day": 1,
+              "hour": 10,
+              "load": 31
+            },
+            {
+              "day": 2,
+              "hour": 9,
+              "load": 24
+            },
+            {
+              "day": 2,
+              "hour": 10,
+              "load": 38
+            }
+          ],
+          "xAccessor": "hour",
+          "yAccessor": "day",
+          "valueAccessor": "load",
+          "title": "Request Load by Weekday and Hour",
+          "description": "Heatmap showing request load by weekday and hour.",
+          "summary": "Request load ranges from 18 to 38, with the highest load on weekday 2 at hour 10.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "a76fd6db7a47d6283f6502674549e7680f34b19dcc975fe9ffb671863cb592e3"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "BigNumber",
+        "props": {
+          "value": 97,
+          "label": "SLA attainment",
+          "format": "percent",
+          "target": {
+            "value": 99,
+            "label": "99% target",
+            "format": "percent"
+          },
+          "thresholds": [
+            {
+              "at": 0,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 99,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "title": "Current SLA Attainment",
+          "description": "Current SLA attainment is 97 percent against a target of 99 percent.",
+          "summary": "SLA attainment is 2 percentage points below target.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "4a88afa6b176ab3a41c6466f3e383a4c6662567f60d10ad4abb1e71685e3cf05"
+    },
+    {
+      "fixtureId": "funnel-static",
+      "proposal": {
+        "component": "FunnelChart",
+        "props": {
+          "data": [
+            {
+              "step": "Visits",
+              "value": 1000
+            },
+            {
+              "step": "Trials",
+              "value": 260
+            },
+            {
+              "step": "Purchases",
+              "value": 80
+            }
+          ],
+          "stepAccessor": "step",
+          "valueAccessor": "value"
+        }
+      },
+      "rawOutputSha256": "724847da3730e6f7e6aa1fb7a2f12e9096565f19cfc82bff5bd3dd8b80714814"
+    },
+    {
+      "fixtureId": "force-network-static",
+      "proposal": {
+        "component": "ForceDirectedGraph",
+        "props": {
+          "nodes": [
+            {
+              "id": "api"
+            },
+            {
+              "id": "worker"
+            },
+            {
+              "id": "db"
+            }
+          ],
+          "edges": [
+            {
+              "source": "api",
+              "target": "worker"
+            },
+            {
+              "source": "worker",
+              "target": "db"
+            }
+          ],
+          "nodeIDAccessor": "id",
+          "sourceAccessor": "source",
+          "targetAccessor": "target"
+        }
+      },
+      "rawOutputSha256": "834f8a32777854a826c1d1f8e4bd47513cb0d28549bf4cb8dbe161ce906b1aed"
+    },
+    {
+      "fixtureId": "sankey-static",
+      "proposal": {
+        "component": "SankeyDiagram",
+        "props": {
+          "edges": [
+            {
+              "source": "Incoming",
+              "target": "Success",
+              "value": 78
+            },
+            {
+              "source": "Incoming",
+              "target": "Retry",
+              "value": 15
+            },
+            {
+              "source": "Incoming",
+              "target": "Failure",
+              "value": 7
+            }
+          ],
+          "valueAccessor": "value",
+          "title": "Incoming Request Outcomes",
+          "description": "Sankey diagram showing how 100 incoming requests split into 78 successes, 15 retries, and 7 failures.",
+          "summary": "Of 100 incoming requests, 78% succeed, 15% require retry, and 7% fail.",
+          "showLabels": true,
+          "tooltip": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "c2555b9539418d73f4a23648322782d4a4574c1ccfae99ede423097214953a01"
+    },
+    {
+      "fixtureId": "treemap-static",
+      "proposal": {
+        "component": "Treemap",
+        "props": {
+          "data": {
+            "name": "Storage",
+            "children": [
+              {
+                "name": "Images",
+                "value": 48
+              },
+              {
+                "name": "Logs",
+                "value": 32
+              },
+              {
+                "name": "Backups",
+                "value": 20
+              }
+            ]
+          },
+          "childrenAccessor": "children",
+          "valueAccessor": "value",
+          "colorBy": "name",
+          "showLabels": true,
+          "title": "Storage Allocation",
+          "description": "A hierarchical treemap showing storage allocation across Images, Logs, and Backups.",
+          "summary": "Images use 48 units, Logs use 32 units, and Backups use 20 units of storage.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "df580fc558fd42b34c63172110387a3edf9c9a96dad3d93920ee6eb088785885"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents"
+        }
+      },
+      "rawOutputSha256": "ad24651613cc32bb1d985f9b720d7709628bca2d19c4ffee0240543e78d278c4"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "mode": "sample",
+          "seed": 42
+        }
+      },
+      "rawOutputSha256": "cca21da3fc818855f93324ed9a2a7b2081c559ba52cead21a388968b5acf2df3"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "team": "Blue",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "colorBy": "team",
+          "mode": "sample",
+          "showProjection": true
+        }
+      },
+      "rawOutputSha256": "68e527e8723e34ed5c26adb40f8d6ac00dde5129c1080a853f45d413964bf4db"
+    },
+    {
+      "fixtureId": "event-drop-push",
+      "proposal": {
+        "component": "EventDropChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "eventTime": 10,
+              "arrivalTime": 12
+            },
+            {
+              "id": "b",
+              "eventTime": 18,
+              "arrivalTime": 20
+            }
+          ],
+          "timeAccessor": "eventTime",
+          "arrivalAccessor": "arrivalTime",
+          "windows": {
+            "size": 20
+          }
+        }
+      },
+      "rawOutputSha256": "ca4cbee251d0fac0939f9a1757f14e9a2b6d39457fdb93cd1e59dd3f3b794a49"
+    },
+    {
+      "fixtureId": "packet-flow-push",
+      "proposal": {
+        "component": "PacketFlowChart",
+        "props": {
+          "nodes": [
+            {
+              "id": "source",
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "id": "sink",
+              "x": 0.9,
+              "y": 0.5
+            }
+          ],
+          "links": [
+            {
+              "id": "route-a",
+              "source": "source",
+              "target": "sink",
+              "value": 4
+            }
+          ],
+          "nodeIdAccessor": "id",
+          "nodeXAccessor": "x",
+          "nodeYAccessor": "y",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "throughputAccessor": "value"
+        }
+      },
+      "rawOutputSha256": "6dac456ae51c8bc7e307f3fc85aff1e471e7b0aef828a940773e892f683e9fa7"
+    }
+  ]
+}

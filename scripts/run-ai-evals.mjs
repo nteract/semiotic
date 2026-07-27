@@ -8,6 +8,10 @@ import { fileURLToPath } from "node:url"
 import { prepareChart } from "semiotic/ai"
 import { renderChartWithEvidence } from "semiotic/server"
 import Ajv2020 from "ajv/dist/2020.js"
+import {
+  groundingScoringRevision,
+  scoreGroundingAnswer,
+} from "./ai-eval-scoring.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"))
@@ -301,33 +305,6 @@ const submittedAnswers = uniqueSubmissionMap(
   groundingCaseIds,
   "Grounding"
 )
-const abstentionPattern =
-  /\b(cannot determine|can't determine|not provided|not shown|does not show|doesn't show|unknown|insufficient (?:data|information|evidence)|cannot infer|can't infer)\b/i
-
-function scoreGroundingAnswer(expected, answer, submissionProvided) {
-  if (answer == null) {
-    return submissionProvided
-      ? { status: "missing", passed: false }
-      : { status: "pending", passed: null }
-  }
-  if (expected.abstain) {
-    return {
-      status: "scored",
-      passed: abstentionPattern.test(answer),
-      abstained: abstentionPattern.test(answer),
-    }
-  }
-  const normalized = answer.toLowerCase()
-  const matched = expected.required.map((alternatives) =>
-    alternatives.some((term) => normalized.includes(term.toLowerCase()))
-  )
-  return {
-    status: "scored",
-    passed: matched.every(Boolean),
-    matched,
-  }
-}
-
 const groundingRaw = groundingCases.map((entry) => {
   const answer = submittedAnswers.get(
     `${entry.fixtureId}/${entry.condition}`
@@ -404,9 +381,12 @@ const report = {
     raw: firstTryRaw,
   },
   grounding: {
-    metadata: groundingSubmission?.metadata ?? {
-      fixtureRevision: grounding.fixtureRevision,
-      status: "awaiting-model-results",
+    metadata: {
+      ...(groundingSubmission?.metadata ?? {
+        fixtureRevision: grounding.fixtureRevision,
+        status: "awaiting-model-results",
+      }),
+      scoringRevision: groundingScoringRevision,
     },
     summary: {
       charts: grounding.charts.length,

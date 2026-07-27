@@ -12,9 +12,16 @@ surfaces. The fixtures intentionally contain no private prompts or production da
   unanswerable questions, expanded across PNG-only, combined, and
   grounding-only conditions.
 
-The runners report their raw per-fixture results. They do not claim model quality:
-model/client runs belong in separately versioned compatibility reports with model IDs,
-dates, prompts, and consent-safe traces.
+The runners report their raw per-fixture results. They do not claim model
+quality: model/client runs belong in separately versioned compatibility reports
+with model IDs, dates, fixture/context revisions, and consent-safe traces.
+
+The latest live compatibility evidence is the complete three-model
+[`openai-gpt-5.6-2026-07-27`](./reports/openai-gpt-5.6-2026-07-27/README.md)
+run: 516 requests covering the grounding and first-try suites. Its central
+grounding result is mixed — the combined payload improved Sol's abstention,
+tied PNG-only for Terra and Luna, and did not improve answerable reading — and
+is preserved without reinterpretation.
 
 Run `npm run prepare:ai-evals` after an intentional fixture change, then
 `npm run eval:ai` for the local render oracle. Provider result files conform
@@ -38,5 +45,6 @@ npm run eval:ai:openai -- \
 
 Use `--validate-only` first for one minimal request. The live runner refuses
 paid work unless `--confirm-spend` and a positive `--max-usd` are both present.
-It never writes the credential, project ID, raw prompts, or raw model responses
-to its reports.
+It never writes the credential, project ID, raw prompts, or raw API response
+bodies to its reports. Scoring inputs necessarily retain parsed chart proposals
+and grounding answer strings.

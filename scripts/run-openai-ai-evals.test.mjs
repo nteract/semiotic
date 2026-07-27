@@ -5,6 +5,7 @@ import {
   extractOutputText,
   publicRequestRecord,
   requestUpperBoundCost,
+  retryDelayMs,
 } from "./run-openai-ai-evals.mjs"
 
 test("calculateResponseCost applies standard, cached, cache-write, and output rates", () => {
@@ -56,6 +57,36 @@ test("extractOutputText returns output text and rejects refusals", () => {
         ],
       }),
     /Model refusal/
+  )
+})
+
+test("retryDelayMs honors headers and token-limit reset messages", () => {
+  const headers = (values) => ({
+    get: (name) => values[name] ?? null,
+  })
+  assert.equal(
+    retryDelayMs({
+      headers: headers({ "retry-after": "2" }),
+      errorText: "",
+      attempt: 0,
+    }),
+    2_500
+  )
+  assert.equal(
+    retryDelayMs({
+      headers: headers({}),
+      errorText: "Please try again in 7.923s.",
+      attempt: 3,
+    }),
+    8_423
+  )
+  assert.equal(
+    retryDelayMs({
+      headers: headers({}),
+      errorText: "",
+      attempt: 2,
+    }),
+    4_500
   )
 })
 

@@ -154,7 +154,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   answerable/unanswerable questions, PNG and `buildReaderGrounding` artifacts,
   and a three-condition 150-trial expansion. Both suites have provider-result
   schemas, pinned run metadata, raw/summary output, and local regeneration and
-  integrity checks; the actual model calls remain external benchmark work.
+  integrity checks. A spend-capped, resumable OpenAI Responses runner now reads
+  credentials from the environment or macOS Keychain, disables provider
+  storage, records hashes instead of raw outputs, estimates locked-rate cost,
+  and backs off across TPM/HTTP retry signals. The first complete live run
+  issued 516 requests across `gpt-5.6-sol`, `gpt-5.6-terra`, and
+  `gpt-5.6-luna` for $2.2792. First-try scores were 21/22, 17/22, and 17/22.
+  Grounding's combined PNG-plus-payload condition beat PNG alone for Sol
+  (45/50 versus 43/50) and tied it for Terra (45/50) and Luna (44/50), but did
+  not improve answerable-question accuracy. A paired manual audit hardened the
+  provider-neutral scorer before publication: explicit passive abstentions are
+  recognized, answerable abstentions cannot pass by repeating an expected
+  label, numeric matches use token boundaries, and reports carry a scoring
+  revision. The published evidence therefore supports an abstention benefit
+  for Sol, not the stronger expected claim that the payload closes an
+  answerable chart-reading gap.
 - **Offline conference-demo hardening packet.** `docs/strategy/talk-demos.md`
   now inventories the selected Stage C path, fused reader-grounding beat, and
   Stage B fallback with inputs, interactions, dependency class, timing, and a

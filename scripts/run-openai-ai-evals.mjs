@@ -111,6 +111,38 @@ export function extractOutputText(response) {
   throw new Error("Response contained no output_text")
 }
 
+export function retryDelayMs({ headers, errorText, attempt }) {
+  const retryAfterMillisecondsHeader = headers.get("retry-after-ms")
+  const retryAfterMilliseconds = Number(retryAfterMillisecondsHeader)
+  if (
+    retryAfterMillisecondsHeader != null &&
+    Number.isFinite(retryAfterMilliseconds) &&
+    retryAfterMilliseconds >= 0
+  ) {
+    return Math.ceil(retryAfterMilliseconds + 500)
+  }
+  const retryAfterSecondsHeader = headers.get("retry-after")
+  const retryAfterSeconds = Number(retryAfterSecondsHeader)
+  if (
+    retryAfterSecondsHeader != null &&
+    Number.isFinite(retryAfterSeconds) &&
+    retryAfterSeconds >= 0
+  ) {
+    return Math.ceil(retryAfterSeconds * 1_000 + 500)
+  }
+  const messageDelay = errorText.match(
+    /try again in ([\d.]+)\s*(ms|s)\b/i
+  )
+  if (messageDelay) {
+    const value = Number(messageDelay[1])
+    const milliseconds = messageDelay[2].toLowerCase() === "s"
+      ? value * 1_000
+      : value
+    return Math.ceil(milliseconds + 500)
+  }
+  return Math.min(60_000, 1_000 * 2 ** attempt + 500)
+}
+
 export function publicRequestRecord({
   model,
   suite,
@@ -179,7 +211,7 @@ async function apiRequest({
   apiKey,
   body,
   idempotencyKey,
-  retries = 3,
+  retries = 6,
 }) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const startedAt = Date.now()
@@ -217,11 +249,12 @@ async function apiRequest({
         ).slice(0, 1_000)}`
       )
     }
-    const retryAfterSeconds = Number(response.headers.get("retry-after"))
     await delay(
-      Number.isFinite(retryAfterSeconds)
-        ? retryAfterSeconds * 1_000
-        : 1_000 * 2 ** attempt
+      retryDelayMs({
+        headers: response.headers,
+        errorText,
+        attempt,
+      })
     )
   }
   throw new Error("Unreachable API retry state")

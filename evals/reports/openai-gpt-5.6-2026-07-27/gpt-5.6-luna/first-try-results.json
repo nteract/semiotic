@@ -1,0 +1,821 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-luna",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-26",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "bar-static-custom-fields",
+      "proposal": {
+        "component": "BarChart",
+        "props": {
+          "data": [
+            {
+              "market_name": "North",
+              "net_revenue": 12
+            },
+            {
+              "market_name": "South",
+              "net_revenue": 8
+            }
+          ],
+          "categoryAccessor": "market_name",
+          "valueAccessor": "net_revenue",
+          "title": "Revenue by region",
+          "description": "Net revenue by market region.",
+          "summary": "North has revenue of 12 and South has revenue of 8. North is higher by 4.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "547711e73ee39d18bbf3607360d63466c1a2e8c3f52943d28d49e5d46cb10b43"
+    },
+    {
+      "fixtureId": "grouped-bar-static",
+      "proposal": {
+        "component": "GroupedBarChart",
+        "props": {
+          "data": [
+            {
+              "region": "North",
+              "channel": "Web",
+              "value": 12
+            },
+            {
+              "region": "North",
+              "channel": "Retail",
+              "value": 7
+            },
+            {
+              "region": "South",
+              "channel": "Web",
+              "value": 9
+            },
+            {
+              "region": "South",
+              "channel": "Retail",
+              "value": 11
+            }
+          ],
+          "categoryAccessor": "region",
+          "valueAccessor": "value",
+          "groupBy": "channel",
+          "colorBy": "channel",
+          "title": "Web and Retail Revenue by Region",
+          "description": "Grouped bars compare web and retail revenue within each region.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "05b0e48a54344da851d45d9c8a527d20de224cd40ba3405cb82e98805c7f7ea0"
+    },
+    {
+      "fixtureId": "stacked-bar-static",
+      "proposal": {
+        "component": "StackedBarChart",
+        "props": {
+          "data": [
+            {
+              "quarter": "Q1",
+              "product": "Core",
+              "value": 14
+            },
+            {
+              "quarter": "Q1",
+              "product": "Plus",
+              "value": 6
+            },
+            {
+              "quarter": "Q2",
+              "product": "Core",
+              "value": 16
+            },
+            {
+              "quarter": "Q2",
+              "product": "Plus",
+              "value": 9
+            }
+          ],
+          "categoryAccessor": "quarter",
+          "valueAccessor": "value",
+          "stackBy": "product",
+          "colorBy": "product",
+          "sort": false,
+          "title": "Product mix by quarter",
+          "description": "Stacked bars show the value of Core and Plus products within each quarter.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "cee8b82c478937e1fd36ef001c7735aa9bea9d8dcd0c9ce46f0eba83e9313e07"
+    },
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "xScaleType": "linear",
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "pushRows": [
+            {
+              "week": 4,
+              "users": 165
+            }
+          ],
+          "width": 600,
+          "height": 400,
+          "title": "Active users by week",
+          "description": "A line chart showing active users for each week.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "ed69e30465047e575c74b68def679cf127b85293849d42fcdfd6c67dcd23a94f"
+    },
+    {
+      "fixtureId": "area-static",
+      "proposal": {
+        "component": "AreaChart",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "used": 40
+            },
+            {
+              "day": 2,
+              "used": 47
+            },
+            {
+              "day": 3,
+              "used": 53
+            },
+            {
+              "day": 4,
+              "used": 51
+            }
+          ],
+          "xAccessor": "day",
+          "yAccessor": "used",
+          "title": "Storage used over seven days",
+          "description": "Area chart showing storage used by day.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "dc3b5ce8bcd67ed3284a293530af05415fbd1d82adf2b3e69637846cc9ba35f2"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "pointRadius": 5,
+          "enableHover": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "15b4266dc36dc203d66157f3afd180d08f83b25bd9fc4ba5110704ee1d59280f"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "pointIdAccessor": "company",
+          "title": "Company growth and retention",
+          "description": "Companies compared by growth and retention, with bubble size representing customers.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "b942f9c3c449751a7e2bf61c511c3f45dfb2cca9447bc8c9c497f8f369f0f29d"
+    },
+    {
+      "fixtureId": "box-static",
+      "proposal": {
+        "component": "BoxPlot",
+        "props": {
+          "data": [
+            {
+              "service": "API",
+              "latency": 90
+            },
+            {
+              "service": "API",
+              "latency": 110
+            },
+            {
+              "service": "API",
+              "latency": 160
+            },
+            {
+              "service": "Worker",
+              "latency": 55
+            },
+            {
+              "service": "Worker",
+              "latency": 75
+            },
+            {
+              "service": "Worker",
+              "latency": 120
+            }
+          ],
+          "categoryAccessor": "service",
+          "valueAccessor": "latency",
+          "showOutliers": true,
+          "title": "Latency distribution by service",
+          "description": "Compare the distribution of latency for API and Worker services.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "ac87bc9c9c56d19a85b1f80d056d24e0621a97adcd0785e1e1e24250c4e44d3a"
+    },
+    {
+      "fixtureId": "violin-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "cohort": "Control",
+              "score": 42
+            },
+            {
+              "cohort": "Control",
+              "score": 55
+            },
+            {
+              "cohort": "Control",
+              "score": 68
+            },
+            {
+              "cohort": "Treatment",
+              "score": 51
+            },
+            {
+              "cohort": "Treatment",
+              "score": 70
+            },
+            {
+              "cohort": "Treatment",
+              "score": 83
+            }
+          ],
+          "categoryAccessor": "cohort",
+          "valueAccessor": "score",
+          "bins": 25,
+          "showIQR": true,
+          "title": "Score distribution by cohort",
+          "description": "Full score distributions for the Control and Treatment cohorts shown as violin plots.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "b6c86faed4697563ccd1e63a05732b5fde6a742ebf707cf3bdae99cb3cc9cf94"
+    },
+    {
+      "fixtureId": "ridgeline-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "job": "Import",
+              "duration": 40
+            },
+            {
+              "job": "Import",
+              "duration": 90
+            },
+            {
+              "job": "Import",
+              "duration": 150
+            },
+            {
+              "job": "Export",
+              "duration": 35
+            },
+            {
+              "job": "Export",
+              "duration": 80
+            },
+            {
+              "job": "Export",
+              "duration": 145
+            },
+            {
+              "job": "Index",
+              "duration": 20
+            },
+            {
+              "job": "Index",
+              "duration": 45
+            },
+            {
+              "job": "Index",
+              "duration": 75
+            }
+          ],
+          "categoryAccessor": "job",
+          "valueAccessor": "duration",
+          "bins": 25,
+          "showIQR": true,
+          "width": 600,
+          "height": 400,
+          "title": "Duration distributions by job type",
+          "description": "Distribution of job durations for Import, Export, and Index jobs.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "976cbaefebc4429cc82c8e046c33940f1eaf57dc75d18571a266a78f6e15b14a"
+    },
+    {
+      "fixtureId": "dot-static",
+      "proposal": {
+        "component": "DotPlot",
+        "props": {
+          "data": [
+            {
+              "team": "Blue",
+              "satisfaction": 82
+            },
+            {
+              "team": "Green",
+              "satisfaction": 74
+            },
+            {
+              "team": "Red",
+              "satisfaction": 91
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "satisfaction",
+          "width": 400,
+          "height": 260,
+          "dotRadius": 6,
+          "showGrid": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "bdd9dd7acaff22af636fee141f480b2346cce9b1085063c673ea1fb591a49139"
+    },
+    {
+      "fixtureId": "heatmap-static",
+      "proposal": {
+        "component": "Heatmap",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "hour": 9,
+              "load": 18
+            },
+            {
+              "day": 1,
+              "hour": 10,
+              "load": 31
+            },
+            {
+              "day": 2,
+              "hour": 9,
+              "load": 24
+            },
+            {
+              "day": 2,
+              "hour": 10,
+              "load": 38
+            }
+          ],
+          "xAccessor": "hour",
+          "yAccessor": "day",
+          "valueAccessor": "load",
+          "width": 600,
+          "height": 400,
+          "title": "Request load by weekday and hour",
+          "description": "Heatmap showing request load for each weekday and hour.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "03e2aecb9dc97e8651e0ee716b8a52a04ccf03eebd59379ac93c3707b60a3529"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "GaugeChart",
+        "props": {
+          "value": 97,
+          "min": 0,
+          "max": 100,
+          "thresholds": [
+            {
+              "at": 99,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 100,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "title": "Current SLA attainment",
+          "description": "SLA attainment is 97 percent against a 99 percent target.",
+          "summary": "Current SLA attainment is 97 percent, which is below the 99 percent target.",
+          "accessibleTable": true,
+          "width": 600,
+          "height": 400,
+          "showNeedle": true,
+          "centerContent": "97%"
+        }
+      },
+      "rawOutputSha256": "82ba6f9f9af03f9b00e78846b77f7bdc42741e72e2d38c9a79872c9a802c8fe3"
+    },
+    {
+      "fixtureId": "funnel-static",
+      "proposal": {
+        "component": "FunnelChart",
+        "props": {
+          "data": [
+            {
+              "step": "Visits",
+              "value": 1000
+            },
+            {
+              "step": "Trials",
+              "value": 260
+            },
+            {
+              "step": "Purchases",
+              "value": 80
+            }
+          ],
+          "stepAccessor": "step",
+          "valueAccessor": "value",
+          "width": 600,
+          "height": 400,
+          "title": "Conversion funnel",
+          "description": "Visits, trials, and purchases through the conversion funnel.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "4619e3abc6b12ed851720feadad8f592b5b05c9de24f282436850a4b0f76b747"
+    },
+    {
+      "fixtureId": "force-network-static",
+      "proposal": {
+        "component": "ForceDirectedGraph",
+        "props": {
+          "nodes": [
+            {
+              "id": "api"
+            },
+            {
+              "id": "worker"
+            },
+            {
+              "id": "db"
+            }
+          ],
+          "edges": [
+            {
+              "source": "api",
+              "target": "worker"
+            },
+            {
+              "source": "worker",
+              "target": "db"
+            }
+          ],
+          "nodeIDAccessor": "id",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "width": 600,
+          "height": 400,
+          "title": "Dependency network",
+          "description": "A dependency network showing API connected to the worker, which is connected to the database.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "b49320745d2b56386dd619617454dcc49fb849e072d1799a62e094364889829a"
+    },
+    {
+      "fixtureId": "sankey-static",
+      "proposal": {
+        "component": "SankeyDiagram",
+        "props": {
+          "edges": [
+            {
+              "source": "Incoming",
+              "target": "Success",
+              "value": 78
+            },
+            {
+              "source": "Incoming",
+              "target": "Retry",
+              "value": 15
+            },
+            {
+              "source": "Incoming",
+              "target": "Failure",
+              "value": 7
+            }
+          ],
+          "valueAccessor": "value",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "nodeIdAccessor": "id",
+          "nodes": [
+            {
+              "id": "Incoming"
+            },
+            {
+              "id": "Success"
+            },
+            {
+              "id": "Retry"
+            },
+            {
+              "id": "Failure"
+            }
+          ],
+          "width": 600,
+          "height": 400,
+          "title": "Incoming requests by outcome",
+          "description": "100 incoming requests split into 78 successes, 15 retries, and 7 failures.",
+          "showLabels": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "8e4357cc103a2ca03559322ef3045ea94d4a0b83e81abb273744e73e04a942fb"
+    },
+    {
+      "fixtureId": "treemap-static",
+      "proposal": {
+        "component": "Treemap",
+        "props": {
+          "data": {
+            "name": "Storage",
+            "children": [
+              {
+                "name": "Images",
+                "value": 48
+              },
+              {
+                "name": "Logs",
+                "value": 32
+              },
+              {
+                "name": "Backups",
+                "value": 20
+              }
+            ]
+          },
+          "childrenAccessor": "children",
+          "valueAccessor": "value",
+          "showLabels": true,
+          "title": "Storage allocation",
+          "description": "A treemap showing storage allocation across Images, Logs, and Backups.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "64e9b55d8e75ad914f1ce61402ade7d70b79c21bbb3deaa8c0f49dd1d7ff784e"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents",
+          "sizeRange": [
+            5,
+            40
+          ],
+          "width": 600,
+          "height": 400,
+          "title": "Incident counts by location",
+          "description": "A proportional symbol map showing incident counts at three longitude and latitude locations.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "54a7d6463fa0a44bb48ee22ac6a325f7b9bb9c50e10d8d403404b8395fcd9f28"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "seed": 42,
+          "mode": "sample",
+          "bins": 21,
+          "width": 600,
+          "height": 400,
+          "title": "Observed value distribution",
+          "description": "A deterministic Galton-board distribution of the observed values.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "7647480e730e00820b21bb4830aab2922488809fe78f82807fbe57f699c1d6df"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "colorBy": "team",
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "mode": "sample",
+          "showProjection": true,
+          "title": "Queued work by team",
+          "description": "Unit piles show queued work totals for each team.",
+          "summary": "Blue has 3 units of queued work and Green has 2 units. Additional rows can be pushed through the chart ref.",
+          "dataIdAccessor": "id",
+          "pushRows": [
+            {
+              "id": "c",
+              "team": "Blue",
+              "value": 2
+            }
+          ]
+        }
+      },
+      "rawOutputSha256": "4dbe92ab48b46f0090f50f1049fe1d2aae5c91c5e43980b452b1e3d0491a68b3"
+    },
+    {
+      "fixtureId": "event-drop-push",
+      "proposal": {
+        "component": "EventDropChart",
+        "props": {
+          "timeAccessor": "eventTime",
+          "arrivalAccessor": "arrivalTime",
+          "windows": {
+            "size": 20
+          },
+          "data": [
+            {
+              "id": "a",
+              "eventTime": 10,
+              "arrivalTime": 12
+            },
+            {
+              "id": "b",
+              "eventTime": 18,
+              "arrivalTime": 20
+            }
+          ]
+        }
+      },
+      "rawOutputSha256": "f12160a5e9b3a7b9644423db67302a4671e9fdc5bf6ee9d8a02011f62c9b37af"
+    },
+    {
+      "fixtureId": "packet-flow-push",
+      "proposal": {
+        "component": "PacketFlowChart",
+        "props": {
+          "nodes": [
+            {
+              "id": "source",
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "id": "sink",
+              "x": 0.9,
+              "y": 0.5
+            }
+          ],
+          "links": [
+            {
+              "id": "route-a",
+              "source": "source",
+              "target": "sink",
+              "value": 4
+            }
+          ],
+          "nodeIdAccessor": "id",
+          "nodeXAccessor": "x",
+          "nodeYAccessor": "y",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "throughputAccessor": "value",
+          "size": [
+            600,
+            400
+          ]
+        }
+      },
+      "rawOutputSha256": "c1279274a30eee2b8666266c5ce0be65ba282640adbfe24b99755839d7ecd072"
+    }
+  ]
+}
