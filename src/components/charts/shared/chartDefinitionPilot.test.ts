@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import Ajv2020 from "ajv/dist/2020.js"
 import { describe, expect, it } from "vitest"
 import { CHART_CONFIGS } from "../../server/serverChartConfigs"
+import { VALUE_RENDERERS } from "../../server/staticValue"
 import { CHART_SPECS, composeProps } from "./chartSpecs"
 import type { Datum } from "./datumTypes"
 import { validateProps } from "./validateProps"
@@ -104,14 +105,15 @@ describe("ChartDefinition pilot registry", () => {
   it("matches the current renderChart support boundary", () => {
     for (const chart of CHART_DEFINITION_PILOT_IDS) {
       const definition = CHART_DEFINITION_PILOT[chart]
-      const registeredForRenderChart = chart in CHART_CONFIGS
+      const registeredForRenderChart =
+        chart in CHART_CONFIGS || chart in VALUE_RENDERERS
       expect(definition.metadata.support.server.mode === "render-chart").toBe(registeredForRenderChart)
       expect(definition.metadata.capabilities.supportsSSR).toBe(registeredForRenderChart)
       if (definition.metadata.support.server.mode === "render-chart") {
         expect(definition.metadata.support.server.chartConfig).toBe(chart)
       }
     }
-    expect(CHART_DEFINITION_PILOT.BigNumber.metadata.support.server.mode).toBe("react-ssr-only")
+    expect(CHART_DEFINITION_PILOT.BigNumber.metadata.support.server.mode).toBe("render-chart")
     expect(CHART_DEFINITION_PILOT.RealtimeLineChart.metadata.support.server.mode).toBe("unavailable")
   })
 

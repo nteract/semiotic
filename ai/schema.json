@@ -3010,11 +3010,6 @@
               "description": "Display numeric values in cells",
               "default": false
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "cellBorderColor": {
               "type": "string",
               "default": "#fff"
@@ -3600,11 +3595,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -3903,11 +3893,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -4195,11 +4180,6 @@
             "showCategoryTicks": {
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "data": {
               "type": "array",
@@ -4500,11 +4480,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -4787,11 +4762,6 @@
             "showCategoryTicks": {
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "data": {
               "type": "array",
@@ -5098,11 +5068,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -5382,11 +5347,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -5658,11 +5618,6 @@
             "showCategoryTicks": {
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "data": {
               "type": "array",
@@ -5949,11 +5904,6 @@
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -6220,11 +6170,6 @@
             "showCategoryTicks": {
               "type": "boolean",
               "description": "Show category labels on the ordinal axis."
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "data": {
               "type": "array",
@@ -7043,7 +6988,27 @@
             },
             "thresholds": {
               "type": "array",
-              "description": "Array of { value, color, label? } defining threshold zones. Last value should equal max."
+              "description": "Array of { value, color, label? } defining threshold zones. This is GaugeChart's wire format; BigNumber instead uses { at, level, color?, label? }. Last value should equal max.",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "value",
+                  "color"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
             },
             "gradientFill": {
               "type": "object",
@@ -7074,11 +7039,6 @@
             },
             "needleColor": {
               "type": "string"
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "showScaleLabels": {
               "type": "boolean",
@@ -10413,11 +10373,6 @@
               "description": "Show category tick labels on ordinal axis",
               "default": false
             },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
-            },
             "data": {
               "type": "array",
               "description": "Array of data objects with step and value fields"
@@ -10697,11 +10652,6 @@
             "showCategoryTicks": {
               "type": "boolean",
               "description": "Show lane labels on the category axis"
-            },
-            "valueFormat": {
-              "x-semiotic-runtime-types": [
-                "function"
-              ]
             },
             "data": {
               "type": "array",
@@ -11735,6 +11685,19 @@
                 "string",
                 "function"
               ]
+            },
+            "sizeRange": {
+              "type": "array",
+              "description": "Minimum and maximum symbol radius in pixels.",
+              "default": [
+                3,
+                30
+              ],
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "areas": {
               "type": [
@@ -13214,6 +13177,22 @@
               "type": "string",
               "description": "Composed with the BEM root class on the outer container."
             },
+            "chartId": {
+              "type": "string",
+              "description": "Stable identifier surfaced on observation events."
+            },
+            "description": {
+              "type": "string",
+              "description": "Override the auto-generated accessible label sentence."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only supplement appended after the accessible label."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show the loading skeleton overlay."
+            },
             "value": {
               "type": "number",
               "description": "The focal number this card exists to display"
@@ -13235,7 +13214,7 @@
                 "compact",
                 "duration"
               ],
-              "description": "Number-format shortcut or custom (value) => string",
+              "description": "Number-format shortcut or React-only custom formatter. Percent treats the value as a ratio and multiplies by 100.",
               "default": "number",
               "x-semiotic-runtime-types": [
                 "string",
@@ -13436,6 +13415,32 @@
             "title": {
               "type": "string"
             },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
             "responsiveWidth": {
               "type": "boolean"
             },
@@ -13572,6 +13577,32 @@
             "title": {
               "type": "string"
             },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
             "responsiveWidth": {
               "type": "boolean"
             },
@@ -13690,6 +13721,32 @@
             },
             "title": {
               "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
             },
             "responsiveWidth": {
               "type": "boolean"
@@ -13817,6 +13874,32 @@
             },
             "title": {
               "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
             },
             "responsiveWidth": {
               "type": "boolean"
@@ -14328,6 +14411,32 @@
             "title": {
               "type": "string"
             },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
             "responsiveWidth": {
               "type": "boolean"
             },
@@ -14486,6 +14595,32 @@
             },
             "title": {
               "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
             },
             "responsiveWidth": {
               "type": "boolean"
@@ -14648,6 +14783,32 @@
             "title": {
               "type": "string"
             },
+            "description": {
+              "type": "string",
+              "description": "Accessible description of the authored charge, treatment, and terminal accounting."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader summary of the final products, outlets, and any conservation result."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
             "responsiveWidth": {
               "type": "boolean"
             },
@@ -14695,14 +14856,6 @@
                 "function",
                 "object"
               ]
-            },
-            "description": {
-              "type": "string",
-              "description": "Accessible description of the authored charge, treatment, and terminal accounting."
-            },
-            "summary": {
-              "type": "string",
-              "description": "Screen-reader summary of the final products, outlets, and any conservation result."
             },
             "phases": {
               "type": "array",
@@ -15990,6 +16143,32 @@
             },
             "title": {
               "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only takeaway and interaction guidance."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose source data through Semiotic's screen-reader data table."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable chart identity for linked observation and navigation."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
             },
             "responsiveWidth": {
               "type": "boolean"

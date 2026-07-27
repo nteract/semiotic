@@ -1,0 +1,2041 @@
+{
+  "version": 2,
+  "generatedAt": "2026-07-27T04:27:24.624Z",
+  "toolDiscovery": {
+    "summary": {
+      "cases": 8,
+      "positiveCases": 6,
+      "negativeCases": 2,
+      "publicTools": [
+        "createChart",
+        "improveChart",
+        "explainChart",
+        "auditChart",
+        "getChartSchema"
+      ]
+    },
+    "raw": [
+      {
+        "id": "create-comparison",
+        "prompt": "Show revenue by region as a chart.",
+        "expectedTools": [
+          "createChart"
+        ]
+      },
+      {
+        "id": "create-trend",
+        "prompt": "Visualize weekly active users over time.",
+        "expectedTools": [
+          "createChart"
+        ]
+      },
+      {
+        "id": "repair-existing",
+        "prompt": "My PieChart has twelve categories. Help improve it.",
+        "expectedTools": [
+          "improveChart"
+        ]
+      },
+      {
+        "id": "explain-accessibly",
+        "prompt": "Explain this chart to someone who cannot see it.",
+        "expectedTools": [
+          "explainChart"
+        ]
+      },
+      {
+        "id": "audit-mobile",
+        "prompt": "Check whether this chart is accessible and works on a phone.",
+        "expectedTools": [
+          "auditChart"
+        ]
+      },
+      {
+        "id": "schema-code",
+        "prompt": "What props does LineChart accept?",
+        "expectedTools": [
+          "getChartSchema"
+        ]
+      },
+      {
+        "id": "negative-writing",
+        "prompt": "Rewrite this paragraph for clarity; do not make a chart.",
+        "expectedTools": []
+      },
+      {
+        "id": "negative-calculation",
+        "prompt": "What is 17 times 23?",
+        "expectedTools": []
+      }
+    ]
+  },
+  "firstTry": {
+    "metadata": {
+      "modelId": "gpt-5.6-sol",
+      "clientVersion": "semiotic-openai-eval/1",
+      "fixtureRevision": "semiotic-first-try-2026-07-26",
+      "date": "2026-07-27",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ]
+    },
+    "summary": {
+      "generationFixtures": 22,
+      "guardFixtures": 3,
+      "staticFixtures": 17,
+      "pushFixtures": 5,
+      "firstAttemptPassed": 21,
+      "postRepairAttempted": 0,
+      "postRepairPassed": 0
+    },
+    "raw": [
+      {
+        "id": "bar-static-custom-fields",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 2,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "grouped-bar-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "stacked-bar-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "line-push",
+        "kind": "generation",
+        "family": "xy",
+        "mode": "push",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 1,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "area-static",
+        "kind": "generation",
+        "family": "xy",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 1,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "scatter-push",
+        "kind": "generation",
+        "family": "xy",
+        "mode": "push",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "bubble-static",
+        "kind": "generation",
+        "family": "xy",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 3,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "box-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 2,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "violin-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 2,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "ridgeline-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 3,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "dot-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 3,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "heatmap-static",
+        "kind": "generation",
+        "family": "xy",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "gauge-static",
+        "kind": "generation",
+        "family": "value",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": false,
+          "renderProven": false,
+          "noErrorDiagnostics": false,
+          "markCount": 0,
+          "empty": null,
+          "diagnostics": [],
+          "repairStatus": null,
+          "error": "Unknown chart component: \"BigNumber\". See CLAUDE.md for supported chart types.",
+          "passed": false
+        },
+        "postRepair": null
+      },
+      {
+        "id": "funnel-static",
+        "kind": "generation",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 5,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "force-network-static",
+        "kind": "generation",
+        "family": "network",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 5,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": null,
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "sankey-static",
+        "kind": "generation",
+        "family": "network",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 7,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": null,
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "treemap-static",
+        "kind": "generation",
+        "family": "network",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "symbol-map-static",
+        "kind": "generation",
+        "family": "geo",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 3,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": null,
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "galton-static",
+        "kind": "generation",
+        "family": "physics",
+        "mode": "static",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 4,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "unit-pile-push",
+        "kind": "generation",
+        "family": "physics",
+        "mode": "push",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 7,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "event-drop-push",
+        "kind": "generation",
+        "family": "physics",
+        "mode": "push",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 3,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "ok",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "packet-flow-push",
+        "kind": "generation",
+        "family": "physics",
+        "mode": "push",
+        "source": "model-submission",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": true,
+          "noErrorDiagnostics": true,
+          "markCount": 1,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": null,
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "guard-missing-stacking",
+        "kind": "guard",
+        "family": "ordinal",
+        "mode": "static",
+        "source": "committed-reference",
+        "firstAttempt": {
+          "validated": false,
+          "renderProven": false,
+          "noErrorDiagnostics": false,
+          "markCount": 1,
+          "empty": false,
+          "diagnostics": [
+            {
+              "code": "VALIDATION",
+              "severity": "error"
+            },
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "guard-invented-component",
+        "kind": "guard",
+        "family": "unknown",
+        "mode": "static",
+        "source": "committed-reference",
+        "firstAttempt": {
+          "validated": false,
+          "renderProven": false,
+          "noErrorDiagnostics": true,
+          "markCount": 0,
+          "empty": null,
+          "diagnostics": [],
+          "repairStatus": "unknown",
+          "passed": true
+        },
+        "postRepair": null
+      },
+      {
+        "id": "guard-categorical-scatter",
+        "kind": "guard",
+        "family": "xy",
+        "mode": "static",
+        "source": "committed-reference",
+        "firstAttempt": {
+          "validated": true,
+          "renderProven": false,
+          "noErrorDiagnostics": false,
+          "markCount": 0,
+          "empty": true,
+          "diagnostics": [
+            {
+              "code": "DEGENERATE_EXTENT",
+              "severity": "error"
+            },
+            {
+              "code": "MISSING_DESCRIPTION",
+              "severity": "warning"
+            }
+          ],
+          "repairStatus": "alternative",
+          "passed": true
+        },
+        "postRepair": null
+      }
+    ]
+  },
+  "grounding": {
+    "metadata": {
+      "modelId": "gpt-5.6-sol",
+      "clientVersion": "semiotic-openai-eval/1",
+      "fixtureRevision": "semiotic-grounding-2026-07-26",
+      "date": "2026-07-27",
+      "scoringRevision": "semiotic-grounding-score-2026-07-27"
+    },
+    "summary": {
+      "charts": 10,
+      "questions": 50,
+      "trials": 150,
+      "conditions": {
+        "png-only": {
+          "trials": 50,
+          "scored": 50,
+          "passed": 43,
+          "accuracy": 0.86,
+          "unanswerableTrials": 30
+        },
+        "png-plus-grounding": {
+          "trials": 50,
+          "scored": 50,
+          "passed": 45,
+          "accuracy": 0.9,
+          "unanswerableTrials": 30
+        },
+        "grounding-only": {
+          "trials": 50,
+          "scored": 50,
+          "passed": 42,
+          "accuracy": 0.84,
+          "unanswerableTrials": 30
+        }
+      }
+    },
+    "raw": [
+      {
+        "fixtureId": "regional-revenue/highest",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/highest",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/highest",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/count",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/count",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/count",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "regional-revenue/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/forecast",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/forecast",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/forecast",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/source",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/source",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "regional-revenue/source",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/last",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/last",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/last",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/direction",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/direction",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/direction",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "weekly-users/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/forecast",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/forecast",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/forecast",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/uncertainty",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/uncertainty",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "weekly-users/uncertainty",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/largest",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/largest",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/largest",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/count",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/count",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/count",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "payload-latency/causal",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/causal",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/causal",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/protocol",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/protocol",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/protocol",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/forecast",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": false,
+        "abstained": false
+      },
+      {
+        "fixtureId": "payload-latency/forecast",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "payload-latency/forecast",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/categories",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/categories",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/categories",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/max",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/max",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/max",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "service-latency/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sample-policy",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sample-policy",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sample-policy",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sla",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sla",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "service-latency/sla",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/largest",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "request-flow/largest",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "request-flow/largest",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "request-flow/failed",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": false,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "request-flow/failed",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "request-flow/failed",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "request-flow/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/retry-result",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/retry-result",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/retry-result",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/time",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/time",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "request-flow/time",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/largest",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/largest",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/largest",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/backups",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/backups",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/backups",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "storage-tree/units",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/units",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/units",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/owner",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/owner",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/owner",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/growth",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/growth",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "storage-tree/growth",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/largest",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/largest",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/largest",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/count",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/count",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/count",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "incident-map/names",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/names",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/names",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/severity",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": false,
+        "abstained": false
+      },
+      {
+        "fixtureId": "incident-map/severity",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "incident-map/severity",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/value",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/value",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/value",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/maximum",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/maximum",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/maximum",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "sla-gauge/cause",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/cause",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/cause",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/period",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/period",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/period",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/forecast",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/forecast",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "sla-gauge/forecast",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/purchases",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/purchases",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/purchases",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/stages",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/stages",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/stages",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true,
+          true,
+          true
+        ]
+      },
+      {
+        "fixtureId": "conversion-funnel/dropoff",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/dropoff",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/dropoff",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/people",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": false,
+        "abstained": false
+      },
+      {
+        "fixtureId": "conversion-funnel/people",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/people",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/experiment",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/experiment",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "conversion-funnel/experiment",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/range",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false,
+          true
+        ]
+      },
+      {
+        "fixtureId": "galton-values/range",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false,
+          false
+        ]
+      },
+      {
+        "fixtureId": "galton-values/range",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false,
+          false
+        ]
+      },
+      {
+        "fixtureId": "galton-values/count",
+        "condition": "png-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": true,
+        "abstained": false,
+        "matched": [
+          true
+        ]
+      },
+      {
+        "fixtureId": "galton-values/count",
+        "condition": "png-plus-grounding",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "galton-values/count",
+        "condition": "grounding-only",
+        "answerable": true,
+        "status": "scored",
+        "passed": false,
+        "abstained": true,
+        "matched": [
+          false
+        ]
+      },
+      {
+        "fixtureId": "galton-values/probability",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/probability",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/probability",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/population",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/population",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/population",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/forecast",
+        "condition": "png-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/forecast",
+        "condition": "png-plus-grounding",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      },
+      {
+        "fixtureId": "galton-values/forecast",
+        "condition": "grounding-only",
+        "answerable": false,
+        "status": "scored",
+        "passed": true,
+        "abstained": true
+      }
+    ]
+  }
+}

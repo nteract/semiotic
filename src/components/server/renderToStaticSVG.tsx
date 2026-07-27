@@ -31,6 +31,11 @@ import { renderNetworkFrame } from "./staticNetwork"
 import { renderGeoFrame } from "./staticGeo"
 import { renderPhysicsFrame } from "./staticPhysics"
 import type { SharpFactory, SharpModule } from "./optionalImageTypes"
+import {
+  renderValueChart,
+  VALUE_RENDERERS,
+  type ValueChartName,
+} from "./staticValue"
 
 export function renderToStaticSVG(
   frameType: FrameType,
@@ -78,7 +83,7 @@ export function renderGeoToStaticSVG(props: StreamGeoFrameProps & ThemeAwareProp
  * union — no second edit required, no silent drift like the CandlestickChart
  * gap that motivated this refactor.
  */
-type ChartName = keyof typeof CHART_CONFIGS
+type ChartName = keyof typeof CHART_CONFIGS | ValueChartName
 
 interface RenderChartOptions {
   /** Output format — currently only "svg" is synchronous */
@@ -227,10 +232,17 @@ function renderChartInternal(
   _options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
+  if (component in VALUE_RENDERERS) {
+    return {
+      svg: renderValueChart(component as ValueChartName, props, sink),
+      frameType: "value",
+    }
+  }
+
   // Resolve the public HOC contract before mapping chart-specific props. The
   // resolver is the same pure function every React chart HOC consumes, so
   // context/sparkline/mobile dimensions and chrome cannot drift in SSR.
-  const config = CHART_CONFIGS[component]
+  const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]
   if (!config) {
     throw new Error(
       `Unknown chart component: "${component}". ` +

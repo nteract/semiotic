@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A high-touch evaluation example makes the prove track inspectable.**
+  `/examples/the-benchmark-is-a-chart-too` turns the completed 516-request
+  GPT-5.6 compatibility run into an evidence-first reading room. It separates
+  answerable questions from correct abstentions, preserves the first-attempt
+  failure matrix and cost/latency context, documents the scorer audit, and links
+  the aggregate back to its checked-in reports and methods.
 - **The HRA/WPP typology pilot now runs on the real kidney ASCT+B v1.6
   digital object.** A pinned generator produces a checked-in, workshop-ready
   artifact for the observed direct children of kidney, with ontology IDs kept
@@ -16,7 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   measured counts, and a public `/interoperability/hra-wpp` walkthrough. The
   actual data exposed the pilot's first failure case: distinct ontology concepts
   share labels, while mixing parent and descendant rows turns hierarchy into a
-  misleading rank. A focused regression test pins both corrections.
+  misleading rank. A focused regression test pins both corrections. A public
+  workshop bundle now adds the exact kidney fixture, a 30-minute review
+  protocol, response schema/template, explicit extension-vs-context decision
+  rubric, and written co-sign template.
 - **MCP `3.8.6` distribution is verified end to end.** The official
   `io.github.nteract/semiotic` Registry entry marks `3.8.6` latest, and stable
   Cloud Run revision `semiotic-mcp-server-00071-2rw` now serves the exact
@@ -41,13 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   state, or push-driven streaming. Accessibility language now states the EAA
   date and the infrastructure Semiotic supplies without claiming that a chart
   library certifies application-level legal compliance.
-- **Physics capability claims now distinguish selection consumption from linked-hover
-  production.** The eight standard physics HOCs advertise `supportsSelection`
-  because they resolve named selection stores over `body.datum`;
-  `ChainReactionChart`, whose `selectedTaskIDs` is chart-specific, does not.
-  All nine remain `supportsLinkedHover: false` until their body-hover path
-  actually publishes to the linked store. The capability gate now checks the
-  physics source in both directions so metadata cannot outrun behavior again.
+- **Physics charts now consume and produce linked hover.** The eight standard
+  physics HOCs already resolved named selection stores over `body.datum`; their
+  `StreamPhysicsFrame.onBodyHover` path now publishes the source datum through
+  the shared hover store and clears it on leave. Authored wrapper bodies such as
+  Gauntlet cores are unwrapped through `sourceDatum`, and frame-level hover
+  callbacks still compose with the shared producer. Those eight charts now
+  advertise `supportsLinkedHover: true`; `ChainReactionChart`, whose
+  `selectedTaskIDs` is chart-specific, remains false. The capability gate
+  recognizes the physics selection bridge so metadata cannot outrun behavior.
 - **Accessibility audits now report the shipped texture surface accurately.**
   `perceivable.color-alone` and `flexible.textures-adjustable` recognize
   serializable `HatchFill` descriptors authored through `styleRules`, without
@@ -131,10 +142,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   refusal, declared production scale, governed audience, captured-model variant,
   the KStreams custom-chart escape, pinned server-render evidence, live reader
   grounding, and JSX handoff. Interactions record a fresh typed conversation arc
-  that can be downloaded for rehearsal review, while the committed hand-authored
-  arc stays visibly labeled as recovery rather than benchmark evidence. The
-  talk-demo browser contract exercises every beat with external requests and
-  sockets blocked.
+  that can be downloaded for rehearsal review. The committed recovery is now a
+  normalized 13-event Playwright rehearsal arc rather than a hand-authored
+  substitute. The talk-demo browser contract preloads the custom-chart chunk
+  under throttling, takes the browser fully offline, and then exercises every
+  beat with external requests and sockets blocked.
+- **Conference recovery recording package.** A reproducible Playwright capture
+  produces an MP4, candidate/variant/handoff keyframes, the live typed arc, and
+  a manifest with byte counts and SHA-256 digests. The conference page exposes
+  the checked-in fallback, and a focused asset test authenticates all four
+  files plus the required refusal, audience, evidence, grounding, and export
+  events.
+- **Prove-track evaluation substrate.** `evals/first-try` now carries 22
+  generation prompts across static and push modes plus three guard cases, with
+  first-attempt and post-repair scoring against validation, diagnostics, and
+  `renderChartWithEvidence`. `evals/grounding` carries 10 rendered charts, 50
+  answerable/unanswerable questions, PNG and `buildReaderGrounding` artifacts,
+  and a three-condition 150-trial expansion. Both suites have provider-result
+  schemas, pinned run metadata, raw/summary output, and local regeneration and
+  integrity checks. A spend-capped, resumable OpenAI Responses runner now reads
+  credentials from the environment or macOS Keychain, disables provider
+  storage, records hashes instead of raw outputs, estimates locked-rate cost,
+  and backs off across TPM/HTTP retry signals. The first complete live run
+  issued 516 requests across `gpt-5.6-sol`, `gpt-5.6-terra`, and
+  `gpt-5.6-luna` for $2.2792. First-try scores were 21/22, 17/22, and 17/22.
+  Grounding's combined PNG-plus-payload condition beat PNG alone for Sol
+  (45/50 versus 43/50) and tied it for Terra (45/50) and Luna (44/50), but did
+  not improve answerable-question accuracy. A paired manual audit hardened the
+  provider-neutral scorer before publication: explicit passive abstentions are
+  recognized, answerable abstentions cannot pass by repeating an expected
+  label, numeric matches use token boundaries, and reports carry a scoring
+  revision. The published evidence therefore supports an abstention benefit
+  for Sol, not the stronger expected claim that the payload closes an
+  answerable chart-reading gap.
 - **Offline conference-demo hardening packet.** `docs/strategy/talk-demos.md`
   now inventories the selected Stage C path, fused reader-grounding beat, and
   Stage B fallback with inputs, interactions, dependency class, timing, and a

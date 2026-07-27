@@ -1,0 +1,31 @@
+{
+  "component": "SankeyDiagram",
+  "description": {
+    "levels": {
+      "l1": "A Sankey diagram with 3 edges."
+    },
+    "text": "A Sankey diagram with 3 edges."
+  },
+  "intent": {
+    "act": "tracing",
+    "sentence": "This is a flow chart; follow the movement between states."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A Sankey diagram with 3 edges.",
+    "level": 1,
+    "children": []
+  },
+  "facts": {
+    "source": "chart-props",
+    "statements": [
+      "3 source flows are supplied.",
+      "Incoming to Success has value 78.",
+      "Incoming to Retry has value 15.",
+      "Incoming to Failure has value 7."
+    ],
+    "text": "Exact chart-prop facts: 3 source flows are supplied. Incoming to Success has value 78. Incoming to Retry has value 15. Incoming to Failure has value 7."
+  },
+  "text": "A Sankey diagram with 3 edges. This is a flow chart; follow the movement between states. Exact chart-prop facts: 3 source flows are supplied. Incoming to Success has value 78. Incoming to Retry has value 15. Incoming to Failure has value 7."
+}

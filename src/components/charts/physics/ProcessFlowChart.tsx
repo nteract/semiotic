@@ -542,14 +542,17 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
   )
   const rerun = usePhysicsRerun(resolvedConfig, rerunMS, paused)
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "ProcessFlowChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof stageAccessor === "string" ? [stageAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -628,6 +631,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       controllers={capacityControllers}
       regionEffects={regionEffects}
       selection={bodySelection ?? frameProps.selection}

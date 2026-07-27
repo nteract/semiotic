@@ -77,6 +77,18 @@ function isSelectionConfig(
   return !!value && typeof (value as SelectionConfig).name === "string"
 }
 
+function physicsBodyDatum(
+  body: Parameters<NonNullable<StreamPhysicsFrameProps["onBodyHover"]>>[0],
+  unwrapSourceDatum = false
+): Datum | null {
+  if (!body?.datum) return null
+  const datum = body.datum as Datum
+  const sourceDatum = datum.sourceDatum
+  return unwrapSourceDatum && sourceDatum && typeof sourceDatum === "object"
+    ? (sourceDatum as Datum)
+    : datum
+}
+
 export interface PhysicsSelectionOptions {
   selection?: PhysicsChartSelection
   linkedHover?: LinkedHoverProp
@@ -85,6 +97,14 @@ export interface PhysicsSelectionOptions {
   chartId?: string
   onObservation?: BaseChartProps["onObservation"]
   onClick?: BaseChartProps["onClick"]
+  onBodyHover?: StreamPhysicsFrameProps["onBodyHover"]
+  fallbackFields?: string[]
+  unwrapSourceDatum?: boolean
+}
+
+export interface PhysicsSelectionResult {
+  selection: PhysicsBodySelection | null
+  onBodyHover?: StreamPhysicsFrameProps["onBodyHover"]
 }
 
 /**
@@ -96,15 +116,24 @@ export interface PhysicsSelectionOptions {
  */
 export function usePhysicsSelection(
   options: PhysicsSelectionOptions
-): PhysicsBodySelection | null {
-  const { selection, linkedHover, colorBy, chartType, chartId } = options
+): PhysicsSelectionResult {
+  const {
+    selection,
+    linkedHover,
+    colorBy,
+    chartType,
+    chartId,
+    onBodyHover: frameOnBodyHover,
+    fallbackFields,
+    unwrapSourceDatum
+  } = options
   const colorByField = typeof colorBy === "string" ? colorBy : undefined
   const storeSelection = isSelectionConfig(selection) ? selection : undefined
 
-  const { activeSelectionHook } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection: storeSelection,
     linkedHover,
-    fallbackFields: colorByField ? [colorByField] : undefined,
+    fallbackFields: colorByField ? [colorByField] : fallbackFields,
     onObservation: options.onObservation,
     onClick: options.onClick,
     chartType,
@@ -114,16 +143,50 @@ export function usePhysicsSelection(
 
   const direct = isSelectionConfig(selection) ? null : (selection ?? null)
 
-  return useMemo<PhysicsBodySelection | null>(() => {
+  const resolvedSelection = useMemo<PhysicsBodySelection | null>(() => {
     if (direct) return direct
     if (!activeSelectionHook?.isActive) return null
     const predicate = activeSelectionHook.predicate
     return {
       isActive: true,
-      predicate: (body) =>
-        body.datum == null ? false : predicate(body.datum as Datum)
+      predicate: (body) => {
+        const datum = physicsBodyDatum(body, unwrapSourceDatum)
+        return datum == null ? false : predicate(datum)
+      }
     }
-  }, [activeSelectionHook?.isActive, activeSelectionHook?.predicate, direct])
+  }, [
+    activeSelectionHook?.isActive,
+    activeSelectionHook?.predicate,
+    direct,
+    unwrapSourceDatum
+  ])
+
+  const onBodyHover = useMemo<StreamPhysicsFrameProps["onBodyHover"]>(() => {
+    if (!linkedHover && !frameOnBodyHover) return undefined
+    return (body, hover) => {
+      frameOnBodyHover?.(body, hover)
+      if (!linkedHover) return
+      const datum = physicsBodyDatum(body, unwrapSourceDatum)
+      if (!datum || !hover) {
+        customHoverBehavior(null)
+        return
+      }
+      customHoverBehavior({
+        ...hover,
+        data: datum
+      } as unknown as Datum)
+    }
+  }, [
+    customHoverBehavior,
+    frameOnBodyHover,
+    linkedHover,
+    unwrapSourceDatum
+  ])
+
+  return useMemo(
+    () => ({ selection: resolvedSelection, onBodyHover }),
+    [onBodyHover, resolvedSelection]
+  )
 }
 
 /** Galton / pile sampling mode (orthogonal to ChartMode display modes). */

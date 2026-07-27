@@ -68,17 +68,11 @@ function metadataForComponent(entryOrName) {
   // any other static HOC. Matches the name-prefix exclusion the
   // check-surface-parity script applies.
   const isPushOnly = category === "realtime" && name.startsWith("Realtime")
-  // Value-family charts (BigNumber, future SingleValueFrame HOCs)
-  // render via react-dom/server in a normal React tree, but they do
-  // not route through the frame-driven `renderChart` path in
-  // serverChartConfigs.ts — so they are not MCP-renderable. Mirrors
-  // the `hoc-ssr-only` special feature documented in chartSpecs.ts.
-  const isValueCategory = category === "value"
   return {
     name,
     category,
     importPath: importPathForCategory(category),
-    renderable: !isPushOnly && !isValueCategory,
+    renderable: !isPushOnly,
     description: typeof entryOrName === "string" ? undefined : entryOrName.description,
   }
 }

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.nteract.io/workshop/hra-wpp/response-schema.json",
+  "title": "HRA/WPP × IDID workshop response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "session",
+    "participant",
+    "termReview",
+    "failureCase",
+    "communicativeActContrast",
+    "contextDecision",
+    "coSign"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "status": {
+      "enum": ["draft", "participant-reviewed", "final"]
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "facilitator", "sourcePurl", "sourceVersion"],
+      "properties": {
+        "date": { "type": "string" },
+        "facilitator": { "type": "string" },
+        "sourcePurl": { "type": "string", "format": "uri" },
+        "sourceVersion": { "const": "v1.6" }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "organization",
+        "roles",
+        "domainLiteracy",
+        "attribution"
+      ],
+      "properties": {
+        "name": { "type": "string" },
+        "organization": { "type": "string" },
+        "roles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "domainLiteracy": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "attribution": {
+          "enum": ["anonymous", "role-and-organization", "named"]
+        }
+      }
+    },
+    "termReview": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "term",
+          "decision",
+          "replacement",
+          "sourceOrOntology",
+          "owner",
+          "crossToolInterpretation",
+          "notes"
+        ],
+        "properties": {
+          "term": { "type": "string" },
+          "decision": {
+            "enum": ["accept", "revise", "reject", "pending"]
+          },
+          "replacement": { "type": "string" },
+          "sourceOrOntology": { "type": "string" },
+          "owner": { "type": "string" },
+          "crossToolInterpretation": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "failureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readerRole",
+        "task",
+        "expectedReading",
+        "observedReading",
+        "lostFact",
+        "consequence",
+        "reproductionSteps",
+        "evidence"
+      ],
+      "properties": {
+        "readerRole": { "type": "string" },
+        "task": { "type": "string" },
+        "expectedReading": { "type": "string" },
+        "observedReading": { "type": "string" },
+        "lostFact": { "type": "string" },
+        "consequence": { "type": "string" },
+        "reproductionSteps": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "communicativeActContrast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roleA", "roleB", "sharedData", "behaviorChanges"],
+      "properties": {
+        "roleA": {
+          "$ref": "#/$defs/roleAct"
+        },
+        "roleB": {
+          "$ref": "#/$defs/roleAct"
+        },
+        "sharedData": { "type": "boolean" },
+        "behaviorChanges": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "prose",
+              "annotation-status",
+              "available-actions",
+              "ranking-or-scoring",
+              "chart-form",
+              "none"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "contextDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "fact",
+        "producer",
+        "consumers",
+        "observableBehavior",
+        "rationale",
+        "secondWorkflowNeeded"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "pending",
+            "extension-sufficient",
+            "grounding-context-envelope",
+            "context-profile-rfc-candidate",
+            "insufficient-evidence"
+          ]
+        },
+        "fact": { "type": "string" },
+        "producer": { "type": "string" },
+        "consumers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "observableBehavior": { "type": "string" },
+        "rationale": { "type": "string" },
+        "secondWorkflowNeeded": { "type": "boolean" }
+      }
+    },
+    "coSign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "followUpAllowed",
+        "permissionToQuote",
+        "approvedSentence",
+        "approvedAt"
+      ],
+      "properties": {
+        "followUpAllowed": { "type": "boolean" },
+        "permissionToQuote": { "type": "boolean" },
+        "approvedSentence": { "type": "string" },
+        "approvedAt": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "roleAct": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "notice", "action", "communicativeAct"],
+      "properties": {
+        "role": { "type": "string" },
+        "notice": { "type": "string" },
+        "action": { "type": "string" },
+        "communicativeAct": { "type": "string" }
+      }
+    }
+  }
+}

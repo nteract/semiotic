@@ -44,6 +44,7 @@ const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname, "..")
 
 const SERVER_CONFIGS_PATH = path.join(ROOT, "src/components/server/serverChartConfigs.ts")
+const VALUE_RENDERERS_PATH = path.join(ROOT, "src/components/server/staticValue.tsx")
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
 
 // Parse via the shared helper so this script, the markdown
@@ -80,6 +81,14 @@ const ssrRegistered = new Set()
 const registryStart = configsSource.indexOf("export const CHART_CONFIGS")
 const registrySource = registryStart >= 0 ? configsSource.slice(registryStart) : configsSource
 for (const match of registrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
+  ssrRegistered.add(match[1])
+}
+const valueRenderersSource = fs.readFileSync(VALUE_RENDERERS_PATH, "utf8")
+const valueRegistryStart = valueRenderersSource.indexOf("export const VALUE_RENDERERS")
+const valueRegistrySource = valueRegistryStart >= 0
+  ? valueRenderersSource.slice(valueRegistryStart)
+  : valueRenderersSource
+for (const match of valueRegistrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
   ssrRegistered.add(match[1])
 }
 
@@ -228,10 +237,10 @@ for (const e of specEntries) {
     }
   }
 
-  // Lock 4: linkedHover claim ↔ useChartSelection or useChartSetup
-  // (which calls useChartSelection internally) or useNetworkChartSetup
-  // (also wraps useChartSelection). The hook is the only standardized
-  // way to wire `linkedHover` into the frame's hover-selection
+  // Lock 4: linkedHover claim ↔ useChartSelection or one of its standard
+  // wrappers: useChartSetup, useNetworkChartSetup, or usePhysicsSelection.
+  // These hooks are the standardized way to wire `linkedHover` into the
+  // frame's hover-selection
   // pipeline; charts claiming linked-hover support without it would
   // have a no-op `linkedHover` prop.
   if (e.supportsLinkedHover) {
@@ -240,6 +249,7 @@ for (const e of specEntries) {
       /\buseChartSelection\b/.test(source) ||
       /\buseChartSetup\b/.test(source) ||
       /\buseNetworkChartSetup\b/.test(source) ||
+      /\busePhysicsSelection\b/.test(source) ||
       // A HOC that delegates to a custom-layout wrapper inherits selection
       // wiring: the wrapper runs useCustomChartSetup → useChartSetup →
       // useChartSelection. (e.g. BumpChart renders <XYCustomChart>.)
@@ -247,7 +257,7 @@ for (const e of specEntries) {
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
-        `Either import useChartSelection / useChartSetup / useNetworkChartSetup, or set ` +
+        `Either import useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, or set ` +
         `supportsLinkedHover=false.`,
       )
     }

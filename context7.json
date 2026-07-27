@@ -31,6 +31,11 @@
     "Geo imports must come from `semiotic/geo`, never bare `semiotic`, to avoid pulling d3-geo into non-geo bundles.",
     "Required prop combos: `StackedAreaChart` needs `areaBy`; `BubbleChart` `sizeBy`; `StackedBarChart` `stackBy`; `GroupedBarChart` `groupBy`; `SwimlaneChart` `subcategoryAccessor`; `ForceDirectedGraph` `nodes`+`edges`. Push mode preserves these.",
     "`semiotic/server` (`renderChart`, `renderToImage`, `renderToAnimatedGif`) produces static SVG/PNG snapshots and cannot ingest pushed data. For live/streaming behavior return React HOC code with a ref instead.",
+    "Serialized MCP/SSR/eval proposals keep supplied initial rows in the chart's actual data prop. Do not invent pushRows, pushRequirement, ref, or method props. React push JSX instead omits controlled data and mutates through a ref.",
+    "xFormat, yFormat, categoryFormat, and valueFormat are React callbacks, not strings. Omit them from JSON. Use xLabel, yLabel, categoryLabel, and valueLabel for axis titles; pass formatter functions only in JSX.",
+    "BigNumber uses label, description, and summary, not title or accessibleTable. format percent expects a ratio (0.97 becomes 97%); for a 0–100 value, use format number plus suffix \"%\".",
+    "ProportionalSymbolMap uses points + xAccessor(longitude) + yAccessor(latitude) + sizeBy(radius field); sizeRange is [min,max] pixel radius. Do not substitute generic data or valueAccessor props.",
+    "Physics snapshots use data plus semantic accessors. React refs push source records; pushRows and dataIdAccessor are not physics props. Galton uses valueAccessor/bins; UnitPile uses categoryAccessor/valueAccessor/unitValue.",
     "CrucibleChart is an authored ledger, not inference: supply data, phases, products, events, and outlets. buildCrucibleProductEvents expands form/contribute/complete only; callers own membership, timing, reasons, loss, and routing. replay() restarts.",
     "Word Trails callbacks receive source datum, canonical fields, and resolvedColumnColor. Put derived encodings on rows. Spread wordTrailsProgressiveReveal({currentSegment,segmentDomain}) into layoutConfig to fade history and hide future rows without reflow."
   ]

@@ -1,0 +1,746 @@
+{
+  "version": 1,
+  "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+  "jobs": [
+    {
+      "fixtureId": "bar-static-custom-fields",
+      "prompt": "Build an accessible bar chart of revenue by region from rows whose fields are market_name and net_revenue.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "market_name": "North",
+            "net_revenue": 12
+          },
+          {
+            "market_name": "South",
+            "net_revenue": 8
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "grouped-bar-static",
+      "prompt": "Compare web and retail revenue within each region using grouped bars.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "region": "North",
+            "channel": "Web",
+            "value": 12
+          },
+          {
+            "region": "North",
+            "channel": "Retail",
+            "value": 7
+          },
+          {
+            "region": "South",
+            "channel": "Web",
+            "value": 9
+          },
+          {
+            "region": "South",
+            "channel": "Retail",
+            "value": 11
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "stacked-bar-static",
+      "prompt": "Show the product mix within each quarter as stacked bars.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "quarter": "Q1",
+            "product": "Core",
+            "value": 14
+          },
+          {
+            "quarter": "Q1",
+            "product": "Plus",
+            "value": 6
+          },
+          {
+            "quarter": "Q2",
+            "product": "Core",
+            "value": 16
+          },
+          {
+            "quarter": "Q2",
+            "product": "Plus",
+            "value": 9
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "line-push",
+      "prompt": "Create a line chart of active users by week that can accept new rows through the chart ref push API.",
+      "family": "xy",
+      "mode": "push",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "week": 1,
+            "users": 120
+          },
+          {
+            "week": 2,
+            "users": 138
+          },
+          {
+            "week": 3,
+            "users": 151
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props.",
+      "pushRows": [
+        {
+          "week": 4,
+          "users": 165
+        }
+      ],
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+    },
+    {
+      "fixtureId": "area-static",
+      "prompt": "Show storage used over seven days as an area chart.",
+      "family": "xy",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "day": 1,
+            "used": 40
+          },
+          {
+            "day": 2,
+            "used": 47
+          },
+          {
+            "day": 3,
+            "used": 53
+          },
+          {
+            "day": 4,
+            "used": 51
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "scatter-push",
+      "prompt": "Plot response time against payload size and keep the chart ready for streaming observations.",
+      "family": "xy",
+      "mode": "push",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "payload_kb": 8,
+            "response_ms": 42
+          },
+          {
+            "payload_kb": 16,
+            "response_ms": 61
+          },
+          {
+            "payload_kb": 32,
+            "response_ms": 95
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props.",
+      "pushRows": [
+        {
+          "payload_kb": 64,
+          "response_ms": 142
+        }
+      ],
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+    },
+    {
+      "fixtureId": "bubble-static",
+      "prompt": "Compare growth and retention, sizing each company by customers.",
+      "family": "xy",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "company": "A",
+            "growth": 12,
+            "retention": 86,
+            "customers": 300
+          },
+          {
+            "company": "B",
+            "growth": 18,
+            "retention": 78,
+            "customers": 180
+          },
+          {
+            "company": "C",
+            "growth": 9,
+            "retention": 92,
+            "customers": 420
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "box-static",
+      "prompt": "Compare the distribution of latency by service with a box plot.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "service": "API",
+            "latency": 90
+          },
+          {
+            "service": "API",
+            "latency": 110
+          },
+          {
+            "service": "API",
+            "latency": 160
+          },
+          {
+            "service": "Worker",
+            "latency": 55
+          },
+          {
+            "service": "Worker",
+            "latency": 75
+          },
+          {
+            "service": "Worker",
+            "latency": 120
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "violin-static",
+      "prompt": "Show the full score distribution for two cohorts with violins.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "cohort": "Control",
+            "score": 42
+          },
+          {
+            "cohort": "Control",
+            "score": 55
+          },
+          {
+            "cohort": "Control",
+            "score": 68
+          },
+          {
+            "cohort": "Treatment",
+            "score": 51
+          },
+          {
+            "cohort": "Treatment",
+            "score": 70
+          },
+          {
+            "cohort": "Treatment",
+            "score": 83
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "ridgeline-static",
+      "prompt": "Reveal possible multimodal duration distributions across three job types.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "job": "Import",
+            "duration": 40
+          },
+          {
+            "job": "Import",
+            "duration": 90
+          },
+          {
+            "job": "Import",
+            "duration": 150
+          },
+          {
+            "job": "Export",
+            "duration": 35
+          },
+          {
+            "job": "Export",
+            "duration": 80
+          },
+          {
+            "job": "Export",
+            "duration": 145
+          },
+          {
+            "job": "Index",
+            "duration": 20
+          },
+          {
+            "job": "Index",
+            "duration": 45
+          },
+          {
+            "job": "Index",
+            "duration": 75
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "dot-static",
+      "prompt": "Make a compact dot plot of satisfaction by team.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "team": "Blue",
+            "satisfaction": 82
+          },
+          {
+            "team": "Green",
+            "satisfaction": 74
+          },
+          {
+            "team": "Red",
+            "satisfaction": 91
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "heatmap-static",
+      "prompt": "Display request load by weekday and hour as a heatmap.",
+      "family": "xy",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "day": 1,
+            "hour": 9,
+            "load": 18
+          },
+          {
+            "day": 1,
+            "hour": 10,
+            "load": 31
+          },
+          {
+            "day": 2,
+            "hour": 9,
+            "load": 24
+          },
+          {
+            "day": 2,
+            "hour": 10,
+            "load": 38
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "gauge-static",
+      "prompt": "Show current SLA attainment of 97 percent against a 99 percent target.",
+      "family": "value",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "value": 97,
+        "min": 0,
+        "max": 100,
+        "thresholds": [
+          {
+            "value": 99,
+            "color": "#c7952f",
+            "label": "Below target"
+          },
+          {
+            "value": 100,
+            "color": "#2a8f68",
+            "label": "Meets target"
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "funnel-static",
+      "prompt": "Show visits, trials, and purchases as a conversion funnel.",
+      "family": "ordinal",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "step": "Visits",
+            "value": 1000
+          },
+          {
+            "step": "Trials",
+            "value": 260
+          },
+          {
+            "step": "Purchases",
+            "value": 80
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "force-network-static",
+      "prompt": "Draw a small dependency network from explicit nodes and edges.",
+      "family": "network",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "nodes": [
+          {
+            "id": "api"
+          },
+          {
+            "id": "worker"
+          },
+          {
+            "id": "db"
+          }
+        ],
+        "edges": [
+          {
+            "source": "api",
+            "target": "worker"
+          },
+          {
+            "source": "worker",
+            "target": "db"
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "sankey-static",
+      "prompt": "Show how 100 incoming requests split between success, retry, and failure.",
+      "family": "network",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "edges": [
+          {
+            "source": "Incoming",
+            "target": "Success",
+            "value": 78
+          },
+          {
+            "source": "Incoming",
+            "target": "Retry",
+            "value": 15
+          },
+          {
+            "source": "Incoming",
+            "target": "Failure",
+            "value": 7
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "treemap-static",
+      "prompt": "Show storage allocation in a hierarchical treemap.",
+      "family": "network",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": {
+          "name": "Storage",
+          "children": [
+            {
+              "name": "Images",
+              "value": 48
+            },
+            {
+              "name": "Logs",
+              "value": 32
+            },
+            {
+              "name": "Backups",
+              "value": 20
+            }
+          ]
+        }
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "prompt": "Map incident counts at three longitude/latitude locations using proportional symbols.",
+      "family": "geo",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "points": [
+          {
+            "city": "A",
+            "longitude": -122.4,
+            "latitude": 37.8,
+            "incidents": 18
+          },
+          {
+            "city": "B",
+            "longitude": -74,
+            "latitude": 40.7,
+            "incidents": 31
+          },
+          {
+            "city": "C",
+            "longitude": -87.6,
+            "latitude": 41.9,
+            "incidents": 12
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "galton-static",
+      "prompt": "Show a deterministic Galton-board distribution for observed values.",
+      "family": "physics",
+      "mode": "static",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "id": "a",
+            "value": 1
+          },
+          {
+            "id": "b",
+            "value": 2
+          },
+          {
+            "id": "c",
+            "value": 3
+          },
+          {
+            "id": "d",
+            "value": 4
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props."
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "prompt": "Build a unit pile of queued work by team that accepts additional rows.",
+      "family": "physics",
+      "mode": "push",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "id": "a",
+            "team": "Blue",
+            "value": 3
+          },
+          {
+            "id": "b",
+            "team": "Green",
+            "value": 2
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props.",
+      "pushRows": [
+        {
+          "id": "c",
+          "team": "Blue",
+          "value": 2
+        }
+      ],
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+    },
+    {
+      "fixtureId": "event-drop-push",
+      "prompt": "Create an event-time drop chart that can receive newly arrived events.",
+      "family": "physics",
+      "mode": "push",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "data": [
+          {
+            "id": "a",
+            "eventTime": 10,
+            "arrivalTime": 12
+          },
+          {
+            "id": "b",
+            "eventTime": 18,
+            "arrivalTime": 20
+          }
+        ],
+        "windows": {
+          "size": 20
+        }
+      },
+      "output": "Return one JSON object with component and props.",
+      "pushRows": [
+        {
+          "id": "c",
+          "eventTime": 23,
+          "arrivalTime": 25
+        }
+      ],
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+    },
+    {
+      "fixtureId": "packet-flow-push",
+      "prompt": "Render packet flow between a source and sink and keep the flow ready for pushed link updates.",
+      "family": "physics",
+      "mode": "push",
+      "context": [
+        "CLAUDE.md",
+        "docs/public/llms.txt"
+      ],
+      "input": {
+        "nodes": [
+          {
+            "id": "source",
+            "x": 0.1,
+            "y": 0.5
+          },
+          {
+            "id": "sink",
+            "x": 0.9,
+            "y": 0.5
+          }
+        ],
+        "links": [
+          {
+            "id": "route-a",
+            "source": "source",
+            "target": "sink",
+            "value": 4
+          }
+        ]
+      },
+      "output": "Return one JSON object with component and props.",
+      "pushRows": [
+        {
+          "id": "route-b",
+          "source": "source",
+          "target": "sink",
+          "value": 2
+        }
+      ],
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+    }
+  ]
+}

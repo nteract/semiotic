@@ -12,7 +12,6 @@ import type { StreamGeoFrameProps } from "../stream/geoTypes"
 import type { PhysicsSettledSVGOptions } from "../stream/physics/PhysicsSettledSVG"
 import type { PhysicsPipelineStore, PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineStore"
 import type { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
-import type { RenderEvidence } from "./renderEvidence"
 import {
   renderStaticLegend,
   renderStaticLegendGroups,
@@ -33,7 +32,7 @@ import {
   resolveSideLegendMargin,
 } from "../legendLayout"
 
-export type FrameType = RenderEvidence["frameType"]
+export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 
 export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]

@@ -1,0 +1,162 @@
+{
+  "kind": "semiotic-hra-wpp-kidney-pilot",
+  "schemaVersion": 1,
+  "source": {
+    "purl": "https://purl.humanatlas.io/asct-b/kidney/v1.6",
+    "version": "v1.6",
+    "creationDate": "2026-06-08",
+    "publisher": "HuBMAP",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "seeAlso": "https://lod.humanatlas.io/asct-b/kidney/v1.6",
+    "derivedFrom": "https://lod.humanatlas.io/asct-b/kidney/v1.6#raw-data"
+  },
+  "methodology": {
+    "scope": "Observed direct children of kidney (UBERON:0002113)",
+    "identity": "Ontology identifiers are semantic keys; labels are display text only.",
+    "aggregation": "For each ASCT+B record, distinct cell types are associated with every anatomical structure in that record's path, then deduplicated per structure.",
+    "caveats": [
+      "Counts are set memberships and are not additive across anatomical structures.",
+      "A record can contribute to more than one hierarchy path.",
+      "Parent and descendant rows must not be ranked together as independent categories."
+    ]
+  },
+  "summary": {
+    "recordCount": 78,
+    "declaredAnatomicalStructureCount": 67,
+    "observedAnatomicalStructureCount": 61,
+    "declaredCellTypeCount": 72,
+    "observedCellTypeCount": 70,
+    "provisionalAnatomicalStructureCount": 2,
+    "provisionalCellTypeCount": 3
+  },
+  "chartRows": [
+    {
+      "anatomicalStructureId": "UBERON:0001285",
+      "anatomicalStructureLabel": "nephron",
+      "displayLabel": "nephron · UBERON:0001285",
+      "cellTypeCount": 25,
+      "temporaryCellTypeCount": 0,
+      "recordCount": 25,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0005215",
+      "anatomicalStructureLabel": "Interstitium",
+      "displayLabel": "Interstitium · UBERON:0005215",
+      "cellTypeCount": 22,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 21,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0004100",
+      "anatomicalStructureLabel": "renal collecting system",
+      "displayLabel": "renal collecting system · UBERON:0004100",
+      "cellTypeCount": 11,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 12,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0006544",
+      "anatomicalStructureLabel": "Vessels",
+      "displayLabel": "Vessels · UBERON:0006544",
+      "cellTypeCount": 10,
+      "temporaryCellTypeCount": 0,
+      "recordCount": 10,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0000362",
+      "anatomicalStructureLabel": "renal medulla",
+      "displayLabel": "renal medulla · UBERON:0000362",
+      "cellTypeCount": 4,
+      "temporaryCellTypeCount": 0,
+      "recordCount": 5,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0001225",
+      "anatomicalStructureLabel": "cortex of kidney",
+      "displayLabel": "cortex of kidney · UBERON:0001225",
+      "cellTypeCount": 2,
+      "temporaryCellTypeCount": 0,
+      "recordCount": 4,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0001228",
+      "anatomicalStructureLabel": "renal papilla",
+      "displayLabel": "renal papilla · UBERON:0001228",
+      "cellTypeCount": 2,
+      "temporaryCellTypeCount": 0,
+      "recordCount": 2,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0002015",
+      "anatomicalStructureLabel": "kidney capsule",
+      "displayLabel": "kidney capsule · UBERON:0002015",
+      "cellTypeCount": 2,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 1,
+      "structureIsProvisional": false
+    }
+  ],
+  "reviewRows": [
+    {
+      "anatomicalStructureId": "UBERON:0005215",
+      "anatomicalStructureLabel": "Interstitium",
+      "displayLabel": "Interstitium · UBERON:0005215",
+      "cellTypeCount": 22,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 21,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0004100",
+      "anatomicalStructureLabel": "renal collecting system",
+      "displayLabel": "renal collecting system · UBERON:0004100",
+      "cellTypeCount": 11,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 12,
+      "structureIsProvisional": false
+    },
+    {
+      "anatomicalStructureId": "UBERON:0002015",
+      "anatomicalStructureLabel": "kidney capsule",
+      "displayLabel": "kidney capsule · UBERON:0002015",
+      "cellTypeCount": 2,
+      "temporaryCellTypeCount": 1,
+      "recordCount": 1,
+      "structureIsProvisional": false
+    }
+  ],
+  "findings": {
+    "observedLabelCollisions": [
+      {
+        "label": "Endothelium (non glomerular)",
+        "ids": [
+          "UBERON:0001986",
+          "UBERON:0002042",
+          "UBERON:0012441"
+        ]
+      },
+      {
+        "label": "Loop of Henle (Thin Limb)",
+        "ids": [
+          "UBERON:0001289",
+          "UBERON:0004193"
+        ]
+      },
+      {
+        "label": "Tubules",
+        "ids": [
+          "UBERON:0001231",
+          "UBERON:0001232"
+        ]
+      }
+    ],
+    "hierarchyFailure": "Ranking the kidney root beside descendants makes the largest bar a hierarchy artifact and implies independent categories. The pilot therefore limits the chart to one explicit sibling scope."
+  }
+}

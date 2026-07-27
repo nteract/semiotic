@@ -107,8 +107,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 412114,
-      "gzipBytes": 136980,
+      "rawBytes": 413455,
+      "gzipBytes": 137350,
       "packedPackageInputFiles": 16
     },
     {
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 864596,
-      "gzipBytes": 273552,
+      "rawBytes": 871062,
+      "gzipBytes": 275601,
       "packedPackageInputFiles": 4
     },
     {
@@ -143,8 +143,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 524491,
-      "gzipBytes": 168097,
+      "rawBytes": 524579,
+      "gzipBytes": 168112,
       "packedPackageInputFiles": 15
     },
     {
@@ -152,8 +152,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 865559,
-      "gzipBytes": 274033,
+      "rawBytes": 872026,
+      "gzipBytes": 276059,
       "packedPackageInputFiles": 4
     },
     {
@@ -161,8 +161,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 708482,
-      "gzipBytes": 197279,
+      "rawBytes": 710032,
+      "gzipBytes": 197321,
       "packedPackageInputFiles": 50
     },
     {
@@ -170,8 +170,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 207724,
-      "gzipBytes": 37082,
+      "rawBytes": 209274,
+      "gzipBytes": 37135,
       "packedPackageInputFiles": 2
     },
     {
@@ -233,8 +233,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 108836,
-      "gzipBytes": 7996,
+      "rawBytes": 111495,
+      "gzipBytes": 8417,
       "packedPackageInputFiles": 14
     },
     {

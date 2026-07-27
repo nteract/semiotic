@@ -1,0 +1,820 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-terra",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-26",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "bar-static-custom-fields",
+      "proposal": {
+        "component": "BarChart",
+        "props": {
+          "data": [
+            {
+              "market_name": "North",
+              "net_revenue": 12
+            },
+            {
+              "market_name": "South",
+              "net_revenue": 8
+            }
+          ],
+          "categoryAccessor": "market_name",
+          "valueAccessor": "net_revenue",
+          "title": "Revenue by region",
+          "description": "Bar chart comparing net revenue by region.",
+          "summary": "North has net revenue of 12 and South has net revenue of 8.",
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "d08415bfcb2e3e59d7048993bb7baa7f7604af879856c0996cb583b3efa2e4eb"
+    },
+    {
+      "fixtureId": "grouped-bar-static",
+      "proposal": {
+        "component": "GroupedBarChart",
+        "props": {
+          "data": [
+            {
+              "region": "North",
+              "channel": "Web",
+              "value": 12
+            },
+            {
+              "region": "North",
+              "channel": "Retail",
+              "value": 7
+            },
+            {
+              "region": "South",
+              "channel": "Web",
+              "value": 9
+            },
+            {
+              "region": "South",
+              "channel": "Retail",
+              "value": 11
+            }
+          ],
+          "categoryAccessor": "region",
+          "valueAccessor": "value",
+          "groupBy": "channel",
+          "colorBy": "channel",
+          "sort": false,
+          "title": "Web and retail revenue by region",
+          "description": "Grouped bar chart comparing web and retail revenue in North and South regions.",
+          "showLegend": true
+        }
+      },
+      "rawOutputSha256": "5d3fc66517609df338cfe563d6a92bf4e2eee0a9411e0aaeaae8dae33a6c5011"
+    },
+    {
+      "fixtureId": "stacked-bar-static",
+      "proposal": {
+        "component": "StackedBarChart",
+        "props": {
+          "data": [
+            {
+              "quarter": "Q1",
+              "product": "Core",
+              "value": 14
+            },
+            {
+              "quarter": "Q1",
+              "product": "Plus",
+              "value": 6
+            },
+            {
+              "quarter": "Q2",
+              "product": "Core",
+              "value": 16
+            },
+            {
+              "quarter": "Q2",
+              "product": "Plus",
+              "value": 9
+            }
+          ],
+          "categoryAccessor": "quarter",
+          "valueAccessor": "value",
+          "stackBy": "product",
+          "colorBy": "product",
+          "sort": false
+        }
+      },
+      "rawOutputSha256": "ca3c8f1459b66077a1ac33c70d87d2d78e7c80b55bb03cf76a7edcb786d12797"
+    },
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "pointIdAccessor": "week",
+          "title": "Active users by week",
+          "description": "Line chart showing active users by week. Supports new rows through the chart ref push API.",
+          "summary": "Active users rise from 120 in week 1 to 151 in week 3. New weekly rows can be added through the chart reference.",
+          "showPoints": true,
+          "tooltip": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "92e3b4865298a2744a2d35b4886e6ceb2cdf1a1902eeb2894e1bc3cec04efb14"
+    },
+    {
+      "fixtureId": "area-static",
+      "proposal": {
+        "component": "AreaChart",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "used": 40
+            },
+            {
+              "day": 2,
+              "used": 47
+            },
+            {
+              "day": 3,
+              "used": 53
+            },
+            {
+              "day": 4,
+              "used": 51
+            }
+          ],
+          "xAccessor": "day",
+          "yAccessor": "used",
+          "title": "Storage Used Over Seven Days",
+          "description": "Area chart showing storage used by day.",
+          "areaOpacity": 0.7,
+          "showLine": true,
+          "showPoints": true
+        }
+      },
+      "rawOutputSha256": "3a3b4c715aac534f7d85e7ea4220f37df94701894b8b068c0a472dbfef6f1d9e"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "pointIdAccessor": "payload_kb",
+          "title": "Response Time vs Payload Size",
+          "description": "Scatterplot of response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time increases as payload size increases. The chart supports ref-based push observations with payload_kb and response_ms fields.",
+          "xFormat": "Payload (KB)",
+          "yFormat": "Response Time (ms)",
+          "showGrid": true,
+          "tooltip": true
+        }
+      },
+      "rawOutputSha256": "435afaaade7f8fd13bd2c505c1b49ea2fac183326cfd8876de0aeebe3d4bbeac"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "pointIdAccessor": "company",
+          "title": "Company Growth and Retention",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customers.",
+          "summary": "Companies are positioned by growth and retention; larger bubbles represent more customers.",
+          "xFormat": "d",
+          "yFormat": "d",
+          "tooltip": true,
+          "showLegend": true,
+          "showGrid": true
+        }
+      },
+      "rawOutputSha256": "d7c58027178ea31fbea20bb66924c5ec4e4e28109628ba7a01152426f93bca30"
+    },
+    {
+      "fixtureId": "box-static",
+      "proposal": {
+        "component": "BoxPlot",
+        "props": {
+          "data": [
+            {
+              "service": "API",
+              "latency": 90
+            },
+            {
+              "service": "API",
+              "latency": 110
+            },
+            {
+              "service": "API",
+              "latency": 160
+            },
+            {
+              "service": "Worker",
+              "latency": 55
+            },
+            {
+              "service": "Worker",
+              "latency": 75
+            },
+            {
+              "service": "Worker",
+              "latency": 120
+            }
+          ],
+          "categoryAccessor": "service",
+          "valueAccessor": "latency",
+          "showOutliers": true,
+          "title": "Latency Distribution by Service",
+          "description": "Box plot comparing latency distributions for API and Worker services.",
+          "summary": "API latency ranges from 90 to 160, while Worker latency ranges from 55 to 120."
+        }
+      },
+      "rawOutputSha256": "0ea6f5166f267e7a1486ec33e411a56bd8bb623310fa7f9e66005b9247f8fec8"
+    },
+    {
+      "fixtureId": "violin-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "cohort": "Control",
+              "score": 42
+            },
+            {
+              "cohort": "Control",
+              "score": 55
+            },
+            {
+              "cohort": "Control",
+              "score": 68
+            },
+            {
+              "cohort": "Treatment",
+              "score": 51
+            },
+            {
+              "cohort": "Treatment",
+              "score": 70
+            },
+            {
+              "cohort": "Treatment",
+              "score": 83
+            }
+          ],
+          "categoryAccessor": "cohort",
+          "valueAccessor": "score",
+          "bins": 25,
+          "title": "Score distribution by cohort",
+          "description": "Violin plots showing the full score distribution for Control and Treatment cohorts.",
+          "summary": "Compare the distribution of scores between the Control and Treatment cohorts.",
+          "showLegend": false,
+          "showGrid": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "0474455e211646766efdb6897b48f284cade7374b3a781de1fcf572b72f2a724"
+    },
+    {
+      "fixtureId": "ridgeline-static",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [
+            {
+              "job": "Import",
+              "duration": 40
+            },
+            {
+              "job": "Import",
+              "duration": 90
+            },
+            {
+              "job": "Import",
+              "duration": 150
+            },
+            {
+              "job": "Export",
+              "duration": 35
+            },
+            {
+              "job": "Export",
+              "duration": 80
+            },
+            {
+              "job": "Export",
+              "duration": 145
+            },
+            {
+              "job": "Index",
+              "duration": 20
+            },
+            {
+              "job": "Index",
+              "duration": 45
+            },
+            {
+              "job": "Index",
+              "duration": 75
+            }
+          ],
+          "categoryAccessor": "job",
+          "valueAccessor": "duration",
+          "bins": 12,
+          "showIQR": true,
+          "title": "Job Duration Distributions",
+          "description": "Violin plots comparing the distribution of durations across Import, Export, and Index jobs.",
+          "summary": "Compare distribution shapes across the three job types to identify possible multiple duration modes.",
+          "width": 600,
+          "height": 400,
+          "showLegend": false,
+          "showGrid": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "befa8c38eec069bf08bb83e14725dd41fa2f2aa33e541f16d51f60de47bd2737"
+    },
+    {
+      "fixtureId": "dot-static",
+      "proposal": {
+        "component": "DotPlot",
+        "props": {
+          "data": [
+            {
+              "team": "Blue",
+              "satisfaction": 82
+            },
+            {
+              "team": "Green",
+              "satisfaction": 74
+            },
+            {
+              "team": "Red",
+              "satisfaction": 91
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "satisfaction",
+          "sort": false,
+          "width": 420,
+          "height": 240,
+          "title": "Satisfaction by Team",
+          "description": "Dot plot comparing satisfaction scores for Blue, Green, and Red teams.",
+          "summary": "Red has the highest satisfaction score at 91, followed by Blue at 82 and Green at 74.",
+          "showGrid": true,
+          "showCategoryTicks": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "ca5fe05b94736805131b47655562b31b021c02c23f0d709c672f1d1a5ea136f3"
+    },
+    {
+      "fixtureId": "heatmap-static",
+      "proposal": {
+        "component": "Heatmap",
+        "props": {
+          "data": [
+            {
+              "day": 1,
+              "hour": 9,
+              "load": 18
+            },
+            {
+              "day": 1,
+              "hour": 10,
+              "load": 31
+            },
+            {
+              "day": 2,
+              "hour": 9,
+              "load": 24
+            },
+            {
+              "day": 2,
+              "hour": 10,
+              "load": 38
+            }
+          ],
+          "xAccessor": "hour",
+          "yAccessor": "day",
+          "valueAccessor": "load",
+          "title": "Request load by weekday and hour",
+          "description": "Heatmap showing request load by weekday and hour.",
+          "showValues": true,
+          "colorScheme": "blues"
+        }
+      },
+      "rawOutputSha256": "153b8520f4912d7b2f5d58aaf3d20fbfc174606e11e8629a36b72611db3c16f0"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "GaugeChart",
+        "props": {
+          "value": 97,
+          "min": 0,
+          "max": 100,
+          "thresholds": [
+            {
+              "value": 99,
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "value": 100,
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "title": "Current SLA attainment",
+          "description": "Current SLA attainment is 97 percent against a 99 percent target.",
+          "summary": "SLA attainment is 2 percentage points below the 99 percent target.",
+          "showNeedle": true,
+          "centerContent": "97%",
+          "annotations": [
+            {
+              "type": "x-threshold",
+              "value": 99,
+              "label": "Target: 99%",
+              "color": "#c7952f"
+            }
+          ]
+        }
+      },
+      "rawOutputSha256": "6395d179ae891cd3c70847d6f4c1c1fb83108deb633ea6a46c63ca0b2da2d2bb"
+    },
+    {
+      "fixtureId": "funnel-static",
+      "proposal": {
+        "component": "FunnelChart",
+        "props": {
+          "data": [
+            {
+              "step": "Visits",
+              "value": 1000
+            },
+            {
+              "step": "Trials",
+              "value": 260
+            },
+            {
+              "step": "Purchases",
+              "value": 80
+            }
+          ],
+          "stepAccessor": "step",
+          "valueAccessor": "value",
+          "orientation": "vertical",
+          "title": "Conversion Funnel",
+          "description": "Conversion funnel showing visits, trials, and purchases.",
+          "summary": "Visits: 1,000; Trials: 260; Purchases: 80.",
+          "showLegend": false,
+          "showGrid": false,
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "46a64745de7ca76731f400451f9c9dfa7a501448c83dc8c1e374890c3b3c22a3"
+    },
+    {
+      "fixtureId": "force-network-static",
+      "proposal": {
+        "component": "ForceDirectedGraph",
+        "props": {
+          "nodes": [
+            {
+              "id": "api"
+            },
+            {
+              "id": "worker"
+            },
+            {
+              "id": "db"
+            }
+          ],
+          "edges": [
+            {
+              "source": "api",
+              "target": "worker"
+            },
+            {
+              "source": "worker",
+              "target": "db"
+            }
+          ],
+          "nodeIDAccessor": "id",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "7319d7505ab820abaa901e01ebf0ad45586b60c5411a3048e9b1e677836cbaaf"
+    },
+    {
+      "fixtureId": "sankey-static",
+      "proposal": {
+        "component": "SankeyDiagram",
+        "props": {
+          "nodes": [
+            {
+              "id": "Incoming"
+            },
+            {
+              "id": "Success"
+            },
+            {
+              "id": "Retry"
+            },
+            {
+              "id": "Failure"
+            }
+          ],
+          "edges": [
+            {
+              "source": "Incoming",
+              "target": "Success",
+              "value": 78
+            },
+            {
+              "source": "Incoming",
+              "target": "Retry",
+              "value": 15
+            },
+            {
+              "source": "Incoming",
+              "target": "Failure",
+              "value": 7
+            }
+          ],
+          "nodeIdAccessor": "id",
+          "valueAccessor": "value",
+          "colorBy": "id",
+          "edgeColorBy": "source",
+          "title": "Incoming request outcomes",
+          "description": "A Sankey diagram showing 100 incoming requests splitting into 78 successes, 15 retries, and 7 failures.",
+          "summary": "Of 100 incoming requests, 78 succeed, 15 require retry, and 7 fail.",
+          "showLabels": true,
+          "showLegend": true,
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "3a9fbc16902410365ff3d0a1b46f134d272d0a3f81fec2f7e5d4895c3a61e1a0"
+    },
+    {
+      "fixtureId": "treemap-static",
+      "proposal": {
+        "component": "Treemap",
+        "props": {
+          "data": {
+            "name": "Storage",
+            "children": [
+              {
+                "name": "Images",
+                "value": 48
+              },
+              {
+                "name": "Logs",
+                "value": 32
+              },
+              {
+                "name": "Backups",
+                "value": 20
+              }
+            ]
+          },
+          "childrenAccessor": "children",
+          "valueAccessor": "value",
+          "colorBy": "name",
+          "title": "Storage Allocation",
+          "description": "Hierarchical treemap showing storage allocation across Images, Logs, and Backups.",
+          "summary": "Images use 48 units of storage, Logs use 32 units, and Backups use 20 units.",
+          "width": 600,
+          "height": 400,
+          "showLabels": true,
+          "showLegend": true
+        }
+      },
+      "rawOutputSha256": "5852163ca0a2e98bbefa35358f259242f259b2fd93e0b4bb98183a256c22c75b"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents",
+          "sizeRange": [
+            5,
+            40
+          ],
+          "colorBy": "city",
+          "title": "Incident counts by location",
+          "description": "Proportional symbols show incident counts at three longitude and latitude locations.",
+          "summary": "City B has 31 incidents, City A has 18, and City C has 12.",
+          "showLegend": true
+        }
+      },
+      "rawOutputSha256": "12f543f8420ff6365f4a2ad900c5bfabe6ee267058208ea94d028b0c034c0b24"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "seed": 42,
+          "mode": "sample",
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "6fafb596f93493744fc66c1a9e49c5df8bb32be2e5632d2d538cda648a9bf8d5"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "colorBy": "team",
+          "dataIdAccessor": "id",
+          "mode": "sample",
+          "showProjection": true,
+          "title": "Queued work by team",
+          "description": "A unit pile chart showing queued work units by team. Additional rows can be appended through the chart ref push API.",
+          "summary": "Blue has 3 queued work units and Green has 2. The chart supports ref-based push for additional rows such as Blue with 2 more units.",
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "9c870b6cc4bb3a87d4eb2b85ee76df2681ce6d470bf6eaf14c52ee1f84702a64"
+    },
+    {
+      "fixtureId": "event-drop-push",
+      "proposal": {
+        "component": "EventDropChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "eventTime": 10,
+              "arrivalTime": 12
+            },
+            {
+              "id": "b",
+              "eventTime": 18,
+              "arrivalTime": 20
+            }
+          ],
+          "timeAccessor": "eventTime",
+          "arrivalAccessor": "arrivalTime",
+          "windows": {
+            "size": 20
+          }
+        }
+      },
+      "rawOutputSha256": "ca4cbee251d0fac0939f9a1757f14e9a2b6d39457fdb93cd1e59dd3f3b794a49"
+    },
+    {
+      "fixtureId": "packet-flow-push",
+      "proposal": {
+        "component": "PacketFlowChart",
+        "props": {
+          "nodes": [
+            {
+              "id": "source",
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "id": "sink",
+              "x": 0.9,
+              "y": 0.5
+            }
+          ],
+          "links": [
+            {
+              "id": "route-a",
+              "source": "source",
+              "target": "sink",
+              "value": 4
+            }
+          ],
+          "nodeIdAccessor": "id",
+          "nodeXAccessor": "x",
+          "nodeYAccessor": "y",
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "throughputAccessor": "value",
+          "coordinateMode": "normalized",
+          "showStaticFlow": true,
+          "showNodeLabels": true,
+          "paused": false,
+          "seed": 1
+        }
+      },
+      "rawOutputSha256": "a1442e16584791f49677d43402567eb3858cb64cd03e202c33c27d7101e847a2"
+    }
+  ]
+}

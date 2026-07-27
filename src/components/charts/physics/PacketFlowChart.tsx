@@ -3,7 +3,6 @@
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
-  type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle,
   type StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsFrame"
@@ -25,6 +24,11 @@ import {
   type PhysicalFlowProjectionMetadata,
   type PhysicalFlowRawPath
 } from "./physicsChartUtils"
+import {
+  formatPhysicalFlowThroughput,
+  physicalFlowPathD,
+  physicalFlowSemanticItems
+} from "./packetFlowSemantics"
 import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
@@ -89,38 +93,6 @@ export interface PacketFlowChartProps<
 /** @deprecated Renamed to {@link PacketFlowChartProps} in 3.9.0. */
 export type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> =
   PacketFlowChartProps<TNode, TLink>
-function formatThroughput(value: number): string {
-  return Math.abs(value) >= 1000
-    ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-    : value.toLocaleString(undefined, { maximumFractionDigits: 1 })
-}
-
-function pathD(points: PhysicalFlowProjectionMetadata["links"][number]["path"]): string {
-  return points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ")
-}
-
-function physicalFlowSemanticItems(
-  metadata: PhysicalFlowProjectionMetadata | undefined
-): PhysicsSemanticItem[] {
-  if (!metadata) return []
-  return metadata.links.map((link) => {
-    const mid = link.path[Math.floor(link.path.length / 2)] ?? link.path[0]
-    const label = `${link.sourceLabel} to ${link.targetLabel}: ${formatThroughput(link.throughput)} throughput, ${link.packetCount} packets`
-    return {
-      id: link.id,
-      label,
-      description: label,
-      datum: link,
-      x: mid?.x ?? 0,
-      y: mid?.y ?? 0,
-      shape: "path" as const,
-      pathData: pathD(link.path),
-      group: "flow"
-    }
-  })
-}
 
 type FlowPathPoint = { x: number; y: number }
 
@@ -380,7 +352,7 @@ function physicalFlowOverlay(
               return (
                 <g key={link.id}>
                   <path
-                    d={pathD(link.path)}
+                    d={physicalFlowPathD(link.path)}
                     fill="none"
                     stroke="var(--semiotic-border, #d1d5db)"
                     strokeWidth={strokeWidth + 5}
@@ -389,7 +361,7 @@ function physicalFlowOverlay(
                     opacity={0.26}
                   />
                   <path
-                    d={pathD(link.path)}
+                    d={physicalFlowPathD(link.path)}
                     fill="none"
                     stroke="var(--semiotic-primary, #4e79a7)"
                     strokeWidth={strokeWidth}
@@ -406,7 +378,7 @@ function physicalFlowOverlay(
                       fontSize={10}
                       fontWeight={700}
                     >
-                      {formatThroughput(link.throughput)}
+                      {formatPhysicalFlowThroughput(link.throughput)}
                     </text>
                   ) : null}
                 </g>
@@ -703,14 +675,17 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
     [flowSpeed, pathConstraint, reducedMotion]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "PacketFlowChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof sourceAccessor === "string" ? [sourceAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -759,6 +734,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
       {...sharedFrameProps}
       key={rerun.rerunKey}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       config={rerun.config}
       continuous={!reducedMotion && pathConstraint !== "none"}
       foregroundGraphics={composePhysicsFrameGraphics(

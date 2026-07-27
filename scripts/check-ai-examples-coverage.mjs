@@ -167,7 +167,7 @@ const COVERAGE_BASELINE = new Set([
   "SwimlaneChart", "LikertChart",
   "BubbleChart", "QuadrantChart", "MultiAxisLineChart",
   "CandlestickChart", "ScatterplotMatrix", "MinimapChart",
-  "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",
+  "ChoroplethMap", "FlowMap", "DistanceCartogram",
   "RealtimeSwarmChart", "RealtimeWaterfallChart",
 ])
 

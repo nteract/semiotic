@@ -404,14 +404,17 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     [chartSize, layout.projectionRows]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "GaltonBoardChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof valueAccessor === "string" ? [valueAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -455,6 +458,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         structureOverlay,

@@ -1,0 +1,80 @@
+{
+  "component": "LineChart",
+  "description": {
+    "levels": {
+      "l1": "A line chart of users by week.",
+      "l2": "users ranges from 120 (1) to 165 (4), with a mean of 143.5 across 4 points.",
+      "l3": "Overall users rises from 120 (1) to a peak of 165 (4)."
+    },
+    "text": "A line chart of users by week. users ranges from 120 (1) to 165 (4), with a mean of 143.5 across 4 points. Overall users rises from 120 (1) to a peak of 165 (4)."
+  },
+  "intent": {
+    "act": "tracking",
+    "sentence": "This is a trend chart; read it for the trajectory of users, which rises from 120 (1) to 165 (4)."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A line chart of users by week. users ranges from 120 (1) to 165 (4), with a mean of 143.5 across 4 points. Overall users rises from 120 (1) to a peak of 165 (4).",
+    "level": 1,
+    "children": [
+      {
+        "id": "axis-0",
+        "role": "axis",
+        "level": 2,
+        "label": "X axis: week, 1 to 4."
+      },
+      {
+        "id": "axis-1",
+        "role": "axis",
+        "level": 2,
+        "label": "Value axis: users, 120 to 165."
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "1: 120",
+        "value": 120,
+        "datum": {
+          "week": 1,
+          "users": 120
+        }
+      },
+      {
+        "id": "datum-3",
+        "role": "datum",
+        "level": 2,
+        "label": "2: 138",
+        "value": 138,
+        "datum": {
+          "week": 2,
+          "users": 138
+        }
+      },
+      {
+        "id": "datum-4",
+        "role": "datum",
+        "level": 2,
+        "label": "3: 151",
+        "value": 151,
+        "datum": {
+          "week": 3,
+          "users": 151
+        }
+      },
+      {
+        "id": "datum-5",
+        "role": "datum",
+        "level": 2,
+        "label": "4: 165",
+        "value": 165,
+        "datum": {
+          "week": 4,
+          "users": 165
+        }
+      }
+    ]
+  },
+  "text": "A line chart of users by week. users ranges from 120 (1) to 165 (4), with a mean of 143.5 across 4 points. Overall users rises from 120 (1) to a peak of 165 (4). This is a trend chart; read it for the trajectory of users, which rises from 120 (1) to 165 (4)."
+}

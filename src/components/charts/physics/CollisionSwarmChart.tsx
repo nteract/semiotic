@@ -343,14 +343,17 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     [resolvedColorBy, styleRules, xAccessor]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
-    colorBy,
+    colorBy: resolvedColorBy,
     chartType: "CollisionSwarmChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof xAccessor === "string" ? [xAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -395,6 +398,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,

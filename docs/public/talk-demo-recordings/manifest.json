@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "sourceRoute": "/intelligence/conference-demo",
+  "fixture": "/talk-demo-fixtures/conference-arc.json",
+  "capture": {
+    "browser": "playwright-chromium",
+    "network": "external requests blocked",
+    "sessionId": "conference-stage-recorded",
+    "eventCount": 13,
+    "eventTypes": [
+      "audience-set",
+      "chart-edited",
+      "chart-exported",
+      "chart-rendered",
+      "chart-replaced",
+      "interrogation-answered",
+      "interrogation-asked",
+      "proposal-refused",
+      "render-evidence",
+      "suggestion-chosen",
+      "suggestion-shown"
+    ]
+  },
+  "files": [
+    {
+      "id": "conference-stage.mp4",
+      "kind": "video/mp4",
+      "path": "/talk-demo-recordings/conference-stage.mp4",
+      "bytes": 490031,
+      "sha256": "03d42e61ea023c2cb7192db89a1091defe36cb18ca56e5dd77ca4c26e29656fc"
+    },
+    {
+      "id": "keyframe-01-candidates.png",
+      "kind": "image/png",
+      "path": "/talk-demo-recordings/keyframe-01-candidates.png",
+      "bytes": 135608,
+      "sha256": "01cdd0642f7502b599176f5b7b5231a8f6b9ff95c76a2774ff3b42d8565bbf54"
+    },
+    {
+      "id": "keyframe-02-variant.png",
+      "kind": "image/png",
+      "path": "/talk-demo-recordings/keyframe-02-variant.png",
+      "bytes": 124939,
+      "sha256": "d6fdca254a400aa6f32cb49261de630f5f6abd8856a1b5f9dd05f156b2e0e318"
+    },
+    {
+      "id": "keyframe-03-handoff.png",
+      "kind": "image/png",
+      "path": "/talk-demo-recordings/keyframe-03-handoff.png",
+      "bytes": 133366,
+      "sha256": "72d642ab1adb491b06a24de8f431ce43e2c3ae77d3570e2ec44b5f57ae96ae63"
+    }
+  ]
+}

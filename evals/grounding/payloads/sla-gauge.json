@@ -1,0 +1,25 @@
+{
+  "component": "GaugeChart",
+  "description": {
+    "levels": {
+      "l1": "A gauge."
+    },
+    "text": "A gauge."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A gauge.",
+    "level": 1,
+    "children": []
+  },
+  "facts": {
+    "source": "chart-props",
+    "statements": [
+      "Current value is 97.",
+      "The gauge scale runs from 0 to 100."
+    ],
+    "text": "Exact chart-prop facts: Current value is 97. The gauge scale runs from 0 to 100."
+  },
+  "text": "A gauge. Exact chart-prop facts: Current value is 97. The gauge scale runs from 0 to 100."
+}

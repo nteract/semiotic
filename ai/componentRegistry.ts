@@ -51,7 +51,8 @@ import {
   ProcessFlowChart,
   GauntletChart,
   CrucibleChart,
-  ChainReactionChart
+  ChainReactionChart,
+  BigNumber
 } from "semiotic/ai"
 
 import {
@@ -63,7 +64,7 @@ import {
 
 export interface RegistryEntry {
   component: ComponentType<any>
-  category: "xy" | "ordinal" | "network" | "geo" | "physics"
+  category: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
@@ -121,5 +122,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   ProcessFlowChart: { component: ProcessFlowChart, category: "physics" },
   GauntletChart: { component: GauntletChart, category: "physics" },
   CrucibleChart: { component: CrucibleChart, category: "physics" },
-  ChainReactionChart: { component: ChainReactionChart, category: "physics" }
+  ChainReactionChart: { component: ChainReactionChart, category: "physics" },
+
+  BigNumber: { component: BigNumber, category: "value" }
 }

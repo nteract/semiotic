@@ -156,7 +156,7 @@ export default function ConferenceDemoPage() {
         intent: INTENT,
         includeVariants: false,
         maxResults: 4,
-        scale: { rows: 50_000, typicalCardinality: "low" },
+        scale: { rows: 50000, typicalCardinality: "low" },
       }),
     []
   )
@@ -298,7 +298,7 @@ export default function ConferenceDemoPage() {
       meta: {
         beat: "scale",
         decision: "retain-linear-domain",
-        declaredRows: 50_000,
+        declaredRows: 50000,
       },
     })
   }, [record])
@@ -413,6 +413,32 @@ export default function ConferenceDemoPage() {
         refusal, variant, grounding, and serialization APIs. The captured answer
         remains explicitly labeled as a recovery replay, not model evidence.
       </p>
+
+      <aside className="conference-stage__fallback" aria-labelledby="conference-fallback-title">
+        <div>
+          <span>Recorded recovery package</span>
+          <h2 id="conference-fallback-title">The same arc, ready when the room is not</h2>
+          <p>
+            This MP4 and its three keyframes were captured from the local demo
+            while external requests were blocked.
+          </p>
+          <nav aria-label="Conference demo keyframes">
+            <a href="/talk-demo-recordings/keyframe-01-candidates.png">Candidates</a>
+            <a href="/talk-demo-recordings/keyframe-02-variant.png">Variant</a>
+            <a href="/talk-demo-recordings/keyframe-03-handoff.png">Handoff</a>
+          </nav>
+        </div>
+        <video
+          controls
+          preload="metadata"
+          poster="/talk-demo-recordings/keyframe-01-candidates.png"
+        >
+          <source
+            src="/talk-demo-recordings/conference-stage.mp4"
+            type="video/mp4"
+          />
+        </video>
+      </aside>
 
       <div className="conference-stage" data-demo="conference-stage">
         <header className="conference-stage__header">
@@ -683,9 +709,9 @@ export default function ConferenceDemoPage() {
                 {exported && <StatusPill tone="success">handoff recorded</StatusPill>}
               </div>
               <p className="conference-stage__recovery-note">
-                Recovery remains the typed, hand-authored{" "}
-                <code>conference-arc.json</code> ({recoveryArc.length} events).
-                Replace it only after a full rehearsal arc is reviewed.
+                Recovery is the typed, Playwright-recorded{" "}
+                <code>conference-arc.json</code> ({recoveryArc.length} events),
+                captured from this exact rehearsal path.
               </p>
             </section>
           )}

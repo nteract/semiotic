@@ -37,6 +37,7 @@ const PREVIEW_COMPONENTS = {
   "distant-reading": MiniDistantReadingPreview,
   funnels: MiniFunnelsPreview,
   machine: MiniMachinePreview,
+  "model-evaluation": MiniModelEvaluationPreview,
   architecture: MiniArchitecturePreview,
   octopus: MiniOctopusPreview,
   gestalt: MiniGestaltPreview,
@@ -2018,6 +2019,67 @@ function MiniMachinePreview() {
       {dots.map(([x, y], index) => (
         <circle key={index} cx={x} cy={y} r="3" fill="#7c6cf0" opacity="0.92" />
       ))}
+    </svg>
+  )
+}
+
+function MiniModelEvaluationPreview() {
+  const groups = [
+    { label: "S", values: [43, 45, 42] },
+    { label: "T", values: [45, 45, 42] },
+    { label: "L", values: [44, 44, 41] },
+  ]
+  const colors = ["#2f6578", "#d5633f", "#9b8f74"]
+
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5eddd" />
+      <path
+        d="M0 18H242M0 36H242M0 54H242M0 72H242M28 0V96M72 0V96M116 0V96M160 0V96M204 0V96"
+        stroke="#91a9b2"
+        strokeOpacity=".23"
+      />
+      <path d="M20 77H166M20 14V77" stroke="#3a3935" strokeWidth="1.2" />
+      {groups.map((group, groupIndex) => (
+        <g key={group.label} transform={`translate(${34 + groupIndex * 44},0)`}>
+          {group.values.map((value, valueIndex) => (
+            <rect
+              key={valueIndex}
+              x={valueIndex * 9}
+              y={77 - value * 1.18}
+              width="7"
+              height={value * 1.18}
+              rx="1"
+              fill={colors[valueIndex]}
+            />
+          ))}
+          <text
+            x="10"
+            y="89"
+            textAnchor="middle"
+            fill="#3a3935"
+            fontSize="8"
+            fontWeight="800"
+            fontFamily="sans-serif"
+          >
+            {group.label}
+          </text>
+        </g>
+      ))}
+      <g transform="translate(178,15) rotate(-5)">
+        <rect width="51" height="62" rx="2" fill="#fffaf0" stroke="#b8aa91" />
+        <path d="M7 14H42M7 23H42M7 32H42M7 41H42M7 50H34" stroke="#c9bda7" />
+        <path d="M9 13l5 5 9-12M9 31l5 5 9-12" fill="none" stroke="#b14235" strokeWidth="2" />
+        <circle cx="31" cy="43" r="8" fill="none" stroke="#b14235" strokeWidth="1.6" />
+        <path d="M25 49l13-13" stroke="#b14235" strokeWidth="1.6" />
+      </g>
+      <path
+        d="M151 22c8-10 15-13 24-12"
+        fill="none"
+        stroke="#b14235"
+        strokeWidth="1.5"
+        strokeDasharray="3 2"
+      />
     </svg>
   )
 }

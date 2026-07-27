@@ -1,0 +1,56 @@
+{
+  "component": "FunnelChart",
+  "description": {
+    "levels": {
+      "l1": "A funnel chart showing value across step categories.",
+      "l2": "3 segments totaling 1,600. Largest is Visits at 1,000; smallest is Purchases at 200."
+    },
+    "text": "A funnel chart showing value across step categories. 3 segments totaling 1,600. Largest is Visits at 1,000; smallest is Purchases at 200."
+  },
+  "intent": {
+    "act": "apportioning",
+    "sentence": "This is a composition chart; read each step's share of the 1,600 total; Visits is the largest at 1,000 (63%)."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A funnel chart showing value across step categories. 3 segments totaling 1,600. Largest is Visits at 1,000; smallest is Purchases at 200.",
+    "level": 1,
+    "children": [
+      {
+        "id": "datum-0",
+        "role": "datum",
+        "level": 2,
+        "label": "Visits: 1,000",
+        "value": 1000,
+        "datum": {
+          "step": "Visits",
+          "value": 1000
+        }
+      },
+      {
+        "id": "datum-1",
+        "role": "datum",
+        "level": 2,
+        "label": "Trials: 400",
+        "value": 400,
+        "datum": {
+          "step": "Trials",
+          "value": 400
+        }
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "Purchases: 200",
+        "value": 200,
+        "datum": {
+          "step": "Purchases",
+          "value": 200
+        }
+      }
+    ]
+  },
+  "text": "A funnel chart showing value across step categories. 3 segments totaling 1,600. Largest is Visits at 1,000; smallest is Purchases at 200. This is a composition chart; read each step's share of the 1,600 total; Visits is the largest at 1,000 (63%)."
+}

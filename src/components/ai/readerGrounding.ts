@@ -157,7 +157,20 @@ export interface ChartReaderGrounding {
   structure?: NavTreeNode
   /** Physics-specific runtime grounding for simulation charts. */
   physics?: PhysicsReaderGrounding
+  /**
+   * Exact source facts for chart families whose visual/navigation summary
+   * does not enumerate their scalar, edge, hierarchy, or simulation inputs.
+   * These statements report supplied props only; they never infer causes,
+   * forecasts, or runtime outcomes.
+   */
+  facts?: ChartReaderGroundingFacts
   /** L1–L4 joined into one prose blob an LLM can read directly. */
+  text: string
+}
+
+export interface ChartReaderGroundingFacts {
+  source: "chart-props"
+  statements: string[]
   text: string
 }
 
@@ -209,6 +222,124 @@ function compactObject<T extends Record<string, unknown>>(value: T): Partial<T> 
     if (entry !== undefined) result[key] = entry
   }
   return result
+}
+
+function factValue(row: Record<string, unknown>, accessor: unknown, fallback: string): unknown {
+  const key = typeof accessor === "string" && accessor ? accessor : fallback
+  return row[key]
+}
+
+function displayFactValue(value: unknown): string {
+  if (value instanceof Date) return value.toISOString()
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? String(value) : String(Math.round(value * 1000) / 1000)
+  }
+  return String(value ?? "—")
+}
+
+function sourceFacts(
+  component: string,
+  props: Datum,
+  maxLeaves: number
+): ChartReaderGroundingFacts | undefined {
+  const statements: string[] = []
+
+  if (component === "GaugeChart") {
+    if (typeof props.value === "number" && Number.isFinite(props.value)) {
+      statements.push(`Current value is ${displayFactValue(props.value)}.`)
+    }
+    const min = typeof props.min === "number" && Number.isFinite(props.min) ? props.min : 0
+    const max = typeof props.max === "number" && Number.isFinite(props.max) ? props.max : 100
+    statements.push(`The gauge scale runs from ${displayFactValue(min)} to ${displayFactValue(max)}.`)
+  }
+
+  if (component === "SankeyDiagram" || component === "ProcessSankey") {
+    const edges = Array.isArray(props.edges)
+      ? (props.edges as Record<string, unknown>[])
+      : []
+    if (edges.length > 0) {
+      statements.push(`${edges.length} source flow${edges.length === 1 ? "" : "s"} are supplied.`)
+      for (const edge of edges.slice(0, maxLeaves)) {
+        const source = factValue(edge, props.sourceAccessor, "source")
+        const target = factValue(edge, props.targetAccessor, "target")
+        const value = factValue(edge, props.valueAccessor, "value")
+        statements.push(
+          `${displayFactValue(source)} to ${displayFactValue(target)} has value ${displayFactValue(value)}.`
+        )
+      }
+    }
+  }
+
+  if (
+    component === "Treemap" ||
+    component === "CirclePack" ||
+    component === "TreeDiagram" ||
+    component === "OrbitDiagram"
+  ) {
+    const root = record(props.data)
+    const childKey =
+      typeof props.childrenAccessor === "string" && props.childrenAccessor
+        ? props.childrenAccessor
+        : "children"
+    const valueKey =
+      typeof props.valueAccessor === "string" && props.valueAccessor
+        ? props.valueAccessor
+        : "value"
+    const labelKey =
+      typeof props.nodeIdAccessor === "string" && props.nodeIdAccessor
+        ? props.nodeIdAccessor
+        : typeof props.nodeIDAccessor === "string" && props.nodeIDAccessor
+          ? props.nodeIDAccessor
+          : "name"
+    const leaves: Record<string, unknown>[] = []
+    const visit = (node: Record<string, unknown>) => {
+      const children = Array.isArray(node[childKey])
+        ? node[childKey] as unknown[]
+        : []
+      if (children.length === 0) {
+        leaves.push(node)
+        return
+      }
+      for (const child of children) {
+        const childRecord = record(child)
+        if (childRecord) visit(childRecord)
+      }
+    }
+    if (root) visit(root)
+    if (leaves.length > 0) {
+      statements.push(`${leaves.length} hierarchy leaves are supplied.`)
+      for (const leaf of leaves.slice(0, maxLeaves)) {
+        statements.push(
+          `${displayFactValue(leaf[labelKey])} has value ${displayFactValue(leaf[valueKey])}.`
+        )
+      }
+    }
+  }
+
+  if (PHYSICS_COMPONENTS.has(component) && Array.isArray(props.data)) {
+    const rows = props.data as Record<string, unknown>[]
+    statements.push(`${rows.length} observed source row${rows.length === 1 ? "" : "s"} are supplied.`)
+    const accessor =
+      component === "CollisionSwarmChart"
+        ? props.xAccessor
+        : props.valueAccessor
+    const fallback = component === "CollisionSwarmChart" ? "x" : "value"
+    const values = rows
+      .map((row) => finite(factValue(row, accessor, fallback)))
+      .filter((value): value is number => value != null)
+    if (values.length > 0) {
+      statements.push(
+        `Observed ${typeof accessor === "string" ? accessor : fallback} ranges from ${displayFactValue(Math.min(...values))} to ${displayFactValue(Math.max(...values))}.`
+      )
+    }
+  }
+
+  if (statements.length === 0) return undefined
+  return {
+    source: "chart-props",
+    statements,
+    text: `Exact chart-prop facts: ${statements.join(" ")}`,
+  }
 }
 
 function plural(count: number | undefined, noun: string): string {
@@ -583,8 +714,13 @@ export function buildReaderGrounding(
     : undefined
 
   const physics = buildPhysicsGrounding(component, props, options.physics)
+  const facts = sourceFacts(
+    component,
+    props,
+    Math.max(1, options.maxLeaves ?? 200)
+  )
 
-  const text = [description.text, intent?.sentence, physics?.text].filter(Boolean).join(" ")
+  const text = [description.text, intent?.sentence, physics?.text, facts?.text].filter(Boolean).join(" ")
 
-  return { component, description, intent, structure, physics, text }
+  return { component, description, intent, structure, physics, facts, text }
 }

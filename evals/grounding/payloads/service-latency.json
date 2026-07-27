@@ -1,0 +1,89 @@
+{
+  "component": "BoxPlot",
+  "description": {
+    "levels": {
+      "l1": "A box plot of the distribution of latency.",
+      "l2": "latency ranges from 55 (—) to 160 (—), with a mean of 101.67 across 6 points."
+    },
+    "text": "A box plot of the distribution of latency. latency ranges from 55 (—) to 160 (—), with a mean of 101.67 across 6 points."
+  },
+  "intent": {
+    "act": "characterizing",
+    "sentence": "This is a distribution chart; read it for the spread of latency, from 55 to 160."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A box plot of the distribution of latency. latency ranges from 55 (—) to 160 (—), with a mean of 101.67 across 6 points.",
+    "level": 1,
+    "children": [
+      {
+        "id": "datum-0",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 90",
+        "value": 90,
+        "datum": {
+          "service": "API",
+          "latency": 90
+        }
+      },
+      {
+        "id": "datum-1",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 110",
+        "value": 110,
+        "datum": {
+          "service": "API",
+          "latency": 110
+        }
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 160",
+        "value": 160,
+        "datum": {
+          "service": "API",
+          "latency": 160
+        }
+      },
+      {
+        "id": "datum-3",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 55",
+        "value": 55,
+        "datum": {
+          "service": "Worker",
+          "latency": 55
+        }
+      },
+      {
+        "id": "datum-4",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 75",
+        "value": 75,
+        "datum": {
+          "service": "Worker",
+          "latency": 75
+        }
+      },
+      {
+        "id": "datum-5",
+        "role": "datum",
+        "level": 2,
+        "label": "—: 120",
+        "value": 120,
+        "datum": {
+          "service": "Worker",
+          "latency": 120
+        }
+      }
+    ]
+  },
+  "text": "A box plot of the distribution of latency. latency ranges from 55 (—) to 160 (—), with a mean of 101.67 across 6 points. This is a distribution chart; read it for the spread of latency, from 55 to 160."
+}

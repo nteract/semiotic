@@ -45,6 +45,16 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       xAccessor: { type: ["string", "function"], default: "lon" },
       yAccessor: { type: ["string", "function"], default: "lat" },
       sizeBy: { type: ["string", "function"] },
+      sizeRange: {
+        type: "array",
+        default: [3, 30],
+        description: "Minimum and maximum symbol radius in pixels.",
+        schema: {
+          minItems: 2,
+          maxItems: 2,
+          items: { type: "number" },
+        },
+      },
       areas: { type: ["array", "string"] },
     },
     capabilities: {

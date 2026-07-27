@@ -191,6 +191,10 @@ const navData = [
       { title: "The Long Way Around", path: "/examples/port-congestion-replay" },
       { title: "The Scroll You're Telling", path: "/examples/scroll-youre-telling" },
       { title: "What the Machine Sees", path: "/examples/what-the-machine-sees" },
+      {
+        title: "The Benchmark Is a Chart, Too",
+        path: "/examples/the-benchmark-is-a-chart-too",
+      },
       { title: "The Living System of Semiotic", path: "/examples/semiotic-architecture" },
       { title: "Point Climate Anomaly", path: "/examples/climate-anomaly" },
       { title: "The Gestalt of Data Visualization", path: "/examples/gestalt-principles" },

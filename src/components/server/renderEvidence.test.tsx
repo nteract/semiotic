@@ -102,6 +102,28 @@ describe("renderChartWithEvidence", () => {
     expect(evidence.yDomain![1]).toBeGreaterThanOrEqual(620)
   })
 
+  it("emits native value evidence for BigNumber", () => {
+    const { svg, evidence } = renderChartWithEvidence("BigNumber", {
+      value: 0.97,
+      label: "SLA attainment",
+      format: "percent",
+      comparison: { value: 0.95, label: "vs last month" },
+      target: { value: 0.99, label: "target" },
+      thresholds: [
+        { at: 0, level: "danger" },
+        { at: 0.95, level: "warning" },
+        { at: 0.99, level: "success" },
+      ],
+    })
+    expect(svg).toContain('data-semiotic-component="BigNumber"')
+    expect(svg).toContain("97%")
+    expect(evidence.component).toBe("BigNumber")
+    expect(evidence.frameType).toBe("value")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCount).toBe(1)
+    expect(evidence.markCountByType.value).toBe(1)
+  })
+
   it("emits network evidence with node and edge counts", () => {
     const { evidence } = renderChartWithEvidence("SankeyDiagram", {
       edges: [

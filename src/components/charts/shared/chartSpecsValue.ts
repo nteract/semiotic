@@ -15,17 +15,23 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
     // BigNumber is a plain React component and doesn't consume the
     // chart-frame prop bag (margin, title, showLegend/Grid, colorBy,
     // tooltip, annotations, axisExtent, frameProps). Listing the few
-    // common-bag props it DOES use (width / height / className / onClick)
+    // common-bag props it DOES use
     // explicitly here keeps the AI schema honest.
     propBags: [],
     ownProps: {
       width: { type: ["number", "string"], default: 280, description: "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail)." },
       height: { type: ["number", "string"], default: 184, description: "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail)." },
       className: { type: "string", description: "Composed with the BEM root class on the outer container." },
+      chartId: { type: "string", description: "Stable identifier surfaced on observation events." },
+      description: { type: "string", description: "Override the auto-generated accessible label sentence." },
+      summary: { type: "string", description: "Screen-reader-only supplement appended after the accessible label." },
+      loading: { type: "boolean", description: "Show the loading skeleton overlay." },
+      loadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode override for loading state; false suppresses it." },
+      emptyContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode shown when value is null, undefined, or NaN; false suppresses it." },
       value: { type: "number", description: "The focal number this card exists to display" },
       label: { type: "string", description: "Top-line descriptor rendered above the value" },
       caption: { type: "string", description: "Secondary descriptor, smaller, below the label" },
-      format: { type: ["string", "function"], enum: ["number", "currency", "percent", "compact", "duration"] as const, default: "number", description: "Number-format shortcut or custom (value) => string" },
+      format: { type: ["string", "function"], enum: ["number", "currency", "percent", "compact", "duration"] as const, default: "number", description: "Number-format shortcut or React-only custom formatter. Percent treats the value as a ratio and multiplies by 100." },
       locale: { type: "string", default: "en-US", description: "BCP-47 locale for Intl.NumberFormat" },
       currency: { type: "string", default: "USD", description: "ISO 4217 code for format: \"currency\"" },
       precision: { type: "number", description: "maximumFractionDigits passed to Intl.NumberFormat" },
@@ -70,20 +76,16 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
       // Push API exposes push/pushMany/clear/getValue/getData; updates
       // the focal value and feeds the auto-trend buffer.
       supportsPush: true,
-      // BigNumber renders cleanly through react-dom/server (plain DOM +
-      // SVG sparkline, no canvas) — but `renderChart` in
-      // `semiotic/server` routes everything through Stream Frame
-      // serverChartConfigs.ts, which doesn't apply to a non-frame HOC.
-      // Set false + tag "hoc-ssr-only" so the registry accurately
-      // describes the runtime: SSR-safe in a normal React tree, but
-      // not exposed via the MCP `renderChart` path.
-      supportsSSR: false,
+      // The browser HOC is DOM-based; semiotic/server supplies a native,
+      // standalone SVG renderer for the serializable value-card contract so
+      // MCP previews and render evidence do not depend on foreignObject.
+      supportsSSR: true,
       colorModel: "threshold",
       layoutMode: "synthetic",
       specialFeatures: [
         "threshold-zones", "value-only", "comparison", "target",
         "staleness", "intl-format", "chart-slot", "trend-slot",
-        "hoc-ssr-only",
+        "native-value-svg",
       ],
     },
   },

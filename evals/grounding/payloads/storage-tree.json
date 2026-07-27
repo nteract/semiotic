@@ -1,0 +1,27 @@
+{
+  "component": "Treemap",
+  "description": {
+    "levels": {
+      "l1": "A treemap."
+    },
+    "text": "A treemap."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A treemap.",
+    "level": 1,
+    "children": []
+  },
+  "facts": {
+    "source": "chart-props",
+    "statements": [
+      "3 hierarchy leaves are supplied.",
+      "Images has value 48.",
+      "Logs has value 32.",
+      "Backups has value 20."
+    ],
+    "text": "Exact chart-prop facts: 3 hierarchy leaves are supplied. Images has value 48. Logs has value 32. Backups has value 20."
+  },
+  "text": "A treemap. Exact chart-prop facts: 3 hierarchy leaves are supplied. Images has value 48. Logs has value 32. Backups has value 20."
+}

@@ -1,0 +1,760 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-luna",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-grounding-2026-07-26",
+    "date": "2026-07-27"
+  },
+  "responses": [
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "png-only",
+      "answer": "North has the highest revenue, at 18."
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "png-plus-grounding",
+      "answer": "North has the highest revenue, at 18."
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "grounding-only",
+      "answer": "North has the highest revenue, at 18."
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "png-only",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "png-plus-grounding",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "grounding-only",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "condition": "png-only",
+      "answer": "Cannot determine why North had the highest revenue; the chart only shows that North’s revenue was highest at approximately 18, compared with West at 15 and South at 11."
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine why; the chart only shows that North had the highest revenue, at 18."
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "condition": "grounding-only",
+      "answer": "Cannot determine why; the chart only shows that North had the highest revenue at 18, compared with West at 15 and South at 11."
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart shows current North revenue of approximately 18, not next quarter’s revenue."
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine next quarter’s North revenue from the chart; it only shows current North revenue of 18."
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "condition": "grounding-only",
+      "answer": "Cannot determine North’s revenue next quarter; the chart only shows current revenue of 18."
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart."
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "png-only",
+      "answer": "165 users"
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "png-plus-grounding",
+      "answer": "The last observed user count is 165 users (week 4)."
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "grounding-only",
+      "answer": "The last observed user count was 165 users (week 4)."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "png-only",
+      "answer": "The series rises across the observed weeks."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "png-plus-grounding",
+      "answer": "The series rises across the observed weeks, increasing from 120 users in week 1 to 165 users in week 4."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "grounding-only",
+      "answer": "The series rises across the observed weeks, increasing from 120 users in week 1 to 165 users in week 4."
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "condition": "png-only",
+      "answer": "Cannot determine—the chart shows weekly active users increasing but does not identify any product launches."
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine; the chart shows users increasing from 120 in week 1 to 165 in week 4, but it does not identify any product launch."
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "condition": "grounding-only",
+      "answer": "Cannot determine which product launch caused the increase; the chart only shows users rising from 120 in week 1 to 165 in week 4."
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart only shows weeks 1–4."
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine; the chart only provides data through week 4."
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the number of users in week 8; the chart only provides data for weeks 1–4."
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart does not display a confidence interval for week 4."
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the confidence interval for week 4; the chart only provides the users value of 165."
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the confidence interval for week 4; the evidence only provides 165 users."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "png-only",
+      "answer": "The largest payload is approximately 64, paired with a latency of approximately 142."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "png-plus-grounding",
+      "answer": "The largest payload is 64, paired with a latency of 142."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "grounding-only",
+      "answer": "The largest payload is 64, paired with a latency of 142."
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "png-only",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "png-plus-grounding",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "grounding-only",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "condition": "png-only",
+      "answer": "Yes. The chart shows latency increasing as payload size increases: approximately (8, 41), (16, 60), (32, 95), and (64, 142)."
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "condition": "png-plus-grounding",
+      "answer": "Yes. Latency increases as payload size increases: 42 at payload 8, 61 at 16, 95 at 32, and 142 at 64."
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "condition": "grounding-only",
+      "answer": "Yes. The chart shows latency increasing as payload size increases: 42 at payload 8, 61 at 16, 95 at 32, and 142 at 64."
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart."
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "condition": "png-only",
+      "answer": "Cannot determine—the chart does not show a 128 KB payload."
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine; the chart only provides latency values for payloads up to 64 KB."
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the chart; it only shows payloads up to 64 KB."
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "png-only",
+      "answer": "API and Worker"
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "png-plus-grounding",
+      "answer": "API and Worker."
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "grounding-only",
+      "answer": "API and Worker"
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "png-only",
+      "answer": "The largest observed latency is 160 ms for API."
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "png-plus-grounding",
+      "answer": "160"
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "grounding-only",
+      "answer": "The largest observed latency is 160."
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "condition": "png-only",
+      "answer": "The API is slower because its latency distribution is higher than the Worker’s: median 110 vs. 75, with an interquartile range of 100–135 vs. 65–98 and a maximum of 160 vs. 120. The chart does not explain why."
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "condition": "png-plus-grounding",
+      "answer": "The API is slower because its latency values are higher: API latencies are 90, 110, and 160, compared with Worker latencies of 55, 75, and 120. The API’s median is about 110 versus 75 for the Worker. The chart does not explain why this occurs."
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "condition": "grounding-only",
+      "answer": "The API is slower because its observed latencies are higher: 90, 110, and 160, compared with the Worker’s 55, 75, and 120. The chart does not identify why the API is slower."
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "condition": "png-only",
+      "answer": "Cannot determine how the requests were sampled from the chart."
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine how the requests were sampled from the supplied evidence."
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "condition": "grounding-only",
+      "answer": "The requests were sampled across two services: API (3 requests) and Worker (3 requests), for 6 total points. The sampling method cannot be determined from the chart."
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "condition": "png-only",
+      "answer": "Cannot determine. The chart shows latency distributions for API and Worker but does not specify the SLA thresholds."
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine. The chart provides latency values for API (90, 110, 160) and Worker (55, 75, 120), but no SLA thresholds are supplied."
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "condition": "grounding-only",
+      "answer": "Cannot determine. The SLA thresholds are not provided, so it cannot be established whether the API or Worker service violated its SLA."
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "png-only",
+      "answer": "Success"
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "png-plus-grounding",
+      "answer": "Success receives the largest flow."
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "grounding-only",
+      "answer": "Cannot determine which outcome receives the largest flow; the supplied evidence does not identify the flow values or outcomes."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart; it shows flow proportions but no numeric request counts."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the number of requests flowing to Failure from the supplied evidence."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "grounding-only",
+      "answer": "Cannot determine how many requests flow to Failure."
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart; it only shows request outcomes (Success, Retry, and Failure), not the causes of failures."
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine what caused the failures; the chart only shows incoming requests flowing to Success, Retry, and Failure."
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "condition": "grounding-only",
+      "answer": "Cannot determine what caused the failures from the supplied evidence."
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart; it shows incoming requests split into Success, Retry, and Failure, but not how many retried requests later succeeded."
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine; the chart does not show how many retried requests later succeeded."
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart."
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine—the chart does not specify a time period."
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the time period from the supplied evidence."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart labels Logs, Images, and Backups but provides no values or visibly distinct sizes."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart labels Backups but provides no value."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the value assigned to Backups from the supplied evidence."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the value assigned to Backups."
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "condition": "png-only",
+      "answer": "Cannot determine whether the values are bytes, gigabytes, or percentages; the chart only shows the categories Logs, Images, and Backups without numeric values or units."
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine whether the values are bytes, gigabytes, or percentages; the chart only identifies storage categories (Images, Logs, and Backups) without units or values."
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "condition": "grounding-only",
+      "answer": "Cannot determine whether the values are bytes, gigabytes, or percentages from the supplied evidence."
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "condition": "png-only",
+      "answer": "Cannot determine who owns the Logs allocation from the chart."
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine who owns the Logs allocation."
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "condition": "grounding-only",
+      "answer": "Cannot determine who owns the Logs allocation."
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart shows storage categories but no growth data."
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine which category is growing fastest; the treemap only shows categories (Logs, Images, and Backups) without growth data."
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "condition": "grounding-only",
+      "answer": "Cannot determine which category is growing fastest from the supplied evidence."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "png-only",
+      "answer": "B has the most incidents, with 31."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "png-plus-grounding",
+      "answer": "City B has the most incidents, with 31."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "grounding-only",
+      "answer": "City B has the most incidents, with 31."
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "png-only",
+      "answer": "3 locations"
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "png-plus-grounding",
+      "answer": "3 locations"
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "grounding-only",
+      "answer": "3 locations."
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "condition": "png-only",
+      "answer": "Cannot determine the real-world city names represented by A, B, and C from the chart."
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the real-world city names represented by A, B, and C; the chart only labels them A, B, and C."
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the real-world city names represented by A, B, and C; the evidence only identifies them as labels with incident counts: A = 18, B = 31, and C = 12."
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "condition": "png-only",
+      "answer": "Cannot determine why city B has more incidents; the chart only shows that city B has about 31 incidents, compared with A’s 18 and C’s 12."
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine why city B has more incidents. The chart only shows that B has 31 incidents, compared with A’s 18 and C’s 12."
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "condition": "grounding-only",
+      "answer": "The chart does not explain why. It only shows that city B has the most incidents, with 31, compared with A’s 18 and C’s 12."
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "condition": "png-only",
+      "answer": "Cannot determine how severe the incidents were; the chart only shows incident counts by city: A = 18, B = 31, C = 12."
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "condition": "png-plus-grounding",
+      "answer": "Severity cannot be determined from the chart. It reports incident counts: B had 31, A had 18, and C had 12."
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "condition": "grounding-only",
+      "answer": "Incident severity cannot be determined from the chart; it only shows incident counts: A—18, B—31, and C—12."
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "png-only",
+      "answer": "97 out of 100"
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "png-plus-grounding",
+      "answer": "The current gauge value is 97 out of 100."
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the current gauge value."
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "png-only",
+      "answer": "The gauge maximum is 100."
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "png-plus-grounding",
+      "answer": "The gauge scale maximum is 100."
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the maximum that defines the gauge scale."
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "condition": "png-only",
+      "answer": "Cannot determine the cause of the SLA miss. The chart only shows SLA attainment of 97 out of 100, with 3 below target."
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine what caused the SLA miss. The chart only shows SLA attainment of 97 out of 100, below target."
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied chart."
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the reporting period from the supplied evidence."
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the reporting period from the supplied evidence."
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "condition": "png-only",
+      "answer": "Cannot determine whether the target will be met next month. The chart only shows current SLA attainment: 97 of 100, labeled “Below target.”"
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine whether the target will be met next month. The chart shows SLA attainment at 97 of 100, labeled “Below target.”"
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "png-only",
+      "answer": "Purchases: 200 (20%)"
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "png-plus-grounding",
+      "answer": "Purchases: 200"
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "grounding-only",
+      "answer": "Purchases: 200"
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "png-only",
+      "answer": "Visits; Trials; Purchases"
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "png-plus-grounding",
+      "answer": "Visits, Trials, Purchases"
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "grounding-only",
+      "answer": "Visits, Trials, and Purchases."
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "condition": "png-only",
+      "answer": "The chart does not explain why visitors failed to start trials. It only shows that 1.0K visits resulted in 400 trials (40%), meaning 600 visitors (60%) did not start a trial."
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine why visitors failed to start trials. The chart only shows that Visits were 1,000 and Trials were 400 (40% of the visits)."
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "condition": "grounding-only",
+      "answer": "The chart does not explain why visitors failed to start trials. It only shows that 1,000 visitors and 400 trials were recorded, so 600 visitors did not start trials."
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart whether the same people are counted at every stage."
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine from the chart whether the same people are counted at every stage."
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the chart whether the same people are counted at every stage."
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied chart; it only identifies a conversion funnel with Visits, Trials, and Purchases."
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine which experiment produced this funnel."
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "condition": "grounding-only",
+      "answer": "Cannot determine which experiment produced this funnel from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "png-only",
+      "answer": "Smallest observed value: cannot determine; largest observed value: cannot determine."
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "png-plus-grounding",
+      "answer": "Smallest observed value: cannot determine. Largest observed value: cannot determine."
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "grounding-only",
+      "answer": "Cannot determine the smallest or largest observed values; no settled projection is loaded."
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied chart; it shows four identical points without labels or values indicating the underlying probability process."
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine. The evidence only identifies a Galton board chart with no settled histogram projection or values loaded."
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "condition": "grounding-only",
+      "answer": "Cannot determine. The supplied evidence only identifies a Galton board chart and states that no settled histogram projection is loaded; it provides no values or specific real-world probability process."
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied chart."
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine the population from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "condition": "grounding-only",
+      "answer": "Cannot determine from the supplied evidence."
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "condition": "png-only",
+      "answer": "Cannot determine from the supplied chart; it shows four observations but no discernible pattern or axes."
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "condition": "png-plus-grounding",
+      "answer": "Cannot determine; no settled projection is loaded."
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "condition": "grounding-only",
+      "answer": "Cannot determine where the next observation will land; no settled projection is loaded."
+    }
+  ]
+}

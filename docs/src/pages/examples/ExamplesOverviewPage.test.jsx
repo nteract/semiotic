@@ -11,6 +11,13 @@ describe("ExamplePreview", () => {
     expect(container.querySelector("svg")).not.toBeNull()
   })
 
+  it("renders the benchmark notebook preview from its explicit key", () => {
+    const { container } = render(<ExamplePreview preview="model-evaluation" />)
+
+    expect(container.querySelector("[data-example-preview-missing]")).toBeNull()
+    expect(container.querySelector("svg")).not.toBeNull()
+  })
+
   it("makes an unknown preview key visible instead of silently rendering another card", () => {
     render(<ExamplePreview preview="not-a-preview" />)
 

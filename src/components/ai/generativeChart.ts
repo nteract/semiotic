@@ -168,7 +168,12 @@ export function prepareChart(
   // Prove it paints, if a renderer was injected.
   let evidence: RenderEvidence | undefined
   let svg: string | undefined
-  if (options.render && known) {
+  if (
+    options.render &&
+    known &&
+    validation.valid &&
+    (!treatErrorsAsBlocking || errorDiagnostics.length === 0)
+  ) {
     const rendered = options.render(component, props)
     svg = rendered.svg
     evidence = rendered.evidence

@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-25 · 57 charts indexed.
+Last regen: 2026-07-27 · 57 charts indexed.
 
 **Column key**
 
@@ -93,20 +93,20 @@ Last regen: 2026-07-25 · 57 charts indexed.
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **ChainReactionChart** | — | — | — | — | — | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `hoc-ssr-only` |
-| **CollisionSwarmChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
-| **CrucibleChart** | — | ✓ | — | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
-| **EventDropChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
-| **GaltonBoardChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
-| **GauntletChart** | — | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
-| **PacketFlowChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
-| **ProcessFlowChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
-| **UnitPileChart** | ✓ | ✓ | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
+| **CollisionSwarmChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
+| **CrucibleChart** | — | ✓ | ✓ | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
+| **EventDropChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
+| **GaltonBoardChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
+| **GauntletChart** | — | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
+| **PacketFlowChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
+| **ProcessFlowChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
+| **UnitPileChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
 
 ## Value
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **BigNumber** | — | — | — | ✓ | — | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `hoc-ssr-only` |
+| **BigNumber** | — | — | — | ✓ | ✓ | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `native-value-svg` |
 
 ---
 
@@ -114,6 +114,6 @@ Last regen: 2026-07-25 · 57 charts indexed.
 
 - 47/57 charts render a top-level legend.
 - 45/57 charts expose a push API.
-- 45/57 charts SSR via the `renderChart()` registry.
+- 46/57 charts SSR via the `renderChart()` registry.
 - 2/57 charts use the customLayout escape hatch.
 - 11/57 charts use synthetic (no-layout) construction.

@@ -8,18 +8,28 @@
  */
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { LinkedCharts } from "../../LinkedCharts"
 import { useSelection } from "../../store/useSelection"
 import type { PhysicsBodySelection } from "../../stream/physics/StreamPhysicsFrame"
 
 // Capture what each HOC forwards to the frame.
-let lastProps: { selection?: PhysicsBodySelection | null } | null = null
+type CapturedFrameProps = {
+  chartId?: string
+  selection?: PhysicsBodySelection | null
+  onBodyHover?: (body: Record<string, unknown> | null, hover: Record<string, unknown> | null) => void
+}
+
+let lastProps: CapturedFrameProps | null = null
+const propsByChartId = new Map<string, CapturedFrameProps>()
 vi.mock("../../stream/physics/StreamPhysicsFrame", () => ({
   __esModule: true,
   default: React.forwardRef((props: Record<string, unknown>, _ref: unknown) => {
     lastProps = props as typeof lastProps
+    if (typeof props.chartId === "string") {
+      propsByChartId.set(props.chartId, props as CapturedFrameProps)
+    }
     return <div className="stream-physics-frame"><canvas /><svg /></div>
   }),
 }))
@@ -48,10 +58,22 @@ function SelectNorth() {
   return null
 }
 
+let hoveredSelection: ReturnType<typeof useSelection> | null = null
+
+function InspectPhysicsHover() {
+  hoveredSelection = useSelection({
+    name: "physics-hover",
+    fields: ["category"]
+  })
+  return null
+}
+
 describe("physics HOCs and the shared selection store", () => {
   let cleanup: () => void
   beforeEach(() => {
     lastProps = null
+    propsByChartId.clear()
+    hoveredSelection = null
     cleanup = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => cleanup())
@@ -112,6 +134,152 @@ describe("physics HOCs and the shared selection store", () => {
       />
     )
     expect(lastProps!.selection).toEqual({ isActive: true, predicate })
+  })
+
+  it("publishes body datum on linked hover and clears it on hover end", () => {
+    const frameHover = vi.fn()
+    render(
+      <LinkedCharts selections={{ "physics-hover": {} }}>
+        <InspectPhysicsHover />
+        <UnitPileChart
+          data={pileRows}
+          categoryAccessor="category"
+          valueAccessor="value"
+          colorBy="category"
+          size={[240, 160]}
+          linkedHover="physics-hover"
+          frameProps={{ onBodyHover: frameHover }}
+        />
+      </LinkedCharts>
+    )
+
+    expect(typeof lastProps!.onBodyHover).toBe("function")
+    act(() => {
+      lastProps!.onBodyHover!(
+        { id: "north-body", datum: pileRows[0] },
+        {
+          __semioticHoverData: true,
+          id: "north-body",
+          type: "body",
+          x: 42,
+          y: 24,
+          data: pileRows[0]
+        }
+      )
+    })
+    expect(frameHover).toHaveBeenCalledTimes(1)
+    expect(hoveredSelection!.isActive).toBe(true)
+    expect(hoveredSelection!.predicate({ category: "North" })).toBe(true)
+    expect(hoveredSelection!.predicate({ category: "South" })).toBe(false)
+
+    act(() => {
+      lastProps!.onBodyHover!(null, null)
+    })
+    expect(frameHover).toHaveBeenCalledTimes(2)
+    expect(hoveredSelection!.isActive).toBe(false)
+  })
+
+  it("unwraps authored sourceDatum before publishing linked hover", () => {
+    render(
+      <LinkedCharts selections={{ "physics-hover": {} }}>
+        <InspectPhysicsHover />
+        <GauntletChart
+          data={[{ id: "a", category: "North", positives: ["signal"], negatives: [] }]}
+          positiveAccessor="positives"
+          negativeAccessor="negatives"
+          positiveProperties={[{ id: "signal", radius: 4 }]}
+          negativeProperties={[]}
+          size={[240, 160]}
+          linkedHover={{ name: "physics-hover", fields: ["category"] }}
+        />
+      </LinkedCharts>
+    )
+
+    const sourceDatum = { id: "a", category: "North" }
+    act(() => {
+      lastProps!.onBodyHover!(
+        {
+          id: "gauntlet-core",
+          datum: {
+            __gauntlet: true,
+            kind: "core",
+            projectId: "a",
+            sourceDatum
+          }
+        },
+        {
+          __semioticHoverData: true,
+          id: "gauntlet-core",
+          type: "body",
+          x: 10,
+          y: 20,
+          data: sourceDatum
+        }
+      )
+    })
+    expect(hoveredSelection!.predicate({ category: "North" })).toBe(true)
+  })
+
+  it("cross-highlights a sibling physics frame from produced body hover", () => {
+    render(
+      <LinkedCharts selections={{ "physics-hover": {} }}>
+        <UnitPileChart
+          chartId="physics-producer"
+          data={pileRows}
+          categoryAccessor="category"
+          valueAccessor="value"
+          colorBy="category"
+          size={[240, 160]}
+          linkedHover="physics-hover"
+        />
+        <CollisionSwarmChart
+          chartId="physics-consumer"
+          data={[
+            { id: "n", category: "North", x: 1 },
+            { id: "s", category: "South", x: 2 }
+          ]}
+          xAccessor="x"
+          colorBy="category"
+          size={[240, 160]}
+          selection={{ name: "physics-hover" }}
+        />
+      </LinkedCharts>
+    )
+
+    expect(propsByChartId.get("physics-consumer")?.selection ?? null).toBeNull()
+    act(() => {
+      propsByChartId.get("physics-producer")!.onBodyHover!(
+        { id: "north-body", datum: pileRows[0] },
+        {
+          __semioticHoverData: true,
+          id: "north-body",
+          type: "body",
+          x: 42,
+          y: 24,
+          data: pileRows[0]
+        }
+      )
+    })
+
+    const crossHighlight = propsByChartId.get("physics-consumer")!.selection
+    expect(crossHighlight?.isActive).toBe(true)
+    expect(
+      crossHighlight!.predicate!({
+        id: "north-consumer",
+        datum: { category: "North" }
+      } as never)
+    ).toBe(true)
+    expect(
+      crossHighlight!.predicate!({
+        id: "south-consumer",
+        datum: { category: "South" }
+      } as never)
+    ).toBe(false)
+
+    act(() => {
+      propsByChartId.get("physics-producer")!.onBodyHover!(null, null)
+    })
+    expect(propsByChartId.get("physics-consumer")?.selection ?? null).toBeNull()
   })
 
   it("wires the same bridge on the other colorBy-driven physics HOCs", () => {

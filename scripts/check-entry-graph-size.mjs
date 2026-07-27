@@ -31,13 +31,20 @@ const ENTRY_GRAPHS = [
   // Bumped 360→375: CrucibleChart + netEnsemble/wordTrails recipe growth
   // pushed the full facade to ~362.6 KB gzip; other family budgets absorbed
   // the same growth with headroom to spare.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 375 },
+  // Bumped 375→376 (3.8.6): the native BigNumber static renderer makes the
+  // formerly React-only value card render-evidence-capable through
+  // semiotic/server. This is a measured sub-KiB graph increase, not a new
+  // shared runtime; keep the one-KiB headroom narrow.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 376 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   { entry: "network.module.min.js", label: "network", limitKb: 140 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
-  { entry: "physics.module.min.js", label: "physics", limitKb: 160 },
+  // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
+  // physics selection contract. The chart-local split keeps source modules
+  // bounded, while the reachable graph gains less than one KiB gzip.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 161 },
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.

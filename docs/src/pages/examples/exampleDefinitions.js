@@ -779,6 +779,66 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
     },
   },
+  {
+    id: "the-benchmark-is-a-chart-too",
+    path: "/examples/the-benchmark-is-a-chart-too",
+    sourceFile: "ModelEvaluationExamplePage.jsx",
+    isPilot: true,
+    title: "The Benchmark Is a Chart, Too",
+    eyebrow: "Model evaluation · scorer audit",
+    description:
+      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+    contract: {
+      publicImports: ["semiotic/ordinal"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-openai-gpt-5.6-compatibility-run",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Semiotic prove-track OpenAI Responses run, corrected score reports, and request ledger",
+        capturedAt: "2026-07-27",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "fixture revision",
+      },
+      accessibility: {
+        summary:
+          "Chart tables, explicit denominators, a text failure matrix, scorer audit cards, and a prose reading of every result",
+        navigation:
+          "Native score switches, chart navigation, an accessible failure table, and collapsed methods",
+        keyboard:
+          "Native buttons and details, keyboard-navigable charts and legends, and semantic tables",
+        forcedColors:
+          "System-color boundaries preserve controls, chart shells, audit cards, focus rings, and failure states",
+      },
+      motion: {
+        reducedMotion: "No essential motion; decorative transitions are disabled",
+        visibility: "No timers, animation loops, network requests, or hidden-page work",
+      },
+      responsive: {
+        status: "designed-and-component-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable model, evidence-condition, score, and fixture IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic checked-in snapshot with an overall-score default",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy route using the public ordinal entry point",
+          interaction: "nine grounding rows and three local score switches",
+          memory: "small checked-in score, failure, and scorer-audit arrays",
+          hiddenPage: "no background work",
+        },
+      },
+    },
+  },
 ])
 
 const EXAMPLE_REGISTRY_METADATA = [
@@ -1151,6 +1211,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["ai", "design", "accessibility"],
   },
   {
+    title: "The Benchmark Is a Chart, Too",
+    path: "/examples/the-benchmark-is-a-chart-too",
+    eyebrow: "Answer vs abstain · scorer audit",
+    description:
+      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+    preview: "model-evaluation",
+    badges: ["Grouped scorecard", "Scorer audit", "Agent-readable"],
+    frames: ["ordinal"],
+    topics: ["ai", "uncertainty", "design", "accessibility"],
+  },
+  {
     title: "The Living System of Semiotic",
     path: "/examples/semiotic-architecture",
     eyebrow: "Interactive architecture map",
@@ -1377,6 +1448,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/urine-wheel": "UrineWheelExamplePage.jsx",
   "/examples/us-war-timeline": "USWarTimelineExamplePage.jsx",
   "/examples/what-the-machine-sees": "WhatTheMachineSeesExamplePage.jsx",
+  "/examples/the-benchmark-is-a-chart-too": "ModelEvaluationExamplePage.jsx",
   "/examples/wikipedia-realtime": "WikipediaRealtimeExamplePage.jsx",
   "/examples/world-of-funnels": "WorldOfFunnelsExamplePage.jsx",
   "/examples/earthquakes": "EarthquakesExamplePage.jsx",

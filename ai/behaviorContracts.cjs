@@ -102,7 +102,7 @@ const REQUIRED_COMBINATIONS = [
     required: ["value"],
     staticRequired: ["value"],
     pushRequired: [],
-    summary: "GaugeChart is value-only. thresholds, min, max, sweep, and arcWidth are optional.",
+    summary: "GaugeChart is value-only. Its thresholds use { value, color, label? }; BigNumber thresholds use the distinct { at, level, color?, label? } vocabulary.",
   },
   {
     component: "ForceDirectedGraph",
@@ -142,6 +142,15 @@ const PUSH_MODE_COMPONENTS = [
   "ChordDiagram",
   "ProportionalSymbolMap",
   "DistanceCartogram",
+  "GaltonBoardChart",
+  "EventDropChart",
+  "UnitPileChart",
+  "CollisionSwarmChart",
+  "PacketFlowChart",
+  "ProcessFlowChart",
+  "GauntletChart",
+  "CrucibleChart",
+  "ChainReactionChart",
 ]
 
 const STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema()
@@ -202,6 +211,18 @@ const BEHAVIOR_CONTRACTS = [
     agentAction: "For live charts, create a ref, omit data, then call ref.current.push() or pushMany(). For static renderChart/MCP snapshots, provide data because renderChart cannot push later.",
   },
   {
+    id: "streaming.serialized-proposal-snapshot",
+    category: "streaming",
+    title: "Serialized proposals keep the initial snapshot",
+    severity: "warning",
+    appliesTo: {
+      components: PUSH_MODE_COMPONENTS,
+    },
+    summary: "A JSON component/props proposal for MCP, SSR, or evaluation is a static snapshot even when the request mentions future pushes. Keep the supplied initial rows in the component's real data prop and do not invent pushRows, pushRequirement, ref, or method props.",
+    agentAction: "Return renderable initial props in JSON. If the requested deliverable is React push code, separately omit the controlled data prop in JSX, attach a ref, and call the documented imperative method from an effect or event handler.",
+    example: 'JSON snapshot: { "component": "LineChart", "props": { "data": [{"week":1,"users":120}], "xAccessor":"week", "yAccessor":"users" } }. React push code instead omits data and calls ref.current?.push(row).',
+  },
+  {
     id: "streaming.ref-mutations-require-id-accessors",
     category: "streaming",
     title: "Ref mutations need stable IDs",
@@ -220,6 +241,66 @@ const BEHAVIOR_CONTRACTS = [
     appliesTo: {},
     summary: "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
     agentAction: "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.",
+  },
+  {
+    id: "serialization.formatters-are-react-callbacks",
+    category: "serialization",
+    title: "Axis formatters are React callbacks",
+    severity: "error",
+    appliesTo: {
+      propsAny: ["xFormat", "yFormat", "categoryFormat", "valueFormat"],
+    },
+    summary: "xFormat, yFormat, categoryFormat, and valueFormat are callback props, not d3 format strings or axis-title strings. They are intentionally absent from JSON/MCP schemas and string values fail validation.",
+    agentAction: "In serialized props, omit formatter callbacks and use xLabel, yLabel, categoryLabel, or valueLabel for axis titles. In React JSX, pass a function such as xFormat={value => formatAxis(value)}.",
+    example: 'JSON: { "xLabel": "Payload (KB)", "yLabel": "Response time (ms)" }. React-only: xFormat={value => formatNumber(value, { maximumFractionDigits: 0 })}.',
+  },
+  {
+    id: "value.bignumber-wire-contract",
+    category: "value",
+    title: "BigNumber uses value-card props",
+    severity: "error",
+    appliesTo: {
+      components: ["BigNumber"],
+    },
+    summary: "BigNumber uses label as its visible heading and supports description and summary; title and accessibleTable are chart-frame props and are not supported. Its percent format expects a ratio such as 0.97 and renders it as 97%.",
+    agentAction: "Use label, description, and summary for BigNumber text. For a 97-of-100 KPI, either pass value={0.97} with format=\"percent\" or pass value={97} with format=\"number\" and suffix=\"%\"; do not combine value={97} with format=\"percent\".",
+    example: '{ "component": "BigNumber", "props": { "value": 97, "label": "SLA attainment", "format": "number", "suffix": "%", "target": { "value": 99, "label": "target", "format": "number" } } }',
+  },
+  {
+    id: "geo.proportional-symbol-wire-shape",
+    category: "geo",
+    title: "Proportional symbol maps use geographic props",
+    severity: "error",
+    appliesTo: {
+      components: ["ProportionalSymbolMap"],
+    },
+    summary: "ProportionalSymbolMap reads point rows from points, longitude from xAccessor (default lon), latitude from yAccessor (default lat), and radius from sizeBy. sizeRange is the two-number pixel-radius range.",
+    agentAction: "Use points, xAccessor, yAccessor, and sizeBy. Do not rename points to data or sizeBy to valueAccessor merely because the map renders circles.",
+    example: '{ "points": [{"city":"A","longitude":-122.4,"latitude":37.8,"incidents":18}], "xAccessor":"longitude", "yAccessor":"latitude", "sizeBy":"incidents", "sizeRange":[5,40] }',
+  },
+  {
+    id: "physics.sample-and-mechanical-inputs",
+    category: "physics",
+    title: "Physics charts separate chart mode from simulation input",
+    severity: "warning",
+    appliesTo: {
+      components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"],
+    },
+    summary: "Sample simulations use data plus the chart's accessors. Seeded no-data demonstrations use simulationMode=\"mechanical\" (legacy mode=\"mechanical\" remains accepted); mode otherwise carries chart display modes such as primary or sparkline.",
+    agentAction: "For observed Galton values pass data + valueAccessor. For unit piles pass data + categoryAccessor + valueAccessor. Use seed for reproducibility, bins for Galton columns, and unitValue for the amount represented by one UnitPile body.",
+    example: '{ "component": "GaltonBoardChart", "props": { "data": [{"id":"a","value":1}], "valueAccessor":"value", "bins":4, "seed":42 } }',
+  },
+  {
+    id: "physics.push-uses-source-records",
+    category: "physics",
+    title: "Physics push methods ingest source records",
+    severity: "error",
+    appliesTo: {
+      components: ["GaltonBoardChart", "EventDropChart", "UnitPileChart", "CollisionSwarmChart"],
+    },
+    summary: "Physics HOC refs push source records through the chart's accessors. pushRows and dataIdAccessor are not component props; stable source id fields are retained on spawned bodies without an invented accessor.",
+    agentAction: "For React live code, call ref.current?.push(row) or pushMany(rows). For serialized snapshots, append the rows to data. Keep category/value/time accessors, but omit pushRows and dataIdAccessor.",
+    example: 'ref.current?.push({ id: "c", team: "Blue", value: 2 }); <UnitPileChart ref={ref} categoryAccessor="team" valueAccessor="value" unitValue={1} />',
   },
 ]
 
@@ -284,6 +365,7 @@ function formatDoctorBehaviorContracts(contracts) {
         lines.push(`    ${formatRequiredCombination(combo)}`)
       }
     }
+    if (contract.example) lines.push(`    Example: ${contract.example}`)
     lines.push(`    Action: ${contract.agentAction}`)
   }
   return lines.join("\n")
@@ -307,6 +389,9 @@ function formatBehaviorContractsMarkdown({ compact = false } = {}) {
     if (contract.combinations) {
       const combos = contract.combinations.map(formatRequiredCombination).join(" ")
       lines.push(`  Required combinations: ${combos}`)
+    }
+    if (!compact && contract.example) {
+      lines.push(`  Example: \`${contract.example}\``)
     }
   }
 

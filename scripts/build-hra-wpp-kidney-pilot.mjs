@@ -10,6 +10,9 @@ export const KIDNEY_ROOT_ID = "UBERON:0002113"
 export const DEFAULT_OUTPUT = resolve(
   "docs/src/data/hra-wpp-kidney-v1.6-pilot.json",
 )
+export const PUBLIC_OUTPUT = resolve(
+  "docs/public/workshop/hra-wpp/kidney-v1.6-pilot.json",
+)
 
 const uniqueBy = (items, accessor) => {
   const seen = new Set()
@@ -216,16 +219,23 @@ export async function fetchKidneySource() {
 }
 
 async function main() {
-  const output = process.argv.includes("--write")
-    ? DEFAULT_OUTPUT
-    : process.argv.find((argument) => argument.startsWith("--output="))?.slice(9)
+  const requestedOutput = process.argv
+    .find((argument) => argument.startsWith("--output="))
+    ?.slice(9)
+  const outputs = process.argv.includes("--write")
+    ? [DEFAULT_OUTPUT, PUBLIC_OUTPUT]
+    : requestedOutput
+      ? [resolve(requestedOutput)]
+      : []
   const artifact = buildKidneyPilot(await fetchKidneySource())
   const serialized = `${JSON.stringify(artifact, null, 2)}\n`
 
-  if (output) {
-    await mkdir(dirname(output), { recursive: true })
-    await writeFile(output, serialized)
-    console.log(`Wrote ${output}`)
+  if (outputs.length > 0) {
+    for (const output of outputs) {
+      await mkdir(dirname(output), { recursive: true })
+      await writeFile(output, serialized)
+      console.log(`Wrote ${output}`)
+    }
   } else {
     process.stdout.write(serialized)
   }

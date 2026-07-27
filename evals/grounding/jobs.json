@@ -1,0 +1,1506 @@
+{
+  "version": 1,
+  "fixtureRevision": "semiotic-grounding-2026-07-27-source-facts",
+  "jobs": [
+    {
+      "fixtureId": "regional-revenue/highest",
+      "chartId": "regional-revenue",
+      "condition": "png-only",
+      "question": "Which region has the highest revenue, and what is its value?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "chartId": "regional-revenue",
+      "condition": "png-plus-grounding",
+      "question": "Which region has the highest revenue, and what is its value?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "chartId": "regional-revenue",
+      "condition": "grounding-only",
+      "question": "Which region has the highest revenue, and what is its value?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "chartId": "regional-revenue",
+      "condition": "png-only",
+      "question": "How many regions are shown?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "chartId": "regional-revenue",
+      "condition": "png-plus-grounding",
+      "question": "How many regions are shown?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "chartId": "regional-revenue",
+      "condition": "grounding-only",
+      "question": "How many regions are shown?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "chartId": "regional-revenue",
+      "condition": "png-only",
+      "question": "Why did North have the highest revenue?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "chartId": "regional-revenue",
+      "condition": "png-plus-grounding",
+      "question": "Why did North have the highest revenue?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/cause",
+      "chartId": "regional-revenue",
+      "condition": "grounding-only",
+      "question": "Why did North have the highest revenue?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "chartId": "regional-revenue",
+      "condition": "png-only",
+      "question": "What will North revenue be next quarter?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "chartId": "regional-revenue",
+      "condition": "png-plus-grounding",
+      "question": "What will North revenue be next quarter?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/forecast",
+      "chartId": "regional-revenue",
+      "condition": "grounding-only",
+      "question": "What will North revenue be next quarter?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "chartId": "regional-revenue",
+      "condition": "png-only",
+      "question": "Which accounting system supplied these values?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "chartId": "regional-revenue",
+      "condition": "png-plus-grounding",
+      "question": "Which accounting system supplied these values?",
+      "inputs": {
+        "png": "assets/regional-revenue.png",
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "regional-revenue/source",
+      "chartId": "regional-revenue",
+      "condition": "grounding-only",
+      "question": "Which accounting system supplied these values?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/regional-revenue.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "chartId": "weekly-users",
+      "condition": "png-only",
+      "question": "What is the last observed user count?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "chartId": "weekly-users",
+      "condition": "png-plus-grounding",
+      "question": "What is the last observed user count?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "chartId": "weekly-users",
+      "condition": "grounding-only",
+      "question": "What is the last observed user count?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "chartId": "weekly-users",
+      "condition": "png-only",
+      "question": "Does the series rise or fall across the observed weeks?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "chartId": "weekly-users",
+      "condition": "png-plus-grounding",
+      "question": "Does the series rise or fall across the observed weeks?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "chartId": "weekly-users",
+      "condition": "grounding-only",
+      "question": "Does the series rise or fall across the observed weeks?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "chartId": "weekly-users",
+      "condition": "png-only",
+      "question": "Which product launch caused the increase?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "chartId": "weekly-users",
+      "condition": "png-plus-grounding",
+      "question": "Which product launch caused the increase?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/cause",
+      "chartId": "weekly-users",
+      "condition": "grounding-only",
+      "question": "Which product launch caused the increase?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "chartId": "weekly-users",
+      "condition": "png-only",
+      "question": "How many users will there be in week 8?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "chartId": "weekly-users",
+      "condition": "png-plus-grounding",
+      "question": "How many users will there be in week 8?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/forecast",
+      "chartId": "weekly-users",
+      "condition": "grounding-only",
+      "question": "How many users will there be in week 8?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "chartId": "weekly-users",
+      "condition": "png-only",
+      "question": "What is the confidence interval for week 4?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "chartId": "weekly-users",
+      "condition": "png-plus-grounding",
+      "question": "What is the confidence interval for week 4?",
+      "inputs": {
+        "png": "assets/weekly-users.png",
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "weekly-users/uncertainty",
+      "chartId": "weekly-users",
+      "condition": "grounding-only",
+      "question": "What is the confidence interval for week 4?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/weekly-users.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "chartId": "payload-latency",
+      "condition": "png-only",
+      "question": "What latency is paired with the largest payload?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "chartId": "payload-latency",
+      "condition": "png-plus-grounding",
+      "question": "What latency is paired with the largest payload?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "chartId": "payload-latency",
+      "condition": "grounding-only",
+      "question": "What latency is paired with the largest payload?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "chartId": "payload-latency",
+      "condition": "png-only",
+      "question": "How many observations are plotted?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "chartId": "payload-latency",
+      "condition": "png-plus-grounding",
+      "question": "How many observations are plotted?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "chartId": "payload-latency",
+      "condition": "grounding-only",
+      "question": "How many observations are plotted?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "chartId": "payload-latency",
+      "condition": "png-only",
+      "question": "Does payload size cause latency to increase?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "chartId": "payload-latency",
+      "condition": "png-plus-grounding",
+      "question": "Does payload size cause latency to increase?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/causal",
+      "chartId": "payload-latency",
+      "condition": "grounding-only",
+      "question": "Does payload size cause latency to increase?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "chartId": "payload-latency",
+      "condition": "png-only",
+      "question": "Which network protocol was used?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "chartId": "payload-latency",
+      "condition": "png-plus-grounding",
+      "question": "Which network protocol was used?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/protocol",
+      "chartId": "payload-latency",
+      "condition": "grounding-only",
+      "question": "Which network protocol was used?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "chartId": "payload-latency",
+      "condition": "png-only",
+      "question": "What latency will a 128 KB payload have?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "chartId": "payload-latency",
+      "condition": "png-plus-grounding",
+      "question": "What latency will a 128 KB payload have?",
+      "inputs": {
+        "png": "assets/payload-latency.png",
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "payload-latency/forecast",
+      "chartId": "payload-latency",
+      "condition": "grounding-only",
+      "question": "What latency will a 128 KB payload have?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/payload-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "chartId": "service-latency",
+      "condition": "png-only",
+      "question": "Which two services are compared?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "chartId": "service-latency",
+      "condition": "png-plus-grounding",
+      "question": "Which two services are compared?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "chartId": "service-latency",
+      "condition": "grounding-only",
+      "question": "Which two services are compared?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "chartId": "service-latency",
+      "condition": "png-only",
+      "question": "What is the largest observed latency?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "chartId": "service-latency",
+      "condition": "png-plus-grounding",
+      "question": "What is the largest observed latency?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "chartId": "service-latency",
+      "condition": "grounding-only",
+      "question": "What is the largest observed latency?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "chartId": "service-latency",
+      "condition": "png-only",
+      "question": "Why is the API slower?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "chartId": "service-latency",
+      "condition": "png-plus-grounding",
+      "question": "Why is the API slower?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/cause",
+      "chartId": "service-latency",
+      "condition": "grounding-only",
+      "question": "Why is the API slower?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "chartId": "service-latency",
+      "condition": "png-only",
+      "question": "How were these requests sampled?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "chartId": "service-latency",
+      "condition": "png-plus-grounding",
+      "question": "How were these requests sampled?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/sample-policy",
+      "chartId": "service-latency",
+      "condition": "grounding-only",
+      "question": "How were these requests sampled?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "chartId": "service-latency",
+      "condition": "png-only",
+      "question": "Did either service violate its SLA?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "chartId": "service-latency",
+      "condition": "png-plus-grounding",
+      "question": "Did either service violate its SLA?",
+      "inputs": {
+        "png": "assets/service-latency.png",
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "service-latency/sla",
+      "chartId": "service-latency",
+      "condition": "grounding-only",
+      "question": "Did either service violate its SLA?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/service-latency.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "chartId": "request-flow",
+      "condition": "png-only",
+      "question": "Which outcome receives the largest flow?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "chartId": "request-flow",
+      "condition": "png-plus-grounding",
+      "question": "Which outcome receives the largest flow?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "chartId": "request-flow",
+      "condition": "grounding-only",
+      "question": "Which outcome receives the largest flow?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "chartId": "request-flow",
+      "condition": "png-only",
+      "question": "How many requests flow to Failure?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "chartId": "request-flow",
+      "condition": "png-plus-grounding",
+      "question": "How many requests flow to Failure?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "chartId": "request-flow",
+      "condition": "grounding-only",
+      "question": "How many requests flow to Failure?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "chartId": "request-flow",
+      "condition": "png-only",
+      "question": "What caused the failures?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "chartId": "request-flow",
+      "condition": "png-plus-grounding",
+      "question": "What caused the failures?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/cause",
+      "chartId": "request-flow",
+      "condition": "grounding-only",
+      "question": "What caused the failures?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "chartId": "request-flow",
+      "condition": "png-only",
+      "question": "How many retried requests later succeeded?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "chartId": "request-flow",
+      "condition": "png-plus-grounding",
+      "question": "How many retried requests later succeeded?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/retry-result",
+      "chartId": "request-flow",
+      "condition": "grounding-only",
+      "question": "How many retried requests later succeeded?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "chartId": "request-flow",
+      "condition": "png-only",
+      "question": "What time period do these requests cover?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "chartId": "request-flow",
+      "condition": "png-plus-grounding",
+      "question": "What time period do these requests cover?",
+      "inputs": {
+        "png": "assets/request-flow.png",
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "request-flow/time",
+      "chartId": "request-flow",
+      "condition": "grounding-only",
+      "question": "What time period do these requests cover?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/request-flow.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "chartId": "storage-tree",
+      "condition": "png-only",
+      "question": "Which storage category is largest?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "chartId": "storage-tree",
+      "condition": "png-plus-grounding",
+      "question": "Which storage category is largest?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "chartId": "storage-tree",
+      "condition": "grounding-only",
+      "question": "Which storage category is largest?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "chartId": "storage-tree",
+      "condition": "png-only",
+      "question": "What value is assigned to Backups?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "chartId": "storage-tree",
+      "condition": "png-plus-grounding",
+      "question": "What value is assigned to Backups?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "chartId": "storage-tree",
+      "condition": "grounding-only",
+      "question": "What value is assigned to Backups?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "chartId": "storage-tree",
+      "condition": "png-only",
+      "question": "Are these values bytes, gigabytes, or percentages?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "chartId": "storage-tree",
+      "condition": "png-plus-grounding",
+      "question": "Are these values bytes, gigabytes, or percentages?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/units",
+      "chartId": "storage-tree",
+      "condition": "grounding-only",
+      "question": "Are these values bytes, gigabytes, or percentages?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "chartId": "storage-tree",
+      "condition": "png-only",
+      "question": "Who owns the Logs allocation?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "chartId": "storage-tree",
+      "condition": "png-plus-grounding",
+      "question": "Who owns the Logs allocation?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/owner",
+      "chartId": "storage-tree",
+      "condition": "grounding-only",
+      "question": "Who owns the Logs allocation?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "chartId": "storage-tree",
+      "condition": "png-only",
+      "question": "Which category is growing fastest?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "chartId": "storage-tree",
+      "condition": "png-plus-grounding",
+      "question": "Which category is growing fastest?",
+      "inputs": {
+        "png": "assets/storage-tree.png",
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "storage-tree/growth",
+      "chartId": "storage-tree",
+      "condition": "grounding-only",
+      "question": "Which category is growing fastest?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/storage-tree.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "chartId": "incident-map",
+      "condition": "png-only",
+      "question": "Which labeled city has the most incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "chartId": "incident-map",
+      "condition": "png-plus-grounding",
+      "question": "Which labeled city has the most incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "chartId": "incident-map",
+      "condition": "grounding-only",
+      "question": "Which labeled city has the most incidents?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "chartId": "incident-map",
+      "condition": "png-only",
+      "question": "How many locations are plotted?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "chartId": "incident-map",
+      "condition": "png-plus-grounding",
+      "question": "How many locations are plotted?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "chartId": "incident-map",
+      "condition": "grounding-only",
+      "question": "How many locations are plotted?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "chartId": "incident-map",
+      "condition": "png-only",
+      "question": "What real-world city names do A, B, and C represent?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "chartId": "incident-map",
+      "condition": "png-plus-grounding",
+      "question": "What real-world city names do A, B, and C represent?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/names",
+      "chartId": "incident-map",
+      "condition": "grounding-only",
+      "question": "What real-world city names do A, B, and C represent?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "chartId": "incident-map",
+      "condition": "png-only",
+      "question": "Why does city B have more incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "chartId": "incident-map",
+      "condition": "png-plus-grounding",
+      "question": "Why does city B have more incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/cause",
+      "chartId": "incident-map",
+      "condition": "grounding-only",
+      "question": "Why does city B have more incidents?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "chartId": "incident-map",
+      "condition": "png-only",
+      "question": "How severe were the incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "chartId": "incident-map",
+      "condition": "png-plus-grounding",
+      "question": "How severe were the incidents?",
+      "inputs": {
+        "png": "assets/incident-map.png",
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "incident-map/severity",
+      "chartId": "incident-map",
+      "condition": "grounding-only",
+      "question": "How severe were the incidents?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/incident-map.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "chartId": "sla-gauge",
+      "condition": "png-only",
+      "question": "What is the current gauge value?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "chartId": "sla-gauge",
+      "condition": "png-plus-grounding",
+      "question": "What is the current gauge value?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "chartId": "sla-gauge",
+      "condition": "grounding-only",
+      "question": "What is the current gauge value?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "chartId": "sla-gauge",
+      "condition": "png-only",
+      "question": "What maximum defines the gauge scale?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "chartId": "sla-gauge",
+      "condition": "png-plus-grounding",
+      "question": "What maximum defines the gauge scale?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "chartId": "sla-gauge",
+      "condition": "grounding-only",
+      "question": "What maximum defines the gauge scale?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "chartId": "sla-gauge",
+      "condition": "png-only",
+      "question": "What caused the SLA miss?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "chartId": "sla-gauge",
+      "condition": "png-plus-grounding",
+      "question": "What caused the SLA miss?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/cause",
+      "chartId": "sla-gauge",
+      "condition": "grounding-only",
+      "question": "What caused the SLA miss?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "chartId": "sla-gauge",
+      "condition": "png-only",
+      "question": "Which reporting period does this gauge cover?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "chartId": "sla-gauge",
+      "condition": "png-plus-grounding",
+      "question": "Which reporting period does this gauge cover?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/period",
+      "chartId": "sla-gauge",
+      "condition": "grounding-only",
+      "question": "Which reporting period does this gauge cover?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "chartId": "sla-gauge",
+      "condition": "png-only",
+      "question": "Will the target be met next month?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "chartId": "sla-gauge",
+      "condition": "png-plus-grounding",
+      "question": "Will the target be met next month?",
+      "inputs": {
+        "png": "assets/sla-gauge.png",
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "sla-gauge/forecast",
+      "chartId": "sla-gauge",
+      "condition": "grounding-only",
+      "question": "Will the target be met next month?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/sla-gauge.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "chartId": "conversion-funnel",
+      "condition": "png-only",
+      "question": "How many purchases are shown?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "chartId": "conversion-funnel",
+      "condition": "png-plus-grounding",
+      "question": "How many purchases are shown?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "chartId": "conversion-funnel",
+      "condition": "grounding-only",
+      "question": "How many purchases are shown?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "chartId": "conversion-funnel",
+      "condition": "png-only",
+      "question": "Name the three funnel stages.",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "chartId": "conversion-funnel",
+      "condition": "png-plus-grounding",
+      "question": "Name the three funnel stages.",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "chartId": "conversion-funnel",
+      "condition": "grounding-only",
+      "question": "Name the three funnel stages.",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "chartId": "conversion-funnel",
+      "condition": "png-only",
+      "question": "Why did visitors fail to start trials?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "chartId": "conversion-funnel",
+      "condition": "png-plus-grounding",
+      "question": "Why did visitors fail to start trials?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/dropoff",
+      "chartId": "conversion-funnel",
+      "condition": "grounding-only",
+      "question": "Why did visitors fail to start trials?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "chartId": "conversion-funnel",
+      "condition": "png-only",
+      "question": "Are the same people counted at every stage?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "chartId": "conversion-funnel",
+      "condition": "png-plus-grounding",
+      "question": "Are the same people counted at every stage?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/people",
+      "chartId": "conversion-funnel",
+      "condition": "grounding-only",
+      "question": "Are the same people counted at every stage?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "chartId": "conversion-funnel",
+      "condition": "png-only",
+      "question": "Which experiment produced this funnel?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "chartId": "conversion-funnel",
+      "condition": "png-plus-grounding",
+      "question": "Which experiment produced this funnel?",
+      "inputs": {
+        "png": "assets/conversion-funnel.png",
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "conversion-funnel/experiment",
+      "chartId": "conversion-funnel",
+      "condition": "grounding-only",
+      "question": "Which experiment produced this funnel?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/conversion-funnel.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "chartId": "galton-values",
+      "condition": "png-only",
+      "question": "What are the smallest and largest observed values?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "chartId": "galton-values",
+      "condition": "png-plus-grounding",
+      "question": "What are the smallest and largest observed values?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "chartId": "galton-values",
+      "condition": "grounding-only",
+      "question": "What are the smallest and largest observed values?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "chartId": "galton-values",
+      "condition": "png-only",
+      "question": "How many observed rows feed the board?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "chartId": "galton-values",
+      "condition": "png-plus-grounding",
+      "question": "How many observed rows feed the board?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "chartId": "galton-values",
+      "condition": "grounding-only",
+      "question": "How many observed rows feed the board?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "chartId": "galton-values",
+      "condition": "png-only",
+      "question": "What real-world probability process generated these values?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "chartId": "galton-values",
+      "condition": "png-plus-grounding",
+      "question": "What real-world probability process generated these values?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/probability",
+      "chartId": "galton-values",
+      "condition": "grounding-only",
+      "question": "What real-world probability process generated these values?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "chartId": "galton-values",
+      "condition": "png-only",
+      "question": "What population were these observations sampled from?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "chartId": "galton-values",
+      "condition": "png-plus-grounding",
+      "question": "What population were these observations sampled from?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/population",
+      "chartId": "galton-values",
+      "condition": "grounding-only",
+      "question": "What population were these observations sampled from?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "chartId": "galton-values",
+      "condition": "png-only",
+      "question": "Where will the next observation land?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": null
+      }
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "chartId": "galton-values",
+      "condition": "png-plus-grounding",
+      "question": "Where will the next observation land?",
+      "inputs": {
+        "png": "assets/galton-values.png",
+        "grounding": "payloads/galton-values.json"
+      }
+    },
+    {
+      "fixtureId": "galton-values/forecast",
+      "chartId": "galton-values",
+      "condition": "grounding-only",
+      "question": "Where will the next observation land?",
+      "inputs": {
+        "png": null,
+        "grounding": "payloads/galton-values.json"
+      }
+    }
+  ]
+}

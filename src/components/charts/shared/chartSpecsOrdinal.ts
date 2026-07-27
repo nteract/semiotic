@@ -353,7 +353,23 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       value: { type: "number", description: "Current gauge value" },
       min: { type: "number", default: 0 },
       max: { type: "number", default: 100 },
-      thresholds: { type: "array", description: "Array of { value, color, label? } defining threshold zones. Last value should equal max." },
+      thresholds: {
+        type: "array",
+        description: "Array of { value, color, label? } defining threshold zones. This is GaugeChart's wire format; BigNumber instead uses { at, level, color?, label? }. Last value should equal max.",
+        schema: {
+          minItems: 1,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["value", "color"],
+            properties: {
+              value: { type: "number" },
+              color: { type: "string" },
+              label: { type: "string" },
+            },
+          },
+        },
+      },
       gradientFill: { type: "object", description: "Sweep gradient: { stops: [{ offset: 0-1, color?, opacity? }] }. Offset 0 is the sweep start and offset 1 is the sweep end." },
       arcWidth: { type: "number", default: 0.3, description: "Arc thickness as fraction of radius (0-1)" },
       cornerRadius: { type: "number", description: "Pixel radius for rounded segment ends. Same semantics as DonutChart's cornerRadius. Omit for sharp corners." },
@@ -363,11 +379,10 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       needleColor: { type: "string" },
       color: { type: "string", description: "Fallback fill color used when no thresholds are defined" },
       // GaugeChart only uses the `common` bag (no ordinalAxis), so
-      // `valueFormat` is an explicit ownProp. Both canonical schema and
-      // validationMap expose it. `centerContent` accepts ReactNode which
-      // can't be serialized into a tool definition; same for backgroundColor
-      // — kept runtime-only.
-      valueFormat: { type: "function" },
+      // `valueFormat` is an explicit runtime-only callback. JSON/MCP callers
+      // cannot serialize it; `centerContent` and backgroundColor are likewise
+      // kept out of the tool definition.
+      valueFormat: { type: "function", omitFromSchema: true },
       centerContent: { type: ["object", "string", "number", "function"], omitFromSchema: true },
       showScaleLabels: { type: "boolean", default: true },
       backgroundColor: { type: "string", omitFromSchema: true },
