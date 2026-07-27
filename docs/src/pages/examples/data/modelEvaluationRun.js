@@ -11,13 +11,27 @@ export const MODEL_EVALUATION_RUN = Object.freeze({
   estimatedUsd: 2.27921653,
 })
 
+export const FOLLOW_UP_RUN = Object.freeze({
+  capturedAt: "2026-07-27",
+  fixtureRevision: "semiotic-grounding-2026-07-27-source-facts",
+  firstTryRevision: "semiotic-first-try-2026-07-27-contracts",
+  trialCount: 3,
+  requestCount: 603,
+  groundingOutcomes: 540,
+  firstTryOutcomes: 63,
+  answerableQuestions: 20,
+  firstTryFixtures: 7,
+  estimatedUsd: 1.95983369,
+})
+
+export const TOTAL_RECORDED_REQUESTS =
+  MODEL_EVALUATION_RUN.requestCount + FOLLOW_UP_RUN.requestCount
+
+export const TOTAL_ESTIMATED_USD = MODEL_EVALUATION_RUN.estimatedUsd + FOLLOW_UP_RUN.estimatedUsd
+
 export const MODEL_ORDER = Object.freeze(["Sol", "Terra", "Luna"])
 
-export const CONDITION_ORDER = Object.freeze([
-  "png-only",
-  "png-plus-grounding",
-  "grounding-only",
-])
+export const CONDITION_ORDER = Object.freeze(["png-only", "png-plus-grounding", "grounding-only"])
 
 export const CONDITION_LABELS = Object.freeze({
   "png-only": "PNG only",
@@ -140,6 +154,103 @@ export const GROUNDING_SCORES = Object.freeze([
     answerable: 12,
     unanswerable: 29,
   },
+])
+
+export const FOLLOW_UP_GROUNDING_SCORES = Object.freeze([
+  {
+    model: "Sol",
+    modelId: "gpt-5.6-sol",
+    condition: "png-only",
+    passed: 47,
+    attempted: 60,
+  },
+  {
+    model: "Sol",
+    modelId: "gpt-5.6-sol",
+    condition: "png-plus-grounding",
+    passed: 60,
+    attempted: 60,
+  },
+  {
+    model: "Sol",
+    modelId: "gpt-5.6-sol",
+    condition: "grounding-only",
+    passed: 60,
+    attempted: 60,
+  },
+  {
+    model: "Terra",
+    modelId: "gpt-5.6-terra",
+    condition: "png-only",
+    passed: 48,
+    attempted: 60,
+  },
+  {
+    model: "Terra",
+    modelId: "gpt-5.6-terra",
+    condition: "png-plus-grounding",
+    passed: 60,
+    attempted: 60,
+  },
+  {
+    model: "Terra",
+    modelId: "gpt-5.6-terra",
+    condition: "grounding-only",
+    passed: 60,
+    attempted: 60,
+  },
+  {
+    model: "Luna",
+    modelId: "gpt-5.6-luna",
+    condition: "png-only",
+    passed: 44,
+    attempted: 60,
+  },
+  {
+    model: "Luna",
+    modelId: "gpt-5.6-luna",
+    condition: "png-plus-grounding",
+    passed: 60,
+    attempted: 60,
+  },
+  {
+    model: "Luna",
+    modelId: "gpt-5.6-luna",
+    condition: "grounding-only",
+    passed: 60,
+    attempted: 60,
+  },
+])
+
+export const FOLLOW_UP_FIRST_TRY_MODELS = Object.freeze([
+  {
+    model: "Sol",
+    modelId: "gpt-5.6-sol",
+    passed: 21,
+    attempted: 21,
+  },
+  {
+    model: "Terra",
+    modelId: "gpt-5.6-terra",
+    passed: 21,
+    attempted: 21,
+  },
+  {
+    model: "Luna",
+    modelId: "gpt-5.6-luna",
+    passed: 19,
+    attempted: 21,
+  },
+])
+
+export const FOLLOW_UP_FIRST_TRY_FIXTURES = Object.freeze([
+  { fixtureId: "line-push", passed: 9, attempted: 9 },
+  { fixtureId: "scatter-push", passed: 9, attempted: 9 },
+  { fixtureId: "bubble-static", passed: 9, attempted: 9 },
+  { fixtureId: "gauge-static", passed: 7, attempted: 9 },
+  { fixtureId: "symbol-map-static", passed: 9, attempted: 9 },
+  { fixtureId: "galton-static", passed: 9, attempted: 9 },
+  { fixtureId: "unit-pile-push", passed: 9, attempted: 9 },
 ])
 
 export const FIRST_TRY_MODELS = Object.freeze([
@@ -267,10 +378,16 @@ export function groundingRowsForMetric(metricId) {
   }))
 }
 
+export function followUpGroundingRows() {
+  return FOLLOW_UP_GROUNDING_SCORES.map((row) => ({
+    ...row,
+    conditionLabel: CONDITION_LABELS[row.condition],
+    denominator: row.attempted,
+  }))
+}
+
 export function combinedGroundingDeltas(model) {
-  const png = GROUNDING_SCORES.find(
-    (row) => row.model === model && row.condition === "png-only",
-  )
+  const png = GROUNDING_SCORES.find((row) => row.model === model && row.condition === "png-only")
   const combined = GROUNDING_SCORES.find(
     (row) => row.model === model && row.condition === "png-plus-grounding",
   )

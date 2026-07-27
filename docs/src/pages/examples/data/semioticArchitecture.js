@@ -1243,7 +1243,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   {
     id: "the-benchmark-is-a-chart-too",
     shortLabel: "Benchmark Is a Chart",
-    note: "A three-model scorecard separates answerable reads from correct abstentions, then keeps the first-attempt failure matrix and scorer corrections beside the aggregate.",
+    note: "A three-model scorecard separates answerable reads from correct abstentions, then places repeated post-merge evidence beside the first-attempt failure matrix and scorer corrections.",
     uses: [
       "input-static",
       "hoc-ordinal-bars",

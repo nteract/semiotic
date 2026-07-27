@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-sol",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "xAccessor": "week",
+          "yAccessor": "users"
+        }
+      },
+      "rawOutputSha256": "aa45c1a9bc81bd075f976a9d2867a77f43a85fada4beb75edd44baa972fad878"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "title": "Response Time by Payload Size",
+          "description": "Scatterplot of response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time increases as payload size increases.",
+          "accessibleTable": true,
+          "enableHover": true
+        }
+      },
+      "rawOutputSha256": "06f9ea5e886ec7cb00497ba6ae2021140fa1269a0873045c8eefd81a04355dd8"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "title": "Company Growth and Retention",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customer count.",
+          "summary": "Company C has the highest retention and largest customer base, while Company B has the highest growth and lowest retention.",
+          "showLegend": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "f29d43baab01575b088d0ac57f3a0c00025770d2484b5a45a8aa53a06bd7f737"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "BigNumber",
+        "props": {
+          "value": 97,
+          "label": "SLA attainment",
+          "format": "number",
+          "suffix": "%",
+          "target": {
+            "value": 99,
+            "label": "target",
+            "format": "number"
+          },
+          "thresholds": [
+            {
+              "at": 0,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 99,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "description": "Current SLA attainment is 97 percent against a target of 99 percent.",
+          "summary": "SLA attainment is 2 percentage points below target.",
+          "mode": "tile"
+        }
+      },
+      "rawOutputSha256": "476907f679e7fac333bd718cdad67fce1ef7b96320244e154ed2569cdd0f6a82"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents"
+        }
+      },
+      "rawOutputSha256": "ad24651613cc32bb1d985f9b720d7709628bca2d19c4ffee0240543e78d278c4"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "mode": "sample",
+          "seed": 42
+        }
+      },
+      "rawOutputSha256": "cca21da3fc818855f93324ed9a2a7b2081c559ba52cead21a388968b5acf2df3"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "unitValue": 1
+        }
+      },
+      "rawOutputSha256": "add8e8477487c817bce0146d71d94720611ed4029bb7f902fc3ab25e9c086bfd"
+    }
+  ]
+}

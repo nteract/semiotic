@@ -212,8 +212,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       performance: {
         status: "bounded-and-route-split",
         budgets: {
-          bundle:
-            "lazy example route; the optional 110m world reference is dynamically imported",
+          bundle: "lazy example route; the optional 110m world reference is dynamically imported",
           interaction:
             "bounded projected lattice or 50 authored U.S. cells / 177 Natural Earth centroids with memoized responsive layout configuration",
           memory:
@@ -512,8 +511,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         reviewCadence: "release",
       },
       accessibility: {
-        summary:
-          "Blocker-amplification comparison, settled task table, and a live observation log",
+        summary: "Blocker-amplification comparison, settled task table, and a live observation log",
         navigation:
           "Selected task drives both views; keyboard-reachable task marks in the swimlane and the machine",
         keyboard: "Native buttons plus canvas keyboard navigation in both charts",
@@ -536,7 +534,8 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       performance: {
         status: "unmeasured",
         budgets: {
-          bundle: "lazy example route using public root, ordinal, physics, and recipes entry points",
+          bundle:
+            "lazy example route using public root, ordinal, physics, and recipes entry points",
           interaction: "unmeasured",
           memory: "20-task dependency machine with a bounded 6-event observation log",
           hiddenPage: "physics suspendWhenHidden inherited from the frame",
@@ -787,20 +786,20 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Benchmark Is a Chart, Too",
     eyebrow: "Model evaluation · scorer audit",
     description:
-      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+      "Read the compatibility baseline and repeated post-merge trial as evidence: separate answers from abstentions, inspect repaired contracts and residual failures, and audit the scorer before trusting the total.",
     contract: {
       publicImports: ["semiotic/ordinal"],
       data: {
         states: ["snapshot"],
         fixture: {
-          kind: "checked-in-openai-gpt-5.6-compatibility-run",
+          kind: "checked-in-openai-gpt-5.6-baseline-and-repeat",
           replay: false,
           schemaVersion: "1",
         },
       },
       provenance: {
         source:
-          "Semiotic prove-track OpenAI Responses run, corrected score reports, and request ledger",
+          "Semiotic prove-track OpenAI Responses baseline, repeated targeted trials, corrected score reports, and request ledgers",
         capturedAt: "2026-07-27",
         freshnessOwner: "Semiotic maintainers",
         reviewCadence: "fixture revision",

@@ -10,8 +10,12 @@ import { renderChartWithEvidence } from "semiotic/server"
 import Ajv2020 from "ajv/dist/2020.js"
 import {
   groundingScoringRevision,
-  scoreGroundingAnswer,
+  scoreGroundingAnswer
 } from "./ai-eval-scoring.mjs"
+import {
+  summarizeFirstTryRows,
+  summarizeGroundingRows
+} from "./lib/ai-eval-report-summary.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"))
@@ -40,7 +44,7 @@ const publicTools = new Set([
   "improveChart",
   "explainChart",
   "auditChart",
-  "getChartSchema",
+  "getChartSchema"
 ])
 
 const generationFixtureIds = firstTry.fixtures
@@ -84,7 +88,7 @@ function validateSubmission(schema, submission, label) {
   const ajv = new Ajv2020({
     allErrors: true,
     strict: false,
-    validateFormats: false,
+    validateFormats: false
   })
   const validate = ajv.compile(schema)
   if (validate(submission)) return
@@ -118,8 +122,8 @@ function mergedProposal(fixture, proposal) {
     ...proposal,
     props: {
       ...proposal.props,
-      data: [...data, ...fixture.push.rows],
-    },
+      data: [...data, ...fixture.push.rows]
+    }
   }
 }
 
@@ -128,16 +132,15 @@ function scoreProposal(fixture, proposal) {
     const candidate = mergedProposal(fixture, proposal)
     const result = prepareChart(candidate, {
       data: candidate?.props?.data,
-      render: (component, props) =>
-        renderChartWithEvidence(component, props),
+      render: (component, props) => renderChartWithEvidence(component, props)
     })
     const actual = {
       validated: result.validation.valid,
       renderProven: Boolean(
         result.validation.valid &&
         result.evidence &&
-          !result.evidence.empty &&
-          result.evidence.markCount > 0
+        !result.evidence.empty &&
+        result.evidence.markCount > 0
       ),
       noErrorDiagnostics: !result.diagnostics.some(
         ({ severity }) => severity === "error"
@@ -146,9 +149,9 @@ function scoreProposal(fixture, proposal) {
       empty: result.evidence?.empty ?? null,
       diagnostics: result.diagnostics.map(({ code, severity }) => ({
         code,
-        severity,
+        severity
       })),
-      repairStatus: result.repair?.status ?? null,
+      repairStatus: result.repair?.status ?? null
     }
     const checks = Object.entries(fixture.expect)
       .filter(([key]) =>
@@ -166,7 +169,7 @@ function scoreProposal(fixture, proposal) {
       diagnostics: [],
       repairStatus: null,
       error: error instanceof Error ? error.message : String(error),
-      passed: fixture.expect.validated === false,
+      passed: fixture.expect.validated === false
     }
   }
 }
@@ -176,16 +179,8 @@ const firstTrySubmission = firstTryResultsPath
   ? await readJson(resolve(firstTryResultsPath))
   : null
 if (firstTrySubmission) {
-  validateSubmission(
-    firstTryResultSchema,
-    firstTrySubmission,
-    "First-try"
-  )
-  validateMetadata(
-    firstTrySubmission,
-    firstTry.fixtureRevision,
-    "First-try"
-  )
+  validateSubmission(firstTryResultSchema, firstTrySubmission, "First-try")
+  validateMetadata(firstTrySubmission, firstTry.fixtureRevision, "First-try")
 }
 const submittedProposals = uniqueSubmissionMap(
   firstTrySubmission?.results ?? [],
@@ -207,7 +202,7 @@ const firstTryRaw = firstTry.fixtures.map((fixture) => {
           diagnostics: [],
           repairStatus: null,
           error: "Missing model submission",
-          passed: false,
+          passed: false
         }
       : scoreProposal(fixture, submitted?.proposal ?? fixture.proposal)
   const postRepair = submitted?.repairProposal
@@ -220,10 +215,9 @@ const firstTryRaw = firstTry.fixtures.map((fixture) => {
     mode: fixture.mode,
     source: submitted ? "model-submission" : "committed-reference",
     firstAttempt,
-    postRepair,
+    postRepair
   }
 })
-const generationRows = firstTryRaw.filter(({ kind }) => kind === "generation")
 if (!firstTrySubmission) {
   const failedReferences = firstTryRaw.filter(
     ({ firstAttempt }) => !firstAttempt.passed
@@ -247,7 +241,7 @@ const groundingCases = grounding.charts.flatMap((chart) =>
       chartId: chart.id,
       questionId: question.id,
       condition,
-      expected: question.expected,
+      expected: question.expected
     }))
   )
 )
@@ -272,9 +266,7 @@ for (const chart of grounding.charts) {
     bytes.byteLength !== groundingManifest.jobs.bytes ||
     hash !== groundingManifest.jobs.sha256
   ) {
-    throw new Error(
-      `Grounding artifact drift: ${groundingManifest.jobs.path}`
-    )
+    throw new Error(`Grounding artifact drift: ${groundingManifest.jobs.path}`)
   }
 }
 
@@ -283,21 +275,11 @@ const groundingSubmission = groundingResultsPath
   ? await readJson(resolve(groundingResultsPath))
   : null
 if (groundingSubmission) {
-  validateSubmission(
-    groundingResultSchema,
-    groundingSubmission,
-    "Grounding"
-  )
-  validateMetadata(
-    groundingSubmission,
-    grounding.fixtureRevision,
-    "Grounding"
-  )
+  validateSubmission(groundingResultSchema, groundingSubmission, "Grounding")
+  validateMetadata(groundingSubmission, grounding.fixtureRevision, "Grounding")
 }
 const groundingCaseIds = new Set(
-  groundingCases.map(
-    ({ fixtureId, condition }) => `${fixtureId}/${condition}`
-  )
+  groundingCases.map(({ fixtureId, condition }) => `${fixtureId}/${condition}`)
 )
 const submittedAnswers = uniqueSubmissionMap(
   groundingSubmission?.responses ?? [],
@@ -317,28 +299,18 @@ const groundingRaw = groundingCases.map((entry) => {
       entry.expected,
       answer,
       Boolean(groundingSubmission)
-    ),
+    )
   }
 })
 
-const conditionSummary = Object.fromEntries(
-  grounding.conditions.map((condition) => {
-    const rows = groundingRaw.filter((entry) => entry.condition === condition)
-    const scored = rows.filter((entry) => entry.status !== "pending")
-    return [
-      condition,
-      {
-        trials: rows.length,
-        scored: scored.length,
-        passed: scored.filter(({ passed }) => passed).length,
-        accuracy:
-          scored.length > 0
-            ? scored.filter(({ passed }) => passed).length / scored.length
-            : null,
-        unanswerableTrials: rows.filter(({ answerable }) => !answerable).length,
-      },
-    ]
-  })
+const firstTrySummary = summarizeFirstTryRows(
+  firstTryRaw,
+  Boolean(firstTrySubmission)
+)
+const groundingSummary = summarizeGroundingRows(
+  grounding.conditions,
+  groundingRaw,
+  Boolean(groundingSubmission)
 )
 
 const report = {
@@ -353,40 +325,25 @@ const report = {
       negativeCases: discovery.cases.filter(
         (entry) => entry.expectedTools.length === 0
       ).length,
-      publicTools: [...publicTools],
+      publicTools: [...publicTools]
     },
-    raw: discovery.cases,
+    raw: discovery.cases
   },
   firstTry: {
     metadata: firstTrySubmission?.metadata ?? {
       fixtureRevision: firstTry.fixtureRevision,
-      source: "committed-reference",
+      source: "committed-reference"
     },
-    summary: {
-      generationFixtures: generationRows.length,
-      guardFixtures: firstTryRaw.length - generationRows.length,
-      staticFixtures: generationRows.filter(({ mode }) => mode === "static")
-        .length,
-      pushFixtures: generationRows.filter(({ mode }) => mode === "push")
-        .length,
-      firstAttemptPassed: generationRows.filter(
-        ({ firstAttempt }) => firstAttempt.passed
-      ).length,
-      postRepairAttempted: generationRows.filter(({ postRepair }) => postRepair)
-        .length,
-      postRepairPassed: generationRows.filter(
-        ({ postRepair }) => postRepair?.passed
-      ).length,
-    },
-    raw: firstTryRaw,
+    summary: firstTrySummary,
+    raw: firstTryRaw
   },
   grounding: {
     metadata: {
       ...(groundingSubmission?.metadata ?? {
         fixtureRevision: grounding.fixtureRevision,
-        status: "awaiting-model-results",
+        status: "awaiting-model-results"
       }),
-      scoringRevision: groundingScoringRevision,
+      scoringRevision: groundingScoringRevision
     },
     summary: {
       charts: grounding.charts.length,
@@ -394,11 +351,10 @@ const report = {
         (total, chart) => total + chart.questions.length,
         0
       ),
-      trials: groundingRaw.length,
-      conditions: conditionSummary,
+      ...groundingSummary
     },
-    raw: groundingRaw,
-  },
+    raw: groundingRaw
+  }
 }
 
 const outputPath = argValue("output")
@@ -409,7 +365,7 @@ process.stderr.write(
   [
     `first-try ${report.firstTry.summary.firstAttemptPassed}/${report.firstTry.summary.generationFixtures}`,
     `grounding ${report.grounding.summary.trials} trials`,
-    groundingSubmission ? "scored" : "awaiting model results",
+    groundingSubmission ? "scored" : "awaiting model results"
   ].join(" · ") + "\n"
 )
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)

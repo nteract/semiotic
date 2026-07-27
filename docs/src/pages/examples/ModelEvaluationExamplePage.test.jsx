@@ -11,7 +11,9 @@ vi.mock("../../hooks/useResponsiveWidth", () => ({
 vi.mock("semiotic/ordinal", () => ({
   GroupedBarChart: ({ data, title, valueLabel }) => (
     <div
-      data-testid="grounding-chart"
+      data-testid={
+        title === "Repeated answerable outcomes" ? "follow-up-grounding-chart" : "grounding-chart"
+      }
       data-denominator={data[0]?.denominator}
       data-value-label={valueLabel}
     >
@@ -33,20 +35,18 @@ describe("ModelEvaluationReadingRoom", () => {
   it("preserves the run ledger and the split score denominators", () => {
     renderRoom()
 
-    expect(screen.getAllByText("516")).toHaveLength(2)
+    expect(screen.getByText("1,119")).toBeTruthy()
+    expect(screen.getAllByText("603")).toHaveLength(2)
+    expect(screen.getByTestId("follow-up-grounding-chart").dataset.denominator).toBe("60")
     expect(screen.getByTestId("grounding-chart").dataset.denominator).toBe("50")
 
     fireEvent.click(screen.getByRole("button", { name: /Answerable, score out of 20/i }))
 
     expect(screen.getByTestId("grounding-chart").dataset.denominator).toBe("20")
     expect(screen.getByTestId("grounding-chart").dataset.valueLabel).toContain("of 20")
-    expect(
-      screen.getByText(/The payload did not add a correct answer/i),
-    ).toBeTruthy()
+    expect(screen.getByText(/The payload did not add a correct answer/i)).toBeTruthy()
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /Correct abstention, score out of 30/i }),
-    )
+    fireEvent.click(screen.getByRole("button", { name: /Correct abstention, score out of 30/i }))
 
     expect(screen.getByTestId("grounding-chart").dataset.denominator).toBe("30")
     expect(screen.getByText(/combined evidence reached 30 of 30/i)).toBeTruthy()
@@ -55,6 +55,8 @@ describe("ModelEvaluationReadingRoom", () => {
   it("keeps failures, scorer corrections, and provenance readable without the charts", () => {
     renderRoom()
 
+    expect(screen.getByText(/revised payload recovered the answerable lookups/i)).toBeTruthy()
+    expect(screen.getByText(/6 fixtures held across every model and trial/i)).toBeTruthy()
     expect(screen.getByText("Failures by fixture family")).toBeTruthy()
     expect(screen.getByText(/render-evidence seam as much as a model miss/i)).toBeTruthy()
     expect(screen.getAllByText(/corrected:/i)).toHaveLength(3)

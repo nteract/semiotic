@@ -108,15 +108,16 @@ locked rate table, not an OpenAI billing ledger.
 
 ## Evidence-led follow-up
 
-1. Inspect `buildReaderGrounding` for the answerable lookups lost in the
-   combined and payload-only conditions, especially value, hierarchy, and
-   physics projections. Revise the payload before making a reception claim.
-2. Add schema behavior metadata and AI-facing examples for serializable
-   formatting, push data, geo inputs, physics modes, and value-chart selection;
-   then publish a new fixture revision before rerunning.
-3. Add repeated trials only after a payload revision. This single-response
-   baseline is sufficient to find contract failures, not to estimate small
-   model differences precisely.
+The payload and generation-contract revisions were tested in three repeated,
+targeted trials after merge. The follow-up preserves this baseline and reports
+only the changed cases:
+
+- [post-merge repeated evaluation](../openai-follow-up/README.md)
+
+The repeat recovered every targeted answerable lookup when grounding was
+present and resolved six of the seven generation fixtures across every model
+and trial. The remaining `gauge-static` misses are retained as failures rather
+than repaired in place.
 
 The per-model compatibility reports are the scored source of truth:
 

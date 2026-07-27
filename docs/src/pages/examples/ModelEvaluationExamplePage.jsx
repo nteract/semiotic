@@ -5,6 +5,9 @@ import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
   CONDITION_COLORS,
+  FOLLOW_UP_FIRST_TRY_FIXTURES,
+  FOLLOW_UP_FIRST_TRY_MODELS,
+  FOLLOW_UP_RUN,
   FIRST_TRY_FAILURES,
   FIRST_TRY_MODELS,
   GROUNDING_METRICS,
@@ -12,7 +15,10 @@ import {
   MODEL_EVALUATION_RUN,
   MODEL_ORDER,
   SCORER_AUDIT_CASES,
+  TOTAL_ESTIMATED_USD,
+  TOTAL_RECORDED_REQUESTS,
   combinedGroundingDeltas,
+  followUpGroundingRows,
   groundingRowsForMetric,
 } from "./data/modelEvaluationRun"
 import "./ModelEvaluationExamplePage.css"
@@ -55,22 +61,22 @@ function ScoreTooltip({ datum }) {
 
 function RunLedger() {
   const rows = [
-    ["Requests", INTEGER.format(MODEL_EVALUATION_RUN.requestCount), "across three models"],
     [
-      "Grounding",
-      `${MODEL_EVALUATION_RUN.groundingRequestsPerModel}/model`,
-      "50 questions × 3 evidence conditions",
+      "Complete baseline",
+      INTEGER.format(MODEL_EVALUATION_RUN.requestCount),
+      "one response per case",
     ],
     [
-      "First try",
-      `${MODEL_EVALUATION_RUN.firstTryRequestsPerModel}/model`,
-      "one proposal, no repair pass",
+      "Repeated follow-up",
+      INTEGER.format(FOLLOW_UP_RUN.requestCount),
+      `${FOLLOW_UP_RUN.trialCount} targeted trials`,
     ],
     [
-      "Run cost",
-      USD.format(MODEL_EVALUATION_RUN.estimatedUsd),
-      `${MODEL_EVALUATION_RUN.durationMinutes} minutes`,
+      "Repeated scope",
+      `${FOLLOW_UP_RUN.answerableQuestions} + ${FOLLOW_UP_RUN.firstTryFixtures}`,
+      "answerable questions + generation fixtures",
     ],
+    ["Recorded cost", USD.format(TOTAL_ESTIMATED_USD), "baseline plus follow-up"],
   ]
   return (
     <dl className="benchmark-chart__ledger">
@@ -89,49 +95,143 @@ function RunLedger() {
 
 export function ModelEvaluationReadingRoom() {
   const [metricId, setMetricId] = useState("overall")
+  const [followUpWidth, followUpRef] = useResponsiveWidth(320, 920)
   const [groundingWidth, groundingRef] = useResponsiveWidth(320, 920)
   const [firstTryWidth, firstTryRef] = useResponsiveWidth(320, 760)
 
   const metric =
-    GROUNDING_METRICS.find((candidate) => candidate.id === metricId) ??
-    GROUNDING_METRICS[0]
+    GROUNDING_METRICS.find((candidate) => candidate.id === metricId) ?? GROUNDING_METRICS[0]
   const groundingRows = useMemo(() => groundingRowsForMetric(metric.id), [metric.id])
-  const deltas = useMemo(
-    () => MODEL_ORDER.map((model) => combinedGroundingDeltas(model)),
-    [],
-  )
+  const repeatedGroundingRows = useMemo(() => followUpGroundingRows(), [])
+  const deltas = useMemo(() => MODEL_ORDER.map((model) => combinedGroundingDeltas(model)), [])
   const maximumCost = Math.max(...FIRST_TRY_MODELS.map((row) => row.estimatedUsd))
+  const perfectFollowUpFixtures = FOLLOW_UP_FIRST_TRY_FIXTURES.filter(
+    (row) => row.passed === row.attempted,
+  ).length
+  const gaugeFollowUp = FOLLOW_UP_FIRST_TRY_FIXTURES.find((row) => row.fixtureId === "gauge-static")
 
   return (
     <div className="benchmark-chart">
       <header className="benchmark-chart__masthead">
         <div>
           <p className="benchmark-chart__eyebrow">
-            OpenAI GPT-5.6 compatibility run · snapshot 2026-07-27
+            OpenAI GPT-5.6 compatibility evidence · snapshot 2026-07-27
           </p>
           <h2>The benchmark is a chart, too.</h2>
           <p>
-            A scorecard has encodings, denominators, and failure modes—just like
-            the charts it judges. This one asks two different questions: can a
-            model read what is there, and can it stop when the evidence runs out?
+            A scorecard has encodings, denominators, and failure modes—just like the charts it
+            judges. This one asks two different questions: can a model read what is there, and can
+            it stop when the evidence runs out?
           </p>
         </div>
         <div className="benchmark-chart__stamp" aria-label="Run completed">
           <span>COMPLETE</span>
-          <strong>516</strong>
-          <small>requests</small>
+          <strong>{INTEGER.format(TOTAL_RECORDED_REQUESTS)}</strong>
+          <small>recorded requests</small>
         </div>
       </header>
 
       <RunLedger />
 
+      <section className="benchmark-chart__chapter" aria-labelledby="follow-up-heading">
+        <div className="benchmark-chart__chapter-heading">
+          <p>Post-merge repeated trials</p>
+          <h3 id="follow-up-heading">The revised payload recovered the answerable lookups.</h3>
+          <span>
+            Twenty answerable questions and seven generation fixtures were repeated across every
+            model. PNG-only stayed in the run as a control.
+          </span>
+        </div>
+
+        <div className="benchmark-chart__chart-shell" ref={followUpRef}>
+          <GroupedBarChart
+            data={repeatedGroundingRows}
+            categoryAccessor="model"
+            groupBy="conditionLabel"
+            valueAccessor="passed"
+            colorBy="conditionLabel"
+            colorScheme={CONDITION_COLORS}
+            valueExtent={[0, 60]}
+            sort={false}
+            width={followUpWidth}
+            height={360}
+            showGrid
+            showLegend
+            legendPosition="bottom"
+            legendInteraction="isolate"
+            enableHover
+            tooltip={(datum) => <ScoreTooltip datum={datum} />}
+            categoryLabel="Model"
+            valueLabel="Correct answerable outcomes (of 60)"
+            title="Repeated answerable outcomes"
+            description="Across three targeted trials, PNG plus grounding and grounding-only each passed all 180 answerable outcomes. PNG-only passed 139 of 180."
+            summary="The revised source-fact payload recovered every targeted answerable lookup across Sol, Terra, and Luna. This follow-up did not repeat the unanswerable questions."
+            accessibleTable
+          />
+        </div>
+
+        <div className="benchmark-chart__first-try-grid">
+          <div className="benchmark-chart__finding">
+            <span>First-attempt generation</span>
+            <strong>{perfectFollowUpFixtures} fixtures held across every model and trial.</strong>
+            <p>
+              The remaining fixture, <code>gauge-static</code>, passed {gaugeFollowUp?.passed}/
+              {gaugeFollowUp?.attempted}. Luna twice added an unsupported HOC prop to an otherwise
+              valid BigNumber proposal.
+            </p>
+          </div>
+          <div className="benchmark-chart__cost-strip" aria-label="Repeated generation by model">
+            {FOLLOW_UP_FIRST_TRY_MODELS.map((row) => (
+              <article key={row.model}>
+                <header>
+                  <strong>{row.model}</strong>
+                  <span>{row.modelId}</span>
+                </header>
+                <div
+                  className="benchmark-chart__cost-meter"
+                  aria-label={`${row.model} passed ${row.passed} of ${row.attempted}`}
+                >
+                  <i
+                    style={{
+                      width: `${(row.passed / row.attempted) * 100}%`,
+                      background: MODEL_COLORS[row.model],
+                    }}
+                  />
+                </div>
+                <dl>
+                  <div>
+                    <dt>Passing proposals</dt>
+                    <dd>
+                      {row.passed}/{row.attempted}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Pass rate</dt>
+                    <dd>{Math.round((row.passed / row.attempted) * 100)}%</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="benchmark-chart__margin-note">
+          <strong>What the repeat establishes</strong>
+          <p>
+            The source-fact revision fixed the tested value, hierarchy, geo, and physics lookups. It
+            does not update the baseline’s abstention result, because the thirty unanswerable
+            questions were outside this targeted run.
+          </p>
+        </aside>
+      </section>
+
       <section className="benchmark-chart__chapter" aria-labelledby="grounding-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>Reader grounding</p>
+          <p>Original baseline · reader grounding</p>
           <h3 id="grounding-heading">Grounding improved restraint, not chart reading.</h3>
           <span>
-            Compare correct answers with correct restraint instead of
-            compressing both into the same bar.
+            Compare correct answers with correct restraint instead of compressing both into the same
+            bar.
           </span>
         </div>
 
@@ -204,25 +304,27 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note">
           <strong>What survived the comparison</strong>
           <p>
-            Structured grounding can help a model refuse unsupported claims.
-            This run does not show that the current payload helps models recover
-            more labels or values from a chart.
+            Structured grounding can help a model refuse unsupported claims. This run does not show
+            that the current payload helps models recover more labels or values from a chart.
           </p>
         </aside>
       </section>
 
       <section className="benchmark-chart__chapter" aria-labelledby="first-try-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>First-attempt generation</p>
+          <p>Original baseline · first-attempt generation</p>
           <h3 id="first-try-heading">Chart choice did not guarantee a valid render.</h3>
           <span>
-            Every proposal had one chance to validate, render visible marks, and
-            avoid error diagnostics. There was no repair pass.
+            Every proposal had one chance to validate, render visible marks, and avoid error
+            diagnostics. There was no repair pass.
           </span>
         </div>
 
         <div className="benchmark-chart__first-try-grid">
-          <div className="benchmark-chart__chart-shell benchmark-chart__chart-shell--compact" ref={firstTryRef}>
+          <div
+            className="benchmark-chart__chart-shell benchmark-chart__chart-shell--compact"
+            ref={firstTryRef}
+          >
             <BarChart
               data={FIRST_TRY_MODELS}
               categoryAccessor="model"
@@ -326,9 +428,9 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note benchmark-chart__margin-note--blue">
           <strong>The oracle was part of the system under test</strong>
           <p>
-            Sol’s `BigNumber` choice was not imaginary—it is a real Semiotic
-            component documented in the supplied context. The failure exposed a
-            render-evidence seam as much as a model miss.
+            Sol’s `BigNumber` choice was not imaginary—it is a real Semiotic component documented in
+            the supplied context. The failure exposed a render-evidence seam as much as a model
+            miss.
           </p>
         </aside>
       </section>
@@ -338,8 +440,8 @@ export function ModelEvaluationReadingRoom() {
           <p>Scorer audit</p>
           <h3 id="scorer-heading">The scorer needed a manual review.</h3>
           <span>
-            Before publication, every score change between PNG-only and combined
-            evidence was read by a person. That audit found these lexical traps.
+            Before publication, every score change between PNG-only and combined evidence was read
+            by a person. That audit found these lexical traps.
           </span>
         </div>
 
@@ -364,17 +466,16 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__conclusion">
         <p>THE READING</p>
-        <h3>The disagreements define the engineering backlog.</h3>
+        <h3>The repeat separates repaired contracts from residual risk.</h3>
         <div>
           <p>
-            Keep the split scores. Keep the failed proposals. Keep the scorer
-            revision. The aggregate is useful, but the disagreements are where
-            the next product work lives.
+            The revised grounding payload held across every repeated answerable outcome. Six
+            generation fixtures also held everywhere. BigNumber’s remaining HOC-prop confusion stays
+            visible as the next narrow contract problem.
           </p>
           <p>
-            For the deterministic intelligence layer that generated the
-            grounding payload, continue with{" "}
-            <Link to="/examples/what-the-machine-sees">What the Machine Sees</Link>.
+            For the deterministic intelligence layer that generated the grounding payload, continue
+            with <Link to="/examples/what-the-machine-sees">What the Machine Sees</Link>.
           </p>
         </div>
       </section>
@@ -383,9 +484,10 @@ export function ModelEvaluationReadingRoom() {
         <summary>Methods, provenance, and limits</summary>
         <div>
           <p>
-            This is a checked-in snapshot of one response per fixture and
-            condition, not a repeated-trial estimate. The Responses API ran with
-            reasoning effort set to none and provider storage disabled.
+            This page preserves the complete one-response baseline and adds three repeated targeted
+            trials. The follow-up covers the seven generation fixtures that previously failed and
+            all twenty answerable grounding questions; it does not carry forward untouched cases.
+            The Responses API ran with reasoning effort set to none and provider storage disabled.
           </p>
           <dl>
             <div>
@@ -394,7 +496,11 @@ export function ModelEvaluationReadingRoom() {
             </div>
             <div>
               <dt>First-try fixture</dt>
-              <dd>{MODEL_EVALUATION_RUN.firstTryRevision}</dd>
+              <dd>{FOLLOW_UP_RUN.firstTryRevision}</dd>
+            </div>
+            <div>
+              <dt>Follow-up requests</dt>
+              <dd>{INTEGER.format(FOLLOW_UP_RUN.requestCount)}</dd>
             </div>
             <div>
               <dt>Scorer</dt>
@@ -402,10 +508,16 @@ export function ModelEvaluationReadingRoom() {
             </div>
           </dl>
           <p>
-            Cost is the runner’s locked-rate estimate, not a billing ledger.
-            Small model differences should not be treated as stable without
-            repeated trials.
+            Cost is the runner’s locked-rate estimate, not a billing ledger. The repeat supports
+            claims only for its targeted fixtures and answerable questions.
           </p>
+          <a
+            href="https://github.com/nteract/semiotic/tree/main/evals/reports/openai-follow-up"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open the repeated follow-up report
+          </a>
           <a
             href="https://github.com/nteract/semiotic/tree/main/evals/reports/openai-gpt-5.6-2026-07-27"
             target="_blank"

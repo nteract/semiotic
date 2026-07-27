@@ -1,0 +1,310 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-luna",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-grounding-2026-07-27-source-facts",
+    "date": "2026-07-27"
+  },
+  "responses": [
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "png-only",
+      "answer": "North has the highest revenue, with a value of 18."
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "png-plus-grounding",
+      "answer": "North has the highest revenue, at 18."
+    },
+    {
+      "fixtureId": "regional-revenue/highest",
+      "condition": "grounding-only",
+      "answer": "North has the highest revenue, with a value of 18."
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "png-only",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "png-plus-grounding",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "regional-revenue/count",
+      "condition": "grounding-only",
+      "answer": "3 regions"
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "png-only",
+      "answer": "165"
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "png-plus-grounding",
+      "answer": "The last observed user count is 165."
+    },
+    {
+      "fixtureId": "weekly-users/last",
+      "condition": "grounding-only",
+      "answer": "The last observed user count is 165 users (week 4)."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "png-only",
+      "answer": "The series rises across the observed weeks."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "png-plus-grounding",
+      "answer": "The series rises across the observed weeks, increasing from 120 users in week 1 to 165 users in week 4."
+    },
+    {
+      "fixtureId": "weekly-users/direction",
+      "condition": "grounding-only",
+      "answer": "The series rises across the observed weeks, increasing from 120 users in week 1 to 165 users in week 4."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "png-only",
+      "answer": "Cannot determine—the chart does not provide explicit payload and latency labels or values."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "png-plus-grounding",
+      "answer": "Latency 142 is paired with the largest payload, 64."
+    },
+    {
+      "fixtureId": "payload-latency/largest",
+      "condition": "grounding-only",
+      "answer": "The largest payload is 64, paired with a latency of 142."
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "png-only",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "png-plus-grounding",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "payload-latency/count",
+      "condition": "grounding-only",
+      "answer": "4 observations"
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "png-only",
+      "answer": "API and Worker"
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "png-plus-grounding",
+      "answer": "API and Worker."
+    },
+    {
+      "fixtureId": "service-latency/categories",
+      "condition": "grounding-only",
+      "answer": "API and Worker."
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "png-only",
+      "answer": "The largest observed latency is 160 ms (API)."
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "png-plus-grounding",
+      "answer": "The largest observed latency is 160."
+    },
+    {
+      "fixtureId": "service-latency/max",
+      "condition": "grounding-only",
+      "answer": "The largest observed latency is 160."
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "png-only",
+      "answer": "Success receives the largest flow."
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "png-plus-grounding",
+      "answer": "Success receives the largest flow, with a value of 78."
+    },
+    {
+      "fixtureId": "request-flow/largest",
+      "condition": "grounding-only",
+      "answer": "Success receives the largest flow, with a value of 78."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "png-plus-grounding",
+      "answer": "7 requests flow to Failure."
+    },
+    {
+      "fixtureId": "request-flow/failed",
+      "condition": "grounding-only",
+      "answer": "Failure: 7 requests."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "png-only",
+      "answer": "Cannot determine from the chart; it shows Logs, Images, and Backups but provides no values or visibly distinct category sizes."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "png-plus-grounding",
+      "answer": "Images is the largest storage category, with a value of 48."
+    },
+    {
+      "fixtureId": "storage-tree/largest",
+      "condition": "grounding-only",
+      "answer": "Images is the largest storage category, with a value of 48."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "png-only",
+      "answer": "Cannot determine the value assigned to Backups from the chart."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "png-plus-grounding",
+      "answer": "Backups is assigned a value of 20."
+    },
+    {
+      "fixtureId": "storage-tree/backups",
+      "condition": "grounding-only",
+      "answer": "Backups is assigned a value of 20."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "png-only",
+      "answer": "B, with 31 incidents."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "png-plus-grounding",
+      "answer": "City B, with 31 incidents."
+    },
+    {
+      "fixtureId": "incident-map/largest",
+      "condition": "grounding-only",
+      "answer": "City B has the most incidents, with 31."
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "png-only",
+      "answer": "3 locations"
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "png-plus-grounding",
+      "answer": "3 locations"
+    },
+    {
+      "fixtureId": "incident-map/count",
+      "condition": "grounding-only",
+      "answer": "3 locations"
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "png-only",
+      "answer": "97 out of 100"
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "png-plus-grounding",
+      "answer": "The current gauge value is 97."
+    },
+    {
+      "fixtureId": "sla-gauge/value",
+      "condition": "grounding-only",
+      "answer": "Current gauge value: 97"
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "png-only",
+      "answer": "The gauge maximum is 100."
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "png-plus-grounding",
+      "answer": "The maximum defining the gauge scale is 100."
+    },
+    {
+      "fixtureId": "sla-gauge/maximum",
+      "condition": "grounding-only",
+      "answer": "The gauge scale maximum is 100."
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "png-only",
+      "answer": "200 purchases"
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "png-plus-grounding",
+      "answer": "Purchases: 200"
+    },
+    {
+      "fixtureId": "conversion-funnel/purchases",
+      "condition": "grounding-only",
+      "answer": "Purchases: 200"
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "png-only",
+      "answer": "Visits; Trials; Purchases"
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "png-plus-grounding",
+      "answer": "Visits, Trials, and Purchases."
+    },
+    {
+      "fixtureId": "conversion-funnel/stages",
+      "condition": "grounding-only",
+      "answer": "Visits, Trials, Purchases"
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "png-only",
+      "answer": "Smallest observed value: cannot determine. Largest observed value: cannot determine."
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "png-plus-grounding",
+      "answer": "Smallest observed value: 1. Largest observed value: 4."
+    },
+    {
+      "fixtureId": "galton-values/range",
+      "condition": "grounding-only",
+      "answer": "Smallest observed value: 1. Largest observed value: 4."
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "png-only",
+      "answer": "Cannot determine; the chart does not show a board or observed-row count."
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "png-plus-grounding",
+      "answer": "4 observed rows"
+    },
+    {
+      "fixtureId": "galton-values/count",
+      "condition": "grounding-only",
+      "answer": "4 observed rows"
+    }
+  ]
+}

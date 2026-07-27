@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A high-touch evaluation example makes the prove track inspectable.**
   `/examples/the-benchmark-is-a-chart-too` turns the completed 516-request
-  GPT-5.6 compatibility run into an evidence-first reading room. It separates
-  answerable questions from correct abstentions, preserves the first-attempt
-  failure matrix and cost/latency context, documents the scorer audit, and links
-  the aggregate back to its checked-in reports and methods.
+  GPT-5.6 compatibility baseline and its 603-request repeated follow-up into an
+  evidence-first reading room. It separates answerable questions from correct
+  abstentions, preserves the first-attempt failure matrix and cost/latency
+  context, documents the scorer audit, and shows where the revised grounding
+  payload and generation contracts held across repeated trials. Targeted result
+  scoring now reports only submitted fixtures while retaining the available
+  corpus size, so omitted cases no longer appear as failures.
 - **The HRA/WPP typology pilot now runs on the real kidney ASCT+B v1.6
   digital object.** A pinned generator produces a checked-in, workshop-ready
   artifact for the observed direct children of kidney, with ontology IDs kept
