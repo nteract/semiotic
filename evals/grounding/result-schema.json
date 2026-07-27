@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semiotic grounding benchmark model submission",
+  "type": "object",
+  "required": ["metadata", "responses"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["modelId", "clientVersion", "fixtureRevision", "date"],
+      "properties": {
+        "modelId": {"type": "string", "minLength": 1},
+        "clientVersion": {"type": "string", "minLength": 1},
+        "fixtureRevision": {"type": "string", "minLength": 1},
+        "date": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    },
+    "responses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fixtureId", "condition", "answer"],
+        "properties": {
+          "fixtureId": {"type": "string"},
+          "condition": {"enum": ["png-only", "png-plus-grounding", "grounding-only"]},
+          "answer": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

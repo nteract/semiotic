@@ -339,14 +339,17 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
     [chartSize, layout.projectionRows]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "UnitPileChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof categoryAccessor === "string" ? [categoryAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -388,6 +391,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       key={rerun.rerunKey}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(

@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0",
+  "status": "draft",
+  "session": {
+    "date": "",
+    "facilitator": "Elijah Meeks",
+    "sourcePurl": "https://purl.humanatlas.io/asct-b/kidney/v1.6",
+    "sourceVersion": "v1.6"
+  },
+  "participant": {
+    "name": "",
+    "organization": "",
+    "roles": [],
+    "domainLiteracy": [],
+    "attribution": "anonymous"
+  },
+  "termReview": [
+    {
+      "term": "subject-matter-expert",
+      "decision": "pending",
+      "replacement": "",
+      "sourceOrOntology": "",
+      "owner": "",
+      "crossToolInterpretation": false,
+      "notes": ""
+    },
+    {
+      "term": "ontology-curator",
+      "decision": "pending",
+      "replacement": "",
+      "sourceOrOntology": "",
+      "owner": "",
+      "crossToolInterpretation": false,
+      "notes": ""
+    },
+    {
+      "term": "research-software-engineer",
+      "decision": "pending",
+      "replacement": "",
+      "sourceOrOntology": "",
+      "owner": "",
+      "crossToolInterpretation": false,
+      "notes": ""
+    },
+    {
+      "term": "ASCT+B",
+      "decision": "pending",
+      "replacement": "",
+      "sourceOrOntology": "",
+      "owner": "",
+      "crossToolInterpretation": false,
+      "notes": ""
+    },
+    {
+      "term": "ontology-crosswalk",
+      "decision": "pending",
+      "replacement": "",
+      "sourceOrOntology": "",
+      "owner": "",
+      "crossToolInterpretation": false,
+      "notes": ""
+    }
+  ],
+  "failureCase": {
+    "readerRole": "",
+    "task": "",
+    "expectedReading": "",
+    "observedReading": "",
+    "lostFact": "",
+    "consequence": "",
+    "reproductionSteps": [],
+    "evidence": []
+  },
+  "communicativeActContrast": {
+    "roleA": {
+      "role": "",
+      "notice": "",
+      "action": "",
+      "communicativeAct": ""
+    },
+    "roleB": {
+      "role": "",
+      "notice": "",
+      "action": "",
+      "communicativeAct": ""
+    },
+    "sharedData": true,
+    "behaviorChanges": []
+  },
+  "contextDecision": {
+    "decision": "pending",
+    "fact": "",
+    "producer": "",
+    "consumers": [],
+    "observableBehavior": "",
+    "rationale": "",
+    "secondWorkflowNeeded": true
+  },
+  "coSign": {
+    "followUpAllowed": false,
+    "permissionToQuote": false,
+    "approvedSentence": "",
+    "approvedAt": ""
+  }
+}

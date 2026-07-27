@@ -1,0 +1,21 @@
+{
+  "component": "SankeyDiagram",
+  "description": {
+    "levels": {
+      "l1": "A Sankey diagram with 3 edges."
+    },
+    "text": "A Sankey diagram with 3 edges."
+  },
+  "intent": {
+    "act": "tracing",
+    "sentence": "This is a flow chart; follow the movement between states."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A Sankey diagram with 3 edges.",
+    "level": 1,
+    "children": []
+  },
+  "text": "A Sankey diagram with 3 edges. This is a flow chart; follow the movement between states."
+}

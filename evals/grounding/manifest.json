@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "fixtureRevision": "semiotic-grounding-2026-07-26",
+  "chartCount": 10,
+  "questionCount": 50,
+  "trialCount": 150,
+  "conditions": [
+    "png-only",
+    "png-plus-grounding",
+    "grounding-only"
+  ],
+  "jobs": {
+    "path": "jobs.json",
+    "bytes": 44025,
+    "sha256": "54d9b40440fa0a60c45947527b534db452ff0ad1fc328cd922e64135932127e0"
+  },
+  "entries": [
+    {
+      "id": "regional-revenue",
+      "component": "BarChart",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 3,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/regional-revenue.png",
+        "bytes": 9146,
+        "sha256": "0177b3e5145d2cc9c89aa1884e70e4afbd108cdb33932cb24c9a99a6133caed9"
+      },
+      "grounding": {
+        "path": "payloads/regional-revenue.json",
+        "bytes": 2115,
+        "sha256": "1b8312b86304c7fdda51b31b95e0f77f2378a81eeb265749fb2725e8ced91724"
+      }
+    },
+    {
+      "id": "weekly-users",
+      "component": "LineChart",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 1,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/weekly-users.png",
+        "bytes": 11690,
+        "sha256": "39c9dea8d80d7ed7e81e978fa2c5c92bcbaca2788e323acf9c4336678e6bda56"
+      },
+      "grounding": {
+        "path": "payloads/weekly-users.json",
+        "bytes": 2264,
+        "sha256": "661eeff75a4c53e20947b13a441c8f2e61fc4d7a09b720c829b61345598e6312"
+      }
+    },
+    {
+      "id": "payload-latency",
+      "component": "Scatterplot",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 4,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/payload-latency.png",
+        "bytes": 8227,
+        "sha256": "d51b62ce07e2c2ff75472aba02ef988171384ecd19fbfca2851a95a4ef9a126a"
+      },
+      "grounding": {
+        "path": "payloads/payload-latency.json",
+        "bytes": 2294,
+        "sha256": "cff92837bd093eb81e9a2583a0887bb14280f6eff617d5969b49ea2ab5ea188d"
+      }
+    },
+    {
+      "id": "service-latency",
+      "component": "BoxPlot",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 2,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/service-latency.png",
+        "bytes": 9235,
+        "sha256": "19e9dcba3b1f3631de20dc604021dd84735181d73bc2bf641afef3b40e8afb23"
+      },
+      "grounding": {
+        "path": "payloads/service-latency.json",
+        "bytes": 2296,
+        "sha256": "2a969b0db42eebfbfcd9dc4a1604516be9f6dd667073ceb4c39a225565a9583d"
+      }
+    },
+    {
+      "id": "request-flow",
+      "component": "SankeyDiagram",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 7,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/request-flow.png",
+        "bytes": 11559,
+        "sha256": "f920165523e8ed84380be4ae8802a42ffe064f1f489ad61a3797fd0698ec4439"
+      },
+      "grounding": {
+        "path": "payloads/request-flow.json",
+        "bytes": 534,
+        "sha256": "2d06a3afc7515037acaaad6c7935563d3066aa7a09d432ccb1e82315839dccf4"
+      }
+    },
+    {
+      "id": "storage-tree",
+      "component": "Treemap",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 4,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/storage-tree.png",
+        "bytes": 8953,
+        "sha256": "2fbde8b089509bb881307a433505653f412f57b9db43c1f63a8079543bbacabe"
+      },
+      "grounding": {
+        "path": "payloads/storage-tree.json",
+        "bytes": 273,
+        "sha256": "10aaf3ad8acdaa7c27d67cd6b3f374297daa3d87424dfb228b6b6da72bf2a91b"
+      }
+    },
+    {
+      "id": "incident-map",
+      "component": "DotPlot",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 3,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/incident-map.png",
+        "bytes": 9374,
+        "sha256": "180a1dd7ffff37601ba327eaee1f861057bd5ba76df0c9d9b349a4b5c4fe06ad"
+      },
+      "grounding": {
+        "path": "payloads/incident-map.json",
+        "bytes": 2009,
+        "sha256": "50fd1c61095c705717eb905fda1532b5df97c0954fe2ea651476348506c44362"
+      }
+    },
+    {
+      "id": "sla-gauge",
+      "component": "GaugeChart",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 3,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/sla-gauge.png",
+        "bytes": 18312,
+        "sha256": "891ff49bf167a67c3de49acde066a563dae36c2782f0804405c37dd42b337921"
+      },
+      "grounding": {
+        "path": "payloads/sla-gauge.json",
+        "bytes": 268,
+        "sha256": "113be2a0d5b1b84cb5995a97d2feef542b8d96639a422734a0b9b7ebd8686923"
+      }
+    },
+    {
+      "id": "conversion-funnel",
+      "component": "FunnelChart",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 5,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/conversion-funnel.png",
+        "bytes": 16053,
+        "sha256": "dc2eb0a2241e3736f06cfa63250dbd16f6d9ce63d7109509c327f8d0375be964"
+      },
+      "grounding": {
+        "path": "payloads/conversion-funnel.json",
+        "bytes": 1761,
+        "sha256": "7f45948cfc5983b2ddf9e60bbbd98a951f371282e3f1a8bc2bf5dbfd77e9c39d"
+      }
+    },
+    {
+      "id": "galton-values",
+      "component": "GaltonBoardChart",
+      "questions": 5,
+      "renderEvidence": {
+        "markCount": 4,
+        "empty": false,
+        "warnings": []
+      },
+      "png": {
+        "path": "assets/galton-values.png",
+        "bytes": 2478,
+        "sha256": "74e7b8641736e1ed70efcf13592d894af2e7fe12d4693c7422d88b441b09a256"
+      },
+      "grounding": {
+        "path": "payloads/galton-values.json",
+        "bytes": 757,
+        "sha256": "744a58bab2f7cca30270ad918fe717cd9d9109d43e4702269a0194f2453f61c2"
+      }
+    }
+  ]
+}

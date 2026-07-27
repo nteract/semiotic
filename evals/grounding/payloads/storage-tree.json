@@ -1,0 +1,17 @@
+{
+  "component": "Treemap",
+  "description": {
+    "levels": {
+      "l1": "A treemap."
+    },
+    "text": "A treemap."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A treemap.",
+    "level": 1,
+    "children": []
+  },
+  "text": "A treemap."
+}

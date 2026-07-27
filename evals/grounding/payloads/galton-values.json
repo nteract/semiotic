@@ -1,0 +1,18 @@
+{
+  "component": "GaltonBoardChart",
+  "description": {
+    "levels": {
+      "l1": "A Galton board chart that collapses falling samples into a settled histogram projection.",
+      "l2": "No settled projection is loaded yet."
+    },
+    "text": "A Galton board chart that collapses falling samples into a settled histogram projection. No settled projection is loaded yet."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A Galton board chart that collapses falling samples into a settled histogram projection. No settled projection is loaded yet.",
+    "level": 1,
+    "children": []
+  },
+  "text": "A Galton board chart that collapses falling samples into a settled histogram projection. No settled projection is loaded yet."
+}

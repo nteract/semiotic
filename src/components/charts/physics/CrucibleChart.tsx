@@ -905,14 +905,15 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     [amountLabel, plan.layout, projection, projectionRows, showProjection]
   )
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy: colorBy,
     chartType: "CrucibleChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover
   })
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     { ...props, onClick: undefined },
@@ -1034,6 +1035,7 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
         {...sharedFrameProps}
         key={`${visualKey}:${runKey}:${rerun.rerunKey}:${snapshotMode ? resolvedSnapshotTime : "replay"}`}
         ref={frameRef}
+        onBodyHover={onBodyHover}
         accessibleTable={props.accessibleTable ?? frameProps.accessibleTable}
         backgroundGraphics={backgroundGraphics}
         bodyForces={bodyForces}

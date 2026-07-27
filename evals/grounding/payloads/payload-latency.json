@@ -1,0 +1,80 @@
+{
+  "component": "Scatterplot",
+  "description": {
+    "levels": {
+      "l1": "A scatter plot of latency by payload.",
+      "l2": "latency ranges from 42 (8) to 142 (64), with a mean of 85 across 4 points.",
+      "l3": "Overall latency rises from 42 (8) to a peak of 142 (64)."
+    },
+    "text": "A scatter plot of latency by payload. latency ranges from 42 (8) to 142 (64), with a mean of 85 across 4 points. Overall latency rises from 42 (8) to a peak of 142 (64)."
+  },
+  "intent": {
+    "act": "relating",
+    "sentence": "This is a correlation chart; read it for whether payload and latency move together."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A scatter plot of latency by payload. latency ranges from 42 (8) to 142 (64), with a mean of 85 across 4 points. Overall latency rises from 42 (8) to a peak of 142 (64).",
+    "level": 1,
+    "children": [
+      {
+        "id": "axis-0",
+        "role": "axis",
+        "level": 2,
+        "label": "X axis: payload, 8 to 64."
+      },
+      {
+        "id": "axis-1",
+        "role": "axis",
+        "level": 2,
+        "label": "Value axis: latency, 42 to 142."
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "8: 42",
+        "value": 42,
+        "datum": {
+          "payload": 8,
+          "latency": 42
+        }
+      },
+      {
+        "id": "datum-3",
+        "role": "datum",
+        "level": 2,
+        "label": "16: 61",
+        "value": 61,
+        "datum": {
+          "payload": 16,
+          "latency": 61
+        }
+      },
+      {
+        "id": "datum-4",
+        "role": "datum",
+        "level": 2,
+        "label": "32: 95",
+        "value": 95,
+        "datum": {
+          "payload": 32,
+          "latency": 95
+        }
+      },
+      {
+        "id": "datum-5",
+        "role": "datum",
+        "level": 2,
+        "label": "64: 142",
+        "value": 142,
+        "datum": {
+          "payload": 64,
+          "latency": 142
+        }
+      }
+    ]
+  },
+  "text": "A scatter plot of latency by payload. latency ranges from 42 (8) to 142 (64), with a mean of 85 across 4 points. Overall latency rises from 42 (8) to a peak of 142 (64). This is a correlation chart; read it for whether payload and latency move together."
+}

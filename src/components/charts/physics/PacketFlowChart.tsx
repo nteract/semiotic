@@ -703,14 +703,17 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
     [flowSpeed, pathConstraint, reducedMotion]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "PacketFlowChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof sourceAccessor === "string" ? [sourceAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -759,6 +762,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
       {...sharedFrameProps}
       key={rerun.rerunKey}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       config={rerun.config}
       continuous={!reducedMotion && pathConstraint !== "none"}
       foregroundGraphics={composePhysicsFrameGraphics(

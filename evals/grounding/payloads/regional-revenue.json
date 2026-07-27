@@ -1,0 +1,69 @@
+{
+  "component": "BarChart",
+  "description": {
+    "levels": {
+      "l1": "A bar chart of revenue by region.",
+      "l2": "revenue ranges from 11 (South) to 18 (North), with a mean of 14.67 across 3 points.",
+      "l3": "The highest region is North and the lowest is South."
+    },
+    "text": "A bar chart of revenue by region. revenue ranges from 11 (South) to 18 (North), with a mean of 14.67 across 3 points. The highest region is North and the lowest is South."
+  },
+  "intent": {
+    "act": "comparing",
+    "sentence": "This is a comparison chart; compare revenue across region; North leads at 18."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A bar chart of revenue by region. revenue ranges from 11 (South) to 18 (North), with a mean of 14.67 across 3 points. The highest region is North and the lowest is South.",
+    "level": 1,
+    "children": [
+      {
+        "id": "axis-0",
+        "role": "axis",
+        "level": 2,
+        "label": "Category axis: region, North to West (3 categories)."
+      },
+      {
+        "id": "axis-1",
+        "role": "axis",
+        "level": 2,
+        "label": "Value axis: revenue, 11 to 18."
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "North: 18",
+        "value": 18,
+        "datum": {
+          "region": "North",
+          "revenue": 18
+        }
+      },
+      {
+        "id": "datum-3",
+        "role": "datum",
+        "level": 2,
+        "label": "South: 11",
+        "value": 11,
+        "datum": {
+          "region": "South",
+          "revenue": 11
+        }
+      },
+      {
+        "id": "datum-4",
+        "role": "datum",
+        "level": 2,
+        "label": "West: 15",
+        "value": 15,
+        "datum": {
+          "region": "West",
+          "revenue": 15
+        }
+      }
+    ]
+  },
+  "text": "A bar chart of revenue by region. revenue ranges from 11 (South) to 18 (North), with a mean of 14.67 across 3 points. The highest region is North and the lowest is South. This is a comparison chart; compare revenue across region; North leads at 18."
+}

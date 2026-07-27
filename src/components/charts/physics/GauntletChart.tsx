@@ -222,14 +222,18 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     summary: modeSummary,
     accessibleTable: modeAccessibleTable
   } = layoutMode
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy: undefined,
     chartType: "GauntletChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof props.idAccessor === "string" ? [props.idAccessor] : ["id"],
+    unwrapSourceDatum: true
   })
 
   const stateEl = renderPhysicsChartState({
@@ -723,6 +727,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       {...sharedFrameProps}
       key={`${chartSize[0]}x${chartSize[1]}:${dataKey}:${rerun.rerunKey}`}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       accessibleTable={props.accessibleTable ?? frameProps.accessibleTable}
       backgroundGraphics={backgroundGraphics}
       bodyForces={bodyForces}

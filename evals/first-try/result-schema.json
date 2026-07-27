@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semiotic first-try model submission",
+  "type": "object",
+  "required": ["metadata", "results"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["modelId", "clientVersion", "fixtureRevision", "date"],
+      "properties": {
+        "modelId": {"type": "string", "minLength": 1},
+        "clientVersion": {"type": "string", "minLength": 1},
+        "fixtureRevision": {"type": "string", "minLength": 1},
+        "date": {"type": "string", "format": "date"},
+        "context": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fixtureId", "proposal"],
+        "properties": {
+          "fixtureId": {"type": "string"},
+          "proposal": {"type": "object"},
+          "repairProposal": {"type": "object"},
+          "rawOutputSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

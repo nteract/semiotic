@@ -1,113 +1,165 @@
 [
   {
-    "type": "proposal-refused",
-    "timestamp": 1792000000000,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "component": "Scatterplot",
-    "stage": "diagnosis",
-    "codes": ["DEGENERATE_EXTENT"],
-    "alternatives": ["ViolinPlot", "BoxPlot", "DotPlot"]
-  },
-  {
     "type": "suggestion-shown",
-    "timestamp": 1792000001400,
-    "sessionId": "conference-demo-offline",
     "arcId": "question-to-defensible-chart",
-    "intent": ["distribution", "compare-categories"],
-    "components": ["BoxPlot", "ViolinPlot", "SwarmPlot", "RidgelinePlot"],
+    "intent": [
+      "distribution",
+      "compare-categories"
+    ],
+    "components": [
+      "BoxPlot",
+      "ViolinPlot",
+      "SwarmPlot",
+      "RidgelinePlot"
+    ],
     "topScore": 4.5,
-    "audience": "general"
+    "audience": "general",
+    "meta": {
+      "source": "composed-stage",
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000000000,
+    "sessionId": "conference-stage-recorded"
   },
   {
     "type": "suggestion-chosen",
-    "timestamp": 1792000002600,
-    "sessionId": "conference-demo-offline",
     "arcId": "question-to-defensible-chart",
     "component": "BoxPlot",
     "rank": 1,
-    "source": "agent"
-  },
-  {
-    "type": "audience-set",
-    "timestamp": 1792000005200,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "audience": "ai-tooling-developer",
-    "previous": "general"
-  },
-  {
-    "type": "chart-rendered",
-    "timestamp": 1792000006900,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "component": "BoxPlot",
-    "chartId": "service-latency"
-  },
-  {
-    "type": "render-evidence",
-    "timestamp": 1792000007600,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "component": "BoxPlot",
-    "chartId": "service-latency",
-    "markCount": 3,
-    "empty": false,
-    "warnings": []
-  },
-  {
-    "type": "chart-edited",
-    "timestamp": 1792000009000,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "component": "BoxPlot",
-    "chartId": "service-latency",
-    "changedProps": ["valueExtent"],
+    "source": "user",
+    "timestamp": 1792000001000,
+    "sessionId": "conference-stage-recorded",
     "meta": {
-      "beat": "scale",
-      "decision": "retain-linear-domain"
+      "capture": "playwright-rehearsal"
     }
   },
   {
-    "type": "chart-replaced",
-    "timestamp": 1792000010500,
-    "sessionId": "conference-demo-offline",
+    "type": "chart-rendered",
     "arcId": "question-to-defensible-chart",
-    "from": "BoxPlot",
-    "to": "RidgelinePlot",
-    "reason": "variant-discovery"
+    "component": "BoxPlot",
+    "chartId": "service-latency",
+    "timestamp": 1792000002000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
   },
   {
-    "type": "chart-rendered",
-    "timestamp": 1792000012100,
-    "sessionId": "conference-demo-offline",
+    "type": "proposal-refused",
     "arcId": "question-to-defensible-chart",
-    "component": "RidgelinePlot",
-    "chartId": "service-latency"
+    "component": "Scatterplot",
+    "stage": "diagnosis",
+    "codes": [
+      "DEGENERATE_EXTENT"
+    ],
+    "alternatives": [
+      "BoxPlot",
+      "ViolinPlot",
+      "SwarmPlot"
+    ],
+    "timestamp": 1792000003000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
+  },
+  {
+    "type": "chart-edited",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "chartId": "service-latency",
+    "changedProps": [
+      "valueExtent"
+    ],
+    "meta": {
+      "beat": "scale",
+      "decision": "retain-linear-domain",
+      "declaredRows": 50000,
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000004000,
+    "sessionId": "conference-stage-recorded"
+  },
+  {
+    "type": "audience-set",
+    "arcId": "question-to-defensible-chart",
+    "audience": "ai-tooling-developer",
+    "previous": "general",
+    "timestamp": 1792000005000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
   },
   {
     "type": "render-evidence",
-    "timestamp": 1792000012800,
-    "sessionId": "conference-demo-offline",
+    "arcId": "question-to-defensible-chart",
+    "component": "BoxPlot",
+    "chartId": "service-latency",
+    "markCount": 3,
+    "empty": false,
+    "warnings": [],
+    "meta": {
+      "source": "server-golden-fixture",
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000006000,
+    "sessionId": "conference-stage-recorded"
+  },
+  {
+    "type": "chart-replaced",
+    "arcId": "question-to-defensible-chart",
+    "from": "BoxPlot",
+    "to": "RidgelinePlot",
+    "reason": "variant-discovery",
+    "meta": {
+      "source": "model",
+      "fixture": "bimodal-service-latency",
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000007000,
+    "sessionId": "conference-stage-recorded"
+  },
+  {
+    "type": "chart-rendered",
+    "arcId": "question-to-defensible-chart",
+    "component": "RidgelinePlot",
+    "chartId": "service-latency",
+    "timestamp": 1792000008000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
+  },
+  {
+    "type": "render-evidence",
     "arcId": "question-to-defensible-chart",
     "component": "RidgelinePlot",
     "chartId": "service-latency",
     "markCount": 3,
     "empty": false,
-    "warnings": []
+    "warnings": [],
+    "meta": {
+      "source": "server-golden-fixture",
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000009000,
+    "sessionId": "conference-stage-recorded"
   },
   {
     "type": "interrogation-asked",
-    "timestamp": 1792000014300,
-    "sessionId": "conference-demo-offline",
     "arcId": "question-to-defensible-chart",
     "component": "RidgelinePlot",
-    "query": "Which services have a second latency mode?"
+    "query": "Which services have a second latency mode that a box plot hides?",
+    "contextSize": 312,
+    "timestamp": 1792000010000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
   },
   {
     "type": "interrogation-answered",
-    "timestamp": 1792000015600,
-    "sessionId": "conference-demo-offline",
     "arcId": "question-to-defensible-chart",
     "component": "RidgelinePlot",
     "answer": "Ingest and export each split into two separated latency clusters.",
@@ -115,26 +167,21 @@
     "latencyMs": 1300,
     "meta": {
       "source": "offline-grounding-replay",
-      "pixelsSeen": false
-    }
-  },
-  {
-    "type": "nav-node-focused",
-    "timestamp": 1792000016700,
-    "sessionId": "conference-demo-offline",
-    "arcId": "question-to-defensible-chart",
-    "chartId": "service-latency",
-    "nodeId": "chart:service-latency/series:ingest",
-    "role": "series",
-    "level": 2,
-    "label": "Ingest latency distribution"
+      "pixelsSeen": false,
+      "capture": "playwright-rehearsal"
+    },
+    "timestamp": 1792000011000,
+    "sessionId": "conference-stage-recorded"
   },
   {
     "type": "chart-exported",
-    "timestamp": 1792000018300,
-    "sessionId": "conference-demo-offline",
     "arcId": "question-to-defensible-chart",
     "component": "RidgelinePlot",
-    "format": "jsx"
+    "format": "jsx",
+    "timestamp": 1792000012000,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "capture": "playwright-rehearsal"
+    }
   }
 ]

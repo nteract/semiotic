@@ -1,0 +1,17 @@
+{
+  "component": "GaugeChart",
+  "description": {
+    "levels": {
+      "l1": "A gauge."
+    },
+    "text": "A gauge."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A gauge.",
+    "level": 1,
+    "children": []
+  },
+  "text": "A gauge."
+}

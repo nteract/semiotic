@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "fixtureRevision": "semiotic-grounding-2026-07-26",
+  "conditions": ["png-only", "png-plus-grounding", "grounding-only"],
+  "charts": [
+    {
+      "id": "regional-revenue",
+      "component": "BarChart",
+      "props": {
+        "data": [{"region": "North", "revenue": 18}, {"region": "South", "revenue": 11}, {"region": "West", "revenue": 15}],
+        "categoryAccessor": "region",
+        "valueAccessor": "revenue",
+        "title": "Revenue by region",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "highest", "prompt": "Which region has the highest revenue, and what is its value?", "expected": {"required": [["north"], ["18"]]}},
+        {"id": "count", "prompt": "How many regions are shown?", "expected": {"required": [["3", "three"]]}},
+        {"id": "cause", "prompt": "Why did North have the highest revenue?", "expected": {"abstain": true}},
+        {"id": "forecast", "prompt": "What will North revenue be next quarter?", "expected": {"abstain": true}},
+        {"id": "source", "prompt": "Which accounting system supplied these values?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "weekly-users",
+      "component": "LineChart",
+      "props": {
+        "data": [{"week": 1, "users": 120}, {"week": 2, "users": 138}, {"week": 3, "users": 151}, {"week": 4, "users": 165}],
+        "xAccessor": "week",
+        "yAccessor": "users",
+        "title": "Weekly active users",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "last", "prompt": "What is the last observed user count?", "expected": {"required": [["165"]]}},
+        {"id": "direction", "prompt": "Does the series rise or fall across the observed weeks?", "expected": {"required": [["rise", "rises", "increase", "increases", "upward"]]}},
+        {"id": "cause", "prompt": "Which product launch caused the increase?", "expected": {"abstain": true}},
+        {"id": "forecast", "prompt": "How many users will there be in week 8?", "expected": {"abstain": true}},
+        {"id": "uncertainty", "prompt": "What is the confidence interval for week 4?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "payload-latency",
+      "component": "Scatterplot",
+      "props": {
+        "data": [{"payload": 8, "latency": 42}, {"payload": 16, "latency": 61}, {"payload": 32, "latency": 95}, {"payload": 64, "latency": 142}],
+        "xAccessor": "payload",
+        "yAccessor": "latency",
+        "title": "Payload and latency",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "largest", "prompt": "What latency is paired with the largest payload?", "expected": {"required": [["142"]]}},
+        {"id": "count", "prompt": "How many observations are plotted?", "expected": {"required": [["4", "four"]]}},
+        {"id": "causal", "prompt": "Does payload size cause latency to increase?", "expected": {"abstain": true}},
+        {"id": "protocol", "prompt": "Which network protocol was used?", "expected": {"abstain": true}},
+        {"id": "forecast", "prompt": "What latency will a 128 KB payload have?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "service-latency",
+      "component": "BoxPlot",
+      "props": {
+        "data": [{"service": "API", "latency": 90}, {"service": "API", "latency": 110}, {"service": "API", "latency": 160}, {"service": "Worker", "latency": 55}, {"service": "Worker", "latency": 75}, {"service": "Worker", "latency": 120}],
+        "categoryAccessor": "service",
+        "valueAccessor": "latency",
+        "title": "Latency by service",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "categories", "prompt": "Which two services are compared?", "expected": {"required": [["api"], ["worker"]]}},
+        {"id": "max", "prompt": "What is the largest observed latency?", "expected": {"required": [["160"]]}},
+        {"id": "cause", "prompt": "Why is the API slower?", "expected": {"abstain": true}},
+        {"id": "sample-policy", "prompt": "How were these requests sampled?", "expected": {"abstain": true}},
+        {"id": "sla", "prompt": "Did either service violate its SLA?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "request-flow",
+      "component": "SankeyDiagram",
+      "props": {
+        "edges": [{"source": "Incoming", "target": "Success", "value": 78}, {"source": "Incoming", "target": "Retry", "value": 15}, {"source": "Incoming", "target": "Failure", "value": 7}],
+        "sourceAccessor": "source",
+        "targetAccessor": "target",
+        "valueAccessor": "value",
+        "title": "Request outcomes",
+        "margin": {"top": 50, "right": 90, "bottom": 50, "left": 80},
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "largest", "prompt": "Which outcome receives the largest flow?", "expected": {"required": [["success"]]}},
+        {"id": "failed", "prompt": "How many requests flow to Failure?", "expected": {"required": [["7", "seven"]]}},
+        {"id": "cause", "prompt": "What caused the failures?", "expected": {"abstain": true}},
+        {"id": "retry-result", "prompt": "How many retried requests later succeeded?", "expected": {"abstain": true}},
+        {"id": "time", "prompt": "What time period do these requests cover?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "storage-tree",
+      "component": "Treemap",
+      "props": {
+        "data": {"name": "Storage", "children": [{"name": "Images", "value": 48}, {"name": "Logs", "value": 32}, {"name": "Backups", "value": 20}]},
+        "nodeIdAccessor": "name",
+        "childrenAccessor": "children",
+        "valueAccessor": "value",
+        "title": "Storage allocation",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "largest", "prompt": "Which storage category is largest?", "expected": {"required": [["images"]]}},
+        {"id": "backups", "prompt": "What value is assigned to Backups?", "expected": {"required": [["20", "twenty"]]}},
+        {"id": "units", "prompt": "Are these values bytes, gigabytes, or percentages?", "expected": {"abstain": true}},
+        {"id": "owner", "prompt": "Who owns the Logs allocation?", "expected": {"abstain": true}},
+        {"id": "growth", "prompt": "Which category is growing fastest?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "incident-map",
+      "component": "DotPlot",
+      "props": {
+        "data": [{"city": "A", "incidents": 18}, {"city": "B", "incidents": 31}, {"city": "C", "incidents": 12}],
+        "categoryAccessor": "city",
+        "valueAccessor": "incidents",
+        "title": "Incidents by city",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "largest", "prompt": "Which labeled city has the most incidents?", "expected": {"required": [["city b", "b has", "b,"], ["31"]]}},
+        {"id": "count", "prompt": "How many locations are plotted?", "expected": {"required": [["3", "three"]]}},
+        {"id": "names", "prompt": "What real-world city names do A, B, and C represent?", "expected": {"abstain": true}},
+        {"id": "cause", "prompt": "Why does city B have more incidents?", "expected": {"abstain": true}},
+        {"id": "severity", "prompt": "How severe were the incidents?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "sla-gauge",
+      "component": "GaugeChart",
+      "props": {
+        "value": 97,
+        "min": 0,
+        "max": 100,
+        "thresholds": [{"value": 99, "color": "#c7952f", "label": "Below target"}, {"value": 100, "color": "#2a8f68", "label": "Meets target"}],
+        "title": "SLA attainment · 97 of 100",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "value", "prompt": "What is the current gauge value?", "expected": {"required": [["97"]]}},
+        {"id": "maximum", "prompt": "What maximum defines the gauge scale?", "expected": {"required": [["100", "one hundred"]]}},
+        {"id": "cause", "prompt": "What caused the SLA miss?", "expected": {"abstain": true}},
+        {"id": "period", "prompt": "Which reporting period does this gauge cover?", "expected": {"abstain": true}},
+        {"id": "forecast", "prompt": "Will the target be met next month?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "conversion-funnel",
+      "component": "FunnelChart",
+      "props": {
+        "data": [{"step": "Visits", "value": 1000}, {"step": "Trials", "value": 400}, {"step": "Purchases", "value": 200}],
+        "stepAccessor": "step",
+        "valueAccessor": "value",
+        "title": "Conversion funnel",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "purchases", "prompt": "How many purchases are shown?", "expected": {"required": [["200", "two hundred"]]}},
+        {"id": "stages", "prompt": "Name the three funnel stages.", "expected": {"required": [["visits"], ["trials"], ["purchases"]]}},
+        {"id": "dropoff", "prompt": "Why did visitors fail to start trials?", "expected": {"abstain": true}},
+        {"id": "people", "prompt": "Are the same people counted at every stage?", "expected": {"abstain": true}},
+        {"id": "experiment", "prompt": "Which experiment produced this funnel?", "expected": {"abstain": true}}
+      ]
+    },
+    {
+      "id": "galton-values",
+      "component": "GaltonBoardChart",
+      "props": {
+        "data": [{"id": "a", "value": 1}, {"id": "b", "value": 2}, {"id": "c", "value": 3}, {"id": "d", "value": 4}],
+        "valueAccessor": "value",
+        "bins": 4,
+        "title": "Observed value distribution",
+        "width": 600,
+        "height": 400
+      },
+      "questions": [
+        {"id": "range", "prompt": "What are the smallest and largest observed values?", "expected": {"required": [["1", "one"], ["4", "four"]]}},
+        {"id": "count", "prompt": "How many observed rows feed the board?", "expected": {"required": [["4", "four"]]}},
+        {"id": "probability", "prompt": "What real-world probability process generated these values?", "expected": {"abstain": true}},
+        {"id": "population", "prompt": "What population were these observations sampled from?", "expected": {"abstain": true}},
+        {"id": "forecast", "prompt": "Where will the next observation land?", "expected": {"abstain": true}}
+      ]
+    }
+  ]
+}

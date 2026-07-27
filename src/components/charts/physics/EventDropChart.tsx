@@ -450,14 +450,17 @@ export const EventDropChart = forwardRef(function EventDropChart<
     [chartSize, layout.projectionRows, metadata]
   )
 
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy,
     chartType: "EventDropChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover,
+    fallbackFields:
+      typeof timeAccessor === "string" ? [timeAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -499,6 +502,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       key={rerun.rerunKey}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(

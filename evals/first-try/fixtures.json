@@ -1,20 +1,431 @@
 {
-  "version": 1,
+  "version": 2,
+  "fixtureRevision": "semiotic-first-try-2026-07-26",
+  "context": ["CLAUDE.md", "docs/public/llms.txt"],
   "fixtures": [
     {
-      "id": "valid-bar",
-      "proposal": { "component": "BarChart", "props": { "data": [{ "region": "North", "value": 12 }, { "region": "South", "value": 8 }], "categoryAccessor": "region", "valueAccessor": "value", "title": "Revenue by region" } },
-      "expect": { "validated": true, "renderProven": true }
+      "id": "bar-static-custom-fields",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Build an accessible bar chart of revenue by region from rows whose fields are market_name and net_revenue.",
+      "proposal": {
+        "component": "BarChart",
+        "props": {
+          "data": [{"market_name": "North", "net_revenue": 12}, {"market_name": "South", "net_revenue": 8}],
+          "categoryAccessor": "market_name",
+          "valueAccessor": "net_revenue",
+          "title": "Revenue by region",
+          "description": "Net revenue for North and South."
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
     },
     {
-      "id": "missing-stacking",
-      "proposal": { "component": "StackedBarChart", "props": { "data": [{ "region": "North", "value": 12 }], "categoryAccessor": "region", "valueAccessor": "value" } },
-      "expect": { "validated": false }
+      "id": "grouped-bar-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Compare web and retail revenue within each region using grouped bars.",
+      "proposal": {
+        "component": "GroupedBarChart",
+        "props": {
+          "data": [{"region": "North", "channel": "Web", "value": 12}, {"region": "North", "channel": "Retail", "value": 7}, {"region": "South", "channel": "Web", "value": 9}, {"region": "South", "channel": "Retail", "value": 11}],
+          "categoryAccessor": "region",
+          "valueAccessor": "value",
+          "groupBy": "channel",
+          "title": "Revenue by region and channel"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
     },
     {
-      "id": "invented-component",
-      "proposal": { "component": "ImaginaryChart", "props": { "data": [] } },
-      "expect": { "validated": false }
+      "id": "stacked-bar-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Show the product mix within each quarter as stacked bars.",
+      "proposal": {
+        "component": "StackedBarChart",
+        "props": {
+          "data": [{"quarter": "Q1", "product": "Core", "value": 14}, {"quarter": "Q1", "product": "Plus", "value": 6}, {"quarter": "Q2", "product": "Core", "value": 16}, {"quarter": "Q2", "product": "Plus", "value": 9}],
+          "categoryAccessor": "quarter",
+          "valueAccessor": "value",
+          "stackBy": "product",
+          "title": "Quarterly product mix"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "line-push",
+      "kind": "generation",
+      "family": "xy",
+      "mode": "push",
+      "prompt": "Create a line chart of active users by week that can accept new rows through the chart ref push API.",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [{"week": 1, "users": 120}, {"week": 2, "users": 138}, {"week": 3, "users": 151}],
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "title": "Weekly active users"
+        }
+      },
+      "push": {"method": "push", "rows": [{"week": 4, "users": 165}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "area-static",
+      "kind": "generation",
+      "family": "xy",
+      "mode": "static",
+      "prompt": "Show storage used over seven days as an area chart.",
+      "proposal": {
+        "component": "AreaChart",
+        "props": {
+          "data": [{"day": 1, "used": 40}, {"day": 2, "used": 47}, {"day": 3, "used": 53}, {"day": 4, "used": 51}],
+          "xAccessor": "day",
+          "yAccessor": "used",
+          "title": "Storage used"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "scatter-push",
+      "kind": "generation",
+      "family": "xy",
+      "mode": "push",
+      "prompt": "Plot response time against payload size and keep the chart ready for streaming observations.",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [{"payload_kb": 8, "response_ms": 42}, {"payload_kb": 16, "response_ms": 61}, {"payload_kb": 32, "response_ms": 95}],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "title": "Payload size and response time"
+        }
+      },
+      "push": {"method": "push", "rows": [{"payload_kb": 64, "response_ms": 142}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "bubble-static",
+      "kind": "generation",
+      "family": "xy",
+      "mode": "static",
+      "prompt": "Compare growth and retention, sizing each company by customers.",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [{"company": "A", "growth": 12, "retention": 86, "customers": 300}, {"company": "B", "growth": 18, "retention": 78, "customers": 180}, {"company": "C", "growth": 9, "retention": 92, "customers": 420}],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "title": "Growth, retention, and customers"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "box-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Compare the distribution of latency by service with a box plot.",
+      "proposal": {
+        "component": "BoxPlot",
+        "props": {
+          "data": [{"service": "API", "latency": 90}, {"service": "API", "latency": 110}, {"service": "API", "latency": 160}, {"service": "Worker", "latency": 55}, {"service": "Worker", "latency": 75}, {"service": "Worker", "latency": 120}],
+          "categoryAccessor": "service",
+          "valueAccessor": "latency",
+          "title": "Latency by service"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "violin-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Show the full score distribution for two cohorts with violins.",
+      "proposal": {
+        "component": "ViolinPlot",
+        "props": {
+          "data": [{"cohort": "Control", "score": 42}, {"cohort": "Control", "score": 55}, {"cohort": "Control", "score": 68}, {"cohort": "Treatment", "score": 51}, {"cohort": "Treatment", "score": 70}, {"cohort": "Treatment", "score": 83}],
+          "categoryAccessor": "cohort",
+          "valueAccessor": "score",
+          "title": "Scores by cohort"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "ridgeline-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Reveal possible multimodal duration distributions across three job types.",
+      "proposal": {
+        "component": "RidgelinePlot",
+        "props": {
+          "data": [{"job": "Import", "duration": 40}, {"job": "Import", "duration": 90}, {"job": "Import", "duration": 150}, {"job": "Export", "duration": 35}, {"job": "Export", "duration": 80}, {"job": "Export", "duration": 145}, {"job": "Index", "duration": 20}, {"job": "Index", "duration": 45}, {"job": "Index", "duration": 75}],
+          "categoryAccessor": "job",
+          "valueAccessor": "duration",
+          "title": "Job duration distributions"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "dot-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Make a compact dot plot of satisfaction by team.",
+      "proposal": {
+        "component": "DotPlot",
+        "props": {
+          "data": [{"team": "Blue", "satisfaction": 82}, {"team": "Green", "satisfaction": 74}, {"team": "Red", "satisfaction": 91}],
+          "categoryAccessor": "team",
+          "valueAccessor": "satisfaction",
+          "title": "Satisfaction by team"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "heatmap-static",
+      "kind": "generation",
+      "family": "xy",
+      "mode": "static",
+      "prompt": "Display request load by weekday and hour as a heatmap.",
+      "proposal": {
+        "component": "Heatmap",
+        "props": {
+          "data": [{"day": 1, "hour": 9, "load": 18}, {"day": 1, "hour": 10, "load": 31}, {"day": 2, "hour": 9, "load": 24}, {"day": 2, "hour": 10, "load": 38}],
+          "xAccessor": "day",
+          "yAccessor": "hour",
+          "valueAccessor": "load",
+          "title": "Request load"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "gauge-static",
+      "kind": "generation",
+      "family": "value",
+      "mode": "static",
+      "prompt": "Show current SLA attainment of 97 percent against a 99 percent target.",
+      "proposal": {
+        "component": "GaugeChart",
+        "props": {
+          "value": 97,
+          "min": 0,
+          "max": 100,
+          "thresholds": [{"value": 99, "color": "#c7952f", "label": "Below target"}, {"value": 100, "color": "#2a8f68", "label": "Meets target"}],
+          "title": "SLA attainment"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "funnel-static",
+      "kind": "generation",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Show visits, trials, and purchases as a conversion funnel.",
+      "proposal": {
+        "component": "FunnelChart",
+        "props": {
+          "data": [{"step": "Visits", "value": 1000}, {"step": "Trials", "value": 260}, {"step": "Purchases", "value": 80}],
+          "stepAccessor": "step",
+          "valueAccessor": "value",
+          "title": "Conversion funnel"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "force-network-static",
+      "kind": "generation",
+      "family": "network",
+      "mode": "static",
+      "prompt": "Draw a small dependency network from explicit nodes and edges.",
+      "proposal": {
+        "component": "ForceDirectedGraph",
+        "props": {
+          "nodes": [{"id": "api"}, {"id": "worker"}, {"id": "db"}],
+          "edges": [{"source": "api", "target": "worker"}, {"source": "worker", "target": "db"}],
+          "nodeIdAccessor": "id",
+          "title": "Service dependencies"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "sankey-static",
+      "kind": "generation",
+      "family": "network",
+      "mode": "static",
+      "prompt": "Show how 100 incoming requests split between success, retry, and failure.",
+      "proposal": {
+        "component": "SankeyDiagram",
+        "props": {
+          "edges": [{"source": "Incoming", "target": "Success", "value": 78}, {"source": "Incoming", "target": "Retry", "value": 15}, {"source": "Incoming", "target": "Failure", "value": 7}],
+          "sourceAccessor": "source",
+          "targetAccessor": "target",
+          "valueAccessor": "value",
+          "title": "Request outcomes"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "treemap-static",
+      "kind": "generation",
+      "family": "network",
+      "mode": "static",
+      "prompt": "Show storage allocation in a hierarchical treemap.",
+      "proposal": {
+        "component": "Treemap",
+        "props": {
+          "data": {"name": "Storage", "children": [{"name": "Images", "value": 48}, {"name": "Logs", "value": 32}, {"name": "Backups", "value": 20}]},
+          "nodeIdAccessor": "name",
+          "childrenAccessor": "children",
+          "valueAccessor": "value",
+          "title": "Storage allocation"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "symbol-map-static",
+      "kind": "generation",
+      "family": "geo",
+      "mode": "static",
+      "prompt": "Map incident counts at three longitude/latitude locations using proportional symbols.",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [{"city": "A", "longitude": -122.4, "latitude": 37.8, "incidents": 18}, {"city": "B", "longitude": -74, "latitude": 40.7, "incidents": 31}, {"city": "C", "longitude": -87.6, "latitude": 41.9, "incidents": 12}],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents",
+          "title": "Incidents by location"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "galton-static",
+      "kind": "generation",
+      "family": "physics",
+      "mode": "static",
+      "prompt": "Show a deterministic Galton-board distribution for observed values.",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [{"id": "a", "value": 1}, {"id": "b", "value": 2}, {"id": "c", "value": 3}, {"id": "d", "value": 4}],
+          "valueAccessor": "value",
+          "bins": 4,
+          "width": 480,
+          "height": 300,
+          "title": "Observed value distribution"
+        }
+      },
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "unit-pile-push",
+      "kind": "generation",
+      "family": "physics",
+      "mode": "push",
+      "prompt": "Build a unit pile of queued work by team that accepts additional rows.",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [{"id": "a", "team": "Blue", "value": 3}, {"id": "b", "team": "Green", "value": 2}],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "unitValue": 1,
+          "width": 480,
+          "height": 300,
+          "title": "Queued work by team"
+        }
+      },
+      "push": {"method": "push", "rows": [{"id": "c", "team": "Blue", "value": 2}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "event-drop-push",
+      "kind": "generation",
+      "family": "physics",
+      "mode": "push",
+      "prompt": "Create an event-time drop chart that can receive newly arrived events.",
+      "proposal": {
+        "component": "EventDropChart",
+        "props": {
+          "data": [{"id": "a", "eventTime": 10, "arrivalTime": 12}, {"id": "b", "eventTime": 18, "arrivalTime": 20}],
+          "timeAccessor": "eventTime",
+          "arrivalAccessor": "arrivalTime",
+          "windows": {"size": 20},
+          "width": 480,
+          "height": 300,
+          "title": "Event arrivals"
+        }
+      },
+      "push": {"method": "push", "rows": [{"id": "c", "eventTime": 23, "arrivalTime": 25}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "packet-flow-push",
+      "kind": "generation",
+      "family": "physics",
+      "mode": "push",
+      "prompt": "Render packet flow between a source and sink and keep the flow ready for pushed link updates.",
+      "proposal": {
+        "component": "PacketFlowChart",
+        "props": {
+          "nodes": [{"id": "source", "x": 0.1, "y": 0.5}, {"id": "sink", "x": 0.9, "y": 0.5}],
+          "links": [{"id": "route-a", "source": "source", "target": "sink", "value": 4}],
+          "width": 480,
+          "height": 300,
+          "title": "Packet flow"
+        }
+      },
+      "push": {"method": "push", "rows": [{"id": "route-b", "source": "source", "target": "sink", "value": 2}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+    },
+    {
+      "id": "guard-missing-stacking",
+      "kind": "guard",
+      "family": "ordinal",
+      "mode": "static",
+      "prompt": "Use StackedBarChart but omit the field that defines the stacks.",
+      "proposal": {"component": "StackedBarChart", "props": {"data": [{"region": "North", "value": 12}], "categoryAccessor": "region", "valueAccessor": "value"}},
+      "expect": {"validated": false, "renderProven": false}
+    },
+    {
+      "id": "guard-invented-component",
+      "kind": "guard",
+      "family": "unknown",
+      "mode": "static",
+      "prompt": "Render an ImaginaryChart component that does not exist.",
+      "proposal": {"component": "ImaginaryChart", "props": {"data": []}},
+      "expect": {"validated": false, "renderProven": false}
+    },
+    {
+      "id": "guard-categorical-scatter",
+      "kind": "guard",
+      "family": "xy",
+      "mode": "static",
+      "prompt": "Put categorical service names on a quantitative scatterplot x-axis.",
+      "proposal": {"component": "Scatterplot", "props": {"data": [{"service": "API", "latency": 90}, {"service": "Worker", "latency": 55}], "xAccessor": "service", "yAccessor": "latency"}},
+      "expect": {"validated": true, "renderProven": false, "noErrorDiagnostics": false}
     }
   ]
 }

@@ -228,10 +228,10 @@ for (const e of specEntries) {
     }
   }
 
-  // Lock 4: linkedHover claim ↔ useChartSelection or useChartSetup
-  // (which calls useChartSelection internally) or useNetworkChartSetup
-  // (also wraps useChartSelection). The hook is the only standardized
-  // way to wire `linkedHover` into the frame's hover-selection
+  // Lock 4: linkedHover claim ↔ useChartSelection or one of its standard
+  // wrappers: useChartSetup, useNetworkChartSetup, or usePhysicsSelection.
+  // These hooks are the standardized way to wire `linkedHover` into the
+  // frame's hover-selection
   // pipeline; charts claiming linked-hover support without it would
   // have a no-op `linkedHover` prop.
   if (e.supportsLinkedHover) {
@@ -240,6 +240,7 @@ for (const e of specEntries) {
       /\buseChartSelection\b/.test(source) ||
       /\buseChartSetup\b/.test(source) ||
       /\buseNetworkChartSetup\b/.test(source) ||
+      /\busePhysicsSelection\b/.test(source) ||
       // A HOC that delegates to a custom-layout wrapper inherits selection
       // wiring: the wrapper runs useCustomChartSetup → useChartSetup →
       // useChartSelection. (e.g. BumpChart renders <XYCustomChart>.)
@@ -247,7 +248,7 @@ for (const e of specEntries) {
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
-        `Either import useChartSelection / useChartSetup / useNetworkChartSetup, or set ` +
+        `Either import useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, or set ` +
         `supportsLinkedHover=false.`,
       )
     }

@@ -1,0 +1,69 @@
+{
+  "component": "DotPlot",
+  "description": {
+    "levels": {
+      "l1": "A dot plot of incidents by city.",
+      "l2": "incidents ranges from 12 (C) to 31 (B), with a mean of 20.33 across 3 points.",
+      "l3": "The highest city is B and the lowest is C."
+    },
+    "text": "A dot plot of incidents by city. incidents ranges from 12 (C) to 31 (B), with a mean of 20.33 across 3 points. The highest city is B and the lowest is C."
+  },
+  "intent": {
+    "act": "comparing",
+    "sentence": "This is a comparison chart; compare incidents across city; B leads at 31."
+  },
+  "structure": {
+    "id": "root",
+    "role": "chart",
+    "label": "A dot plot of incidents by city. incidents ranges from 12 (C) to 31 (B), with a mean of 20.33 across 3 points. The highest city is B and the lowest is C.",
+    "level": 1,
+    "children": [
+      {
+        "id": "axis-0",
+        "role": "axis",
+        "level": 2,
+        "label": "Category axis: city, A to C (3 categories)."
+      },
+      {
+        "id": "axis-1",
+        "role": "axis",
+        "level": 2,
+        "label": "Value axis: incidents, 12 to 31."
+      },
+      {
+        "id": "datum-2",
+        "role": "datum",
+        "level": 2,
+        "label": "A: 18",
+        "value": 18,
+        "datum": {
+          "city": "A",
+          "incidents": 18
+        }
+      },
+      {
+        "id": "datum-3",
+        "role": "datum",
+        "level": 2,
+        "label": "B: 31",
+        "value": 31,
+        "datum": {
+          "city": "B",
+          "incidents": 31
+        }
+      },
+      {
+        "id": "datum-4",
+        "role": "datum",
+        "level": 2,
+        "label": "C: 12",
+        "value": 12,
+        "datum": {
+          "city": "C",
+          "incidents": 12
+        }
+      }
+    ]
+  },
+  "text": "A dot plot of incidents by city. incidents ranges from 12 (C) to 31 (B), with a mean of 20.33 across 3 points. The highest city is B and the lowest is C. This is a comparison chart; compare incidents across city; B leads at 31."
+}

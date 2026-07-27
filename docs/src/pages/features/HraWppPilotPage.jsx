@@ -33,6 +33,8 @@ const tableCellStyle = {
   whiteSpace: "nowrap",
 }
 
+const workshopRoot = "/workshop/hra-wpp"
+
 const sourceCode = `import { BarChart } from "semiotic/ordinal"
 
 const chartRows = kidneyDirectChildren.map(row => ({
@@ -195,6 +197,52 @@ export default function HraWppPilotPage() {
       </p>
 
       <CodeBlock code={sourceCode} />
+
+      <h2 id="workshop-kit">Offline workshop kit</h2>
+
+      <p>
+        The field kit turns the workshop question into a thirty-minute,
+        auditable protocol. All required evidence is bundled locally; the HRA
+        PURL is provenance, not a live-session dependency.
+      </p>
+
+      <ul>
+        <li>
+          <a href={`${workshopRoot}/README.md`} download>
+            Facilitator guide and decision rubric
+          </a>
+        </li>
+        <li>
+          <a href={`${workshopRoot}/kidney-v1.6-pilot.json`} download>
+            Pinned kidney v1.6 evidence
+          </a>
+        </li>
+        <li>
+          <a href={`${workshopRoot}/response-template.json`} download>
+            Structured response template
+          </a>{" "}
+          and{" "}
+          <a href={`${workshopRoot}/response-schema.json`} download>
+            response JSON Schema
+          </a>
+        </li>
+        <li>
+          <a href={`${workshopRoot}/co-sign-template.md`} download>
+            Written co-sign request
+          </a>
+        </li>
+      </ul>
+
+      <div style={panelStyle}>
+        <strong>Decision gate</strong>
+        <p style={{ marginBottom: 0 }}>
+          Keep <code>x-hra</code> when receivers only preserve or display
+          context. Prototype an opt-in grounding envelope when reception needs
+          selected domain fields. Consider a <code>ContextProfile</code> RFC
+          only when at least two tools share stable context identity and use it
+          to change validation, scoring, permitted actions, or governance.
+        </p>
+      </div>
 
       <h2 id="workshop-question">Workshop question</h2>
 

@@ -75,7 +75,7 @@ test.describe("talk demos stay browser-local and deterministic", () => {
       waitUntil: "domcontentloaded",
     })
     await page.getByRole("button", { name: "Replay fixture" }).click()
-    await expect(page.getByText(/Loaded 14 events from .*conference-arc\.json/)).toBeVisible()
+    await expect(page.getByText(/Loaded 13 events from .*conference-arc\.json/)).toBeVisible()
     await expect(page.getByText("proposal-refused · 1").first()).toBeVisible()
     await expect(page.getByText("render-evidence · 2").first()).toBeVisible()
 
@@ -121,8 +121,24 @@ test.describe("talk demos stay browser-local and deterministic", () => {
         exact: true,
       })
     ).toBeVisible()
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send("Network.enable")
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 350,
+      downloadThroughput: 750_000,
+      uploadThroughput: 250_000,
+    })
     const stage = page.locator('[data-demo="conference-stage"]')
     await expect(stage).toHaveAttribute("data-demo", "conference-stage")
+
+    // Load the only lazy demo chunk under throttling, then prove the complete
+    // decision arc still runs after the browser is taken fully offline.
+    await stage.getByRole("button", { name: /Keep the custom-chart exit/ }).click()
+    await expect(stage.getByRole("button", { name: /Morph to snapshot/ })).toBeVisible()
+    await stage.getByRole("button", { name: /Question → candidates/ }).click()
+    await page.context().setOffline(true)
+
     await stage.getByRole("button", { name: "Choose BoxPlot baseline" }).click()
 
     await stage.getByRole("button", { name: /Refuse the bad proposal/ }).click()
@@ -157,7 +173,16 @@ test.describe("talk demos stay browser-local and deterministic", () => {
     await stage.getByRole("button", { name: /Export defensible JSX/ }).click()
     await stage.getByRole("button", { name: "Mark JSX exported" }).click()
     await expect(stage.getByText("handoff recorded")).toBeVisible()
-    await expect(stage.getByText(/Recovery remains the typed, hand-authored/)).toBeVisible()
+    await expect(stage.getByText(/Recovery is the typed, Playwright-recorded/)).toBeVisible()
+
+    await page.context().setOffline(false)
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    })
+    await cdp.send("Network.disable")
 
     for (const [route, heading] of [
       ["/choose", "Choose a Chart"],

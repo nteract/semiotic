@@ -238,14 +238,15 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const topologySpawnsRef = useRef<PhysicsQueuedSpawn[] | null>(null)
   const topologyKeyRef = useRef<string>("")
-  const bodySelection = usePhysicsSelection({
+  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection: props.selection,
     linkedHover: props.linkedHover,
     colorBy: colorBy,
     chartType: "PhysicsCustomChart",
     chartId: props.chartId,
     onObservation: props.onObservation,
-    onClick: props.onClick
+    onClick: props.onClick,
+    onBodyHover: frameProps?.onBodyHover
   })
 
   const stateEl = renderPhysicsChartState({
@@ -456,6 +457,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
+      onBodyHover={onBodyHover}
       backgroundGraphics={composePhysicsFrameGraphics(
         frameProps.backgroundGraphics,
         resolved.result.backgroundOverlays

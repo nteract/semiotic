@@ -2,10 +2,12 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import Ajv2020 from "ajv/dist/2020.js"
 
 import {
   buildKidneyPilot,
   KIDNEY_ROOT_ID,
+  PUBLIC_OUTPUT,
 } from "./build-hra-wpp-kidney-pilot.mjs"
 
 const source = {
@@ -153,5 +155,56 @@ test("the checked-in kidney v1.6 fixture pins the reviewed workshop evidence", (
     artifact.findings.observedLabelCollisions.some(
       ({ label, ids }) => label === "Tubules" && ids.length === 2,
     ),
+  )
+})
+
+test("the public workshop fixture matches the source-bundled artifact", () => {
+  const sourceArtifact = readFileSync(
+    resolve("docs/src/data/hra-wpp-kidney-v1.6-pilot.json"),
+    "utf8",
+  )
+  const publicArtifact = readFileSync(PUBLIC_OUTPUT, "utf8")
+  assert.equal(publicArtifact, sourceArtifact)
+})
+
+test("the workshop response template and schema retain the decision evidence", () => {
+  const schema = JSON.parse(
+    readFileSync(
+      resolve("docs/public/workshop/hra-wpp/response-schema.json"),
+      "utf8",
+    ),
+  )
+  const template = JSON.parse(
+    readFileSync(
+      resolve("docs/public/workshop/hra-wpp/response-template.json"),
+      "utf8",
+    ),
+  )
+
+  assert.deepEqual(schema.required, [
+    "schemaVersion",
+    "status",
+    "session",
+    "participant",
+    "termReview",
+    "failureCase",
+    "communicativeActContrast",
+    "contextDecision",
+    "coSign",
+  ])
+  assert.equal(template.schemaVersion, "1.0")
+  assert.equal(template.session.sourceVersion, "v1.6")
+  assert.equal(template.contextDecision.decision, "pending")
+  assert.equal(template.coSign.permissionToQuote, false)
+
+  const validate = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    validateFormats: false,
+  }).compile(schema)
+  assert.equal(
+    validate(template),
+    true,
+    JSON.stringify(validate.errors, null, 2),
   )
 })
