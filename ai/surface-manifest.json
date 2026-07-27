@@ -11,8 +11,8 @@
   "components": {
     "schema": 57,
     "aiChartExports": 54,
-    "mcpRenderable": 51,
-    "browserOnly": 6,
+    "mcpRenderable": 52,
+    "browserOnly": 5,
     "categories": {
       "xy": [
         "AreaChart",
