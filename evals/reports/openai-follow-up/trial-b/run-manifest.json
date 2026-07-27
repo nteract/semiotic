@@ -1,0 +1,4684 @@
+{
+  "version": 1,
+  "clientVersion": "semiotic-openai-eval/1",
+  "priceRevision": "openai-standard-2026-07-26",
+  "models": [
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "gpt-5.6-luna"
+  ],
+  "trialId": "postmerge-b",
+  "filters": {
+    "suites": [
+      "first-try",
+      "grounding"
+    ],
+    "firstTryFixtureIds": [
+      "gauge-static",
+      "line-push",
+      "scatter-push",
+      "bubble-static",
+      "symbol-map-static",
+      "unit-pile-push",
+      "galton-static"
+    ],
+    "groundingFixtureIds": [
+      "regional-revenue/highest",
+      "regional-revenue/count",
+      "weekly-users/last",
+      "weekly-users/direction",
+      "payload-latency/largest",
+      "payload-latency/count",
+      "service-latency/categories",
+      "service-latency/max",
+      "request-flow/largest",
+      "request-flow/failed",
+      "storage-tree/largest",
+      "storage-tree/backups",
+      "incident-map/largest",
+      "incident-map/count",
+      "sla-gauge/value",
+      "sla-gauge/maximum",
+      "conversion-funnel/purchases",
+      "conversion-funnel/stages",
+      "galton-values/range",
+      "galton-values/count"
+    ],
+    "groundingConditions": [
+      "png-only",
+      "png-plus-grounding",
+      "grounding-only"
+    ]
+  },
+  "projectFingerprint": "cc3c2be40c1f",
+  "maxUsd": 3,
+  "startedAt": "2026-07-27T20:26:28.009Z",
+  "completedAt": "2026-07-27T20:28:55.981Z",
+  "requests": [
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-only",
+      "responseId": "resp_038f8ce2279b5896016a67bef46da4819ba4a63d28a40f1db6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 374,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 400
+      },
+      "estimatedUsd": 0.00265,
+      "latencyMs": 1401,
+      "rawOutputSha256": "88936eda3d8e7302c9379539aefd611e4bf5cb0034befd12025a91ca79f7d558"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-plus-grounding",
+      "responseId": "resp_05e0fe34c9682e7b016a67bef47168819ab7675bc361c2c8d2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 996,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1019
+      },
+      "estimatedUsd": 0.00567,
+      "latencyMs": 1326,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/grounding-only",
+      "responseId": "resp_00b61757fa9fd1d6016a67bef58ac0819a8a40ea1c7b07cebf",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 699,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 722
+      },
+      "estimatedUsd": 0.004185,
+      "latencyMs": 1228,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-only",
+      "responseId": "resp_0c2b84ff4906db97016a67bef5873c819bbefd238db1fed064",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 390
+      },
+      "estimatedUsd": 0.002525,
+      "latencyMs": 1274,
+      "rawOutputSha256": "fcf77bad7f39f8de12bdace68707c9dfe9fe18f3becb676f96507e56f2df4998"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-plus-grounding",
+      "responseId": "resp_04a8dc842366e969016a67bef6d170819892ff12337d46ff0b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1012
+      },
+      "estimatedUsd": 0.005635,
+      "latencyMs": 1152,
+      "rawOutputSha256": "fcf77bad7f39f8de12bdace68707c9dfe9fe18f3becb676f96507e56f2df4998"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/grounding-only",
+      "responseId": "resp_0afe886412a18f91016a67bef6cfb8819a900e27ae5cc8db1b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 708
+      },
+      "estimatedUsd": 0.00394,
+      "latencyMs": 1074,
+      "rawOutputSha256": "0f68b1bf58d9ad62e6fef8b78533bc3c7a29a4abd9c7f842c105da58f45e9b86"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-only",
+      "responseId": "resp_0093aa7cbe72cd5e016a67bef80394819b999173a6c8c52e32",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 390
+      },
+      "estimatedUsd": 0.002475,
+      "latencyMs": 1856,
+      "rawOutputSha256": "85cce93badae1de85397859ed39129cf3494801c67eb4459f746c389891739ad"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-plus-grounding",
+      "responseId": "resp_04b02e3a29f5b052016a67bef7fe6081988e40c9c69be9eac8",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1104,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1052
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1125
+      },
+      "estimatedUsd": 0.001416,
+      "latencyMs": 1522,
+      "rawOutputSha256": "75bbef3f8990abc3c267e7e306e775c6fc4f1435c7d19a2ddd81440f2019fa42"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/grounding-only",
+      "responseId": "resp_08c24ec689426812016a67bef9d94081988151fc9af4749a2d",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 807,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 828
+      },
+      "estimatedUsd": 0.004665,
+      "latencyMs": 1136,
+      "rawOutputSha256": "75bbef3f8990abc3c267e7e306e775c6fc4f1435c7d19a2ddd81440f2019fa42"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-only",
+      "responseId": "resp_0964ba30e31b1e06016a67bef9db8c819aa76a5c77f389f8db",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 372,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 42,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 414
+      },
+      "estimatedUsd": 0.00312,
+      "latencyMs": 1539,
+      "rawOutputSha256": "7a511c1e18e52f0b8059f1736b86e5d86f85518cd1620145fd3a80b41eafe9be"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-plus-grounding",
+      "responseId": "resp_06597918dba454c8016a67befb651481999f5c3ea7857cf426",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1107,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1055
+        },
+        "output_tokens": 50,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1157
+      },
+      "estimatedUsd": 0.0022875,
+      "latencyMs": 2643,
+      "rawOutputSha256": "d8917ada7c49000fe18c35b6058cd7ea308f22f202f6e50b07b6d9fa662ff6c2"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/grounding-only",
+      "responseId": "resp_0d4575b96f1f1542016a67befb6a80819b9d2e17cce8bc6ada",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 810,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 50,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 860
+      },
+      "estimatedUsd": 0.00555,
+      "latencyMs": 1743,
+      "rawOutputSha256": "d8917ada7c49000fe18c35b6058cd7ea308f22f202f6e50b07b6d9fa662ff6c2"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-only",
+      "responseId": "resp_0eb49f9ff305c1ed016a67befe1728819ba84db1039818fdb7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 396
+      },
+      "estimatedUsd": 0.00263,
+      "latencyMs": 1412,
+      "rawOutputSha256": "d9b4eb4774cf41dc65ddf9f4da5b6166ca4cdaae9cafe083cdd38e63b2ab1fee"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-plus-grounding",
+      "responseId": "resp_08ae8c24222e648e016a67befe0ad4819a88dad1727b86c250",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1077,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1025
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1105
+      },
+      "estimatedUsd": 0.0016125,
+      "latencyMs": 1232,
+      "rawOutputSha256": "f3f5d9ba945975d3f6c2276f3f6996a6ffcef411030dba19eeb47d91aaf7638a"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/grounding-only",
+      "responseId": "resp_0687116410231b17016a67beff6f30819ba75b069af4f746f2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 780,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 29,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 809
+      },
+      "estimatedUsd": 0.00477,
+      "latencyMs": 1105,
+      "rawOutputSha256": "9a1005e108b19746a0b86f4bd0e4506d16407fa1d53e89dd7146c87139af541b"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-only",
+      "responseId": "resp_089d8cb5a6de74b4016a67beff6fa08199a7800d52acd82be7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 383
+      },
+      "estimatedUsd": 0.002315,
+      "latencyMs": 1308,
+      "rawOutputSha256": "db581f71a007f0598a6a640bbb858c5256af62c79ae61f149233e32cce4679b2"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-plus-grounding",
+      "responseId": "resp_0f77459945a8db42016a67bf00d4d481989c8ca812c3ef6de0",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1074,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1092
+      },
+      "estimatedUsd": 0.00591,
+      "latencyMs": 1166,
+      "rawOutputSha256": "3c3eeaf75b600452370e78a739d4d431ba57064c98163b837081438f2c78873e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/grounding-only",
+      "responseId": "resp_00b9e101e46cb600016a67bf00cfac819a9a847fa4130ef83c",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 777,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 795
+      },
+      "estimatedUsd": 0.004425,
+      "latencyMs": 1216,
+      "rawOutputSha256": "3c3eeaf75b600452370e78a739d4d431ba57064c98163b837081438f2c78873e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-only",
+      "responseId": "resp_090132785dcf8f41016a67bf0200948198899acd2b8689b3b5",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.002345,
+      "latencyMs": 2228,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-plus-grounding",
+      "responseId": "resp_068c8e148512ff2f016a67bf01fb4081989aa02c450e245f87",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1061,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1078
+      },
+      "estimatedUsd": 0.005815,
+      "latencyMs": 1149,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/grounding-only",
+      "responseId": "resp_0833399ce01c81b5016a67bf0433d4819a9f442834211d4ea6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 764,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 781
+      },
+      "estimatedUsd": 0.00433,
+      "latencyMs": 933,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-only",
+      "responseId": "resp_021ae21be1806175016a67bf044054819991e0e3bb90c08114",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 25,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 393
+      },
+      "estimatedUsd": 0.00259,
+      "latencyMs": 1244,
+      "rawOutputSha256": "2d0f53cd636e1c3f191638b15d1975a3545bf1ff33d256f66c2c59c26f1281d2"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-plus-grounding",
+      "responseId": "resp_0b914e7f1ded9ed5016a67bf057530819ab48a3b2c26bbef12",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1062,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1085
+      },
+      "estimatedUsd": 0.006,
+      "latencyMs": 1104,
+      "rawOutputSha256": "ba97bc35a0fe8024bdb3f8cd46fd4da5885a4226ed918e9c15bb482ea189c77a"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/grounding-only",
+      "responseId": "resp_008d2559f84a4ab9016a67bf05725c8198a98691625742c990",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 765,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 786
+      },
+      "estimatedUsd": 0.004455,
+      "latencyMs": 1108,
+      "rawOutputSha256": "7295c9d5d6f4ea0ac2c58c12d63f39e12cb5f365069d19d9781948860e8a936b"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-only",
+      "responseId": "resp_0e2c2ac95793c2b3016a67bf06957c8199a8feef35a68e5e46",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 387
+      },
+      "estimatedUsd": 0.00241,
+      "latencyMs": 3985,
+      "rawOutputSha256": "8ce76a2cc90fce86f33856eb397f5d7929bd4c1c263686f1bda00c74e84c8b7f"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-plus-grounding",
+      "responseId": "resp_06098411e8834f5e016a67bf069b8481988cda68b00331fad7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 700
+      },
+      "estimatedUsd": 0.00415,
+      "latencyMs": 1167,
+      "rawOutputSha256": "c713a07fb2312f9fff73682b5b1eb18f75e63d98269a17a174e5264d66821f61"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/grounding-only",
+      "responseId": "resp_099c4b6a2d9aa869016a67bf0a911c819a83d54647a1747d43",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 403
+      },
+      "estimatedUsd": 0.002665,
+      "latencyMs": 1271,
+      "rawOutputSha256": "c713a07fb2312f9fff73682b5b1eb18f75e63d98269a17a174e5264d66821f61"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-only",
+      "responseId": "resp_09067694dd343752016a67bf0a9670819993df5ee4d1a8ce02",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 386
+      },
+      "estimatedUsd": 0.00238,
+      "latencyMs": 1285,
+      "rawOutputSha256": "8a16f96e9ff361091a7339fdab4fc8951a30546c07ace96148a02f5f4dfee885"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-plus-grounding",
+      "responseId": "resp_0f56ccfc6f48f37e016a67bf0bf664819983d3978f215ad642",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 693
+      },
+      "estimatedUsd": 0.00394,
+      "latencyMs": 1701,
+      "rawOutputSha256": "5fa497f3f8106c6f31d32a111886afafa13772704cab1817afa1cace02f54dd1"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/grounding-only",
+      "responseId": "resp_0cb605bbcd04beaa016a67bf0be0b08198bbfaa2676a2a95e2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 396
+      },
+      "estimatedUsd": 0.002455,
+      "latencyMs": 1457,
+      "rawOutputSha256": "5fa497f3f8106c6f31d32a111886afafa13772704cab1817afa1cace02f54dd1"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-only",
+      "responseId": "resp_0cc4ad7584d039a9016a67bf0d92ec8199b95156f1da3296ae",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 39,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 406
+      },
+      "estimatedUsd": 0.003005,
+      "latencyMs": 1384,
+      "rawOutputSha256": "37da094514d7e2ee79266094cc424540b2d0ca3ff3b94ec10b9f37c8105564cb"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-plus-grounding",
+      "responseId": "resp_00796fb8f6d22ede016a67bf0d91dc819aa45e31252fb6efc4",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 592,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 610
+      },
+      "estimatedUsd": 0.0035,
+      "latencyMs": 1261,
+      "rawOutputSha256": "7f244ee40a26cd329aaa70e1417ed8be11e42081f387b637245500866fc408ab"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/grounding-only",
+      "responseId": "resp_0d8730e76a81bee7016a67bf0efbd4819b853c2aecdfdbe127",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 295,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 313
+      },
+      "estimatedUsd": 0.002015,
+      "latencyMs": 934,
+      "rawOutputSha256": "7f244ee40a26cd329aaa70e1417ed8be11e42081f387b637245500866fc408ab"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-only",
+      "responseId": "resp_019d51e6e612852f016a67bf0efc88819b9687298212206da7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 388
+      },
+      "estimatedUsd": 0.002415,
+      "latencyMs": 1404,
+      "rawOutputSha256": "a8406cbafeff6310f2d3c7f58dbaf2fd9fccffe490afc3e7d50a2764cd1a36df"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-plus-grounding",
+      "responseId": "resp_0cb2ed2f5a5319d9016a67bf10689c8198875e8851d51a0510",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 594,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 613
+      },
+      "estimatedUsd": 0.00354,
+      "latencyMs": 1364,
+      "rawOutputSha256": "2bdcd2581a233eef2e3e19338bf56fe720108cbc0b5b30b13629abc2c519fb3f"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/grounding-only",
+      "responseId": "resp_05938ddc32385500016a67bf106244819aa3b7ebd0269b2563",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 297,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 315
+      },
+      "estimatedUsd": 0.002025,
+      "latencyMs": 3009,
+      "rawOutputSha256": "753f86bf4602c0d28bab029088ca178bb2f2e9959e70868f46aaf03ce6dd0d1a"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-only",
+      "responseId": "resp_06abe2826b98f2b1016a67bf1364e48199988c50d51308a5bd",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 393
+      },
+      "estimatedUsd": 0.002565,
+      "latencyMs": 1177,
+      "rawOutputSha256": "0bfc9b74a5ecae617f08db8725ab35bc9ff9714491e643cb6710c85538500c7d"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-plus-grounding",
+      "responseId": "resp_03b54369e16e4eb1016a67bf137fd0819bba574ded25c7f513",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 991,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1014
+      },
+      "estimatedUsd": 0.005645,
+      "latencyMs": 1683,
+      "rawOutputSha256": "aab71f12b87d6c2de6eecc920195891341458434364ed59a0fac4c731b189e69"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/grounding-only",
+      "responseId": "resp_0232b478de3da300016a67bf1520608199bfa1eb1284206d7b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 694,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 718
+      },
+      "estimatedUsd": 0.00419,
+      "latencyMs": 1159,
+      "rawOutputSha256": "0bfc9b74a5ecae617f08db8725ab35bc9ff9714491e643cb6710c85538500c7d"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-only",
+      "responseId": "resp_0c0b049a803e02f7016a67bf1513208198ad3654ee35a4782a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 385
+      },
+      "estimatedUsd": 0.002375,
+      "latencyMs": 959,
+      "rawOutputSha256": "1760697eb73e58cde8936922849298389b6c393ec24bbd982ac84c7fb4682702"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-plus-grounding",
+      "responseId": "resp_06bc86a388710e5d016a67bf164944819aa27fae03eea92343",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 25,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1014
+      },
+      "estimatedUsd": 0.005695,
+      "latencyMs": 1368,
+      "rawOutputSha256": "acec872f2e5bca19e5e9c871a5e288699d213b7be49c8f3e24f524feab22b55d"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/grounding-only",
+      "responseId": "resp_06cf773d9dd3127d016a67bf164d5c819ba1c4148db1c325ac",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 25,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 717
+      },
+      "estimatedUsd": 0.00421,
+      "latencyMs": 1393,
+      "rawOutputSha256": "acec872f2e5bca19e5e9c871a5e288699d213b7be49c8f3e24f524feab22b55d"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-only",
+      "responseId": "resp_056086696fd445d3016a67bf17ab6481999125311e8aa6aaaf",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 391
+      },
+      "estimatedUsd": 0.00253,
+      "latencyMs": 1347,
+      "rawOutputSha256": "4c5c937a88b9b0c005d960dd07cb16d392de1e5460996191434a65c360e49896"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-plus-grounding",
+      "responseId": "resp_00076e93b937e570016a67bf17aa08819891644740b7ad8c36",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 579
+      },
+      "estimatedUsd": 0.003395,
+      "latencyMs": 1216,
+      "rawOutputSha256": "958f838b0bece7c1fc0719d53f1eed638c12159b3846f67c669f4ef9bb62a74a"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/grounding-only",
+      "responseId": "resp_06b92d2d62e33a89016a67bf190020819a8f9e896f4d9ad6fc",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 282
+      },
+      "estimatedUsd": 0.00191,
+      "latencyMs": 1957,
+      "rawOutputSha256": "958f838b0bece7c1fc0719d53f1eed638c12159b3846f67c669f4ef9bb62a74a"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-only",
+      "responseId": "resp_02510a32e4daabfe016a67bf1900348198b200e7b43f33a62a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 389
+      },
+      "estimatedUsd": 0.00247,
+      "latencyMs": 1253,
+      "rawOutputSha256": "d0c9d91e3bc79bfd1d1618e809ea049706a9ad55d3f130f3bf759deeb094e3b0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-plus-grounding",
+      "responseId": "resp_0e9204e305e97f17016a67bf1b02d8819a8363d4340b469b17",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 580
+      },
+      "estimatedUsd": 0.003425,
+      "latencyMs": 1561,
+      "rawOutputSha256": "d0c9d91e3bc79bfd1d1618e809ea049706a9ad55d3f130f3bf759deeb094e3b0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/grounding-only",
+      "responseId": "resp_0e590abc1d15b29c016a67bf1b010481989ce0a27f08c7938b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 283
+      },
+      "estimatedUsd": 0.00194,
+      "latencyMs": 1355,
+      "rawOutputSha256": "d0c9d91e3bc79bfd1d1618e809ea049706a9ad55d3f130f3bf759deeb094e3b0"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-only",
+      "responseId": "resp_017324927dccd04b016a67bf1c8820819a991b507086c6861e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 388
+      },
+      "estimatedUsd": 0.002465,
+      "latencyMs": 1263,
+      "rawOutputSha256": "a2d6d0ce8f82c61b1439f5bf86afefe2c0cbf01d2a861b7f2fbf241b225895ef"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-plus-grounding",
+      "responseId": "resp_020f27d58151e9b1016a67bf1c885c8198afb901fa1e0d2a70",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 884,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 902
+      },
+      "estimatedUsd": 0.00496,
+      "latencyMs": 1238,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/grounding-only",
+      "responseId": "resp_03937a319ea96ecd016a67bf1de9548198ac2803900c6d59dd",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 587,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 605
+      },
+      "estimatedUsd": 0.003475,
+      "latencyMs": 1321,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-only",
+      "responseId": "resp_0bb44e097daacaf5016a67bf1dcd40819aa29bfa1c9ca90944",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 37,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 404
+      },
+      "estimatedUsd": 0.002945,
+      "latencyMs": 1566,
+      "rawOutputSha256": "2bfb7c196b56118add45c999a8b1a373ab62b3ee5484180456540f3ed6d70ea6"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-plus-grounding",
+      "responseId": "resp_09fae44b92e01634016a67bf1f7330819ba70c58c5b1c2a747",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 883,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 904
+      },
+      "estimatedUsd": 0.005045,
+      "latencyMs": 1580,
+      "rawOutputSha256": "c0b02428c60234d33e4d0d347ad3c6741abe7369711de8be4112974e7faf44b4"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/grounding-only",
+      "responseId": "resp_0cafdc7b471f5c6a016a67bf1f62508199b4fcf60061ac8848",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 586,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 29,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 615
+      },
+      "estimatedUsd": 0.0038,
+      "latencyMs": 1270,
+      "rawOutputSha256": "1cb421d25f1253a7b416fd987485d12bab37315b8f43e57690d1a37b32ceec8b"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-only",
+      "responseId": "resp_0801154054d86714016a67bf20f83081998c68e79df53c7bc2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 30,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 400
+      },
+      "estimatedUsd": 0.00275,
+      "latencyMs": 1431,
+      "rawOutputSha256": "3f144cfcfdefea4b6f8ddebc5f92d86a0442c71e265b1c76be474a7f783e2f1e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-plus-grounding",
+      "responseId": "resp_0f2a5cfbf2155ba0016a67bf20fd60819ba5eb777bcd5c7b0e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 653,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 681
+      },
+      "estimatedUsd": 0.004105,
+      "latencyMs": 1248,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/grounding-only",
+      "responseId": "resp_0213b80703b95242016a67bf2269fc819bb842ec5028f11db6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 356,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.00262,
+      "latencyMs": 1137,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-only",
+      "responseId": "resp_0cb935560f86cb2a016a67bf226a5c819ab78a3db7097fad14",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 389
+      },
+      "estimatedUsd": 0.002445,
+      "latencyMs": 1360,
+      "rawOutputSha256": "fb94eb55341fccee3343d470b0e548617f76c367224a8e446d7334279a2aefc7"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-plus-grounding",
+      "responseId": "resp_0ed28a3caaef1795016a67bf23bfc08199967769bbda85c665",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 652,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 671
+      },
+      "estimatedUsd": 0.00383,
+      "latencyMs": 1419,
+      "rawOutputSha256": "d8a2e6ff8d390abc669f65f8dfff4a5bb11cf40bb73ff7cae1650e6fcf834d1e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/grounding-only",
+      "responseId": "resp_0bcbb8739847a930016a67bf23c5788199945447d9096c6402",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 355,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 374
+      },
+      "estimatedUsd": 0.002345,
+      "latencyMs": 1336,
+      "rawOutputSha256": "d8a2e6ff8d390abc669f65f8dfff4a5bb11cf40bb73ff7cae1650e6fcf834d1e"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "line-push",
+      "responseId": "resp_0ff724e143add078016a67bf253dd48198bc49bdd5b8938dda",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27328,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27325
+        },
+        "output_tokens": 71,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27399
+      },
+      "estimatedUsd": 0.0158075,
+      "latencyMs": 1896,
+      "rawOutputSha256": "7fd2b49f954eefe2e1aec19faeb185907657c217797615e13a9862c0b40f8c41"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "scatter-push",
+      "responseId": "resp_00128c7eae87a79b016a67bf253674819996a5bf1205b42a89",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27334,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27331
+        },
+        "output_tokens": 136,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27470
+      },
+      "estimatedUsd": 0.0177605,
+      "latencyMs": 3643,
+      "rawOutputSha256": "4d58e8ec0db5608540a0299115dba7b04ffe173335336b1e430fc5db1577d297"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "bubble-static",
+      "responseId": "resp_079626b8e639e511016a67bf28e19881989ff7e1dcaaefd5bd",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27279,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27276
+        },
+        "output_tokens": 152,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27431
+      },
+      "estimatedUsd": 0.018213,
+      "latencyMs": 3634,
+      "rawOutputSha256": "33e281fcd90211daef28fdbd29f851e958b370f164ff088d90c2da4212b5b01c"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "gauge-static",
+      "responseId": "resp_02e6bc7612e45856016a67bf28e300819ba43e77ba26c0e9aa",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27281,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27278
+        },
+        "output_tokens": 127,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27408
+      },
+      "estimatedUsd": 0.017464,
+      "latencyMs": 2459,
+      "rawOutputSha256": "e2ee95a90654f0ceda37b676718fb5eafe15681e4efdff0d1596948061ead803"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "symbol-map-static",
+      "responseId": "resp_093c59f7090b4086016a67bf2c830c819bbed9488297e6a7e8",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27294,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27291
+        },
+        "output_tokens": 167,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27461
+      },
+      "estimatedUsd": 0.0186705,
+      "latencyMs": 2871,
+      "rawOutputSha256": "e2056506eb20d5faf0503bb50f25612615cf1a4b6063b6341ad53365d168145d"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "galton-static",
+      "responseId": "resp_05f4ade30f77399b016a67bf2c94188199adfe5eb8e38635db",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27260,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27257
+        },
+        "output_tokens": 66,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27326
+      },
+      "estimatedUsd": 0.0156235,
+      "latencyMs": 1583,
+      "rawOutputSha256": "cca21da3fc818855f93324ed9a2a7b2081c559ba52cead21a388968b5acf2df3"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "resolvedModel": "gpt-5.6-sol",
+      "suite": "first-try",
+      "fixtureId": "unit-pile-push",
+      "responseId": "resp_0c0c2831323e4949016a67bf2f5c248198b52a3e1d9ff9739a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27325,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27322
+        },
+        "output_tokens": 59,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27384
+      },
+      "estimatedUsd": 0.015446,
+      "latencyMs": 1628,
+      "rawOutputSha256": "add8e8477487c817bce0146d71d94720611ed4029bb7f902fc3ab25e9c086bfd"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-only",
+      "responseId": "resp_074126ee0a9d8d17016a67bf2f5fa48199bca8ac8eb9d8fc76",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 374,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 400
+      },
+      "estimatedUsd": 0.001325,
+      "latencyMs": 1295,
+      "rawOutputSha256": "88936eda3d8e7302c9379539aefd611e4bf5cb0034befd12025a91ca79f7d558"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-plus-grounding",
+      "responseId": "resp_0a085c8a92ca4e66016a67bf30fe8c8199b7abfe989db0174f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 996,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1019
+      },
+      "estimatedUsd": 0.002835,
+      "latencyMs": 845,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/grounding-only",
+      "responseId": "resp_0a44d921ecc2ebea016a67bf3350e08198b2e6f81fff6ed0a4",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 699,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 722
+      },
+      "estimatedUsd": 0.0020925,
+      "latencyMs": 4369,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-only",
+      "responseId": "resp_052253ece224c3ab016a67bf3560a8819baa6d2c5f92129827",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.0011425,
+      "latencyMs": 899,
+      "rawOutputSha256": "139191d99676236271ad7f49706a7bb8bfd33648dc4662402beed84cde5397af"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-plus-grounding",
+      "responseId": "resp_0c92f31089433bc3016a67bf355b588199a89352e17fe06984",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1004
+      },
+      "estimatedUsd": 0.0026975,
+      "latencyMs": 978,
+      "rawOutputSha256": "139191d99676236271ad7f49706a7bb8bfd33648dc4662402beed84cde5397af"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/grounding-only",
+      "responseId": "resp_055e6bf82341d1a0016a67bf3656a88198b2957b75cfe23db1",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 708
+      },
+      "estimatedUsd": 0.00197,
+      "latencyMs": 678,
+      "rawOutputSha256": "0f68b1bf58d9ad62e6fef8b78533bc3c7a29a4abd9c7f842c105da58f45e9b86"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-only",
+      "responseId": "resp_084220e64cf7b4fc016a67bf36583c8198a0cd263b67a5ab0d",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 383
+      },
+      "estimatedUsd": 0.0011325,
+      "latencyMs": 961,
+      "rawOutputSha256": "55db033120bd8822d113989369c02fa976a8ff0f3b45b9e618b894612552bbc8"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-plus-grounding",
+      "responseId": "resp_0bf25ee69c9741aa016a67bf3755d4819b930da881c7099471",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1104,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1052
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1125
+      },
+      "estimatedUsd": 0.000708,
+      "latencyMs": 911,
+      "rawOutputSha256": "75bbef3f8990abc3c267e7e306e775c6fc4f1435c7d19a2ddd81440f2019fa42"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/grounding-only",
+      "responseId": "resp_03110bda36e4d882016a67bf375068819a974c630bc2840c97",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 807,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 828
+      },
+      "estimatedUsd": 0.0023325,
+      "latencyMs": 757,
+      "rawOutputSha256": "75bbef3f8990abc3c267e7e306e775c6fc4f1435c7d19a2ddd81440f2019fa42"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-only",
+      "responseId": "resp_005f81b410bd6db0016a67bf383bdc819b8cd0fdca0aa92acb",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 372,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 39,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 411
+      },
+      "estimatedUsd": 0.001515,
+      "latencyMs": 1060,
+      "rawOutputSha256": "4084052faa9237bb6fbe709bf521e551d3914244ccf5eaeda351258a16898326"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-plus-grounding",
+      "responseId": "resp_084db5590590c77d016a67bf3840748199bb451ef4999b2004",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1107,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1055
+        },
+        "output_tokens": 32,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1139
+      },
+      "estimatedUsd": 0.00087375,
+      "latencyMs": 1076,
+      "rawOutputSha256": "ed69e9050a684d8b0ff00ac74bbe5906d06184a852d12f916618b08509949147"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/grounding-only",
+      "responseId": "resp_0c7aaac3da034679016a67bf39502481989403ecafe5741d03",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 810,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 38,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 848
+      },
+      "estimatedUsd": 0.002595,
+      "latencyMs": 1073,
+      "rawOutputSha256": "e63981d0befbc36e4435c42e226f7c8fae71ca7f61d19d7624b11bacbf660b10"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-only",
+      "responseId": "resp_0b56fa903289a229016a67bf394fb881998a1f68609998e9c4",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 398
+      },
+      "estimatedUsd": 0.001345,
+      "latencyMs": 1119,
+      "rawOutputSha256": "0b05d0eb4395a488dce2d7b8e62baab2dfc47543b9e97a61b751bcb7f6f9800b"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-plus-grounding",
+      "responseId": "resp_0d9574e9c4b7bcfe016a67bf3a75548198a90d8be03c36b650",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1077,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1025
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1104
+      },
+      "estimatedUsd": 0.00079125,
+      "latencyMs": 923,
+      "rawOutputSha256": "fc3ca6ad038166d9cd095fb6a28b9e7975ee049aa75d7f44ed92dcd8d3017bbb"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/grounding-only",
+      "responseId": "resp_016cb6e2ee82eb2e016a67bf3a83dc819bab0f8385fbc053ae",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 780,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 807
+      },
+      "estimatedUsd": 0.002355,
+      "latencyMs": 1224,
+      "rawOutputSha256": "75c93f9baa9f8f99cb56dd2ea9a5f4f0f4ee6101f2b9a5c2884204dbf7747148"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-only",
+      "responseId": "resp_0defe9708c151b42016a67bf3bb04c819b9fd74db6dac5f56f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.0011425,
+      "latencyMs": 1000,
+      "rawOutputSha256": "162c22f13b349170282a67ca830479c3ab9bdd5c246da8847e3eb9602ab5bad0"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-plus-grounding",
+      "responseId": "resp_0dd924c72eb10c23016a67bf3bb284819b858f652ea48e2e89",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1074,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1092
+      },
+      "estimatedUsd": 0.002955,
+      "latencyMs": 1196,
+      "rawOutputSha256": "3c3eeaf75b600452370e78a739d4d431ba57064c98163b837081438f2c78873e"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/grounding-only",
+      "responseId": "resp_0cd833d2b0939440016a67bf3ce65c819bba057f9d0dea1b48",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 777,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 795
+      },
+      "estimatedUsd": 0.0022125,
+      "latencyMs": 923,
+      "rawOutputSha256": "3c3eeaf75b600452370e78a739d4d431ba57064c98163b837081438f2c78873e"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-only",
+      "responseId": "resp_06bb574fc913a4c5016a67bf3ce3e8819a9b4ba822c2894a12",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 383
+      },
+      "estimatedUsd": 0.0011575,
+      "latencyMs": 1075,
+      "rawOutputSha256": "6e33072acb074d489d6d31794e02ed7c874e350e0c9d69eaa92ad1527129276a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-plus-grounding",
+      "responseId": "resp_0fa21b3a8541acf5016a67bf3df8b0819baf2f8384ccd8bc3e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1061,
+        "input_tokens_details": {
+          "cache_write_tokens": 1058,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1078
+      },
+      "estimatedUsd": 0.00356875,
+      "latencyMs": 887,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/grounding-only",
+      "responseId": "resp_0eb5557050f79650016a67bf3dfa808199987d3993b65893b9",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 764,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 781
+      },
+      "estimatedUsd": 0.002165,
+      "latencyMs": 887,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-only",
+      "responseId": "resp_04d5282ca786697d016a67bf3ee048819baea52a3121ebaa67",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.00113,
+      "latencyMs": 1065,
+      "rawOutputSha256": "4fa4c8e85fcec46fdf1c47a79beae825dd532385e6e9270997f377d80b2ef697"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-plus-grounding",
+      "responseId": "resp_043933c72946581b016a67bf3edec4819882c6b2009d533c18",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1062,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1076
+      },
+      "estimatedUsd": 0.002865,
+      "latencyMs": 1057,
+      "rawOutputSha256": "4fa4c8e85fcec46fdf1c47a79beae825dd532385e6e9270997f377d80b2ef697"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/grounding-only",
+      "responseId": "resp_019f939c84187525016a67bf4051ec8198a642b2a3f159bff2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 765,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 779
+      },
+      "estimatedUsd": 0.0021225,
+      "latencyMs": 1527,
+      "rawOutputSha256": "4fa4c8e85fcec46fdf1c47a79beae825dd532385e6e9270997f377d80b2ef697"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-only",
+      "responseId": "resp_0a06020704a30f28016a67bf3ff0b88198a04abbd873c0a2fb",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.00113,
+      "latencyMs": 1740,
+      "rawOutputSha256": "71fb75bf5fcc0e8b3636105dc27bb7b2dca95e74307b096680d0dcc6671b3865"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-plus-grounding",
+      "responseId": "resp_04cd341ea4225cd5016a67bf41b810819b83860a396b7cc316",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 22,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 696
+      },
+      "estimatedUsd": 0.002015,
+      "latencyMs": 976,
+      "rawOutputSha256": "3522e67ce72bcb303645530a065d780fa303860630b3a4c07d6ca105c11d4811"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/grounding-only",
+      "responseId": "resp_0290f5a33eeef3a7016a67bf41af8081988f52496609985f23",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 22,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 399
+      },
+      "estimatedUsd": 0.0012725,
+      "latencyMs": 1010,
+      "rawOutputSha256": "3522e67ce72bcb303645530a065d780fa303860630b3a4c07d6ca105c11d4811"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-only",
+      "responseId": "resp_0826f782157f293b016a67bf42b3c8819bb4dcaf45654077b8",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 29,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 397
+      },
+      "estimatedUsd": 0.001355,
+      "latencyMs": 1109,
+      "rawOutputSha256": "057b6d31341eca604142496a9a3d287b6370628be7a00342f4385ee3e0f2f481"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-plus-grounding",
+      "responseId": "resp_0befe47c4409a924016a67bf42b4dc81998d785c0ca4806dd4",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 693
+      },
+      "estimatedUsd": 0.00197,
+      "latencyMs": 883,
+      "rawOutputSha256": "5fa497f3f8106c6f31d32a111886afafa13772704cab1817afa1cace02f54dd1"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/grounding-only",
+      "responseId": "resp_0808939afbd696d1016a67bf43dce081988a9821c5465c1b0f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 396
+      },
+      "estimatedUsd": 0.0012275,
+      "latencyMs": 1233,
+      "rawOutputSha256": "eb476af13299bba6bf03ef2fc81f45f3f2fe4c5eb0baf9e0779c718d69891938"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-only",
+      "responseId": "resp_0b95b2a4a161fc9d016a67bf43d454819b96dbb1d6c886b4d6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 34,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 401
+      },
+      "estimatedUsd": 0.0014275,
+      "latencyMs": 1209,
+      "rawOutputSha256": "7239b036c9900a563a807c70ea6f2a8f3ad4c95196cf2b24c6c04f35e2bba7c1"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-plus-grounding",
+      "responseId": "resp_0e92f5c30dcfa46f016a67bf451038819aa1f4d43dcf675e3e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 592,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 619
+      },
+      "estimatedUsd": 0.001885,
+      "latencyMs": 1136,
+      "rawOutputSha256": "37ef39016a208daaa941288e460ec85c9c1c7fded730f6768e232b9cb9bcf20a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/grounding-only",
+      "responseId": "resp_0c578606cf05e54e016a67bf450ff8819bba2019e5f7e97e5b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 295,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 322
+      },
+      "estimatedUsd": 0.0011425,
+      "latencyMs": 1068,
+      "rawOutputSha256": "37ef39016a208daaa941288e460ec85c9c1c7fded730f6768e232b9cb9bcf20a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-only",
+      "responseId": "resp_0f0a60f53f6546bf016a67bf4639e88199ba55aa067eb1f2a0",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.0011475,
+      "latencyMs": 1132,
+      "rawOutputSha256": "19e5b23bbfe73715f941bcbbe902eef9c924ba2d6e268de396d0e5037f8e731b"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-plus-grounding",
+      "responseId": "resp_030691d7d5d26cb7016a67bf464fc081998b09a1a318f6559e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 594,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 612
+      },
+      "estimatedUsd": 0.001755,
+      "latencyMs": 1388,
+      "rawOutputSha256": "753f86bf4602c0d28bab029088ca178bb2f2e9959e70868f46aaf03ce6dd0d1a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/grounding-only",
+      "responseId": "resp_0750b1c241633148016a67bf47948081988482829d8d19b76f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 297,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 315
+      },
+      "estimatedUsd": 0.0010125,
+      "latencyMs": 811,
+      "rawOutputSha256": "753f86bf4602c0d28bab029088ca178bb2f2e9959e70868f46aaf03ce6dd0d1a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-only",
+      "responseId": "resp_0c73f9960d47cb18016a67bf479b388199960f661f4928a1c6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 392
+      },
+      "estimatedUsd": 0.0012675,
+      "latencyMs": 1093,
+      "rawOutputSha256": "1e93c437f100f8ac32ef1fa3498cf8e8f4aba9d88b7db79118d5eb3f79061fd8"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-plus-grounding",
+      "responseId": "resp_0dec3bd9df75214c016a67bf49e7d8819bbfc99a1e98d40cb2",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 991,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1014
+      },
+      "estimatedUsd": 0.0028225,
+      "latencyMs": 2216,
+      "rawOutputSha256": "aab71f12b87d6c2de6eecc920195891341458434364ed59a0fac4c731b189e69"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/grounding-only",
+      "responseId": "resp_04b238105c11bcbb016a67bf48bee08199955997f4410af1a5",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 694,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 717
+      },
+      "estimatedUsd": 0.00208,
+      "latencyMs": 1078,
+      "rawOutputSha256": "aab71f12b87d6c2de6eecc920195891341458434364ed59a0fac4c731b189e69"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-only",
+      "responseId": "resp_0e9beb76ce6c71b9016a67bf4aea4481989bb968fd86bde8d7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 385
+      },
+      "estimatedUsd": 0.0011875,
+      "latencyMs": 1080,
+      "rawOutputSha256": "1760697eb73e58cde8936922849298389b6c393ec24bbd982ac84c7fb4682702"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-plus-grounding",
+      "responseId": "resp_09e62968abe36f71016a67bf4aebfc819ba28bdb51447429f6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1007
+      },
+      "estimatedUsd": 0.0027425,
+      "latencyMs": 964,
+      "rawOutputSha256": "1760697eb73e58cde8936922849298389b6c393ec24bbd982ac84c7fb4682702"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/grounding-only",
+      "responseId": "resp_08213527eb16c1a3016a67bf4c00a8819b9b66f9d8abd1929d",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 710
+      },
+      "estimatedUsd": 0.002,
+      "latencyMs": 1086,
+      "rawOutputSha256": "1760697eb73e58cde8936922849298389b6c393ec24bbd982ac84c7fb4682702"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-only",
+      "responseId": "resp_03655fe331eb4eeb016a67bf4c02d4819a9c058f194d3788d7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 385
+      },
+      "estimatedUsd": 0.001175,
+      "latencyMs": 961,
+      "rawOutputSha256": "39cc280018911ae5f39f958f625651a5ae5c3c61278dc6050d9cc96abf787705"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-plus-grounding",
+      "responseId": "resp_0d1b6c453ecbb86f016a67bf4d1e708199aa0c00e8c7da4cab",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 573
+      },
+      "estimatedUsd": 0.0016075,
+      "latencyMs": 1115,
+      "rawOutputSha256": "986f12b5b317b7b5c4efe40dbcfb3837e62bd0f229c257de1267cdf25a85b447"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/grounding-only",
+      "responseId": "resp_096cf900c030c0f8016a67bf4d1c24819aaf91e1e4fa765c32",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 276
+      },
+      "estimatedUsd": 0.000865,
+      "latencyMs": 958,
+      "rawOutputSha256": "986f12b5b317b7b5c4efe40dbcfb3837e62bd0f229c257de1267cdf25a85b447"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-only",
+      "responseId": "resp_042b9a94c795cd26016a67bf4e3fa88198a078ef54d4a49abc",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.00113,
+      "latencyMs": 884,
+      "rawOutputSha256": "37b714bd7f3ab357c8ff281f4f6e8d73b3247e72873c581e56dbb7c45cbc6b28"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-plus-grounding",
+      "responseId": "resp_0e31851b438382d0016a67bf4e3d2881988ab8b4bc4873f80b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 573
+      },
+      "estimatedUsd": 0.0016075,
+      "latencyMs": 974,
+      "rawOutputSha256": "37b714bd7f3ab357c8ff281f4f6e8d73b3247e72873c581e56dbb7c45cbc6b28"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/grounding-only",
+      "responseId": "resp_055d0ce0684fcde2016a67bf4f37fc81988d51025e6985e6db",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 14,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 276
+      },
+      "estimatedUsd": 0.000865,
+      "latencyMs": 778,
+      "rawOutputSha256": "37b714bd7f3ab357c8ff281f4f6e8d73b3247e72873c581e56dbb7c45cbc6b28"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-only",
+      "responseId": "resp_099c1d7c78479242016a67bf4f38d0819b8cb8df876a213908",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 388
+      },
+      "estimatedUsd": 0.0012325,
+      "latencyMs": 1064,
+      "rawOutputSha256": "a572446d27d5e9bd19fbde2f3c0aa584d3f2badd982189efa690127ffbc3c0ae"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-plus-grounding",
+      "responseId": "resp_0ad4e36b7eb767a9016a67bf504f00819b9e87c5de4488f0f4",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 884,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 902
+      },
+      "estimatedUsd": 0.00248,
+      "latencyMs": 958,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/grounding-only",
+      "responseId": "resp_0f0766b608adba53016a67bf5048f48198ba570246bfff759c",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 587,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 605
+      },
+      "estimatedUsd": 0.0017375,
+      "latencyMs": 840,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-only",
+      "responseId": "resp_075d196a7a0583ef016a67bf5146a881989f85753c7da98e37",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 387
+      },
+      "estimatedUsd": 0.0012175,
+      "latencyMs": 1231,
+      "rawOutputSha256": "cf17b012dc1a3efb89f8ae93a4e31c4c9d6a6a584d34cc26df4cae3c9f52830a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-plus-grounding",
+      "responseId": "resp_08d5647ab91690dc016a67bf5141f0819aa2b2953e5bbd7b9b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 883,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 903
+      },
+      "estimatedUsd": 0.0025075,
+      "latencyMs": 1111,
+      "rawOutputSha256": "cf17b012dc1a3efb89f8ae93a4e31c4c9d6a6a584d34cc26df4cae3c9f52830a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/grounding-only",
+      "responseId": "resp_0895055513062e6d016a67bf527eb8819bac43345375be3e40",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 586,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 606
+      },
+      "estimatedUsd": 0.001765,
+      "latencyMs": 912,
+      "rawOutputSha256": "cf17b012dc1a3efb89f8ae93a4e31c4c9d6a6a584d34cc26df4cae3c9f52830a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-only",
+      "responseId": "resp_0bdbc6e6ba72f5c1016a67bf527c84819a83eba480d4233000",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 398
+      },
+      "estimatedUsd": 0.001345,
+      "latencyMs": 1120,
+      "rawOutputSha256": "3a4ba5d60d8bd29ccae6c247f919c3a54cd039327d6d2314fbf99de359416f50"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-plus-grounding",
+      "responseId": "resp_0bdb96374992f503016a67bf539d5c819b88149e964c3fdc86",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 653,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 681
+      },
+      "estimatedUsd": 0.0020525,
+      "latencyMs": 832,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/grounding-only",
+      "responseId": "resp_0dfa0178a5a7111f016a67bf53994c8199814e1fc98fe340fa",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 356,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.00131,
+      "latencyMs": 845,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-only",
+      "responseId": "resp_0ad49fbad70adc6a016a67bf54796c819bb17294c6e4321ba7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 385
+      },
+      "estimatedUsd": 0.0011625,
+      "latencyMs": 1160,
+      "rawOutputSha256": "4fc5fa4367adf5d671f36647483094920a174a9e10a32538442aafeb73c0946c"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-plus-grounding",
+      "responseId": "resp_0446e72cb2344fa2016a67bf5479c881999a27097b40872b4b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 652,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 668
+      },
+      "estimatedUsd": 0.00187,
+      "latencyMs": 1181,
+      "rawOutputSha256": "4fc5fa4367adf5d671f36647483094920a174a9e10a32538442aafeb73c0946c"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/grounding-only",
+      "responseId": "resp_09a0bec763dae554016a67bf55cf2c819abe092e6d5ed671fb",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 355,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 376
+      },
+      "estimatedUsd": 0.0012025,
+      "latencyMs": 1429,
+      "rawOutputSha256": "0e563cdddb6681902792286c59978e32cfce61d418efb2cfdf083d2c67276ae5"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "line-push",
+      "responseId": "resp_00ef6f47184ee919016a67bf55a91c81998da414ca7aa82f09",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27328,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27325
+        },
+        "output_tokens": 99,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27427
+      },
+      "estimatedUsd": 0.00832375,
+      "latencyMs": 1555,
+      "rawOutputSha256": "6e257e58ab4714382eb299dff2f6952b7262d83fe9d1bdaf177a892b57135980"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "scatter-push",
+      "responseId": "resp_0e62aed47a1a735e016a67bf573ec48199bab2de37b1d73eb6",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27334,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27331
+        },
+        "output_tokens": 131,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27465
+      },
+      "estimatedUsd": 0.00880525,
+      "latencyMs": 1804,
+      "rawOutputSha256": "1e322895dbd9b68dfb33eb81f61c9ceb77f12bb906d76eff3470b25de33414ac"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "bubble-static",
+      "responseId": "resp_0a0724ba921189f3016a67bf57412c8198a75370793cb71a3a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27279,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27276
+        },
+        "output_tokens": 177,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27456
+      },
+      "estimatedUsd": 0.0094815,
+      "latencyMs": 2389,
+      "rawOutputSha256": "ad6bb8e6808f5175b6503a35aca24316c97e4fd9cf7c61de2e0fc77081528fa5"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "gauge-static",
+      "responseId": "resp_0a9281ec19ac7a2f016a67bf59b02081989350eecbaec0bee0",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27281,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27278
+        },
+        "output_tokens": 131,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27412
+      },
+      "estimatedUsd": 0.008792,
+      "latencyMs": 2019,
+      "rawOutputSha256": "580455e5d7856fb4dc7b14e01885d94c43ff64b6c447e1babee67a219d17219a"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "symbol-map-static",
+      "responseId": "resp_0d0d6c74f2f961c4016a67bf59b5f4819886d7f09e14b614a3",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27294,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27291
+        },
+        "output_tokens": 164,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27458
+      },
+      "estimatedUsd": 0.00929025,
+      "latencyMs": 2506,
+      "rawOutputSha256": "dbab117f310c4763060d9400803cafb23e21318083065103c6f8914640819596"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "galton-static",
+      "responseId": "resp_0de8be496b19c521016a67bf5c2690819a926f6759c656508b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27260,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27257
+        },
+        "output_tokens": 66,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27326
+      },
+      "estimatedUsd": 0.00781175,
+      "latencyMs": 3080,
+      "rawOutputSha256": "f0be851cfd0530c242a17a7798513abfadb5254721a66eb4f91f7680770b97b4"
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "resolvedModel": "gpt-5.6-terra",
+      "suite": "first-try",
+      "fixtureId": "unit-pile-push",
+      "responseId": "resp_09588fabf733b433016a67bf5c29908198be5d5abc2327b54b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27325,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27322
+        },
+        "output_tokens": 64,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27389
+      },
+      "estimatedUsd": 0.007798,
+      "latencyMs": 1236,
+      "rawOutputSha256": "8a53ec482310cbcd7c98b58fca71475bc9c5cd8ac356a1d5b8b64a6e1f670410"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-only",
+      "responseId": "resp_04d2c30b32710111016a67bf5f35d081988ecfc4c4d7956952",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 374,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 397
+      },
+      "estimatedUsd": 0.000512,
+      "latencyMs": 622,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/png-plus-grounding",
+      "responseId": "resp_09a6f35f7bdcea65016a67bf5f3eec819ab9af0c131dd1ada3",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 996,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1019
+      },
+      "estimatedUsd": 0.001134,
+      "latencyMs": 704,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/highest/grounding-only",
+      "responseId": "resp_08679d56ba695fb5016a67bf5fed9c8198bccec8494db25143",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 699,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 722
+      },
+      "estimatedUsd": 0.000837,
+      "latencyMs": 595,
+      "rawOutputSha256": "e8097e8a1fab95b2e2feeb201aa95be0437944be071961969ffda4f2e85982c3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-only",
+      "responseId": "resp_096782cec8bec4b2016a67bf5fef20819bb6365d91e7b4b65c",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.000457,
+      "latencyMs": 738,
+      "rawOutputSha256": "139191d99676236271ad7f49706a7bb8bfd33648dc4662402beed84cde5397af"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/png-plus-grounding",
+      "responseId": "resp_0fb791353a673253016a67bf60bbc881998f379928b90c3d60",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1005
+      },
+      "estimatedUsd": 0.001085,
+      "latencyMs": 754,
+      "rawOutputSha256": "0f68b1bf58d9ad62e6fef8b78533bc3c7a29a4abd9c7f842c105da58f45e9b86"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "regional-revenue/count/grounding-only",
+      "responseId": "resp_03361d7162290fea016a67bf60b4c4819abe3635267e25d782",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 707
+      },
+      "estimatedUsd": 0.000782,
+      "latencyMs": 581,
+      "rawOutputSha256": "139191d99676236271ad7f49706a7bb8bfd33648dc4662402beed84cde5397af"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-only",
+      "responseId": "resp_0e7178422c8cb677016a67bf61a86c819ab137610a5e7dc683",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.000459,
+      "latencyMs": 1216,
+      "rawOutputSha256": "e2fecba5f95c02aae27d4e5d5644998931ac2a3061172afd22ba353217703c8f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/png-plus-grounding",
+      "responseId": "resp_0a2869c8ba16365a016a67bf61751481989cdd5107b158d053",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1104,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1052
+        },
+        "output_tokens": 22,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1126
+      },
+      "estimatedUsd": 0.0002892,
+      "latencyMs": 1041,
+      "rawOutputSha256": "c0892d79ea92a2086eab960e4fd2936f64052d2371dd77c2b79d14b64ca6dd7e"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/last/grounding-only",
+      "responseId": "resp_033b7d152a76cd4a016a67bf62aaa0819ba4f9954bf1b59a74",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 807,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 834
+      },
+      "estimatedUsd": 0.000969,
+      "latencyMs": 1002,
+      "rawOutputSha256": "5783723d21b573997f5fce50ff0f31b115da63de8ad395fd96c032f59e0f06d5"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-only",
+      "responseId": "resp_0c174b9fc7861aea016a67bf653120819b9c94876a93c16d40",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 372,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 39,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 411
+      },
+      "estimatedUsd": 0.000606,
+      "latencyMs": 4700,
+      "rawOutputSha256": "de972e53523d89cdae1c0a8509e442a3bbdfc8e3349e495b0218aab744c63fd4"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/png-plus-grounding",
+      "responseId": "resp_0c477b7487b299ce016a67bf676750819a96ea7d7601fad48f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1107,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1055
+        },
+        "output_tokens": 38,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1145
+      },
+      "estimatedUsd": 0.0003855,
+      "latencyMs": 1101,
+      "rawOutputSha256": "e63981d0befbc36e4435c42e226f7c8fae71ca7f61d19d7624b11bacbf660b10"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "weekly-users/direction/grounding-only",
+      "responseId": "resp_00f11b12d1dd91f0016a67bf676244819ba0cd78e1ef382d64",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 810,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 39,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 849
+      },
+      "estimatedUsd": 0.001044,
+      "latencyMs": 1105,
+      "rawOutputSha256": "daf7ef1c98d9cbc68403e9230501fb1ffde6e00d528d575b1f8d5c76583f2f5f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-only",
+      "responseId": "resp_04befbc54166da88016a67bf687ffc819aabcba6749d619364",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 30,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 400
+      },
+      "estimatedUsd": 0.00055,
+      "latencyMs": 917,
+      "rawOutputSha256": "6c352dbb0ddb8f530853ef2e9e67374002c6ef8b6d1c8dbc5345ef315dbd87dd"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/png-plus-grounding",
+      "responseId": "resp_0ea5fccef0a4f5e9016a67bf68829881998e2a9e13e410d908",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1077,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 1025
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1105
+      },
+      "estimatedUsd": 0.0003225,
+      "latencyMs": 1107,
+      "rawOutputSha256": "f3f5d9ba945975d3f6c2276f3f6996a6ffcef411030dba19eeb47d91aaf7638a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/largest/grounding-only",
+      "responseId": "resp_03a5fb29c17be29b016a67bf699878819b8006011d3740e464",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 780,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 808
+      },
+      "estimatedUsd": 0.000948,
+      "latencyMs": 699,
+      "rawOutputSha256": "f3f5d9ba945975d3f6c2276f3f6996a6ffcef411030dba19eeb47d91aaf7638a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-only",
+      "responseId": "resp_03ad2d5dd0028bd4016a67bf699c988199bddf9a6ffc1d366f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.000457,
+      "latencyMs": 637,
+      "rawOutputSha256": "162c22f13b349170282a67ca830479c3ab9bdd5c246da8847e3eb9602ab5bad0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/png-plus-grounding",
+      "responseId": "resp_0a829842569303f6016a67bf6a51ac8199a70e437ec1d3a43e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1074,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1089
+      },
+      "estimatedUsd": 0.001164,
+      "latencyMs": 730,
+      "rawOutputSha256": "162c22f13b349170282a67ca830479c3ab9bdd5c246da8847e3eb9602ab5bad0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "payload-latency/count/grounding-only",
+      "responseId": "resp_0ea65657c7b87799016a67bf6a4d4c8198bf22e31e44aaf9f9",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 777,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 792
+      },
+      "estimatedUsd": 0.000867,
+      "latencyMs": 644,
+      "rawOutputSha256": "162c22f13b349170282a67ca830479c3ab9bdd5c246da8847e3eb9602ab5bad0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-only",
+      "responseId": "resp_08f73142ffab8c65016a67bf6b114c819aa05c30062ce8623a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 383
+      },
+      "estimatedUsd": 0.000463,
+      "latencyMs": 1077,
+      "rawOutputSha256": "6e33072acb074d489d6d31794e02ed7c874e350e0c9d69eaa92ad1527129276a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/png-plus-grounding",
+      "responseId": "resp_0e366a5438c108f3016a67bf6b0f0c819a9877b7444850edaf",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1061,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1078
+      },
+      "estimatedUsd": 0.001163,
+      "latencyMs": 787,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/categories/grounding-only",
+      "responseId": "resp_07c160426891dddc016a67bf6c1e00819a9b788354b900c65e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 764,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 17,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 781
+      },
+      "estimatedUsd": 0.000866,
+      "latencyMs": 725,
+      "rawOutputSha256": "31e26555e6b8ab1d563881fa9dc075cee1a0eedd745a8e796133c097084261a0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-only",
+      "responseId": "resp_0253d508ec0ff718016a67bf6c2600819a80d0df5d1cff2379",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 392
+      },
+      "estimatedUsd": 0.000512,
+      "latencyMs": 946,
+      "rawOutputSha256": "1c44bb694fa4d64adc6868677a74cb932ae6f3572416f8b3dfe2e899b516b23a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/png-plus-grounding",
+      "responseId": "resp_06baea74ffd32bf5016a67bf6d13788199af720141da1c2e57",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1062,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1083
+      },
+      "estimatedUsd": 0.001188,
+      "latencyMs": 713,
+      "rawOutputSha256": "7295c9d5d6f4ea0ac2c58c12d63f39e12cb5f365069d19d9781948860e8a936b"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "service-latency/max/grounding-only",
+      "responseId": "resp_02f2d719cd8fe665016a67bf6d16ec819a89dd21a54e71299b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 765,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 786
+      },
+      "estimatedUsd": 0.000891,
+      "latencyMs": 731,
+      "rawOutputSha256": "7295c9d5d6f4ea0ac2c58c12d63f39e12cb5f365069d19d9781948860e8a936b"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-only",
+      "responseId": "resp_07a1155e3ca929c0016a67bf6ddef0819aae05781f7e85da87",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 387
+      },
+      "estimatedUsd": 0.000482,
+      "latencyMs": 903,
+      "rawOutputSha256": "8ce76a2cc90fce86f33856eb397f5d7929bd4c1c263686f1bda00c74e84c8b7f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/png-plus-grounding",
+      "responseId": "resp_06f9fec3c8cd78f8016a67bf6dd2a8819a9d31766e3ec3e639",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 700
+      },
+      "estimatedUsd": 0.00083,
+      "latencyMs": 777,
+      "rawOutputSha256": "c713a07fb2312f9fff73682b5b1eb18f75e63d98269a17a174e5264d66821f61"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/largest/grounding-only",
+      "responseId": "resp_097f0330ecda2bc7016a67bf6eb7a0819b91150a5888ff1497",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 26,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 403
+      },
+      "estimatedUsd": 0.000533,
+      "latencyMs": 810,
+      "rawOutputSha256": "c713a07fb2312f9fff73682b5b1eb18f75e63d98269a17a174e5264d66821f61"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-only",
+      "responseId": "resp_0b39e65cfdca5a8d016a67bf6eb9048198a3d6dfb973e433c0",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 29,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 397
+      },
+      "estimatedUsd": 0.000542,
+      "latencyMs": 866,
+      "rawOutputSha256": "17b7ef7fa005ffa1bc8f43ac1dd7c594464c0edcfe4795a88f8b26ff287fab63"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/png-plus-grounding",
+      "responseId": "resp_0d0cb513fcd7136e016a67bf6f98a4819882136cb3d38a85cf",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 674,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 693
+      },
+      "estimatedUsd": 0.000788,
+      "latencyMs": 671,
+      "rawOutputSha256": "eb476af13299bba6bf03ef2fc81f45f3f2fe4c5eb0baf9e0779c718d69891938"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "request-flow/failed/grounding-only",
+      "responseId": "resp_0cb10cc56403b6a3016a67bf6f97f48198b0698164777a17c9",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 377,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 396
+      },
+      "estimatedUsd": 0.000491,
+      "latencyMs": 798,
+      "rawOutputSha256": "5fa497f3f8106c6f31d32a111886afafa13772704cab1817afa1cace02f54dd1"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-only",
+      "responseId": "resp_05f56c3fd949fb0c016a67bf7067508199bb1b52c047fbc876",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 33,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 400
+      },
+      "estimatedUsd": 0.000565,
+      "latencyMs": 1143,
+      "rawOutputSha256": "b6c51e96df8e9e148c15fe12c110aea6b0571cc98f717662c3f8b67f573bd791"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/png-plus-grounding",
+      "responseId": "resp_0c053598ae3d6522016a67bf706b948198a8ba85a75822e21e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 592,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 619
+      },
+      "estimatedUsd": 0.000754,
+      "latencyMs": 700,
+      "rawOutputSha256": "37ef39016a208daaa941288e460ec85c9c1c7fded730f6768e232b9cb9bcf20a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/largest/grounding-only",
+      "responseId": "resp_0c9bf16e89cb19cc016a67bf718b1c819bb0e201792715a1ba",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 295,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 27,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 322
+      },
+      "estimatedUsd": 0.000457,
+      "latencyMs": 616,
+      "rawOutputSha256": "37ef39016a208daaa941288e460ec85c9c1c7fded730f6768e232b9cb9bcf20a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-only",
+      "responseId": "resp_0cd3fc2f524eb8c8016a67bf718b648199a990edbe398aabed",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 25,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 394
+      },
+      "estimatedUsd": 0.000519,
+      "latencyMs": 816,
+      "rawOutputSha256": "138c4a6fd13c9348524e7671ab23f8021a63d5409f413df8545c2787f8f94dc3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/png-plus-grounding",
+      "responseId": "resp_0bd90df587946a6d016a67bf7272c8819ab3bc8e4c7191eee9",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 594,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 617
+      },
+      "estimatedUsd": 0.000732,
+      "latencyMs": 851,
+      "rawOutputSha256": "5131dbca7f7ac689da5a1c1b58bd92d072b459dc8826474b2af4c5c203d401d3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "storage-tree/backups/grounding-only",
+      "responseId": "resp_0c4fa9d7c7e6de03016a67bf728a98819bb5d43d3cc67aa0fa",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 297,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 320
+      },
+      "estimatedUsd": 0.000435,
+      "latencyMs": 1330,
+      "rawOutputSha256": "5131dbca7f7ac689da5a1c1b58bd92d072b459dc8826474b2af4c5c203d401d3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-only",
+      "responseId": "resp_0b110fa28fb2aee1016a67bf73b5a0819b9d167c1ba825e505",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 389
+      },
+      "estimatedUsd": 0.000489,
+      "latencyMs": 1112,
+      "rawOutputSha256": "51f69ab11ed275154b484b6933fadd14bb4eb722ce8ea58bd175466d785d3173"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/png-plus-grounding",
+      "responseId": "resp_036eb6dfef4856c4016a67bf73b7b4819bb5be7922ef43bd53",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 991,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1015
+      },
+      "estimatedUsd": 0.001135,
+      "latencyMs": 1182,
+      "rawOutputSha256": "0bfc9b74a5ecae617f08db8725ab35bc9ff9714491e643cb6710c85538500c7d"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/largest/grounding-only",
+      "responseId": "resp_0cdd93331237d07e016a67bf74e19c819b998afff496d7ff47",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 694,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 718
+      },
+      "estimatedUsd": 0.000838,
+      "latencyMs": 608,
+      "rawOutputSha256": "0bfc9b74a5ecae617f08db8725ab35bc9ff9714491e643cb6710c85538500c7d"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-only",
+      "responseId": "resp_0e9bf643d5fc18b5016a67bf74e998819bba8d28af7c3b617a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.000457,
+      "latencyMs": 1161,
+      "rawOutputSha256": "57713459e8dc9d76ffd769bdeab211636e28289bd04732040ff557176131a96f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/png-plus-grounding",
+      "responseId": "resp_0c9a18fcc4c0cd63016a67bf761454819bb2849b2bfe683e88",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 989,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1004
+      },
+      "estimatedUsd": 0.001079,
+      "latencyMs": 582,
+      "rawOutputSha256": "57713459e8dc9d76ffd769bdeab211636e28289bd04732040ff557176131a96f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "incident-map/count/grounding-only",
+      "responseId": "resp_080cd85b33fba650016a67bf7611a48198942dfea556684f2a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 710
+      },
+      "estimatedUsd": 0.0008,
+      "latencyMs": 753,
+      "rawOutputSha256": "1760697eb73e58cde8936922849298389b6c393ec24bbd982ac84c7fb4682702"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-only",
+      "responseId": "resp_0a5e42b6df7f48e0016a67bf76f8bc819ba7e571a93690ded0",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 386
+      },
+      "estimatedUsd": 0.000476,
+      "latencyMs": 1303,
+      "rawOutputSha256": "82a0f474f977156cdc2cb38abe0992d98f14cdf2d136c4f820cbf9bcc61373b1"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/png-plus-grounding",
+      "responseId": "resp_0bacb18819097bfc016a67bf76df148199be3958c230ccfb6d",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 580
+      },
+      "estimatedUsd": 0.000685,
+      "latencyMs": 1011,
+      "rawOutputSha256": "65587e2cd4ae5cab44b4f6f934a0efc040ed33c3a514fb306ebae4207950e5e8"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/value/grounding-only",
+      "responseId": "resp_0fda35604f9029cb016a67bf783304819a8900172b30b4da68",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 282
+      },
+      "estimatedUsd": 0.000382,
+      "latencyMs": 1236,
+      "rawOutputSha256": "958f838b0bece7c1fc0719d53f1eed638c12159b3846f67c669f4ef9bb62a74a"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-only",
+      "responseId": "resp_02c800f8f5881528016a67bf78264c8198809b92de5b0e4c33",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 368,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 389
+      },
+      "estimatedUsd": 0.000494,
+      "latencyMs": 834,
+      "rawOutputSha256": "d0c9d91e3bc79bfd1d1618e809ea049706a9ad55d3f130f3bf759deeb094e3b0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/png-plus-grounding",
+      "responseId": "resp_0d64b894ae7dfcfa016a67bf7962388199bae02139b1ae3a5a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 559,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 23,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 582
+      },
+      "estimatedUsd": 0.000697,
+      "latencyMs": 947,
+      "rawOutputSha256": "9242d26cbe64ba1e16898ad431b3dc65bbacdac88bd38a0a1aa8a45832381946"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "sla-gauge/maximum/grounding-only",
+      "responseId": "resp_0567596cf618a09f016a67bf796084819886f5a70b2f3b55b8",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 262,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 283
+      },
+      "estimatedUsd": 0.000388,
+      "latencyMs": 794,
+      "rawOutputSha256": "d0c9d91e3bc79bfd1d1618e809ea049706a9ad55d3f130f3bf759deeb094e3b0"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-only",
+      "responseId": "resp_092397a42200dc4c016a67bf7a57748198b921719f9ae30ba7",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 15,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 382
+      },
+      "estimatedUsd": 0.000457,
+      "latencyMs": 932,
+      "rawOutputSha256": "efcba35e14732082a5e790b33de76bcff89418a04ba5a31c7d7002bbfac85d52"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/png-plus-grounding",
+      "responseId": "resp_03d45a8af3d51b2d016a67bf7a5c3481988cf85f48780fb6d9",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 884,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 902
+      },
+      "estimatedUsd": 0.000992,
+      "latencyMs": 959,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/purchases/grounding-only",
+      "responseId": "resp_06f3969856f53018016a67bf7b4b7c819aa34716d2ac104f4b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 587,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 18,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 605
+      },
+      "estimatedUsd": 0.000695,
+      "latencyMs": 710,
+      "rawOutputSha256": "53eb447c645b500ce3cf4152992e02c96d721a682101397aa0e4098ddeaf69b3"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-only",
+      "responseId": "resp_0144ca316b1e75ad016a67bf7b59cc8198b43f345a42870e4a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 367,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 19,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 386
+      },
+      "estimatedUsd": 0.000481,
+      "latencyMs": 894,
+      "rawOutputSha256": "478c4a4c7da2c142e990688964e6e5a62235d8a57a9d8a3ca4e79a7d2b29c929"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/png-plus-grounding",
+      "responseId": "resp_07053cf530abbec0016a67bf7c3a4c819881ea3985aa872f9c",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 883,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 904
+      },
+      "estimatedUsd": 0.001009,
+      "latencyMs": 883,
+      "rawOutputSha256": "c0b02428c60234d33e4d0d347ad3c6741abe7369711de8be4112974e7faf44b4"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "conversion-funnel/stages/grounding-only",
+      "responseId": "resp_0cfc0de5e7be4347016a67bf7c3af8819a9f54ff5fb20217c1",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 586,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 21,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 607
+      },
+      "estimatedUsd": 0.000712,
+      "latencyMs": 974,
+      "rawOutputSha256": "c0b02428c60234d33e4d0d347ad3c6741abe7369711de8be4112974e7faf44b4"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-only",
+      "responseId": "resp_089ded6e7b64a823016a67bf7d30c0819abdd3d437c26b4057",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 370,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 398
+      },
+      "estimatedUsd": 0.000538,
+      "latencyMs": 1142,
+      "rawOutputSha256": "3a4ba5d60d8bd29ccae6c247f919c3a54cd039327d6d2314fbf99de359416f50"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/png-plus-grounding",
+      "responseId": "resp_016aaf09d3f7a906016a67bf7d343c8199ae4ae6342a3e3d0e",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 653,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 681
+      },
+      "estimatedUsd": 0.000821,
+      "latencyMs": 999,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/range/grounding-only",
+      "responseId": "resp_0c14e05f5a8564f6016a67bf7e595881989270dd9f09423d5c",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 356,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 28,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 384
+      },
+      "estimatedUsd": 0.000524,
+      "latencyMs": 982,
+      "rawOutputSha256": "9d816351d2918a194334f4b04295830b941c93a77d064e761547fdc126976a7e"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-only",
+      "responseId": "resp_053341dd91769ace016a67bf7e53448198961b90580016c1ec",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 369,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 389
+      },
+      "estimatedUsd": 0.000489,
+      "latencyMs": 1283,
+      "rawOutputSha256": "470007836843b9cfe29cfc694eb3c9eb62911e9d635043fa066bad769948d069"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/png-plus-grounding",
+      "responseId": "resp_0173c49bc3df8b78016a67bf7fa2f8819b9f62ed9602cada5a",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 652,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 16,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 668
+      },
+      "estimatedUsd": 0.000748,
+      "latencyMs": 890,
+      "rawOutputSha256": "4fc5fa4367adf5d671f36647483094920a174a9e10a32538442aafeb73c0946c"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "grounding",
+      "fixtureId": "galton-values/count/grounding-only",
+      "responseId": "resp_0bfe0b156b25b05a016a67bf7fa1308198beb8f603cc415418",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 355,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 20,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 375
+      },
+      "estimatedUsd": 0.000475,
+      "latencyMs": 823,
+      "rawOutputSha256": "fb94eb55341fccee3343d470b0e548617f76c367224a8e446d7334279a2aefc7"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "line-push",
+      "responseId": "resp_00c0b430128409d4016a67bf808d6c819abb54b0308aeaf7db",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27328,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27325
+        },
+        "output_tokens": 81,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27409
+      },
+      "estimatedUsd": 0.0032215,
+      "latencyMs": 1403,
+      "rawOutputSha256": "e8553d6ce8393ed59002b752cf08b251b03c0ec6843d0c94c1eeebd80979e16f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "scatter-push",
+      "responseId": "resp_0f04539990d3b0fb016a67bf808e58819aa84e284e3f1c0768",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27334,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27331
+        },
+        "output_tokens": 140,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27474
+      },
+      "estimatedUsd": 0.0035761,
+      "latencyMs": 1770,
+      "rawOutputSha256": "0592f943d7c32ddfbdc7dba770b07fffde7b49133ed6101b22db6c5421b3da4f"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "bubble-static",
+      "responseId": "resp_0c4e4def1785da18016a67bf82556c8199bcdd12b7cfc5888d",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27279,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27276
+        },
+        "output_tokens": 127,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27406
+      },
+      "estimatedUsd": 0.0034926,
+      "latencyMs": 1608,
+      "rawOutputSha256": "19d26b70da99222ddc3e79327d029c9c2eea2f5669c9dc86a12e7b668a0253ce"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "gauge-static",
+      "responseId": "resp_0d714957d246fb37016a67bf8253fc81999a468ea6fdc25190",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27281,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27278
+        },
+        "output_tokens": 90,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27371
+      },
+      "estimatedUsd": 0.0032708,
+      "latencyMs": 1260,
+      "rawOutputSha256": "02739cc93a57217400b1df8ec32957027d8b0abe3dc29e5896762633f956ff57"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "symbol-map-static",
+      "responseId": "resp_0fe0dceb80cfb395016a67bf83ee848199bb43f5ed67e0769f",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27294,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27291
+        },
+        "output_tokens": 102,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27396
+      },
+      "estimatedUsd": 0.0033441,
+      "latencyMs": 1249,
+      "rawOutputSha256": "ad24651613cc32bb1d985f9b720d7709628bca2d19c4ffee0240543e78d278c4"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "galton-static",
+      "responseId": "resp_0dbef061e9177fb4016a67bf83f2308199afe41d5944881ce1",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27260,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27257
+        },
+        "output_tokens": 62,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27322
+      },
+      "estimatedUsd": 0.0031007,
+      "latencyMs": 1131,
+      "rawOutputSha256": "991ca987758a3d66c30df0a4dd882b4635a3245c7651c0c03e15f5cc707ab4a9"
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "resolvedModel": "gpt-5.6-luna",
+      "suite": "first-try",
+      "fixtureId": "unit-pile-push",
+      "responseId": "resp_0e508705f3d46413016a67bf8534e8819892b737ac1ba6fe09",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 27325,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 27322
+        },
+        "output_tokens": 125,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27450
+      },
+      "estimatedUsd": 0.0034852,
+      "latencyMs": 2908,
+      "rawOutputSha256": "2bf05605b03998a82ef6fe4990c35825b72ffa55af86832cfbc24535fb6e11ab"
+    }
+  ],
+  "estimatedUsd": 0.55227145,
+  "requestCount": 201
+}

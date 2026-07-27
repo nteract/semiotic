@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-sol",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "xAccessor": "week",
+          "yAccessor": "users"
+        }
+      },
+      "rawOutputSha256": "aa45c1a9bc81bd075f976a9d2867a77f43a85fada4beb75edd44baa972fad878"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "xLabel": "Payload size (KB)",
+          "yLabel": "Response time (ms)",
+          "title": "Response Time by Payload Size",
+          "description": "Scatterplot of response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time rises as payload size increases. The chart supports adding future observations through its ref-based push API.",
+          "accessibleTable": true,
+          "enableHover": true
+        }
+      },
+      "rawOutputSha256": "32a7c58796e0249e71c8382e2c342d55b0ce1b504df188af095c0bed4b3e155a"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "title": "Company Growth and Retention",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customers.",
+          "summary": "Company C has the highest retention and largest customer base, while Company B has the highest growth and lowest retention.",
+          "showLegend": true,
+          "showGrid": true,
+          "tooltip": true,
+          "accessibleTable": true
+        }
+      },
+      "rawOutputSha256": "be7d77551e68201bf41cb20131b61f3473e82e3aed66f223ed47f137efd285c2"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "BigNumber",
+        "props": {
+          "value": 97,
+          "label": "SLA attainment",
+          "format": "number",
+          "suffix": "%",
+          "target": {
+            "value": 99,
+            "label": "target",
+            "format": "number"
+          },
+          "thresholds": [
+            {
+              "at": 0,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 99,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "description": "Current SLA attainment is 97 percent against a target of 99 percent.",
+          "summary": "SLA attainment is 2 percentage points below target."
+        }
+      },
+      "rawOutputSha256": "3fa4c48ad1be59cbf31e4e3733b940b425c8e7a6f24c9d2de292af67732e82b8"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents"
+        }
+      },
+      "rawOutputSha256": "ad24651613cc32bb1d985f9b720d7709628bca2d19c4ffee0240543e78d278c4"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "seed": 42
+        }
+      },
+      "rawOutputSha256": "991ca987758a3d66c30df0a4dd882b4635a3245c7651c0c03e15f5cc707ab4a9"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "unitValue": 1
+        }
+      },
+      "rawOutputSha256": "add8e8477487c817bce0146d71d94720611ed4029bb7f902fc3ab25e9c086bfd"
+    }
+  ]
+}

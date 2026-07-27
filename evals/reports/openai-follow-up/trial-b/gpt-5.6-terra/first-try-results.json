@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-terra",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "title": "Active users by week",
+          "description": "Line chart showing active users increasing from 120 in week 1 to 151 in week 3.",
+          "xLabel": "Week",
+          "yLabel": "Active users",
+          "showPoints": true
+        }
+      },
+      "rawOutputSha256": "6e257e58ab4714382eb299dff2f6952b7262d83fe9d1bdaf177a892b57135980"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "xLabel": "Payload size (KB)",
+          "yLabel": "Response time (ms)",
+          "title": "Response Time by Payload Size",
+          "description": "Scatterplot showing response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time increases as payload size increases. The chart supports additional observations through its ref-based push API."
+        }
+      },
+      "rawOutputSha256": "1e322895dbd9b68dfb33eb81f61c9ceb77f12bb906d76eff3470b25de33414ac"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "sizeRange": [
+            8,
+            32
+          ],
+          "title": "Company Growth and Retention",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customer count.",
+          "summary": "Company B has the highest growth, Company C has the highest retention and the most customers, and Company A falls between them.",
+          "xLabel": "Growth",
+          "yLabel": "Retention",
+          "showLegend": true,
+          "tooltip": true,
+          "width": 600,
+          "height": 400
+        }
+      },
+      "rawOutputSha256": "ad6bb8e6808f5175b6503a35aca24316c97e4fd9cf7c61de2e0fc77081528fa5"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "BigNumber",
+        "props": {
+          "value": 97,
+          "label": "SLA attainment",
+          "format": "number",
+          "suffix": "%",
+          "target": {
+            "value": 99,
+            "label": "target",
+            "format": "number"
+          },
+          "thresholds": [
+            {
+              "at": 0,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 99,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ],
+          "description": "Current SLA attainment is 97%, against a 99% target.",
+          "summary": "SLA attainment is 2 percentage points below the 99% target."
+        }
+      },
+      "rawOutputSha256": "580455e5d7856fb4dc7b14e01885d94c43ff64b6c447e1babee67a219d17219a"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents",
+          "sizeRange": [
+            5,
+            40
+          ],
+          "colorBy": "city",
+          "title": "Incident counts by location",
+          "description": "Proportional symbols map incident counts at three longitude and latitude locations.",
+          "summary": "City B has 31 incidents, City A has 18, and City C has 12.",
+          "showLegend": true
+        }
+      },
+      "rawOutputSha256": "dbab117f310c4763060d9400803cafb23e21318083065103c6f8914640819596"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "seed": 42,
+          "bins": 4
+        }
+      },
+      "rawOutputSha256": "f0be851cfd0530c242a17a7798513abfadb5254721a66eb4f91f7680770b97b4"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "colorBy": "team",
+          "unitValue": 1
+        }
+      },
+      "rawOutputSha256": "8a53ec482310cbcd7c98b58fca71475bc9c5cd8ac356a1d5b8b64a6e1f670410"
+    }
+  ]
+}

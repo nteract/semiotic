@@ -23,6 +23,12 @@ grounding result is mixed — the combined payload improved Sol's abstention,
 tied PNG-only for Terra and Luna, and did not improve answerable reading — and
 is preserved without reinterpretation.
 
+The subsequent
+[`openai-follow-up`](./reports/openai-follow-up/README.md) report adds three
+targeted post-merge trials: 603 requests covering the seven generation fixtures
+that previously failed and all twenty answerable grounding questions. It
+reports only repeated cases and does not replace the complete baseline.
+
 Run `npm run prepare:ai-evals` after an intentional fixture change, then
 `npm run eval:ai` for the local render oracle. Provider result files conform
 to the schemas in each suite and can be scored with

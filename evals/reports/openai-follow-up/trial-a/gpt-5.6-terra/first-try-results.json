@@ -1,0 +1,246 @@
+{
+  "metadata": {
+    "modelId": "gpt-5.6-terra",
+    "clientVersion": "semiotic-openai-eval/1",
+    "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+    "date": "2026-07-27",
+    "context": [
+      "CLAUDE.md",
+      "docs/public/llms.txt"
+    ]
+  },
+  "results": [
+    {
+      "fixtureId": "line-push",
+      "proposal": {
+        "component": "LineChart",
+        "props": {
+          "data": [
+            {
+              "week": 1,
+              "users": 120
+            },
+            {
+              "week": 2,
+              "users": 138
+            },
+            {
+              "week": 3,
+              "users": 151
+            }
+          ],
+          "xAccessor": "week",
+          "yAccessor": "users",
+          "title": "Active Users by Week",
+          "xLabel": "Week",
+          "yLabel": "Active Users",
+          "showPoints": true,
+          "pointRadius": 3
+        }
+      },
+      "rawOutputSha256": "4ab18391e0dc371322b615cefda19cbb07e980ea57d576091ff507ca8e7be82c"
+    },
+    {
+      "fixtureId": "scatter-push",
+      "proposal": {
+        "component": "Scatterplot",
+        "props": {
+          "data": [
+            {
+              "payload_kb": 8,
+              "response_ms": 42
+            },
+            {
+              "payload_kb": 16,
+              "response_ms": 61
+            },
+            {
+              "payload_kb": 32,
+              "response_ms": 95
+            }
+          ],
+          "xAccessor": "payload_kb",
+          "yAccessor": "response_ms",
+          "xLabel": "Payload size (KB)",
+          "yLabel": "Response time (ms)",
+          "title": "Response time by payload size",
+          "description": "Scatterplot of response time in milliseconds against payload size in kilobytes.",
+          "summary": "Response time increases from 42 milliseconds at 8 KB to 95 milliseconds at 32 KB. The chart supports ref-based streaming pushes in React."
+        }
+      },
+      "rawOutputSha256": "140802ff3747ce7fa9dfc4b8bbcb37dff40dc81e76e1035d0cdb08822bbe3cde"
+    },
+    {
+      "fixtureId": "bubble-static",
+      "proposal": {
+        "component": "BubbleChart",
+        "props": {
+          "data": [
+            {
+              "company": "A",
+              "growth": 12,
+              "retention": 86,
+              "customers": 300
+            },
+            {
+              "company": "B",
+              "growth": 18,
+              "retention": 78,
+              "customers": 180
+            },
+            {
+              "company": "C",
+              "growth": 9,
+              "retention": 92,
+              "customers": 420
+            }
+          ],
+          "xAccessor": "growth",
+          "yAccessor": "retention",
+          "sizeBy": "customers",
+          "colorBy": "company",
+          "xLabel": "Growth",
+          "yLabel": "Retention",
+          "title": "Growth and retention by company",
+          "description": "Bubble chart comparing company growth and retention, with bubble size representing customers.",
+          "summary": "Company C has the highest retention and customer count; Company B has the highest growth.",
+          "showLegend": true,
+          "tooltip": true
+        }
+      },
+      "rawOutputSha256": "31d319c7a31fa8c9ad64d4cce56e913e400f045d87132b9174f1778088512eec"
+    },
+    {
+      "fixtureId": "gauge-static",
+      "proposal": {
+        "component": "BigNumber",
+        "props": {
+          "value": 97,
+          "label": "SLA attainment",
+          "format": "number",
+          "suffix": "%",
+          "target": {
+            "value": 99,
+            "label": "target",
+            "format": "number"
+          },
+          "description": "Current SLA attainment is 97 percent against a target of 99 percent.",
+          "summary": "SLA attainment is 2 percentage points below the 99 percent target.",
+          "thresholds": [
+            {
+              "at": 0,
+              "level": "warning",
+              "color": "#c7952f",
+              "label": "Below target"
+            },
+            {
+              "at": 99,
+              "level": "success",
+              "color": "#2a8f68",
+              "label": "Meets target"
+            }
+          ]
+        }
+      },
+      "rawOutputSha256": "7fa27221bf02508a28913beb7e8a1d491055de36bc38dd8b96eeadd0fef8f253"
+    },
+    {
+      "fixtureId": "symbol-map-static",
+      "proposal": {
+        "component": "ProportionalSymbolMap",
+        "props": {
+          "points": [
+            {
+              "city": "A",
+              "longitude": -122.4,
+              "latitude": 37.8,
+              "incidents": 18
+            },
+            {
+              "city": "B",
+              "longitude": -74,
+              "latitude": 40.7,
+              "incidents": 31
+            },
+            {
+              "city": "C",
+              "longitude": -87.6,
+              "latitude": 41.9,
+              "incidents": 12
+            }
+          ],
+          "xAccessor": "longitude",
+          "yAccessor": "latitude",
+          "sizeBy": "incidents",
+          "sizeRange": [
+            5,
+            40
+          ],
+          "colorBy": "city",
+          "title": "Incident counts by location",
+          "description": "Proportional symbols show incident counts at three longitude and latitude locations.",
+          "showLegend": true
+        }
+      },
+      "rawOutputSha256": "ad62b2258a4503b52e6aae4a82b5fc7622f17b0697b29aac3fe0d0cc4a01b40c"
+    },
+    {
+      "fixtureId": "galton-static",
+      "proposal": {
+        "component": "GaltonBoardChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "value": 1
+            },
+            {
+              "id": "b",
+              "value": 2
+            },
+            {
+              "id": "c",
+              "value": 3
+            },
+            {
+              "id": "d",
+              "value": 4
+            }
+          ],
+          "valueAccessor": "value",
+          "bins": 4,
+          "seed": 42
+        }
+      },
+      "rawOutputSha256": "a2cd7e9c911fc269d1fce6f111b3f6c27dc9f3059a7186b6645992cf9933b087"
+    },
+    {
+      "fixtureId": "unit-pile-push",
+      "proposal": {
+        "component": "UnitPileChart",
+        "props": {
+          "data": [
+            {
+              "id": "a",
+              "team": "Blue",
+              "value": 3
+            },
+            {
+              "id": "b",
+              "team": "Green",
+              "value": 2
+            }
+          ],
+          "categoryAccessor": "team",
+          "valueAccessor": "value",
+          "colorBy": "team",
+          "unitValue": 1,
+          "title": "Queued work by team",
+          "description": "A unit pile showing queued work totals by team.",
+          "summary": "Blue has 3 units of queued work and Green has 2 units. Additional source rows can be added through the chart ref push API."
+        }
+      },
+      "rawOutputSha256": "840faf4b612604fe82eb0a8f098916797a3229490167a34b49582f2261f99e3d"
+    }
+  ]
+}
