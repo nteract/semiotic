@@ -70,5 +70,5 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "ProcessFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "PacketFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics"},
-  "BigNumber": {"category":"value","recommendedImport":"semiotic/value","docsRoute":"/charts/big-number","pilot":true}
+  "BigNumber": {"category":"value","recommendedImport":"semiotic/value","serverImport":"semiotic/server","docsRoute":"/charts/big-number","pilot":true}
 }
