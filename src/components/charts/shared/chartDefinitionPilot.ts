@@ -348,8 +348,8 @@ export const CHART_DEFINITION_PILOT: Readonly<{
       source: "docs/src/pages/charts/BigNumberPage.jsx",
     },
     server: {
-      mode: "react-ssr-only",
-      reason: "BigNumber is React-SSR safe but does not use the Stream Frame renderChart adapter.",
+      mode: "render-chart",
+      chartConfig: "BigNumber",
     },
     examples: [{
       route: "/examples/local-government-explorer",

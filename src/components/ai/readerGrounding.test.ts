@@ -182,4 +182,48 @@ describe("buildReaderGrounding", () => {
     expect(g.physics).toBeUndefined()
     expect(g.text).not.toContain("Physics simulation:")
   })
+
+  it("keeps observed Galton source facts even before a settled projection exists", () => {
+    const g = buildReaderGrounding("GaltonBoardChart", {
+      data: [
+        { id: "a", value: 1 },
+        { id: "b", value: 2 },
+        { id: "c", value: 3 },
+        { id: "d", value: 4 },
+      ],
+      valueAccessor: "value",
+      bins: 4,
+    })
+    expect(g.description.text).toContain("No settled projection")
+    expect(g.facts?.source).toBe("chart-props")
+    expect(g.facts?.statements).toContain("4 observed source rows are supplied.")
+    expect(g.text).toContain("Observed value ranges from 1 to 4.")
+  })
+
+  it("surfaces exact scalar, flow, and hierarchy facts without inference", () => {
+    const gauge = buildReaderGrounding("GaugeChart", {
+      value: 97,
+      min: 0,
+      max: 100,
+    })
+    expect(gauge.text).toContain("Current value is 97.")
+    expect(gauge.text).toContain("scale runs from 0 to 100")
+
+    const sankey = buildReaderGrounding("SankeyDiagram", {
+      edges: [{ source: "Incoming", target: "Failure", value: 7 }],
+    })
+    expect(sankey.text).toContain("Incoming to Failure has value 7.")
+
+    const treemap = buildReaderGrounding("Treemap", {
+      data: {
+        name: "Storage",
+        children: [
+          { name: "Images", value: 48 },
+          { name: "Backups", value: 20 },
+        ],
+      },
+    })
+    expect(treemap.text).toContain("Images has value 48.")
+    expect(treemap.text).toContain("Backups has value 20.")
+  })
 })

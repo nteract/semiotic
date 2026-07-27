@@ -13,5 +13,13 @@
     "level": 1,
     "children": []
   },
-  "text": "A gauge."
+  "facts": {
+    "source": "chart-props",
+    "statements": [
+      "Current value is 97.",
+      "The gauge scale runs from 0 to 100."
+    ],
+    "text": "Exact chart-prop facts: Current value is 97. The gauge scale runs from 0 to 100."
+  },
+  "text": "A gauge. Exact chart-prop facts: Current value is 97. The gauge scale runs from 0 to 100."
 }

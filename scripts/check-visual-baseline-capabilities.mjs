@@ -106,6 +106,7 @@ for (const chart of ssrParityCharts) {
 // Known SSR-capable charts that still need chart-specific SSR/CSR parity
 // cases. Do not add to this map casually; the intended direction is down.
 const SSR_PARITY_BURN_DOWN = new Map([
+  ["BigNumber", "native value SVG evidence is covered in unit/PNG tests; side-by-side parity with the DOM HOC still needs a dedicated fixture"],
   ["CollisionSwarmChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["EventDropChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["PacketFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
@@ -231,6 +232,14 @@ const LINKED_HOVER_BURN_DOWN = new Map([
   ["RealtimeSwarmChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["RealtimeWaterfallChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["TemporalHistogram", "no chart-specific linked-hover interaction snapshot yet"],
+  ["CollisionSwarmChart", "physics linked-hover needs a deterministic interaction snapshot"],
+  ["CrucibleChart", "crucible linked-hover needs a deterministic terminal-state interaction snapshot"],
+  ["EventDropChart", "event-time physics linked-hover needs a deterministic interaction snapshot"],
+  ["GaltonBoardChart", "settled Galton linked-hover needs a deterministic interaction snapshot"],
+  ["GauntletChart", "gauntlet linked-hover needs a deterministic gate-state interaction snapshot"],
+  ["PacketFlowChart", "packet-flow linked-hover needs a deterministic route interaction snapshot"],
+  ["ProcessFlowChart", "process-flow linked-hover needs a deterministic capacity-state interaction snapshot"],
+  ["UnitPileChart", "settled unit-pile linked-hover needs a deterministic interaction snapshot"],
 ])
 
 const linkedHoverBurnDownCharts = new Set(LINKED_HOVER_BURN_DOWN.keys())

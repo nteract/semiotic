@@ -70,6 +70,49 @@ function allowsGeneratedArrayData(componentName: string, props: Datum): boolean 
   )
 }
 
+function validateGaugeThresholds(props: Datum): string[] {
+  if (!Array.isArray(props.thresholds)) return []
+  const errors: string[] = []
+  if (props.thresholds.length === 0) {
+    errors.push(
+      '"thresholds" for GaugeChart must contain at least one { value, color, label? } object.'
+    )
+  }
+  props.thresholds.forEach((threshold, index) => {
+    if (!threshold || typeof threshold !== "object" || Array.isArray(threshold)) {
+      errors.push(
+        `"thresholds[${index}]" for GaugeChart should be an object with numeric "value" and string "color".`
+      )
+      return
+    }
+    const entry = threshold as Record<string, unknown>
+    if (typeof entry.value !== "number" || !Number.isFinite(entry.value)) {
+      errors.push(
+        `"thresholds[${index}].value" is required for GaugeChart and must be a finite number. BigNumber's "at" threshold key is not supported here.`
+      )
+    }
+    if (typeof entry.color !== "string" || entry.color.length === 0) {
+      errors.push(
+        `"thresholds[${index}].color" is required for GaugeChart and must be a non-empty string.`
+      )
+    }
+    if (entry.label !== undefined && typeof entry.label !== "string") {
+      errors.push(
+        `"thresholds[${index}].label" for GaugeChart should be a string.`
+      )
+    }
+    const unexpected = Object.keys(entry).filter(
+      (key) => key !== "value" && key !== "color" && key !== "label"
+    )
+    if (unexpected.length > 0) {
+      errors.push(
+        `"thresholds[${index}]" has unsupported GaugeChart key(s): ${unexpected.join(", ")}. Use { value, color, label? }; { at, level } belongs to BigNumber.`
+      )
+    }
+  })
+  return errors
+}
+
 import { closestMatch } from "./stringDistance"
 
 // ---------------------------------------------------------------------------
@@ -219,6 +262,10 @@ export function validateProps(
     // Value-only components such as GaugeChart have no data prop to validate.
   }
   // realtime charts: no data validation (ref-based push API)
+
+  if (componentName === "GaugeChart") {
+    errors.push(...validateGaugeThresholds(props))
+  }
 
   return { valid: errors.length === 0, errors }
 }

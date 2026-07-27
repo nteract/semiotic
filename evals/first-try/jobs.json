@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "fixtureRevision": "semiotic-first-try-2026-07-26",
+  "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
   "jobs": [
     {
       "fixtureId": "bar-static-custom-fields",
@@ -127,7 +127,7 @@
           "users": 165
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object."
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
     },
     {
       "fixtureId": "area-static",
@@ -192,7 +192,7 @@
           "response_ms": 142
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object."
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
     },
     {
       "fixtureId": "bubble-static",
@@ -662,7 +662,7 @@
           "value": 2
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object."
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
     },
     {
       "fixtureId": "event-drop-push",
@@ -698,7 +698,7 @@
           "arrivalTime": 25
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object."
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
     },
     {
       "fixtureId": "packet-flow-push",
@@ -740,7 +740,7 @@
           "value": 2
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object."
+      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
     }
   ]
 }

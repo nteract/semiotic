@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "fixtureRevision": "semiotic-grounding-2026-07-26",
+  "fixtureRevision": "semiotic-grounding-2026-07-27-source-facts",
   "chartCount": 10,
   "questionCount": 50,
   "trialCount": 150,
@@ -11,8 +11,8 @@
   ],
   "jobs": {
     "path": "jobs.json",
-    "bytes": 44025,
-    "sha256": "54d9b40440fa0a60c45947527b534db452ff0ad1fc328cd922e64135932127e0"
+    "bytes": 44038,
+    "sha256": "56c25ebc2b281ad7dc718334e1f96bec2cbed93cca6cf33b13d8e429f2bda8ee"
   },
   "entries": [
     {
@@ -111,8 +111,8 @@
       },
       "grounding": {
         "path": "payloads/request-flow.json",
-        "bytes": 534,
-        "sha256": "2d06a3afc7515037acaaad6c7935563d3066aa7a09d432ccb1e82315839dccf4"
+        "bytes": 1089,
+        "sha256": "69b53bbe48ba23a0fefa91ab7c52c6440a811e444d0a4c6c9be063a6e76a1c10"
       }
     },
     {
@@ -131,8 +131,8 @@
       },
       "grounding": {
         "path": "payloads/storage-tree.json",
-        "bytes": 273,
-        "sha256": "10aaf3ad8acdaa7c27d67cd6b3f374297daa3d87424dfb228b6b6da72bf2a91b"
+        "bytes": 729,
+        "sha256": "05883cff3b5096827db112b27759227c440e76438c838bf2d17330925c0fbb3c"
       }
     },
     {
@@ -171,8 +171,8 @@
       },
       "grounding": {
         "path": "payloads/sla-gauge.json",
-        "bytes": 268,
-        "sha256": "113be2a0d5b1b84cb5995a97d2feef542b8d96639a422734a0b9b7ebd8686923"
+        "bytes": 592,
+        "sha256": "77ecdc8568884092cd11d927ac4368f211df2bb298f81ac7edc301c8aebf29e6"
       }
     },
     {
@@ -211,8 +211,8 @@
       },
       "grounding": {
         "path": "payloads/galton-values.json",
-        "bytes": 757,
-        "sha256": "744a58bab2f7cca30270ad918fe717cd9d9109d43e4702269a0194f2453f61c2"
+        "bytes": 1126,
+        "sha256": "dbb520df96e8aea0026b6be95449524985b0fb7b94abd3e15f3d101ba5b07aad"
       }
     }
   ]

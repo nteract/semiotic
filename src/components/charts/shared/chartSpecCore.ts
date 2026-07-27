@@ -281,10 +281,10 @@ const ordinalAxisProps: Record<string, ChartPropSpec> = {
   categoryLabel: { type: "string" },
   valueLabel: { type: "string" },
   showCategoryTicks: { type: "boolean", description: "Show category labels on the ordinal axis." },
-  // `valueFormat` surfaces in schema as a function type — canonical
-  // GaugeChart already uses this shape. LLMs use it as a hint that
-  // numeric formatting is overridable; they can't populate it directly.
-  valueFormat: { type: "function" },
+  // Formatter callbacks remain valid React props, but JSON/MCP callers
+  // cannot serialize executable functions. Keep them in runtime validation
+  // while omitting them from the generated tool schema.
+  valueFormat: { type: "function", omitFromSchema: true },
   categoryFormat: { type: "function", omitFromSchema: true },
 }
 
@@ -336,6 +336,20 @@ const physicsProps: Record<string, ChartPropSpec> = {
   height: { type: "number", description: "Alias for size[1]" },
   className: { type: "string" },
   title: { type: "string" },
+  description: {
+    type: "string",
+    description: "Concise accessible description that overrides the generated aria-label.",
+  },
+  summary: {
+    type: "string",
+    description: "Screen-reader-only takeaway and interaction guidance.",
+  },
+  accessibleTable: {
+    type: ["boolean", "object"],
+    description: "Expose source data through Semiotic's screen-reader data table.",
+  },
+  chartId: { type: "string", description: "Stable chart identity for linked observation and navigation." },
+  emphasis: { type: "string", enum: ["primary", "secondary"] as const },
   responsiveWidth: { type: "boolean" },
   responsiveHeight: { type: "boolean" },
   colorBy: { type: ["string", "function"], description: "Categorical field or accessor used to color simulated bodies." },

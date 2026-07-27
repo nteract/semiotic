@@ -166,11 +166,15 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
       expect(created.result.structuredContent.props.data).toBeUndefined()
       expect(created.result.structuredContent.suggestion.props.data).toBeUndefined()
       const trendRows = [{ time: 1, value: 2 }, { time: 2, value: 4 }, { time: 3, value: 3 }]
-      const browserOnly = await sendRequest(publicProc, "tools/call", { name: "createChart", arguments: { data: trendRows, intent: "trend", component: "BigNumber" } }, "public-create-browser-only")
-      expect(browserOnly.result.isError).toBe(true)
-      expect(browserOnly.result.structuredContent.status).toBe("no-suggestion")
-      expect(browserOnly.result.structuredContent.suggestions).not.toContainEqual(expect.objectContaining({ component: "BigNumber" }))
-      expect(browserOnly.result.structuredContent.suggestions.every((suggestion: { props: Record<string, unknown> }) => suggestion.props.data === undefined)).toBe(true)
+      const incompatibleValueCard = await sendRequest(publicProc, "tools/call", { name: "createChart", arguments: { data: trendRows, intent: "trend", component: "BigNumber" } }, "public-create-incompatible-value-card")
+      expect(incompatibleValueCard.result.isError).toBe(true)
+      expect(incompatibleValueCard.result.structuredContent).toMatchObject({
+        status: "blocked",
+        component: "BigNumber",
+        suggestion: { component: "BigNumber" },
+      })
+      expect(incompatibleValueCard.result.structuredContent.props.data).toBeUndefined()
+      expect(incompatibleValueCard.result.structuredContent.suggestion.props.data).toBeUndefined()
     } finally {
       publicProc.kill()
     }

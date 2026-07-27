@@ -6,6 +6,7 @@ import {
   publicRequestRecord,
   requestUpperBoundCost,
   retryDelayMs,
+  validateFilterValues,
 } from "./run-openai-ai-evals.mjs"
 
 test("calculateResponseCost applies standard, cached, cache-write, and output rates", () => {
@@ -108,4 +109,23 @@ test("public request records never include credentials, prompts, or project IDs"
   assert.doesNotMatch(serialized, /api[_-]?key|project|prompt/i)
   assert.doesNotMatch(serialized, /North/)
   assert.match(record.rawOutputSha256, /^[a-f0-9]{64}$/)
+})
+
+test("validateFilterValues rejects typos before a paid run", () => {
+  assert.doesNotThrow(() =>
+    validateFilterValues(
+      "suite",
+      new Set(["first-try"]),
+      new Set(["first-try", "grounding"])
+    )
+  )
+  assert.throws(
+    () =>
+      validateFilterValues(
+        "suite",
+        new Set(["firsttry"]),
+        new Set(["first-try", "grounding"])
+      ),
+    /Unknown suite: firsttry/
+  )
 })

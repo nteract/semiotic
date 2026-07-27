@@ -138,7 +138,7 @@ const firstTryJobs = firstTry.fixtures
         ? {
             pushRows: fixture.push.rows,
             pushRequirement:
-              "Choose a chart that supports ref-based push for the supplied pushRows; the returned value remains a component/props JSON object.",
+              "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props.",
           }
         : {}),
     }

@@ -193,12 +193,8 @@ const semioticAI = parseSemioticAIChartExports()
 const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
-// Value-family HOCs (BigNumber today) ship under `semiotic/value` and
-// don't route through the frame-driven `renderChart` server config path.
-// `semiotic/ai` does re-export BigNumber for the intelligence demo
-// pages, but the chart still skips the MCP-renderable parity check
-// because it isn't a `renderChart`-compatible HOC. Mirrors the
-// `hoc-ssr-only` capability special-feature documented in chartSpecs.ts.
+// Value-family HOCs use the native value SVG registry rather than the
+// frame-driven CHART_CONFIGS registry, but remain MCP-renderable.
 const valueCharts = discoverChartFiles("value")
 const realtimeCharts = new Set([...validation].filter(name => name.startsWith("Realtime")))
 const { componentIndexFromSchema } = require(files.componentMetadata)
@@ -218,10 +214,12 @@ const expectedAIExports = new Set(
   [...validation, ...AI_EXPORT_ONLY].filter(name => !geoCharts.has(name))
 )
 const expectedMCPRegistry = new Set(
-  [...validation].filter(name => !realtimeCharts.has(name) && !valueCharts.has(name))
+  [...validation].filter(name => !realtimeCharts.has(name))
 )
 const expectedServerConfigs = new Set(
-  [...expectedMCPRegistry].filter(name => !SERVER_CONFIG_EXCLUDED.has(name))
+  [...expectedMCPRegistry].filter(
+    name => !SERVER_CONFIG_EXCLUDED.has(name) && !valueCharts.has(name)
+  )
 )
 
 const errors = []
@@ -275,7 +273,11 @@ for (const name of mcpRegistry) {
   if (!geoCharts.has(name) && !semioticAI.has(name)) {
     errors.push(`MCP component registry includes ${name}, but semiotic/ai does not export it`)
   }
-  if (!serverConfigs.has(name) && !SERVER_CONFIG_EXCLUDED.has(name)) {
+  if (
+    !serverConfigs.has(name) &&
+    !SERVER_CONFIG_EXCLUDED.has(name) &&
+    !valueCharts.has(name)
+  ) {
     errors.push(`MCP component registry includes ${name}, but it has no serverChartConfigs entry or documented exclusion`)
   }
 }
@@ -290,7 +292,7 @@ if (errors.length) {
 console.log("AI/MCP surface parity check passed")
 console.log(`  ${validation.size} validation/schema components`)
 console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo chart(s) intentionally excluded)`)
-console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime + ${valueCharts.size} value chart(s) intentionally excluded)`)
+console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime chart(s) intentionally excluded; ${valueCharts.size} value chart(s) use native SVG renderers)`)
 console.log(`  ${metadataComponents.size} shared AI metadata components`)
 console.log(`  ${serverConfigs.size} server render configs (+ ${SERVER_CONFIG_EXCLUDED.size} documented HOC-SSR exclusions)`)
 console.log(`  ${publiclyExported.size} publicly exported chart components, all registered (${SERVER_ONLY.size} layout-function escape hatches excluded)`)

@@ -116,3 +116,53 @@ describe("validateProps — declared non-data array inputs", () => {
     expect(result.errors).not.toContain('"data" is required for FlowMap.')
   })
 })
+
+describe("validateProps — GaugeChart threshold wire contract", () => {
+  it("accepts GaugeChart value/color threshold objects", () => {
+    expect(validateProps("GaugeChart", {
+      value: 97,
+      thresholds: [
+        { value: 99, color: "#c7952f", label: "Below target" },
+        { value: 100, color: "#2a8f68" },
+      ],
+    }).valid).toBe(true)
+  })
+
+  it("rejects BigNumber at/level thresholds before rendering", () => {
+    const result = validateProps("GaugeChart", {
+      value: 97,
+      thresholds: [
+        { at: 99, level: "warning", color: "#c7952f" },
+      ],
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors.join(" ")).toContain("BigNumber")
+    expect(result.errors.join(" ")).toContain(".value")
+  })
+})
+
+describe("validateProps — BigNumber wire contract", () => {
+  it("accepts its supported accessibility and display props", () => {
+    expect(validateProps("BigNumber", {
+      value: 97,
+      label: "SLA attainment",
+      format: "number",
+      suffix: "%",
+      description: "Current SLA attainment.",
+      summary: "The current value is below the target.",
+      chartId: "sla-attainment",
+      loading: false,
+    }).valid).toBe(true)
+  })
+
+  it("rejects chart-frame title and table props", () => {
+    const result = validateProps("BigNumber", {
+      value: 97,
+      title: "SLA attainment",
+      accessibleTable: true,
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors.join(" ")).toContain('"title"')
+    expect(result.errors.join(" ")).toContain('"accessibleTable"')
+  })
+})

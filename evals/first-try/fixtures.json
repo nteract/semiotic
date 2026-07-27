@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "fixtureRevision": "semiotic-first-try-2026-07-26",
+  "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
   "context": ["CLAUDE.md", "docs/public/llms.txt"],
   "fixtures": [
     {

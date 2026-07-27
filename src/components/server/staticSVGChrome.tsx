@@ -33,7 +33,7 @@ import {
   resolveSideLegendMargin,
 } from "../legendLayout"
 
-export type FrameType = RenderEvidence["frameType"]
+export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 
 export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]

@@ -14,5 +14,13 @@
     "level": 1,
     "children": []
   },
-  "text": "A Galton board chart that collapses falling samples into a settled histogram projection. No settled projection is loaded yet."
+  "facts": {
+    "source": "chart-props",
+    "statements": [
+      "4 observed source rows are supplied.",
+      "Observed value ranges from 1 to 4."
+    ],
+    "text": "Exact chart-prop facts: 4 observed source rows are supplied. Observed value ranges from 1 to 4."
+  },
+  "text": "A Galton board chart that collapses falling samples into a settled histogram projection. No settled projection is loaded yet. Exact chart-prop facts: 4 observed source rows are supplied. Observed value ranges from 1 to 4."
 }

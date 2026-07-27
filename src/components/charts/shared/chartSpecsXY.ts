@@ -314,8 +314,9 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       showValues: { type: "boolean", default: false, description: "Display numeric values in cells" },
       // Heatmap is XY-shaped but has a valueAccessor (not yAccessor), so
       // it carries `valueFormat` for cell-value formatting — pulled from
-      // the ordinalAxis concept rather than the xyAxis bag.
-      valueFormat: { type: "function" },
+      // the ordinalAxis concept rather than the xyAxis bag. It is a
+      // React-only callback and cannot be serialized into the tool schema.
+      valueFormat: { type: "function", omitFromSchema: true },
       cellBorderColor: { type: "string", default: "#fff" },
       cellBorderWidth: { type: "number", default: 1 },
       pointIdAccessor: { type: ["string", "function"], description: "Stable ID for point annotations and push-mode remove()/update()." },

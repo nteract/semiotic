@@ -44,6 +44,7 @@ const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname, "..")
 
 const SERVER_CONFIGS_PATH = path.join(ROOT, "src/components/server/serverChartConfigs.ts")
+const VALUE_RENDERERS_PATH = path.join(ROOT, "src/components/server/staticValue.tsx")
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
 
 // Parse via the shared helper so this script, the markdown
@@ -80,6 +81,14 @@ const ssrRegistered = new Set()
 const registryStart = configsSource.indexOf("export const CHART_CONFIGS")
 const registrySource = registryStart >= 0 ? configsSource.slice(registryStart) : configsSource
 for (const match of registrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
+  ssrRegistered.add(match[1])
+}
+const valueRenderersSource = fs.readFileSync(VALUE_RENDERERS_PATH, "utf8")
+const valueRegistryStart = valueRenderersSource.indexOf("export const VALUE_RENDERERS")
+const valueRegistrySource = valueRegistryStart >= 0
+  ? valueRenderersSource.slice(valueRegistryStart)
+  : valueRenderersSource
+for (const match of valueRegistrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
   ssrRegistered.add(match[1])
 }
 

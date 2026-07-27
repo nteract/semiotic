@@ -53,9 +53,9 @@
       "DEGENERATE_EXTENT"
     ],
     "alternatives": [
-      "BoxPlot",
       "ViolinPlot",
-      "SwarmPlot"
+      "BoxPlot",
+      "DotPlot"
     ],
     "timestamp": 1792000003000,
     "sessionId": "conference-stage-recorded",
@@ -145,6 +145,21 @@
     },
     "timestamp": 1792000009000,
     "sessionId": "conference-stage-recorded"
+  },
+  {
+    "type": "nav-node-focused",
+    "arcId": "question-to-defensible-chart",
+    "chartId": "service-latency",
+    "nodeId": "series-ingest",
+    "role": "series",
+    "level": 2,
+    "label": "Ingest latency distribution",
+    "timestamp": 1792000009500,
+    "sessionId": "conference-stage-recorded",
+    "meta": {
+      "source": "offline-grounding-replay",
+      "capture": "playwright-rehearsal"
+    }
   },
   {
     "type": "interrogation-asked",

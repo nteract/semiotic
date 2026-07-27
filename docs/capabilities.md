@@ -106,7 +106,7 @@ Last regen: 2026-07-27 · 57 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **BigNumber** | — | — | — | ✓ | — | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `hoc-ssr-only` |
+| **BigNumber** | — | — | — | ✓ | ✓ | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `native-value-svg` |
 
 ---
 
@@ -114,6 +114,6 @@ Last regen: 2026-07-27 · 57 charts indexed.
 
 - 47/57 charts render a top-level legend.
 - 45/57 charts expose a push API.
-- 45/57 charts SSR via the `renderChart()` registry.
+- 46/57 charts SSR via the `renderChart()` registry.
 - 2/57 charts use the customLayout escape hatch.
 - 11/57 charts use synthetic (no-layout) construction.

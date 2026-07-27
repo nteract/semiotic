@@ -57,11 +57,30 @@ const argValue = (name) =>
     .find((argument) => argument.startsWith(`--${name}=`))
     ?.slice(name.length + 3)
 const hasArg = (name) => process.argv.includes(`--${name}`)
+const argSet = (name) => {
+  const value = argValue(name)
+  if (!value) return null
+  return new Set(
+    value.split(",").map((entry) => entry.trim()).filter(Boolean)
+  )
+}
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"))
 const safeModelName = (model) => model.replace(/[^a-zA-Z0-9._-]/g, "-")
 const roundCost = (value) => Number(value.toFixed(8))
 const sanitizedApiError = (value) =>
   value.replace(/sk-[A-Za-z0-9_*.-]+/g, "[REDACTED_API_KEY]")
+
+export function validateFilterValues(name, values, knownValues) {
+  if (!values) return
+  const unknown = [...values].filter((value) => !knownValues.has(value))
+  if (unknown.length > 0) {
+    throw new Error(
+      `Unknown ${name}: ${unknown.join(", ")}. Expected one of: ${[
+        ...knownValues,
+      ].join(", ")}`
+    )
+  }
+}
 
 export function calculateResponseCost(model, usage = {}) {
   const rates = pricesPerMillion[model]
@@ -454,6 +473,11 @@ async function main() {
     .map((model) => model.trim())
     .filter(Boolean)
   const maxUsd = Number(argValue("max-usd") ?? 0)
+  const suites = argSet("suites")
+  const firstTryFixtureIds = argSet("first-try-fixtures")
+  const groundingFixtureIds = argSet("grounding-fixtures")
+  const groundingConditions = argSet("grounding-conditions")
+  const trialId = argValue("trial-id") ?? "primary"
   const concurrency = Math.max(
     1,
     Math.min(8, Number(argValue("concurrency") ?? 4))
@@ -494,6 +518,26 @@ async function main() {
   const groundingJobs = await readJson(
     join(root, "evals/grounding/jobs.json")
   )
+  validateFilterValues(
+    "suite",
+    suites,
+    new Set(["first-try", "grounding"])
+  )
+  validateFilterValues(
+    "first-try fixture",
+    firstTryFixtureIds,
+    new Set(firstTryJobs.jobs.map(({ fixtureId }) => fixtureId))
+  )
+  validateFilterValues(
+    "grounding fixture",
+    groundingFixtureIds,
+    new Set(groundingJobs.jobs.map(({ fixtureId }) => fixtureId))
+  )
+  validateFilterValues(
+    "grounding condition",
+    groundingConditions,
+    new Set(groundingJobs.jobs.map(({ condition }) => condition))
+  )
   const contextText = await loadContext(firstTryJobs.jobs[0].context)
   const manifestPath = join(outputDirectory, "run-manifest.json")
   const manifest = await existingJson(manifestPath, {
@@ -501,6 +545,13 @@ async function main() {
     clientVersion,
     priceRevision,
     models,
+    trialId,
+    filters: {
+      suites: suites ? [...suites] : null,
+      firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
+      groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
+      groundingConditions: groundingConditions ? [...groundingConditions] : null,
+    },
     projectFingerprint: digest(project).slice(0, 12),
     maxUsd,
     startedAt: new Date().toISOString(),
@@ -509,7 +560,8 @@ async function main() {
   })
   if (
     manifest.projectFingerprint !== digest(project).slice(0, 12) ||
-    manifest.priceRevision !== priceRevision
+    manifest.priceRevision !== priceRevision ||
+    manifest.trialId !== trialId
   ) {
     throw new Error("Existing output directory belongs to another run")
   }
@@ -540,6 +592,9 @@ async function main() {
       responses: [],
     })
     for (const job of groundingJobs.jobs) {
+      if (suites && !suites.has("grounding")) continue
+      if (groundingFixtureIds && !groundingFixtureIds.has(job.fixtureId)) continue
+      if (groundingConditions && !groundingConditions.has(job.condition)) continue
       const requestKey = `${model}/grounding/${job.fixtureId}/${job.condition}`
       if (completedRequestKeys.has(requestKey)) continue
       pending.push({
@@ -552,6 +607,8 @@ async function main() {
       })
     }
     for (const job of firstTryJobs.jobs) {
+      if (suites && !suites.has("first-try")) continue
+      if (firstTryFixtureIds && !firstTryFixtureIds.has(job.fixtureId)) continue
       const requestKey = `${model}/first-try/${job.fixtureId}`
       if (completedRequestKeys.has(requestKey)) continue
       pending.push({
@@ -601,6 +658,7 @@ async function main() {
             candidate.fixtureId,
             firstTryJobs.fixtureRevision,
             groundingJobs.fixtureRevision,
+            trialId,
           ].join("/")
         )
         const { response, latencyMs } = await apiRequest({

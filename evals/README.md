@@ -48,3 +48,35 @@ paid work unless `--confirm-spend` and a positive `--max-usd` are both present.
 It never writes the credential, project ID, raw prompts, or raw API response
 bodies to its reports. Scoring inputs necessarily retain parsed chart proposals
 and grounding answer strings.
+
+Targeted follow-ups can select suites, fixtures, and grounding conditions:
+
+```sh
+npm run eval:ai:openai -- \
+  --project=proj_... \
+  --suites=first-try,grounding \
+  --first-try-fixtures=gauge-static,symbol-map-static \
+  --grounding-fixtures=galton-values/count \
+  --grounding-conditions=png-plus-grounding,grounding-only \
+  --trial-id=follow-up-a \
+  --output-dir=evals/reports/follow-up/trial-a \
+  --max-usd=2 \
+  --confirm-spend
+```
+
+Use a distinct `--trial-id` and output directory for every repeated trial.
+The trial ID participates in the idempotency key, so a repeated trial receives
+a fresh model response while an interrupted run with the same ID remains
+resumable.
+
+After two or more targeted runs complete, aggregate only the cases that were
+actually repeated:
+
+```sh
+npm run eval:ai:trials -- \
+  --runs=evals/reports/follow-up/trial-a,evals/reports/follow-up/trial-b \
+  --output=evals/reports/follow-up/summary.json
+```
+
+The summarizer requires matching models, fixture revisions, and target filters
+across trials. It does not carry forward untouched baseline cases.

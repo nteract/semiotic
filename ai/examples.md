@@ -854,6 +854,33 @@ Key props: **`edges`** (required), shows bidirectional relationships in a circle
 
 ## Realtime — Push API via Ref
 
+### Serialized snapshot versus React push code
+
+When an MCP, SSR, or evaluation request asks for component/props JSON and also
+mentions future pushes, keep the supplied initial rows in the serialized
+snapshot. `pushRows`, `pushRequirement`, `ref`, and `method` are orchestration
+instructions, not chart props.
+
+```json
+{
+  "component": "LineChart",
+  "props": {
+    "data": [
+      { "week": 1, "users": 120 },
+      { "week": 2, "users": 138 }
+    ],
+    "xAccessor": "week",
+    "yAccessor": "users",
+    "xLabel": "Week",
+    "yLabel": "Active users"
+  }
+}
+```
+
+React push code has a different lifecycle: omit `data`, attach a ref, and push
+the initial or newly arrived rows from an effect. Formatter callbacks such as
+`xFormat` are JSX-only; serialized axis titles belong in `xLabel` and `yLabel`.
+
 ### RealtimeLineChart
 
 ```jsx
@@ -1334,6 +1361,40 @@ Key APIs: `WordTrailsWordInfo` gives `word`, `column`, `weight`, and `segment` p
 
 ---
 
+## Geographic Charts
+
+### ProportionalSymbolMap
+
+```jsx
+import { ProportionalSymbolMap } from "semiotic/geo"
+
+const incidents = [
+  { id: "a", city: "A", longitude: -122.4, latitude: 37.8, incidents: 18 },
+  { id: "b", city: "B", longitude: -74.0, latitude: 40.7, incidents: 31 },
+  { id: "c", city: "C", longitude: -87.6, latitude: 41.9, incidents: 12 },
+]
+
+<ProportionalSymbolMap
+  points={incidents}
+  xAccessor="longitude"
+  yAccessor="latitude"
+  sizeBy="incidents"
+  sizeRange={[5, 40]}
+  colorBy="city"
+  showLegend
+/>
+```
+
+The geographic wire vocabulary is deliberate: rows live in `points`,
+longitude and latitude use `xAccessor` and `yAccessor`, and symbol radius uses
+`sizeBy`. Do not substitute the generic `data` or `valueAccessor` names.
+
+For live React code, omit `points` and push source records through the ref:
+`ref.current?.push({ id, longitude, latitude, incidents })`. For a static JSON
+snapshot, keep all observed records in `points`.
+
+---
+
 ## Physics Charts — Motion With A Settled Projection
 
 ### GaltonBoardChart (distribution drop)
@@ -1400,6 +1461,34 @@ import { UnitPileChart } from "semiotic/physics"
 ```
 
 Key props: `unitValue` controls how many simulated bodies appear. Increase it for large values so the settled piles remain readable and the frame budget stays bounded.
+
+For a live unit pile, the ref ingests the same source-row shape the static
+`data` prop uses:
+
+```jsx
+import { useEffect, useRef } from "react"
+import { UnitPileChart } from "semiotic/physics"
+
+const pileRef = useRef(null)
+
+useEffect(() => {
+  pileRef.current?.push({ id: "c", team: "Blue", value: 2 })
+}, [])
+
+<UnitPileChart
+  ref={pileRef}
+  categoryAccessor="team"
+  valueAccessor="value"
+  unitValue={1}
+  seed={42}
+  title="Queued work by team"
+/>
+```
+
+`pushRows` and `dataIdAccessor` are not physics chart props. Keep an `id` on
+source records when identity matters; the physics HOC retains it on the spawned
+bodies. For a static JSON proposal, append the incoming rows to `data` so the
+snapshot can render immediately.
 
 ### CollisionSwarmChart (axis-preserving collision layout)
 
@@ -1648,7 +1737,7 @@ import { BigNumber } from "semiotic/value"
 />
 ```
 
-Key props: `value` (the one number), `format` ("number"|"currency"|"percent"|"compact"|"duration"|fn), `comparison` derives a delta with auto-sentiment, `target` renders "X% of goal", `thresholds` map value to a semantic theme role (`--semiotic-{success|warning|danger|info}`). Suppress decoration via `mode="thumbnail"` for dense grids or `mode="inline"` for prose. Stream via `ref.current.push({ value, time })` — pair with `stalenessThreshold` to dim the card when updates stop.
+Key props: `value` (the focal number), `label` (the visible heading), `description` and `summary` (accessible text), `comparison`, `target`, and `thresholds`. BigNumber does not use chart-frame `title` or `accessibleTable` props. Built-in `format` values are `"number"`, `"currency"`, `"percent"`, `"compact"`, and `"duration"`; custom formatter functions are React-only. `"percent"` treats its input as a ratio, so `0.97` renders as 97%. For an existing 0–100 value such as 97, use `format="number"` with `suffix="%"`. Suppress decoration via `mode="thumbnail"` for dense grids or `mode="inline"` for prose. Stream via `ref.current.push({ value, time })` — pair with `stalenessThreshold` to dim the card when updates stop.
 
 ### BigNumber with a Semiotic chart embedded via `trendSlot` (wide / rectangular)
 

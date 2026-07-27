@@ -138,6 +138,29 @@ describe("prepareChart", () => {
     expect(result.evidence?.markCount).toBe(3)
   })
 
+  it("does not call the renderer after wire validation rejects a callback string", () => {
+    let renderCalls = 0
+    const result = prepareChart({
+      component: "Scatterplot",
+      props: {
+        data: [{ x: 1, y: 2 }],
+        xAccessor: "x",
+        yAccessor: "y",
+        xFormat: "d",
+      },
+    }, {
+      render: () => {
+        renderCalls += 1
+        throw new Error("invalid props reached the renderer")
+      },
+    })
+    expect(result.ok).toBe(false)
+    expect(result.validation.valid).toBe(false)
+    expect(result.reasons.join(" ")).toContain('"xFormat" should be function')
+    expect(renderCalls).toBe(0)
+    expect(result.evidence).toBeUndefined()
+  })
+
   it("passes a first-try physics proposal with render evidence", () => {
     const result = prepareChart({
       component: "GaltonBoardChart",
