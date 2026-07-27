@@ -332,14 +332,16 @@ export function renderBigNumberToStaticSVG(
     </svg>,
   )
 
-  sink && (sink.evidence = buildEvidence({
-    frameType: "value",
-    width,
-    height,
-    marks: value === undefined ? [] : [{ type: "value" }],
-    title: label,
-    description: accessibleName,
-  }))
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "value",
+      width,
+      height,
+      marks: value === undefined ? [] : [{ type: "value" }],
+      title: label,
+      description: accessibleName,
+    })
+  }
   return svg
 }
 

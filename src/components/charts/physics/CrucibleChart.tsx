@@ -71,9 +71,7 @@ import {
 } from "./crucibleChartUtils"
 import type {
   CrucibleChartHandle,
-  CrucibleChartProps,
-  CrucibleColorBy,
-  CrucibleControls
+  CrucibleChartProps
 } from "./crucibleChartProps"
 import type {
   CrucibleBodyDatum,
