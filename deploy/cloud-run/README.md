@@ -38,7 +38,7 @@ arbitrary commits from `main`.
 
 ### Lockfile status
 
-The wrapper pins the published `semiotic@3.8.1` release and includes a generated
+The wrapper pins the published `semiotic@3.8.6` release and includes a generated
 `package-lock.json`. Cloud Buildpacks receives that lockfile because `.gcloudignore` excludes
 only `node_modules`.
 
@@ -86,18 +86,30 @@ git status --short
 cd deploy/cloud-run
 npm ci --ignore-scripts
 npm pkg get dependencies.semiotic
+SEMIOTIC_RELEASE_SHA="$(git rev-list -n 1 vX.Y.Z)"
+SEMIOTIC_RELEASE_BUILT_AT="$(node -e 'process.stdout.write(new Date(process.argv[1]).toISOString())' "$(git show -s --format=%cI vX.Y.Z)")"
 gcloud run deploy semiotic-mcp-server --source . --region us-west1 \
   --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "MCP_ALLOWED_HOSTS=YOUR_STABLE_HOST"
+  --update-labels "commit-sha=${SEMIOTIC_RELEASE_SHA},managed-by=manual-stable-release,release-version=X-Y-Z" \
+  --remove-labels "gcb-build-id,gcb-trigger-id,gcb-trigger-region" \
+  --update-env-vars "MCP_ALLOWED_HOSTS=YOUR_STABLE_HOST,SEMIOTIC_DEPLOYMENT_CHANNEL=stable,SEMIOTIC_GIT_SHA=${SEMIOTIC_RELEASE_SHA},SEMIOTIC_BUILD_ID=release-vX.Y.Z,SEMIOTIC_BUILD_TIME=${SEMIOTIC_RELEASE_BUILT_AT}"
+
+node ../../scripts/smoke-hosted-mcp.mjs \
+  --endpoint https://YOUR_STABLE_HOST \
+  --expected-channel stable \
+  --expected-sha "${SEMIOTIC_RELEASE_SHA}" \
+  --expected-build-id release-vX.Y.Z
 ```
 
 `git status --short` must be empty, and `npm pkg get dependencies.semiotic` must
 print the exact published release version represented by the tag (for example,
-`"3.8.1"`, never a range). If deploying from a reviewed release commit instead
+`"3.8.6"`, never a range). If deploying from a reviewed release commit instead
 of a tag, substitute that full commit SHA for `vX.Y.Z` only after confirming
 that the wrapper's exact dependency and lockfile match the intended published
 npm artifact. This keeps npm, the stable Cloud Run revision, registry metadata,
-the surface manifest, and GitHub Release on one release identity.
+the surface manifest, and GitHub Release on one release identity. The Node
+one-liner normalizes the tag timestamp to the ISO UTC form required by the
+hosted smoke.
 
 ### Why these flags
 
@@ -219,7 +231,6 @@ ChatGPT: add it as a connector / app using the `/mcp` URL.
 When a new `semiotic` is published, bump the pinned `semiotic` version in `package.json`,
 generate and verify the lockfile as above, then re-run the same `gcloud run deploy` command.
 Cloud Buildpacks will receive the committed lockfile and install the exact dependency graph.
-If release provenance is available, set the `SEMIOTIC_*` build-identity variables with an
-additive `gcloud run services update --update-env-vars ...` command after the manual stable
-release deploy; this does not require building repository source and should never make the
-stable service track `main`.
+Release provenance is required for the post-deploy smoke: set the `SEMIOTIC_*`
+build-identity variables with additive `--update-env-vars` during the manual
+stable deploy. The stable service must never track arbitrary `main` commits.

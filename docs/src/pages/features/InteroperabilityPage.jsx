@@ -30,6 +30,18 @@ const GROUPS = [
     ],
   },
   {
+    heading: "Domain typology pilot — expert vocabulary stays identifiable",
+    blurb:
+      "Test portable audience, intent, provenance, and extension metadata against a real versioned domain object before promoting a new core schema.",
+    items: [
+      {
+        title: "HRA/WPP Typology Pilot",
+        path: "/interoperability/hra-wpp",
+        what: "A reproducible kidney ASCT+B v1.6 query artifact, ontology-identity failure case, and bounded workshop question.",
+      },
+    ],
+  },
+  {
     heading: "Inbound spec adapters — a format becomes a chart",
     blurb:
       "Parse another tool's chart description and compile it to a Semiotic ChartConfig. The chart arrives with the accessibility, navigation, theming, and provenance the source never had.",

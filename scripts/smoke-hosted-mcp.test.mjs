@@ -28,8 +28,13 @@ function json(res, status, body, headers = {}) {
 
 function fixtureIdentity(options) {
   const commitSha = options.commitSha ?? (options.wrongSha ? OTHER_SHA : COMMIT_SHA)
+  const expectedChannel = options.channel ?? "nightly"
   return {
-    channel: options.wrongChannel ? "stable" : "nightly",
+    channel: options.wrongChannel
+      ? expectedChannel === "nightly"
+        ? "stable"
+        : "nightly"
+      : expectedChannel,
     packageVersion: "3.8.3",
     surfaceVersion: "3.8.3-ai",
     commitSha,
@@ -208,12 +213,12 @@ async function createFixture(options = {}) {
   }
 }
 
-function runSmoke(endpoint, args = []) {
+function runSmoke(endpoint, args = [], expectedChannel = "nightly") {
   return new Promise((resolveRun, reject) => {
     const child = spawn(process.execPath, [
       smokeScript,
       "--endpoint", endpoint,
-      "--expected-channel", "nightly",
+      "--expected-channel", expectedChannel,
       "--expected-sha", COMMIT_SHA,
       "--expected-build-id", BUILD_ID,
       "--timeout-ms", "300",
@@ -266,6 +271,15 @@ describe("smoke-hosted-mcp", () => {
       assert.match(result.stdout, /health attempts 3/)
       assert.match(result.stdout, /createChart/)
       assert.doesNotMatch(result.stdout, /<svg/i)
+      assert.equal(result.stderr, "")
+    })
+  })
+
+  it("accepts the stable server name and exact published package version", async () => {
+    await withFixture({ channel: "stable" }, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint, [], "stable")
+      assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
+      assert.match(result.stdout, /hosted MCP smoke passed/)
       assert.equal(result.stderr, "")
     })
   })

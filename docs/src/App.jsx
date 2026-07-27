@@ -152,6 +152,7 @@ const ConferenceDemoPage = lazy(() => import("./pages/features/ConferenceDemoPag
 const TemporalLifecyclePage = lazy(() => import("./pages/features/TemporalLifecyclePage"))
 const PortabilitySpecPage = lazy(() => import("./pages/features/PortabilitySpecPage"))
 const VACPPage = lazy(() => import("./pages/features/VACPPage"))
+const HraWppPilotPage = lazy(() => import("./pages/features/HraWppPilotPage"))
 const DataQualityBridgePage = lazy(() => import("./pages/features/DataQualityBridgePage"))
 const GenerativeUIPage = lazy(() => import("./pages/features/GenerativeUIPage"))
 const ObservablePlotPage = lazy(() => import("./pages/features/ObservablePlotPage"))
@@ -830,6 +831,7 @@ export default function DocsApp() {
                 <Route path="overview" element={<InteroperabilityPage />} />
                 <Route path="portability-spec" element={<PortabilitySpecPage />} />
                 <Route path="vacp" element={<VACPPage />} />
+                <Route path="hra-wpp" element={<HraWppPilotPage />} />
                 <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
                 <Route path="observable-plot" element={<ObservablePlotPage />} />
                 <Route path="flint-chart" element={<FlintChartAdapterPage />} />

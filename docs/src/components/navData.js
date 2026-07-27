@@ -265,6 +265,7 @@ const navData = [
       { title: "Overview", path: "/interoperability/overview" },
       { title: "Portability Spec", path: "/interoperability/portability-spec" },
       { title: "VACP Bridge", path: "/interoperability/vacp" },
+      { title: "HRA/WPP Typology Pilot", path: "/interoperability/hra-wpp" },
       { title: "Vega-Lite", path: "/interoperability/vega-lite" },
       { title: "Observable Plot", path: "/interoperability/observable-plot" },
       { title: "Flint Chart", path: "/interoperability/flint-chart" },

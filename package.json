@@ -273,6 +273,8 @@
     "generate:gofish-fixtures": "node --experimental-strip-types scripts/gen-gofish-fixtures.ts --write",
     "generate:demo-gifs": "node -e \"try{require.resolve('sharp');require.resolve('gifenc')}catch{console.log('Skipping GIF generation (sharp/gifenc not installed)');process.exit(0)}\" && npx tsx scripts/generate-demo-gifs.ts",
     "generate:weather-baselines": "npx tsx scripts/generate-open-meteo-preset-baselines.mjs",
+    "generate:hra-wpp-pilot": "node scripts/build-hra-wpp-kidney-pilot.mjs --write",
+    "test:hra-wpp-pilot": "node --test scripts/build-hra-wpp-kidney-pilot.test.mjs",
     "generate:blog-og-cards": "node scripts/generate-blog-og-cards.mjs",
     "generate:example-og-cards": "node scripts/generate-example-og-cards.mjs",
     "generate:blog-rss": "node scripts/generate-blog-rss.mjs",
