@@ -55,8 +55,7 @@ describe("ModelEvaluationReadingRoom", () => {
   it("keeps failures, scorer corrections, and provenance readable without the charts", () => {
     renderRoom()
 
-    expect(screen.getByText("The seven fixture families that failed at least one first attempt"))
-      .toBeTruthy()
+    expect(screen.getByText("Failures by fixture family")).toBeTruthy()
     expect(screen.getByText(/render-evidence seam as much as a model miss/i)).toBeTruthy()
     expect(screen.getAllByText(/corrected:/i)).toHaveLength(3)
     expect(screen.getByText("Methods, provenance, and limits")).toBeTruthy()

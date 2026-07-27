@@ -670,13 +670,6 @@
   gap: 10px;
 }
 
-.benchmark-chart__audit-grid header span {
-  color: var(--bench-orange);
-  font-family: var(--bench-mono);
-  font-size: 0.68rem;
-  font-weight: 900;
-}
-
 .benchmark-chart__audit-expected {
   min-height: 38px;
   margin: 0;

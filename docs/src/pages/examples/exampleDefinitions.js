@@ -785,9 +785,9 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFile: "ModelEvaluationExamplePage.jsx",
     isPilot: true,
     title: "The Benchmark Is a Chart, Too",
-    eyebrow: "516 model requests · scorer audit",
+    eyebrow: "Model evaluation · scorer audit",
     description:
-      "Read one compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
     contract: {
       publicImports: ["semiotic/ordinal"],
       data: {
@@ -1213,9 +1213,9 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Benchmark Is a Chart, Too",
     path: "/examples/the-benchmark-is-a-chart-too",
-    eyebrow: "516 requests · answer vs abstain",
+    eyebrow: "Answer vs abstain · scorer audit",
     description:
-      "Read one compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
     preview: "model-evaluation",
     badges: ["Grouped scorecard", "Scorer audit", "Agent-readable"],
     frames: ["ordinal"],

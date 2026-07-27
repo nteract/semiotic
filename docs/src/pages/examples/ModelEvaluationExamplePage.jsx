@@ -127,11 +127,11 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__chapter" aria-labelledby="grounding-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>01 · The reading test</p>
-          <h3 id="grounding-heading">One total was hiding two jobs.</h3>
+          <p>Reader grounding</p>
+          <h3 id="grounding-heading">Grounding improved restraint, not chart reading.</h3>
           <span>
-            Switch the denominator. The same responses tell a different story
-            when correct answers and correct restraint stop sharing one bar.
+            Compare correct answers with correct restraint instead of
+            compressing both into the same bar.
           </span>
         </div>
 
@@ -213,8 +213,8 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__chapter" aria-labelledby="first-try-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>02 · The first-draft test</p>
-          <h3 id="first-try-heading">Correct chart family is not enough.</h3>
+          <p>First-attempt generation</p>
+          <h3 id="first-try-heading">Chart choice did not guarantee a valid render.</h3>
           <span>
             Every proposal had one chance to validate, render visible marks, and
             avoid error diagnostics. There was no repair pass.
@@ -280,9 +280,7 @@ export function ModelEvaluationReadingRoom() {
 
         <div className="benchmark-chart__failure-table-wrap">
           <table className="benchmark-chart__failure-table">
-            <caption>
-              The seven fixture families that failed at least one first attempt
-            </caption>
+            <caption>Failures by fixture family</caption>
             <thead>
               <tr>
                 <th scope="col">Fixture</th>
@@ -337,8 +335,8 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__chapter" aria-labelledby="scorer-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>03 · Marking the marker</p>
-          <h3 id="scorer-heading">Three tiny rules changed the honest result.</h3>
+          <p>Scorer audit</p>
+          <h3 id="scorer-heading">The scorer needed a manual review.</h3>
           <span>
             Before publication, every score change between PNG-only and combined
             evidence was read by a person. That audit found these lexical traps.
@@ -346,10 +344,9 @@ export function ModelEvaluationReadingRoom() {
         </div>
 
         <div className="benchmark-chart__audit-grid">
-          {SCORER_AUDIT_CASES.map((entry, index) => (
+          {SCORER_AUDIT_CASES.map((entry) => (
             <article key={entry.id}>
               <header>
-                <span>0{index + 1}</span>
                 <strong>{entry.label}</strong>
               </header>
               <p className="benchmark-chart__audit-expected">{entry.expected}</p>
@@ -367,7 +364,7 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__conclusion">
         <p>THE READING</p>
-        <h3>A benchmark can catch a product seam only if it is allowed to embarrass the benchmark.</h3>
+        <h3>The disagreements define the engineering backlog.</h3>
         <div>
           <p>
             Keep the split scores. Keep the failed proposals. Keep the scorer
