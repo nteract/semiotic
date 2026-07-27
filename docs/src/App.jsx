@@ -252,6 +252,9 @@ const WorldOfFunnelsExamplePage = lazy(() => import("./pages/examples/WorldOfFun
 const WhatTheMachineSeesExamplePage = lazy(
   () => import("./pages/examples/WhatTheMachineSeesExamplePage"),
 )
+const ModelEvaluationExamplePage = lazy(
+  () => import("./pages/examples/ModelEvaluationExamplePage"),
+)
 const SemioticArchitectureExamplePage = lazy(
   () => import("./pages/examples/SemioticArchitectureExamplePage"),
 )
@@ -324,6 +327,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "DistantReadingExamplePage.jsx": DistantReadingExamplePage,
   "WorldOfFunnelsExamplePage.jsx": WorldOfFunnelsExamplePage,
   "WhatTheMachineSeesExamplePage.jsx": WhatTheMachineSeesExamplePage,
+  "ModelEvaluationExamplePage.jsx": ModelEvaluationExamplePage,
   "SemioticArchitectureExamplePage.jsx": SemioticArchitectureExamplePage,
   "OctopusMetaphorExamplePage.jsx": OctopusMetaphorExamplePage,
   "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,

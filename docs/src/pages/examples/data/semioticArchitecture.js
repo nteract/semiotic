@@ -1241,6 +1241,22 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "the-benchmark-is-a-chart-too",
+    shortLabel: "Benchmark Is a Chart",
+    note: "A three-model scorecard separates answerable reads from correct abstentions, then keeps the first-attempt failure matrix and scorer corrections beside the aggregate.",
+    uses: [
+      "input-static",
+      "hoc-ordinal-bars",
+      "feature-accessors",
+      "feature-axes",
+      "feature-tooltips",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "semiotic-architecture",
     shortLabel: "This Diagram (↻)",
     note: "The map you are reading is itself a NetworkCustomChart: a custom layout draws the Sankey overlay onto transparent hit targets, hover and shared-selection restyle it in place, and tooltips, descriptions, and a navigable table make it accessible. Tracing it highlights its own machinery.",

@@ -41,7 +41,9 @@ error diagnostics on the model's first proposal.
 | Terra | 17/22 | 77.3% | `line-push`, `scatter-push`, `bubble-static`, `symbol-map-static`, `unit-pile-push` |
 | Luna | 17/22 | 77.3% | `line-push`, `gauge-static`, `symbol-map-static`, `galton-static`, `unit-pile-push` |
 
-Sol invented an unsupported `BigNumber` component for the gauge request.
+Sol selected the real, documented `BigNumber` component, but the server
+render-evidence oracle does not support it. This is a surface seam, not a
+fabricated component.
 Terra's two XY failures exposed a serializability/behavior ambiguity: it supplied
 string `xFormat` values where the render path expected formatter functions.
 Across Terra and Luna, the repeated failures otherwise cluster around required
