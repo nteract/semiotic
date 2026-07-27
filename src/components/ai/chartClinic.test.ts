@@ -76,15 +76,15 @@ describe("Chart Clinic read-only inspection", () => {
     })
   })
 
-  it("preserves explicit pilot exclusions from renderChart guidance", () => {
+  it("uses native renderChart guidance for the BigNumber value card", () => {
     const report = inspectChart({ component: "BigNumber", props: {} })
 
     expect(report.bundle).toMatchObject({
       category: "value",
       recommendedImport: "semiotic/value",
+      serverImport: "semiotic/server",
       docsRoute: "/charts/big-number",
     })
-    expect(report.bundle).not.toHaveProperty("serverImport")
   })
 
   it("omits the generated export timestamp so identical inspection reports are deterministic", () => {
