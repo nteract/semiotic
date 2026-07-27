@@ -9,11 +9,11 @@ vi.mock("../../hooks/useResponsiveWidth", () => ({
 }))
 
 vi.mock("semiotic/ordinal", () => ({
+  // Only the repeated post-merge rows carry `attempted`, so the mock keys off
+  // data shape rather than title copy an edit could change.
   GroupedBarChart: ({ data, title, valueLabel }) => (
     <div
-      data-testid={
-        title === "Repeated answerable outcomes" ? "follow-up-grounding-chart" : "grounding-chart"
-      }
+      data-testid={data[0]?.attempted == null ? "grounding-chart" : "follow-up-grounding-chart"}
       data-denominator={data[0]?.denominator}
       data-value-label={valueLabel}
     >

@@ -309,8 +309,7 @@ const firstTrySummary = summarizeFirstTryRows(
 )
 const groundingSummary = summarizeGroundingRows(
   grounding.conditions,
-  groundingRaw,
-  Boolean(groundingSubmission)
+  groundingRaw
 )
 
 const report = {
@@ -364,7 +363,9 @@ if (outputPath) {
 process.stderr.write(
   [
     `first-try ${report.firstTry.summary.firstAttemptPassed}/${report.firstTry.summary.generationFixtures}`,
-    `grounding ${report.grounding.summary.trials} trials`,
+    groundingSubmission
+      ? `grounding ${report.grounding.summary.trials} trials`
+      : `grounding ${report.grounding.summary.availableTrials} trials`,
     groundingSubmission ? "scored" : "awaiting model results"
   ].join(" · ") + "\n"
 )

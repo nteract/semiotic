@@ -21,7 +21,7 @@ export function summarizeFirstTryRows(rows, hasSubmission) {
   }
 }
 
-export function summarizeGroundingRows(conditions, rows, hasSubmission) {
+export function summarizeGroundingRows(conditions, rows) {
   const conditionSummary = Object.fromEntries(
     conditions.map((condition) => {
       const available = rows.filter((entry) => entry.condition === condition)
@@ -45,14 +45,15 @@ export function summarizeGroundingRows(conditions, rows, hasSubmission) {
     })
   )
 
+  const trials = Object.values(conditionSummary).reduce(
+    (total, condition) => total + condition.trials,
+    0
+  )
+
   return {
-    trials: hasSubmission
-      ? Object.values(conditionSummary).reduce(
-          (total, condition) => total + condition.trials,
-          0
-        )
-      : rows.length,
+    trials,
     availableTrials: rows.length,
+    missing: rows.length - trials,
     conditions: conditionSummary
   }
 }

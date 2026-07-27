@@ -77,12 +77,12 @@ test("targeted grounding summaries count only submitted scored rows", () => {
         passed: false,
         answerable: true
       }
-    ],
-    true
+    ]
   )
 
   assert.equal(summary.trials, 2)
   assert.equal(summary.availableTrials, 4)
+  assert.equal(summary.missing, 2)
   assert.deepEqual(summary.conditions["png-only"], {
     trials: 1,
     availableTrials: 2,
@@ -93,4 +93,36 @@ test("targeted grounding summaries count only submitted scored rows", () => {
     unanswerableTrials: 0
   })
   assert.equal(summary.conditions["grounding-only"].unanswerableTrials, 1)
+})
+
+test("grounding trials stay consistent with their conditions before results land", () => {
+  const summary = summarizeGroundingRows(
+    ["png-only", "grounding-only"],
+    [
+      {
+        condition: "png-only",
+        status: "pending",
+        passed: null,
+        answerable: true
+      },
+      {
+        condition: "grounding-only",
+        status: "pending",
+        passed: null,
+        answerable: false
+      }
+    ]
+  )
+
+  assert.equal(summary.trials, 0)
+  assert.equal(
+    summary.trials,
+    Object.values(summary.conditions).reduce(
+      (total, condition) => total + condition.trials,
+      0
+    )
+  )
+  assert.equal(summary.availableTrials, 2)
+  assert.equal(summary.missing, 2)
+  assert.equal(summary.conditions["png-only"].accuracy, null)
 })
