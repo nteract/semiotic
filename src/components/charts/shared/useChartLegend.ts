@@ -7,9 +7,11 @@ import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import {
+  resolveAxisChromeGutter,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
   resolveSideLegendMargin,
+  type AxisChromeInput,
 } from "../../legendLayout"
 import type { Datum } from "./datumTypes"
 
@@ -33,6 +35,7 @@ export function useChartLegendAndMargin({
   chartWidth,
   legendLayout,
   hasTitle = false,
+  axisChrome,
 }: {
   data: Array<Datum>
   colorBy: Accessor<string> | undefined
@@ -50,6 +53,12 @@ export function useChartLegendAndMargin({
   legendLayout?: LegendLayout
   /** Reserve the chart-title band above a top legend. */
   hasTitle?: boolean
+  /**
+   * Axis chrome on the legend's side. A top/bottom legend is placed outside
+   * this band, so the reserved margin has to include it or the legend lands
+   * past the canvas edge.
+   */
+  axisChrome?: AxisChromeInput
 }): {
   legend: LegendValue | undefined
   margin: MarginType
@@ -93,6 +102,10 @@ export function useChartLegendAndMargin({
     [automaticLegend, additionalLegend],
   )
 
+  // Depend on the fields, not the object: callers pass an inline literal, so
+  // keying the memo on its identity would recompute the margin every render.
+  const { hasAxis, hasAxisLabel, rotatedTicks } = axisChrome ?? {}
+
   const margin = useMemo<MarginType>(() => {
     const userSides = typeof userMargin === "number"
       ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
@@ -117,9 +130,40 @@ export function useChartLegendAndMargin({
         1,
         (chartWidth ?? 600) - finalMargin.left - finalMargin.right,
       )
+      // The axis gutter is part of the reservation, not just the placement:
+      // the legend now sits below the tick labels, so the band has to hold
+      // both or the legend is pushed off the canvas.
+      //
+      // `axisChrome` describes the *bottom* axis, so only a bottom legend
+      // reserves the measured band. A top axis is opt-in, so a top legend
+      // shifts only for an explicit `legendLayout.axisGutter` — passing
+      // `undefined` here keeps that override while dropping the measurement,
+      // exactly matching the placement split in `renderLegendFromConfig` and
+      // the server's `bottomRequirement`. Reserving it for both would push the
+      // plot down by 22–46px that nothing draws into.
+      //
+      // When the caller did not describe its axis, assume the widest ordinary
+      // band rather than none. Placement always knows the real chrome (the SVG
+      // overlay measures it), so an under-reservation does not shrink the
+      // gutter — it makes the renderer clamp the legend back *up* into the
+      // axis labels, which is the exact overlap this gutter exists to prevent.
+      // The 80px bottom-legend floor already absorbs this whenever the legend
+      // plus its distance stays under it — the common single-row case — so
+      // those charts keep their current margins. Only a legend that already
+      // exceeds the floor (wrapped onto extra rows, or a large
+      // `legendDistance`) grows, and there an axis-less chart such as
+      // pie/donut over-reserves slightly rather than colliding. Charts that
+      // pass `axisChrome` are exact either way.
+      const bottomAxisChrome: AxisChromeInput = hasAxis === undefined
+        ? { hasAxis: true, hasAxisLabel: true }
+        : { hasAxis, hasAxisLabel, rotatedTicks }
       const horizontalLegendMargin =
         resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
         resolveLegendDistance(legend) +
+        resolveAxisChromeGutter(
+          legendPosition === "bottom" ? bottomAxisChrome : undefined,
+          legendLayout,
+        ) +
         (legendPosition === "top" && hasTitle ? 24 : 0)
       if (legendPosition === "right" && !sideSet("right") && finalMargin.right < sideLegendMargin) finalMargin.right = sideLegendMargin
       else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < sideLegendMargin) finalMargin.left = sideLegendMargin
@@ -127,7 +171,8 @@ export function useChartLegendAndMargin({
       else if (legendPosition === "bottom" && !sideSet("bottom")) finalMargin.bottom = Math.max(finalMargin.bottom, 80, horizontalLegendMargin)
     }
     return finalMargin
-  }, [defaults, userMargin, legend, legendPosition, chartWidth, legendLayout, hasTitle])
+  }, [defaults, userMargin, legend, legendPosition, chartWidth, legendLayout, hasTitle,
+      hasAxis, hasAxisLabel, rotatedTicks])
 
   return { legend, margin, legendPosition }
 }

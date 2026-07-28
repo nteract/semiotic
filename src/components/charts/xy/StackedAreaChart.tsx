@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
@@ -364,6 +365,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
   })
 
   // ── Area-series construction (data shaping, line/point style, tooltip) ─

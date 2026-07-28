@@ -31,7 +31,10 @@ export function summarizeGroundingRows(conditions, rows) {
         {
           trials: scored.length,
           availableTrials: available.length,
-          missing: available.length - scored.length,
+          unscored: available.length - scored.length,
+          missingSubmissions: available.filter(
+            (entry) => entry.status === "missing"
+          ).length,
           scored: scored.length,
           passed: scored.filter(({ passed }) => passed).length,
           accuracy:
@@ -53,7 +56,9 @@ export function summarizeGroundingRows(conditions, rows) {
   return {
     trials,
     availableTrials: rows.length,
-    missing: rows.length - trials,
+    unscored: rows.length - trials,
+    missingSubmissions: rows.filter((entry) => entry.status === "missing")
+      .length,
     conditions: conditionSummary
   }
 }

@@ -637,6 +637,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
         legendLayout,
+        // The bottom axis is the value axis when horizontal and the category
+        // axis otherwise; radial projections draw neither.
+        axisChrome: {
+          hasAxis: !!showAxes && !isRadial,
+          hasAxisLabel: isHorizontal ? !!rLabel : !!oLabel,
+        },
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

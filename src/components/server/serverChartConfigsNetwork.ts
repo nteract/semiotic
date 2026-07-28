@@ -7,28 +7,15 @@ import { createColorScale, getColor, resolveCategoricalPalette, DEPTH_PALETTE_CO
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
-import { type ChartConfig } from "./serverChartConfigShared"
+import { type ChartConfig, primitiveStyleOverrides } from "./serverChartConfigShared"
+import { mergeShapeStyle, hasPrimitiveOverrides } from "../charts/shared/mergeShapeStyle"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
+import {
+  composeHierarchyNodeStyle,
+  resolveForceEdgeStyle,
+} from "./serverChartConfigNetworkStyles"
 import * as React from "react"
-
-/**
- * Compose a user/frame `nodeStyle` on top of the HOC's built-in fill
- * encoding so hierarchy fill, hide-root, and border rules remain intact.
- */
-function composeHierarchyNodeStyle(
-  baseNodeStyle: (d: Datum) => Record<string, unknown>,
-  userNodeStyle: ((d: Datum) => Record<string, unknown> | undefined | null) | Record<string, unknown> | undefined | null,
-): (d: Datum) => Record<string, unknown> {
-  if (!userNodeStyle) return baseNodeStyle
-  if (typeof userNodeStyle === "function") {
-    return (d: Datum) => ({
-      ...baseNodeStyle(d),
-      ...(userNodeStyle(d) ?? {}),
-    })
-  }
-  return (d: Datum) => ({ ...baseNodeStyle(d), ...userNodeStyle })
-}
 
 // ── Network Charts ─────────────────────────────────────────────────────
 
@@ -36,37 +23,7 @@ export const forceDirectedGraph: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    // Mirror the HOC's edgeWidth/edgeColor/edgeOpacity handling so that
-    // `renderChart("ForceDirectedGraph", { edgeWidth: "weight" })` honors
-    // edge weight in SSR. An explicit edgeStyle wins; otherwise synthesize
-    // one when any edge primitive prop is set. The edge callback receives a
-    // RealtimeEdge wrapper (user data on .data) — read field/function
-    // accessors against the raw edge, matching the HOC.
-    const { edgeWidth, edgeColor, edgeOpacity } = rest
-    const hasEdgePrimitives =
-      edgeWidth !== undefined || edgeColor !== undefined || edgeOpacity !== undefined
-    const edgeStyle =
-      rest.edgeStyle ??
-      (hasEdgePrimitives
-        ? (d: Datum) => {
-            const edge = (d?.data as Datum) || d
-            let strokeWidth = 1
-            if (typeof edgeWidth === "number") {
-              strokeWidth = edgeWidth
-            } else if (typeof edgeWidth === "function") {
-              strokeWidth = edgeWidth(edge)
-            } else if (typeof edgeWidth === "string") {
-              const raw = edge?.[edgeWidth]
-              const n = typeof raw === "number" ? raw : Number(raw)
-              strokeWidth = Number.isFinite(n) && n > 0 ? n : 1
-            }
-            return {
-              stroke: edgeColor ?? "#999",
-              strokeWidth,
-              opacity: edgeOpacity ?? 0.6,
-            }
-          }
-        : undefined)
+    const edgeStyle = resolveForceEdgeStyle(rest)
     const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
     const categoryIndexMap = new Map<string, number>()
     const baseNodeStyle = rest.nodeStyle ?? ((d: Datum) => {
@@ -86,9 +43,16 @@ export const forceDirectedGraph: ChartConfig = {
       colorBy as string | ((d: Datum) => unknown) | undefined,
       typeof rest.nodeSize === "number" ? undefined : rest.nodeSize,
     )
-    const configuredNodeStyle = ruleNodeStyle
+    const ruledNodeStyle = ruleNodeStyle
       ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
       : baseNodeStyle
+    // Node-only props win over the generic primitives, matching the HOC's
+    // documented `nodeStroke ?? stroke` precedence.
+    const configuredNodeStyle = mergeShapeStyle(ruledNodeStyle, {
+      stroke: (rest.nodeStroke ?? rest.stroke) as string | undefined,
+      strokeWidth: (rest.nodeStrokeWidth ?? rest.strokeWidth) as number | undefined,
+      opacity: rest.opacity as number | undefined,
+    })
     return {
       chartType: "force",
       nodes: rest.nodes,
@@ -108,6 +72,9 @@ export const forceDirectedGraph: ChartConfig = {
       nodeSizeRange: rest.nodeSizeRange,
       nodeStyle: configuredNodeStyle,
       edgeStyle,
+      // `...common` last, mirroring the HOC's trailing `{...frameProps}`: an
+      // explicit frameProps nodeStyle/edgeStyle is the documented escape hatch
+      // and outranks the primitive overlay on both paths.
       ...common,
     }
   },
@@ -441,9 +408,11 @@ export const sankeyDiagram: ChartConfig = {
         fill: colorBy
           ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
           : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
-        stroke: common.stroke ?? "black",
-        strokeWidth: common.strokeWidth ?? 1,
-        ...(common.opacity !== undefined && { opacity: common.opacity }),
+        // `stroke`/`strokeWidth`/`opacity` are not COMMON_FRAME_PROP_KEYS, so
+        // reading them off `common` always fell through to the defaults.
+        stroke: (rest.stroke as string | undefined) ?? "black",
+        strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
+        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
       }
     }
     // Wire styleRules into nodeStyle for hatch and threshold fills.
@@ -480,9 +449,16 @@ export const sankeyDiagram: ChartConfig = {
     colorBy,
     edgeColorBy: rest.edgeColorBy,
     edgeOpacity: rest.edgeOpacity,
-    nodeStyle: common.nodeStyle || rest.nodeStyle || configuredNodeStyle,
-    edgeStyle: common.edgeStyle || rest.edgeStyle || baseEdgeStyle,
+    nodeStyle: mergeShapeStyle(
+      (rest.nodeStyle || configuredNodeStyle) as (d: Datum) => Datum,
+      primitiveStyleOverrides(rest),
+    ),
+    edgeStyle: mergeShapeStyle(
+      (rest.edgeStyle || baseEdgeStyle) as (d: Datum) => Datum,
+      primitiveStyleOverrides(rest),
+    ),
     colorScheme,
+    // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
     ...common,
     }
   },
@@ -500,7 +476,13 @@ export const chordDiagram: ChartConfig = {
     // When nothing needs a custom nodeStyle, omit it so the layout plugin's
     // built-in path stays identical to the pre-styleRules SSR config.
     const hasStyleRules = Array.isArray(rest.styleRules) && (rest.styleRules as unknown[]).length > 0
-    const needsNodeStyle = Boolean(colorBy || hasStyleRules || common.nodeStyle || rest.nodeStyle)
+    // Top-level primitives need a nodeStyle too — without them in this gate,
+    // `renderChart("ChordDiagram", { stroke })` took the built-in path below
+    // and the arcs kept their default black outline.
+    const needsNodeStyle = Boolean(
+      colorBy || hasStyleRules || common.nodeStyle || rest.nodeStyle ||
+      hasPrimitiveOverrides(primitiveStyleOverrides(rest))
+    )
     if (!needsNodeStyle) {
       return {
         chartType: "chord",
@@ -557,9 +539,12 @@ export const chordDiagram: ChartConfig = {
       }
       return {
         fill,
-        stroke: common.stroke ?? "black",
-        strokeWidth: common.strokeWidth ?? 1,
-        ...(common.opacity !== undefined && { opacity: common.opacity }),
+        // Read the top-level primitives off `rest`: they are deliberately not
+        // in COMMON_FRAME_PROP_KEYS, so `common.stroke` is always undefined
+        // and this used to collapse to the hardcoded default every time.
+        stroke: (rest.stroke as string | undefined) ?? "black",
+        strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
+        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
       }
     }
     // styleRulesToNodeStyle layers rules over an optional user style — pass
@@ -581,7 +566,11 @@ export const chordDiagram: ChartConfig = {
       colorBy,
       edgeColorBy: rest.edgeColorBy,
       colorScheme,
-      nodeStyle: common.nodeStyle || rest.nodeStyle || configuredNodeStyle,
+      nodeStyle: mergeShapeStyle(
+        (rest.nodeStyle || configuredNodeStyle) as (d: Datum) => Datum,
+        primitiveStyleOverrides(rest),
+      ),
+      // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
       ...common,
     }
   },
@@ -616,9 +605,11 @@ export const treeDiagram: ChartConfig = {
                 ? getColor({ __ssrTreeColorBy: colorByFn(raw) }, "__ssrTreeColorBy", colorScale ?? undefined)
                 : getColor(raw, colorBy as string, colorScale ?? undefined))
             : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
-        stroke: common.stroke ?? "black",
-        strokeWidth: common.strokeWidth ?? 1,
-        ...(common.opacity !== undefined && { opacity: common.opacity }),
+        // `stroke`/`strokeWidth`/`opacity` are not COMMON_FRAME_PROP_KEYS, so
+        // reading them off `common` always fell through to the defaults.
+        stroke: (rest.stroke as string | undefined) ?? "black",
+        strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
+        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
       }
     }
     // HOC defaults showLabels true and supplies nodeLabel || nodeIdAccessor;
@@ -639,7 +630,7 @@ export const treeDiagram: ChartConfig = {
     nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
     colorScheme,
     ...common,
-    nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
+    nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
     }
   },
 }
@@ -720,7 +711,7 @@ export const treemap: ChartConfig = {
       ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
       colorScheme,
       ...common,
-      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
+      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
     }
   },
 }
@@ -783,7 +774,7 @@ export const circlePack: ChartConfig = {
       ...(rest.padding != null && { padding: rest.padding }),
       colorScheme,
       ...common,
-      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle),
+      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
     }
   },
 }

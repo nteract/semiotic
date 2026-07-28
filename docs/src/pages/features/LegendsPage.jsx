@@ -159,6 +159,14 @@ const legendProps = [
     description:
       "Space reserved between the plot and a left/right legend for adjacent chrome such as axis ticks and an axis title. MultiAxisLineChart supplies this automatically.",
   },
+  {
+    name: "legendLayout.axisGutter",
+    type: "number",
+    required: false,
+    default: "measured bottom-axis chrome; 0 for a top legend",
+    description:
+      "The top/bottom counterpart of sideGutter. A bottom legend defaults to the chrome of the axis actually drawn (tick labels, plus an axis title when present, wider again for rotated ticks) so it clears the labels instead of overdrawing them, and to zero when there is no bottom axis. Auto-measurement is bottom-axis only — top axes are opt-in, so a top legend needs this set explicitly. Set 0 to anchor the legend directly to the plot edge.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -430,6 +438,24 @@ export default function LegendsPage() {
         axis title must remain next to its axis while the legend sits beyond it;
         <code>MultiAxisLineChart</code> configures that ordering automatically.
         Neither option adds padding at the outside edge of the SVG.
+      </p>
+
+      <p>
+        A bottom legend measures that same gap from the outside of its axis
+        chrome rather than from the plot edge, so it sits below the tick labels
+        instead of on top of them. The reserved band is derived from the axis
+        actually drawn — tick labels alone, or tick labels plus an axis title,
+        widening again when <code>autoRotate</code> turns the tick labels — and
+        is zero for charts with no bottom axis, such as pie and donut.
+      </p>
+
+      <p>
+        Auto-measurement is bottom-axis only. A top axis is opt-in through{" "}
+        <code>frameProps.axes</code>, so a top legend reserves nothing unless
+        you set <code>legendLayout.axisGutter</code> yourself. That same option
+        overrides the measured bottom band, and{" "}
+        <code>axisGutter: 0</code> opts out entirely, anchoring the legend
+        directly to the plot edge.
       </p>
 
       <h3 id="top-legend">Top Legend</h3>

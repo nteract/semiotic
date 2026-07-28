@@ -193,6 +193,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     width,
     height,
     hasTitle: !!title,
+    // Always radial — no bottom axis for a bottom legend to clear.
+    axisChrome: { hasAxis: false },
   })
 
   const themeCategorical = useThemeCategorical()

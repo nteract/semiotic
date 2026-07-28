@@ -16,6 +16,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 
@@ -247,6 +248,13 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     width,
     height,
     hasTitle: !!title,
+    // Histogram is always horizontal.
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: "horizontal",
+      hasCategoryLabel: !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

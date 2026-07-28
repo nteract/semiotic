@@ -257,13 +257,13 @@ const BEHAVIOR_CONTRACTS = [
   {
     id: "value.bignumber-wire-contract",
     category: "value",
-    title: "BigNumber uses value-card props",
+    title: "Value components do not inherit chart-HOC props",
     severity: "error",
     appliesTo: {
       components: ["BigNumber"],
     },
-    summary: "BigNumber uses label as its visible heading and supports description and summary; title and accessibleTable are chart-frame props and are not supported. Its percent format expects a ratio such as 0.97 and renders it as 97%.",
-    agentAction: "Use label, description, and summary for BigNumber text. For a 97-of-100 KPI, either pass value={0.97} with format=\"percent\" or pass value={97} with format=\"number\" and suffix=\"%\"; do not combine value={97} with format=\"percent\".",
+    summary: "BigNumber is a value component, not a chart HOC, so it does not inherit the common chart-HOC prop list. It uses label as its visible heading and supports description and summary; title and accessibleTable are invalid. Its percent format expects a ratio such as 0.97 and renders it as 97%.",
+    agentAction: "Validate BigNumber against its own prop schema and remove inherited chart-HOC props such as title and accessibleTable before returning a proposal. Use label, description, and summary for text. For a 97-of-100 KPI, either pass value={0.97} with format=\"percent\" or pass value={97} with format=\"number\" and suffix=\"%\"; do not combine value={97} with format=\"percent\".",
     example: '{ "component": "BigNumber", "props": { "value": 97, "label": "SLA attainment", "format": "number", "suffix": "%", "target": { "value": 99, "label": "target", "format": "number" } } }',
   },
   {

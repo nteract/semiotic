@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+  "fixtureRevision": "semiotic-first-try-2026-07-27-value-boundary",
   "context": ["CLAUDE.md", "docs/public/llms.txt"],
   "fixtures": [
     {

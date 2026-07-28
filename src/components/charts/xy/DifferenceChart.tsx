@@ -13,6 +13,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp, normalizeTooltip, defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
 import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
@@ -409,6 +410,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
   })
 
   // Custom two-item legend keyed to series labels, not the internal

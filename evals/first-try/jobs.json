@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "fixtureRevision": "semiotic-first-try-2026-07-27-contracts",
+  "fixtureRevision": "semiotic-first-try-2026-07-27-value-boundary",
   "jobs": [
     {
       "fixtureId": "bar-static-custom-fields",

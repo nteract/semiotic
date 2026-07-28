@@ -65,6 +65,83 @@ export function resolveLegendSideGutter(layout?: LegendLayout): number {
   return Math.max(0, layout?.sideGutter ?? 0)
 }
 
+/**
+ * Height of the chrome a horizontal axis draws *outside* the plot rect, which
+ * a top/bottom legend has to clear.
+ *
+ * The axis renderers place tick labels on a baseline 18px past the axis line
+ * and an axis title at 40px (58px when ticks are rotated); each needs a few
+ * more pixels for descenders. A bottom legend anchored at `plotBottom +
+ * legendDistance` lands in exactly that band, so without this reservation the
+ * legend and the tick labels draw at the same y.
+ */
+export const AXIS_TICK_CHROME = 22
+export const AXIS_TITLE_CHROME = 46
+export const ROTATED_AXIS_TITLE_CHROME = 64
+
+export interface AxisChromeInput {
+  /** A horizontal axis renders on this side of the plot. */
+  hasAxis?: boolean
+  /** An axis title (`xLabel` / `valueLabel` / `categoryLabel`) is present. */
+  hasAxisLabel?: boolean
+  /** Tick labels are rotated, which pushes the axis title further out. */
+  rotatedTicks?: boolean
+}
+
+/**
+ * Space to reserve between the plot edge and a top/bottom legend.
+ *
+ * `legendLayout.axisGutter` is the explicit override (including `0` to opt out
+ * and restore pre-3.8.7 placement); otherwise the band is derived from the
+ * axis chrome actually being drawn, and is 0 when there is no axis on that
+ * side — so pie/donut and axes-off charts are unaffected.
+ */
+export function resolveAxisChromeGutter(
+  input?: AxisChromeInput,
+  layout?: LegendLayout,
+): number {
+  if (layout?.axisGutter != null) return Math.max(0, layout.axisGutter)
+  if (!input?.hasAxis) return 0
+  if (!input.hasAxisLabel) return AXIS_TICK_CHROME
+  return input.rotatedTicks ? ROTATED_AXIS_TITLE_CHROME : AXIS_TITLE_CHROME
+}
+
+/**
+ * Resolve `axisChrome` for an XY chart HOC's `useChartLegendAndMargin` call.
+ * Mirrors `server/staticXY.tsx`'s `renderStreamXYFrame` (`hasAxis:
+ * showAxes !== false`, `hasAxisLabel: !!xLabel`) so a bottom-legend chart
+ * reserves the same margin on the client as `renderChart` does on the
+ * server — leaving either side to guess (the pre-3.8.8 default) makes the
+ * client over- or under-reserve relative to the SSR output whenever a
+ * wrapped legend pushes the reservation past the 80px floor.
+ */
+export function resolveXYAxisChrome(input: {
+  showAxes?: boolean
+  xLabel?: unknown
+}): AxisChromeInput {
+  return { hasAxis: input.showAxes !== false, hasAxisLabel: !!input.xLabel }
+}
+
+/**
+ * Resolve `axisChrome` for an ordinal chart HOC's `useChartLegendAndMargin`
+ * call. Mirrors `server/staticOrdinal.tsx`'s `renderOrdinalFrame`: the
+ * bottom axis is the value axis for `"horizontal"` projection, the category
+ * axis otherwise, and radial projections draw no axis at all. See
+ * `resolveXYAxisChrome` for why this must track the server computation.
+ */
+export function resolveOrdinalAxisChrome(input: {
+  showAxes?: boolean
+  projection?: "horizontal" | "vertical" | "radial"
+  hasCategoryLabel: boolean
+  hasValueLabel: boolean
+}): AxisChromeInput {
+  const projection = input.projection ?? "vertical"
+  return {
+    hasAxis: input.showAxes !== false && projection !== "radial",
+    hasAxisLabel: projection === "horizontal" ? input.hasValueLabel : input.hasCategoryLabel,
+  }
+}
+
 /** Estimate the layout-box height used to place a top/bottom legend. */
 export function resolveHorizontalLegendHeight(
   legend: LegendValue | null | undefined,

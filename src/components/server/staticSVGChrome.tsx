@@ -27,9 +27,11 @@ import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
+  resolveAxisChromeGutter,
   resolveLegendDistance,
   resolveLegendSideGutter,
   resolveSideLegendMargin,
+  type AxisChromeInput,
 } from "../legendLayout"
 
 export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
@@ -104,6 +106,11 @@ type LegendPosition = "right" | "left" | "top" | "bottom"
 type StaticLegendHostProps = ThemeAwareProps & {
   legend?: unknown
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Bottom-axis chrome, so a bottom legend is placed and reserved outside the
+   * tick labels. Frames without a horizontal axis omit it and keep a 0 gutter.
+   */
+  axisChrome?: AxisChromeInput
 }
 
 function effectiveFrameLegend(
@@ -161,6 +168,7 @@ export function reserveStaticLegendMargin(
     legendLayout?: LegendLayout
     minimumMargin?: number
     preserveExplicitMargin?: boolean
+    axisChrome?: AxisChromeInput
   }
 ): void {
   if (options.categories.length === 0) return
@@ -183,8 +191,11 @@ export function reserveStaticLegendMargin(
     options.minimumMargin ?? 0,
     resolveSideLegendMargin(categoricalLegend, options.legendLayout),
   )
+  // Include the axis gutter: the legend now sits below the tick labels, so
+  // the reserved band has to cover chrome + gap + legend.
+  const axisGutter = resolveAxisChromeGutter(options.axisChrome, options.legendLayout)
   const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
-  const bottomRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height)
+  const bottomRequirement = Math.max(options.minimumMargin ?? 0, axisGutter + legendDistance + metrics.height)
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -208,6 +219,7 @@ export function reserveLegendConfigMargin(
     legendLayout?: LegendLayout
     minimumMargin?: number
     preserveExplicitMargin?: boolean
+    axisChrome?: AxisChromeInput
   }
 ): void {
   if (options.preserveExplicitMargin) return
@@ -232,8 +244,11 @@ export function reserveLegendConfigMargin(
     options.minimumMargin ?? 0,
     resolveSideLegendMargin(options.legend as LegendValue, options.legendLayout),
   )
+  // Include the axis gutter: the legend now sits below the tick labels, so
+  // the reserved band has to cover chrome + gap + legend.
+  const axisGutter = resolveAxisChromeGutter(options.axisChrome, options.legendLayout)
   const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
-  const bottomRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height)
+  const bottomRequirement = Math.max(options.minimumMargin ?? 0, axisGutter + legendDistance + metrics.height)
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -257,6 +272,7 @@ export function renderLegendConfig(
     legendLayout?: LegendLayout
     idPrefix?: string
     reservedWidth?: number
+    axisChrome?: AxisChromeInput
   }
 ): React.ReactNode {
   const base = {
@@ -269,6 +285,7 @@ export function renderLegendConfig(
     legendLayout: options.legendLayout,
     idPrefix: options.idPrefix,
     reservedWidth: options.reservedWidth,
+    axisChrome: options.axisChrome,
     legendDistance: (isLegendConfig(legend) || isGradientLegendConfig(legend))
       ? legend.legendDistance
       : undefined,
@@ -301,6 +318,7 @@ export function reserveFrameLegendMargin(
     size,
     hasTitle,
     legendLayout: props.legendLayout,
+    axisChrome: props.axisChrome,
     minimumMargin: hocLegendMarginMinimum(props, position),
     preserveExplicitMargin: hasExplicitLegendMargin(props, position),
   }
@@ -337,6 +355,7 @@ export function renderFrameLegend(options: {
     margin,
     hasTitle,
     legendLayout: props.legendLayout,
+    axisChrome: props.axisChrome,
     idPrefix: props._idPrefix,
   }
   if (props.legend !== undefined && props.legend !== null) {
@@ -358,6 +377,7 @@ export function renderFrameLegend(options: {
     margin,
     hasTitle,
     legendLayout: props.legendLayout,
+    axisChrome: props.axisChrome,
     idPrefix: props._idPrefix,
   })
 }

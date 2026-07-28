@@ -615,3 +615,130 @@ describe("LineChart — x-band / x-threshold SSR", () => {
     expect(label).toContain('fill="#00a2ce"')
   })
 })
+
+/**
+ * Top-level primitive styling (`stroke` / `strokeWidth` / `opacity`) in SSR.
+ *
+ * Only charts whose HOC actually implements the primitives (via
+ * `mergeShapeStyle` / `useOrdinalPieceStyle` / `useXYPointStyle`) belong in the
+ * table below. Heatmap and DifferenceChart deliberately do NOT — Heatmap
+ * exposes cell borders through `cellBorderColor`/`cellBorderWidth` and
+ * DifferenceChart owns its A/B series colors — so teaching only the server path
+ * to honor them would make the static SVG diverge from the canvas instead of
+ * matching it.
+ *
+ * CLAUDE.md's contract: these "apply to any shape the chart draws", resolved
+ * last so they beat `frameProps.*Style`, the HOC base, and the theme. Every
+ * shape-drawing HOC implements that with `mergeShapeStyle`; a server
+ * `ChartConfig.buildProps` that builds its style function *without* the same
+ * overlay drops the whole channel, and the static SVG comes back byte-identical
+ * to an unstyled render while the canvas honors it.
+ *
+ * A downstream SSR consumer reported this for Heatmap and Treemap. Sweeping
+ * every server-renderable chart found the same omission in ten more, so this
+ * table gates the class rather than the two reported instances.
+ */
+describe("SSR honors top-level primitive styling", () => {
+  const PRIMITIVES = { stroke: "#00ff00", strokeWidth: 6, opacity: 0.4 }
+  const tree = { name: "r", children: [{ name: "a", value: 10 }, { name: "b", value: 6 }] }
+  const nodes = [{ id: "a" }, { id: "b" }, { id: "c" }]
+  const edges = [{ source: "a", target: "b", value: 5 }, { source: "b", target: "c", value: 3 }]
+
+  const cases: Array<[string, Record<string, unknown>]> = [
+    ["Treemap", { data: tree, valueAccessor: "value" }],
+    ["CirclePack", { data: tree, valueAccessor: "value" }],
+    ["TreeDiagram", { data: tree }],
+    ["ForceDirectedGraph", { nodes, edges }],
+    ["SankeyDiagram", { nodes, edges, valueAccessor: "value" }],
+    ["ChordDiagram", { nodes, edges, valueAccessor: "value" }],
+    ["GaugeChart", { value: 42 }],
+    ["LikertChart", {
+      // Needs `levels` plus rows on both sides of neutral: a degenerate
+      // Likert config renders empty, which would pass the table vacuously.
+      data: [
+        { q: "Clarity", level: "Disagree", n: 8 },
+        { q: "Clarity", level: "Neutral", n: 12 },
+        { q: "Clarity", level: "Agree", n: 28 },
+        { q: "Trust", level: "Disagree", n: 10 },
+        { q: "Trust", level: "Neutral", n: 16 },
+        { q: "Trust", level: "Agree", n: 22 },
+      ],
+      categoryAccessor: "q", levelAccessor: "level", countAccessor: "n",
+      levels: ["Disagree", "Neutral", "Agree"],
+    }],
+    ["ConnectedScatterplot", { data: [{ x: 0, y: 1 }, { x: 1, y: 4 }], xAccessor: "x", yAccessor: "y" }],
+    ["StackedAreaChart", {
+      data: [{ x: 0, y: 5, s: "a" }, { x: 1, y: 7, s: "a" }, { x: 0, y: 3, s: "b" }, { x: 1, y: 9, s: "b" }],
+      xAccessor: "x", yAccessor: "y", areaBy: "s",
+    }],
+    ["BarChart", { data: [{ c: "AMER", v: 42 }, { c: "EMEA", v: 33 }], categoryAccessor: "c", valueAccessor: "v" }],
+    ["LineChart", { data: [{ x: 0, y: 1 }, { x: 1, y: 4 }], xAccessor: "x", yAccessor: "y" }],
+  ]
+
+  it.each(cases)("%s emits the caller's stroke", (component, props) => {
+    const styled = renderChart(component as Parameters<typeof renderChart>[0], { ...props, ...PRIMITIVES })
+    const plain = renderChart(component as Parameters<typeof renderChart>[0], { ...props })
+    // Guard against a vacuous pass: an empty render is byte-identical for
+    // reasons that have nothing to do with styling.
+    expect(renderChartWithEvidence(component as Parameters<typeof renderChart>[0], { ...props }).evidence.empty).toBe(false)
+    expect(styled).not.toBe(plain)
+    expect(styled).toContain("#00ff00")
+  })
+
+  it("Heatmap cell borders reach the static SVG", () => {
+    const props = {
+      data: [{ x: "a", y: "p", v: 1 }, { x: "b", y: "q", v: 5 }],
+      xAccessor: "x", yAccessor: "y", valueAccessor: "v",
+    }
+    // The HOC turns cellBorderColor/cellBorderWidth into an areaStyle; SSR used
+    // to forward a bare `cellBorderColor` that no consumer read.
+    const svg = renderChart("Heatmap", { ...props, cellBorderColor: "#ff0000", cellBorderWidth: 4 })
+    expect(svg).toContain('stroke="#ff0000"')
+    expect(svg).toContain('stroke-width="4"')
+    // Default matches the HOC's "#fff" / 1 rather than an unstroked cell.
+    expect(renderChart("Heatmap", props)).toContain('stroke="#fff"')
+  })
+
+  it("a bottom legend is placed outside the bottom axis chrome", () => {
+    const props = {
+      data: [
+        { category: "alpha", value: 4, series: "one" }, { category: "alpha", value: 6, series: "two" },
+        { category: "beta", value: 3, series: "one" }, { category: "beta", value: 8, series: "two" },
+      ],
+      categoryAccessor: "category", valueAccessor: "value", stackBy: "series",
+      showLegend: true, legendPosition: "bottom" as const, width: 400, height: 300,
+    }
+    // Resolve each <text> to an absolute y by accumulating enclosing
+    // translate()s — the axis ticks and the legend live in different groups,
+    // so their raw `y` attributes are not comparable.
+    const absoluteTextY = (svg: string, label: string): number => {
+      const stack = [0]
+      let found = NaN
+      const token = /<g\b[^>]*?>|<\/g>|<text\b[^>]*?>([^<]*)</g
+      let m: RegExpExecArray | null
+      while ((m = token.exec(svg))) {
+        if (m[0] === "</g>") { stack.pop(); continue }
+        const top = stack[stack.length - 1]
+        if (m[0].startsWith("<g")) {
+          const tr = /transform="translate\((-?[\d.]+)[, ]\s*(-?[\d.]+)\)"/.exec(m[0])
+          stack.push(top + (tr ? Number(tr[2]) : 0))
+          continue
+        }
+        if (m[1] === label) found = top + Number(/\by="(-?[\d.]+)"/.exec(m[0])?.[1] ?? 0)
+      }
+      return found
+    }
+    const gap = (svg: string) => absoluteTextY(svg, "one") - absoluteTextY(svg, "alpha")
+
+    // Default reserves the 22px tick-label band; `axisGutter: 0` restores the
+    // pre-3.8.7 plot-edge anchoring for callers who laid out around it.
+    expect(gap(renderChart("StackedBarChart", props))).toBe(22)
+    expect(gap(renderChart("StackedBarChart", {
+      ...props, legendLayout: { axisGutter: 0 },
+    }))).toBe(0)
+    // An axis title pushes the band out further still.
+    expect(gap(renderChart("StackedBarChart", {
+      ...props, categoryLabel: "Region",
+    }))).toBe(46)
+  })
+})

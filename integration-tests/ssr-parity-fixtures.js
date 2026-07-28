@@ -1884,6 +1884,108 @@ function makeSsrParityCases(React) {
         height: 220,
       },
     },
+    {
+      // Heatmap `cellBorderColor`/`cellBorderWidth` reach SSR. The HOC folds
+      // them into an `areaStyle` (which the heatmap scene builder reads), but
+      // the server config forwarded a bare `cellBorderColor` that no consumer
+      // read, so static cells came back with no border at all.
+      id: "heatmap-cell-borders",
+      component: "Heatmap",
+      props: {
+        data: heatmapData,
+        xAccessor: "xBin",
+        yAccessor: "yBin",
+        valueAccessor: "value",
+        cellBorderColor: "#1B1F3B",
+        cellBorderWidth: 3,
+        showValues: true,
+        width: 420,
+        height: 260,
+      },
+    },
+    {
+      // Bottom-legend axis gutter on the XY frame (the ordinal frame's copy is
+      // covered by the Likert case below). The legend used to be parked at
+      // `plotBottom + legendDistance` — the same band the tick labels and the
+      // axis title occupy — so it drew straight through the axis chrome.
+      id: "line-bottom-legend-axis-gutter",
+      component: "LineChart",
+      props: {
+        data: groupedXyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        lineBy: "series",
+        colorBy: "series",
+        showLegend: true,
+        legendPosition: "bottom",
+        xLabel: "Week",
+        width: 440,
+        height: 280,
+      },
+    },
+    {
+      // Hierarchy tile primitives. Treemap/CirclePack/TreeDiagram share one
+      // server nodeStyle composer, which never applied the top-level
+      // `stroke`/`strokeWidth`/`opacity` overlay the HOCs add via
+      // `mergeShapeStyle` — the static SVG was byte-identical to an unstyled
+      // render while the canvas honored all three.
+      id: "treemap-tile-primitives",
+      component: "Treemap",
+      props: {
+        data: tieredHierarchy,
+        childrenAccessor: "children",
+        valueAccessor: "value",
+        colorBy: "tier",
+        showLabels: true,
+        colorScheme: ["#0E9AA7", "#C2185B", "#7CB342"],
+        stroke: "#12143A",
+        strokeWidth: 5,
+        opacity: 0.55,
+        width: 460,
+        height: 300,
+      },
+    },
+    {
+      // Chord arcs had two distinct SSR defects: the node style read
+      // `common.stroke`, which is never populated (the primitives are
+      // deliberately not COMMON_FRAME_PROP_KEYS) so it always fell back to
+      // black; and an early return skipped building a nodeStyle at all unless
+      // colorBy/styleRules/nodeStyle was set, so primitives alone did nothing.
+      id: "chord-primitives",
+      component: "ChordDiagram",
+      props: {
+        edges: chordEdges,
+        valueAccessor: "value",
+        stroke: "#F5B301",
+        strokeWidth: 4,
+        opacity: 0.75,
+        width: 420,
+        height: 320,
+      },
+    },
+    {
+      // Ordinal pieceStyle primitives + the bottom-legend gutter on the
+      // ordinal overlay, which is a separate wiring from the XY one exercised
+      // by the heatmap case above. LikertChart builds its own level-keyed
+      // pieceStyle and never applied the primitive overlay in SSR.
+      id: "likert-primitives-bottom-legend",
+      component: "LikertChart",
+      props: {
+        data: likertData,
+        categoryAccessor: "question",
+        levelAccessor: "level",
+        countAccessor: "value",
+        // Declare the level order: without it SSR and CSR infer it
+        // independently and assign the diverging palette differently.
+        levels: likertLevels,
+        stroke: "#12143A",
+        strokeWidth: 2,
+        showLegend: true,
+        legendPosition: "bottom",
+        width: 500,
+        height: 320,
+      },
+    },
   ]
 }
 

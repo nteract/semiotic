@@ -82,11 +82,13 @@ test("targeted grounding summaries count only submitted scored rows", () => {
 
   assert.equal(summary.trials, 2)
   assert.equal(summary.availableTrials, 4)
-  assert.equal(summary.missing, 2)
+  assert.equal(summary.unscored, 2)
+  assert.equal(summary.missingSubmissions, 2)
   assert.deepEqual(summary.conditions["png-only"], {
     trials: 1,
     availableTrials: 2,
-    missing: 1,
+    unscored: 1,
+    missingSubmissions: 1,
     scored: 1,
     passed: 1,
     accuracy: 1,
@@ -123,6 +125,9 @@ test("grounding trials stay consistent with their conditions before results land
     )
   )
   assert.equal(summary.availableTrials, 2)
-  assert.equal(summary.missing, 2)
+  assert.equal(summary.unscored, 2)
+  assert.equal(summary.missingSubmissions, 0)
+  assert.equal(summary.conditions["png-only"].unscored, 1)
+  assert.equal(summary.conditions["png-only"].missingSubmissions, 0)
   assert.equal(summary.conditions["png-only"].accuracy, null)
 })

@@ -290,6 +290,8 @@ export const RealtimeHistogram = forwardRef(
       defaults: resolved.marginDefaults,
       additionalLegend,
       chartWidth: resolvedSize[0],
+      // Reserve the bottom-axis band a bottom legend is placed beyond.
+      axisChrome: { hasAxis: resolved.showAxes !== false },
     })
     // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
     const resolvedTooltip =

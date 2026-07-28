@@ -9,7 +9,7 @@ vi.mock("../../hooks/useResponsiveWidth", () => ({
 }))
 
 vi.mock("semiotic/ordinal", () => ({
-  // Only the repeated post-merge rows carry `attempted`, so the mock keys off
+  // Only the later repeated rows carry `attempted`, so the mock keys off
   // data shape rather than title copy an edit could change.
   GroupedBarChart: ({ data, title, valueLabel }) => (
     <div
@@ -55,10 +55,12 @@ describe("ModelEvaluationReadingRoom", () => {
   it("keeps failures, scorer corrections, and provenance readable without the charts", () => {
     renderRoom()
 
-    expect(screen.getByText(/revised payload recovered the answerable lookups/i)).toBeTruthy()
-    expect(screen.getByText(/6 fixtures held across every model and trial/i)).toBeTruthy()
+    expect(screen.getByText(/revised contracts changed the result/i)).toBeTruthy()
+    expect(screen.getByText(/6 of 7 repaired fixtures held/i)).toBeTruthy()
     expect(screen.getByText("Failures by fixture family")).toBeTruthy()
-    expect(screen.getByText(/render-evidence seam as much as a model miss/i)).toBeTruthy()
+    expect(screen.getByRole("columnheader", { name: "Later trials" })).toBeTruthy()
+    expect(screen.getAllByText("7/9")).not.toHaveLength(0)
+    expect(screen.getByText(/later renderer fix resolved that baseline seam/i)).toBeTruthy()
     expect(screen.getAllByText(/corrected:/i)).toHaveLength(3)
     expect(screen.getByText("Methods, provenance, and limits")).toBeTruthy()
     expect(screen.getByRole("link", { name: "What the Machine Sees" })).toHaveAttribute(

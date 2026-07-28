@@ -15,6 +15,7 @@ import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
@@ -154,6 +155,12 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: orientation === "horizontal" ? "horizontal" : "vertical",
+      hasCategoryLabel: !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const themeCategorical = useThemeCategorical()

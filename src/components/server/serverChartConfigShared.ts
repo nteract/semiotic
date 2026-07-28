@@ -7,6 +7,7 @@ import type { ReactNode } from "react"
  * Shared helpers + ChartConfig type for serverChartConfigs family modules.
  */
 import { interpolateViridis } from "../charts/shared/colorPalettes"
+import type { PrimitiveStyleOverrides } from "../charts/shared/mergeShapeStyle"
 
 export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 export type ServerAccessorValue = string | number | boolean | Date | null | undefined
@@ -50,6 +51,28 @@ export function numericValue(value: ServerAccessorValue): number {
 
 export function viridisColor(i: number, n: number): string {
   return interpolateViridis(n === 1 ? 0.5 : i / (n - 1))
+}
+
+/**
+ * Pull the top-level primitive styling props out of a chart's raw props so a
+ * server config can overlay them with `mergeShapeStyle`, exactly as the HOC
+ * does before handing style functions to its frame.
+ *
+ * Every shape-drawing HOC applies `stroke`/`strokeWidth`/`opacity` last, so
+ * they win over `frameProps.*Style` returns and the HOC's own base style. A
+ * server config that builds its style function without this overlay silently
+ * drops the whole channel — the static SVG comes back byte-identical to an
+ * unstyled render while the canvas honors it.
+ *
+ * Keys are omitted when unset so `mergeShapeStyle` can return its input
+ * unchanged and callers keep the no-override fast path.
+ */
+export function primitiveStyleOverrides(rest: Datum): PrimitiveStyleOverrides {
+  const overrides: PrimitiveStyleOverrides = {}
+  if (rest.stroke !== undefined) overrides.stroke = rest.stroke as string
+  if (rest.strokeWidth !== undefined) overrides.strokeWidth = rest.strokeWidth as number
+  if (rest.opacity !== undefined) overrides.opacity = rest.opacity as number
+  return overrides
 }
 
 export function prepareConnectedScatterplotData(

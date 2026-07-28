@@ -332,6 +332,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     width,
     height,
     hasTitle: !!title,
+    // Mirrors the server likertChart config's legendAxisChrome: the bottom
+    // axis is the value axis when diverging, the category axis otherwise.
+    axisChrome: { hasAxis: resolved.showAxes !== false, hasAxisLabel: isDiverging ? !!valueLabel : !!categoryLabel },
   })
 
   // ── Neutral color (for split halves) ────────────────────────────────

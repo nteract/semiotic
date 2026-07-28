@@ -16,6 +16,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 
@@ -151,6 +152,12 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: orientation === "horizontal" ? "horizontal" : "vertical",
+      hasCategoryLabel: !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const themeCategorical = useThemeCategorical()
