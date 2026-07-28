@@ -147,6 +147,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     width,
     height,
     hasTitle: !!title,
+    // Always radial — no bottom axis for a bottom legend to clear.
+    axisChrome: { hasAxis: false },
   })
 
   // Default `innerRadius` scales with the container's min dimension so the

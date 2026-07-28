@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
@@ -463,6 +464,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
   })
 
   // ── Statistical features (forecast + anomaly overlays) ────────────────

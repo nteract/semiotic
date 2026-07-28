@@ -18,6 +18,7 @@ import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
@@ -239,6 +240,14 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     width,
     height,
     hasTitle: !!title,
+    // Mirrors the `oLabel` gate below: showCategoryTicks={false} suppresses
+    // the category axis title along with its ticks.
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: orientation === "horizontal" ? "horizontal" : "vertical",
+      hasCategoryLabel: showCategoryTicks === false ? false : !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

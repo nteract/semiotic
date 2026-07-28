@@ -18,6 +18,7 @@ import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 
@@ -174,6 +175,12 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: orientation === "horizontal" ? "horizontal" : "vertical",
+      hasCategoryLabel: !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const themeCategorical = useThemeCategorical()

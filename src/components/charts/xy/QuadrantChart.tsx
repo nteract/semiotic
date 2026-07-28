@@ -16,6 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
@@ -278,6 +279,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
   })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────

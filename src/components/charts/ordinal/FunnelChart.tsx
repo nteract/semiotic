@@ -15,6 +15,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
@@ -203,6 +204,14 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     width,
     height,
     hasTitle: !!title,
+    // FunnelChart has no categoryLabel/valueLabel props; horizontal (the
+    // default) draws no axis at all, matching `showAxes: isVertical` below.
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: isVertical,
+      projection: isVertical ? "vertical" : "horizontal",
+      hasCategoryLabel: false,
+      hasValueLabel: false,
+    }),
   })
 
   warnMissingField("FunnelChart", safeData, "stepAccessor", stepAccessor)

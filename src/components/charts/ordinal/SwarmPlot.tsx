@@ -9,6 +9,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import type { SymbolName } from "../../stream/symbolPath"
 import { getSize } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
+import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -176,6 +177,12 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveOrdinalAxisChrome({
+      showAxes: resolved.showAxes,
+      projection: orientation === "horizontal" ? "horizontal" : "vertical",
+      hasCategoryLabel: !!categoryLabel,
+      hasValueLabel: !!valueLabel,
+    }),
   })
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })

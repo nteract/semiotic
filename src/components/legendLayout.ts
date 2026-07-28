@@ -106,6 +106,42 @@ export function resolveAxisChromeGutter(
   return input.rotatedTicks ? ROTATED_AXIS_TITLE_CHROME : AXIS_TITLE_CHROME
 }
 
+/**
+ * Resolve `axisChrome` for an XY chart HOC's `useChartLegendAndMargin` call.
+ * Mirrors `server/staticXY.tsx`'s `renderStreamXYFrame` (`hasAxis:
+ * showAxes !== false`, `hasAxisLabel: !!xLabel`) so a bottom-legend chart
+ * reserves the same margin on the client as `renderChart` does on the
+ * server — leaving either side to guess (the pre-3.8.8 default) makes the
+ * client over- or under-reserve relative to the SSR output whenever a
+ * wrapped legend pushes the reservation past the 80px floor.
+ */
+export function resolveXYAxisChrome(input: {
+  showAxes?: boolean
+  xLabel?: unknown
+}): AxisChromeInput {
+  return { hasAxis: input.showAxes !== false, hasAxisLabel: !!input.xLabel }
+}
+
+/**
+ * Resolve `axisChrome` for an ordinal chart HOC's `useChartLegendAndMargin`
+ * call. Mirrors `server/staticOrdinal.tsx`'s `renderOrdinalFrame`: the
+ * bottom axis is the value axis for `"horizontal"` projection, the category
+ * axis otherwise, and radial projections draw no axis at all. See
+ * `resolveXYAxisChrome` for why this must track the server computation.
+ */
+export function resolveOrdinalAxisChrome(input: {
+  showAxes?: boolean
+  projection?: "horizontal" | "vertical" | "radial"
+  hasCategoryLabel: boolean
+  hasValueLabel: boolean
+}): AxisChromeInput {
+  const projection = input.projection ?? "vertical"
+  return {
+    hasAxis: input.showAxes !== false && projection !== "radial",
+    hasAxisLabel: projection === "horizontal" ? input.hasValueLabel : input.hasCategoryLabel,
+  }
+}
+
 /** Estimate the layout-box height used to place a top/bottom legend. */
 export function resolveHorizontalLegendHeight(
   legend: LegendValue | null | undefined,

@@ -16,6 +16,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 import { interpolateViridis } from "../shared/colorPalettes"
 import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYAxisChrome } from "../../legendLayout"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
@@ -255,6 +256,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     width,
     height,
     hasTitle: !!title,
+    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
   })
 
   // ── Canvas pre-renderer for connecting lines (drawn under points) ─────
