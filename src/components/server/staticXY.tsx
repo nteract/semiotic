@@ -39,9 +39,16 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? extractCategories(data, props.colorAccessor || props.groupAccessor || props.categoryAccessor)
     : []
 
+  // Bottom-axis chrome a bottom legend has to clear. Computed once so the
+  // margin reservation and the placement below agree.
+  const legendAxisChrome = {
+    hasAxis: props.showAxes !== false,
+    hasAxisLabel: !!props.xLabel,
+  }
+
   // Expand margin for legend BEFORE calculating inner dimensions
   reserveFrameLegendMargin(margin, {
-    props,
+    props: { ...props, axisChrome: legendAxisChrome },
     categories: xyLegendCategories,
     theme,
     size,
@@ -236,7 +243,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
   // honor a caller-supplied pre-rendered ReactNode/config object.
   const legend = renderFrameLegend({
-    props,
+    props: { ...props, axisChrome: legendAxisChrome },
     categories: xyLegendCategories,
     theme,
     size,

@@ -414,6 +414,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     chartWidth: width,
     legendLayout: frameProps.legendLayout,
     hasTitle: !!title,
+    // Reserve the bottom-axis band a bottom legend is placed beyond.
+    axisChrome: { hasAxis: resolved.showAxes !== false, hasAxisLabel: !!xLabel },
   })
 
   // Build StreamXYFrame props

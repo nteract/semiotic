@@ -159,6 +159,14 @@ const legendProps = [
     description:
       "Space reserved between the plot and a left/right legend for adjacent chrome such as axis ticks and an axis title. MultiAxisLineChart supplies this automatically.",
   },
+  {
+    name: "legendLayout.axisGutter",
+    type: "number",
+    required: false,
+    default: "measured axis chrome",
+    description:
+      "The top/bottom counterpart of sideGutter. Defaults to the chrome of the axis actually drawn on that side (tick labels, plus an axis title when present), so a bottom legend clears the tick labels instead of overdrawing them. Zero when the chart has no axis on that side. Set 0 to anchor the legend directly to the plot edge.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -430,6 +438,18 @@ export default function LegendsPage() {
         axis title must remain next to its axis while the legend sits beyond it;
         <code>MultiAxisLineChart</code> configures that ordering automatically.
         Neither option adds padding at the outside edge of the SVG.
+      </p>
+
+      <p>
+        Top and bottom legends measure that same gap from the outside of their
+        axis chrome rather than from the plot edge, so a bottom legend sits
+        below the tick labels instead of on top of them. The reserved band is
+        derived from the axis actually drawn — tick labels alone, or tick
+        labels plus an axis title — and is zero for charts with no axis on that
+        side, such as pie and donut. Override it with{" "}
+        <code>legendLayout.axisGutter</code>, including{" "}
+        <code>axisGutter: 0</code> to anchor the legend directly to the plot
+        edge.
       </p>
 
       <h3 id="top-legend">Top Legend</h3>

@@ -154,9 +154,20 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     ? extractCategories(data, props.colorAccessor || props.stackBy || props.groupBy)
     : []
 
+  // The bottom axis is the value axis when horizontal, the category axis when
+  // vertical, and absent when radial. Computed once so reservation and
+  // placement agree.
+  const legendProjection = props.projection || "vertical"
+  const legendAxisChrome = {
+    hasAxis: props.showAxes !== false && legendProjection !== "radial",
+    hasAxisLabel: legendProjection === "horizontal"
+      ? !!(props.valueLabel || props.rLabel)
+      : !!(props.categoryLabel || props.oLabel),
+  }
+
   // Expand margin for legend BEFORE calculating inner dimensions
   reserveFrameLegendMargin(margin, {
-    props,
+    props: { ...props, axisChrome: legendAxisChrome },
     categories: ordinalLegendCategories,
     theme,
     size,
@@ -350,7 +361,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   // honor caller-supplied pre-rendered ReactNode. See XY block for the
   // contract; same pattern. Config-object form deferred.
   const legend = renderFrameLegend({
-    props,
+    props: { ...props, axisChrome: legendAxisChrome },
     categories: ordinalLegendCategories,
     theme,
     size,

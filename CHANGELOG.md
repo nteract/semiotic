@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.7] - 2026-07-27
+
 ### Changed
 
 - **A high-touch evaluation example makes the prove track inspectable.**
@@ -17,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context, documents the scorer audit, and shows where the revised grounding
   payload and generation contracts held across repeated trials. Targeted result
   scoring now reports only submitted fixtures while retaining the available
-  corpus size, so omitted cases no longer appear as failures.
+  corpus size and distinguishes missing submissions from pending or otherwise
+  unscored rows.
 - **The HRA/WPP typology pilot now runs on the real kidney ASCT+B v1.6
   digital object.** A pinned generator produces a checked-in, workshop-ready
   artifact for the observed direct children of kidney, with ontology IDs kept
@@ -90,6 +93,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Static SVG output now preserves chart-level primitive styling.** Server
+  configs apply `stroke`, `strokeWidth`, and `opacity` with the same precedence
+  as their browser chart HOCs across hierarchy, network, ordinal, XY, and value
+  charts instead of silently falling back to built-in outlines. Heatmap cell
+  borders and heat-cell opacity now reach SVG output as well. Focused
+  SSR-to-browser fixtures cover treemap and chord primitives, Likert styling,
+  and heatmap borders across Chromium, Firefox, and WebKit.
+- **Horizontal legends no longer overlap axis ticks or titles.** Browser and
+  static renderers now reserve a shared axis-chrome gutter before placing top
+  or bottom categorical and gradient legends, including XY, ordinal, heatmap,
+  minimap, and realtime histogram paths. `legendLayout.axisGutter` exposes an
+  exact override; setting it to `0` preserves plot-edge placement when that is
+  intentional.
+- **Value components no longer appear to inherit chart-HOC props in agent
+  guidance.** The common-prop section now states its boundary before the chart
+  catalog, and the generated BigNumber behavior contract tells agents to
+  validate against the value-component schema and remove `title`,
+  `accessibleTable`, and other inherited chart-HOC props. The first-try fixture
+  revision records this guidance change without rewriting the published 7/9
+  `gauge-static` follow-up result.
+- **Targeted evaluation summaries no longer label every unscored row as a
+  missing submission.** Reports now expose `unscored` separately from
+  `missingSubmissions`, so a queued or pending response remains visible without
+  implying that its model output was omitted.
 - **Runtime reduced-motion changes no longer fast-forward physics simulations.**
   Entering the settled path clears the animation clock in both synchronous and
   worker modes; a preference change that arrives during worker work is replayed

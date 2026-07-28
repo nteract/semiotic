@@ -107,9 +107,20 @@ export interface LegendLayout {
   /**
    * Space between the plot and a left/right legend reserved for adjacent
    * chart chrome such as axis ticks and an axis title. Ignored for top/bottom
-   * legends. The legend is placed outside this gutter.
+   * legends — see `axisGutter`. The legend is placed outside this gutter.
    */
   sideGutter?: number
+  /**
+   * The top/bottom counterpart of `sideGutter`: space between the plot and a
+   * top/bottom legend reserved for that side's axis chrome (tick labels and
+   * an axis title). Defaults to the measured chrome of the axis actually
+   * drawn, so a bottom legend clears the tick labels instead of overdrawing
+   * them; 0 when the chart has no axis on that side.
+   *
+   * Set explicitly to override, or `0` to opt out and anchor the legend
+   * directly to the plot edge.
+   */
+  axisGutter?: number
 }
 
 export interface LegendProps {

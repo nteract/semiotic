@@ -19,6 +19,7 @@ import {
   accessorValue,
   numericValue,
   prepareConnectedScatterplotData,
+  primitiveStyleOverrides,
   viridisColor,
 } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
@@ -605,6 +606,10 @@ export const differenceChart: ChartConfig = {
       y0Accessor: "__y0",
       groupAccessor: "__diffSegment",
       areaGroups,
+      // No primitive overlay here on purpose: DifferenceChart's HOC owns its
+      // A/B series colors and never applies `mergeShapeStyle`, so honoring
+      // top-level stroke/strokeWidth/opacity in SSR alone would make the
+      // static SVG diverge from the canvas rather than match it.
       areaStyle: (d: Datum) => {
         const key = d.__diffSegment as string
         const winner = key?.endsWith("-A") ? "A" : "B"
@@ -879,7 +884,7 @@ export const connectedScatterplot: ChartConfig = {
       yAccessor: rest.yAccessor || "y",
       colorAccessor: colorBy,
       colorScheme,
-      pointStyle: (d: Datum) => {
+      pointStyle: mergeShapeStyle((d: Datum) => {
         const order = prepared.orderMap.get(d)
         const i = order?.idx ?? 0
         const n = order?.total ?? 1
@@ -890,25 +895,9 @@ export const connectedScatterplot: ChartConfig = {
           r: pointRadius,
           fillOpacity: 1,
         }
-      },
+      }, primitiveStyleOverrides(rest)),
       ...common,
       svgPreRenderers,
     }
   },
-}
-
-export const heatmap: ChartConfig = {
-  frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "heatmap",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    valueAccessor: rest.valueAccessor,
-    colorScheme: colorScheme || rest.colorScheme || "blues",
-    showValues: rest.showValues,
-    heatmapValueFormat: rest.valueFormat,
-    cellBorderColor: rest.cellBorderColor,
-    ...common,
-  }),
 }

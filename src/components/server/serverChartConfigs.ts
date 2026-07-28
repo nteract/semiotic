@@ -16,9 +16,9 @@ import {
   scatterplot,
   quadrantChart,
   connectedScatterplot,
-  heatmap,
   temporalHistogram
 } from "./serverChartConfigsXY"
+import { heatmap } from "./serverChartConfigHeatmap"
 import {
   barChart,
   stackedBarChart,

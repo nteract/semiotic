@@ -27,7 +27,12 @@ const {
   dataRequiredForUsageMode,
   requiredCombinationsFor,
 } = require("../../../ai/behaviorContracts.cjs") as {
-  BEHAVIOR_CONTRACTS: Array<{ id: string; title: string }>
+  BEHAVIOR_CONTRACTS: Array<{
+    id: string
+    title: string
+    summary: string
+    agentAction?: string
+  }>
   DOC_MARKER_END: string
   DOC_MARKER_START: string
   behaviorContractsFor: (args: { component?: string; props?: Record<string, unknown> }) => Array<{ id: string }>
@@ -69,6 +74,32 @@ describe("AI behavior contract metadata", () => {
 
     expect(colorRules).toContain("color.category-precedence")
     expect(colorRules).toContain("streaming.push-mode-data")
+  })
+
+  it("keeps value components outside the common chart-HOC prop boundary", () => {
+    const contract = BEHAVIOR_CONTRACTS.find(
+      ({ id }) => id === "value.bignumber-wire-contract",
+    )
+    expect(contract?.summary).toContain("does not inherit the common chart-HOC prop list")
+    expect(contract?.agentAction).toContain("remove inherited chart-HOC props")
+
+    const guide = readFileSync(resolve(process.cwd(), "CLAUDE.md"), "utf8")
+    const commonProps = guide.indexOf("## Common Props (chart HOCs only)")
+    const boundary = guide.indexOf("This list is not global.", commonProps)
+    const firstChartFamily = guide.indexOf("## XY Charts", commonProps)
+    expect(commonProps).toBeGreaterThan(-1)
+    expect(boundary).toBeGreaterThan(commonProps)
+    expect(boundary).toBeLessThan(firstChartFamily)
+
+    const validation = validateProps("BigNumber", {
+      value: 97,
+      label: "SLA attainment",
+      accessibleTable: true,
+    })
+    expect(validation.valid).toBe(false)
+    expect(validation.errors).toContainEqual(
+      expect.stringContaining('Unknown prop "accessibleTable" for BigNumber.'),
+    )
   })
 
   it("treats data as required for static configs but optional for push-mode HOCs", () => {

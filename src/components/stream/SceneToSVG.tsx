@@ -365,6 +365,19 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     }
     case "heatcell": {
       const n = node as HeatcellSceneNode
+      // `style.opacity` dims the cell on canvas (heatmapCanvasRenderer sets
+      // globalAlpha, covering fill and stroke alike); without it here the
+      // static SVG rendered decayed/dimmed cells at full strength.
+      const cellRect = {
+        x: n.x,
+        y: n.y,
+        width: n.w,
+        height: n.h,
+        fill: n.fill,
+        stroke: n.style?.stroke,
+        strokeWidth: n.style?.strokeWidth,
+        ...(n.style?.opacity != null && { opacity: n.style.opacity }),
+      }
       if (n.showValues && n.value != null && n.w >= 20 && n.h >= 20) {
         const formatted = n.valueFormat
           ? n.valueFormat(n.value)
@@ -378,15 +391,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         const fontSize = Math.max(10, Math.min(16, Math.min(n.w, n.h) * 0.3))
         return (
           <g key={`heatcell-${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              fill={n.fill}
-              stroke={n.style?.stroke}
-              strokeWidth={n.style?.strokeWidth}
-            />
+            <rect {...cellRect} />
             <text
               x={n.x + n.w / 2}
               y={n.y + n.h / 2}
@@ -400,18 +405,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
           </g>
         )
       }
-      return (
-        <rect
-          key={`heatcell-${i}`}
-          x={n.x}
-          y={n.y}
-          width={n.w}
-          height={n.h}
-          fill={n.fill}
-          stroke={n.style?.stroke}
-          strokeWidth={n.style?.strokeWidth}
-        />
-      )
+      return <rect key={`heatcell-${i}`} {...cellRect} />
     }
     case "candlestick": {
       const n = node as CandlestickSceneNode

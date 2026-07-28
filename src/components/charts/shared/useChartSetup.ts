@@ -19,6 +19,7 @@
 import type { Datum } from "./datumTypes"
 
 import { useCallback, useMemo, useState } from "react"
+import type { AxisChromeInput } from "../../legendLayout"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps, resolveMobileInteraction } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
@@ -106,6 +107,12 @@ export interface ChartSetupInput {
   height: number
   /** Whether the resolved chart mode includes a title. */
   hasTitle?: boolean
+  /**
+   * Bottom-axis chrome, so a bottom legend reserves space outside the tick
+   * labels rather than only being drawn past them. Omit for charts with no
+   * horizontal axis (pie/donut/radial) — the gutter resolves to 0.
+   */
+  axisChrome?: AxisChromeInput
 }
 
 /**
@@ -203,6 +210,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     width,
     height,
     hasTitle,
+    axisChrome,
   } = input
   const isPushMode = rawData === undefined
 
@@ -333,6 +341,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartWidth: width,
     legendLayout,
     hasTitle,
+    axisChrome,
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────

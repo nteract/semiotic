@@ -17,7 +17,8 @@ import { getMinMax } from "../charts/shared/minMax"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
 import { resolveTheme } from "./themeResolver"
-import { type ChartConfig, type ServerAccessor } from "./serverChartConfigShared"
+import { type ChartConfig, type ServerAccessor, primitiveStyleOverrides } from "./serverChartConfigShared"
+import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import * as React from "react"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 
@@ -545,13 +546,13 @@ export const likertChart: ChartConfig = {
       ...common,
       // Likert uses a level-keyed diverging palette rather than the normal
       // ordinal color scale. Preserve the neutral split's shared color.
-      pieceStyle: (d: Datum) => {
+      pieceStyle: mergeShapeStyle((d: Datum) => {
         const level = d.__likertLevel || d.data?.__likertLevel
         const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
         return { fill: level === NEUTRAL_NEG || level === NEUTRAL_POS
           ? neutralColor
           : levelColors.get(String(label || level)) || "#888" }
-      },
+      }, primitiveStyleOverrides(rest)),
       showLegend: common.showLegend ?? true,
       // setup.legendPosition defaults to right in the client HOC. The
       // bottom fallback here was an SSR-only override.
@@ -683,7 +684,7 @@ export const gaugeChart: ChartConfig = {
       sweepAngle: sweep,
       startAngle: startAngleDeg,
       oSort: false,
-      pieceStyle: gaugeModel.pieceStyle,
+      pieceStyle: mergeShapeStyle(gaugeModel.pieceStyle, primitiveStyleOverrides(rest)),
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
       ...common,
       size: [width, height],

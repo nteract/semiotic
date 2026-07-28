@@ -87,6 +87,34 @@ function getRenderChartWithEvidence() {
   return renderChartWithEvidence
 }
 
+/**
+ * Absolute y of the first `<text>` whose content is exactly `label`,
+ * accumulating enclosing `translate()`s. Axis ticks and the legend live in
+ * different groups, so their raw `y` attributes are not comparable — this is
+ * what lets a fixture assert "the legend sits below the axis labels".
+ */
+function absoluteTextY(svg: string, label: string): number {
+  const stack: number[] = [0]
+  const token = /<g\b[^>]*?>|<\/g>|<text\b[^>]*?>([^<]*)</g
+  let match: RegExpExecArray | null
+  while ((match = token.exec(svg))) {
+    if (match[0] === "</g>") {
+      stack.pop()
+      continue
+    }
+    const top = stack[stack.length - 1]
+    if (match[0].startsWith("<g")) {
+      const translate = /transform="translate\((-?[\d.]+)[, ]\s*(-?[\d.]+)\)"/.exec(match[0])
+      stack.push(top + (translate ? Number(translate[2]) : 0))
+      continue
+    }
+    if (match[1] === label) {
+      return top + Number(/\by="(-?[\d.]+)"/.exec(match[0])?.[1] ?? 0)
+    }
+  }
+  return NaN
+}
+
 function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: string) {
   expect(evidence.status).toBe("ok")
   expect(evidence.empty).toBe(false)
@@ -136,6 +164,56 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   if (id === "bar-gradient") {
     expect(svg).toContain("<linearGradient")
     expect(svg).toMatch(/fill="url\(#/)
+  }
+  // Top-level `stroke`/`strokeWidth`/`opacity` are resolved last by every
+  // shape-drawing HOC (`mergeShapeStyle`), so they must beat the chart's base
+  // style in SSR too. Server configs that built a style function without that
+  // overlay dropped the whole channel and returned an SVG byte-identical to an
+  // unstyled render. Assert the painted values, not just that marks exist.
+  if (id === "heatmap-cell-borders") {
+    expect(evidence.markCountByType.heatcell).toBe(9)
+    // cellBorderColor/cellBorderWidth reach the cells (were dropped entirely).
+    expect(svg).toContain('stroke="#1B1F3B"')
+    expect(svg).toContain('stroke-width="3"')
+  }
+  if (id === "line-bottom-legend-axis-gutter") {
+    // The legend labels must sit strictly below the axis title, which itself
+    // sits below the tick labels. Before the gutter the legend shared the
+    // tick-label baseline exactly.
+    const axisTitle = absoluteTextY(svg, "Week")
+    const legendLabel = absoluteTextY(svg, "A")
+    expect(Number.isFinite(axisTitle)).toBe(true)
+    expect(Number.isFinite(legendLabel)).toBe(true)
+    expect(legendLabel).toBeGreaterThan(axisTitle)
+  }
+  if (id === "treemap-tile-primitives") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:rect"]).toBeGreaterThanOrEqual(4)
+    expect(svg).toContain('stroke="#12143A"')
+    expect(svg).toContain('stroke-width="5"')
+    expect(svg).toContain('opacity="0.55"')
+  }
+  if (id === "chord-primitives") {
+    expect(evidence.markCountByType["node:arc"]).toBeGreaterThan(0)
+    expect(evidence.markCountByType["edge:ribbon"]).toBeGreaterThan(0)
+    // Arcs used to always paint the hardcoded black fallback.
+    expect(svg).toContain('stroke="#F5B301"')
+    expect(svg).not.toContain('stroke="black"')
+    expect(svg).toContain('stroke-width="4"')
+  }
+  if (id === "likert-primitives-bottom-legend") {
+    expect(evidence.frameType).toBe("ordinal")
+    expect(evidence.markCountByType.rect).toBeGreaterThanOrEqual(10)
+    expect(svg).toContain('stroke="#12143A"')
+    expect(svg).toContain('stroke-width="2"')
+    // The legend labels must sit strictly below the bottom axis's category
+    // tick labels. Before the axis-chrome gutter both landed on the same
+    // baseline and the legend drew straight through the tick text.
+    const lowestTick = Math.max(absoluteTextY(svg, "Clarity"), absoluteTextY(svg, "Trust"))
+    const legendLabel = absoluteTextY(svg, "Agree")
+    expect(Number.isFinite(lowestTick)).toBe(true)
+    expect(Number.isFinite(legendLabel)).toBe(true)
+    expect(legendLabel).toBeGreaterThan(lowestTick)
   }
   // Gauge gradients are arc-length sampled into colored radial slices (not a
   // linear SVG gradient). Assert multiple painted colors plus the unfilled

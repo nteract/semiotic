@@ -963,6 +963,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
         legendLayout,
+        // Keep a bottom legend clear of the bottom axis's tick labels and title.
+        axisChrome: { hasAxis: !!showAxes, hasAxisLabel: !!xLabel },
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

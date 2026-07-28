@@ -62,21 +62,23 @@ function ScoreTooltip({ datum }) {
 function RunLedger() {
   const rows = [
     [
-      "Complete baseline",
+      "Baseline evidence",
       INTEGER.format(MODEL_EVALUATION_RUN.requestCount),
-      "one response per case",
+      "full suite, one response per case",
     ],
     [
-      "Repeated follow-up",
+      "Follow-up evidence",
       INTEGER.format(FOLLOW_UP_RUN.requestCount),
-      `${FOLLOW_UP_RUN.trialCount} targeted trials`,
+      `${FOLLOW_UP_RUN.trialCount} independently submitted targeted trials`,
     ],
     [
-      "Repeated scope",
-      `${FOLLOW_UP_RUN.answerableQuestions} + ${FOLLOW_UP_RUN.firstTryFixtures}`,
-      "answerable questions + generation fixtures",
+      "Repeated outcomes",
+      `${INTEGER.format(FOLLOW_UP_RUN.groundingOutcomes)} + ${INTEGER.format(
+        FOLLOW_UP_RUN.firstTryOutcomes,
+      )}`,
+      "grounding answers + generated proposals",
     ],
-    ["Recorded cost", USD.format(TOTAL_ESTIMATED_USD), "baseline plus follow-up"],
+    ["Estimated API cost", USD.format(TOTAL_ESTIMATED_USD), "baseline plus follow-up"],
   ]
   return (
     <dl className="benchmark-chart__ledger">
@@ -109,6 +111,10 @@ export function ModelEvaluationReadingRoom() {
     (row) => row.passed === row.attempted,
   ).length
   const gaugeFollowUp = FOLLOW_UP_FIRST_TRY_FIXTURES.find((row) => row.fixtureId === "gauge-static")
+  const followUpFixtureById = useMemo(
+    () => new Map(FOLLOW_UP_FIRST_TRY_FIXTURES.map((row) => [row.fixtureId, row])),
+    [],
+  )
 
   return (
     <div className="benchmark-chart">
@@ -120,8 +126,8 @@ export function ModelEvaluationReadingRoom() {
           <h2>The benchmark is a chart, too.</h2>
           <p>
             A scorecard has encodings, denominators, and failure modes—just like the charts it
-            judges. This one asks two different questions: can a model read what is there, and can
-            it stop when the evidence runs out?
+            judges. This page preserves the complete baseline, then shows what happened when revised
+            grounding and generation contracts were tested in three later trials.
           </p>
         </div>
         <div className="benchmark-chart__stamp" aria-label="Run completed">
@@ -135,11 +141,12 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__chapter" aria-labelledby="follow-up-heading">
         <div className="benchmark-chart__chapter-heading">
-          <p>Post-merge repeated trials</p>
-          <h3 id="follow-up-heading">The revised payload recovered the answerable lookups.</h3>
+          <p>Later repeated trials</p>
+          <h3 id="follow-up-heading">The revised contracts changed the result.</h3>
           <span>
-            Twenty answerable questions and seven generation fixtures were repeated across every
-            model. PNG-only stayed in the run as a control.
+            The follow-up repeated every previously failing generation fixture and every answerable
+            grounding question across Sol, Terra, and Luna. PNG-only remained unchanged as the
+            reading control.
           </span>
         </div>
 
@@ -173,11 +180,15 @@ export function ModelEvaluationReadingRoom() {
         <div className="benchmark-chart__first-try-grid">
           <div className="benchmark-chart__finding">
             <span>First-attempt generation</span>
-            <strong>{perfectFollowUpFixtures} fixtures held across every model and trial.</strong>
+            <strong>
+              {perfectFollowUpFixtures} of {FOLLOW_UP_RUN.firstTryFixtures} repaired fixtures held
+              across every model and trial.
+            </strong>
             <p>
               The remaining fixture, <code>gauge-static</code>, passed {gaugeFollowUp?.passed}/
-              {gaugeFollowUp?.attempted}. Luna twice added an unsupported HOC prop to an otherwise
-              valid BigNumber proposal.
+              {gaugeFollowUp?.attempted}. Sol and Terra passed all three trials; Luna passed once
+              and twice added the unsupported chart-HOC prop <code>accessibleTable</code> to an
+              otherwise valid BigNumber proposal.
             </p>
           </div>
           <div className="benchmark-chart__cost-strip" aria-label="Repeated generation by model">
@@ -218,9 +229,10 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note">
           <strong>What the repeat establishes</strong>
           <p>
-            The source-fact revision fixed the tested value, hierarchy, geo, and physics lookups. It
-            does not update the baseline’s abstention result, because the thirty unanswerable
-            questions were outside this targeted run.
+            The source-fact revision recovered all 360 answerable outcomes that received grounding.
+            It does not update the baseline’s abstention result, because the thirty unanswerable
+            questions were outside this targeted run. The unchanged PNG-only control passed 139 of
+            180 answerable outcomes.
           </p>
         </aside>
       </section>
@@ -228,7 +240,9 @@ export function ModelEvaluationReadingRoom() {
       <section className="benchmark-chart__chapter" aria-labelledby="grounding-heading">
         <div className="benchmark-chart__chapter-heading">
           <p>Original baseline · reader grounding</p>
-          <h3 id="grounding-heading">Grounding improved restraint, not chart reading.</h3>
+          <h3 id="grounding-heading">
+            The original payload improved restraint, not chart reading.
+          </h3>
           <span>
             Compare correct answers with correct restraint instead of compressing both into the same
             bar.
@@ -304,8 +318,9 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note">
           <strong>What survived the comparison</strong>
           <p>
-            Structured grounding can help a model refuse unsupported claims. This run does not show
-            that the current payload helps models recover more labels or values from a chart.
+            Structured grounding can help a model refuse unsupported claims. This baseline did not
+            show that its original payload helped models recover more labels or values from a chart;
+            that defect motivated the source-fact revision tested above.
           </p>
         </aside>
       </section>
@@ -313,7 +328,7 @@ export function ModelEvaluationReadingRoom() {
       <section className="benchmark-chart__chapter" aria-labelledby="first-try-heading">
         <div className="benchmark-chart__chapter-heading">
           <p>Original baseline · first-attempt generation</p>
-          <h3 id="first-try-heading">Chart choice did not guarantee a valid render.</h3>
+          <h3 id="first-try-heading">Plausible chart choices still failed their contracts.</h3>
           <span>
             Every proposal had one chance to validate, render visible marks, and avoid error
             diagnostics. There was no repair pass.
@@ -392,35 +407,44 @@ export function ModelEvaluationReadingRoom() {
                     {model}
                   </th>
                 ))}
+                <th scope="col">Later trials</th>
               </tr>
             </thead>
             <tbody>
-              {FIRST_TRY_FAILURES.map((failure) => (
-                <tr key={failure.fixtureId}>
-                  <th scope="row">
-                    <span>{failure.label}</span>
-                    <code>{failure.fixtureId}</code>
-                  </th>
-                  <td>
-                    <b>{failure.kind}</b>
-                    {failure.lesson}
-                  </td>
-                  {MODEL_ORDER.map((model) => {
-                    const failed = failure.models.includes(model)
-                    return (
-                      <td key={model}>
-                        <span
-                          className="benchmark-chart__failure-mark"
-                          data-failed={failed ? "true" : "false"}
-                          aria-label={`${model} ${failed ? "failed" : "passed"} this fixture`}
-                        >
-                          {failed ? "×" : "·"}
-                        </span>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+              {FIRST_TRY_FAILURES.map((failure) => {
+                const repeated = followUpFixtureById.get(failure.fixtureId)
+                return (
+                  <tr key={failure.fixtureId}>
+                    <th scope="row">
+                      <span>{failure.label}</span>
+                      <code>{failure.fixtureId}</code>
+                    </th>
+                    <td>
+                      <b>{failure.kind}</b>
+                      {failure.lesson}
+                    </td>
+                    {MODEL_ORDER.map((model) => {
+                      const failed = failure.models.includes(model)
+                      return (
+                        <td key={model}>
+                          <span
+                            className="benchmark-chart__failure-mark"
+                            data-failed={failed ? "true" : "false"}
+                            aria-label={`${model} ${failed ? "failed" : "passed"} this fixture in the baseline`}
+                          >
+                            {failed ? "×" : "·"}
+                          </span>
+                        </td>
+                      )
+                    })}
+                    <td>
+                      <strong>
+                        {repeated?.passed}/{repeated?.attempted}
+                      </strong>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -429,8 +453,9 @@ export function ModelEvaluationReadingRoom() {
           <strong>The oracle was part of the system under test</strong>
           <p>
             Sol’s `BigNumber` choice was not imaginary—it is a real Semiotic component documented in
-            the supplied context. The failure exposed a render-evidence seam as much as a model
-            miss.
+            the supplied context. The later renderer fix resolved that baseline seam. The remaining
+            Luna failures are different: they cross the value-component boundary with an unsupported
+            chart-HOC prop.
           </p>
         </aside>
       </section>
@@ -469,9 +494,9 @@ export function ModelEvaluationReadingRoom() {
         <h3>The repeat separates repaired contracts from residual risk.</h3>
         <div>
           <p>
-            The revised grounding payload held across every repeated answerable outcome. Six
-            generation fixtures also held everywhere. BigNumber’s remaining HOC-prop confusion stays
-            visible as the next narrow contract problem.
+            The revised grounding payload held across every repeated answerable outcome that
+            received grounding. Six generation fixtures also held everywhere. Luna’s remaining
+            BigNumber HOC-prop confusion stays visible as the next narrow contract problem.
           </p>
           <p>
             For the deterministic intelligence layer that generated the grounding payload, continue
@@ -486,16 +511,26 @@ export function ModelEvaluationReadingRoom() {
           <p>
             This page preserves the complete one-response baseline and adds three repeated targeted
             trials. The follow-up covers the seven generation fixtures that previously failed and
-            all twenty answerable grounding questions; it does not carry forward untouched cases.
-            The Responses API ran with reasoning effort set to none and provider storage disabled.
+            all twenty answerable grounding questions under all three evidence conditions; it does
+            not carry forward untouched generation cases or the baseline’s unanswerable grounding
+            questions. The Responses API ran with reasoning effort set to none and provider storage
+            disabled.
           </p>
           <dl>
             <div>
-              <dt>Grounding fixture</dt>
+              <dt>Baseline grounding fixture</dt>
               <dd>{MODEL_EVALUATION_RUN.fixtureRevision}</dd>
             </div>
             <div>
-              <dt>First-try fixture</dt>
+              <dt>Baseline first-try fixture</dt>
+              <dd>{MODEL_EVALUATION_RUN.firstTryRevision}</dd>
+            </div>
+            <div>
+              <dt>Follow-up grounding fixture</dt>
+              <dd>{FOLLOW_UP_RUN.fixtureRevision}</dd>
+            </div>
+            <div>
+              <dt>Follow-up first-try fixture</dt>
               <dd>{FOLLOW_UP_RUN.firstTryRevision}</dd>
             </div>
             <div>
