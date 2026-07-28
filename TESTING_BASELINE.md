@@ -42,8 +42,14 @@ Key test areas:
 ### Browser and Visual Regression Tests (Playwright)
 
 - **Framework**: Playwright.
-- **Run command**: `npm run test:dist` after building dist output.
-- **Update snapshots**: `npx playwright test --update-snapshots`.
+- **Read-only run command**: `npm run test:dist` after building dist output.
+- **Create missing snapshots intentionally**: `npm run test:visual:bootstrap`.
+- **Update existing snapshots intentionally**: `npm run test:visual:update`.
+
+Ordinary local and CI runs use `updateSnapshots: "none"`. A missing baseline
+therefore fails without writing into the worktree. Snapshot creation is kept
+behind the explicit bootstrap command so every new visual contract can be
+reviewed before it is committed.
 
 Representative coverage:
 
@@ -156,7 +162,8 @@ npx vitest --coverage
 # Browser and visual tests
 npm run dist
 npm run test:dist
-npx playwright test --update-snapshots
+npm run test:visual:bootstrap
+npm run test:visual:update
 
 # Benchmarks
 npm run bench

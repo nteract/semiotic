@@ -141,11 +141,27 @@ export function useChartLegendAndMargin({
       // exactly matching the placement split in `renderLegendFromConfig` and
       // the server's `bottomRequirement`. Reserving it for both would push the
       // plot down by 22–46px that nothing draws into.
+      //
+      // When the caller did not describe its axis, assume the widest ordinary
+      // band rather than none. Placement always knows the real chrome (the SVG
+      // overlay measures it), so an under-reservation does not shrink the
+      // gutter — it makes the renderer clamp the legend back *up* into the
+      // axis labels, which is the exact overlap this gutter exists to prevent.
+      // The 80px bottom-legend floor already absorbs this whenever the legend
+      // plus its distance stays under it — the common single-row case — so
+      // those charts keep their current margins. Only a legend that already
+      // exceeds the floor (wrapped onto extra rows, or a large
+      // `legendDistance`) grows, and there an axis-less chart such as
+      // pie/donut over-reserves slightly rather than colliding. Charts that
+      // pass `axisChrome` are exact either way.
+      const bottomAxisChrome: AxisChromeInput = hasAxis === undefined
+        ? { hasAxis: true, hasAxisLabel: true }
+        : { hasAxis, hasAxisLabel, rotatedTicks }
       const horizontalLegendMargin =
         resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
         resolveLegendDistance(legend) +
         resolveAxisChromeGutter(
-          legendPosition === "bottom" ? { hasAxis, hasAxisLabel, rotatedTicks } : undefined,
+          legendPosition === "bottom" ? bottomAxisChrome : undefined,
           legendLayout,
         ) +
         (legendPosition === "top" && hasTitle ? 24 : 0)

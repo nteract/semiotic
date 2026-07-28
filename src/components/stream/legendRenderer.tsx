@@ -27,9 +27,10 @@ export interface LegendRenderConfig {
   legendIsolatedCategories?: Set<string>
   legendInteraction?: string
   /**
-   * Chrome drawn by the axis on the legend's side, so a top/bottom legend can
-   * be placed outside it instead of on top of the tick labels. Omit for frames
-   * with no horizontal axis (network, geo) — the gutter resolves to 0.
+   * Chrome drawn by the **bottom** axis, so a bottom legend can be placed
+   * outside it instead of on top of the tick labels. Omit for frames with no
+   * horizontal axis (network, geo) — the gutter resolves to 0. Top legends do
+   * not auto-measure; see `LegendLayout.axisGutter`.
    */
   axisChrome?: AxisChromeInput
 }
@@ -68,7 +69,11 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
   // Auto-measured chrome describes the bottom axis, which XY/ordinal frames
   // draw by default. A top axis is opt-in (`frameProps.axes` with
   // `orient: "top"`), so a top legend only gets a gutter when one is set
-  // explicitly rather than guessing an axis that usually isn't there.
+  // explicitly rather than guessing an axis that usually isn't there — the
+  // documented contract on `LegendLayout.axisGutter`. Extending
+  // auto-measurement to the top means threading a second, top-side
+  // `AxisChromeInput` through both this placement path and the margin
+  // reservation in `useChartLegendAndMargin`.
   const bottomAxisGutter = resolveAxisChromeGutter(config.axisChrome, legendLayout)
   const topAxisGutter = resolveAxisChromeGutter(undefined, legendLayout)
   const legendHeight = resolveHorizontalLegendHeight(legend, plotWidth, legendLayout)

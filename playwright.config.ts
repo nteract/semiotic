@@ -10,11 +10,11 @@ export default {
     // Docs examples have their own Vite application and Chromium-only config.
     "**/docs-examples-*.spec.ts",
   ],
-  // Local bootstrap may write a proposed missing baseline, but CI must never
-  // create visual contracts during a test run: a new snapshot has to be
-  // reviewed and committed before a pull request passes. An explicit
-  // `--update-snapshots=missing` still supports the local bootstrap command.
-  updateSnapshots: process.env.CI ? "none" : "missing",
+  // Visual baselines are reviewed contracts, so ordinary local and CI runs
+  // must never create them as a side effect. The explicit visual bootstrap
+  // and update commands override this setting when a maintainer intends to
+  // write proposed baselines.
+  updateSnapshots: "none",
   use: {
     headless: true, // Always run headless to avoid disrupting work
     screenshot: "on",

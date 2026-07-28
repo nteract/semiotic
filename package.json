@@ -234,7 +234,7 @@
     "test:dist": "playwright test",
     "test:examples:source": "playwright test --config playwright.docs-examples.config.ts",
     "test:visual:update": "playwright test --update-snapshots",
-    "test:visual:bootstrap": "playwright test --update-snapshots=missing",
+    "test:visual:bootstrap": "node scripts/run-playwright-missing-snapshot-bootstrap.mjs",
     "test:visual:update:docker": "node scripts/run-playwright-linux-bootstrap.mjs --update-snapshots=all",
     "test:visual:bootstrap:docker": "node scripts/run-playwright-linux-bootstrap.mjs --update-snapshots=missing",
     "bench": "vitest bench",

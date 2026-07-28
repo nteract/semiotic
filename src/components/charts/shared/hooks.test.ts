@@ -759,6 +759,35 @@ describe("useChartLegendAndMargin", () => {
       })
     )
 
+    // 34px gradient legend + 70px legendDistance + the 46px bottom-axis
+    // chrome gutter. This caller does not describe its axis, so the gutter
+    // falls back to the widest ordinary band: under-reserving would let the
+    // renderer clamp the legend back up onto the tick labels.
+    expect(result.current.margin.bottom).toBe(150)
+  })
+
+  it("does not add the gutter for a caller that declares no bottom axis", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data: [],
+        colorBy: undefined,
+        colorScale: undefined,
+        showLegend: false,
+        legendPosition: "bottom",
+        userMargin: { bottom: "auto" },
+        chartWidth: 220,
+        axisChrome: { hasAxis: false },
+        additionalLegend: {
+          gradient: {
+            domain: [0, 1],
+            colorFn: () => "#ccc",
+            label: "Probability",
+          },
+          legendDistance: 70,
+        },
+      })
+    )
+
     expect(result.current.margin.bottom).toBe(104)
   })
 

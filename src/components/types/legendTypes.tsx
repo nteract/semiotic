@@ -113,12 +113,17 @@ export interface LegendLayout {
   /**
    * The top/bottom counterpart of `sideGutter`: space between the plot and a
    * top/bottom legend reserved for that side's axis chrome (tick labels and
-   * an axis title). Defaults to the measured chrome of the axis actually
-   * drawn, so a bottom legend clears the tick labels instead of overdrawing
-   * them; 0 when the chart has no axis on that side.
+   * an axis title).
    *
-   * Set explicitly to override, or `0` to opt out and anchor the legend
-   * directly to the plot edge.
+   * **Auto-measurement is bottom-axis only.** A bottom legend defaults to the
+   * measured chrome of the axis actually drawn, so it clears the tick labels
+   * instead of overdrawing them, and resolves to 0 when the chart has no
+   * bottom axis. Top axes are opt-in (`frameProps.axes` with
+   * `orient: "top"`), so a *top* legend defaults to 0 and needs this set
+   * explicitly to clear a top axis.
+   *
+   * Set explicitly to override either side, or `0` to opt out and anchor the
+   * legend directly to the plot edge.
    */
   axisGutter?: number
 }
