@@ -394,7 +394,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **144 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/xy` | **145 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **120 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **126 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **103 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
@@ -422,7 +422,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/ai/core` | **80 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **12 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **4 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
-| `semiotic` | **388 KB** | Everything below (full bundle) |
+| `semiotic` | **389 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
@@ -443,20 +443,20 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **153.0 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **153.2 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **123.2 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **128.0 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **122.7 KiB** |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **170.5 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **153.1 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **153.3 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **123.5 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **128.1 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **122.8 KiB** |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **170.6 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **134.2 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **269.7 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **164.4 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **269.8 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **164.5 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **270.2 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **192.9 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **193.1 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **36.3 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **108.5 KiB** |
