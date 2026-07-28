@@ -1,6 +1,6 @@
 # MCP distribution inventory
 
-Audited 2026-07-25. This file distinguishes release-controlled distribution
+Audited 2026-07-28. This file distinguishes release-controlled distribution
 from third-party directory cards that may cache or rewrite project metadata.
 
 ## Canonical, release-controlled paths
@@ -8,22 +8,19 @@ from third-party directory cards that may cache or rewrite project metadata.
 | Path | Status | Source of truth | Freshness mechanism |
 | --- | --- | --- | --- |
 | npm stdio | `npx semiotic-mcp` from the `semiotic` package | `package.json` and the published npm artifact | The release workflow publishes and smoke-tests the exact immutable tarball. |
-| Stable Streamable HTTP | `https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp` serves verified `3.8.6` | `server.json` and `deploy/cloud-run` | Hosted smoke tests cover initialize, tools, resources, prompts, limits, and response headers. |
+| Stable Streamable HTTP | `https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp` serves verified `3.8.7` | `server.json` and `deploy/cloud-run` | Hosted smoke tests cover initialize, tools, resources, prompts, limits, and response headers. |
 | Official MCP Registry | `io.github.nteract/semiotic` | `server.json` | After npm publication, the release workflow validates and publishes the exact `package.json` / `server.json` version, then verifies the active Registry entry. Manual dispatch remains available for backfill. |
 
 The Registry metadata backfill is complete. At
-`2026-07-26T06:07:39.980185Z`
-(`2026-07-25` in the project timezone), the Official Registry returned active
-entries for `3.4.2`, `3.8.1`, and `3.8.6`, with `3.8.6` marked latest. Its
-package is the exact immutable npm release `semiotic@3.8.6`, and its remote is
-the canonical Streamable HTTP endpoint above.
+`2026-07-28T15:42:43.14232Z`, the Official Registry published the active
+`3.8.7` entry and marked it latest. Its package is the exact immutable npm
+release `semiotic@3.8.7`, and its remote is the canonical Streamable HTTP
+endpoint above.
 
-An end-to-end production smoke immediately after that verification found and
-closed a separate deployment drift: the remote still served `3.8.1` and omitted
-required build identity. Stable revision `semiotic-mcp-server-00071-2rw` now
-serves `3.8.6` with release commit
-`315d9b43169391b66fe26510c6460d147fe7e3ea`, and the full smoke passes health,
-MCP GET, initialize, tools, resources, build-info, render evidence, and schema
+Stable revision `semiotic-mcp-server-00072-m8p` now serves `3.8.7` with release
+commit `f86ec9c630e76a3e17ff9b135639422461869bb3`. An end-to-end production
+smoke after routing 100% of traffic to that revision passed health, MCP GET,
+initialize, tools, resources, build-info, render evidence, and schema
 retrieval. The smoke runner is channel-aware so stable requires the exact
 published version while nightly still requires its commit-qualified version.
 The revision labels carry the same release commit/version and remove stale
