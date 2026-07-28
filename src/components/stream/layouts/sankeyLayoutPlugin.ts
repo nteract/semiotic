@@ -9,6 +9,7 @@ import {
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { areaLink, circularAreaLink } from "../../geometry/sankeyLinks"
 import { wrapWithDataHint } from "../devDataAccessWarning"
+import { resolveLabelFn, resolveNodeRefId } from "../accessorUtils"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -58,10 +59,6 @@ interface GradientBezierEdge extends NetworkBezierEdge {
   }
 }
 
-function getNodeId(node: SankeyNodeRef | string): string {
-  return typeof node === "string" ? node : node.id
-}
-
 /**
  * Sankey layout plugin — uses d3-sankey-circular for layout computation.
  *
@@ -94,8 +91,8 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     const sankeyNodes = nodes.map((n) => ({ ...n }))
     const sankeyEdges = edges.map((e) => ({
       ...e,
-      source: typeof e.source === "string" ? e.source : e.source.id,
-      target: typeof e.target === "string" ? e.target : e.target.id,
+      source: resolveNodeRefId(e.source),
+      target: resolveNodeRefId(e.target),
       value: Math.sqrt(Math.max(1, e.value || 1))
     }))
 
@@ -235,16 +232,16 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       if (e._edgeKey) {
         edgeMap.set(e._edgeKey, e)
       } else {
-        const eSrc = typeof e.source === "string" ? e.source : e.source.id
-        const eTgt = typeof e.target === "string" ? e.target : e.target.id
+        const eSrc = resolveNodeRefId(e.source)
+        const eTgt = resolveNodeRefId(e.target)
         edgeMap.set(`${eSrc}\0${eTgt}`, e)
       }
     }
 
     // Write computed positions back to original edges
     for (const se of sankeyEdges as SankeyComputedEdge[]) {
-      const sourceId = getNodeId(se.source)
-      const targetId = getNodeId(se.target)
+      const sourceId = resolveNodeRefId(se.source)
+      const targetId = resolveNodeRefId(se.target)
 
       const original = se._edgeKey
         ? edgeMap.get(se._edgeKey)
@@ -504,10 +501,3 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
   }
 }
 
-function resolveLabelFn(
-  nodeLabel: string | ((d: Datum) => string) | undefined
-): ((d: Datum) => string) | null {
-  if (!nodeLabel) return null
-  if (typeof nodeLabel === "function") return nodeLabel
-  return (d: Datum) => d[nodeLabel] || d.id
-}

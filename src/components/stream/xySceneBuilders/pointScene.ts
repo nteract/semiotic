@@ -10,7 +10,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
  */
 import type { PointSceneNode, SymbolSceneNode } from "../types"
 import { buildPointNode, buildSymbolNode } from "../SceneGraph"
-import { SYMBOL_SEQUENCE, type SymbolName } from "../symbolPath"
+import { makeSymbolResolver } from "../symbolPath"
 import type { XYSceneContext } from "./types"
 
 export function buildPointScene(ctx: XYSceneContext, data: Datum[]): (PointSceneNode | SymbolSceneNode)[] {
@@ -46,23 +46,9 @@ export function buildPointScene(ctx: XYSceneContext, data: Datum[]): (PointScene
   const themedDefaultFill = ctx.config.themeSemantic?.primary || "#4e79a7"
 
   // Symbol (shape) channel: when a symbol accessor is set each mark renders as a
-  // glyph instead of a circle. Explicit `symbolMap` wins; unmapped categories
-  // auto-assign from SYMBOL_SEQUENCE in first-seen (deterministic) order.
+  // glyph instead of a circle.
   const getSymbol = ctx.getSymbol
-  const symbolMapCfg = ctx.config.symbolMap
-  const symbolAssign = new Map<string, SymbolName>()
-  let symSeq = 0
-  const shapeFor = (cat: string): SymbolName => {
-    const explicit = symbolMapCfg?.[cat]
-    if (explicit) return explicit
-    let s = symbolAssign.get(cat)
-    if (!s) {
-      s = SYMBOL_SEQUENCE[symSeq % SYMBOL_SEQUENCE.length]
-      symSeq++
-      symbolAssign.set(cat, s)
-    }
-    return s
-  }
+  const shapeFor = getSymbol ? makeSymbolResolver(getSymbol, ctx.config.symbolMap) : null
 
   for (const d of data) {
     let style = ctx.config.pointStyle ? ctx.config.pointStyle(d) : { fill: themedDefaultFill, opacity: 0.8 }
@@ -83,10 +69,10 @@ export function buildPointScene(ctx: XYSceneContext, data: Datum[]): (PointScene
     }
 
     const pointId = ctx.getPointId ? String(ctx.getPointId(d)) : undefined
-    if (getSymbol) {
+    if (shapeFor) {
       // Encode the computed radius as d3-symbol area (πr²) so glyph size still
       // tracks `sizeBy`/`pointRadius`.
-      const shape = shapeFor(String(getSymbol(d)))
+      const shape = shapeFor(d)
       const node = buildSymbolNode(d, ctx.scales, ctx.getX, ctx.getY, Math.PI * r * r, shape, style, pointId)
       if (node) nodes.push(node)
     } else {

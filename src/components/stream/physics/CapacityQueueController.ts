@@ -1,6 +1,7 @@
 /** FIFO capacity-queue controller: stateful region service riding StreamPhysicsFrame's live heartbeat. */
 
-import type { PhysicsBodyState, PhysicsColliderBodyFilter } from "./PhysicsKernel"
+import type { PhysicsBodyState } from "./PhysicsKernel"
+import { valueAtPath, matchesPhysicsBodyFilter } from "./PhysicsKernel"
 import type {
   PhysicsController,
   PhysicsControllerTickContext
@@ -59,41 +60,6 @@ function quantile(sorted: readonly number[], probability: number): number {
   const upper = Math.ceil(position)
   const fraction = position - lower
   return sorted[lower] + (sorted[upper] - sorted[lower]) * fraction
-}
-
-function valueAtPath(source: unknown, path: string): unknown {
-  if (!path) return undefined
-  let current = source
-  for (const part of path.split(".")) {
-    if (current == null || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[part]
-  }
-  return current
-}
-
-function bodyMatchesFilter(
-  body: PhysicsBodyState,
-  filter: PhysicsColliderBodyFilter | undefined
-): boolean {
-  if (!filter) return true
-  if (typeof filter === "function") return filter(body)
-
-  const value = valueAtPath(body, filter.property)
-  if ("equals" in filter && !Object.is(value, filter.equals)) return false
-  if ("notEquals" in filter && Object.is(value, filter.notEquals)) return false
-  if (
-    filter.oneOf &&
-    !filter.oneOf.some((candidate) => Object.is(value, candidate))
-  ) {
-    return false
-  }
-  if (
-    filter.notOneOf &&
-    filter.notOneOf.some((candidate) => Object.is(value, candidate))
-  ) {
-    return false
-  }
-  return true
 }
 
 /** FIFO region service with visit evidence, overflow staging, and live metrics. */
@@ -340,7 +306,7 @@ export function createCapacityQueueController(
       for (const body of bodies) {
         bodyById.set(body.id, body)
         if (!inRegion(body.id, ctx.getRegionState)) continue
-        if (!bodyMatchesFilter(body, options.bodyFilter)) continue
+        if (!matchesPhysicsBodyFilter(body, options.bodyFilter)) continue
         const jobId = readCapacityJobId(body, options.jobKey)
         const candidates = presentByJob.get(jobId) ?? []
         candidates.push(body)

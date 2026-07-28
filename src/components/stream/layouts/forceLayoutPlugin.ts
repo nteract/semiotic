@@ -12,6 +12,7 @@ import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { getMinMax } from "../../charts/shared/minMax"
 import { createSeededFrameRandom } from "../FrameRuntime"
 import { wrapWithDataHint } from "../devDataAccessWarning"
+import { resolveLabelFn, resolveNodeRefId } from "../accessorUtils"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -180,8 +181,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         nodeById.set(node.id, node)
       }
       for (const edge of edges) {
-        const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id
-        const targetId = typeof edge.target === "string" ? edge.target : edge.target.id
+        const sourceId = resolveNodeRefId(edge.source)
+        const targetId = resolveNodeRefId(edge.target)
         degreeById.set(sourceId, (degreeById.get(sourceId) ?? 0) + 1)
         degreeById.set(targetId, (degreeById.get(targetId) ?? 0) + 1)
       }
@@ -194,8 +195,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
         .strength((d) => {
           const weight = (d as RealtimeEdge & { weight?: number }).weight
-          const sourceId = typeof d.source === "string" ? d.source : d.source.id
-          const targetId = typeof d.target === "string" ? d.target : d.target.id
+          const sourceId = resolveNodeRefId(d.source)
+          const targetId = resolveNodeRefId(d.target)
           const endpointDegree = Math.max(
             1,
             Math.min(degreeById.get(sourceId) ?? 1, degreeById.get(targetId) ?? 1)
@@ -277,8 +278,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // Resolve edge source/target to id strings for d3-force linking
         const linkData = edges.map((e) => ({
           ...e,
-          source: typeof e.source === "string" ? e.source : e.source.id,
-          target: typeof e.target === "string" ? e.target : e.target.id
+          source: resolveNodeRefId(e.source),
+          target: resolveNodeRefId(e.target)
         }))
 
         linkForce.links(linkData)
@@ -477,8 +478,8 @@ function findNeighborPositions(
   const positions: Array<{ x: number; y: number }> = []
 
   for (const edge of edges) {
-    const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
-    const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+    const srcId = resolveNodeRefId(edge.source)
+    const tgtId = resolveNodeRefId(edge.target)
 
     let neighborId: string | null = null
     if (srcId === nodeId) neighborId = tgtId
@@ -549,14 +550,6 @@ function simpleHash(str: string): number {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
   }
   return Math.abs(hash)
-}
-
-function resolveLabelFn(
-  nodeLabel: string | ((d: Datum) => string) | undefined
-): ((d: Datum) => string) | null {
-  if (!nodeLabel) return null
-  if (typeof nodeLabel === "function") return nodeLabel
-  return (d: Datum) => d[nodeLabel] || d.id
 }
 
 /**

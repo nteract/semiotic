@@ -316,10 +316,11 @@ function BumpLabel({
       fill={color}
       fillOpacity={dimmed ? 0.16 : 1}
       fontWeight={highlighted ? 650 : 450}
+      fontSize={12}
       style={{
         pointerEvents: "none",
         fontFamily: "var(--semiotic-font-family, sans-serif)",
-        fontSize: "var(--semiotic-axis-label-font-size, 11px)",
+        fontSize: "var(--semiotic-axis-label-font-size, 12px)",
         ...customStyle,
       }}
     >

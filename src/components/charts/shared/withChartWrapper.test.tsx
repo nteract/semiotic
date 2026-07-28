@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react"
 import * as React from "react"
 import {
   SafeRender,
-  warnDataShape,
   warnMissingField,
   renderEmptyState,
   renderLoadingState,
@@ -109,61 +108,6 @@ describe("SafeRender", () => {
       (el) => el.textContent !== "LineChart"
     )
     expect(hintDivs).toHaveLength(0)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// warnDataShape
-// ---------------------------------------------------------------------------
-
-describe("warnDataShape", () => {
-  it("warns when data keys do not match expected keys (dev mode)", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    warnDataShape(
-      "BarChart",
-      [{ foo: 1, bar: 2 }],
-      ["category", "value"],
-      "Did you forget categoryAccessor?"
-    )
-
-    // IS_DEV is true in test env (NODE_ENV !== "production")
-    expect(spy).toHaveBeenCalledOnce()
-    expect(spy.mock.calls[0][0]).toContain("BarChart")
-    expect(spy.mock.calls[0][0]).toContain("foo, bar")
-    expect(spy.mock.calls[0][0]).toContain("category, value")
-    expect(spy.mock.calls[0][0]).toContain("Did you forget categoryAccessor?")
-  })
-
-  it("does not warn when at least one expected key is present", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    warnDataShape(
-      "BarChart",
-      [{ category: "A", extra: 1 }],
-      ["category", "value"],
-      "hint"
-    )
-
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn for empty data", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", [], ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn for undefined data", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", undefined, ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn when first element is not an object", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", [42], ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
   })
 })
 

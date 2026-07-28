@@ -8,6 +8,7 @@ import {
   type FieldSelection,
   type SelectionStoreState
 } from "./SelectionStore"
+import { hasOwnEnumerableKey } from "./createStore"
 
 // Re-export crosshair store for convenience
 export { useCrosshairPosition, setCrosshairPosition, clearCrosshairPosition } from "./LinkedCrosshairStore"
@@ -300,13 +301,6 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
   )
 
   return { brushInteraction, predicate, isActive, clear }
-}
-
-function hasOwnEnumerableKey(value: object): boolean {
-  for (const key in value) {
-    if (Object.prototype.hasOwnProperty.call(value, key)) return true
-  }
-  return false
 }
 
 // ── useFilteredData ────────────────────────────────────────────────────────

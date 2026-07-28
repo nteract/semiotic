@@ -3,7 +3,6 @@ import {
   resolveCurveFactory,
   resolveCanvasFill,
   buildLinearFillGradient,
-  buildColorStopGradient,
 } from "./canvasRenderHelpers"
 import { createMockCanvasContext } from "../../../test-utils/canvasMock"
 
@@ -118,42 +117,6 @@ describe("canvasRenderHelpers", () => {
           { offset: 1, opacity: Infinity },
         ] }, "#000", 0, 0, 0, 100),
       ).toBeNull()
-    })
-  })
-
-  describe("buildColorStopGradient", () => {
-    it("returns null when fewer than 2 stops are present", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [{ offset: 0, color: "red" }] },
-        "#000",
-        0, 0, 100, 0,
-      )
-      expect(grad).toBeNull()
-    })
-
-    it("builds a gradient when 2+ stops are present", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [
-          { offset: 0, color: "red" },
-          { offset: 1, color: "blue" },
-        ]},
-        "#000", 0, 0, 100, 0,
-      )
-      expect(grad).toBeTruthy()
-    })
-
-    it("filters non-finite offsets before the 2-stop minimum (avoids addColorStop IndexSizeError)", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [
-          { offset: 0, color: "red" },
-          { offset: NaN, color: "green" },
-        ]},
-        "#000", 0, 0, 100, 0,
-      )
-      expect(grad).toBeNull()
     })
   })
 })

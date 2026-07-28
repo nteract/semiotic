@@ -1,4 +1,5 @@
-import type { PhysicsBodyState, PhysicsColliderBodyFilter } from "./PhysicsKernel"
+import type { PhysicsBodyState } from "./PhysicsKernel"
+import { valueAtPath, matchesPhysicsBodyFilter } from "./PhysicsKernel"
 import type {
   PhysicsController
 } from "./PhysicsControllers"
@@ -14,29 +15,6 @@ import type {
   ServiceResourcePoolOptions,
   ServiceResourcePoolSnapshot
 } from "./ServiceOperationsTypes"
-
-function valueAtPath(source: unknown, path: string): unknown {
-  if (!path) return undefined
-  let current = source
-  for (const part of path.split(".")) {
-    if (current == null || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[part]
-  }
-  return current
-}
-
-function matchesFilter(
-  body: PhysicsBodyState,
-  filter: PhysicsColliderBodyFilter | undefined
-): boolean {
-  if (!filter) return true
-  if (typeof filter === "function") return filter(body)
-  const value = valueAtPath(body, filter.property)
-  if ("equals" in filter && !Object.is(value, filter.equals)) return false
-  if ("notEquals" in filter && Object.is(value, filter.notEquals)) return false
-  if (filter.oneOf && !filter.oneOf.some((candidate) => Object.is(value, candidate))) return false
-  return !(filter.notOneOf && filter.notOneOf.some((candidate) => Object.is(value, candidate)))
-}
 
 export interface ServiceResourcePoolController extends PhysicsController {
   assign: (caseBodyId: string) => ServiceResourceAssignment | null
@@ -192,7 +170,7 @@ export function createServiceLevelController(
     tick: (ctx) => {
       currentTime = Math.max(currentTime, ctx.elapsed)
       for (const body of ctx.controls.readBodies()) {
-        if (!matchesFilter(body, options.bodyFilter)) continue
+        if (!matchesPhysicsBodyFilter(body, options.bodyFilter)) continue
         if (!cases.has(body.id)) {
           const deadline = deadlineFor(body, options)
           update({ bodyId: body.id, openedAt: currentTime, deadlineAt: currentTime + deadline, state: "waiting" })
@@ -256,7 +234,7 @@ export function createDependencyGateController(
       const present = new Map(bodies.map((body) => [body.id, body]))
       for (const body of bodies) {
         const inside = ctx.getRegionState(body.id)?.activeRegionIds.includes(options.regionId)
-        if (!inside || !matchesFilter(body, options.bodyFilter)) continue
+        if (!inside || !matchesPhysicsBodyFilter(body, options.bodyFilter)) continue
         if (!open && !held.has(body.id)) {
           held.add(body.id)
           metricRevision += 1

@@ -9,7 +9,7 @@ import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
 import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
 import { networkArcRenderer } from "./renderers/networkArcRenderer"
-import { networkSymbolRenderer } from "./renderers/networkSymbolRenderer"
+import { networkSymbolRenderer } from "./renderers/symbolCanvasRenderer"
 import { networkGlyphRenderer } from "./renderers/glyphCanvasRenderer"
 import {
   renderNetworkParticles,

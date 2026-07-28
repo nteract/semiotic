@@ -683,6 +683,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 12px)" }
           const tickFontStyleLandmark = { fontSize: "calc(var(--semiotic-tick-font-size, 12px) + 1px)" }
           const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
+          // Plain `fontSize` presentation-attribute fallbacks alongside the
+          // `style` above. A real browser's `style` attribute always wins
+          // over a presentation attribute, so live CSS-var cascade
+          // overrides are unaffected — but a consumer that doesn't run a
+          // CSS engine over the SVG (a sanitizer, the Figma plugin's SVG
+          // importer, static rasterization) can't resolve `var(...)` and
+          // would otherwise silently inherit the host document's font-size.
+          const TICK_FONT_SIZE = 12
+          const LANDMARK_TICK_FONT_SIZE = 13
+          const AXIS_LABEL_FONT_SIZE = 12
           const bottomTickAnchorMode = bottomAxis?.tickAnchor
           const leftTickAnchorMode = leftAxis?.tickAnchor
           // Pre-compute the edge pixels for each axis so the tick-render
@@ -723,6 +733,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                     )}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
+                    fontSize={isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE}
                     className="semiotic-axis-tick"
                     style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                     transform={shouldRotateBottom ? "rotate(-45)" : undefined}
@@ -743,6 +754,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y={bottomAxisLabelY}
                 textAnchor="middle"
                 fill={labelColor}
+                fontSize={AXIS_LABEL_FONT_SIZE}
                 className="semiotic-axis-label"
                 style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
@@ -779,6 +791,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                     )}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
+                    fontSize={isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE}
                     className="semiotic-axis-tick"
                     style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                   >
@@ -801,6 +814,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 textAnchor="middle"
                 fill={labelColor}
                 transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${height / 2})`}
+                fontSize={AXIS_LABEL_FONT_SIZE}
                 className="semiotic-axis-label"
                 style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
@@ -844,6 +858,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                           )}
                           fontWeight={isLandmark ? 600 : 400}
                           fill={tickColor}
+                          fontSize={isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE}
                           className="semiotic-axis-tick"
                           style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                         >
@@ -864,6 +879,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                       textAnchor="middle"
                       fill={labelColor}
                       transform={`rotate(90, ${width + rightAxisLabelMargin - 15}, ${height / 2})`}
+                      fontSize={AXIS_LABEL_FONT_SIZE}
                       className="semiotic-axis-label"
                       style={{ userSelect: "none", ...axisLabelFontStyle }}
                     >
@@ -964,6 +980,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
+          fontSize={14}
           className="semiotic-chart-title"
           style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >

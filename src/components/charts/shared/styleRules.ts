@@ -362,7 +362,11 @@ export function styleRulesToXYStyle(
 /**
  * Ordinal-flavored {@link makeStyleRuleStyleFn}: the context is
  * `{ value: valueAccessor(d), category }` — the bar/piece value plus the
- * stack/group key. Kept as sugar for the ordinal server config.
+ * stack/group key. Public API sugar mirroring {@link styleRulesToXYStyle};
+ * unlike that XY sibling (used internally by `serverChartConfigsXY.ts`), the
+ * ordinal server config (`serverChartConfigsOrdinal.ts`) resolves colorBy
+ * and style rules together in its own `buildBarPieceStyle` rather than
+ * calling this — kept for external callers building an ordinal `pieceStyle`.
  */
 export function styleRulesToPieceStyle(
   rules: ReadonlyArray<StyleRule> | undefined,

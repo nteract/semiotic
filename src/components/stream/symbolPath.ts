@@ -20,6 +20,7 @@ import {
   symbolWye,
   type SymbolType,
 } from "d3-shape"
+import type { Datum } from "../charts/shared/datumTypes"
 
 /** Named glyph shapes a `symbol` scene node can request. */
 export type NetworkSymbolName =
@@ -114,6 +115,32 @@ export function symbolExtent(
   if (EXTENT_CACHE.size > 512) EXTENT_CACHE.clear()
   EXTENT_CACHE.set(key, max)
   return max
+}
+
+/**
+ * Build a per-scene category→shape resolver for the `symbolBy` channel.
+ * Explicit `symbolMap` wins; unmapped categories auto-assign from
+ * `SYMBOL_SEQUENCE` in first-seen (deterministic) order. Shared by the XY
+ * and ordinal point scene builders so Scatterplot/SwarmPlot glyphs agree.
+ */
+export function makeSymbolResolver(
+  getSymbol: (d: Datum) => unknown,
+  symbolMap: Record<string, SymbolName> | undefined
+): (d: Datum) => SymbolName {
+  const assign = new Map<string, SymbolName>()
+  let seq = 0
+  return (d: Datum) => {
+    const cat = String(getSymbol(d))
+    const explicit = symbolMap?.[cat]
+    if (explicit) return explicit
+    let s = assign.get(cat)
+    if (!s) {
+      s = SYMBOL_SEQUENCE[seq % SYMBOL_SEQUENCE.length]
+      seq++
+      assign.set(cat, s)
+    }
+    return s
+  }
 }
 
 /** A concave upward dart — visually distinct from `triangle`, sized to roughly

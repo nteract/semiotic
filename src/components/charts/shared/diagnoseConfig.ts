@@ -33,19 +33,15 @@ import {
 } from "./diagnoseMisleadingChecks"
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
 import { auditData } from "../../data/auditData"
+import { COLOR_SCHEMES } from "./colorUtils"
 
 export { contrastRatio } from "./colorContrast"
 export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
 
-// Named color schemes that resolve to a palette (colorUtils.COLOR_SCHEMES).
-// A string `colorScheme` outside this set silently falls back to the default
-// palette, so a typo produces wrong colors with no error. Kept in sync with
-// COLOR_SCHEMES by a drift test in diagnoseConfig.test.ts.
-const KNOWN_COLOR_SCHEMES = new Set([
-  "category10", "tableau10", "set3",
-  "blues", "reds", "greens", "oranges", "purples", "greys",
-  "viridis", "plasma", "inferno", "magma", "cividis", "turbo",
-])
+// Named color schemes that resolve to a palette. A string `colorScheme`
+// outside this set silently falls back to the default palette, so a typo
+// produces wrong colors with no error.
+const KNOWN_COLOR_SCHEMES = new Set(Object.keys(COLOR_SCHEMES))
 
 function checkEmptyData(
   component: string,

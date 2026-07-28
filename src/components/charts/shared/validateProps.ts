@@ -8,13 +8,18 @@ import type { Datum } from "./datumTypes"
  * Components with dataShape "none" intentionally skip data validation.
  */
 
-import { validateArrayData } from "./validateChartData"
-import { validateObjectData } from "./validateChartData"
-import { validateNetworkData } from "./validateChartData"
+import {
+  validateArrayData,
+  validateObjectData,
+  validateNetworkData,
+} from "./validateChartData"
 import { VALIDATION_MAP } from "./validationMap"
+import type { PropType, DataShape } from "./chartSpecCore"
+import { closestMatch } from "./stringDistance"
 
 // Re-export for external consumers (diagnoseConfig, chartConfig, etc.)
 export { VALIDATION_MAP }
+export type { PropType, DataShape }
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,21 +30,10 @@ export interface ValidationResult {
   errors: string[]
 }
 
-export type PropType =
-  | "string"
-  | "number"
-  | "boolean"
-  | "array"
-  | "object"
-  | "function"
-  | "null"
-
 export interface PropDef {
   type: PropType | PropType[]
   enum?: readonly string[]
 }
-
-type DataShape = "array" | "object" | "network" | "realtime" | "none"
 
 export interface ComponentSpec {
   /** Props that must be present */
@@ -113,8 +107,6 @@ function validateGaugeThresholds(props: Datum): string[] {
   return errors
 }
 
-import { closestMatch } from "./stringDistance"
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -183,7 +175,7 @@ export function validateProps(
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
     const def = spec.props[key]
-    if (!def) continue // unknown prop — checked in step 5
+    if (!def) continue // unknown prop — checked in step 4
 
     // Type check
     if (!checkType(value, def.type)) {
@@ -258,10 +250,9 @@ export function validateProps(
       accessors: nodeAccessors,
     })
     if (dataError) errors.push(dataError)
-  } else if (spec.dataShape === "none") {
-    // Value-only components such as GaugeChart have no data prop to validate.
   }
-  // realtime charts: no data validation (ref-based push API)
+  // "none" (e.g. GaugeChart's value-only props) and "realtime" (ref-based
+  // push API) data shapes have no data prop to validate — no branch needed.
 
   if (componentName === "GaugeChart") {
     errors.push(...validateGaugeThresholds(props))

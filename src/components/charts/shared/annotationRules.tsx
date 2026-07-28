@@ -4,8 +4,15 @@ import { packEnclose } from "d3-hierarchy"
 import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep, curveStepAfter, curveStepBefore, curveBasis, curveCardinal, curveCatmullRom } from "d3-shape"
 import type { CurveFactory } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
+import type { CurveType } from "../../stream/types"
 import { loess } from "./loess"
-import { linearRegression, polynomialRegression } from "./leastSquaresRegression"
+import {
+  linearRegression,
+  polynomialRegression,
+  fitLinearForForecast,
+  forecastIntervalStats,
+  confidenceZScore,
+} from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
@@ -17,7 +24,10 @@ import { resolveSvgFill } from "./hatchFill"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
-const CURVE_FACTORIES: Record<string, CurveFactory> = {
+// `"natural"` is a valid CurveType but unsupported here — Partial<Record<...>>
+// keeps that an intentional omission rather than a required-but-missing key,
+// while still catching a typo'd key against the real CurveType union.
+const CURVE_FACTORIES: Partial<Record<CurveType, CurveFactory>> = {
   linear: curveLinear,
   monotoneX: curveMonotoneX,
   monotoneY: curveMonotoneY,
@@ -656,7 +666,7 @@ export function createDefaultAnnotationRules(
         if (bounded.length < 2) return null
 
         // Build envelope area using d3-shape area generator with curve interpolation
-        const curveFn = CURVE_FACTORIES[context.curve || "linear"] || curveLinear
+        const curveFn = CURVE_FACTORIES[(context.curve || "linear") as CurveType] || curveLinear
         const envelopeArea = d3Area<Datum>()
           .x((d) => scaleX(d[xAcc]))
           .y0((d) => scaleY(d[lowerAcc]))
@@ -693,7 +703,6 @@ export function createDefaultAnnotationRules(
         const data = context.data || []
         if (data.length < 2) return null
         const yAcc = context.yAccessor || "y"
-        const _xAcc = context.xAccessor || "x"
         const scaleX = context.scales?.x ?? context.scales?.time
         const scaleY = context.scales?.y ?? context.scales?.value
         if (!scaleX || !scaleY) return null
@@ -799,36 +808,15 @@ export function createDefaultAnnotationRules(
               0
             )
         } else {
-          // Linear regression (inline — no dependency needed)
-          const n = points.length
-          let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0
-          for (const [x, y] of points) {
-            sumX += x; sumY += y; sumXX += x * x; sumXY += x * y
-          }
-          const det = n * sumXX - sumX * sumX
-          if (Math.abs(det) < 1e-12) return null
-          const slope = (n * sumXY - sumX * sumY) / det
-          const intercept = (sumY - slope * sumX) / n
-          predict = (x: number) => intercept + slope * x
+          const fit = fitLinearForForecast(points)
+          if (!fit) return null
+          predict = fit
         }
 
-        // Residual standard error
         const n = points.length
-        const residuals = points.map(([x, y]) => y - predict(x))
-        const sse = residuals.reduce((s, r) => s + r * r, 0)
-        const se = Math.sqrt(sse / Math.max(n - 2, 1))
-
-        // Mean of x and sum of squared deviations
-        const meanX = points.reduce((s, p) => s + p[0], 0) / n
-        const ssX = points.reduce((s, p) => s + (p[0] - meanX) ** 2, 0)
-
-        // Confidence z-score
+        const { se, meanX, ssX } = forecastIntervalStats(points, predict)
         const confidence = ann.confidence ?? 0.95
-        // Approximate z for common confidence levels
-        const z = confidence >= 0.99 ? 2.576
-          : confidence >= 0.95 ? 1.96
-          : confidence >= 0.9 ? 1.645
-          : 1.0
+        const z = confidenceZScore(confidence)
 
         // Generate forecast x-values
         const steps = ann.steps ?? 5

@@ -20,7 +20,7 @@ import type { Datum } from "./datumTypes"
 
 import { useCallback, useMemo, useState } from "react"
 import type { AxisChromeInput } from "../../legendLayout"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps, resolveMobileInteraction } from "./hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps, resolveMobileInteraction, distinctCategories } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
 import { createColorScale, STREAMING_PALETTE } from "./colorUtils"
@@ -152,7 +152,7 @@ export interface ChartSetupResult {
   /** If non-null, the HOC should return this element (loading or empty state) */
   earlyReturn: ReactElement | null
   /** Props to spread into the stream frame for legend behavior */
-  legendBehaviorProps: Datum
+  legendBehaviorProps: Record<string, unknown>
   /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
   crosshairProps: { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
   /**
@@ -246,7 +246,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   }, [])
 
   // ── Selection hooks (always called) ────────────────────────────────────
-  const colorByField = typeof input.colorBy === "string" ? input.colorBy : undefined
+  const colorByField = typeof colorBy === "string" ? colorBy : undefined
   const resolvedMobileInteraction = useMemo(
     () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
     [mobileInteraction, width, mobileSemantics],
@@ -272,15 +272,10 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // ── Category extraction ────────────────────────────────────────────────
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
+  const allCategories = useMemo(
+    () => distinctCategories(safeData as Datum[], colorBy),
+    [safeData, colorBy]
+  )
 
   const activeCategories = useMemo(() => {
     if (isPushMode && frameCategories.length > 0) return frameCategories

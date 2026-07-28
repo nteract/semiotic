@@ -326,7 +326,6 @@ export const RealtimeHistogram = forwardRef(
     // LinkedBrush integration via selection store
     const brushConfig = normalizeLinkedBrush(linkedBrush)
     const timeField = typeof timeAccessor === "string" ? timeAccessor : "time"
-    const _valueField = typeof valueAccessor === "string" ? valueAccessor : "value"
 
     const brushHook = useBrushSelection({
       name: brushConfig?.name || "__unused_hist_brush__",

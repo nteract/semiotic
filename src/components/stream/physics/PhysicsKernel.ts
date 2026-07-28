@@ -203,6 +203,16 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
+/** Pair two per-body restitution values — the less-bouncy of the two wins (conservative combining, avoids energy gain). */
+function pairRestitution(a: number | undefined, b: number | undefined, fallback: number): number {
+  return Math.min(a ?? fallback, b ?? fallback)
+}
+
+/** Pair two per-body friction values (grippier of the two wins), clamped to the valid [0, 1] range. */
+function pairFriction(a: number | undefined, b: number | undefined, fallback: number): number {
+  return clamp(Math.max(a ?? fallback, b ?? fallback), 0, 1)
+}
+
 function signOrOne(value: number): number {
   return value < 0 ? -1 : 1
 }
@@ -313,8 +323,8 @@ function circleAabbCollision(
   const halfHeight = bh / 2
   const closestX = clamp(cx, bx - halfWidth, bx + halfWidth)
   const closestY = clamp(cy, by - halfHeight, by + halfHeight)
-  let dx = cx - closestX
-  let dy = cy - closestY
+  const dx = cx - closestX
+  const dy = cy - closestY
   const distanceSquared = dx * dx + dy * dy
 
   if (distanceSquared > radius * radius) return null
@@ -325,24 +335,10 @@ function circleAabbCollision(
     const top = Math.abs(cy - (by - halfHeight))
     const bottom = Math.abs(cy - (by + halfHeight))
     const min = Math.min(left, right, top, bottom)
-    if (min === left) {
-      dx = -1
-      dy = 0
-      return { nx: dx, ny: dy, penetration: radius + left }
-    }
-    if (min === right) {
-      dx = 1
-      dy = 0
-      return { nx: dx, ny: dy, penetration: radius + right }
-    }
-    if (min === top) {
-      dx = 0
-      dy = -1
-      return { nx: dx, ny: dy, penetration: radius + top }
-    }
-    dx = 0
-    dy = 1
-    return { nx: dx, ny: dy, penetration: radius + bottom }
+    if (min === left) return { nx: -1, ny: 0, penetration: radius + left }
+    if (min === right) return { nx: 1, ny: 0, penetration: radius + right }
+    if (min === top) return { nx: 0, ny: -1, penetration: radius + top }
+    return { nx: 0, ny: 1, penetration: radius + bottom }
   }
 
   const distance = Math.sqrt(distanceSquared)
@@ -468,7 +464,7 @@ function bodyColliderCollision(
         shape.height
       )
     }
-    const collision = aabbAabbCollision(
+    return aabbAabbCollision(
       shape.x,
       shape.y,
       shape.width,
@@ -478,7 +474,6 @@ function bodyColliderCollision(
       body.shape.width,
       body.shape.height
     )
-    return collision
   }
 
   const radius =
@@ -559,7 +554,8 @@ function cloneCollider(collider: MutableCollider): MutableCollider {
   }
 }
 
-function valueAtPath(source: unknown, path: string): unknown {
+/** Read a dot-separated property path off an arbitrary value. Shared across physics controllers. */
+export function valueAtPath(source: unknown, path: string): unknown {
   if (!path) return undefined
   let current = source
   for (const part of path.split(".")) {
@@ -573,11 +569,16 @@ function valueIn(value: unknown, options: unknown[] | undefined): boolean {
   return Boolean(options?.some((candidate) => Object.is(value, candidate)))
 }
 
-function colliderAppliesToBody(
-  collider: MutableCollider,
-  body: MutableBody
+/**
+ * Test whether a body matches a `PhysicsColliderBodyFilter` — a predicate
+ * function or a declarative equals/notEquals/oneOf/notOneOf spec. Shared by
+ * collider/sensor permeability here and by the capacity-queue and
+ * service-operations controllers' own `bodyFilter` options.
+ */
+export function matchesPhysicsBodyFilter(
+  body: PhysicsBodyState,
+  filter: PhysicsColliderBodyFilter | undefined
 ): boolean {
-  const filter = collider.bodyFilter
   if (!filter) return true
   if (typeof filter === "function") return filter(body)
 
@@ -587,6 +588,13 @@ function colliderAppliesToBody(
   if (filter.oneOf && !valueIn(value, filter.oneOf)) return false
   if (filter.notOneOf && valueIn(value, filter.notOneOf)) return false
   return true
+}
+
+function colliderAppliesToBody(
+  collider: MutableCollider,
+  body: MutableBody
+): boolean {
+  return matchesPhysicsBodyFilter(body, collider.bodyFilter)
 }
 
 export class PhysicsKernelWorld {
@@ -1015,10 +1023,7 @@ export class PhysicsKernelWorld {
     if (velocityAlongNormal > 0) return
     const impactSpeed = Math.abs(velocityAlongNormal)
 
-    const restitution = Math.min(
-      a.restitution ?? this.options.restitution,
-      b.restitution ?? this.options.restitution
-    )
+    const restitution = pairRestitution(a.restitution, b.restitution, this.options.restitution)
     const impulse = (-(1 + restitution) * velocityAlongNormal) / invTotal
     const ix = impulse * collision.nx
     const iy = impulse * collision.ny
@@ -1048,16 +1053,7 @@ export class PhysicsKernelWorld {
     const tangentVelocity = rvx * tx + rvy * ty
     const invTotal = invA + invB
     if (Math.abs(tangentVelocity) <= EPSILON || invTotal <= EPSILON) return
-    const friction = Math.max(
-      0,
-      Math.min(
-        1,
-        Math.max(
-          a.friction ?? this.options.friction,
-          b.friction ?? this.options.friction
-        )
-      )
-    )
+    const friction = pairFriction(a.friction, b.friction, this.options.friction)
     const frictionImpulse = clamp(
       -tangentVelocity / invTotal,
       -normalImpulse * friction,
@@ -1110,26 +1106,14 @@ export class PhysicsKernelWorld {
 
     const velocityAlongNormal = body.vx * collision.nx + body.vy * collision.ny
     if (velocityAlongNormal < 0) {
-      const restitution = Math.min(
-        body.restitution ?? this.options.restitution,
-        collider.restitution ?? this.options.restitution
-      )
+      const restitution = pairRestitution(body.restitution, collider.restitution, this.options.restitution)
       body.vx -= (1 + restitution) * velocityAlongNormal * collision.nx
       body.vy -= (1 + restitution) * velocityAlongNormal * collision.ny
 
       const tx = -collision.ny
       const ty = collision.nx
       const tangentVelocity = body.vx * tx + body.vy * ty
-      const friction = Math.max(
-        0,
-        Math.min(
-          1,
-          Math.max(
-            body.friction ?? this.options.friction,
-            collider.friction ?? this.options.friction
-          )
-        )
-      )
+      const friction = pairFriction(body.friction, collider.friction, this.options.friction)
       body.vx -= tangentVelocity * tx * friction
       body.vy -= tangentVelocity * ty * friction
     }

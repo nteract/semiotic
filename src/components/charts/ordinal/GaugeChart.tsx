@@ -393,6 +393,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
               x={lx} y={ly}
               textAnchor={textAnchor} dominantBaseline={dominantBaseline}
               fill="var(--semiotic-text-secondary, #666)"
+              fontSize={10}
               style={{
                 userSelect: "none",
                 fontSize: "var(--semiotic-gauge-label-font-size, 10px)",

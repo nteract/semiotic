@@ -15,6 +15,7 @@ import { getMax, getMinMax } from "./minMax"
  */
 
 import { darkenColor, lightenColor } from "./colorManipulation"
+import { fitLinearForForecast, forecastIntervalStats, confidenceZScore } from "./leastSquaresRegression"
 
 // ── Config types ───────────────────────────────────────────────────────
 
@@ -464,28 +465,10 @@ function buildAutoForecast(
 
   if (points.length >= 3) {
     const n = points.length
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0
-    for (const [x, y] of points) {
-      sumX += x; sumY += y; sumXX += x * x; sumXY += x * y
-    }
-    const det = n * sumXX - sumX * sumX
-    if (Math.abs(det) > 1e-12) {
-      const slope = (n * sumXY - sumX * sumY) / det
-      const intercept = (sumY - slope * sumX) / n
-      const predict = (x: number) => intercept + slope * x
-
-      // Residual standard error
-      const residuals = points.map(([x, y]) => y - predict(x))
-      const sse = residuals.reduce((s, r) => s + r * r, 0)
-      const se = Math.sqrt(sse / Math.max(n - 2, 1))
-
-      const meanX = points.reduce((s, p) => s + p[0], 0) / n
-      const ssX = points.reduce((s, p) => s + (p[0] - meanX) ** 2, 0)
-
-      const z = confidence >= 0.99 ? 2.576
-        : confidence >= 0.95 ? 1.96
-        : confidence >= 0.9 ? 1.645
-        : 1.0
+    const predict = fitLinearForForecast(points)
+    if (predict) {
+      const { se, meanX, ssX } = forecastIntervalStats(points, predict)
+      const z = confidenceZScore(confidence)
 
       const allX = data.map((d) => d[xAccessor] as number).filter((v) => v != null && isFinite(v))
       const xMax = getMax(allX)

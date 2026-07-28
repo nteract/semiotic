@@ -13,7 +13,7 @@
  * linkedBrush) plus the valueAccessor. The hook returns hasBrush, handleBrush,
  * and brushStreamProps ready to spread into StreamOrdinalFrame props.
  */
-import { useCallback, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { normalizeLinkedBrush } from "./selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import type { ChartAccessor } from "./types"
@@ -39,13 +39,17 @@ export function useOrdinalBrush({
   linkedBrush,
   valueAccessor,
 }: OrdinalBrushInput): OrdinalBrushResult {
-  // Normalize rField → xField for the selection store
-  const normalizedLinkedBrush = typeof linkedBrush === "string"
-    ? linkedBrush
-    : linkedBrush
-      ? { name: linkedBrush.name, xField: linkedBrush.rField }
-      : undefined
-  const brushConfig = normalizeLinkedBrush(normalizedLinkedBrush)
+  // Normalize rField → xField for the selection store. Memoized so
+  // `handleBrush`'s useCallback below (keyed on `brushConfig`) gets a stable
+  // identity across renders instead of a fresh object every time.
+  const brushConfig = useMemo(() => {
+    const normalizedLinkedBrush = typeof linkedBrush === "string"
+      ? linkedBrush
+      : linkedBrush
+        ? { name: linkedBrush.name, xField: linkedBrush.rField }
+        : undefined
+    return normalizeLinkedBrush(normalizedLinkedBrush)
+  }, [linkedBrush])
   const rFieldStr = typeof valueAccessor === "string" ? valueAccessor : "value"
 
   const brushHook = useBrushSelection({

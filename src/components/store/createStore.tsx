@@ -122,7 +122,8 @@ function createSource<T>(
   }
 }
 
-function hasOwnEnumerableKey(value: object): boolean {
+/** True if `value` has at least one of its own enumerable keys. */
+export function hasOwnEnumerableKey(value: object): boolean {
   for (const key in value) {
     if (Object.prototype.hasOwnProperty.call(value, key)) return true
   }

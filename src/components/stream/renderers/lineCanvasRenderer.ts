@@ -2,7 +2,7 @@ import type { LineSceneNode } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
-import { buildColorStopGradient, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
+import { buildLinearFillGradient, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
 import { buildThresholdLineSegments } from "./thresholdLineSegments"
 
 /**
@@ -142,7 +142,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.beginPath()
 
       const strokeGrad = node.strokeGradient && node.path.length >= 2
-        ? buildColorStopGradient(
+        ? buildLinearFillGradient(
             ctx,
             node.strokeGradient,
             baseColor,

@@ -1,5 +1,6 @@
 import { chord, ribbon, type Chord } from "d3-chord"
 import { wrapWithDataHint } from "../devDataAccessWarning"
+import { resolveLabelFn, resolveNodeRefId } from "../accessorUtils"
 import { arc, type DefaultArcObject } from "d3-shape"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import type {
@@ -58,10 +59,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     )
 
     for (const edge of edges) {
-      const sourceId =
-        typeof edge.source === "string" ? edge.source : edge.source.id
-      const targetId =
-        typeof edge.target === "string" ? edge.target : edge.target.id
+      const sourceId = resolveNodeRefId(edge.source)
+      const targetId = resolveNodeRefId(edge.target)
 
       const si = nodeIndex.get(sourceId)
       const ti = nodeIndex.get(targetId)
@@ -119,8 +118,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     for (const n of nodes) nodeMap.set(n.id, n)
 
     for (const edge of edges) {
-      const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
-      const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+      const srcId = resolveNodeRefId(edge.source)
+      const tgtId = resolveNodeRefId(edge.target)
       const srcNode = nodeMap.get(srcId)
       const tgtNode = nodeMap.get(tgtId)
       if (srcNode) edge.source = srcNode
@@ -131,8 +130,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // Build bidirectional edge lookup (chord may emit in either direction)
     const edgeLookup = new Map<string, RealtimeEdge>()
     for (const e of edges) {
-      const eSrc = typeof e.source === "string" ? e.source : e.source.id
-      const eTgt = typeof e.target === "string" ? e.target : e.target.id
+      const eSrc = resolveNodeRefId(e.source)
+      const eTgt = resolveNodeRefId(e.target)
       // Store by source\0target for bidirectional lookup (chord parallel edges are less common)
       edgeLookup.set(`${eSrc}\0${eTgt}`, e)
     }
@@ -333,14 +332,6 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 
     return { sceneNodes, sceneEdges, labels }
   }
-}
-
-function resolveLabelFn(
-  nodeLabel: string | ((d: Datum) => string) | undefined
-): ((d: Datum) => string) | null {
-  if (!nodeLabel) return null
-  if (typeof nodeLabel === "function") return nodeLabel
-  return (d: Datum) => d[nodeLabel] || d.id
 }
 
 function resolveValueAccessor(

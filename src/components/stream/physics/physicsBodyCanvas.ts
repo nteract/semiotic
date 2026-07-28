@@ -67,7 +67,11 @@ export function drawBody(
   style: Style
 ): void {
   const fill = coerceCanvasFill(ctx, style.fill) ?? "#4e79a7"
-  const stroke = style.stroke
+  const resolvedStroke = coerceCanvasFill(ctx, style.stroke)
+  // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
+  // "none"`, silently keeps the default black, and still strokes — drawing a
+  // black ring where SVG (stroke="none") paints nothing.
+  const stroke = resolvedStroke !== "none" ? resolvedStroke : undefined
   const strokeWidth = style.strokeWidth ?? 0
   const opacity = style.opacity ?? 1
   const fillOpacity = style.fillOpacity ?? 1
