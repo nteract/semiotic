@@ -1,4 +1,8 @@
 import {
+  AXIS_TICK_CHROME,
+  AXIS_TITLE_CHROME,
+  ROTATED_AXIS_TITLE_CHROME,
+  resolveAxisChromeGutter,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
   resolveSideLegendMargin,
@@ -131,5 +135,38 @@ describe("resolveHorizontalLegendHeight", () => {
     expect(resolveHorizontalLegendHeight(multiGroup, 500)).toBe(
       resolveHorizontalLegendHeight(singleGroup, 500) + 16
     )
+  })
+})
+
+describe("resolveAxisChromeGutter", () => {
+  it("reserves nothing when the chart draws no axis on that side", () => {
+    expect(resolveAxisChromeGutter(undefined)).toBe(0)
+    expect(resolveAxisChromeGutter({ hasAxis: false })).toBe(0)
+    // Pie/donut pass hasAxis:false, so their legends keep the old placement.
+    expect(resolveAxisChromeGutter({ hasAxis: false, hasAxisLabel: true })).toBe(0)
+  })
+
+  it("reserves the tick band, and the title band when a title is present", () => {
+    expect(resolveAxisChromeGutter({ hasAxis: true })).toBe(AXIS_TICK_CHROME)
+    expect(resolveAxisChromeGutter({ hasAxis: true, hasAxisLabel: true })).toBe(AXIS_TITLE_CHROME)
+  })
+
+  it("widens for rotated ticks, which push the axis title further out", () => {
+    // autoRotate moves the title baseline from +40 to +58; without this the
+    // gutter caps at the un-rotated band and a bottom legend still overlaps.
+    expect(
+      resolveAxisChromeGutter({ hasAxis: true, hasAxisLabel: true, rotatedTicks: true })
+    ).toBe(ROTATED_AXIS_TITLE_CHROME)
+    expect(ROTATED_AXIS_TITLE_CHROME).toBeGreaterThan(AXIS_TITLE_CHROME)
+  })
+
+  it("lets an explicit axisGutter override the measurement, including 0", () => {
+    const chrome = { hasAxis: true, hasAxisLabel: true }
+    expect(resolveAxisChromeGutter(chrome, { axisGutter: 12 })).toBe(12)
+    // 0 opts out entirely and restores plot-edge anchoring.
+    expect(resolveAxisChromeGutter(chrome, { axisGutter: 0 })).toBe(0)
+    // The override applies even with no measured chrome to start from.
+    expect(resolveAxisChromeGutter(undefined, { axisGutter: 30 })).toBe(30)
+    expect(resolveAxisChromeGutter(chrome, { axisGutter: -5 })).toBe(0)
   })
 })

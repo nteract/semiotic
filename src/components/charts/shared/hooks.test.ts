@@ -484,6 +484,58 @@ describe("useChartLegendAndMargin", () => {
     })
   })
 
+  // The axis-chrome gutter describes the BOTTOM axis. Reserving it for a top
+  // legend too would push the plot down by 22-46px that nothing draws into,
+  // because placement only offsets a top legend for an explicit axisGutter.
+  it("reserves the axis-chrome gutter for a bottom legend but not a top one", () => {
+    const colorScale = (v: string) => (v === "A" ? "#f00" : "#0f0")
+    // A narrow chart wraps the legend onto several rows so the measured
+    // requirement clears the 80px compatibility floor and the gutter is
+    // actually observable in the resolved margin.
+    const withPosition = (
+      legendPosition: "top" | "bottom",
+      axisChrome?: { hasAxis?: boolean; hasAxisLabel?: boolean },
+    ) =>
+      renderHook(() =>
+        useChartLegendAndMargin({
+          data,
+          colorBy: "cat",
+          colorScale,
+          showLegend: true,
+          legendPosition,
+          userMargin: undefined,
+          chartWidth: 150,
+          axisChrome,
+        })
+      ).result.current.margin
+
+    const chrome = { hasAxis: true, hasAxisLabel: true }
+    expect(withPosition("bottom", chrome).bottom).toBeGreaterThan(
+      withPosition("bottom", { hasAxis: false }).bottom
+    )
+    expect(withPosition("top", chrome).top).toBe(
+      withPosition("top", { hasAxis: false }).top
+    )
+  })
+
+  it("still honors an explicit axisGutter for a top legend", () => {
+    const colorScale = () => "#f00"
+    const top = (axisGutter?: number) =>
+      renderHook(() =>
+        useChartLegendAndMargin({
+          data,
+          colorBy: "cat",
+          colorScale,
+          showLegend: true,
+          legendPosition: "top",
+          userMargin: undefined,
+          legendLayout: axisGutter == null ? undefined : { axisGutter },
+        })
+      ).result.current.margin.top
+
+    expect(top(60)).toBeGreaterThan(top())
+  })
+
   it("creates a legend when colorBy is a string and showLegend is not explicitly false", () => {
     const colorScale = (v: string) => (v === "A" ? "#f00" : "#0f0")
     const { result } = renderHook(() =>

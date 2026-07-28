@@ -445,6 +445,24 @@ export function SVGOverlay(props: SVGOverlayProps) {
     return filtered
   }, [showAxes, scales, axes, xFormat, width, axisExtent])
 
+  /**
+   * Bottom tick labels rotate 45° when `autoRotate` is set and the labels
+   * would otherwise collide. Hoisted to component scope because it changes the
+   * height of the bottom axis chrome (the axis title drops from +40 to +58),
+   * which a bottom legend has to clear — the axis renderer below and the
+   * legend's `axisChrome` must agree on it.
+   */
+  const shouldRotateBottomTicks = useMemo(() => {
+    const bottomAxis = axes?.find(a => a.orient === "bottom")
+    if (!bottomAxis?.autoRotate || xTicks.length <= 1) return false
+    const avgSpacing = width / Math.max(xTicks.length - 1, 1)
+    const maxLabelW = xTicks.reduce(
+      (max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60),
+      0,
+    )
+    return avgSpacing < maxLabelW + 8
+  }, [axes, xTicks, width])
+
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const leftAxis = axes?.find(a => a.orient === "left")
@@ -651,12 +669,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
 
-          // Rotate bottom-axis labels 45° when autoRotate is set AND labels would overlap horizontally
-          const shouldRotateBottom = !!bottomAxis?.autoRotate && xTicks.length > 1 && (() => {
-            const avgSpacing = width / Math.max(xTicks.length - 1, 1)
-            const maxLabelW = xTicks.reduce((max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60), 0)
-            return avgSpacing < maxLabelW + 8
-          })()
+          // Rotate bottom-axis labels 45° when autoRotate is set AND labels
+          // would overlap horizontally. Computed once at component scope so
+          // the legend's axis-chrome gutter reads the same value.
+          const shouldRotateBottom = shouldRotateBottomTicks
           const bottomTickLabelY = shouldRotateBottom ? 12 : 18
           const bottomAxisLabelY = height + (shouldRotateBottom ? 58 : 40)
 
@@ -963,8 +979,14 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
         legendLayout,
-        // Keep a bottom legend clear of the bottom axis's tick labels and title.
-        axisChrome: { hasAxis: !!showAxes, hasAxisLabel: !!xLabel },
+        // Keep a bottom legend clear of the bottom axis's tick labels and
+        // title. Rotated ticks push the title from +40 to +58, so the gutter
+        // has to know about the rotation or the legend still overlaps.
+        axisChrome: {
+          hasAxis: !!showAxes,
+          hasAxisLabel: !!xLabel,
+          rotatedTicks: shouldRotateBottomTicks,
+        },
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

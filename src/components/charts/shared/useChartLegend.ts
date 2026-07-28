@@ -133,10 +133,21 @@ export function useChartLegendAndMargin({
       // The axis gutter is part of the reservation, not just the placement:
       // the legend now sits below the tick labels, so the band has to hold
       // both or the legend is pushed off the canvas.
+      //
+      // `axisChrome` describes the *bottom* axis, so only a bottom legend
+      // reserves the measured band. A top axis is opt-in, so a top legend
+      // shifts only for an explicit `legendLayout.axisGutter` — passing
+      // `undefined` here keeps that override while dropping the measurement,
+      // exactly matching the placement split in `renderLegendFromConfig` and
+      // the server's `bottomRequirement`. Reserving it for both would push the
+      // plot down by 22–46px that nothing draws into.
       const horizontalLegendMargin =
         resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
         resolveLegendDistance(legend) +
-        resolveAxisChromeGutter({ hasAxis, hasAxisLabel, rotatedTicks }, legendLayout) +
+        resolveAxisChromeGutter(
+          legendPosition === "bottom" ? { hasAxis, hasAxisLabel, rotatedTicks } : undefined,
+          legendLayout,
+        ) +
         (legendPosition === "top" && hasTitle ? 24 : 0)
       if (legendPosition === "right" && !sideSet("right") && finalMargin.right < sideLegendMargin) finalMargin.right = sideLegendMargin
       else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < sideLegendMargin) finalMargin.left = sideLegendMargin

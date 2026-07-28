@@ -395,4 +395,56 @@ describe("font-size CSS variables", () => {
     expect(label).toBeTruthy()
     expect(label!.getAttribute("y")).toBe(String(baseProps.height + 58))
   })
+
+  // Rotation moves the axis title from +40 to +58, so the legend's axis-chrome
+  // gutter has to widen with it. When the overlay did not forward
+  // `rotatedTicks`, the gutter capped at the un-rotated title band and a bottom
+  // legend was placed on top of the rotated chrome.
+  it("widens the bottom-legend gutter when bottom ticks rotate", () => {
+    const legend = {
+      legendGroups: [{
+        label: "",
+        type: "fill" as const,
+        items: [{ label: "Series A" }],
+        styleFn: () => ({ fill: "#f00" }),
+      }],
+    }
+    // A deep bottom margin so the placement clamp (which keeps the legend on
+    // canvas when the reservation is too small) never masks the gutter.
+    const roomy = {
+      width: 300,
+      height: 200,
+      totalWidth: 360,
+      totalHeight: 340,
+      margin: { top: 10, right: 20, bottom: 120, left: 40 },
+    }
+    const legendY = (autoRotate: boolean) => {
+      const { container } = render(
+        <SVGOverlay
+          {...roomy}
+          scales={makeStubScales()}
+          showAxes={true}
+          axes={[{
+            orient: "bottom",
+            autoRotate,
+            tickFormat: (d: number) => `Long stage ${d}`,
+          }]}
+          xLabel="Event step"
+          legend={legend}
+          legendPosition="bottom"
+        />,
+      )
+      // The legend group is the one translated to the left margin and placed
+      // below the plot area.
+      const group = Array.from(container.querySelectorAll("g[transform]")).find((g) => {
+        const m = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(g.getAttribute("transform") ?? "")
+        return !!m && Number(m[1]) === roomy.margin.left && Number(m[2]) > roomy.height
+      })
+      expect(group).toBeTruthy()
+      const m = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(group!.getAttribute("transform") ?? "")
+      return Number(m![2])
+    }
+    // 64px rotated title band vs the 46px un-rotated one.
+    expect(legendY(true) - legendY(false)).toBe(18)
+  })
 })
