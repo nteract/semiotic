@@ -4,7 +4,6 @@ import type { StreamRendererFn } from "./types"
 import { renderPathPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import {
-  buildColorStopGradient,
   buildLinearFillGradient,
   resolveCanvasFill,
   resolveCurveFactory,
@@ -177,7 +176,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.globalAlpha = nodeOpacity
       const baseStroke = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       const strokeGrad = !hasThresholds && !hasStrokeColorBands && node.strokeGradient && node.topPath.length >= 2
-        ? buildColorStopGradient(
+        ? buildLinearFillGradient(
             ctx,
             node.strokeGradient,
             baseStroke,

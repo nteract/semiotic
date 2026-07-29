@@ -1,6 +1,5 @@
 import type { NetworkSceneNode, NetworkArcNode } from "../networkTypes"
-import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasFill } from "./canvasRenderHelpers"
+import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
 
 /**
  * Canvas painter for NetworkArcNode (chord diagram arc segments).
@@ -25,22 +24,8 @@ export function networkArcRenderer(
     ctx.arc(a.cx, a.cy, a.innerR, a.endAngle, a.startAngle, true)
     ctx.closePath()
 
-    // Fill
-    if (a.style.fill) {
-      ctx.fillStyle = resolveCanvasFill(ctx, a.style.fill, "#007bff")
-      if (a.style.fillOpacity !== undefined) {
-        ctx.globalAlpha = (a.style.opacity ?? 1) * a.style.fillOpacity
-      }
-      ctx.fill()
-    }
-
-    // Stroke
-    if (a.style.stroke && a.style.stroke !== "none") {
-      ctx.strokeStyle = resolveCSSColor(ctx, a.style.stroke) || a.style.stroke
-      ctx.lineWidth = a.style.strokeWidth ?? 1
-      ctx.globalAlpha = a.style.opacity ?? 1
-      ctx.stroke()
-    }
+    paintNetworkFill(ctx, a.style, "#007bff", () => ctx.fill())
+    paintNetworkStroke(ctx, a.style, () => ctx.stroke())
 
     ctx.restore()
   }

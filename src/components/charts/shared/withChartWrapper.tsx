@@ -10,10 +10,6 @@ interface SafeRenderProps {
   componentName: string
   width: number
   height: number
-  /** @deprecated Retained for back-compat; no longer threaded into the
-   *  error boundary. Use `npx semiotic-ai --doctor` or import
-   *  `diagnoseConfig` from `semiotic/utils` for validation diagnostics. */
-  chartProps?: Record<string, unknown>
   children: React.ReactNode
 }
 
@@ -186,27 +182,5 @@ export function warnMissingField(
   const available = Object.keys(sample).join(", ")
   console.warn(
     `[semiotic] ${componentName}: ${accessorName} "${accessorValue}" not found in data. Available keys: ${available}`
-  )
-}
-
-/** Warn if data looks like the wrong shape for this chart type */
-export function warnDataShape(
-  componentName: string,
-  data: Array<Datum | string | number | boolean | null | undefined> | undefined,
-  expectedKeys: string[],
-  hint: string
-): void {
-  if (!IS_DEV) return
-  if (!data || data.length === 0) return
-
-  const sample = data[0]
-  if (!sample || typeof sample !== "object") return
-
-  const keys = Object.keys(sample)
-  const hasAny = expectedKeys.some(k => keys.includes(k))
-  if (hasAny) return
-
-  console.warn(
-    `[semiotic] ${componentName}: data[0] has keys [${keys.join(", ")}] but none of the expected keys [${expectedKeys.join(", ")}]. ${hint}`
   )
 }

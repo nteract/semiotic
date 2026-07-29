@@ -233,6 +233,7 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
             textAnchor="middle"
             fontWeight={600}
             fill="var(--semiotic-text, #333)"
+            fontSize={14}
             className="semiotic-chart-title"
             style={{ fontSize: "var(--semiotic-title-font-size, 14px)" }}
           >

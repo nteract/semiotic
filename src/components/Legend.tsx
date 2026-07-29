@@ -151,7 +151,7 @@ const renderLegendGroupVertical = (
         />}
         {renderedType}
         {isIsolated && <CheckMark swatchSize={swatchSize} />}
-        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
+        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" fontSize={12} style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
@@ -279,7 +279,7 @@ const renderLegendGroupHorizontal = (
         />}
         {renderedType}
         {isIsolated && <CheckMark swatchSize={swatchSize} />}
-        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
+        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" fontSize={12} style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
@@ -346,6 +346,7 @@ const renderVerticalGroup = ({
           key={`legend-text-${i}`}
           y={layout.labelY}
           className="legend-group-label"
+          fontSize={12}
           style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >
@@ -433,6 +434,7 @@ const renderHorizontalGroup = ({
           transform={`translate(${offset},${verticalOffset}) rotate(90)`}
           textAnchor="start"
           className="legend-group-label"
+          fontSize={12}
           style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >
@@ -630,6 +632,7 @@ export default function Legend(props: LegendProps) {
           y={16}
           x={width / 2}
           textAnchor="middle"
+          fontSize={12}
           style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >

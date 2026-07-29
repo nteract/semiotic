@@ -435,6 +435,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           // override via the var rather than fighting inline specificity.
           const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 12px)" }
           const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
+          // Plain `fontSize` presentation-attribute fallbacks — see
+          // SVGOverlay for the rationale (a consumer with no CSS engine
+          // over the SVG can't resolve the `var()` above).
+          const TICK_FONT_SIZE = 12
+          const AXIS_LABEL_FONT_SIZE = 12
           return (
           <g className="ordinal-axes">
             {isHorizontal ? (
@@ -452,6 +457,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                         textAnchor="end"
                         dominantBaseline="middle"
                         fill="var(--semiotic-text-secondary, #666)"
+                        fontSize={TICK_FONT_SIZE}
                         className="semiotic-axis-tick"
                         style={{ userSelect: "none", ...tickFontStyle }}
                       >
@@ -471,6 +477,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
+                    fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
@@ -501,6 +508,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                         y={18}
                         textAnchor={anchor}
                         fill="var(--semiotic-text-secondary, #666)"
+                        fontSize={TICK_FONT_SIZE}
                         className="semiotic-axis-tick"
                         style={{ userSelect: "none", ...tickFontStyle }}
                       >
@@ -515,6 +523,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height + 40}
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
+                    fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
@@ -541,6 +550,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                         y={18}
                         textAnchor="middle"
                         fill="var(--semiotic-text-secondary, #666)"
+                        fontSize={TICK_FONT_SIZE}
                         className="semiotic-axis-tick"
                         style={{ userSelect: "none", ...tickFontStyle }}
                       >
@@ -559,6 +569,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height + 40}
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
+                    fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
@@ -578,6 +589,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                       textAnchor="end"
                       dominantBaseline="middle"
                       fill="var(--semiotic-text-secondary, #666)"
+                      fontSize={TICK_FONT_SIZE}
                       className="semiotic-axis-tick"
                       style={{ userSelect: "none", ...tickFontStyle }}
                     >
@@ -592,6 +604,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
+                    fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
@@ -622,6 +635,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
+          fontSize={14}
           className="semiotic-chart-title"
           style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >

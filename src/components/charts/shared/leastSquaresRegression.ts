@@ -139,3 +139,62 @@ export function polynomialRegression(
     equation: [...coefficients].reverse()
   }
 }
+
+/**
+ * Full-precision (unrounded) linear fit for forecast prediction-interval
+ * math — unlike {@link linearRegression}, which rounds gradient/intercept to
+ * two decimals for display. That rounding is fine for a trend-line
+ * annotation but would leak into the residual/standard-error/interval math
+ * a forecast band computes from `predict`. Returns null when x has zero
+ * variance (singular normal equations) rather than falling back to a
+ * zero-gradient line, so callers can skip rendering instead of drawing a
+ * misleading flat forecast. Shared by the `forecast` annotation rule
+ * (`annotationRules.tsx`) and the LineChart forecast-segment overlay
+ * (`statisticalOverlays.ts`).
+ */
+export function fitLinearForForecast(
+  points: ReadonlyArray<readonly [number, number]>
+): ((x: number) => number) | null {
+  const n = points.length
+  let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0
+  for (const [x, y] of points) {
+    sumX += x; sumY += y; sumXX += x * x; sumXY += x * y
+  }
+  const det = n * sumXX - sumX * sumX
+  if (Math.abs(det) < 1e-12) return null
+  const slope = (n * sumXY - sumX * sumY) / det
+  const intercept = (sumY - slope * sumX) / n
+  return (x: number) => intercept + slope * x
+}
+
+/**
+ * Residual standard error plus the mean/sum-of-squared-deviations of x that
+ * a forecast prediction-interval formula needs, given training points and an
+ * already-fitted `predict` (linear or polynomial — this part doesn't care
+ * which). Shared by the same two forecast call sites as
+ * {@link fitLinearForForecast}.
+ */
+export function forecastIntervalStats(
+  points: ReadonlyArray<readonly [number, number]>,
+  predict: (x: number) => number
+): { se: number; meanX: number; ssX: number } {
+  const n = points.length
+  const residuals = points.map(([x, y]) => y - predict(x))
+  const sse = residuals.reduce((s, r) => s + r * r, 0)
+  const se = Math.sqrt(sse / Math.max(n - 2, 1))
+  const meanX = points.reduce((s, p) => s + p[0], 0) / n
+  const ssX = points.reduce((s, p) => s + (p[0] - meanX) ** 2, 0)
+  return { se, meanX, ssX }
+}
+
+/**
+ * Approximate z-score for the common one/two-sided confidence levels a
+ * forecast/envelope prediction interval rounds to. Shared by the same two
+ * forecast call sites as {@link fitLinearForForecast}.
+ */
+export function confidenceZScore(confidence: number): number {
+  return confidence >= 0.99 ? 2.576
+    : confidence >= 0.95 ? 1.96
+    : confidence >= 0.9 ? 1.645
+    : 1.0
+}

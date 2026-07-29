@@ -210,6 +210,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
           textAnchor="middle"
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
+          fontSize={14}
           className="semiotic-chart-title"
           style={{
             userSelect: "none",

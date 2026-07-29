@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react"
 import * as React from "react"
 import {
   SafeRender,
-  warnDataShape,
   warnMissingField,
   renderEmptyState,
   renderLoadingState,
@@ -41,29 +40,6 @@ describe("SafeRender", () => {
     expect(screen.getByTestId("child")).toBeTruthy()
   })
 
-  it("shows the error message even when chartProps are passed", () => {
-    // chartProps is retained for back-compat but no longer threads
-    // diagnoseConfig output into the error fallback. Importing the full
-    // chartSpecs validation map into every subpath bundle (for a fallback
-    // that only fires on render-throw) wasn't worth ~7KB gz per subpath.
-    // Diagnostics remain available via `npx semiotic-ai --doctor` or
-    // `diagnoseConfig` from `semiotic/utils`.
-    const badProps = { data: [], width: 600, height: 400 }
-
-    const { container } = render(
-      <SafeRender componentName="BarChart" width={600} height={400} chartProps={badProps}>
-        <ThrowingChild message="render failed" />
-      </SafeRender>
-    )
-
-    const alert = screen.getByRole("alert")
-    expect(alert).toBeTruthy()
-    expect(alert.textContent).toContain("render failed")
-    // No diagnostic hint should appear — the integration was removed.
-    const hintPanel = container.querySelector("[data-testid='semiotic-diagnostic-hint']")
-    expect(hintPanel).toBeNull()
-  })
-
   it("shows error without diagnostic hint when no props are passed", () => {
     const { container } = render(
       <SafeRender componentName="LineChart" width={600} height={400}>
@@ -83,87 +59,6 @@ describe("SafeRender", () => {
       (el) => el.textContent !== "LineChart"
     )
     expect(hintDivs).toHaveLength(0)
-  })
-
-  it("shows error without diagnostic hint when props are valid (diagnoseConfig ok)", () => {
-    // Props that pass diagnoseConfig successfully — valid data with correct fields
-    const goodProps = {
-      data: [{ x: 1, y: 2 }],
-      xAccessor: "x",
-      yAccessor: "y",
-      width: 600,
-      height: 400,
-    }
-
-    const { container } = render(
-      <SafeRender componentName="LineChart" width={600} height={400} chartProps={goodProps}>
-        <ThrowingChild message="unexpected error" />
-      </SafeRender>
-    )
-
-    const alert = screen.getByRole("alert")
-    expect(alert.textContent).toContain("unexpected error")
-    // diagnoseConfig should return ok: true, so no diagnostic hint
-    const monoDivs = container.querySelectorAll("div[style*='monospace']")
-    const hintDivs = Array.from(monoDivs).filter(
-      (el) => el.textContent !== "LineChart"
-    )
-    expect(hintDivs).toHaveLength(0)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// warnDataShape
-// ---------------------------------------------------------------------------
-
-describe("warnDataShape", () => {
-  it("warns when data keys do not match expected keys (dev mode)", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    warnDataShape(
-      "BarChart",
-      [{ foo: 1, bar: 2 }],
-      ["category", "value"],
-      "Did you forget categoryAccessor?"
-    )
-
-    // IS_DEV is true in test env (NODE_ENV !== "production")
-    expect(spy).toHaveBeenCalledOnce()
-    expect(spy.mock.calls[0][0]).toContain("BarChart")
-    expect(spy.mock.calls[0][0]).toContain("foo, bar")
-    expect(spy.mock.calls[0][0]).toContain("category, value")
-    expect(spy.mock.calls[0][0]).toContain("Did you forget categoryAccessor?")
-  })
-
-  it("does not warn when at least one expected key is present", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    warnDataShape(
-      "BarChart",
-      [{ category: "A", extra: 1 }],
-      ["category", "value"],
-      "hint"
-    )
-
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn for empty data", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", [], ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn for undefined data", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", undefined, ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it("does not warn when first element is not an object", () => {
-    const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", [42], ["category"], "hint")
-    expect(spy).not.toHaveBeenCalled()
   })
 })
 

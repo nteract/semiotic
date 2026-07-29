@@ -73,6 +73,21 @@ export const XY_WITH_AXES_CHARTS = new Set([
   "MinimapChart"
 ])
 
+export const ORDINAL_CHARTS = new Set([
+  "BarChart",
+  "StackedBarChart",
+  "GroupedBarChart",
+  "SwarmPlot",
+  "BoxPlot",
+  "Histogram",
+  "ViolinPlot",
+  "DotPlot",
+  "RidgelinePlot",
+  "FunnelChart",
+  "LikertChart",
+  "SwimlaneChart"
+])
+
 // Charts whose default presentation animates continuously / loops.
 export const PHYSICS_MOTION_CHARTS = new Set([
   "StreamPhysicsFrame",

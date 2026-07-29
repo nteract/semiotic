@@ -563,6 +563,7 @@ export function getCrosshairProps(
 export {
   useChartLegendAndMargin,
   useLegendInteraction,
+  distinctCategories,
 } from "./useChartLegend"
 export type {
   LegendPosition,

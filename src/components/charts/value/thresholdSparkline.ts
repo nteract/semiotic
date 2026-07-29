@@ -87,7 +87,9 @@ export function buildSparklinePath(
 
   const innerW = Math.max(0, opts.width - padding * 2)
   const innerH = Math.max(0, opts.height - padding * 2)
-  const stepX = values.length === 1 ? 0 : innerW / (values.length - 1)
+  // values.length is always >= 2 here — the 0- and 1-length cases already
+  // returned above.
+  const stepX = innerW / (values.length - 1)
 
   const points: SparklinePoint[] = []
   let line = ""

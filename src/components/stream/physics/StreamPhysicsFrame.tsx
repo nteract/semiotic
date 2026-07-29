@@ -229,7 +229,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
   const regionEffectsRef = useRef(regionEffects)
   regionEffectsRef.current = regionEffects
   const bodyForcesRef = useRef(bodyForces)
-  bodyForcesRef.current = bodyForces
   const onTickRef = useRef(onTick)
   onTickRef.current = onTick
   const composedControllers = React.useMemo(
@@ -1404,14 +1403,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
         ? tooltipContent(hoverData)
         : <DefaultPhysicsTooltip hover={hoverData} />
       : null
-  const adjustedWidth = Math.max(1, size[0] - margin.left - margin.right)
-  const adjustedHeight = Math.max(1, size[1] - margin.top - margin.bottom)
   const tooltipElement = tooltipRendered && hoverData ? (
     <FlippingTooltip
       x={hoverData.x - margin.left}
       y={hoverData.y - margin.top}
-      containerWidth={adjustedWidth}
-      containerHeight={adjustedHeight}
+      containerWidth={plotWidth}
+      containerHeight={plotHeight}
       margin={margin}
       className="stream-physics-tooltip"
     >

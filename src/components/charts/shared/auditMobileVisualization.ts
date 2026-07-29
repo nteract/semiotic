@@ -1,5 +1,6 @@
 import type { Datum } from "./datumTypes"
 import { resolveResponsiveRules } from "./responsiveRules"
+import { XY_WITH_AXES_CHARTS, ORDINAL_CHARTS, POINT_TARGET_RADIUS_PROP } from "./chartFamilySets"
 
 /**
  * auditMobileVisualization - static mobile-readiness triage for Semiotic chart
@@ -102,46 +103,17 @@ export interface MobileVisualizationContract {
 const REFERENCE =
   "Mobile visualization audit: informed by MobileVisFixer, mobile exploratory interaction research, small-multiple mobile studies, responsive visualization grammars, constraint-based breakpoints, and WCAG 2.2 input modalities."
 
+// XY_WITH_AXES_CHARTS plus the two realtime charts that share its axis-driven
+// interaction model (mobile audit treats them the same as their static kin).
 const XY_CHARTS = new Set([
-  "LineChart",
-  "AreaChart",
-  "DifferenceChart",
-  "StackedAreaChart",
-  "Scatterplot",
-  "ConnectedScatterplot",
-  "BubbleChart",
-  "QuadrantChart",
-  "MultiAxisLineChart",
-  "CandlestickChart",
-  "Heatmap",
-  "MinimapChart",
+  ...XY_WITH_AXES_CHARTS,
   "RealtimeLineChart",
   "RealtimeHeatmap",
 ])
 
-const ORDINAL_CHARTS = new Set([
-  "BarChart",
-  "StackedBarChart",
-  "GroupedBarChart",
-  "SwarmPlot",
-  "BoxPlot",
-  "Histogram",
-  "ViolinPlot",
-  "DotPlot",
-  "RidgelinePlot",
-  "FunnelChart",
-  "LikertChart",
-  "SwimlaneChart",
-])
-
-const POINT_RADIUS_PROPS: Record<string, string[]> = {
-  Scatterplot: ["pointRadius", "hoverRadius"],
-  BubbleChart: ["pointRadius", "hoverRadius"],
-  ConnectedScatterplot: ["pointRadius", "hoverRadius"],
-  QuadrantChart: ["pointRadius", "hoverRadius"],
-  SwarmPlot: ["pointRadius", "hoverRadius"],
-  DotPlot: ["dotRadius", "hoverRadius"],
-}
+const POINT_RADIUS_PROPS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(POINT_TARGET_RADIUS_PROP).map(([component, prop]) => [component, [prop, "hoverRadius"]])
+)
 
 function isObject(value: unknown): value is Datum {
   return !!value && typeof value === "object" && !Array.isArray(value)

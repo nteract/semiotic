@@ -46,6 +46,7 @@ import {
   useLegendInteraction,
   useThemeCategorical,
   resolveMobileInteraction,
+  distinctCategories,
 } from "./hooks"
 import type { LegendInteractionMode, LegendPosition, LegendInteractionState } from "./hooks"
 import { DEFAULT_COLORS, resolveCategoricalPalette } from "./colorUtils"
@@ -291,20 +292,19 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   const themeCategorical = useThemeCategorical()
 
   const effectivePalette = useMemo<string[]>(() => {
+    // Array colorScheme passes through by reference (no copy) — a consumer
+    // test asserts identity here, and resolveCategoricalPalette's own array
+    // branch (colorUtils.ts) already returns the input array unchanged, so
+    // spreading it below would needlessly break that identity.
     if (Array.isArray(colorScheme) && colorScheme.length > 0) return colorScheme
     return [...resolveCategoricalPalette(colorScheme, themeCategorical, DEFAULT_COLORS)]
   }, [colorScheme, themeCategorical])
 
   // ── Categories for legend interaction ───────────────────────────
-  const allCategories = useMemo<string[]>(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeNodes) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeNodes, colorBy])
+  const allCategories = useMemo<string[]>(
+    () => distinctCategories(safeNodes, colorBy),
+    [safeNodes, colorBy]
+  )
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
@@ -335,7 +335,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true,           // deprecated / no-op since hooks.ts:207, kept for clarity
+    unwrapData: true,           // deprecated / no-op, kept for clarity
     onObservation,
     onClick,
     mobileInteraction: resolvedMobileInteraction,

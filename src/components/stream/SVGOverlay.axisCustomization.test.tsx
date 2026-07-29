@@ -7,7 +7,12 @@
  *      target individual axes via CSS without `!important`.
  *   3. Inline `font-size` references `var(--semiotic-tick-font-size, …)` /
  *      `var(--semiotic-axis-label-font-size, …)` instead of hardcoded
- *      numbers, so a parent setting the CSS variable wins via cascade.
+ *      numbers, so a parent setting the CSS variable wins via cascade. Each
+ *      `<text>` also carries a plain `font-size` presentation attribute
+ *      mirroring the var's own fallback number — strictly lower cascade
+ *      priority than the inline style, so it never overrides the CSS-var
+ *      path in a browser, but it keeps a sane size for consumers that don't
+ *      run a CSS engine over the SVG at all.
  */
 import * as React from "react"
 import { render } from "@testing-library/react"
@@ -336,10 +341,17 @@ describe("font-size CSS variables", () => {
     expect(style).toContain("var(--semiotic-axis-label-font-size, 12px)")
   })
 
-  it("does not emit a hardcoded font-size presentation attribute on tick text", () => {
-    // The whole point of the refactor: presentation-attribute-style or
-    // numeric font-size would beat external CSS in the cascade. Tick
-    // <text> should rely on inline style → CSS var → cascade override.
+  it("also emits a plain font-size attribute as a non-CSS-engine fallback", () => {
+    // A presentation attribute is strictly lower-priority than the inline
+    // `style` attribute in the CSS cascade (SVG2: presentation attributes
+    // act as author-level rules with zero specificity, beaten by any style
+    // sheet mechanism including inline style) — so it can never override the
+    // CSS-var cascade override in a real browser. But a consumer with no CSS
+    // engine over the SVG (a `style`-stripping sanitizer, the Figma plugin's
+    // SVG importer, static rasterizers like resvg) can't resolve
+    // `var(--semiotic-tick-font-size, ...)` and would otherwise silently
+    // inherit the host document's font-size. The plain attribute is that
+    // consumer's fallback.
     const { container } = render(
       <SVGOverlay
         {...baseProps}
@@ -350,7 +362,7 @@ describe("font-size CSS variables", () => {
     )
     const tickText = container.querySelector("text.semiotic-axis-tick") as SVGTextElement | null
     expect(tickText).toBeTruthy()
-    expect(tickText!.getAttribute("font-size")).toBeNull()
+    expect(tickText!.getAttribute("font-size")).toBe("12")
   })
 
   it("landmark ticks use a calc() that adds 1px to the base CSS var", () => {

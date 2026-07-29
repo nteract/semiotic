@@ -1,11 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
   resolveCurveFactory,
   resolveCanvasFill,
   buildLinearFillGradient,
-  buildColorStopGradient,
+  paintNetworkFill,
+  paintNetworkStroke,
 } from "./canvasRenderHelpers"
 import { createMockCanvasContext } from "../../../test-utils/canvasMock"
+import type { Style } from "../types"
 
 describe("canvasRenderHelpers", () => {
   let ctx: CanvasRenderingContext2D
@@ -121,39 +123,67 @@ describe("canvasRenderHelpers", () => {
     })
   })
 
-  describe("buildColorStopGradient", () => {
-    it("returns null when fewer than 2 stops are present", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [{ offset: 0, color: "red" }] },
-        "#000",
-        0, 0, 100, 0,
-      )
-      expect(grad).toBeNull()
+  describe("paintNetworkFill", () => {
+    it("does not invoke paint when style.fill is unset", () => {
+      const paint = vi.fn()
+      paintNetworkFill(ctx, {} as Style, "#007bff", paint)
+      expect(paint).not.toHaveBeenCalled()
     })
 
-    it("builds a gradient when 2+ stops are present", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [
-          { offset: 0, color: "red" },
-          { offset: 1, color: "blue" },
-        ]},
-        "#000", 0, 0, 100, 0,
-      )
-      expect(grad).toBeTruthy()
+    it("resolves fillStyle from the fallback and invokes paint", () => {
+      const paint = vi.fn()
+      paintNetworkFill(ctx, { fill: "#ff0000" } as Style, "#007bff", paint)
+      expect(paint).toHaveBeenCalledOnce()
+      expect((ctx as unknown as { fillStyle: string }).fillStyle).toBe("#ff0000")
     })
 
-    it("filters non-finite offsets before the 2-stop minimum (avoids addColorStop IndexSizeError)", () => {
-      const grad = buildColorStopGradient(
-        ctx,
-        { stops: [
-          { offset: 0, color: "red" },
-          { offset: NaN, color: "green" },
-        ]},
-        "#000", 0, 0, 100, 0,
-      )
-      expect(grad).toBeNull()
+    it("combines opacity × fillOpacity into globalAlpha when fillOpacity is set", () => {
+      const paint = vi.fn()
+      paintNetworkFill(ctx, { fill: "#ff0000", opacity: 0.5, fillOpacity: 0.4 } as Style, "#007bff", paint)
+      expect((ctx as unknown as { globalAlpha: number }).globalAlpha).toBeCloseTo(0.2)
+    })
+
+    it("leaves globalAlpha untouched when fillOpacity is unset", () => {
+      const mutableCtx = ctx as unknown as { globalAlpha: number }
+      mutableCtx.globalAlpha = 0.75
+      const paint = vi.fn()
+      paintNetworkFill(ctx, { fill: "#ff0000", opacity: 0.5 } as Style, "#007bff", paint)
+      expect(mutableCtx.globalAlpha).toBe(0.75)
+    })
+  })
+
+  describe("paintNetworkStroke", () => {
+    it("does not invoke paint when style.stroke is unset", () => {
+      const paint = vi.fn()
+      paintNetworkStroke(ctx, {} as Style, paint)
+      expect(paint).not.toHaveBeenCalled()
+    })
+
+    it("does not invoke paint when style.stroke is \"none\" (the stroke=\"none\" canvas trap)", () => {
+      // `strokeStyle = "none"` is rejected by a real canvas context, which
+      // silently keeps the default black and still strokes — regression
+      // coverage for that trap: "none" must short-circuit before paint().
+      const paint = vi.fn()
+      paintNetworkStroke(ctx, { stroke: "none" } as Style, paint)
+      expect(paint).not.toHaveBeenCalled()
+    })
+
+    it("resolves strokeStyle/lineWidth/globalAlpha and invokes paint for a real color", () => {
+      const paint = vi.fn()
+      paintNetworkStroke(ctx, { stroke: "#00ff00", strokeWidth: 3, opacity: 0.6 } as Style, paint)
+      expect(paint).toHaveBeenCalledOnce()
+      const mutableCtx = ctx as unknown as { strokeStyle: string; lineWidth: number; globalAlpha: number }
+      expect(mutableCtx.strokeStyle).toBe("#00ff00")
+      expect(mutableCtx.lineWidth).toBe(3)
+      expect(mutableCtx.globalAlpha).toBe(0.6)
+    })
+
+    it("defaults lineWidth to 1 and globalAlpha to 1 when unset", () => {
+      const paint = vi.fn()
+      paintNetworkStroke(ctx, { stroke: "#00ff00" } as Style, paint)
+      const mutableCtx = ctx as unknown as { lineWidth: number; globalAlpha: number }
+      expect(mutableCtx.lineWidth).toBe(1)
+      expect(mutableCtx.globalAlpha).toBe(1)
     })
   })
 })

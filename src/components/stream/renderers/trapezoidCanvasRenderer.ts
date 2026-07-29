@@ -30,7 +30,10 @@ export const trapezoidCanvasRenderer = (
     ctx.fillStyle = coerceCanvasFill(ctx, node.style?.fill) || "#999"
     ctx.fill()
 
-    if (node.style?.stroke) {
+    // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
+    // "none"`, silently keeps the default black, and still strokes — drawing a
+    // black outline where SVG (stroke="none") paints nothing.
+    if (node.style?.stroke && node.style.stroke !== "none") {
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.stroke()

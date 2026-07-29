@@ -39,8 +39,14 @@ export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
 
 // Named color schemes that resolve to a palette (colorUtils.COLOR_SCHEMES).
 // A string `colorScheme` outside this set silently falls back to the default
-// palette, so a typo produces wrong colors with no error. Kept in sync with
-// COLOR_SCHEMES by a drift test in diagnoseConfig.test.ts.
+// palette, so a typo produces wrong colors with no error. Kept as a literal
+// list rather than `new Set(Object.keys(COLOR_SCHEMES))` — importing
+// colorUtils.ts here to read just the key names still pulls its full
+// category10/tableau10/set3/sequential-interpolator data (and d3-scale) into
+// every diagnoseConfig consumer, including the size-budgeted semiotic/ai/core
+// bundle, at ~1.5% raw / ~4.6% gzip cost for that one bundle — measured via
+// npm run check:cold-consumer. Kept in sync with COLOR_SCHEMES by a drift
+// test in diagnoseConfig.test.ts.
 const KNOWN_COLOR_SCHEMES = new Set([
   "category10", "tableau10", "set3",
   "blues", "reds", "greens", "oranges", "purples", "greys",

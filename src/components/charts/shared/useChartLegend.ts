@@ -16,6 +16,24 @@ import {
 import type { Datum } from "./datumTypes"
 
 /**
+ * Distinct string-coerced `colorBy` values across `data`, in first-seen order.
+ * Shared by chart setup hooks that need the category list for a color scale
+ * or legend before any scale/legend object is built.
+ */
+export function distinctCategories(
+  data: readonly Datum[],
+  colorBy: Accessor<string | number> | undefined
+): string[] {
+  if (!colorBy) return []
+  const vals = new Set<string>()
+  for (const d of data) {
+    const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy]
+    if (v != null) vals.add(String(v))
+  }
+  return Array.from(vals)
+}
+
+/**
  * Hook to create a legend and compute margins with legend-aware adjustment.
  * Consolidates the shouldShowLegend / createLegend / margin merge / right-margin
  * expansion pattern that every chart with color encoding repeats.
@@ -75,12 +93,7 @@ export function useChartLegendAndMargin({
   const legendCategories = useMemo(() => {
     if (!shouldResolveCategories) return []
     if (categories !== undefined) return categories
-    const vals = new Set<string>()
-    for (const d of data) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
+    return distinctCategories(data, colorBy)
   }, [categories, colorBy, data, shouldResolveCategories])
   useLinkedChartCategories(linkedCategoryRegistryActive && colorBy ? legendCategories : [])
 
@@ -245,7 +258,11 @@ export function useLegendInteraction(
       return {
         isActive: true,
         predicate: (d: Datum) => {
-          const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          const raw = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          // Legend labels are String(v)-coerced (useChartSetup's category
+          // extraction), so a non-string colorBy field (number, boolean)
+          // must be coerced the same way or it never matches.
+          const val = typeof raw === "string" ? raw : String(raw ?? "")
           return val === highlightedCategory
         }
       }
@@ -255,7 +272,8 @@ export function useLegendInteraction(
       return {
         isActive: true,
         predicate: (d: Datum) => {
-          const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          const raw = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          const val = typeof raw === "string" ? raw : String(raw ?? "")
           return isolatedCategories.has(val)
         }
       }

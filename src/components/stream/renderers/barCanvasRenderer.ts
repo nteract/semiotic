@@ -45,6 +45,39 @@ function barGradientAxis(node: RectSceneNode): { x0: number; y0: number; x1: num
 }
 
 /**
+ * Resolve a bar's fill — solid color/pattern, or a tip→base gradient when
+ * `fillGradient` is set. Shared by all three fill branches below (plain,
+ * roundedTop, and per-corner-radii) since none of the resolution depends on
+ * which path-tracing branch is drawing the bar.
+ */
+function resolveBarFill(
+  ctx: CanvasRenderingContext2D,
+  node: RectSceneNode
+): string | CanvasPattern | CanvasGradient {
+  const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
+  // Skip gradient construction entirely when the resolved fill is a
+  // CanvasPattern — feeding the fallback color into the opacity branch
+  // would silently replace the pattern with a solid-color gradient.
+  const axis = barGradientAxis(node)
+  const grad = node.fillGradient && typeof solid === "string"
+    ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
+    : null
+  return grad || solid
+}
+
+/**
+ * Apply a bar's resolved stroke style/width to `ctx`. Returns whether there
+ * is a stroke to draw, so callers pick `stroke()` (traced path) or
+ * `strokeRect()` (no active path) without repeating the guard.
+ */
+function prepareBarStroke(ctx: CanvasRenderingContext2D, node: RectSceneNode): boolean {
+  if (!node.style.stroke || node.style.stroke === "none") return false
+  ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+  ctx.lineWidth = node.style.strokeWidth || 1
+  return true
+}
+
+/**
  * Canvas bar renderer.
  * Renders RectSceneNode as filled rectangles. Supports icon/isotype mode
  * where an image is stamped repeatedly to fill the bar instead of a solid fill.
@@ -64,30 +97,13 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       // Explicit per-corner radii (swimlane's leading/trailing rounding).
       // Same fill resolution as the roundedTop branch so gradients still
       // flow tip→base along the bar axis.
-      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
-      const axis = barGradientAxis(node)
-      const grad = node.fillGradient && typeof solid === "string"
-        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
-        : null
-      ctx.fillStyle = grad || solid
+      ctx.fillStyle = resolveBarFill(ctx, node)
       tracePerCornerPath(ctx, node)
       ctx.fill()
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
-        ctx.stroke()
-      }
+      if (prepareBarStroke(ctx, node)) ctx.stroke()
     } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
-      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
-      // Skip gradient construction entirely when the resolved fill is a
-      // CanvasPattern — feeding the fallback color into the opacity branch
-      // would silently replace the pattern with a solid-color gradient.
-      const axis = barGradientAxis(node)
-      const grad = node.fillGradient && typeof solid === "string"
-        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
-        : null
-      ctx.fillStyle = grad || solid
+      ctx.fillStyle = resolveBarFill(ctx, node)
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
       ctx.beginPath()
       const { x, y, w, h } = node
@@ -128,29 +144,13 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       ctx.closePath()
       ctx.fill()
 
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
-        ctx.stroke()
-      }
+      if (prepareBarStroke(ctx, node)) ctx.stroke()
     } else {
       // Standard solid fill — or gradient when fillGradient is set.
-      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
-      // Skip gradient construction entirely when the resolved fill is a
-      // CanvasPattern — feeding the fallback color into the opacity branch
-      // would silently replace the pattern with a solid-color gradient.
-      const axis = barGradientAxis(node)
-      const grad = node.fillGradient && typeof solid === "string"
-        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
-        : null
-      ctx.fillStyle = grad || solid
+      ctx.fillStyle = resolveBarFill(ctx, node)
       ctx.fillRect(node.x, node.y, node.w, node.h)
 
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
-        ctx.strokeRect(node.x, node.y, node.w, node.h)
-      }
+      if (prepareBarStroke(ctx, node)) ctx.strokeRect(node.x, node.y, node.w, node.h)
     }
 
     // Pulse overlay

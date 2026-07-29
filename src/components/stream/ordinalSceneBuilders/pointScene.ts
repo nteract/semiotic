@@ -1,33 +1,18 @@
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import { SYMBOL_SEQUENCE, type SymbolName } from "../symbolPath"
+import { makeSymbolResolver, type SymbolName } from "../symbolPath"
 import type { OrdinalSceneContext } from "./types"
 
 /**
- * Build a per-call category→shape resolver for the symbolBy channel, or null
- * when no symbol accessor is set. Explicit `symbolMap` wins; unmapped categories
- * auto-assign from SYMBOL_SEQUENCE in first-seen (deterministic) order. Mirrors
- * the XY point scene builder so swarm/dot glyphs match Scatterplot's.
+ * Per-call category→shape resolver for the symbolBy channel, or null when no
+ * symbol accessor is set. Mirrors the XY point scene builder (both call the
+ * shared `makeSymbolResolver`) so swarm/dot glyphs match Scatterplot's.
  */
 function makeShapeResolver(ctx: OrdinalSceneContext): ((d: Datum) => SymbolName) | null {
   const getSymbol = ctx.getSymbol
   if (!getSymbol) return null
-  const symbolMapCfg = ctx.config.symbolMap
-  const assign = new Map<string, SymbolName>()
-  let seq = 0
-  return (d: Datum) => {
-    const cat = String(getSymbol(d))
-    const explicit = symbolMapCfg?.[cat]
-    if (explicit) return explicit
-    let s = assign.get(cat)
-    if (!s) {
-      s = SYMBOL_SEQUENCE[seq % SYMBOL_SEQUENCE.length]
-      seq++
-      assign.set(cat, s)
-    }
-    return s
-  }
+  return makeSymbolResolver(getSymbol, ctx.config.symbolMap)
 }
 
 /** Emit a point or, when symbolBy is active, a glyph (size = πr²) at (px, py). */

@@ -274,6 +274,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
           textAnchor="middle"
           fontWeight={600}
           fill="currentColor"
+          fontSize={14}
           className="semiotic-chart-title"
           style={{ fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >

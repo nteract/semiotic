@@ -83,7 +83,8 @@ function observeField(data: ReadonlyArray<Datum>, field: string): FieldObservati
   return out
 }
 
-function quantile(sorted: ReadonlyArray<number>, p: number): number | undefined {
+/** Linear-interpolation quantile over a pre-sorted array. */
+export function quantile(sorted: ReadonlyArray<number>, p: number): number | undefined {
   if (sorted.length === 0) return undefined
   const index = (sorted.length - 1) * p
   const lower = Math.floor(index)

@@ -16,8 +16,11 @@ import { buildFunnelScene } from "./funnelScene"
 import { buildBarFunnelScene } from "./barFunnelScene"
 import { buildSwimlaneScene } from "./swimlaneScene"
 import type { SceneBuilderFn } from "./types"
+import type { OrdinalChartType } from "../ordinalTypes"
 
-export const ORDINAL_SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
+// "custom" isn't listed — XYCustomChart/OrdinalCustomChart charts build their
+// scene via a user-supplied layout function instead of a registry lookup.
+export const ORDINAL_SCENE_BUILDERS: Partial<Record<OrdinalChartType, SceneBuilderFn>> = {
   bar: buildBarScene,
   clusterbar: buildClusterBarScene,
   point: buildPointScene,

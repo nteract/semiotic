@@ -1,7 +1,6 @@
 import type { NetworkSceneNode, NetworkCircleNode } from "../networkTypes"
 import { renderCirclePulse } from "./renderPulse"
-import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasFill } from "./canvasRenderHelpers"
+import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
 
 /**
  * Canvas painter for NetworkCircleNode (force nodes, tree nodes, circlepack).
@@ -25,22 +24,8 @@ export function networkCircleRenderer(
     ctx.beginPath()
     ctx.arc(c.cx, c.cy, c.r, 0, Math.PI * 2)
 
-    // Fill
-    if (c.style.fill) {
-      ctx.fillStyle = resolveCanvasFill(ctx, c.style.fill, "#007bff")
-      if (c.style.fillOpacity !== undefined) {
-        ctx.globalAlpha = (c.style.opacity ?? 1) * c.style.fillOpacity
-      }
-      ctx.fill()
-    }
-
-    // Stroke
-    if (c.style.stroke && c.style.stroke !== "none") {
-      ctx.strokeStyle = resolveCSSColor(ctx, c.style.stroke) || c.style.stroke
-      ctx.lineWidth = c.style.strokeWidth ?? 1
-      ctx.globalAlpha = c.style.opacity ?? 1
-      ctx.stroke()
-    }
+    paintNetworkFill(ctx, c.style, "#007bff", () => ctx.fill())
+    paintNetworkStroke(ctx, c.style, () => ctx.stroke())
 
     // Pulse glow ring
     renderCirclePulse(ctx, c)

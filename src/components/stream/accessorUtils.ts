@@ -1,3 +1,5 @@
+import type { Datum } from "../charts/shared/datumTypes"
+
 // ── Accessor resolution ────────────────────────────────────────────────
 
 /**
@@ -63,4 +65,32 @@ export function resolveStringAccessor<T extends Record<string, unknown>>(
   if (accessor) return (d: T) => String(d[accessor])
   if (fallback) return (d: T) => String(d[fallback])
   return undefined
+}
+
+/**
+ * Resolve a `nodeLabel` accessor (string key or function) into a label
+ * function, or `null` when unset — the network layout plugins' shared
+ * convention for "no label configured" (as opposed to `resolveStringAccessor`'s
+ * `undefined`). A string accessor falls back to `d.id` when the field is
+ * missing/empty. Shared by the chord/force/sankey layout plugins; hierarchy
+ * layouts use their own `resolveLabelFn` in `layouts/hierarchyUtils.ts`
+ * instead, since a hierarchy scene node nests the original datum under
+ * `.data` and must unwrap it before calling a user accessor.
+ */
+export function resolveLabelFn(
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
+  if (!nodeLabel) return null
+  if (typeof nodeLabel === "function") return nodeLabel
+  return (d: Datum) => d[nodeLabel] || d.id
+}
+
+/**
+ * Resolve a d3-force-style edge endpoint (`source`/`target`) to its node id.
+ * Before a force/sankey/chord simulation resolves string ids into node
+ * object references, an edge endpoint is `string | { id: string }`; this
+ * reads the id either way. Shared by the chord/force/sankey layout plugins.
+ */
+export function resolveNodeRefId(ref: string | { id: string }): string {
+  return typeof ref === "string" ? ref : ref.id
 }

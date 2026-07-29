@@ -1,5 +1,5 @@
 /** Shared canvas primitives for fills, strokes, curves, and gradients. */
-import type { CurveType } from "../types"
+import type { CurveType, Style } from "../types"
 import type { GradientConfig, GradientStop } from "../../charts/shared/gradient"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
@@ -91,7 +91,9 @@ export function coerceCanvasFill(
 
 /**
  * Build a linear gradient from a normalized gradient config. Stops without a
- * color inherit the resolved mark color.
+ * color inherit the resolved mark color. Used for both fill gradients (bar,
+ * area fill) and stroke gradients (line, area stroke) — a canvas gradient
+ * object is equally valid as `fillStyle` or `strokeStyle`.
  *
  * The renderer is responsible for choosing the gradient axis (a bar
  * runs tip→base along its value axis; an area runs minTop→maxBottom
@@ -134,27 +136,38 @@ function canvasGradientStopColor(
   return `rgba(${r},${g},${b},${opacity})`
 }
 
-/** Build a linear stroke gradient along the caller-provided axis. */
-export function buildColorStopGradient(
+/**
+ * Resolve and apply a network node's fill, then invoke `paint` (the
+ * renderer's own `fill()`/`fillRect()` call — the path or rect traced
+ * differs per shape, so painting stays with the caller).
+ */
+export function paintNetworkFill(
   ctx: CanvasRenderingContext2D,
-  strokeGradient: GradientConfig,
-  baseStroke: string,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): CanvasGradient | null {
-  const validStops = strokeGradient.stops.filter((stop) =>
-    Number.isFinite(stop.offset)
-    && (stop.opacity == null || Number.isFinite(stop.opacity)),
-  )
-  if (validStops.length < 2) return null
-  const grad = ctx.createLinearGradient(x0, y0, x1, y1)
-  for (const stop of validStops) {
-    grad.addColorStop(
-      Math.max(0, Math.min(1, stop.offset)),
-      canvasGradientStopColor(ctx, stop, baseStroke),
-    )
+  style: Style,
+  fallback: string,
+  paint: () => void,
+): void {
+  if (!style.fill) return
+  ctx.fillStyle = resolveCanvasFill(ctx, style.fill, fallback)
+  if (style.fillOpacity !== undefined) {
+    ctx.globalAlpha = (style.opacity ?? 1) * style.fillOpacity
   }
-  return grad
+  paint()
+}
+
+/**
+ * Resolve and apply a network node's stroke, then invoke `paint`. `"none"`
+ * is truthy as a string, so this guards it explicitly — canvas otherwise
+ * rejects `strokeStyle = "none"`, keeps the default black, and still strokes.
+ */
+export function paintNetworkStroke(
+  ctx: CanvasRenderingContext2D,
+  style: Style,
+  paint: () => void,
+): void {
+  if (!style.stroke || style.stroke === "none") return
+  ctx.strokeStyle = resolveCSSColor(ctx, style.stroke) || style.stroke
+  ctx.lineWidth = style.strokeWidth ?? 1
+  ctx.globalAlpha = style.opacity ?? 1
+  paint()
 }

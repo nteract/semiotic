@@ -8,7 +8,7 @@ import { orbitLayoutPlugin } from "./orbitLayoutPlugin"
 /**
  * Registry mapping network chart types to their layout plugins.
  */
-export const networkLayoutRegistry: Record<string, NetworkLayoutPlugin> = {
+export const networkLayoutRegistry: Record<NetworkChartType, NetworkLayoutPlugin> = {
   sankey: sankeyLayoutPlugin,
   force: forceLayoutPlugin,
   chord: chordLayoutPlugin,

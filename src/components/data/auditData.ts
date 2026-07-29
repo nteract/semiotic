@@ -13,6 +13,7 @@ import {
   type NumericFieldRole,
   type NumericRequirement,
 } from "./numericContracts"
+import { quantile } from "./numericFieldProfiler"
 
 const MAX_AFFECTED_ROWS = 5
 
@@ -210,16 +211,6 @@ function observe(
   }
 
   return observation
-}
-
-function quantile(sorted: ReadonlyArray<number>, p: number): number | undefined {
-  if (sorted.length === 0) return undefined
-  const index = (sorted.length - 1) * p
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
-  if (lower === upper) return sorted[lower]
-  const weight = index - lower
-  return sorted[lower] * (1 - weight) + sorted[upper] * weight
 }
 
 function requirementSet(
