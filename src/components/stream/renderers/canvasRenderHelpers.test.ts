@@ -185,5 +185,15 @@ describe("canvasRenderHelpers", () => {
       expect(mutableCtx.lineWidth).toBe(1)
       expect(mutableCtx.globalAlpha).toBe(1)
     })
+
+    it("combines opacity × strokeOpacity for a translucent network border", () => {
+      const paint = vi.fn()
+      paintNetworkStroke(
+        ctx,
+        { stroke: "#00ff00", opacity: 0.5, strokeOpacity: 0.4 } as Style,
+        paint,
+      )
+      expect((ctx as unknown as { globalAlpha: number }).globalAlpha).toBeCloseTo(0.2)
+    })
   })
 })

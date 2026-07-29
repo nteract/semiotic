@@ -95,7 +95,12 @@ export function buildTreeScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity
+      opacity: userStyle.opacity,
+      // Keep paint-specific alpha separate from whole-mark opacity. This is
+      // important for nested treemaps: an ancestor's translucent fill needs
+      // to composite with its descendants identically on canvas and SVG.
+      fillOpacity: userStyle.fillOpacity,
+      strokeOpacity: userStyle.strokeOpacity
     }
 
     sceneNodes.push({
@@ -245,7 +250,9 @@ export function buildRectScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity
+      opacity: userStyle.opacity,
+      fillOpacity: userStyle.fillOpacity,
+      strokeOpacity: userStyle.strokeOpacity
     }
 
     sceneNodes.push({
@@ -360,7 +367,9 @@ export function buildCircleScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity ?? circleOpacity
+      opacity: userStyle.opacity ?? circleOpacity,
+      fillOpacity: userStyle.fillOpacity,
+      strokeOpacity: userStyle.strokeOpacity
     }
 
     sceneNodes.push({

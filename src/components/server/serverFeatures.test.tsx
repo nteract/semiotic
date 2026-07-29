@@ -457,6 +457,28 @@ describe("Grid lines", () => {
     expect(svg).not.toContain("semiotic-grid")
   })
 
+  it("can render horizontal-only XY grid lines", () => {
+    const svg = renderXYToStaticSVG({
+      chartType: "line",
+      data: [{ x: 0, y: 10 }, { x: 1, y: 20 }, { x: 2, y: 15 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [400, 300],
+      showGrid: true,
+      axes: [
+        { orient: "bottom", grid: false },
+        { orient: "left", gridStyle: "dashed" },
+      ],
+    } as StaticXYProps)
+
+    const grid = svg.match(/<g[^>]*class="semiotic-grid"[\s\S]*?<\/g>/)?.[0] ?? ""
+    expect(grid).toContain("<line")
+    // Horizontal lines start at the y axis. A vertical x-grid line would
+    // instead have a non-zero x1 tick coordinate.
+    expect(grid).not.toMatch(/<line[^>]*x1="(?!0")/)
+    expect(grid).toContain('stroke-dasharray="6,4"')
+  })
+
   it("renders grid when showGrid is true (ordinal vertical)", () => {
     const svg = renderOrdinalToStaticSVG({
       chartType: "bar",

@@ -162,6 +162,31 @@ describe("hierarchyLayoutPlugin", () => {
       expect(scene.sceneEdges.length).toBe(0)
     })
 
+    it("preserves per-fill and per-stroke opacity in treemap scene nodes", () => {
+      const nodes: RealtimeNode[] = []
+      const edges: RealtimeEdge[] = []
+      const config: NetworkPipelineConfig = {
+        chartType: "treemap",
+        childrenAccessor: "children",
+        nodeIDAccessor: "name",
+        __hierarchyRoot: sampleHierarchy,
+        nodeStyle: () => ({
+          fill: "#64748b",
+          fillOpacity: 0.45,
+          stroke: "#ffffff",
+          strokeOpacity: 0.7,
+        }),
+      }
+      const size: [number, number] = [600, 400]
+
+      hierarchyLayoutPlugin.computeLayout(nodes, edges, config, size)
+      const scene = hierarchyLayoutPlugin.buildScene(nodes, edges, config, size)
+      const rect = scene.sceneNodes.find(node => node.type === "rect")
+
+      expect(rect?.style.fillOpacity).toBe(0.45)
+      expect(rect?.style.strokeOpacity).toBe(0.7)
+    })
+
     it("calls a nodeLabel function with the original datum (not the scene node wrapper)", () => {
       // The user datum carries a `label` field that lives only on the
       // original object — the scene node nests it under `.data`. A

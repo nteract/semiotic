@@ -436,6 +436,54 @@ describe("MultiPointTooltip", () => {
     expect(container.textContent).toContain("42")
   })
 
+  it("a function tooltip can read allSeries through normalizeTooltip", () => {
+    // Regression: `allSeries` lives on the hover ROOT, not inside `.data`,
+    // so unwrapping to `.data` used to hand user functions a datum with no
+    // series — making a custom multi-series tooltip impossible to write.
+    let seen: Record<string, unknown> | undefined
+    const fn = normalizeTooltip((d) => {
+      seen = d
+      return <div>{(d.allSeries as Array<{ group: string }>).map(s => s.group).join(",")}</div>
+    })
+    expect(typeof fn).toBe("function")
+
+    const { container } = render(<>{(fn as (d: Record<string, unknown>) => React.ReactNode)({
+      __semioticHoverData: true,
+      data: { time: 5, y: 10 },
+      x: 100,
+      y: 50,
+      xValue: 5,
+      allSeries: [
+        { group: "A", value: 10, color: "red" },
+        { group: "B", value: 20, color: "blue" },
+      ],
+    })}</>)
+
+    expect(seen).toBeDefined()
+    // The raw datum is still unwrapped as usual...
+    expect(seen!.y).toBe(10)
+    // ...with the multi-series hover context re-attached.
+    expect((seen!.allSeries as unknown[]).length).toBe(2)
+    expect(seen!.xValue).toBe(5)
+    expect(container.textContent).toContain("A,B")
+  })
+
+  it("a real datum field wins over the cursor's xValue", () => {
+    let seen: Record<string, unknown> | undefined
+    const fn = normalizeTooltip((d) => { seen = d; return <div>ok</div> })
+    render(<>{(fn as (d: Record<string, unknown>) => React.ReactNode)({
+      __semioticHoverData: true,
+      // A data row that legitimately carries its own `xValue` column.
+      data: { xValue: "from-data", y: 1 },
+      x: 10,
+      y: 20,
+      xValue: 999,
+      allSeries: [{ group: "A", value: 1, color: "red" }],
+    })}</>)
+    expect(seen!.xValue).toBe("from-data")
+    expect((seen!.allSeries as unknown[]).length).toBe(1)
+  })
+
   it("normalizeTooltip returns MultiLineTooltip content for 'multi' when HOCs do not intercept", () => {
     // Preferred path: Line/Area/StackedArea/Difference set tooltipMode before normalize.
     // Fallback: multi content so unsupported charts still get a multi-series tooltip.

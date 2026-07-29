@@ -245,9 +245,11 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
         {hasGrid && (() => {
           const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
           const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
+          const showXGrid = axes?.find(a => a.orient === "bottom")?.grid !== false
+          const showYGrid = axes?.find(a => a.orient === "left")?.grid !== false
           return (
           <g className="stream-grid">
-            {xTicks.map((tick, i) => (
+            {showXGrid && xTicks.map((tick, i) => (
               <line
                 key={`xgrid-${i}`}
                 x1={tick.pixel}
@@ -259,7 +261,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
                 strokeDasharray={bottomGridStyle}
               />
             ))}
-            {yTicks.map((tick, i) => (
+            {showYGrid && yTicks.map((tick, i) => (
               <line
                 key={`ygrid-${i}`}
                 x1={0}
@@ -623,9 +625,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
         {showGrid && scales && (!underlayRendered || canvasObscuresUnderlay) && (() => {
           const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
           const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
+          const showXGrid = axes?.find(a => a.orient === "bottom")?.grid !== false
+          const showYGrid = axes?.find(a => a.orient === "left")?.grid !== false
           return (
           <g className="stream-grid">
-            {xTicks.map((tick, i) => (
+            {showXGrid && xTicks.map((tick, i) => (
               <line
                 key={`xgrid-${i}`}
                 x1={tick.pixel}
@@ -637,7 +641,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 strokeDasharray={bottomGridStyle}
               />
             ))}
-            {yTicks.map((tick, i) => (
+            {showYGrid && yTicks.map((tick, i) => (
               <line
                 key={`ygrid-${i}`}
                 x1={0}
