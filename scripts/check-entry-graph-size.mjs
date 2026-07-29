@@ -35,7 +35,14 @@ const ENTRY_GRAPHS = [
   // formerly React-only value card render-evidence-capable through
   // semiotic/server. This is a measured sub-KiB graph increase, not a new
   // shared runtime; keep the one-KiB headroom narrow.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 376 },
+  // Bumped 376→377: SVG axis/legend/title text now carries a plain
+  // `font-size` presentation-attribute fallback alongside the existing
+  // CSS-var style, so consumers with no CSS engine over the SVG (a
+  // style-stripping sanitizer, the Figma plugin's importer, static
+  // rasterizers) still get a sane size instead of silently inheriting the
+  // host document's. Sub-KiB text-attribute growth across the shared SVG
+  // overlay chunk, not a new dependency.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 377 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   { entry: "network.module.min.js", label: "network", limitKb: 140 },
