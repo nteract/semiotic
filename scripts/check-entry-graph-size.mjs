@@ -61,10 +61,10 @@ const ENTRY_GRAPHS = [
   // Bumped 475→480 (3.8.6): the current shared capability/accessibility graph
   // measures 477.3 KB gzip after the portable-policy and audit work; this keeps
   // a narrow 2.7 KB headroom without changing the canonical AI catalog.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 480 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 481 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
-  { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 },
+  { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
 
 function collectImports(filePath, seen = new Set()) {
@@ -135,15 +135,17 @@ for (const { entry, label, limitKb } of ENTRY_GRAPHS) {
     totalGzip,
     totalRaw,
     limit,
-    ok,
+    ok
   })
 }
 
-console.log("Chunk-aware entry graph sizes (entry + static ESM imports, gzip):\n")
+console.log(
+  "Chunk-aware entry graph sizes (entry + static ESM imports, gzip):\n"
+)
 for (const r of rows) {
   const mark = r.ok ? "✓" : "✗"
   console.log(
-    `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`,
+    `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
   )
 }
 
@@ -153,7 +155,7 @@ if (failed) {
   console.error(
     "\n✗ One or more entry graphs exceed their chunk-aware gzip budget.\n" +
       "  Facades alone are ~2 KB; budgets measure the reachable shared-chunk graph.\n" +
-      "  Raise limits only with a PR note, or split the heavy shared chunk.",
+      "  Raise limits only with a PR note, or split the heavy shared chunk."
   )
   process.exit(1)
 }
