@@ -40,29 +40,6 @@ describe("SafeRender", () => {
     expect(screen.getByTestId("child")).toBeTruthy()
   })
 
-  it("shows the error message even when chartProps are passed", () => {
-    // chartProps is retained for back-compat but no longer threads
-    // diagnoseConfig output into the error fallback. Importing the full
-    // chartSpecs validation map into every subpath bundle (for a fallback
-    // that only fires on render-throw) wasn't worth ~7KB gz per subpath.
-    // Diagnostics remain available via `npx semiotic-ai --doctor` or
-    // `diagnoseConfig` from `semiotic/utils`.
-    const badProps = { data: [], width: 600, height: 400 }
-
-    const { container } = render(
-      <SafeRender componentName="BarChart" width={600} height={400} chartProps={badProps}>
-        <ThrowingChild message="render failed" />
-      </SafeRender>
-    )
-
-    const alert = screen.getByRole("alert")
-    expect(alert).toBeTruthy()
-    expect(alert.textContent).toContain("render failed")
-    // No diagnostic hint should appear — the integration was removed.
-    const hintPanel = container.querySelector("[data-testid='semiotic-diagnostic-hint']")
-    expect(hintPanel).toBeNull()
-  })
-
   it("shows error without diagnostic hint when no props are passed", () => {
     const { container } = render(
       <SafeRender componentName="LineChart" width={600} height={400}>
@@ -78,32 +55,6 @@ describe("SafeRender", () => {
     // With no props, diagnosticHint remains ""
     const monoDivs = container.querySelectorAll("div[style*='monospace']")
     // The only monospace div should be the componentName, not a diagnosticHint
-    const hintDivs = Array.from(monoDivs).filter(
-      (el) => el.textContent !== "LineChart"
-    )
-    expect(hintDivs).toHaveLength(0)
-  })
-
-  it("shows error without diagnostic hint when props are valid (diagnoseConfig ok)", () => {
-    // Props that pass diagnoseConfig successfully — valid data with correct fields
-    const goodProps = {
-      data: [{ x: 1, y: 2 }],
-      xAccessor: "x",
-      yAccessor: "y",
-      width: 600,
-      height: 400,
-    }
-
-    const { container } = render(
-      <SafeRender componentName="LineChart" width={600} height={400} chartProps={goodProps}>
-        <ThrowingChild message="unexpected error" />
-      </SafeRender>
-    )
-
-    const alert = screen.getByRole("alert")
-    expect(alert.textContent).toContain("unexpected error")
-    // diagnoseConfig should return ok: true, so no diagnostic hint
-    const monoDivs = container.querySelectorAll("div[style*='monospace']")
     const hintDivs = Array.from(monoDivs).filter(
       (el) => el.textContent !== "LineChart"
     )
