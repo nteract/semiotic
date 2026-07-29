@@ -15,7 +15,7 @@ const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme>
 function MultiPointTooltip(): TooltipContentFn
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
-function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
+function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
 function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult

@@ -198,6 +198,13 @@ export function smartTickFormat(value: string | number | Date | null | undefined
 
 type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
 
+/** Options for {@link adaptiveTimeTicks}. UTC remains the default so existing
+ * server-rendered charts stay deterministic; set `utc: false` to format in
+ * the runtime's local timezone. */
+export interface AdaptiveTimeTickOptions {
+  utc?: boolean
+}
+
 const MS_SECOND = 1000
 const MS_MINUTE = 60 * MS_SECOND
 const MS_HOUR = 60 * MS_MINUTE
@@ -228,14 +235,27 @@ function pad2(n: number): string { return n < 10 ? `0${n}` : String(n) }
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-/** Full anchor label — gives the reader absolute context. Uses UTC for SSR determinism. */
-function fullLabel(d: Date, granularity: TimeGranularity): string {
-  const mon = MONTH_SHORT[d.getUTCMonth()]
-  const day = d.getUTCDate()
-  const year = d.getUTCFullYear()
-  const hh = pad2(d.getUTCHours())
-  const mm = pad2(d.getUTCMinutes())
-  const ss = pad2(d.getUTCSeconds())
+type TimeParts = { month: number; day: number; year: number; hours: number; minutes: number; seconds: number }
+
+function timeParts(d: Date, utc: boolean): TimeParts {
+  return utc
+    ? {
+      month: d.getUTCMonth(), day: d.getUTCDate(), year: d.getUTCFullYear(),
+      hours: d.getUTCHours(), minutes: d.getUTCMinutes(), seconds: d.getUTCSeconds(),
+    }
+    : {
+      month: d.getMonth(), day: d.getDate(), year: d.getFullYear(),
+      hours: d.getHours(), minutes: d.getMinutes(), seconds: d.getSeconds(),
+    }
+}
+
+/** Full anchor label — gives the reader absolute context. */
+function fullLabel(d: Date, granularity: TimeGranularity, utc: boolean): string {
+  const { month, day, year, hours, minutes, seconds } = timeParts(d, utc)
+  const mon = MONTH_SHORT[month]
+  const hh = pad2(hours)
+  const mm = pad2(minutes)
+  const ss = pad2(seconds)
 
   switch (granularity) {
     case "seconds":  return `${mon} ${day}, ${year} ${hh}:${mm}:${ss}`
@@ -249,21 +269,22 @@ function fullLabel(d: Date, granularity: TimeGranularity): string {
 
 /**
  * Contextual label — only shows units that changed from `prev`.
- * Re-qualifies upward when a boundary is crossed. Uses UTC for SSR determinism.
+ * Re-qualifies upward when a boundary is crossed.
  */
-function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
-  const yearChanged  = d.getUTCFullYear() !== prev.getUTCFullYear()
-  const monthChanged = yearChanged || d.getUTCMonth() !== prev.getUTCMonth()
-  const dayChanged   = monthChanged || d.getUTCDate() !== prev.getUTCDate()
-  const hourChanged  = dayChanged || d.getUTCHours() !== prev.getUTCHours()
-  const minChanged   = hourChanged || d.getUTCMinutes() !== prev.getUTCMinutes()
+function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity, utc: boolean): string {
+  const current = timeParts(d, utc)
+  const previous = timeParts(prev, utc)
+  const yearChanged  = current.year !== previous.year
+  const monthChanged = yearChanged || current.month !== previous.month
+  const dayChanged   = monthChanged || current.day !== previous.day
+  const hourChanged  = dayChanged || current.hours !== previous.hours
+  const minChanged   = hourChanged || current.minutes !== previous.minutes
 
-  const mon = MONTH_SHORT[d.getUTCMonth()]
-  const day = d.getUTCDate()
-  const year = d.getUTCFullYear()
-  const hh = pad2(d.getUTCHours())
-  const mm = pad2(d.getUTCMinutes())
-  const ss = pad2(d.getUTCSeconds())
+  const mon = MONTH_SHORT[current.month]
+  const { day, year } = current
+  const hh = pad2(current.hours)
+  const mm = pad2(current.minutes)
+  const ss = pad2(current.seconds)
 
   switch (granularity) {
     case "seconds":
@@ -312,6 +333,8 @@ function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
  *
  * @param granularity - Optional explicit granularity. If omitted,
  *   auto-detected from the tick spacing on first call.
+ * @param options - Set `utc: false` to format in local time. The default is
+ *   UTC for backwards-compatible, deterministic SSR output.
  *
  * @example
  * ```tsx
@@ -322,13 +345,18 @@ function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
  *
  * // Explicit granularity
  * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes")} />
+ *
+ * // Local wall-clock time
+ * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes", { utc: false })} />
  * ```
  */
 export function adaptiveTimeTicks(
-  granularity?: TimeGranularity
+  granularity?: TimeGranularity,
+  options: AdaptiveTimeTickOptions = {}
 ): (value: string | number | Date, index?: number, allTicks?: number[]) => string {
   let resolved: TimeGranularity | undefined = granularity
   let lastTicksRef: number[] | undefined
+  const utc = options.utc ?? true
 
   return (value: string | number | Date, index?: number, allTicks?: number[]): string => {
     const d = value instanceof Date ? value : new Date(value)
@@ -342,12 +370,12 @@ export function adaptiveTimeTicks(
 
     // First tick: full anchor label
     if (index == null || index === 0 || !allTicks || allTicks.length === 0) {
-      return fullLabel(d, gran)
+      return fullLabel(d, gran, utc)
     }
 
     // Subsequent ticks: show only what changed
     const prev = new Date(allTicks[index - 1])
-    return deltaLabel(d, prev, gran)
+    return deltaLabel(d, prev, gran, utc)
   }
 }
 

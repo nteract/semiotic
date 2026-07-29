@@ -41,6 +41,8 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
             fill={hatch ? `url(#net-circle-${i}-hatch)` : svgFill(n.style.fill)}
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
+            fillOpacity={n.style.fillOpacity}
+            strokeOpacity={n.style.strokeOpacity}
             opacity={n.style.opacity}
           />
         </React.Fragment>
@@ -57,6 +59,8 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
             fill={hatch ? `url(#net-rect-${i}-hatch)` : svgFill(n.style.fill)}
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
+            fillOpacity={n.style.fillOpacity}
+            strokeOpacity={n.style.strokeOpacity}
             opacity={n.style.opacity}
           />
         </React.Fragment>
@@ -81,6 +85,8 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
             fill={hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill)}
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
+            fillOpacity={n.style.fillOpacity}
+            strokeOpacity={n.style.strokeOpacity}
             opacity={n.style.opacity}
           />
         </React.Fragment>
@@ -100,6 +106,8 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
           fill={n.style.fill ? svgFill(n.style.fill) : "none"}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
+          fillOpacity={n.style.fillOpacity}
+          strokeOpacity={n.style.strokeOpacity}
           opacity={n.style.opacity}
         />
       )

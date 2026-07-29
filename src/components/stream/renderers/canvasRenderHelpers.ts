@@ -168,6 +168,6 @@ export function paintNetworkStroke(
   if (!style.stroke || style.stroke === "none") return
   ctx.strokeStyle = resolveCSSColor(ctx, style.stroke) || style.stroke
   ctx.lineWidth = style.strokeWidth ?? 1
-  ctx.globalAlpha = style.opacity ?? 1
+  ctx.globalAlpha = (style.opacity ?? 1) * (style.strokeOpacity ?? 1)
   paint()
 }

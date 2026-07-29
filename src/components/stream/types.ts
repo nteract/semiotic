@@ -137,6 +137,8 @@ export type RuntimeMode = "bounded" | "streaming"
 export interface Style {
   stroke?: string
   strokeWidth?: number
+  /** Opacity applied to the stroke independently of fill/mark opacity. */
+  strokeOpacity?: number
   strokeDasharray?: string
   strokeLinecap?: "butt" | "round" | "square"
   /**

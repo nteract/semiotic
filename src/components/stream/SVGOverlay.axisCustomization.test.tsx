@@ -17,7 +17,7 @@
 import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
-import { SVGOverlay } from "./SVGOverlay"
+import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import type { StreamScales } from "./types"
 
 function makeStubScales(): StreamScales {
@@ -41,6 +41,42 @@ const baseProps = {
   totalHeight: 240,
   margin: { top: 10, right: 20, bottom: 30, left: 40 },
 }
+
+describe("per-axis grid visibility", () => {
+  it("keeps only horizontal grid lines when the bottom axis opts out", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[{ orient: "bottom", grid: false }, { orient: "left" }]}
+      />,
+    )
+
+    const gridLines = Array.from(container.querySelectorAll("g.stream-grid line"))
+    expect(gridLines.length).toBeGreaterThan(0)
+    // Horizontal (y-axis) grid lines begin at x=0. No bottom-axis ticks
+    // should contribute their vertical x-grid lines.
+    for (const line of gridLines) expect(line.getAttribute("x1")).toBe("0")
+  })
+
+  it("applies the same grid visibility in the canvas underlay", () => {
+    const { container } = render(
+      <SVGUnderlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[{ orient: "bottom", grid: false }, { orient: "left" }]}
+      />,
+    )
+
+    const gridLines = Array.from(container.querySelectorAll("g.stream-grid line"))
+    expect(gridLines.length).toBeGreaterThan(0)
+    for (const line of gridLines) expect(line.getAttribute("x1")).toBe("0")
+  })
+})
 
 // ── tickAnchor ─────────────────────────────────────────────────────────
 

@@ -245,7 +245,9 @@ export function buildRectScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity
+      opacity: userStyle.opacity,
+      fillOpacity: userStyle.fillOpacity,
+      strokeOpacity: userStyle.strokeOpacity
     }
 
     sceneNodes.push({

@@ -198,7 +198,9 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     })
   }
 
-  const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent) : null
+  const grid = props.showGrid
+    ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes)
+    : null
 
   const dataMarks = renderedScene.map(entry => entry.element)
   const plotClipId = `${chartUID(props)}-plot-clip`

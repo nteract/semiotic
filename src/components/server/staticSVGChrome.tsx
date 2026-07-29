@@ -3,6 +3,7 @@ import type { LegendLayout } from "../types/legendTypes"
 import type { LegendValue } from "../types/legendTypes"
 import { composeLegendConfigs, isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 import type { StreamXYFrameProps, StreamScales, StreamLayout } from "../stream/types"
+import type { XYFrameAxisConfig } from "../stream/xyFrameAxisTypes"
 import type {
   StreamNetworkFrameProps,
   RealtimeEdge,
@@ -25,6 +26,7 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
+import { resolveGridDash } from "../stream/svgOverlayUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   resolveAxisChromeGutter,
@@ -392,7 +394,8 @@ export function renderGridSVG(
   layout: StreamLayout,
   theme: SemioticTheme,
   idPrefix?: string,
-  axisExtent?: AxisExtentMode
+  axisExtent?: AxisExtentMode,
+  axes?: XYFrameAxisConfig[]
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
@@ -407,21 +410,25 @@ export function renderGridSVG(
     : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
   const xTicks = ticksForMode(scales.x, xTickCount, axisExtent)
   const yTicks = ticksForMode(scales.y, yTickCount, axisExtent)
+  const showXGrid = axes?.find(axis => axis.orient === "bottom")?.grid !== false
+  const showYGrid = axes?.find(axis => axis.orient === "left")?.grid !== false
+  const xGridDash = resolveGridDash(axes?.find(axis => axis.orient === "bottom")?.gridStyle)
+  const yGridDash = resolveGridDash(axes?.find(axis => axis.orient === "left")?.gridStyle)
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
-      {xTicks.map((v: number, i: number) => {
+      {showXGrid && xTicks.map((v: number, i: number) => {
         const px = scales.x(v)
         return (
           <line key={`gx-${i}`} x1={px} y1={0} x2={px} y2={layout.height}
-            stroke={grid} strokeWidth={0.5} />
+            stroke={grid} strokeWidth={0.5} strokeDasharray={xGridDash} />
         )
       })}
-      {yTicks.map((v: number, i: number) => {
+      {showYGrid && yTicks.map((v: number, i: number) => {
         const py = scales.y(v)
         return (
           <line key={`gy-${i}`} x1={0} y1={py} x2={layout.width} y2={py}
-            stroke={grid} strokeWidth={0.5} />
+            stroke={grid} strokeWidth={0.5} strokeDasharray={yGridDash} />
         )
       })}
     </g>

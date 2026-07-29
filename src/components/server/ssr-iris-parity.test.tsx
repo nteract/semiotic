@@ -294,6 +294,24 @@ describe("Treemap — colorBy + hierarchy labels SSR parity", () => {
     expect(ys.some((y) => y >= 15 && y <= 25)).toBe(true)
     expect(svg.includes(">Group A<")).toBe(true)
   })
+
+  it("serializes per-tile fill opacity so nested branch colors composite like canvas", () => {
+    const svg = renderChart("Treemap", {
+      ...props,
+      nodeStyle: () => ({ fillOpacity: 0.45, strokeOpacity: 0.7 }),
+    })
+
+    expect(svg).toContain('fill-opacity="0.45"')
+    expect(svg).toContain('stroke-opacity="0.7"')
+  })
+
+  it("keeps Treemap's default translucent cell borders in static SVG", () => {
+    // The HOC sets this even when callers do not specify tile opacity. Those
+    // nested border layers are visible in parent bands, so dropping it makes
+    // an SSR band materially flatter/darker than the canvas rendering.
+    const svg = renderChart("Treemap", props)
+    expect(svg).toContain('stroke-opacity="0.8"')
+  })
 })
 
 // ── RangeChart middleAccessor via svgAnnotationRules ──────────────────────

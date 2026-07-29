@@ -42,6 +42,10 @@ export interface XYFrameAxisConfig {
    *  custom strokeDasharray string. Applied to grid lines extending
    *  from ticks across the chart area. */
   gridStyle?: "dashed" | "dotted" | string
+  /** Set false to suppress grid lines emitted from this axis while retaining
+   * its ticks and baseline. For example, set the bottom axis to `false` for
+   * horizontal-only (y-axis) grid lines. */
+  grid?: boolean
   /** Always include the domain max as a tick, even if d3 omits it. */
   includeMax?: boolean
   /** Auto-rotate labels 45° when horizontal spacing is too tight. */
