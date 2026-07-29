@@ -1,21 +1,22 @@
-import { describe, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { renderChart } from "../src/components/semiotic-server"
 
 describe("probe", () => {
-  it("bar", () => {
+  it("serializes concrete font-size attributes for ordinal axis text", () => {
     const svg = renderChart("BarChart", {
       data: [{ c: "Kafka", v: 80 }, { c: "Flink", v: 60 }],
       categoryAccessor: "c", valueAccessor: "v",
     })
-    console.log("BAR FONT-SIZE COUNT:", (svg.match(/font-size/g) || []).length)
-    ;(svg.match(/<text[^>]*>[^<]*<\/text>/g) || []).slice(0, 12).forEach(t => console.log(t))
+    expect(svg).toContain('font-size="12"')
+    expect(svg).toContain(">Kafka<")
   })
-  it("line", () => {
+  it("serializes concrete font-size attributes for XY ticks and labels", () => {
     const svg = renderChart("LineChart", {
       data: [{ x: 1, y: 2 }, { x: 2, y: 5 }],
       xAccessor: "x", yAccessor: "y", xLabel: "Time", yLabel: "Val",
     })
-    console.log("LINE FONT-SIZE COUNT:", (svg.match(/font-size/g) || []).length)
-    ;(svg.match(/<text[^>]*>[^<]*<\/text>/g) || []).slice(0, 10).forEach(t => console.log(t))
+    expect(svg).toContain('font-size="12"')
+    expect(svg).toContain(">Time<")
+    expect(svg).toContain(">Val<")
   })
 })

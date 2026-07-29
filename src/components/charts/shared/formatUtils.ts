@@ -200,7 +200,7 @@ type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "ye
 
 /** Options for {@link adaptiveTimeTicks}. UTC remains the default so existing
  * server-rendered charts stay deterministic; set `utc: false` to format in
- * the viewer's local timezone. */
+ * the runtime's local timezone. */
 export interface AdaptiveTimeTickOptions {
   utc?: boolean
 }
