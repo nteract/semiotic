@@ -15,6 +15,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { render, act, fireEvent } from "@testing-library/react"
 import { LineChart } from "../../components/charts/xy/LineChart"
+import type { HoverData } from "../../components/realtime/types"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 
 const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
@@ -39,11 +40,15 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
   })
 
   it("populates allSeries on hover for line-object input", async () => {
-    let lastHover: Record<string, unknown> | undefined
+    let lastHover: HoverData | null = null
 
     const lineObjectData = [
       {
         series: "A",
+        // LineChart reads x/y from the point objects below. Keeping them on
+        // the outer type too makes the accessor contract explicit to TS.
+        x: 0,
+        y: 0,
         points: [
           { x: 0, y: 10 },
           { x: 10, y: 30 },
@@ -51,6 +56,8 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
       },
       {
         series: "B",
+        x: 0,
+        y: 0,
         points: [
           { x: 0, y: 5 },
           { x: 10, y: 15 },
@@ -71,9 +78,9 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
         width={200}
         height={100}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        showAxes={false}
         frameProps={{
-          customHoverBehavior: (hover: Record<string, unknown>) => {
+          showAxes: false,
+          customHoverBehavior: (hover) => {
             lastHover = hover
           },
         }}
@@ -85,12 +92,15 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
     const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 50 })
 
-    expect(lastHover).toBeDefined()
-    expect(lastHover!.allSeries).toBeDefined()
-    expect((lastHover!.allSeries as unknown[]).length).toBe(2)
+    // The callback mutates this value outside TypeScript's synchronous
+    // control-flow analysis; retain its declared nullable HoverData shape.
+    const hover = lastHover as HoverData | null
+    if (!hover) throw new Error("Expected a multi-series hover payload")
+    expect(hover.allSeries).toBeDefined()
+    expect((hover.allSeries as unknown[]).length).toBe(2)
 
     const valuesByGroup = Object.fromEntries(
-      (lastHover!.allSeries as Array<{ group: string; value: number }>).map(
+      (hover.allSeries as Array<{ group: string; value: number }>).map(
         (s) => [s.group, s.value]
       )
     )
@@ -136,8 +146,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
         width={200}
         height={100}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        showAxes={false}
-        frameProps={{ tooltipMode: "multi" }}
+        frameProps={{ showAxes: false, tooltipMode: "multi" }}
       />
     )
 
