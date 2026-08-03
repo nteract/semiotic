@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   _resetSharedProcessSankeyLayoutSessionForTest,
   estimateProcessSankeyLayoutCost,
-  ProcessSankeyLayoutWorkerSession,
   processSankeyStyleRulesNeedMainThread,
   reattachProcessSankeySceneDatums,
   runProcessSankeyLayoutWorker,

@@ -24,7 +24,7 @@ function toTime(value: TimeLike | undefined | null): number {
 }
 
 export interface UseProcessSankeyTooltipOptions<
-  TNode extends Datum,
+  _TNode extends Datum,
   TEdge extends Datum,
 > {
   tooltip: TooltipProp | undefined
@@ -44,10 +44,10 @@ export interface UseProcessSankeyTooltipOptions<
  * fully overrides; false disables.
  */
 export function useProcessSankeyTooltipContent<
-  TNode extends Datum = Datum,
+  _TNode extends Datum = Datum,
   TEdge extends Datum = Datum,
 >(
-  options: UseProcessSankeyTooltipOptions<TNode, TEdge>,
+  options: UseProcessSankeyTooltipOptions<_TNode, TEdge>,
 ): (d: HoverData) => React.ReactNode {
   const {
     tooltip,

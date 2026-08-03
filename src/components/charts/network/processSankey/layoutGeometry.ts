@@ -6,10 +6,11 @@ import type {
   ProcessSankeyLayoutQuality,
   ProcessSankeyNode,
   ProcessSankeyNodeData,
+  ProcessSankeyRibbonLane,
   ProcessSankeySlot,
 } from "./algorithm"
 
-export type ProcessSankeyRibbonLane = "source" | "target" | "both"
+export type { ProcessSankeyRibbonLane }
 export type SlotByNode = Record<string, number>
 
 export interface SlotGeometryOptions {

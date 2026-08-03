@@ -7,13 +7,30 @@ import {
   US_CORE_NODE_IDS,
 } from "../../../../../docs/src/pages/examples/data/unitedStatesHistoryRiver.js"
 
+type UsRiverNode = {
+  id: string
+  group?: string
+  xExtent?: readonly [number | string, number | string]
+}
+
+type UsRiverEdge = {
+  id: string
+  source: string
+  target: string
+  value: number
+  startTime: number | string
+  endTime: number | string
+  systemInTime?: number | string | null
+  systemOutTime?: number | string | null
+}
+
 function toLayoutInput() {
-  const nodes = US_PROCESS_NODES.map((n: any) => ({
+  const nodes = (US_PROCESS_NODES as UsRiverNode[]).map((n) => ({
     id: n.id,
     group: n.group,
     xExtent: n.xExtent ? [Number(n.xExtent[0]), Number(n.xExtent[1])] as [number, number] : undefined,
   }))
-  const edges = US_PROCESS_EDGES.map((e: any) => ({
+  const edges = (US_PROCESS_EDGES as UsRiverEdge[]).map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,

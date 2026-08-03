@@ -729,7 +729,7 @@ export function orderProcessSankeySlots(
     order = multiSlotBonded ? unitReadabilityOrder(order) : readabilityOrder(order)
   } else if (!geometryRefineOnly && options.laneOrder === "inside-out") {
     if (multiSlotBonded) {
-      let units = bondedSlotUnits(order)
+      const units = bondedSlotUnits(order)
       const unitSize = (unit: BondedSlotUnit) =>
         unit.slots.reduce((sum, slot) => sum + slot.peak.topPeak + slot.peak.botPeak, 0)
       const ranked = [...units].sort((a, b) =>
@@ -770,7 +770,7 @@ export function orderProcessSankeySlots(
     // the best end-to-end readability snapshot if any later move regresses.
     // Multi-slot bonds move as whole units so center bias cannot split a block.
     if (multiSlotBonded) {
-      let units = bondedSlotUnits(order)
+      const units = bondedSlotUnits(order)
       let current = evaluate(flattenBondedUnits(units))
       let best = flattenBondedUnits(units)
       let bestMetrics = current

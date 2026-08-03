@@ -118,7 +118,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       laneOrder: { type: "string", enum: ["insertion", "crossing-min", "inside-out", "crossing-min+inside-out"] as const, default: "crossing-min" },
       maxValueScale: { type: "number", description: "Optional pixels-per-value cap that prevents sparse bands from inflating to fill the plot." },
       lanePlacement: { type: "string", enum: ["stack", "hug"] as const, default: "stack", description: "Use capped-scale slack to pull connected lanes together while preserving order and clearance. When hug (or a binding maxValueScale) is active, a bounded post-scale geometry refine re-scores adjacent lane order under rendered pixel/transit cost without raising crossings or exclusive-handoff span." },
-      showLabels: { type: ["boolean", "string"], enum: [true, false, "auto"] as const, default: true, description: "Node labels: true, false, or density-budgeted auto. With auto, shed labels reappear under selection." },
+      // Booleans are covered by type; enum lists the string mode only (BumpChart pattern).
+      showLabels: { type: ["boolean", "string"], enum: ["auto"] as const, default: true, description: "Node labels: true, false, or density-budgeted auto. With auto, shed labels reappear under selection." },
       labelPriorityAccessor: { type: "string", description: "Field (or React fn) for auto-label priority — higher values survive density shedding first." },
       maxLabels: { type: "number", description: "Optional hard cap on visible auto labels after the area budget." },
       selectionDatum: { type: "string", enum: ["raw", "scene"] as const, default: "raw", description: "Datum shape for selection/linkedHover predicates: raw author records (default) or full scene payload with __kind." },

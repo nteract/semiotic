@@ -51,15 +51,6 @@ export interface ProcessSankeyIssue {
   nodeId?: string
 }
 
-/** Issue kinds that always block layout (missing structure / true reverse time). */
-const FATAL_ISSUE_KINDS = new Set([
-  "invalid-domain",
-  "missing-node",
-  "backward-edge",
-  "invalid-edge-time",
-  "invalid-value",
-  "invalid-node-time",
-])
 export interface ProcessSankeySample {
   t: number
   topMass: number
@@ -151,6 +142,9 @@ export interface ProcessSankeyLayoutQuality {
   /** Fraction of plot height occupied by the outer band envelope. */
   verticalUtilization: number
 }
+
+/** Control-point placement along a ribbon: prefer source, target, or midpoint. */
+export type ProcessSankeyRibbonLane = "source" | "target" | "both"
 
 export interface ProcessSankeyOptions {
   plotH: number

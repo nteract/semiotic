@@ -21,6 +21,7 @@ export type {
   ProcessSankeySideRecord,
   ProcessSankeyLayout,
   ProcessSankeyLayoutQuality,
+  ProcessSankeyRibbonLane,
   ProcessSankeyOptions,
   ProcessSankeyEdgeIndex,
 } from "./processSankeyTypes"

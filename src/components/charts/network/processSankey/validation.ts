@@ -146,11 +146,11 @@ export function validateProcessSankey(
  * Apply non-fatal policy rewrites (e.g. strip bad system times in push mode)
  * so layout can continue with clean fields.
  */
-export function applyProcessSankeyValidationPolicy(
-  edges: ProcessSankeyEdge[],
+export function applyProcessSankeyValidationPolicy<T extends ProcessSankeyEdge>(
+  edges: T[],
   issues: readonly ProcessSankeyIssue[],
   usageMode: ProcessSankeyUsageMode = "static",
-): ProcessSankeyEdge[] {
+): T[] {
   const policy = resolveProcessSankeyValidationPolicy(usageMode)
   if (policy.invalidSystemTime !== "strip") return edges
   const bad = new Set(

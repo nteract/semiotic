@@ -12606,8 +12606,6 @@
                 "string"
               ],
               "enum": [
-                true,
-                false,
                 "auto"
               ],
               "description": "Node labels: true, false, or density-budgeted auto. With auto, shed labels reappear under selection.",

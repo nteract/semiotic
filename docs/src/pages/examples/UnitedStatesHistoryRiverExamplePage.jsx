@@ -6,7 +6,6 @@ import ProcessRiverExampleLayout from "./ProcessRiverExampleLayout"
 import {
   US_AXIS_TICKS,
   US_COLORS,
-  US_CORE_NODE_IDS,
   US_DOMAIN,
   US_FLOW_TYPES,
   US_MILESTONES,

@@ -44,58 +44,6 @@ export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: nu
   return [newBot - v, newBot]
 }
 
-function collectEndpointPositions(
-  edges: readonly ProcessSankeyEdge[],
-  nodeData: Readonly<Record<string, ProcessSankeyNodeData>>,
-  centerlines: Readonly<Record<string, number>>,
-  valueScale: number,
-): Map<string, ProcessSankeyEndpointPositions> {
-  const positions = new Map<string, ProcessSankeyEndpointPositions>()
-  for (const edge of edges) {
-    const sourceAttachment = nodeData[edge.source]?.localAttachments.get(edge.id)
-    const targetAttachment = nodeData[edge.target]?.localAttachments.get(edge.id)
-    const sourceCenter = centerlines[edge.source]
-    const targetCenter = centerlines[edge.target]
-    if (!sourceAttachment || !targetAttachment ||
-        !Number.isFinite(sourceCenter) || !Number.isFinite(targetCenter)) continue
-    const sourceRange = attachmentYRange(sourceAttachment, sourceCenter, valueScale)
-    const targetRange = attachmentYRange(targetAttachment, targetCenter, valueScale)
-    positions.set(edge.id, {
-      source: (sourceRange[0] + sourceRange[1]) / 2,
-      target: (targetRange[0] + targetRange[1]) / 2,
-    })
-  }
-  return positions
-}
-
-function hasResolvableAttachmentTies(
-  edgeIndex: ProcessSankeyEdgeIndex,
-  sides: ReadonlyMap<string, ProcessSankeySideRecord>,
-): boolean {
-  const containsTie = (
-    edgeLists: readonly ProcessSankeyEdge[][],
-    kind: "in" | "out",
-  ): boolean => {
-    for (const edgeList of edgeLists) {
-      const seen = new Map<string, string>()
-      for (const edge of edgeList) {
-        const side = kind === "out" ? sides.get(edge.id)?.sourceSide : sides.get(edge.id)?.targetSide
-        const localTime = kind === "out" ? edge.startTime : edge.endTime
-        const localKey = `${side ?? ""}\u0000${localTime}`
-        const farKey = kind === "out"
-          ? `${edge.target}\u0000${edge.endTime}`
-          : `${edge.source}\u0000${edge.startTime}`
-        const previous = seen.get(localKey)
-        if (previous != null && previous !== farKey) return true
-        seen.set(localKey, farKey)
-      }
-    }
-    return false
-  }
-  return containsTie(Object.values(edgeIndex.outgoing), "out") ||
-    containsTie(Object.values(edgeIndex.incoming), "in")
-}
-
 export function buildBandPath(
   samples: readonly ProcessSankeySample[],
   cl: number,
