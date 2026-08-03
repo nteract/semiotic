@@ -33,7 +33,7 @@ describe("ProcessSankey selectionDatum (M7)", () => {
       },
       selection: {
         isActive: true,
-        predicate: (d) => (d as { category?: string }).category === "core",
+        predicate: (d: unknown) => (d as { category?: string }).category === "core",
       },
     } as never)
 
@@ -56,7 +56,7 @@ describe("ProcessSankey selectionDatum (M7)", () => {
       },
       selection: {
         isActive: true,
-        predicate: (d) =>
+        predicate: (d: unknown) =>
           typeof d === "object" &&
           d != null &&
           (d as { __kind?: string }).__kind === "band" &&

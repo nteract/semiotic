@@ -57,7 +57,7 @@ describe("ProcessSankey band HatchFill (M8)", () => {
       edges: [],
       dimensions: { plot: { x: 0, y: 0, width: 400, height: 300 } },
       theme: {} as never,
-      resolveColor: (k) => String(k),
+      resolveColor: (k: string) => String(k),
       config: result.layoutConfig,
     } as never)
 

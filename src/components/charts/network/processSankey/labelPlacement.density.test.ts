@@ -71,7 +71,7 @@ describe("applyProcessSankeyLabelDensity (M5)", () => {
       edges: [],
       dimensions: { plot: { x: 0, y: 0, width: 200, height: 200 } },
       theme: {} as never,
-      resolveColor: (k) => String(k),
+      resolveColor: (k: string) => String(k),
       config: {
         bands,
         ribbons: [],
@@ -80,7 +80,7 @@ describe("applyProcessSankeyLabelDensity (M5)", () => {
       },
       selection: {
         isActive: true,
-        predicate: (d) => (d as { id?: string }).id === "hid",
+        predicate: (d: unknown) => (d as { id?: string }).id === "hid",
       },
     } as never)
 

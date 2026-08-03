@@ -7,8 +7,7 @@ import { resolveHatchCanvasPattern, clearHatchCanvasPatternCacheForTests } from 
 
 describe("resolveHatchCanvasPattern CSS var resolution", () => {
   beforeEach(() => {
-    // @ts-expect-error test helper may not exist until export
-    clearHatchCanvasPatternCacheForTests?.()
+    clearHatchCanvasPatternCacheForTests()
   })
   afterEach(() => {
     vi.restoreAllMocks()
