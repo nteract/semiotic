@@ -217,8 +217,9 @@ const LINKED_HOVER_BURN_DOWN = new Map([
   ["CirclePack", "no chart-specific linked-hover interaction snapshot yet"],
   ["ForceDirectedGraph", "no chart-specific linked-hover interaction snapshot yet"],
   ["OrbitDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  // ProcessSankey: supportsLinkedHover is false until selection wiring lands
-  // (HOC hard-codes selection/linkedHover to undefined).
+  // ProcessSankey now claims supportsLinkedHover; burn down once a deterministic
+  // band/ribbon interaction snapshot lands (selectionDatum raw vs scene).
+  ["ProcessSankey", "no chart-specific linked-hover interaction snapshot yet"],
   ["SankeyDiagram", "no chart-specific linked-hover interaction snapshot yet"],
   ["TreeDiagram", "no chart-specific linked-hover interaction snapshot yet"],
   ["Treemap", "no chart-specific linked-hover interaction snapshot yet"],
