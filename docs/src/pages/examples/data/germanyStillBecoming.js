@@ -1,4 +1,4 @@
-import riverDataset from "../../../../strategy/germany_history_river_dataset.json"
+import riverDataset from "./germanyStillBecoming.source.generated"
 
 const NODE_HALF_LIFE = 0.11
 const stageByIdMap = new Map(riverDataset.stages.map((stage) => [stage.stage_id, stage]))
