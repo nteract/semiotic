@@ -26,6 +26,7 @@
  */
 import * as React from "react"
 import { createHatchPattern } from "./hatchPattern"
+import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 
 /**
  * A declarative diagonal-hatch fill. Assign it anywhere a `style.fill`
@@ -95,6 +96,11 @@ export function hatchFillId(prefix: string, h: HatchFill): string {
 // blurry on a 2x context. Mirrors `barFunnelCanvasRenderer`'s cache.
 const _canvasPatternCache = new Map<string, CanvasPattern | null>()
 
+/** Test helper: drop the canvas hatch cache between cases. */
+export function clearHatchCanvasPatternCacheForTests(): void {
+  _canvasPatternCache.clear()
+}
+
 /**
  * Resolve a `HatchFill` descriptor to a `CanvasPattern` for the given
  * context. Cached by descriptor content + DPR. Returns `null` only when
@@ -105,14 +111,25 @@ export function resolveHatchCanvasPattern(
   h: HatchFill,
   ctx: CanvasRenderingContext2D,
 ): CanvasPattern | null {
+  // CSS custom properties cannot be used as fillStyle on an offscreen tile —
+  // the browser treats invalid paint as black. Resolve against the live canvas
+  // DOM ancestor first; cache key includes the resolved paint so theme toggles
+  // still re-bake.
+  const backgroundRaw = h.background ?? "transparent"
+  const strokeRaw = h.stroke ?? "#000"
+  const background = backgroundRaw === "transparent" || backgroundRaw === "none"
+    ? backgroundRaw
+    : (resolveCSSColor(ctx, backgroundRaw) || backgroundRaw)
+  const stroke = resolveCSSColor(ctx, strokeRaw) || strokeRaw || "#000"
+
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-  const key = `${hatchFillKey(h)}@${dpr}`
+  const key = `${hatchFillKey(h)}|${background}|${stroke}@${dpr}`
   const cached = _canvasPatternCache.get(key)
   if (cached !== undefined) return cached
   const result = createHatchPattern(
     {
-      background: h.background,
-      stroke: h.stroke,
+      background,
+      stroke,
       lineWidth: h.lineWidth,
       spacing: h.spacing,
       angle: h.angle,

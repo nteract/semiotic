@@ -32,6 +32,7 @@ import {
   checkPieTooManySlices,
 } from "./diagnoseMisleadingChecks"
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
+import { diagnoseProcessSankeyProps } from "../network/processSankey/layoutQualityProduct"
 import { auditData } from "../../data/auditData"
 
 export { contrastRatio } from "./colorContrast"
@@ -724,6 +725,11 @@ export function diagnoseConfig(
   checkExtremeAspectRatio(componentName, props, diagnoses)
   checkPieTooManySlices(componentName, props, diagnoses)
   checkPhysicsConfig(componentName, props, diagnoses)
+  if (componentName === "ProcessSankey") {
+    for (const finding of diagnoseProcessSankeyProps(props as Record<string, unknown>)) {
+      diagnoses.push(finding)
+    }
+  }
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

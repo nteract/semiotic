@@ -535,6 +535,70 @@ describe("StreamOrdinalFrame", () => {
       // Leave without ever having moved — should be a no-op
       fireEvent.mouseLeave(frame)
     })
+
+    it("does not rebuild the scene (or restart transitions) on hover when animate is on", async () => {
+      // Regression: useSemanticFrameInteractions always returned a hover
+      // wrapper, and StreamOrdinalFrame treated any truthy customHoverBehavior
+      // as "selection may have changed" → dirtyRef → computeScene on every
+      // pointermove. With animate.intro that re-ran transitions on hover
+      // (landing gallery grouped/cluster bars).
+      const StoreModule = await import("./OrdinalPipelineStore")
+      const computeSpy = vi.spyOn(
+        StoreModule.OrdinalPipelineStore.prototype,
+        "computeScene"
+      )
+      const data = [
+        { region: "North", quarter: "Q1", value: 84 },
+        { region: "North", quarter: "Q2", value: 92 },
+        { region: "South", quarter: "Q1", value: 62 },
+        { region: "South", quarter: "Q2", value: 71 },
+      ]
+      try {
+        const { container } = render(
+          <StreamOrdinalFrame
+            chartType="clusterbar"
+            data={data}
+            oAccessor="region"
+            rAccessor="value"
+            groupBy="quarter"
+            animate={{ duration: 600, intro: true }}
+            size={[600, 280]}
+            enableHover
+          />
+        )
+        // Let the mount paint settle (intro + first computeScene).
+        await act(async () => {
+          await Promise.resolve()
+        })
+        const afterMount = computeSpy.mock.calls.length
+        expect(afterMount).toBeGreaterThan(0)
+
+        const frame = container.querySelector(".stream-ordinal-frame")!
+        const canvas = frame.querySelector("canvas")!
+        // jsdom lacks layout; stub bounds so hit-testing uses chart coords.
+        vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+          left: 0,
+          top: 0,
+          right: 600,
+          bottom: 280,
+          width: 600,
+          height: 280,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        })
+
+        await act(async () => {
+          fireEvent.pointerMove(frame, { clientX: 120, clientY: 140 })
+          fireEvent.pointerMove(frame, { clientX: 180, clientY: 150 })
+          fireEvent.pointerLeave(frame)
+        })
+
+        expect(computeSpy.mock.calls.length).toBe(afterMount)
+      } finally {
+        computeSpy.mockRestore()
+      }
+    })
   })
 
   // ── Legend rendering ──────────────────────────────────────────────────

@@ -167,6 +167,43 @@ describe("StreamNetworkFrame", () => {
     })
   })
 
+  it("updates custom-layout SVG labels when layout config changes without pointer activity", () => {
+    const customLayout = (context: { config: { labelX?: number } }) => ({
+      sceneNodes: [],
+      sceneEdges: [],
+      labels: [{ x: context.config.labelX ?? 0, y: 20, text: "metric label" }],
+    })
+    const nodes = [{ id: "a" }]
+
+    const { container, rerender } = render(
+      <StreamNetworkFrame
+        chartType="force"
+        customNetworkLayout={customLayout as never}
+        layoutConfig={{ labelX: 10 }}
+        nodes={nodes}
+        edges={[]}
+        animate={false}
+      />,
+    )
+    const label = () => [...container.querySelectorAll("svg text")]
+      .find((element) => element.textContent === "metric label")
+
+    expect(label()?.getAttribute("x")).toBe("10")
+
+    rerender(
+      <StreamNetworkFrame
+        chartType="force"
+        customNetworkLayout={customLayout as never}
+        layoutConfig={{ labelX: 80 }}
+        nodes={nodes}
+        edges={[]}
+        animate={false}
+      />,
+    )
+
+    expect(label()?.getAttribute("x")).toBe("80")
+  })
+
   // ── Push API + clear→reload lifecycle ────────────────────────────────
   // Exercises the frame's imperative handle and the push→ingest→clear→reload
   // path — the frame-level boundary for the store's topology-diff clear() reset.

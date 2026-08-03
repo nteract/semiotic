@@ -588,10 +588,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
       hoverRef.current = hover
       setHoverPoint(hover)
-      if (customHoverBehavior) {
-        customHoverBehavior(hover)
-        dirtyRef.current = true // selection state may have changed
-      }
+      // Hover itself only drives the tooltip/ARIA overlay. Do not mark the
+      // retained scene dirty — that re-runs computeScene and (with animate)
+      // restarts transitions on every pointermove. Selection-driven restyle
+      // (hoverHighlight / linkedHover) updates React state → pieceStyle →
+      // useConfigSync, which dirties only when styles actually change.
+      customHoverBehavior?.(hover)
       scheduleRender()
     }
 
@@ -599,10 +601,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          dirtyRef.current = true
-        }
+        customHoverBehavior?.(null)
         scheduleRender()
       }
     }
@@ -613,7 +612,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const canvas = canvasRef.current
       if (!canvas) {
         customClickBehavior(null)
-        dirtyRef.current = true
+        // Selection/click handlers update React state; do not dirty geometry.
         scheduleRender()
         return
       }
@@ -622,7 +621,6 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const chartY = e.clientY - rect.top - margin.top
       if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
         customClickBehavior(null)
-        dirtyRef.current = true
         scheduleRender()
         return
       }
@@ -630,7 +628,6 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const store = storeRef.current
       if (!store || store.scene.length === 0) {
         customClickBehavior(null)
-        dirtyRef.current = true
         scheduleRender()
         return
       }
@@ -641,7 +638,6 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const hit = findNearestOrdinalNode(store.scene, hitX, hitY, 30, store.pointQuadtree, store.maxPointRadius)
       if (!hit) {
         customClickBehavior(null)
-        dirtyRef.current = true
         scheduleRender()
         return
       }
@@ -659,7 +655,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           (e.nativeEvent as MouseEvent & { pointerType?: string }).pointerType
         )
       })
-      dirtyRef.current = true
+      // Click does not alter retained geometry. Selection restyle flows through
+      // React state → pieceStyle → useConfigSync (same as hover). Dirtying here
+      // restarted transitions under animate/intro.
       scheduleRender()
     }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender])
 

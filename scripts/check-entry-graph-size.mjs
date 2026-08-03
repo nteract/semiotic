@@ -42,7 +42,13 @@ const ENTRY_GRAPHS = [
   // rasterizers) still get a sane size instead of silently inheriting the
   // host document's. Sub-KiB text-attribute growth across the shared SVG
   // overlay chunk, not a new dependency.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 377 },
+  // Bumped 377→384: ProcessSankey's renderer-aware quality scorer, capped/
+  // hugged lane placement, reusable 1D layout kernel, and scene-repaint
+  // invalidation add 5.4 KiB gzip to the full facade. The kernel remains
+  // comfortably inside the recipes-specific budget below; this is chart
+  // functionality, not a new runtime dependency. The production graph is
+  // 382.4 KiB, leaving 1.6 KiB of headroom.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 384 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   { entry: "network.module.min.js", label: "network", limitKb: 140 },
@@ -61,7 +67,10 @@ const ENTRY_GRAPHS = [
   // Bumped 475→480 (3.8.6): the current shared capability/accessibility graph
   // measures 477.3 KB gzip after the portable-policy and audit work; this keeps
   // a narrow 2.7 KB headroom without changing the canonical AI catalog.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 481 },
+  // Bumped 481→487: the same ProcessSankey layout capabilities join the
+  // canonical AI chart catalog. The production graph is 485.8 KiB, leaving
+  // 1.2 KiB of headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 487 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

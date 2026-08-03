@@ -96,6 +96,9 @@ export type {
 export {
   validateProcessSankey,
   formatProcessSankeyIssue,
+  diagnoseProcessSankeyLayout,
+  diagnoseProcessSankeyProps,
+  explainProcessSankeyLayout,
 } from "./charts/network/processSankey/algorithm"
 export type {
   ProcessSankeyNode as ProcessSankeyValidatorNode,

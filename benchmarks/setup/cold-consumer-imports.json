@@ -71,8 +71,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 403501,
-      "gzipBytes": 131079,
+      "rawBytes": 415990,
+      "gzipBytes": 135553,
       "packedPackageInputFiles": 25
     },
     {
@@ -89,8 +89,8 @@
       "importPath": "semiotic/realtime/core",
       "symbol": "RingBuffer",
       "platform": "browser",
-      "rawBytes": 548879,
-      "gzipBytes": 174442,
+      "rawBytes": 548765,
+      "gzipBytes": 174410,
       "packedPackageInputFiles": 14
     },
     {
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 872560,
-      "gzipBytes": 276218,
+      "rawBytes": 885703,
+      "gzipBytes": 280935,
       "packedPackageInputFiles": 4
     },
     {
@@ -144,7 +144,7 @@
       "symbol": "generateFrameSVGs",
       "platform": "node",
       "rawBytes": 524830,
-      "gzipBytes": 168522,
+      "gzipBytes": 168547,
       "packedPackageInputFiles": 16
     },
     {
@@ -152,8 +152,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 873523,
-      "gzipBytes": 276664,
+      "rawBytes": 886666,
+      "gzipBytes": 281391,
       "packedPackageInputFiles": 4
     },
     {
@@ -161,8 +161,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 710739,
-      "gzipBytes": 197531,
+      "rawBytes": 710949,
+      "gzipBytes": 197577,
       "packedPackageInputFiles": 51
     },
     {
@@ -170,8 +170,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 209421,
-      "gzipBytes": 37184,
+      "rawBytes": 209631,
+      "gzipBytes": 37227,
       "packedPackageInputFiles": 2
     },
     {
@@ -233,8 +233,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 112008,
-      "gzipBytes": 8602,
+      "rawBytes": 112218,
+      "gzipBytes": 8646,
       "packedPackageInputFiles": 15
     },
     {

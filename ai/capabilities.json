@@ -455,7 +455,10 @@
       "specialFeatures": [
         "temporal",
         "particles",
-        "lane-reuse"
+        "lane-reuse",
+        "quality-metrics",
+        "slack-aware-placement",
+        "vertical-orientation"
       ]
     },
     "SankeyDiagram": {

@@ -1006,4 +1006,38 @@ describe("OrdinalPipelineStore", () => {
       expect(bandwidth).toBeGreaterThan(100) // three bands across ~560 usable px
     })
   })
+
+  // ── Clusterbar transition identity ───────────────────────────────────
+
+  describe("clusterbar transition identity", () => {
+    it("gives each grouped bar a unique transition key via o-accessor", () => {
+      // Rows use `region` (not hard-coded `category`). Keys must still be
+      // unique per (group × category) so a no-op rebuild does not treat
+      // sibling bars as enter/exit.
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "clusterbar",
+        oAccessor: "region",
+        rAccessor: "value",
+        groupBy: "quarter",
+        transition: { duration: 300 },
+        introAnimation: false,
+      }))
+      store.ingest({
+        inserts: [
+          { region: "North", quarter: "Q1", value: 10 },
+          { region: "North", quarter: "Q2", value: 20 },
+          { region: "South", quarter: "Q1", value: 15 },
+          { region: "South", quarter: "Q2", value: 25 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(store.scene).toHaveLength(4)
+
+      // Second compute with identical data should not start a transition
+      // (positions match, keys match).
+      store.computeScene({ width: 400, height: 300 })
+      expect(store.activeTransition).toBeNull()
+    })
+  })
 })

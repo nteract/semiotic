@@ -32,7 +32,12 @@ const PREVIEW_COMPONENTS = {
   wikipedia: MiniWikipediaPreview,
   "local-government": MiniLocalGovernmentPreview,
   "port-replay": MiniPortReplayPreview,
+  "apollo-third-seat": MiniApolloThirdSeatPreview,
+  "ballot-transfer-ledger": MiniBallotTransferLedgerPreview,
+  "germany-still-becoming": MiniGermanyStillBecomingPreview,
+  "united-states-drawn-together": MiniUnitedStatesHistoryRiverPreview,
   "scroll-tell": MiniScrollTellPreview,
+  thunderdome: MiniThunderdomePreview,
   "dataviz-people": MiniDatavizPeoplePreview,
   "distant-reading": MiniDistantReadingPreview,
   funnels: MiniFunnelsPreview,
@@ -280,6 +285,85 @@ function MiniUkraineWarHistoryPreview() {
       <text x="233" y="91" textAnchor="end" fill="#718088" fontSize="5.5">
         2022—2026
       </text>
+    </svg>
+  )
+}
+
+function MiniApolloThirdSeatPreview() {
+  const lanes = [24, 39, 56, 73]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#07131c" />
+      {lanes.map((y) => (
+        <line key={y} x1="12" x2="230" y1={y} y2={y} stroke="#294553" strokeDasharray="2 4" />
+      ))}
+      <circle cx="19" cy="48" r="10" fill="#367f98" stroke="#8ecae6" />
+      <circle cx="220" cy="39" r="7" fill="#8e8b86" stroke="#f4ead5" />
+      <path d="M28 48C74 48 77 25 116 25H150" fill="none" stroke="#8ecae6" strokeWidth="8" opacity="0.76" />
+      <path d="M116 25C142 25 139 56 170 56" fill="none" stroke="#e8875f" strokeWidth="5" opacity="0.88" />
+      <path d="M170 56C190 56 190 39 213 39" fill="none" stroke="#e8875f" strokeWidth="5" opacity="0.88" />
+      <path d="M116 25H177C194 25 196 39 213 39" fill="none" stroke="#8ecae6" strokeWidth="2.6" opacity="0.9" />
+      <path d="M28 48C72 48 78 73 118 73H155C181 73 190 44 213 39" fill="none" stroke="#ef476f" strokeWidth="4.8" opacity="0.9" />
+      <text x="12" y="13" fill="#f3c969" fontSize="6.5" fontWeight="800" letterSpacing="1.1">THE THIRD SEAT</text>
+      <text x="230" y="89" textAnchor="end" fill="#9bb0b8" fontSize="5.5" letterSpacing="0.7">27 CREW-SEATS / 9 FLIGHTS</text>
+    </svg>
+  )
+}
+
+function MiniBallotTransferLedgerPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#102327" />
+      <path d="M0 24H242M0 48H242M0 72H242M24 0V96M48 0V96M72 0V96M96 0V96M120 0V96M144 0V96M168 0V96M192 0V96M216 0V96" stroke="#355054" strokeWidth="0.5" opacity="0.45" />
+      <path d="M18 26H59C76 26 78 18 94 18H124" fill="none" stroke="#f2b544" strokeWidth="9" />
+      <path d="M18 47H59C75 47 78 34 94 34H124" fill="none" stroke="#36b7a6" strokeWidth="6" />
+      <path d="M18 64H83C97 64 99 48 115 48H146" fill="none" stroke="#a778d5" strokeWidth="5" />
+      <path d="M124 18H162C177 18 178 28 194 28H226" fill="none" stroke="#f2b544" strokeWidth="10" />
+      <path d="M124 34C148 34 151 43 169 43H226" fill="none" stroke="#36b7a6" strokeWidth="9" />
+      <path d="M146 48C171 48 177 43 193 43H226" fill="none" stroke="#36b7a6" strokeWidth="7" />
+      <path d="M83 64C121 64 129 72 161 72H226" fill="none" stroke="#697386" strokeWidth="5" opacity="0.9" />
+      <text x="12" y="12" fill="#f3f0e8" fontSize="6.5" fontWeight="800" letterSpacing="1">THE 7,197-VOTE CORRIDOR</text>
+      <text x="230" y="89" textAnchor="end" fill="#8fa9a7" fontSize="5.5" letterSpacing="0.7">942,031 BALLOTS / 3 POOLS</text>
+    </svg>
+  )
+}
+
+function MiniGermanyStillBecomingPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f2eddc" />
+      {[17, 36, 55, 74].map((y) => <line key={y} x1="13" x2="231" y1={y} y2={y} stroke="#9f9785" strokeWidth="0.5" strokeDasharray="2 3" />)}
+      <path d="M34 15C34 24 48 27 58 36S72 48 82 55S95 66 109 74S117 82 121 91" fill="none" stroke="#b66a50" strokeWidth="11" />
+      <path d="M74 15C74 25 62 27 58 36S75 47 82 55S101 67 109 74S118 83 121 91" fill="none" stroke="#4e79a7" strokeWidth="8" />
+      <path d="M112 15C112 25 102 29 96 36S91 46 82 55S99 67 109 74S118 83 121 91" fill="none" stroke="#a0cbe8" strokeWidth="7" />
+      <path d="M151 15C151 26 164 27 170 36S158 47 151 55S125 68 109 74S119 84 121 91" fill="none" stroke="#2f4b7c" strokeWidth="12" />
+      <path d="M204 15C204 26 189 28 186 36S191 46 197 55S146 69 109 74S119 84 121 91" fill="none" stroke="#edc948" strokeWidth="7" />
+      <text x="8" y="10" fill="#27322b" fontSize="6" fontWeight="800" letterSpacing="0.8">GERMANY, STILL BECOMING</text>
+      <text x="234" y="91" textAnchor="end" fill="#756e60" fontSize="5.2" letterSpacing="0.5">12 OPENINGS / 100% CONSERVED</text>
+    </svg>
+  )
+}
+
+function MiniUnitedStatesHistoryRiverPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f3efe3" />
+      {[18, 36, 54, 72, 88].map((y) => <line key={y} x1="13" x2="231" y1={y} y2={y} stroke="#9d9789" strokeWidth="0.5" strokeDasharray="2 3" />)}
+      <path d="M28 13C35 18 45 20 58 23" fill="none" stroke="#8c6d31" strokeWidth="4" />
+      <path d="M43 13C47 18 52 20 58 23" fill="none" stroke="#8c6d31" strokeWidth="4" />
+      <path d="M58 13V88" fill="none" stroke="#173f6b" strokeWidth="13" />
+      <path d="M126 28V88" fill="none" stroke="#4f82b5" strokeWidth="10" />
+      <path d="M206 62V84" fill="none" stroke="#9bc9e2" strokeWidth="8" opacity="0.95" />
+      <path d="M174 29C154 29 145 29 126 31" fill="none" stroke="#8663a5" strokeWidth="7" />
+      <path d="M183 43C158 43 147 43 126 45" fill="none" stroke="#bd5c55" strokeWidth="5" />
+      <path d="M126 49C106 50 84 51 64 52" fill="none" stroke="#4f82b5" strokeWidth="3" />
+      <path d="M126 60C106 61 84 62 64 63" fill="none" stroke="#4f82b5" strokeWidth="3" />
+      <path d="M58 52C80 52 91 57 98 59S83 67 58 68" fill="none" stroke="#8a4f4f" strokeWidth="5" />
+      <path d="M229 64C220 64 215 64 206 65" fill="none" stroke="#d88743" strokeWidth="4" />
+      <path d="M229 71C219 71 215 71 206 72" fill="none" stroke="#d88743" strokeWidth="3" />
+      <path d="M206 81V88" fill="none" stroke="#9bc9e2" strokeWidth="8" opacity="0.38" />
+      <text x="8" y="9" fill="#22323d" fontSize="5.8" fontWeight="800" letterSpacing="0.65">THE UNITED STATES, DRAWN TOGETHER</text>
+      <text x="234" y="92" textAnchor="end" fill="#6f6a5f" fontSize="5.1" letterSpacing="0.45">3 INSTITUTIONS / 64 TRANSACTIONS</text>
     </svg>
   )
 }
@@ -1778,6 +1862,81 @@ function MiniScrollTellPreview() {
           opacity={color === "#7f8ba0" ? 0.6 : 0.9}
         />
       ))}
+    </svg>
+  )
+}
+
+function MiniThunderdomePreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <defs>
+        <linearGradient id="thunderdome-preview-paper" x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#f7e8c9" />
+          <stop offset="1" stopColor="#e9cfa4" />
+        </linearGradient>
+        <linearGradient id="thunderdome-preview-ink" x1="0" x2="1">
+          <stop stopColor="#c9472f" />
+          <stop offset="1" stopColor="#8c2536" />
+        </linearGradient>
+      </defs>
+      <rect width="242" height="96" rx="6" fill="#231f20" />
+      <rect
+        x="7"
+        y="7"
+        width="228"
+        height="82"
+        rx="18"
+        fill="url(#thunderdome-preview-paper)"
+        stroke="#f7e8c9"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="13"
+        y="13"
+        width="216"
+        height="70"
+        rx="14"
+        fill="none"
+        stroke="#231f20"
+        strokeWidth="1.25"
+      />
+      <text
+        x="121"
+        y="27"
+        textAnchor="middle"
+        fill="#231f20"
+        fontFamily="sans-serif"
+        fontSize="6.5"
+        fontWeight="800"
+        letterSpacing="2.4"
+      >
+        DIGITAL HUMANITIES
+      </text>
+      <text
+        x="121"
+        y="54"
+        textAnchor="middle"
+        fill="url(#thunderdome-preview-ink)"
+        fontFamily="sans-serif"
+        fontSize="26"
+        fontWeight="950"
+        letterSpacing="-1.4"
+      >
+        THUNDERDOME
+      </text>
+      <rect x="53" y="62" width="136" height="13" rx="6.5" fill="#231f20" />
+      <text
+        x="121"
+        y="71"
+        textAnchor="middle"
+        fill="#f7e8c9"
+        fontFamily="sans-serif"
+        fontSize="6.8"
+        fontWeight="900"
+        letterSpacing="1.1"
+      >
+        HAS ROUNDED CORNERS
+      </text>
     </svg>
   )
 }

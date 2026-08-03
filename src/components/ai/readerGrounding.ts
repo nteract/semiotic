@@ -257,14 +257,23 @@ function sourceFacts(
     const edges = Array.isArray(props.edges)
       ? (props.edges as Record<string, unknown>[])
       : []
+    if (component === "ProcessSankey" && Array.isArray(props.domain) && props.domain.length === 2) {
+      statements.push(
+        `The ProcessSankey time domain runs from ${displayFactValue(props.domain[0])} to ${displayFactValue(props.domain[1])}.`,
+      )
+    }
     if (edges.length > 0) {
       statements.push(`${edges.length} source flow${edges.length === 1 ? "" : "s"} are supplied.`)
       for (const edge of edges.slice(0, maxLeaves)) {
         const source = factValue(edge, props.sourceAccessor, "source")
         const target = factValue(edge, props.targetAccessor, "target")
         const value = factValue(edge, props.valueAccessor, "value")
+        const timed = component === "ProcessSankey" &&
+          (edge.startTime != null || edge.endTime != null)
         statements.push(
-          `${displayFactValue(source)} to ${displayFactValue(target)} has value ${displayFactValue(value)}.`
+          timed
+            ? `${displayFactValue(source)} to ${displayFactValue(target)} has value ${displayFactValue(value)} over ${displayFactValue(edge.startTime)}–${displayFactValue(edge.endTime)}.`
+            : `${displayFactValue(source)} to ${displayFactValue(target)} has value ${displayFactValue(value)}.`,
         )
       }
     }

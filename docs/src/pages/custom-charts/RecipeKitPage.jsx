@@ -441,6 +441,20 @@ export default function RecipeKitPage() {
             </tr>
             <tr>
               <td>
+                <code>placeWithMinGap</code> / <code>packBandsBySilhouette</code> /{" "}
+                <code>orderByBarycenter</code> / <code>refineByAdjacentSwaps</code> /{" "}
+                <code>orderExactSmall</code> / <code>countPairwiseCrossings</code>
+              </td>
+              <td>any</td>
+              <td>
+                deterministic 1D layout kernel: weighted isotonic placement with per-pair gaps,
+                sampled-silhouette band packing, and guarded exact/heuristic ordering under a
+                caller-supplied cost. These are the reusable ordering and lane-placement
+                primitives behind <code>ProcessSankey</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>
                 <code>axisFixedForcePositions</code> / <code>rectCollide</code>
               </td>
               <td>network</td>

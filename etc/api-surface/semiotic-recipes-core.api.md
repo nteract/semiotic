@@ -60,6 +60,7 @@ function clustering(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): R
 function collidersFromScales<TBand = string | number>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
 function comparePhysicsTrace<TSample = PhysicsScalarTraceSample>(trace: readonly TSample[], envelope: PhysicsReferenceEnvelope, options?: PhysicsTraceComparisonOptions<TSample> | undefined): PhysicsTraceComparison
 function composePhysicsControllers(controllers: readonly PhysicsController[] | null | undefined): ComposedPhysicsControllers | null
+function countPairwiseCrossings<T>(items: readonly T[], endpoints: (item: T) => readonly [number, number], comparePair?: ((a: T, b: T) => boolean) | undefined): number
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
 function createPortalController(options: { id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void; }): PhysicsController
@@ -139,8 +140,11 @@ function nonNegativeFinite(value: number | undefined): number
 function normalizePoint(a: Point): Point
 function normalizeScores(scores: Record<string, number>): Record<string, number>
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
+function orderByBarycenter<T>(input: readonly T[], relations: readonly WeightedOrderRelation<T>[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
 function orderByGroupDegree<N extends GraphNode>(nodes: readonly N[], edges: readonly GraphEdge[], groupAccessor?: keyof N | ((n: N) => number | string) | undefined): string[]
+function orderExactSmall<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: (Pick<GuardedOrderOptions<T>, "maxEvaluations"> & { maxItems?: number; }) | undefined): T[]
 function orthogonalEdgePath(from: Point, to: Point, opts?: { orientation?: EdgeOrientation; } | undefined): string
+function packBandsBySilhouette(bands: readonly (readonly SilhouetteSample[])[], gap?: number | undefined): PackedBands
 function packIntervals<T = Datum>(items: readonly T[], options?: PackIntervalsOptions<T> | undefined): PackIntervalsResult<T>
 function packSpanLevels<T extends SpanInterval>(spans: readonly T[]): PackSpanLevelsResult<T>
 function packedClusterMatrix(do: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
@@ -151,6 +155,7 @@ function physicsDestination(geography: PhysicsStageGeography, id: string): Physi
 function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: PhysicsReferenceEnvelopeOptions<TSample>): PhysicsReferenceEnvelope
 function physicsStageColliders(geography: PhysicsStageGeography, options?: PhysicsStageColliderOptions | undefined): PhysicsColliderSpec[]
 function physicsStageGeography(options: PhysicsStageGeographyOptions): PhysicsStageGeography
+function placeWithMinGap(options: MinGapPlacementOptions): number[]
 function pointMagnitude(a: Point): number
 function polarToXY(angle: number, radius: number, opts?: PolarOptions | undefined): Point
 function portalRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string; }): StreamPhysicsRegionEffect
@@ -165,6 +170,7 @@ function proximityProblem(nodes: readonly GraphNode[], edges: readonly GraphEdge
 function radiusScale(domain: readonly [number, number], range: readonly [number, number]): (value: number) => number
 function readField(d: unknown, key: string, fallback: unknown): unknown
 function rectCollide(boxes: readonly CollisionBox[], opts?: RectCollideOptions | undefined): Map<string, number>
+function refineByAdjacentSwaps<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): { label: string; value: number; }[]
 function reserveAnnotationBands(levels?: ReserveLevels | undefined): { type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary"; }[]
 function reserveMarginPct(input: { demand: number; capacityOrNetGen: number; interchange?: number; }): number
@@ -278,6 +284,7 @@ interface GraphEdge
 interface GraphNode
 interface GridifiedGeographicPoint<T = Datum>
 interface GridifyGeographicPointsOptions
+interface GuardedOrderOptions<T>
 interface HatchFillOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
@@ -300,6 +307,7 @@ interface MarimekkoConfig
 interface MarkCalloutProps
 interface MatrixCell
 interface MermaidDagConfig
+interface MinGapPlacementOptions
 interface MobileAnnotationCalloutItem
 interface MobileAnnotationStrategyConfig
 interface MobileAnnotationStrategyResult
@@ -320,6 +328,7 @@ interface OrdinalLayoutResult
 interface PackIntervalsOptions<T>
 interface PackIntervalsResult<T>
 interface PackSpanLevelsResult<T extends SpanInterval = SpanInterval>
+interface PackedBands
 interface PackedClusterMatrixConfig
 interface PackedInterval<T>
 interface PackedSpanLevel<T extends SpanInterval = SpanInterval>
@@ -393,6 +402,7 @@ interface ServiceResourceDefinition
 interface ServiceResourcePoolController
 interface ServiceResourcePoolOptions
 interface ServiceResourcePoolSnapshot
+interface SilhouetteSample
 interface SpanArcPathOptions
 interface SpanInterval
 interface SpawnFromTokensOptions<D = unknown>
@@ -414,6 +424,7 @@ interface UnitizeRangeResult
 interface UnitizeResult
 interface VisualToken<D = unknown>
 interface WaffleConfig
+interface WeightedOrderRelation<T>
 interface WordTrailsConfig
 interface WordTrailsProgressiveRevealOptions
 interface WordTrailsWordInfo

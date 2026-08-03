@@ -38,8 +38,9 @@ interface KeyboardInteractionParams<Store, Node = unknown> {
   hoverRef: RefValue<HoverData | null>
   hoveredNodeRef?: RefValue<Node | null>
   setHoverPoint: SetHoverPoint
-  customHoverBehavior: SemanticHoverBehavior<HoverData>
-  customClickBehavior: SemanticClickBehavior<HoverData>
+  /** Optional — absent when neither a user callback nor onObservation is wired. */
+  customHoverBehavior?: SemanticHoverBehavior<HoverData>
+  customClickBehavior?: SemanticClickBehavior<HoverData>
   scheduleRender: () => void
 }
 
@@ -79,7 +80,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
       hoverRef.current = null
       if (hoveredNodeRef) hoveredNodeRef.current = null
       setHoverPoint(null)
-      customHoverBehavior(null)
+      customHoverBehavior?.(null)
       scheduleRender()
     }
     if (store.scene.length === 0) {
@@ -108,7 +109,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     }
     if ((event.key === "Enter" || event.key === " ") && current >= 0) {
       event.preventDefault()
-      customClickBehavior(toHover(graph.flat[current], store), {
+      customClickBehavior?.(toHover(graph.flat[current], store), {
         type: "activate",
         inputType: "keyboard"
       })
@@ -129,7 +130,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
       const hover = toHover(point, store)
       hoverRef.current = hover
       setHoverPoint(hover)
-      customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
+      customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
       scheduleRender()
       return
     }
@@ -149,7 +150,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     const hover = toHover(point, store)
     hoverRef.current = hover
     setHoverPoint(hover)
-    customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
+    customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
     scheduleRender()
   }, [
     customClickBehavior,
@@ -239,7 +240,7 @@ export function useGeoKeyboardNavigation({
       hoverRef.current = null
       if (hoveredNodeRef) hoveredNodeRef.current = null
       setHoverPoint(null)
-      customHoverBehavior(null)
+      customHoverBehavior?.(null)
       scheduleRender()
     }
     if (store.scene.length === 0) {
@@ -259,7 +260,7 @@ export function useGeoKeyboardNavigation({
     }
     if ((event.key === "Enter" || event.key === " ") && current >= 0) {
       event.preventDefault()
-      customClickBehavior(geoPointToHover(navPoints[current]), {
+      customClickBehavior?.(geoPointToHover(navPoints[current]), {
         type: "activate",
         inputType: "keyboard"
       })
@@ -282,7 +283,7 @@ export function useGeoKeyboardNavigation({
     const hover = geoPointToHover(point)
     hoverRef.current = hover
     setHoverPoint(hover)
-    customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
+    customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
     scheduleRender()
   }, [
     customClickBehavior,

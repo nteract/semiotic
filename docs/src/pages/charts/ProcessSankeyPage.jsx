@@ -13,22 +13,36 @@ import StreamingDemo from "../../components/StreamingDemo"
 // Core props for the scannable contract. The prose subsections below
 // (Data / Accessors / Layout / …) remain the detailed reference.
 const processSankeyProps = [
-  { name: "nodes", type: "array", required: true, description: "Node records; may carry xExtent: [start, end] for an explicit lifetime." },
-  { name: "edges", type: "array", required: true, description: "Edge records with source, target, value, startTime, endTime." },
-  { name: "domain", type: "[number, number]", required: true, description: "[tStart, tEnd] of the x-axis." },
+  { name: "nodes", type: "array", description: "Optional node records; may carry xExtent: [start, end] for an explicit lifetime. Missing endpoints are inferred." },
+  { name: "edges", type: "array", description: "Timed edge records; omit when ingesting through the push API." },
+  { name: "domain", type: "[number, number]", required: true, description: "[tStart, tEnd] of the time axis." },
   { name: "axisTicks", type: "array", description: "Optional [{ date, label }] tick overrides." },
+  { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Read time left-to-right or top-to-bottom." },
   { name: "xExtentAccessor", type: "string | function", description: "Per-node [start, end] lifetime accessor." },
-  { name: "pairing", type: '"value" | "temporal"', default: '"value"', description: "How incoming/outgoing flows are paired into ribbons." },
-  { name: "packing", type: '"off" | "reuse"', default: '"reuse"', description: "Pack lifetime-disjoint nodes into shared rows." },
-  { name: "laneOrder", type: '"crossing-min" | "inside-out" | "crossing-min+inside-out" | "insertion"', default: '"crossing-min"', description: "Vertical lane ordering strategy." },
-  { name: "lifetimeMode", type: '"full" | "half"', default: '"full"', description: "Whether a node lane spans its full lifetime or half." },
+  { name: "nodeLabel", type: "string | function", description: "Visible lane-label accessor; defaults to nodeIdAccessor." },
+  { name: "groupBy", type: "string | function", description: "Optional node accessor. Equal non-empty values bond lanes into one contiguous stream-like block." },
+  { name: "systemInTimeAccessor", type: "string | function", description: "Optional source inventory-arrival time before an edge departs; pre-domain values fade inward from the opening boundary." },
+  { name: "systemOutTimeAccessor", type: "string | function", description: "Optional target inventory-departure time after an edge arrives." },
+  { name: "pairing", type: '"value" | "temporal"', default: '"temporal"', description: "How incoming/outgoing flows are paired into ribbons." },
+  { name: "packing", type: '"off" | "reuse"', default: '"reuse"', description: "Pack disjoint occupied-band windows into shared rows, favoring straight handoffs, matching process roles, and destination-coherent source feeders." },
+  { name: "laneOrder", type: '"crossing-min" | "inside-out" | "crossing-min+inside-out" | "insertion"', default: '"crossing-min"', description: "Cross-time lane ordering strategy." },
+  { name: "maxValueScale", type: "number", description: "Optional pixels-per-value cap; prevents sparse bands from inflating to fill the plot." },
+  { name: "lanePlacement", type: '"stack" | "hug"', default: '"stack"', description: "Use capped-scale slack to pull connected lanes together." },
+  { name: "groupPadding", type: "number", default: "0", description: "Pixel gutter inside a bonded group; zero makes adjacent silhouettes touch." },
+  { name: "lifetimeMode", type: '"full" | "half"', default: '"half"', description: "Whether dashed node rails split each transition at its midpoint or span the full edge." },
   { name: "ribbonLane", type: '"source" | "target" | "both"', description: "Which side(s) ribbons attach to." },
+  { name: "ribbonMinRun", type: 'number | "auto"', default: "0", description: "Minimum rendered time-axis runway for source-only feeders and lockstep bonded feeder groups; auto adapts to lane distance and moves the visual band handoff with the ribbon." },
   { name: "colorBy", type: "string | function", description: "Field/accessor that drives categorical node + ribbon color." },
   { name: "showLaneRails", type: "boolean", description: "Draw the rail guides behind lanes." },
-  { name: "showLabels", type: "boolean", default: "true", description: "Render node labels." },
-  { name: "showQualityReadout", type: "boolean", description: "Overlay the layout-quality (crossing) readout." },
+  { name: "showLabels", type: 'boolean | "auto"', default: "true", description: "Node labels; \"auto\" density-budgets and defers shed labels for selection reveal." },
+  { name: "labelPriorityAccessor", type: "string | function", description: "Higher values survive showLabels=\"auto\" first (does not reflow geometry)." },
+  { name: "maxLabels", type: "number", description: "Hard cap on auto-visible labels after the area budget." },
+  { name: "selectionDatum", type: '"raw" | "scene"', default: '"raw"', description: "What selection/linkedHover predicates see — author records or full scene payload." },
+  { name: "styleRules", type: "StyleRule[]", description: "Declarative band styling; fill may be a solid color or HatchFill." },
+  { name: "showQualityReadout", type: "boolean", description: "Overlay crossings, pixel length, transit occlusion, lane utilization, and validation warnings." },
+  { name: "layoutExecution", type: '"auto" | "worker" | "sync"', default: '"auto"', description: "Offload dense packing/order to a module worker when auto cost threshold is met." },
   { name: "showParticles", type: "boolean", description: "Animate particles along ribbons (pair with particleStyle)." },
-  { name: "timeFormat", type: "string | function", description: "Formatter for axis ticks and tooltip time fields." },
+  { name: "timeFormat", type: "function", description: "Formatter for axis ticks and tooltip time fields." },
   { name: "valueFormat", type: "string | function", description: "Formatter for flow values." },
 ]
 
@@ -515,7 +529,9 @@ export default function ProcessSankeyPage() {
   const [pairing, setPairing] = useState("temporal")
   const [packing, setPacking] = useState("reuse")
   const [laneOrder, setLaneOrder] = useState("crossing-min")
+  const [laneDensity, setLaneDensity] = useState("hug")
   const [ribbonLane, setRibbonLane] = useState("both")
+  const [ribbonRunway, setRibbonRunway] = useState("exact")
   const [lifetimeMode, setLifetimeMode] = useState("half")
   const [showLaneRails, setShowLaneRails] = useState(false)
   const [showLabels, setShowLabels] = useState(true)
@@ -547,7 +563,7 @@ export default function ProcessSankeyPage() {
       />
 
       <p>
-        Sankey-style flow with a real time x-axis. Each edge has a{" "}
+        Sankey-style flow with a real time axis. Each edge has a{" "}
         <code>startTime</code> / <code>endTime</code>; nodes may declare
         an <code>xExtent: [start, end]</code> to bound their lane
         explicitly. Use it for flow events with timestamps (PR commits
@@ -569,7 +585,7 @@ export default function ProcessSankeyPage() {
         </li>
         <li>
           <strong>Nodes have lifetimes, not ranks.</strong> A node&rsquo;s
-          vertical lane spans <code>min(xExtent[0], earliestEdge)</code>{" "}
+          lane spans <code>min(xExtent[0], earliestEdge)</code>{" "}
           to <code>max(xExtent[1], latestEdge)</code>. There is no
           node-rank prop; the layout reads timing from the data. Nodes
           may carry an optional <code>xExtent: [start, end]</code> to
@@ -586,8 +602,10 @@ export default function ProcessSankeyPage() {
         </li>
         <li>
           <strong>Lane reuse instead of dedicated rows.</strong> When
-          two nodes have non-overlapping lifetimes, they share a lane
-          (interval-graph greedy, depth-sorted). Pass{" "}
+          two nodes carry mass during non-overlapping intervals, they can share
+          a lane. Small layouts choose the minimum-row assignment that keeps
+          the most flow traveling straight, then aligns alternate phases with
+          the same predecessor/successor role. Pass{" "}
           <code>packing=&quot;off&quot;</code> for one row per node.
         </li>
       </ul>
@@ -625,7 +643,8 @@ export default function ProcessSankeyPage() {
         Pick a fixture and tune layout knobs to see how each affects
         the chart. Configurations that are good defaults for most data:
         <em> Pairing: temporal</em>, <em>Packing: reuse</em>,{" "}
-        <em>Lane order: crossing-min</em>, <em>Lifetime: half edge</em>.
+        <em>Lane order: crossing-min</em>, <em>Density: capped + hug</em>,{" "}
+        <em>Lifetime: half edge</em>.
       </p>
 
       <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
@@ -671,6 +690,15 @@ export default function ProcessSankeyPage() {
             ]}
           />
           <Segmented
+            label="Lane density"
+            value={laneDensity}
+            onChange={setLaneDensity}
+            options={[
+              { value: "fill", label: "Fill" },
+              { value: "hug", label: "Capped + hug" },
+            ]}
+          />
+          <Segmented
             label="Ribbon lane"
             value={ribbonLane}
             onChange={setRibbonLane}
@@ -678,6 +706,15 @@ export default function ProcessSankeyPage() {
               { value: "source", label: "Source" },
               { value: "target", label: "Target" },
               { value: "both", label: "Both" },
+            ]}
+          />
+          <Segmented
+            label="Feeder runway"
+            value={ribbonRunway}
+            onChange={setRibbonRunway}
+            options={[
+              { value: "exact", label: "Exact" },
+              { value: "auto", label: "Auto bend" },
             ]}
           />
           <Segmented
@@ -746,7 +783,10 @@ export default function ProcessSankeyPage() {
           pairing={pairing}
           packing={packing}
           laneOrder={laneOrder}
+          maxValueScale={laneDensity === "hug" ? 1.5 : undefined}
+          lanePlacement={laneDensity === "hug" ? "hug" : "stack"}
           ribbonLane={ribbonLane}
+          ribbonMinRun={ribbonRunway === "auto" ? "auto" : 0}
           lifetimeMode={lifetimeMode}
           showLaneRails={showLaneRails}
           showLabels={showLabels}
@@ -781,6 +821,8 @@ export default function ProcessSankeyPage() {
           colorBy="category"
           colorScheme="category10"
           showLegend
+          maxValueScale={1.5}
+          lanePlacement="hug"
           timeFormat={SANDBOX_TIME_FORMAT}
         />
       </div>
@@ -826,14 +868,19 @@ export default function ProcessSankeyPage() {
           colorBy="category"
           showLegend
           showLaneRails
+          maxValueScale={1.5}
+          lanePlacement="hug"
           timeFormat={SANDBOX_TIME_FORMAT}
         />
       </div>
 
       <h3 id="example-packing-off">Packing off — one row per node</h3>
       <p>
-        Default packing reuses lanes whenever two nodes have
-        non-overlapping lifetimes. Setting{" "}
+        Default packing reuses lanes whenever two node bands carry mass during
+        non-overlapping intervals, favoring same-row handoffs for heavier flow
+        and alternate phases with the same process role. On larger histories,
+        it also avoids reusing one physical row for source-only feeders aimed
+        at incompatible destinations when another legal row is available. Setting{" "}
         <code>packing=&quot;off&quot;</code> gives every node its own
         row — useful when readers need a stable y-position per node,
         even at the cost of vertical space.
@@ -852,6 +899,141 @@ export default function ProcessSankeyPage() {
         />
       </div>
 
+      <h3 id="example-hatch">HatchFill bands via styleRules</h3>
+      <p>
+        Band <code>styleRules</code> accept a solid color or a{" "}
+        <code>HatchFill</code> descriptor (canvas pattern + SSR{" "}
+        <code>&lt;pattern&gt;</code>). The legend below is the{" "}
+        <strong>status</strong> channel from <code>colorBy=&quot;status&quot;</code>{" "}
+        — not a claim that “disputed leads to Ship.” Stages run{" "}
+        <em>Intake → Legal review → Ship</em>; only the middle stage is marked
+        disputed, so it is hatched while both clear stages share the blue solid.
+      </p>
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
+        <ProcessSankey
+          nodes={[
+            { id: "Intake", status: "clear" },
+            { id: "Legal review", status: "disputed" },
+            { id: "Ship", status: "clear" },
+          ]}
+          edges={[
+            { id: "a", source: "Intake", target: "Legal review", value: 6, startTime: D(2026, 1, 10), endTime: D(2026, 2, 1) },
+            { id: "b", source: "Legal review", target: "Ship", value: 6, startTime: D(2026, 2, 15), endTime: D(2026, 3, 15) },
+          ]}
+          domain={[D(2026, 1, 1), D(2026, 4, 1)]}
+          axisTicks={[
+            { date: D(2026, 1, 1), label: "Jan" },
+            { date: D(2026, 2, 1), label: "Feb" },
+            { date: D(2026, 3, 1), label: "Mar" },
+          ]}
+          colorBy="status"
+          colorScheme={{
+            clear: "#3b82f6",
+            disputed: "#f59e0b",
+          }}
+          showLegend
+          showLabels
+          styleRules={[
+            {
+              when: { field: "status", eq: "disputed" },
+              style: {
+                fill: {
+                  type: "hatch",
+                  // Concrete paints: hatch tiles bake on an offscreen canvas
+                  // that cannot resolve CSS custom properties.
+                  background: "#fde68a",
+                  stroke: "#92400e",
+                  spacing: 5,
+                  lineWidth: 1.25,
+                },
+              },
+            },
+          ]}
+          packing="off"
+          height={280}
+          timeFormat={SANDBOX_TIME_FORMAT}
+        />
+      </div>
+      <CodeBlock
+        code={`// colorBy = status (legend: clear | disputed)
+// hatch only the disputed stage — stages are still sequential process steps
+<ProcessSankey
+  colorBy="status"
+  colorScheme={{ clear: "#3b82f6", disputed: "#f59e0b" }}
+  styleRules={[
+    {
+      when: { field: "status", eq: "disputed" },
+      style: {
+        fill: {
+          type: "hatch",
+          background: "#fde68a",
+          stroke: "#92400e",
+          spacing: 5,
+        },
+      },
+    },
+  ]}
+/>`}
+        language="jsx"
+        showCopyButton
+      />
+
+      <h3 id="example-auto-labels">Auto labels + priority</h3>
+      <p>
+        <code>showLabels=&quot;auto&quot;</code> keeps a density-budgeted subset.
+        Pass <code>labelPriorityAccessor</code> so important stages survive first;
+        shed labels keep their text deferred and reappear when the band is
+        selected — no layout recompute.
+      </p>
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
+        <ProcessSankey
+          nodes={LIBRARY_FIXTURE.nodes.map((n) => ({
+            ...n,
+            // Prefer Library / PR labels over individual commits under auto.
+            labelPriority: n.category === "Library" ? 100 : n.category === "PR" ? 50 : 1,
+          }))}
+          edges={LIBRARY_FIXTURE.edges}
+          domain={LIBRARY_FIXTURE.domain}
+          axisTicks={LIBRARY_FIXTURE.axisTicks}
+          colorBy="category"
+          showLegend
+          showLabels="auto"
+          labelPriorityAccessor="labelPriority"
+          maxLabels={8}
+          maxValueScale={1.5}
+          lanePlacement="hug"
+          timeFormat={SANDBOX_TIME_FORMAT}
+        />
+      </div>
+
+      <h3 id="example-quality-readout">Quality readout + layout metrics</h3>
+      <p>
+        <code>showQualityReadout</code> overlays crossings, pixel length, transit
+        occlusion, and lane utilization (plus non-fatal validation warnings).
+        The same metrics are on the layout snapshot:{" "}
+        <code>ref.getCustomLayout()?.layout.layoutQuality</code>. Pure helpers{" "}
+        <code>diagnoseProcessSankeyLayout</code> /{" "}
+        <code>explainProcessSankeyLayout</code> turn that snapshot into diagnoses
+        for agents and MCP.
+      </p>
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
+        <ProcessSankey
+          nodes={TEAM_FIXTURE.nodes}
+          edges={TEAM_FIXTURE.edges}
+          domain={TEAM_FIXTURE.domain}
+          axisTicks={TEAM_FIXTURE.axisTicks}
+          colorBy="category"
+          showLegend
+          showQualityReadout
+          packing="reuse"
+          laneOrder="crossing-min+inside-out"
+          maxValueScale={1.5}
+          lanePlacement="hug"
+          margin={{ top: 36, right: 20, bottom: 40, left: 40 }}
+          timeFormat={SANDBOX_TIME_FORMAT}
+        />
+      </div>
+
       <h3 id="example-ribbon-lane">Ribbon routing</h3>
       <p>
         <code>ribbonLane</code> shifts where the bezier curves bend.
@@ -860,6 +1042,19 @@ export default function ProcessSankeyPage() {
         <code>&quot;target&quot;</code> mirrors that on the target
         side. Useful for &ldquo;these came <em>from</em> X&rdquo;
         vs &ldquo;these go <em>to</em> Y&rdquo; readings.
+      </p>
+      <p>
+        When a short event crosses several lanes, no control-point ratio can
+        make a few timeline pixels read as a generous curve. Set{" "}
+        <code>ribbonMinRun=&quot;auto&quot;</code> to let source-only feeder ribbons
+        borrow earlier runway from an already-visible source band. Lockstep
+        bonded feeder groups borrow one shared runway; sequential grouped
+        departures remain exact.
+        The rendered band hands that stock to the ribbon at the same visual
+        point, avoiding a rectangle beneath the curve. A number sets the
+        desired runway in pixels; <code>0</code> keeps the authored endpoints
+        exact. This is display geometry only: target arrival, inventory
+        events, tooltip dates, and raw data stay unchanged.
       </p>
       <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
         <ProcessSankey
@@ -892,7 +1087,10 @@ export default function ProcessSankeyPage() {
         edge&rsquo;s source slot — band-color saturated from{" "}
         <code>systemInTime</code> through <code>startTime</code>,
         fading transparent → band-color in the 20 px immediately to
-        the left of <code>systemInTime</code>. The same mechanic
+        the left of <code>systemInTime</code>. If the system-in time
+        predates the visible domain, the cropped band instead fades
+        inward over the first 20 px, signaling that it was already in
+        existence when the chart begins. The same mechanic
         runs on the target side when an edge carries{" "}
         <code>systemOutTime</code> &gt; <code>endTime</code>: solid
         band-color from <code>endTime</code> through{" "}
@@ -965,8 +1163,9 @@ export default function ProcessSankeyPage() {
           the lane drawing after the final flow settles.
         </li>
         <li><code>edges</code> — array of edge records with <code>source</code>, <code>target</code>, <code>value</code>, <code>startTime</code>, <code>endTime</code>.</li>
-        <li><code>domain</code> — <code>[tStart, tEnd]</code> of the chart&rsquo;s x-axis.</li>
+        <li><code>domain</code> — <code>[tStart, tEnd]</code> of the chart&rsquo;s time axis.</li>
         <li><code>axisTicks</code> — optional array of <code>{`{ date, label }`}</code>.</li>
+        <li><code>orientation</code> — <code>&quot;horizontal&quot;</code> reads time left-to-right; <code>&quot;vertical&quot;</code> reads top-to-bottom with lanes distributed across the x-axis.</li>
       </ul>
 
       <h3>Accessors</h3>
@@ -982,7 +1181,9 @@ export default function ProcessSankeyPage() {
           flat fill in favor of an outline and paints a 20-px
           gradient stub at the edge&rsquo;s slot fading transparent →
           band-color in the 20 px before <code>systemInTime</code>;
-          the slot stays saturated through <code>startTime</code>.
+          the slot stays saturated through <code>startTime</code>. A
+          time before the visible domain moves that fade inside the
+          chart&rsquo;s opening boundary.
           See the <a href="#example-system-in-out">arrival + departure
           stubs</a> example.
         </li>
@@ -1004,54 +1205,89 @@ export default function ProcessSankeyPage() {
       <h3>Layout</h3>
       <ul>
         <li>
-          <code>pairing</code>: <code>&quot;value&quot;</code>{" "}
-          (default) pairs largest-incoming with largest-outgoing;{" "}
-          <code>&quot;temporal&quot;</code> pairs by arrival/departure
-          order. Try <code>&quot;temporal&quot;</code> when ribbon
-          ordering matters more than per-pair magnitude.
+          <code>pairing</code>: <code>&quot;temporal&quot;</code>{" "}
+          (default) pairs by arrival/departure order;{" "}
+          <code>&quot;value&quot;</code> pairs largest-incoming with
+          largest-outgoing when magnitude should dominate ribbon grouping.
         </li>
         <li>
           <code>packing</code>: <code>&quot;reuse&quot;</code> (default)
-          packs lifetime-disjoint nodes into the same row, sorted by
-          topological depth so hierarchical fixtures collapse to one
-          row per level. <code>&quot;off&quot;</code> gives every node
+          packs nodes with disjoint occupied-band windows into the same row.
+          On small layouts it chooses among minimum-row assignments by keeping
+          the greatest flow weight straight, then matching alternate phases
+          with common predecessors and successors. Its bounded large-layout
+          refinement keeps reusable source-feeder rows coherent by destination
+          without weakening direct handoffs. <code>&quot;off&quot;</code> gives every node
           its own row.
         </li>
         <li>
           <code>laneOrder</code>: <code>&quot;crossing-min&quot;</code>{" "}
-          (default) — brute force for ≤8 lanes / ≤40 edges, barycentric
-          + adjacent-swap above. <code>&quot;inside-out&quot;</code>{" "}
+          (default) — pixel-aware brute force for ≤8 lanes / ≤40 edges,
+          guarded barycentric + local-delta adjacent swaps above. The cost
+          preserves crossings first, then reduces rendered distance and
+          long-ribbon transit through dense lanes. <code>&quot;inside-out&quot;</code>{" "}
           places largest-mass slot at the median.{" "}
           <code>&quot;crossing-min+inside-out&quot;</code> runs both;{" "}
           <code>&quot;insertion&quot;</code> preserves packing order.
         </li>
         <li>
+          <code>maxValueScale</code> caps pixels per value unit instead
+          of letting sparse bands expand until the plot is full. Combine it
+          with <code>lanePlacement=&quot;hug&quot;</code> to pull connected
+          attachment centers through the resulting slack using
+          order-preserving minimum-gap placement. Both options are opt-in;
+          without the cap, <code>&quot;hug&quot;</code> degenerates to the legacy stack.
+        </li>
+        <li>
+          <code>groupBy</code> bonds nodes with the same non-empty key into
+          one contiguous lane block. Grouped rows only reuse other rows from
+          that group, move as a block during crossing minimization, and use a
+          zero-pixel internal gutter by default so their silhouettes meet like
+          neighboring streamgraph layers. Set <code>groupPadding</code> when a
+          small internal separation is preferable. Grouping does not merge
+          node identities, values, labels, tooltips, or edge attachments.
+        </li>
+        <li>
           <code>ribbonLane</code>: <code>&quot;both&quot;</code> (default)
-          routes ribbons via the horizontal midpoint;{" "}
+          routes ribbons via the timeline midpoint;{" "}
           <code>&quot;source&quot;</code> hugs the source lane;{" "}
           <code>&quot;target&quot;</code> hops to the target lane early.
         </li>
         <li>
+          <code>ribbonMinRun</code>: <code>0</code> (default) preserves exact
+          event endpoints. A positive pixel value gives eligible source-only
+          feeders and lockstep bonded feeder groups a minimum time-axis run;
+          <code>&quot;auto&quot;</code> derives
+          a run from lane distance. Pullback is clamped to the feeder band&rsquo;s
+          declared runway, and the rendered feeder silhouette ends or shrinks
+          at that same handoff. Mass accounting and reported dates never change.
+        </li>
+        <li>
           <code>lifetimeMode</code>: <code>&quot;half&quot;</code>{" "}
-          (default) charges each edge to the source-half of its
-          duration at the source and the target-half at the target,
-          shrinking lifetimes and enabling more reuse;{" "}
-          <code>&quot;full&quot;</code> gives both endpoints the full
-          extent.
+          (default) assigns the first half of a transition to the source rail
+          and the second half to the target rail; <code>&quot;full&quot;</code> gives both
+          endpoint rails the complete edge extent. Packing uses visible band
+          occupancy independently, so rail guidance does not waste rows.
         </li>
         <li>
           <code>showLaneRails</code> (default <code>false</code>) — toggle dashed lifetime rails behind each band.
         </li>
         <li>
           <code>showLabels</code> (default <code>true</code>) — render
-          the node-id label at each band&rsquo;s left edge. Turn off
+          each lane&rsquo;s <code>nodeLabel</code> (falling back to its id)
+          at the band&rsquo;s opening edge. Turn off
           for dense layouts where labels would overlap, or when the
           legend already names every band.
         </li>
         <li>
           <code>showQualityReadout</code> — render the small
-          &ldquo;crossings: A → B  edge length: X → Y&rdquo; readout
-          above the chart. Useful while tuning <code>laneOrder</code>.
+          before/after readout for crossings, pixel-weighted ribbon length,
+          authored-window transit occlusion, and lane utilization. With
+          <code>ribbonMinRun</code> enabled, the dates remain authoritative,
+          so this diagnostic deliberately excludes the borrowed visual
+          runway. Useful while
+          tuning <code>laneOrder</code>, <code>maxValueScale</code>, and
+          <code>lanePlacement</code>.
         </li>
       </ul>
 

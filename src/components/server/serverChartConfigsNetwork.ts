@@ -1,5 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
+import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSankey/frameMargins"
+import { buildProcessSankeyBackgroundGraphics } from "../charts/network/processSankey/axisChrome"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import { createEdgeStyleFn, inferNodesFromEdges, flattenHierarchy } from "../charts/network/../shared/networkUtils"
@@ -107,10 +109,10 @@ export const processSankey: ChartConfig = {
     const systemInTimeAccessor = rest.systemInTimeAccessor
     const systemOutTimeAccessor = rest.systemOutTimeAccessor
     const xExtentAccessor = rest.xExtentAccessor || "xExtent"
+    const groupBy = rest.groupBy
     const edgeIdAccessor = rest.edgeIdAccessor || "id"
 
-    const accVal = (acc: unknown, d: Datum): unknown =>
-      typeof acc === "function" ? (acc as (d: Datum) => unknown)(d) : d[acc as string]
+    const accVal = (acc: unknown, d: Datum): unknown => typeof acc === "function" ? (acc as (d: Datum) => unknown)(d) : d[acc as string]
 
     const rawEdges: Datum[] = Array.isArray(rest.edges) ? rest.edges : []
     // Match the HOC: when `nodes` is omitted, infer them from the
@@ -134,7 +136,16 @@ export const processSankey: ChartConfig = {
     const ns = rawNodes.map((n) => {
       const id = String(accVal(nodeIdAccessor, n))
       const x = accVal(xExtentAccessor, n)
-      const out: { id: string; xExtent?: [number, number]; __raw: Datum } = { id, __raw: n }
+      const labelValue = rest.nodeLabel ? accVal(rest.nodeLabel, n) : id
+      const out: {
+        id: string
+        label: string
+        group?: string
+        xExtent?: [number, number]
+        __raw: Datum
+      } = { id, label: labelValue == null ? id : String(labelValue), __raw: n }
+      const groupValue = groupBy ? accVal(groupBy, n) : null
+      if (groupValue != null && String(groupValue) !== "") out.group = String(groupValue)
       if (Array.isArray(x) && x.length === 2) {
         const a = toTime(x[0]); const b = toTime(x[1])
         if (Number.isFinite(a) && Number.isFinite(b)) out.xExtent = [a, b]
@@ -182,7 +193,17 @@ export const processSankey: ChartConfig = {
     // chart visibly clips against the legend).
     const [width, height] = (common.size as [number, number]) ?? [600, 400]
     const userMargin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | undefined
-    const baseMargin = { top: 20, right: 20, bottom: 20, left: 20, ...userMargin }
+    const orientation = rest.orientation === "vertical" ? "vertical" : "horizontal"
+    const hasAxisTicks = Array.isArray(rest.axisTicks) && rest.axisTicks.length > 0
+    const hasTitle = Boolean(common.title)
+    const showQualityReadout = Boolean(rest.showQualityReadout)
+    const defaultMargin = resolveProcessSankeyMarginDefaults(
+      hasTitle,
+      showQualityReadout,
+      hasAxisTicks,
+      orientation,
+    )
+    const baseMargin = { ...defaultMargin, ...userMargin }
     // ProcessSankey owns a categorical legend rather than using the frame's
     // auto-legend. It is active only for an actual categorical accessor.
     const showLegend = common.showLegend ?? Boolean(colorBy)
@@ -270,20 +291,36 @@ export const processSankey: ChartConfig = {
     })() : undefined
     const legend = composeLegendConfigs(chartLegend, common.legend)
 
+    const showLabels = rest.showLabels === false
+      ? false
+      : rest.showLabels === "auto"
+        ? "auto" as const
+        : true
     const { layout, layoutConfig, issues, xScale } = buildProcessSankeyScenes({
       nodes: ns,
       edges: es,
       domain,
       plotW,
       plotH,
+      orientation,
       ribbonLane: rest.ribbonLane || "both",
+      ribbonMinRun: rest.ribbonMinRun === "auto" || typeof rest.ribbonMinRun === "number"
+        ? rest.ribbonMinRun
+        : 0,
       edgeOpacity: typeof rest.edgeOpacity === "number" ? (rest.edgeOpacity as number) : 0.35,
       colorOf,
+      showLabels,
+      styleRules: rest.styleRules,
+      colorBy: colorBy as string | ((d: Datum) => unknown) | undefined,
+      valueAccessor: valueAccessor as string | ((d: Datum) => unknown) | undefined,
       layoutOpts: {
         pairing: rest.pairing || "temporal",
         packing: rest.packing || "reuse",
         laneOrder: rest.laneOrder || "crossing-min",
         lifetimeMode: rest.lifetimeMode || "half",
+        maxValueScale: typeof rest.maxValueScale === "number" ? rest.maxValueScale : undefined,
+        lanePlacement: rest.lanePlacement || "stack",
+        groupPadding: typeof rest.groupPadding === "number" ? rest.groupPadding : 0,
       },
     })
 
@@ -302,43 +339,26 @@ export const processSankey: ChartConfig = {
     // StreamNetworkFrame feature. Recreate that chrome here from the same
     // pure layout result so SSR gets the baseline, optional ticks, and grids
     // rather than silently dropping the entire time-axis contract.
-    const axisTicks = Array.isArray(rest.axisTicks) ? rest.axisTicks as Datum[] : []
-    const backgroundGraphics = layout ? (() => {
-      let minX: number | null = null
-      let maxX: number | null = null
-      for (const node of ns) {
-        const lifetime = layout.laneLifetime[node.id]
-        if (!lifetime || lifetime.start == null || lifetime.end == null) continue
-        const start = Number(xScale(lifetime.start))
-        const end = Number(xScale(lifetime.end))
-        minX = minX == null ? start : Math.min(minX, start)
-        maxX = maxX == null ? end : Math.max(maxX, end)
-      }
-      const clampX = (x: number) => Math.max(0, Math.min(plotW, x))
-      const axisLeft = clampX(minX ?? 0)
-      const axisRight = Math.max(axisLeft, clampX(maxX ?? plotW))
-      const visibleTicks = axisTicks.map((tick, index) => ({ tick, index, x: Number(xScale(toTime(tick.date))) }))
-        .filter(({ x }) => x >= axisLeft - 0.5 && x <= axisRight + 0.5)
-      return React.createElement("g", null,
-        ...visibleTicks.map(({ index, x }) => React.createElement("line", {
-          key: `grid-${index}`, x1: x, y1: 0, x2: x, y2: plotH,
-          stroke: "#94a3b8", strokeOpacity: 0.15, strokeDasharray: "2 4",
-        })),
-        React.createElement("line", {
-          key: "axis", x1: axisLeft, y1: plotH + 4, x2: axisRight, y2: plotH + 4, stroke: "#94a3b8",
-        }),
-        ...visibleTicks.map(({ tick, index, x }) => {
-          const time = toTime(tick.date)
-          const label = tick.label != null
-            ? tick.label
-            : typeof rest.timeFormat === "function" ? rest.timeFormat(new Date(time)) : ""
-          return React.createElement("g", { key: `tick-${index}`, transform: `translate(${x},${plotH + 4})` },
-            React.createElement("line", { y2: 6, stroke: "#94a3b8" }),
-            React.createElement("text", { y: 20, textAnchor: "middle", fontSize: 11, fill: "#475569" }, label as React.ReactNode),
-          )
-        }),
-      )
-    })() : undefined
+    const backgroundGraphics = layout ? buildProcessSankeyBackgroundGraphics({
+      layout,
+      nodes: ns,
+      orientation,
+      plotW,
+      plotH,
+      timelineExtent: orientation === "vertical" ? plotH : plotW,
+      axisTicks: Array.isArray(rest.axisTicks) ? (rest.axisTicks as Array<{ date: unknown; label?: string }>).map((tick) => ({
+        date: tick.date as string | number | Date,
+        label: tick.label,
+      })) : [],
+      showQualityReadout: Boolean(rest.showQualityReadout),
+      showLaneRails: Boolean(rest.showLaneRails),
+      timeFormat: typeof rest.timeFormat === "function"
+        ? (d: Date) => (rest.timeFormat as (d: Date) => string | React.ReactNode)(d)
+        : undefined,
+      colorOf,
+      toTime: (v) => toTime(v),
+      xScale: (t) => Number(xScale(t)),
+    }) : undefined
 
     return {
       chartType: "force",

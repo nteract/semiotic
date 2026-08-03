@@ -22,5 +22,10 @@ docs/public/api/
 .claude/
 /docs/strategy
 
+# Pinned third-party source corpora and full intermediate derivations stay out
+# of the docs build. Ship only the reviewed, browser-sized generated module.
+/data/dhq/raw/
+/data/dhq/derived/
+
 # Core dumps (e.g. WebKit crashes during the dockerized visual-baseline regen)
 /core

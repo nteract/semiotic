@@ -66,6 +66,39 @@ function StaticParticles() {
   })
 }
 
+function StaticHug() {
+  return React.createElement(ProcessSankey, {
+    nodes: STATIC_NODES,
+    edges: STATIC_EDGES,
+    domain: DOMAIN,
+    width: 600,
+    height: 320,
+    colorBy: "category",
+    showLegend: true,
+    maxValueScale: 1.5,
+    lanePlacement: "hug",
+    showQualityReadout: true,
+  })
+}
+
+function StaticVertical() {
+  return React.createElement(ProcessSankey, {
+    nodes: STATIC_NODES,
+    edges: STATIC_EDGES,
+    domain: DOMAIN,
+    width: 380,
+    height: 620,
+    orientation: "vertical",
+    colorBy: "category",
+    axisTicks: [
+      { date: D(2026, 1, 6), label: "Jan" },
+      { date: D(2026, 4, 15), label: "Apr" },
+      { date: D(2026, 6, 28), label: "Jun" },
+    ],
+    showGrid: true,
+  })
+}
+
 function PushDemo() {
   const ref = useRef(null)
   const [count, setCount] = useState(0)
@@ -135,6 +168,10 @@ const App = () =>
       React.createElement(StaticBasic)),
     React.createElement(TestCase, { title: "Static — particles on", testId: "static-particles" },
       React.createElement(StaticParticles)),
+    React.createElement(TestCase, { title: "Static — capped scale + hug placement", testId: "static-hug" },
+      React.createElement(StaticHug)),
+    React.createElement(TestCase, { title: "Static — vertical history river", testId: "static-vertical" },
+      React.createElement(StaticVertical)),
     React.createElement(TestCase, { title: "Push API", testId: "push-demo" },
       React.createElement(PushDemo)),
     React.createElement(TestCase, { title: "Validation failure", testId: "validation-failure" },

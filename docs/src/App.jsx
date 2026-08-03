@@ -243,8 +243,23 @@ const LocalGovernmentExplorerExamplePage = lazy(
 const PortCongestionReplayExamplePage = lazy(
   () => import("./pages/examples/PortCongestionReplayExamplePage"),
 )
+const ApolloLunarChoreographyExamplePage = lazy(
+  () => import("./pages/examples/ApolloLunarChoreographyExamplePage"),
+)
+const BallotTransferLedgerExamplePage = lazy(
+  () => import("./pages/examples/BallotTransferLedgerExamplePage"),
+)
+const GermanyStillBecomingExamplePage = lazy(
+  () => import("./pages/examples/GermanyStillBecomingExamplePage"),
+)
+const UnitedStatesHistoryRiverExamplePage = lazy(
+  () => import("./pages/examples/UnitedStatesHistoryRiverExamplePage"),
+)
 const ScrollYoureTellingExamplePage = lazy(
   () => import("./pages/examples/ScrollYoureTellingExamplePage"),
+)
+const DigitalHumanitiesThunderdomeExamplePage = lazy(
+  () => import("./pages/examples/DigitalHumanitiesThunderdomeExamplePage"),
 )
 const DatavizPeopleExamplePage = lazy(() => import("./pages/examples/DatavizPeopleExamplePage"))
 const DistantReadingExamplePage = lazy(() => import("./pages/examples/DistantReadingExamplePage"))
@@ -322,7 +337,12 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "WikipediaRealtimeExamplePage.jsx": WikipediaRealtimeExamplePage,
   "LocalGovernmentExplorerExamplePage.jsx": LocalGovernmentExplorerExamplePage,
   "PortCongestionReplayExamplePage.jsx": PortCongestionReplayExamplePage,
+  "ApolloLunarChoreographyExamplePage.jsx": ApolloLunarChoreographyExamplePage,
+  "BallotTransferLedgerExamplePage.jsx": BallotTransferLedgerExamplePage,
+  "GermanyStillBecomingExamplePage.jsx": GermanyStillBecomingExamplePage,
+  "UnitedStatesHistoryRiverExamplePage.jsx": UnitedStatesHistoryRiverExamplePage,
   "ScrollYoureTellingExamplePage.jsx": ScrollYoureTellingExamplePage,
+  "DigitalHumanitiesThunderdomeExamplePage.jsx": DigitalHumanitiesThunderdomeExamplePage,
   "DatavizPeopleExamplePage.jsx": DatavizPeopleExamplePage,
   "DistantReadingExamplePage.jsx": DistantReadingExamplePage,
   "WorldOfFunnelsExamplePage.jsx": WorldOfFunnelsExamplePage,

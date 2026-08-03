@@ -240,6 +240,24 @@ export type { Run, RunOptions } from "./recipes/runs"
 // hour-of-day, compass bearing) — the math a radial/circular brush re-derives.
 export { wrapValue, shortestArcDelta, cyclicRangeContains, selectCyclicRange } from "./recipes/cyclical"
 
+// Deterministic one-dimensional ordering, separation, and silhouette packing
+// shared by band/lane layouts (including ProcessSankey).
+export {
+  placeWithMinGap,
+  packBandsBySilhouette,
+  orderByBarycenter,
+  refineByAdjacentSwaps,
+  orderExactSmall,
+  countPairwiseCrossings,
+} from "./recipes/layout1d"
+export type {
+  MinGapPlacementOptions,
+  SilhouetteSample,
+  PackedBands,
+  WeightedOrderRelation,
+  GuardedOrderOptions,
+} from "./recipes/layout1d"
+
 // Interval (Gantt/timeline) packing + temporal density.
 export { packIntervals, activeCountOverDomain } from "./recipes/intervals"
 export type {

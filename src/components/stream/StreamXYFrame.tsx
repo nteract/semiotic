@@ -632,10 +632,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           hoverRef.current = null
           hoveredNodeRef.current = null
           setHoverPoint(null)
-          if (customHoverBehavior) {
-            customHoverBehavior(null)
-            dirtyRef.current = true
-          }
+          // Hover paint lives on the interaction canvas / tooltip — do not
+          // dirty the retained scene (avoids replaying transitions on move).
+          customHoverBehavior?.(null)
           scheduleRender()
         }
         return
@@ -747,10 +746,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hoverRef.current = hover
       hoveredNodeRef.current = hit?.node ?? null
       setHoverPoint(hover)
-      if (customHoverBehavior) {
-        customHoverBehavior(hover)
-        dirtyRef.current = true
-      }
+      // Hover paint lives on the interaction canvas / tooltip — do not dirty
+      // the retained scene (avoids replaying transitions on every move).
+      // Selection restyle flows through React state → style fn → useConfigSync.
+      customHoverBehavior?.(hover)
       scheduleRender()
     }
 
@@ -759,7 +758,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         hoverRef.current = null
         hoveredNodeRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
+        customHoverBehavior?.(null)
         scheduleRender()
       }
     }

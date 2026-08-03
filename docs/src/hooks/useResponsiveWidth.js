@@ -13,21 +13,33 @@ import { useEffect, useRef, useState } from "react"
  *
  * @param {number} minWidth Floor the chart never renders below (it scrolls instead).
  * @param {number} [maxWidth] Optional cap so an art-directed chart doesn't over-stretch.
+ * @param {{ bucket?: number }} [options] When `bucket` is set (e.g. 40), width
+ *   updates only on that step — keeps expensive ProcessSankey layouts from
+ *   re-running on every resize pixel tick.
  */
-export default function useResponsiveWidth(minWidth, maxWidth = Infinity) {
+export default function useResponsiveWidth(minWidth, maxWidth = Infinity, options = {}) {
   const ref = useRef(null)
   const [width, setWidth] = useState(minWidth)
+  const bucket = options?.bucket > 0 ? options.bucket : 0
 
   useEffect(() => {
     const host = ref.current
     if (!host || typeof ResizeObserver === "undefined") return
+    const resolve = (raw) => {
+      const clamped = Math.max(minWidth, Math.min(maxWidth, Math.floor(raw)))
+      if (!bucket) return clamped
+      return Math.max(minWidth, Math.min(maxWidth, Math.round(clamped / bucket) * bucket))
+    }
     const update = () =>
-      setWidth(Math.max(minWidth, Math.min(maxWidth, Math.floor(host.clientWidth))))
+      setWidth((prev) => {
+        const next = resolve(host.clientWidth)
+        return next === prev ? prev : next
+      })
     update()
     const observer = new ResizeObserver(update)
     observer.observe(host)
     return () => observer.disconnect()
-  }, [minWidth, maxWidth])
+  }, [minWidth, maxWidth, bucket])
 
   return [width, ref]
 }

@@ -1,0 +1,98 @@
+/**
+ * United States history-river theme tokens + US-only chrome.
+ * Structure lives in process-river.css — root markup:
+ *   className="process-river usa-becoming"
+ */
+@import "./process-river.css";
+
+.usa-becoming {
+  --river-ink: #19242d;
+  --river-paper: #f3efe3;
+  --river-paper-deep: #ded7c6;
+  --river-red: #9a443f;
+  --river-blue: #315c94;
+  --river-green: #3e6c58;
+  --river-gold: #e8bd63;
+  --river-kicker: #a9bdc8;
+  --river-mast-bg:
+    linear-gradient(122deg, rgba(14, 30, 42, 0.985), rgba(39, 57, 67, 0.93)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255,255,255,0.045) 84px 85px);
+  --river-reader-accent: #315c94;
+  --river-reader-year: #8f3f3b;
+  --river-findings-bg: #1c303d;
+  --river-findings-grid: #586c77;
+  --river-findings-card: #263d49;
+  --river-outside-bg: #ded8c9;
+  --river-footer-bg: #152733;
+  --river-shell-bg:
+    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(36,54,65,0.04) 80px 81px);
+  --semiotic-surface: #f3efe3;
+}
+
+.usa-becoming .process-river__masthead h2 {
+  font-size: clamp(56px, 8.2vw, 126px);
+}
+
+.usa-becoming .process-river__reading-key b { color: #a3433f; }
+
+.usa-becoming__outside-note {
+  margin-top: 24px !important;
+  padding-top: 18px;
+  border-top: 1px solid #aaa18d;
+  color: #5e5a50;
+  font-size: 13px !important;
+}
+
+.usa-becoming__tooltip span { color: #93413d; }
+.usa-becoming__tooltip b { color: #315c94; }
+.usa-becoming__tooltip em {
+  display: block;
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-left: 3px solid #9bc9e2;
+  color: #274e6c;
+  background: rgba(155, 201, 226, 0.18);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.usa-becoming__status-key {
+  min-width: 340px;
+  padding: 18px;
+  border: 1px solid #a9a08b;
+  background: rgba(255,255,255,0.32);
+}
+
+.usa-becoming__status-key > span {
+  display: block;
+  margin-bottom: 12px;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.13em;
+}
+
+.usa-becoming__status-key > div { display: grid; gap: 1px; background: #b9b09a; }
+
+.usa-becoming__status-key article {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 10px;
+  background: #e5decb;
+}
+
+.usa-becoming__status-key i { width: 22px; height: 28px; }
+.usa-becoming__status-key article span { color: #5d5b55; font-size: 9px; line-height: 1.35; }
+.usa-becoming__status-key article strong { display: block; color: var(--river-ink); font-size: 11px; }
+
+@media (max-width: 700px) {
+  .usa-becoming .process-river__masthead h2 {
+    font-size: clamp(48px, 16vw, 72px);
+    line-height: 0.84;
+  }
+
+  .usa-becoming__status-key { min-width: 0; padding: 12px; }
+}

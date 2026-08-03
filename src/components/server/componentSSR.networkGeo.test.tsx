@@ -24,6 +24,7 @@ import { CirclePack } from "../charts/network/CirclePack"
 
 // Standalone SSR for equivalence tests
 import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG, renderChart } from "./renderToStaticSVG"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -160,7 +161,132 @@ describe("Component SSR — Network Charts", () => {
     })
     expect(svg).toContain(">Start<")
     expect(svg).toContain(">Finish<")
-    expect(svg).toContain('stroke="#94a3b8"')
+    // Theme tokens with hex fallback — must not hard-code slate hex alone.
+    expect(svg).toMatch(/stroke="var\(--semiotic-grid,\s*#94a3b8\)"/)
+    // CSR/SSR margin parity: horizontal defaults reserve 80px gutters.
+    expect(svg).toContain('transform="translate(80,')
+  })
+
+  it("renderChart('ProcessSankey', …) accepts zero-duration edges", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [{ id: "A" }, { id: "B" }],
+      edges: [{ source: "A", target: "B", value: 2, startTime: 2, endTime: 2 }],
+      domain: [0, 4],
+      width: 400,
+      height: 240,
+    })
+    expect(svg).toContain("<path")
+    expect(svg).not.toContain("data invalid")
+  })
+
+  it("renderChart('ProcessSankey', …) projects its time axis vertically", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [{ id: "Queue" }, { id: "Done" }],
+      edges: [{ source: "Queue", target: "Done", value: 4, startTime: 1, endTime: 3 }],
+      domain: [0, 4],
+      axisTicks: [{ date: 1, label: "Start" }, { date: 3, label: "Finish" }],
+      orientation: "vertical",
+      width: 500,
+      height: 500,
+    })
+    expect(svg).toContain(">Start<")
+    expect(svg).toContain(">Finish<")
+    expect(svg).toContain('transform="translate(-4,')
+  })
+
+  it("renderChart('ProcessSankey', …) forwards adaptive feeder runway", () => {
+    const props = {
+      nodes: [
+        { id: "Feeder", xExtent: [0, 100] },
+        { id: "Main", xExtent: [0, 100] },
+      ],
+      edges: [{
+        id: "feeder-main",
+        source: "Feeder",
+        target: "Main",
+        value: 1,
+        startTime: 96,
+        endTime: 100,
+      }],
+      domain: [0, 100],
+      orientation: "vertical",
+      packing: "off",
+      laneOrder: "insertion",
+      width: 600,
+      height: 600,
+      margin: 0,
+    }
+    const ribbonStart = (svg: string): number => {
+      const match = svg.match(/<path d="M[^,]+,([^ ]+) C[^"]+" fill="[^"]+" stroke="none"/)
+      return Number(match?.[1])
+    }
+
+    const exact = renderChart("ProcessSankey", props)
+    const smoothed = renderChart("ProcessSankey", { ...props, ribbonMinRun: "auto" })
+    expect(ribbonStart(exact)).toBe(576)
+    expect(ribbonStart(smoothed)).toBeLessThan(ribbonStart(exact))
+  })
+
+  it("renderChart('ProcessSankey', …) preserves reader-facing lane labels", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [
+        { id: "LUNAR_ORBIT", label: "Lunar orbit" },
+        { id: "LM_LIFEBOAT", label: "LM lifeboat" },
+      ],
+      edges: [
+        { source: "LUNAR_ORBIT", target: "LM_LIFEBOAT", value: 3, startTime: 1, endTime: 3 },
+      ],
+      domain: [0, 4],
+      nodeLabel: "label",
+      width: 500,
+      height: 280,
+    })
+    expect(svg).toContain(">Lunar orbit<")
+    expect(svg).toContain(">LM lifeboat<")
+  })
+
+  it("renderChart('ProcessSankey', …) resolves string and function groupBy accessors identically", () => {
+    const props = {
+      nodes: [
+        { id: "states-before", bond: "us", xExtent: [0, 2] },
+        { id: "states-after", bond: "us", xExtent: [8, 10] },
+        { id: "territories-before", bond: "us", xExtent: [0, 2] },
+        { id: "territories-after", bond: "us", xExtent: [8, 10] },
+      ],
+      edges: [
+        { source: "states-before", target: "states-after", value: 4, startTime: 2, endTime: 8 },
+        { source: "territories-before", target: "territories-after", value: 2, startTime: 2, endTime: 8 },
+      ],
+      domain: [0, 10],
+      width: 500,
+      height: 280,
+      laneOrder: "insertion",
+    }
+    const byString = renderChart("ProcessSankey", { ...props, groupBy: "bond" })
+    const byFunction = renderChart("ProcessSankey", {
+      ...props,
+      groupBy: (node: Datum) => node.bond,
+    })
+
+    expect(byFunction).toBe(byString)
+  })
+
+  it("renderChart('ProcessSankey', …) preserves the quality readout", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [{ id: "Queue" }, { id: "Review" }, { id: "Done" }],
+      edges: [
+        { source: "Queue", target: "Review", value: 4, startTime: 1, endTime: 2 },
+        { source: "Review", target: "Done", value: 4, startTime: 2, endTime: 3 },
+      ],
+      domain: [0, 4],
+      width: 500,
+      height: 280,
+      showQualityReadout: true,
+    })
+    expect(svg).toContain("crossings:")
+    expect(svg).toContain("pixel length:")
+    expect(svg).toContain("transit:")
+    expect(svg).toContain("lane use:")
   })
 
   it("TreeDiagram renders nodes and edges", () => {

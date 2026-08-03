@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest"
 import {
   validateProcessSankey,
+  partitionProcessSankeyIssues,
   computeProcessSankeyLayout,
   buildEdgeIndex,
   assignSides,
+  assignSameSlotHandoffSides,
   computeNode,
   clampTime,
   clampSamples,
@@ -18,6 +20,8 @@ import {
   type ProcessSankeyOptions,
   type ProcessSankeyAttachment,
 } from "./algorithm"
+import { resolveProcessSankeyMarginDefaults } from "./frameMargins"
+import { slotStableId } from "./layoutGeometry"
 
 const T = (n: number): number => n // ms — tests use small integers, no Date conversion needed
 
@@ -33,6 +37,39 @@ describe("validateProcessSankey", () => {
       { id: "cd", source: "C", target: "D", value: 4, startTime: 30, endTime: 40 },
     ]
     expect(validateProcessSankey(nodes, edges, dom)).toEqual([])
+  })
+
+  it("allows zero-duration edges (instantaneous events)", () => {
+    const issues = validateProcessSankey(
+      [{ id: "A" }, { id: "B" }],
+      [{ id: "e", source: "A", target: "B", value: 1, startTime: 50, endTime: 50 }],
+      dom,
+    )
+    expect(issues.filter((i) => i.kind === "backward-edge")).toEqual([])
+  })
+
+  it("flags true reverse-time edges as fatal", () => {
+    const issues = validateProcessSankey(
+      [{ id: "A" }, { id: "B" }],
+      [{ id: "e", source: "A", target: "B", value: 1, startTime: 60, endTime: 40 }],
+      dom,
+    )
+    expect(issues.some((i) => i.kind === "backward-edge")).toBe(true)
+    const { fatal } = partitionProcessSankeyIssues(issues)
+    expect(fatal.some((i) => i.kind === "backward-edge")).toBe(true)
+  })
+
+  it("treats duplicate ids as fatal under the default static policy", () => {
+    const issues = validateProcessSankey(
+      [{ id: "A" }, { id: "A" }],
+      [{ id: "e", source: "A", target: "A", value: 1, startTime: 10, endTime: 20 }],
+      dom,
+    )
+    const { fatal, warnings } = partitionProcessSankeyIssues(issues)
+    // Default usageMode is static/mcp: duplicate ids are fatal so SSR/MCP
+    // snapshots never silently double-count. Push mode keeps them as warnings.
+    expect(fatal.some((i) => i.kind === "duplicate-node")).toBe(true)
+    expect(warnings.some((i) => i.kind === "duplicate-node")).toBe(false)
   })
 
   it("flags missing source nodes", () => {
@@ -191,6 +228,92 @@ describe("side assignment and node mass walks", () => {
     expect(data.samples[0].t).toBe(-1)
     expect(data.samples.every((s) => s.topMass >= 0 && s.botMass >= 0)).toBe(true)
   })
+
+  it("anchors synthesized side transfers at departure without creating a floating band island", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Top" }, { id: "Bottom" }, { id: "Eng" }, { id: "Release" },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "top-eng", source: "Top", target: "Eng", value: 5, startTime: 0, endTime: 10 },
+      { id: "bottom-eng", source: "Bottom", target: "Eng", value: 8, startTime: 0, endTime: 10 },
+      { id: "eng-release-8", source: "Eng", target: "Release", value: 8, startTime: 20, endTime: 40 },
+      { id: "eng-release-5", source: "Eng", target: "Release", value: 5, startTime: 30, endTime: 45 },
+    ]
+    const edgeIndex = buildEdgeIndex(nodes, edges)
+    const sides = new Map([
+      ["top-eng", { targetSide: "top" as const }],
+      ["bottom-eng", { targetSide: "bot" as const }],
+      ["eng-release-8", { sourceSide: "bot" as const }],
+      ["eng-release-5", { sourceSide: "bot" as const }],
+    ])
+
+    const data = computeNode(nodes[2], edgeIndex, sides)
+    const sampleTimes = new Set(data.samples.map((sample) => sample.t))
+
+    expect(sampleTimes.has(25)).toBe(false)
+    expect([...sampleTimes].every((time) => [10, 20, 30].includes(time))).toBe(true)
+    expect(data.localAttachments.get("eng-release-8")?.sideMassBefore).toBe(8)
+    expect(data.localAttachments.get("eng-release-5")?.sideMassBefore).toBe(5)
+    expect(data.samples.every((sample) => sample.topMass >= 0 && sample.botMass >= 0)).toBe(true)
+  })
+
+  it("does not translate an arrival band to prepare a future departure", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Input" }, { id: "Stage" }, { id: "Output" },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "input-stage", source: "Input", target: "Stage", value: 13, startTime: 0, endTime: 10 },
+      { id: "stage-output", source: "Stage", target: "Output", value: 13, startTime: 20, endTime: 30 },
+    ]
+    const edgeIndex = buildEdgeIndex(nodes, edges)
+    const sides = new Map([
+      ["input-stage", { targetSide: "top" as const }],
+      ["stage-output", { sourceSide: "bot" as const }],
+    ])
+
+    const data = computeNode(nodes[1], edgeIndex, sides)
+    const settledArrival = data.samples.filter((sample) => sample.t === 10).at(-1)
+    const preparedDeparture = data.samples.filter((sample) => sample.t === 20)
+
+    expect(settledArrival).toMatchObject({ topMass: 13, botMass: 0 })
+    expect(preparedDeparture).toEqual(expect.arrayContaining([
+      expect.objectContaining({ t: 20, topMass: 0, botMass: 13 }),
+    ]))
+    expect(data.localAttachments.get("stage-output")).toMatchObject({
+      side: "bot",
+      sideMassBefore: 13,
+      boundaryOffset: -13,
+    })
+    const departureRange = attachmentYRange(
+      data.localAttachments.get("stage-output")!,
+      100,
+      2,
+    )
+    expect(departureRange).toEqual([74, 100])
+    expect(data.samples.every((sample) => sample.topMass >= 0 && sample.botMass >= 0)).toBe(true)
+  })
+
+  it("assigns same-row handoffs to the side that holds their visible mass", () => {
+    const edges: ProcessSankeyEdge[] = [
+      { id: "alice-eng", source: "Alice", target: "Eng", value: 8, startTime: 0, endTime: 10 },
+      { id: "bob-eng", source: "Bob", target: "Eng", value: 5, startTime: 0, endTime: 15 },
+      { id: "eng-release-8", source: "Eng", target: "Release", value: 8, startTime: 20, endTime: 30 },
+      { id: "eng-release-5", source: "Eng", target: "Release", value: 5, startTime: 25, endTime: 35 },
+    ]
+    const sides = new Map([
+      ["alice-eng", { targetSide: "top" as const }],
+      ["bob-eng", { targetSide: "bot" as const }],
+      ["eng-release-8", { sourceSide: "bot" as const, targetSide: "bot" as const }],
+      ["eng-release-5", { sourceSide: "bot" as const, targetSide: "bot" as const }],
+    ])
+
+    assignSameSlotHandoffSides(edges, sides, {
+      Alice: 0, Bob: 2, Eng: 1, Release: 1,
+    })
+
+    expect(sides.get("eng-release-8")).toMatchObject({ sourceSide: "top", targetSide: "top" })
+    expect(sides.get("eng-release-5")).toMatchObject({ sourceSide: "bot", targetSide: "bot" })
+  })
 })
 
 describe("band geometry helpers", () => {
@@ -241,10 +364,47 @@ describe("band geometry helpers", () => {
     expect(sourceStubs).toHaveLength(1)
     expect(sourceStubs[0]).toMatchObject({ x0: 30, x1: 50, from: 0, to: 1 })
     expect(sourceStubs[0].pathD).toContain("L100")
+    const projectedSourceStubs = buildBandCutoutsForNode(
+      "A", edges, layout, xScale, [0, 40], new Map([["ab", 9.5]]),
+    )
+    expect(projectedSourceStubs[0].pathD).toContain("L95")
+    expect(projectedSourceStubs[0].pathD).not.toContain("L100")
     expect(targetStubs).toHaveLength(1)
     expect(targetStubs[0]).toMatchObject({ x0: 300, x1: 320, from: 1, to: 0 })
     expect(targetStubs[0].pathD).toContain("M200")
     expect(buildBandCutoutsForNode("missing", edges, layout, xScale, [0, 40])).toEqual([])
+  })
+
+  it("moves a pre-domain system-in fade inside the visible boundary", () => {
+    const nodes: ProcessSankeyNode[] = [{ id: "Inherited source" }, { id: "Main" }]
+    const edge: ProcessSankeyEdge = {
+      id: "inherited-main",
+      source: "Inherited source",
+      target: "Main",
+      value: 1,
+      startTime: 10,
+      endTime: 20,
+      systemInTime: -5,
+    }
+    const layout = computeProcessSankeyLayout(nodes, [edge], {
+      plotH: 200,
+      pairing: "temporal",
+      packing: "reuse",
+      laneOrder: "insertion",
+      lifetimeMode: "full",
+    })
+
+    const [stub] = buildBandCutoutsForNode(
+      "Inherited source", [edge], layout, xScale, [0, 40],
+    )
+
+    // An entity known only to predate the dataset should blur into the chart:
+    // transparent at the boundary, fully colored 20 screen pixels inside it.
+    expect(stub).toMatchObject({ x0: 0, x1: 20, from: 0, to: 1 })
+    expect(stub.pathD).toContain("M0")
+    expect(stub.pathD).toContain("L100")
+    // The lifecycle hint is render-only; the authored transfer remains dated.
+    expect(edge.startTime).toBe(10)
   })
 })
 
@@ -256,6 +416,115 @@ describe("computeProcessSankeyLayout", () => {
     laneOrder: "crossing-min",
     lifetimeMode: "half",
   }
+
+  it("places a multi-slot bonded feeder block in line with its exclusive ungrouped sink", () => {
+    // Generic process-river pattern: simultaneous bonded sources hand off into
+    // one long-lived sink. Packing co-locates one feeder with the sink; ordering
+    // keeps the rest of the block contiguous around it instead of parking the
+    // bond in a far lane while unrelated packs sit between.
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Red", group: "founding", xExtent: [0, 10] },
+      { id: "White", group: "founding", xExtent: [0, 10] },
+      { id: "Blue", group: "founding", xExtent: [0, 10] },
+      { id: "States", xExtent: [10, 40] },
+      { id: "NoiseA", xExtent: [12, 20] },
+      { id: "NoiseB", xExtent: [22, 30] },
+      { id: "NoiseC", xExtent: [32, 38] },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "r", source: "Red", target: "States", value: 4, startTime: 10, endTime: 12 },
+      { id: "w", source: "White", target: "States", value: 4, startTime: 10, endTime: 12 },
+      { id: "b", source: "Blue", target: "States", value: 5, startTime: 10, endTime: 12 },
+      { id: "na", source: "NoiseA", target: "States", value: 1, startTime: 20, endTime: 22 },
+      { id: "nb", source: "NoiseB", target: "States", value: 1, startTime: 30, endTime: 32 },
+      { id: "nc", source: "NoiseC", target: "States", value: 1, startTime: 38, endTime: 40 },
+    ]
+    const layout = computeProcessSankeyLayout(nodes, edges, {
+      ...opts,
+      laneOrder: "crossing-min+inside-out",
+      lifetimeMode: "full",
+    })
+    const foundingSlots = ["Red", "White", "Blue"].map((id) => layout.slotByNode[id])
+    const states = layout.slotByNode.States
+    const fMin = Math.min(...foundingSlots)
+    const fMax = Math.max(...foundingSlots)
+    expect(fMax - fMin).toBe(2)
+    expect(foundingSlots).toContain(states)
+    expect(states).toBeGreaterThanOrEqual(fMin)
+    expect(states).toBeLessThanOrEqual(fMax)
+    for (const id of ["Red", "White", "Blue"]) {
+      expect(Math.abs(layout.slotByNode[id] - states)).toBeLessThanOrEqual(2)
+    }
+  })
+
+  it("keeps a shared node group contiguous and removes its internal gutters", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "A-states-before", group: "united-states", xExtent: [0, 2] },
+      { id: "A-states-after", group: "united-states", xExtent: [8, 10] },
+      { id: "B-foreign-before", xExtent: [0, 2] },
+      { id: "B-foreign-after", xExtent: [8, 10] },
+      { id: "C-territories-before", group: "united-states", xExtent: [0, 2] },
+      { id: "C-territories-after", group: "united-states", xExtent: [8, 10] },
+      { id: "D-foreign-before", xExtent: [0, 2] },
+      { id: "D-foreign-after", xExtent: [8, 10] },
+      { id: "E-occupied-before", group: "united-states", xExtent: [0, 2] },
+      { id: "E-occupied-after", group: "united-states", xExtent: [8, 10] },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "states", source: "A-states-before", target: "A-states-after", value: 3, startTime: 2, endTime: 8 },
+      { id: "foreign-1", source: "B-foreign-before", target: "B-foreign-after", value: 2, startTime: 2, endTime: 8 },
+      { id: "territories", source: "C-territories-before", target: "C-territories-after", value: 2, startTime: 2, endTime: 8 },
+      { id: "foreign-2", source: "D-foreign-before", target: "D-foreign-after", value: 2, startTime: 2, endTime: 8 },
+      { id: "occupied", source: "E-occupied-before", target: "E-occupied-after", value: 1, startTime: 2, endTime: 8 },
+    ]
+
+    const layout = computeProcessSankeyLayout(nodes, edges, {
+      ...opts,
+      laneOrder: "insertion",
+      lifetimeMode: "full",
+    })
+    const groupedSlots = [...new Set(nodes
+      .filter((node) => node.group === "united-states")
+      .map((node) => layout.slotByNode[node.id]))].sort((a, b) => a - b)
+
+    expect(groupedSlots).toHaveLength(3)
+    expect(groupedSlots.at(-1)! - groupedSlots[0]).toBe(groupedSlots.length - 1)
+    for (let index = 1; index < groupedSlots.length; index += 1) {
+      const upper = layout.slots[groupedSlots[index - 1]].occupants
+        .find((occupant) => occupant.id.endsWith("before"))!
+      const lower = layout.slots[groupedSlots[index]].occupants
+        .find((occupant) => occupant.id.endsWith("before"))!
+      const upperData = layout.nodeData[upper.id]
+      const lowerData = layout.nodeData[lower.id]
+      const upperBottom = layout.centerlines[upper.id] + upperData.botPeak * layout.valueScale
+      const lowerTop = layout.centerlines[lower.id] - lowerData.topPeak * layout.valueScale
+      expect(lowerTop).toBeCloseTo(upperBottom, 6)
+    }
+
+    const padded = computeProcessSankeyLayout(nodes, edges, {
+      ...opts,
+      laneOrder: "insertion",
+      lifetimeMode: "full",
+      groupPadding: 4,
+    })
+    const activeRanges = nodes
+      .filter((node) => node.group === "united-states" && node.id.endsWith("before"))
+      .map((node) => {
+        const sample = padded.nodeData[node.id].samples
+          .filter((candidate) => candidate.t <= 1)
+          .at(-1)!
+        const boundary = padded.centerlines[node.id] +
+          (sample.boundaryOffset ?? 0) * padded.valueScale
+        return [
+          boundary - sample.topMass * padded.valueScale,
+          boundary + sample.botMass * padded.valueScale,
+        ]
+      })
+      .sort((a, b) => a[0] - b[0])
+    for (let index = 1; index < activeRanges.length; index += 1) {
+      expect(activeRanges[index][0] - activeRanges[index - 1][1]).toBeCloseTo(4, 6)
+    }
+  })
 
   it("computes a layout for the canonical Alice→Eng→Release path", () => {
     const nodes: ProcessSankeyNode[] = [
@@ -309,10 +578,10 @@ describe("computeProcessSankeyLayout", () => {
     expect(layout.laneLifetime.Src.start).toBe(0)
   })
 
-  it("packs depth-disjoint nodes into the same slot when packing=reuse", () => {
-    // A's lane closes well before B's opens (lifetimes disjoint),
-    // and both sit at the same topological depth (sources of Sink),
-    // so reuse packing should merge them into a single slot.
+  it("uses the minimum occupied-band row count and favors a straight handoff", () => {
+    // Two rows are sufficient. Of the valid two-row colorings, putting A and
+    // Sink together keeps their connected handoff straight; the old packer
+    // chose rows only from topological depth and outer lifetime bounds.
     const nodes: ProcessSankeyNode[] = [
       { id: "A",    xExtent: [0,  10] },
       { id: "B",    xExtent: [50, 60] },
@@ -324,7 +593,80 @@ describe("computeProcessSankeyLayout", () => {
     ]
     const layout = computeProcessSankeyLayout(nodes, edges, opts)
     expect(layout.slots.length).toBe(2)
-    expect(layout.slotByNode.A).toBe(layout.slotByNode.B)
+    expect(layout.slotByNode.A).toBe(layout.slotByNode.Sink)
+    expect(layout.slotByNode.B).not.toBe(layout.slotByNode.Sink)
+  })
+
+  it("reuses occupied-band rows across aggregate transition envelopes", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Launch", xExtent: [0, 0] },
+      { id: "Orbit" },
+      { id: "Lifeboat" },
+      { id: "Recovery" },
+      { id: "Return" },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      // Fast and slow arrivals make the old half-edge envelopes overlap:
+      // Launch ended at 15 while Orbit began at 5. The node bands themselves
+      // still hand off cleanly at T+0 → T+10.
+      { id: "fast", source: "Launch", target: "Orbit", value: 9, startTime: 0, endTime: 10 },
+      { id: "slow", source: "Launch", target: "Orbit", value: 9, startTime: 0, endTime: 30 },
+      { id: "abort", source: "Launch", target: "Lifeboat", value: 1, startTime: 0, endTime: 20 },
+      { id: "rescue", source: "Lifeboat", target: "Recovery", value: 1, startTime: 25, endTime: 35 },
+      { id: "home", source: "Orbit", target: "Return", value: 18, startTime: 40, endTime: 50 },
+    ]
+
+    const layout = computeProcessSankeyLayout(nodes, edges, opts)
+
+    expect(layout.slots).toHaveLength(2)
+    expect(layout.slotByNode.Launch).toBe(layout.slotByNode.Orbit)
+    expect(layout.slotByNode.Lifeboat).toBe(layout.slotByNode.Recovery)
+    expect(layout.slotByNode.Orbit).not.toBe(layout.slotByNode.Recovery)
+  })
+
+  it("uses the resolved far-end order to break equal-time attachment ties", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Launch", xExtent: [0, 0] },
+      { id: "Orbit" },
+    ]
+    const midpoint = (
+      layout: ReturnType<typeof computeProcessSankeyLayout>,
+      edge: ProcessSankeyEdge,
+      endpoint: "source" | "target",
+    ) => {
+      const nodeId = edge[endpoint]
+      const attachment = layout.nodeData[nodeId].localAttachments.get(edge.id)!
+      const range = attachmentYRange(
+        attachment, layout.centerlines[nodeId], layout.valueScale,
+      )
+      return (range[0] + range[1]) / 2
+    }
+
+    const sameStart: ProcessSankeyEdge[] = [
+      { id: "a-late", source: "Launch", target: "Orbit", value: 1, startTime: 0, endTime: 30 },
+      { id: "b-early", source: "Launch", target: "Orbit", value: 1, startTime: 0, endTime: 10 },
+      { id: "c-middle", source: "Launch", target: "Orbit", value: 1, startTime: 0, endTime: 20 },
+    ]
+    const departureLayout = computeProcessSankeyLayout(nodes, sameStart, {
+      ...opts, laneOrder: "insertion",
+    })
+    for (const edge of sameStart) {
+      expect(midpoint(departureLayout, edge, "source"))
+        .toBeCloseTo(midpoint(departureLayout, edge, "target"))
+    }
+
+    const sameEnd: ProcessSankeyEdge[] = [
+      { id: "a-late", source: "Launch", target: "Orbit", value: 1, startTime: 30, endTime: 40 },
+      { id: "b-early", source: "Launch", target: "Orbit", value: 1, startTime: 10, endTime: 40 },
+      { id: "c-middle", source: "Launch", target: "Orbit", value: 1, startTime: 20, endTime: 40 },
+    ]
+    const arrivalLayout = computeProcessSankeyLayout(nodes, sameEnd, {
+      ...opts, laneOrder: "insertion",
+    })
+    for (const edge of sameEnd) {
+      expect(midpoint(arrivalLayout, edge, "source"))
+        .toBeCloseTo(midpoint(arrivalLayout, edge, "target"))
+    }
   })
 
   it("packs every node in its own slot when packing=off", () => {
@@ -527,5 +869,68 @@ describe("computeProcessSankeyLayout — laneOrder variants", () => {
     expect(layout.crossingsBefore).not.toBeNull()
     expect(layout.crossingsAfter).not.toBeNull()
     expect(layout.lengthAfter).not.toBeNull()
+  })
+
+  it("keeps packing assignment stable across multi-pass side recompute", () => {
+    const layout = computeProcessSankeyLayout(nodes, edges, {
+      plotH: 400,
+      packing: "reuse",
+      laneOrder: "crossing-min",
+      lifetimeMode: "half",
+      pairing: "temporal",
+    })
+    // Occupant membership is frozen after the first pack; slot stable ids
+    // must be fully ranked (no Infinity fallback to lexicographic order).
+    const ids = layout.slots.map(slotStableId)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(Object.keys(layout.slotByNode).sort()).toEqual(
+      nodes.map((n) => n.id).sort(),
+    )
+  })
+
+  it("preserves packing membership when plot height changes (scale-only reflow)", () => {
+    const opts = {
+      packing: "reuse" as const,
+      laneOrder: "crossing-min" as const,
+      lifetimeMode: "half" as const,
+      pairing: "temporal" as const,
+    }
+    const tall = computeProcessSankeyLayout(nodes, edges, { ...opts, plotH: 900 })
+    const short = computeProcessSankeyLayout(nodes, edges, { ...opts, plotH: 320 })
+    expect(short.slots.map(slotStableId)).toEqual(tall.slots.map(slotStableId))
+    expect(short.slotByNode).toEqual(tall.slotByNode)
+  })
+
+  it("layouts zero-duration edges without throwing", () => {
+    const layout = computeProcessSankeyLayout(
+      [{ id: "A" }, { id: "B" }],
+      [{ id: "e", source: "A", target: "B", value: 2, startTime: 50, endTime: 50 }],
+      { plotH: 200, packing: "off", laneOrder: "insertion" },
+    )
+    expect(layout.slots.length).toBeGreaterThan(0)
+    expect(layout.nodeData.A).toBeDefined()
+    expect(layout.nodeData.B).toBeDefined()
+  })
+})
+
+describe("ProcessSankey public defaults alignment", () => {
+  it("assignSides defaults to temporal pairing", () => {
+    const nodes: ProcessSankeyNode[] = [{ id: "Hub" }, { id: "Early" }, { id: "Late" }]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "e-late", source: "Late", target: "Hub", value: 1, startTime: 30, endTime: 40 },
+      { id: "e-early", source: "Early", target: "Hub", value: 10, startTime: 10, endTime: 20 },
+    ]
+    const index = buildEdgeIndex(nodes, edges)
+    // Default (omitted pairing) must match explicit temporal.
+    const def = assignSides(nodes, edges, index)
+    const temporal = assignSides(nodes, edges, index, "temporal")
+    expect([...def.entries()]).toEqual([...temporal.entries()])
+  })
+
+  it("margin defaults use 80px horizontal gutters for CSR/SSR parity", () => {
+    const m = resolveProcessSankeyMarginDefaults(false, false, false, "horizontal")
+    expect(m.left).toBe(80)
+    expect(m.right).toBe(80)
+    expect(m.top).toBe(8)
   })
 })

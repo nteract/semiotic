@@ -58,6 +58,12 @@ export interface UseCanvasFrameHostInput<TStore extends object> {
    */
   skipInitialCanvasPaintInvalidation?: boolean
   /**
+   * Optional repaint-only invalidator for families that synchronously rebuild
+   * retained scene geometry elsewhere. When omitted, dependency changes use
+   * the conservative `dirtyRef` full-rebuild path.
+   */
+  canvasPaintInvalidator?: () => void
+  /**
    * Values that require a data-canvas repaint. Keep this list family-owned:
    * it expresses paint semantics without teaching the host chart props or
    * layout rules. Its length must remain stable for one host instance.
@@ -140,7 +146,8 @@ export function useCanvasFrameHost<TStore extends object>(
       hasRunCanvasPaintInvalidationRef.current = true
       if (input.skipInitialCanvasPaintInvalidation) return
     }
-    input.dirtyRef.current = true
+    if (input.canvasPaintInvalidator) input.canvasPaintInvalidator()
+    else input.dirtyRef.current = true
     input.scheduleRender()
     // `canvasPaintDependencies` is intentionally the adapter's explicit
     // dependency list; React compares its values just like a local effect.
