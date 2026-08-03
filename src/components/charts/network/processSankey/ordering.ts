@@ -405,6 +405,11 @@ export function orderProcessSankeySlots(
   const evaluateExactTransit = (
     order: readonly ProcessSankeySlot[],
     knownCrossings?: number,
+    /**
+     * `"score"` samples only the authored start/end of each ribbon (hot-loop).
+     * `"quality"` also samples intermediate mass events (final authority).
+     */
+    transitMode: "score" | "quality" = "quality",
   ): ProcessSankeyOrderMetrics => {
     let crossings = knownCrossings
     if (crossings == null) {
@@ -421,7 +426,7 @@ export function orderProcessSankeySlots(
           valueScale: options.valueScale,
           ribbonLane: options.ribbonLane,
           domain: options.domain,
-          mode: "quality",
+          mode: transitMode,
         },
       ),
     }, order)
@@ -681,19 +686,21 @@ export function orderProcessSankeySlots(
       options.laneOrder === "crossing-min+inside-out") && order.length > 1) {
     // One bounded authored-window geometry pass makes the exact cubic occlusion
     // metric part of the accepted cost without putting it in every hot-loop
-    // candidate. The density proxy above narrows the search cheaply; this
-    // guard is the final authority. With multi-slot bonds, transpose whole
-    // units so a refinement pass cannot re-introduce foreign rows inside a block.
-    // Also the sole search step for mode="geometry-refine" (post-scale M3).
+    // candidate of the barycenter/swap stages above. This pass still scores
+    // adjacent transposes with exact transit so exclusive handoffs stay local;
+    // the final before/after snapshot below remains the last authority. With
+    // multi-slot bonds, transpose whole units so a refinement pass cannot
+    // re-introduce foreign rows inside a block. Sole search step for
+    // mode="geometry-refine" (post-scale M3).
     if (multiSlotBonded) {
       let units = bondedSlotUnits(order)
-      let current = evaluateExactTransit(flattenBondedUnits(units))
+      let current = evaluateExactTransit(flattenBondedUnits(units), undefined, "score")
       for (let pass = 0; pass < 6 && units.length > 1; pass++) {
         let improved = false
         for (let i = 0; i < units.length - 1; i++) {
           ;[units[i], units[i + 1]] = [units[i + 1], units[i]]
           const candidate = flattenBondedUnits(units)
-          const next = evaluateExactTransit(candidate)
+          const next = evaluateExactTransit(candidate, undefined, "score")
           if (next.cost < current.cost) {
             order = candidate
             current = next
@@ -708,7 +715,7 @@ export function orderProcessSankeySlots(
       units = orderWithinBondedUnits(bondedSlotUnits(order), relations, compareSlots)
       order = flattenBondedUnits(units)
     } else {
-      let current = evaluateExactTransit(order)
+      let current = evaluateExactTransit(order, undefined, "score")
       for (let i = 0; i < order.length - 1; i++) {
         const first = order[i]
         const second = order[i + 1]
@@ -729,7 +736,11 @@ export function orderProcessSankeySlots(
         let affectedAfter = 0
         for (const pair of affected) affectedAfter += crossingForPair(pair, positionsAfter, edgeSlots)
         evaluations.localCrossing += affected.length
-        const next = evaluateExactTransit(order, current.crossings - affectedBefore + affectedAfter)
+        const next = evaluateExactTransit(
+          order,
+          current.crossings - affectedBefore + affectedAfter,
+          "score",
+        )
         if (next.cost < current.cost) current = next
         else [order[i], order[i + 1]] = [first, second]
       }
