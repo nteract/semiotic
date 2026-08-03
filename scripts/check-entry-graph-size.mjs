@@ -48,10 +48,15 @@ const ENTRY_GRAPHS = [
   // comfortably inside the recipes-specific budget below; this is chart
   // functionality, not a new runtime dependency. The production graph is
   // 382.4 KiB, leaving 1.6 KiB of headroom.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 384 },
+  // Bumped 384→396: ProcessSankey packing/ordering refinements, worker client,
+  // bonded multi-slot units, feeder runway, and quality product surface land
+  // in the full facade. Production graph measures 394.4 KiB gzip.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 396 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
-  { entry: "network.module.min.js", label: "network", limitKb: 140 },
+  // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
+  // subpath. Production graph measures 144.8 KiB gzip.
+  { entry: "network.module.min.js", label: "network", limitKb: 147 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
@@ -70,7 +75,9 @@ const ENTRY_GRAPHS = [
   // Bumped 481→487: the same ProcessSankey layout capabilities join the
   // canonical AI chart catalog. The production graph is 485.8 KiB, leaving
   // 1.2 KiB of headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 487 },
+  // Bumped 487→500: ProcessSankey continues to expand on the AI catalog path.
+  // Production graph measures 498.0 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 500 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
