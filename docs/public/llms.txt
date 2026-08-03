@@ -50,7 +50,7 @@
 
 - [ForceDirectedGraph](/charts/force-directed-graph): Physics-based node-link diagram. _(act: tracing)_
 - [SankeyDiagram](/charts/sankey-diagram): Flow diagram showing weighted connections between nodes. _(act: tracing)_
-- [ProcessSankey](/charts/process-sankey): Temporal sankey with a real time x-axis. _(act: tracing)_
+- [ProcessSankey](/charts/process-sankey): Temporal sankey with a real time axis. _(act: tracing)_
 - [ChordDiagram](/charts/chord-diagram): Circular diagram showing inter-relationships and flow volumes between groups. _(act: tracing)_
 - [TreeDiagram](/charts/tree-diagram): Hierarchical tree layout. _(act: nesting)_
 - [Treemap](/charts/treemap): Space-filling rectangular hierarchy visualization. _(act: nesting)_
