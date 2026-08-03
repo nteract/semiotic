@@ -16,6 +16,9 @@ function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNet
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
+function diagnoseProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter"> | null | undefined): Diagnosis[]
+function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diagnosis[]
+function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter" | "slots"> | null | undefined): string | null
 function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
@@ -34,7 +37,7 @@ function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, co
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
-function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number]): ProcessSankeyIssue[]
+function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: { usageMode?: ProcessSankeyUsageMode; } | undefined): ProcessSankeyIssue[]
 interface CategoricalLegendConfig
 interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface CirclePackProps<TNode extends Datum = Datum>
