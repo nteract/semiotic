@@ -27,5 +27,8 @@ docs/public/api/
 /data/dhq/raw/
 /data/dhq/derived/
 
-# Core dumps (e.g. WebKit crashes during the dockerized visual-baseline regen)
+# Core dumps (e.g. WebKit / QEMU chrome-headless-shell crashes during
+# dockerized visual-baseline regen under --platform linux/amd64)
 /core
+*.core
+qemu_chrome-headless-shell_*.core

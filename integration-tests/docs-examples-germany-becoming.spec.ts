@@ -17,7 +17,7 @@ function collectBrowserProblems(page: Page) {
 }
 
 async function canvasHasPaint(page: Page) {
-  return page.locator(".germany-becoming__chart-shell canvas").evaluate((canvas) => {
+  return page.locator(".process-river__chart-shell canvas").evaluate((canvas) => {
     const element = canvas as HTMLCanvasElement
     const context = element.getContext("2d")
     if (!context || element.width === 0 || element.height === 0) return false
@@ -47,7 +47,7 @@ test.describe("Germany history river", () => {
 
     const widthControl = page.getByRole("group", { name: "Choose what controls river width" })
     await expect(widthControl.getByRole("button", { name: "Balanced" })).toHaveAttribute("aria-pressed", "true")
-    const gdrLabel = page.locator(".germany-becoming__chart-shell svg text").filter({ hasText: /^GDR$/ })
+    const gdrLabel = page.locator(".process-river__chart-shell svg text").filter({ hasText: /^GDR$/ })
     const labelX = async () => Number(await gdrLabel.getAttribute("x"))
     const balancedLabelX = await labelX()
     await widthControl.getByRole("button", { name: "Land" }).click()
@@ -62,22 +62,22 @@ test.describe("Germany history river", () => {
     await widthControl.getByRole("button", { name: "Economy" }).click()
     await expect.poll(labelX).not.toBe(peopleLabelX)
 
-    const canvasSize = await page.locator(".germany-becoming__chart-shell canvas").evaluate((canvas) => ({
+    const canvasSize = await page.locator(".process-river__chart-shell canvas").evaluate((canvas) => ({
       width: (canvas as HTMLCanvasElement).width,
       height: (canvas as HTMLCanvasElement).height,
     }))
     expect(canvasSize.height).toBeGreaterThan(canvasSize.width)
 
-    await expect(page.locator(".germany-becoming__chart-shell svg text").filter({ hasText: "Germany" }).last()).toHaveAttribute("text-anchor", "middle")
+    await expect(page.locator(".process-river__chart-shell svg text").filter({ hasText: "Germany" }).last()).toHaveAttribute("text-anchor", "middle")
 
     await page.getByLabel("Inspect a stage").selectOption("S05")
-    await expect(page.locator(".germany-becoming__reader").getByText("1867", { exact: true })).toBeVisible()
-    await expect(page.locator(".germany-becoming__reader").getByRole("heading", { name: /North German Confederation and southern states/ })).toBeVisible()
+    await expect(page.locator(".process-river__reader").getByText("1867", { exact: true })).toBeVisible()
+    await expect(page.locator(".process-river__reader").getByRole("heading", { name: /North German Confederation and southern states/ })).toBeVisible()
 
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".germany-becoming__chart-shell table")).toHaveCount(1)
+    await expect(page.locator(".process-river__chart-shell table")).toHaveCount(1)
 
     await expect(page.getByRole("link", { name: /Forging an Empire, Bismarckian Germany/ })).toHaveAttribute("href", /germanhistorydocs\.org/)
     expect(problems.errors).toEqual([])

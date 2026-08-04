@@ -243,6 +243,9 @@ export default function GermanyStillBecomingExamplePage() {
             lanePlacement="hug"
             ribbonLane="both"
             lifetimeMode="full"
+            // Docs stories stay on the main thread so first paint is immediate
+            // and Vite dev does not wait on a layout worker module URL.
+            layoutExecution="sync"
             showLabels={compact ? "auto" : true}
             edgeOpacity={0.82}
             tooltip={(hover) => <GermanyBecomingTooltip hover={hover} metricId={metricId} edges={weightedEdges} />}

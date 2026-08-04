@@ -297,6 +297,9 @@ export default function UnitedStatesHistoryRiverExamplePage() {
             ribbonLane="both"
             ribbonMinRun="auto"
             lifetimeMode="full"
+            // Docs stories stay on the main thread so first paint is immediate
+            // and Vite dev does not wait on a layout worker module URL.
+            layoutExecution="sync"
             showLabels={compact ? "auto" : true}
             edgeOpacity={0.8}
             tooltip={(hover) => <UnitedStatesRiverTooltip hover={hover} />}

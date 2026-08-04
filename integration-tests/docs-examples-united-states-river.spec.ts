@@ -17,7 +17,7 @@ function collectBrowserProblems(page: Page) {
 }
 
 async function canvasHasPaint(page: Page) {
-  return page.locator(".usa-becoming .germany-becoming__chart-shell canvas").evaluate((canvas) => {
+  return page.locator(".usa-becoming .process-river__chart-shell canvas").evaluate((canvas) => {
     const element = canvas as HTMLCanvasElement
     const context = element.getContext("2d")
     if (!context || element.width === 0 || element.height === 0) return false
@@ -48,20 +48,20 @@ test.describe("United States institutional history river", () => {
     await expect(page.getByLabel("Persistent institution color key").getByText("U.S. Colonies", { exact: true })).toBeVisible()
     await expect(page.getByText(/three blue institutions are intentionally not bonded/i)).toBeVisible()
 
-    const canvasSize = await page.locator(".usa-becoming .germany-becoming__chart-shell canvas").evaluate((canvas) => ({
+    const canvasSize = await page.locator(".usa-becoming .process-river__chart-shell canvas").evaluate((canvas) => ({
       width: (canvas as HTMLCanvasElement).width,
       height: (canvas as HTMLCanvasElement).height,
     }))
     expect(canvasSize.height).toBeGreaterThan(canvasSize.width)
 
-    const chartLabels = page.locator(".usa-becoming .germany-becoming__chart-shell svg text")
+    const chartLabels = page.locator(".usa-becoming .process-river__chart-shell svg text")
     await expect(chartLabels.filter({ hasText: "United States" })).toHaveCount(1)
     await expect(chartLabels.filter({ hasText: "U.S. Territories" })).toHaveCount(1)
     await expect(chartLabels.filter({ hasText: "U.S. Colonies" })).toHaveCount(1)
 
     await page.getByLabel("Inspect an event").selectOption("CIVIL_WAR")
-    await expect(page.locator(".usa-becoming .germany-becoming__reader").getByText("1860–1861", { exact: true })).toBeVisible()
-    await expect(page.locator(".usa-becoming .germany-becoming__reader").getByRole("heading", { name: "The state band tears from within" })).toBeVisible()
+    await expect(page.locator(".usa-becoming .process-river__reader").getByText("1860–1861", { exact: true })).toBeVisible()
+    await expect(page.locator(".usa-becoming .process-river__reader").getByRole("heading", { name: "The state band tears from within" })).toBeVisible()
 
     await expect(page.getByText(/Cuba appears twice because occupation ended in 1902/i)).toBeVisible()
     await expect(page.getByText(/Philippine rule is shown as one long route/i)).toBeVisible()
@@ -69,7 +69,7 @@ test.describe("United States institutional history river", () => {
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".usa-becoming .germany-becoming__chart-shell table")).toHaveCount(1)
+    await expect(page.locator(".usa-becoming .process-river__chart-shell table")).toHaveCount(1)
 
     await expect(page.getByRole("link", { name: /Territorial Acquisitions of the United States/ })).toHaveAttribute("href", /census\.gov/)
     await expect(page.getByRole("link", { name: /Philippine chronology/ })).toHaveAttribute("href", /doi\.gov/)
