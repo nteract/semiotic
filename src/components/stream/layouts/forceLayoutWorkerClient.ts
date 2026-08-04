@@ -45,11 +45,6 @@ export interface ForceWorkerResponse {
   positions: Record<string, Point>
 }
 
-interface ForceWorkerWireRequest {
-  requestId: number
-  request: ForceWorkerRequest
-}
-
 interface ForceWorkerWireResponse {
   requestId?: number
   positions?: Record<string, Point>

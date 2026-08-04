@@ -40,4 +40,16 @@ describe("inventoryAtTime", () => {
     expect(inventoryAtTime("SRC", 100, edges)).toBe(0)
     expect(inventoryAtTime("SRC", 100, edges, { inferOpeningStock: false })).toBe(-3)
   })
+
+  it("ignores non-finite transfer times without discarding the valid side of an edge", () => {
+    const malformedEdges: InventoryEdge[] = [
+      { source: "SRC", target: "A", value: 5, startTime: 0, endTime: Number.NaN },
+      { source: "A", target: "OUT", value: 3, startTime: 10, endTime: 20 },
+    ]
+
+    // The malformed arrival cannot be sorted or compared reliably. A's valid
+    // departure is still an opening-stock adjustment, so its inventory is zero.
+    expect(inventoryAtTime("A", 100, malformedEdges)).toBe(0)
+    expect(inventoryAtTime("A", 100, malformedEdges, { inferOpeningStock: false })).toBe(-3)
+  })
 })

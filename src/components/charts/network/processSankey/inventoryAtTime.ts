@@ -53,11 +53,13 @@ export function inventoryAtTime(
   for (const edge of edges) {
     const value = Number(edge.value)
     if (!Number.isFinite(value)) continue
-    if (edge.target === nodeId) {
-      events.push({ time: edge.endTime, delta: value })
+    const endTime = Number(edge.endTime)
+    if (edge.target === nodeId && Number.isFinite(endTime)) {
+      events.push({ time: endTime, delta: value })
     }
-    if (edge.source === nodeId) {
-      events.push({ time: edge.startTime, delta: -value })
+    const startTime = Number(edge.startTime)
+    if (edge.source === nodeId && Number.isFinite(startTime)) {
+      events.push({ time: startTime, delta: -value })
     }
     if (edge.target === nodeId && edge.systemOutTime != null) {
       const t = Number(edge.systemOutTime)

@@ -454,11 +454,11 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
 | `import { LineChart } from "semiotic"` | browser | **153.6 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **153.7 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **123.8 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **146.6 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **123.4 KiB** |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **170.8 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **153.8 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **123.9 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **146.3 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **123.5 KiB** |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **171.0 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **134.3 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |

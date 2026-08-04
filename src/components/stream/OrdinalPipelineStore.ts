@@ -63,6 +63,7 @@ import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
 import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
+import { snapOrdinalIntroTargets } from "./pipelineIntroCancellation"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
 export class OrdinalPipelineStore implements UpdateResultStore {
@@ -1264,45 +1265,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   cancelIntroAnimation(): void {
     this.prevPositionMap.clear()
     this.activeTransition = null
-    for (const node of this.scene) {
-      if (node._targetOpacity !== undefined) {
-        const finalOpacity = node._targetOpacity
-        node.style = { ...(node.style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
-        node._targetOpacity = undefined
-      }
-      if (node.type === "point") {
-        if (node._targetX !== undefined) {
-          node.x = node._targetX
-          node.y = node._targetY!
-          if (node._targetR !== undefined) node.r = node._targetR
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetR = undefined
-        } else if (node._targetR !== undefined) {
-          // Enter path often only seeds _targetR (scale-from-zero).
-          node.r = node._targetR
-          node._targetR = undefined
-        }
-      } else if (node.type === "rect") {
-        if (node._targetX !== undefined) {
-          node.x = node._targetX
-          node.y = node._targetY!
-          node.w = node._targetW!
-          node.h = node._targetH!
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetW = undefined
-          node._targetH = undefined
-        }
-      } else if (node.type === "wedge") {
-        if (node._targetStartAngle !== undefined) {
-          node.startAngle = node._targetStartAngle
-          node.endAngle = node._targetEndAngle!
-          node._targetStartAngle = undefined
-          node._targetEndAngle = undefined
-        }
-      }
-    }
+    snapOrdinalIntroTargets(this.scene)
     this.exitNodes = []
   }
 

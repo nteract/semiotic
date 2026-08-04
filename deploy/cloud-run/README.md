@@ -38,7 +38,7 @@ arbitrary commits from `main`.
 
 ### Lockfile status
 
-The wrapper pins the published `semiotic@3.8.8` release and includes a generated
+The wrapper pins the published `semiotic@3.8.7` release and includes a generated
 `package-lock.json`. Cloud Buildpacks receives that lockfile because `.gcloudignore` excludes
 only `node_modules`.
 
