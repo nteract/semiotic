@@ -9,7 +9,15 @@
   --apollo-orange: #e8875f;
   --apollo-blue: #8ecae6;
   --apollo-red: #ef476f;
+  --apollo-strong: #fff8e8;
+  --apollo-copy: #b9c8cb;
+  --apollo-chart-bg: #081821;
+  --apollo-code-bg: #061017;
+  --apollo-footer-bg: #040c12;
+  --apollo-chart-section: rgba(4, 14, 21, 0.66);
+  --apollo-metrics-bg: rgba(10, 27, 37, 0.88);
   --semiotic-bg: transparent;
+  --semiotic-surface: var(--apollo-chart-bg);
   --semiotic-text: #f4ead5;
   --semiotic-text-secondary: #a7bbc1;
   --semiotic-border: #365563;
@@ -17,7 +25,7 @@
   position: relative;
   overflow: clip;
   margin: 8px 0 72px;
-  border: 1px solid #263e4a;
+  border: 1px solid var(--apollo-line);
   color: var(--apollo-paper);
   background:
     radial-gradient(circle at 78% 3%, rgba(142, 202, 230, 0.16), transparent 31rem),
@@ -28,6 +36,31 @@
   background-size: auto, auto, 32px 32px, 32px 32px, auto;
   box-shadow: 0 32px 100px rgba(2, 10, 16, 0.28);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+html[data-theme="light"] .apollo-example {
+  --apollo-night: #edf4f5;
+  --apollo-panel: #ffffff;
+  --apollo-panel-2: #e4eef0;
+  --apollo-line: #a9c2c8;
+  --apollo-paper: #17313a;
+  --apollo-muted: #4e6870;
+  --apollo-gold: #936500;
+  --apollo-orange: #b94c29;
+  --apollo-blue: #087a9d;
+  --apollo-red: #bd3154;
+  --apollo-strong: #102a33;
+  --apollo-copy: #38555e;
+  --apollo-chart-bg: #f7fbfc;
+  --apollo-code-bg: #e7f0f2;
+  --apollo-footer-bg: #dcebed;
+  --apollo-chart-section: #e8f2f4;
+  --apollo-metrics-bg: #f4f9fa;
+  --semiotic-surface: var(--apollo-chart-bg);
+  --semiotic-text: var(--apollo-strong);
+  --semiotic-text-secondary: var(--apollo-muted);
+  --semiotic-border: var(--apollo-line);
+  color: var(--apollo-paper);
 }
 
 .apollo-example *,
@@ -94,7 +127,7 @@
 
 .apollo-example__mast-copy h2 {
   margin: 22px 0 26px;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   font-size: clamp(82px, 13vw, 154px);
   font-weight: 900;
@@ -106,7 +139,7 @@
 .apollo-example__mast-copy p {
   max-width: 560px;
   margin: 0;
-  color: #b8c7ca;
+  color: var(--apollo-copy);
   font-size: clamp(16px, 1.6vw, 20px);
   line-height: 1.6;
 }
@@ -151,7 +184,7 @@
 .apollo-example__question strong {
   display: block;
   margin: 9px 0 12px;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-size: 21px;
   line-height: 1.18;
 }
@@ -160,7 +193,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-bottom: 1px solid var(--apollo-line);
-  background: rgba(10, 27, 37, 0.88);
+  background: var(--apollo-metrics-bg);
 }
 
 .apollo-example__metric {
@@ -186,7 +219,7 @@
 .apollo-example__metric span {
   align-self: end;
   margin-top: 13px;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -229,7 +262,7 @@
 .apollo-example__method-copy p,
 .apollo-example__surface-table > div > p,
 .apollo-example__code > p {
-  color: #b9c8cb;
+  color: var(--apollo-copy);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 17px;
   line-height: 1.72;
@@ -259,7 +292,7 @@
 .apollo-example__chart-section {
   padding: clamp(28px, 5vw, 58px) clamp(18px, 4vw, 48px) 48px;
   border-bottom: 1px solid var(--apollo-line);
-  background: rgba(4, 14, 21, 0.66);
+  background: var(--apollo-chart-section);
 }
 
 .apollo-example__chart-heading {
@@ -296,7 +329,7 @@
   display: flex;
   gap: 9px;
   align-items: center;
-  color: #aec0c5;
+  color: var(--apollo-copy);
   font-size: 9px;
   letter-spacing: 0.08em;
 }
@@ -353,7 +386,7 @@
 }
 
 .apollo-example__focus-grid strong {
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-size: 14px;
 }
 
@@ -389,7 +422,7 @@
 }
 
 .apollo-example__mission-selector button > span {
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-family: "SFMono-Regular", monospace;
   font-size: 11px;
   font-weight: 800;
@@ -430,7 +463,7 @@
 .apollo-example__engineering-controls button {
   padding: 9px 11px;
   border: 1px solid var(--apollo-line);
-  color: #b9c8cb;
+  color: var(--apollo-copy);
   background: var(--apollo-panel);
   font-family: "SFMono-Regular", monospace;
   font-size: 9px;
@@ -459,25 +492,26 @@
   width: 100%;
   min-height: 470px;
   overflow: hidden;
-  border: 1px solid #33515e;
+  --semiotic-surface: var(--apollo-chart-bg);
+  border: 1px solid var(--apollo-line);
   background:
     linear-gradient(rgba(142, 202, 230, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(142, 202, 230, 0.035) 1px, transparent 1px),
-    #081821;
+    var(--apollo-chart-bg);
   background-size: 24px 24px;
 }
 
 .apollo-example__chart-shell svg text {
-  fill: #aec0c5;
+  fill: var(--semiotic-text-secondary);
 }
 
 .apollo-example__chart-shell .semiotic-legend text {
-  fill: #d5e0df;
+  fill: var(--semiotic-text);
 }
 
 .apollo-example__chart-caption {
   margin: 12px 0 0;
-  color: #849ba4;
+  color: var(--apollo-muted);
   font-family: "SFMono-Regular", monospace;
   font-size: 10px;
   letter-spacing: 0.03em;
@@ -611,7 +645,7 @@
 }
 
 .apollo-example__crew strong {
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-size: 17px;
 }
 
@@ -713,7 +747,7 @@
   grid-column: 1 / -1;
   align-self: end;
   margin: 32px 0 8px;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-family: Georgia, serif;
   font-size: 24px;
   font-weight: 500;
@@ -860,7 +894,7 @@
 }
 
 .apollo-example__sources strong {
-  color: #fff8e8;
+  color: var(--apollo-strong);
 }
 
 .apollo-example__sources small {
@@ -869,7 +903,7 @@
 }
 
 .apollo-example__code {
-  background: #061017;
+  background: var(--apollo-code-bg);
 }
 
 .apollo-example__code h3 {
@@ -890,14 +924,14 @@
   padding: clamp(50px, 9vw, 100px);
   background:
     radial-gradient(circle at 83% 45%, rgba(142, 202, 230, 0.2), transparent 18rem),
-    #040c12;
+    var(--apollo-footer-bg);
 }
 
 .apollo-example__footer strong {
   display: block;
   max-width: 760px;
   margin: 20px 0 12px;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-family: Georgia, serif;
   font-size: clamp(44px, 7vw, 84px);
   font-weight: 500;

@@ -1,13 +1,18 @@
 .ballot-ledger {
-  --ledger-paper: #f3f0e8;
-  --ledger-ink: #15272a;
-  --ledger-muted: #657477;
-  --ledger-line: #bcc5c2;
-  --ledger-grid: rgba(21, 39, 42, 0.065);
-  --ledger-panel: #e8ebe5;
-  --ledger-night: #102327;
+  --ledger-paper: #102326;
+  --ledger-ink: #edf5f2;
+  --ledger-muted: #afc1bf;
+  --ledger-line: #3c5759;
+  --ledger-grid: rgba(237, 245, 242, 0.065);
+  --ledger-panel: #193135;
+  --ledger-night: #08191c;
   --ledger-gold: #f2b544;
-  --ledger-teal: #36b7a6;
+  --ledger-teal: #51c7ba;
+  --ledger-chart-surface: #162d31;
+  --semiotic-bg: var(--ledger-chart-surface);
+  --semiotic-surface: var(--ledger-chart-surface);
+  --semiotic-text: var(--ledger-ink);
+  --semiotic-text-secondary: var(--ledger-muted);
   color: var(--ledger-ink);
   background-color: var(--ledger-paper);
   background-image:
@@ -18,6 +23,23 @@
   box-shadow: 0 24px 80px rgba(17, 35, 39, 0.14);
   font-family: "IBM Plex Sans", "Avenir Next", Avenir, sans-serif;
   overflow: hidden;
+}
+
+html[data-theme="light"] .ballot-ledger {
+  --ledger-paper: #f3f0e8;
+  --ledger-ink: #15272a;
+  --ledger-muted: #657477;
+  --ledger-line: #bcc5c2;
+  --ledger-grid: rgba(21, 39, 42, 0.065);
+  --ledger-panel: #e8ebe5;
+  --ledger-night: #102327;
+  --ledger-gold: #f2b544;
+  --ledger-teal: #36b7a6;
+  --ledger-chart-surface: #f7f5ef;
+  --semiotic-bg: var(--ledger-chart-surface);
+  --semiotic-surface: var(--ledger-chart-surface);
+  --semiotic-text: var(--ledger-ink);
+  --semiotic-text-secondary: var(--ledger-muted);
 }
 
 .ballot-ledger h2,
@@ -217,7 +239,7 @@
 
 .ballot-ledger__chart-section {
   padding: 72px clamp(16px, 4vw, 54px) 38px;
-  background: rgba(232, 235, 229, 0.88);
+  background: var(--ledger-panel);
   border-bottom: 1px solid var(--ledger-line);
 }
 
@@ -275,7 +297,7 @@
   justify-content: center;
   padding: 17px 22px;
   color: var(--ledger-ink);
-  background: rgba(243, 240, 232, 0.64);
+  background: color-mix(in srgb, var(--ledger-paper) 78%, transparent);
   border: 0;
   border-right: 1px solid var(--ledger-line);
   cursor: pointer;
@@ -314,7 +336,8 @@
   margin: 0 auto;
   overflow-x: auto;
   color: var(--ledger-ink);
-  background: #f7f5ef;
+  --semiotic-surface: var(--ledger-chart-surface);
+  background: var(--ledger-chart-surface);
   border: 1px solid var(--ledger-line);
   box-shadow: 0 14px 34px rgba(21, 39, 42, 0.09);
 }
@@ -485,7 +508,7 @@
   min-height: 360px;
   flex-direction: column;
   padding: 30px;
-  background: rgba(243, 240, 232, 0.76);
+  background: color-mix(in srgb, var(--ledger-paper) 76%, transparent);
   border-right: 1px solid var(--ledger-line);
 }
 
