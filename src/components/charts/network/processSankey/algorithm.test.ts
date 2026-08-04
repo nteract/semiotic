@@ -229,6 +229,37 @@ describe("side assignment and node mass walks", () => {
     expect(data.samples.every((s) => s.topMass >= 0 && s.botMass >= 0)).toBe(true)
   })
 
+  it("holds an instantaneous same-stage peak across an authored extent when max sizing is requested", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "Earlier" }, { id: "Same-stage" }, { id: "Stage", xExtent: [1, 2] }, { id: "Next" },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "earlier-stage", source: "Earlier", target: "Stage", value: 35, startTime: 0, endTime: 1 },
+      { id: "same-stage", source: "Same-stage", target: "Stage", value: 7, startTime: 2, endTime: 2 },
+      { id: "stage-next", source: "Stage", target: "Next", value: 42, startTime: 2, endTime: 3 },
+    ]
+    const index = buildEdgeIndex(nodes, edges)
+    const sides = new Map([
+      ["earlier-stage", { targetSide: "top" as const }],
+      ["same-stage", { targetSide: "top" as const }],
+      ["stage-next", { sourceSide: "top" as const }],
+    ])
+
+    const temporal = computeNode(nodes[2], index, sides)
+    const staged = computeNode(nodes[2], index, sides, undefined, "max")
+
+    expect(Math.max(...temporal.samples.filter((sample) => sample.t < 2)
+      .map((sample) => sample.topMass + sample.botMass))).toBe(35)
+    expect(staged.samples).toEqual([
+      { t: 1, topMass: 42, botMass: 0 },
+      { t: 2, topMass: 42, botMass: 0 },
+    ])
+    // The option is strictly visual: event/ribbon attachment accounting stays exact.
+    expect(staged.localAttachments.get("stage-next")).toMatchObject({
+      time: 2, sideMassBefore: 42, sideMassAfter: 0,
+    })
+  })
+
   it("anchors synthesized side transfers at departure without creating a floating band island", () => {
     const nodes: ProcessSankeyNode[] = [
       { id: "Top" }, { id: "Bottom" }, { id: "Eng" }, { id: "Release" },

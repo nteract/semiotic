@@ -90,7 +90,9 @@ export function toProcessSankeyWorkerRequest(
       orientation: input.orientation,
       ribbonLane: input.ribbonLane,
       ribbonMinRun: input.ribbonMinRun,
-      edgeOpacity: input.edgeOpacity,
+      // Function opacity resolvers cannot cross the worker boundary; the
+      // caller routes those through the synchronous builder first.
+      edgeOpacity: typeof input.edgeOpacity === "number" ? input.edgeOpacity : 0.35,
       layoutOpts: { ...input.layoutOpts },
       showLabels: input.showLabels,
       // Function accessors cannot cross the boundary (caller forces main thread).

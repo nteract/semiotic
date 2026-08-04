@@ -346,6 +346,22 @@ export type {
   ForceLayoutStatus,
   UseForceLayoutResult
 } from "./charts/network/useForceLayout"
+// ProcessSankey pure helpers (also on semiotic/network)
+export {
+  inventoryAtTime,
+  toProcessSankeyTime,
+  validateProcessSankey,
+  formatProcessSankeyIssue,
+  diagnoseProcessSankeyLayout,
+  diagnoseProcessSankeyProps,
+  explainProcessSankeyLayout,
+} from "./charts/network/processSankey/algorithm"
+export type {
+  InventoryEdge,
+  InventoryAtTimeOptions,
+  ProcessSankeyTimeLike,
+  ProcessSankeyIssue,
+} from "./charts/network/processSankey/algorithm"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 export type {
   CustomLayoutFailureDiagnostic,

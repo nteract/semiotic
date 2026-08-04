@@ -12,6 +12,7 @@ import type {
   ProcessSankeyEdgeIndex,
   ProcessSankeyNode,
   ProcessSankeyNodeData,
+  ProcessSankeyNodeSizing,
   ProcessSankeySample,
   ProcessSankeySideRecord,
 } from "./processSankeyTypes"
@@ -142,6 +143,7 @@ export function computeNode(
   edgeIndex: ProcessSankeyEdgeIndex,
   sides: Map<string, ProcessSankeySideRecord>,
   endpointPositions?: ReadonlyMap<string, ProcessSankeyEndpointPositions>,
+  nodeSizing: ProcessSankeyNodeSizing = "temporal",
 ): ProcessSankeyNodeData {
   const incoming = edgeIndex.incoming[node.id]
   const outgoing = edgeIndex.outgoing[node.id]
@@ -422,7 +424,40 @@ export function computeNode(
     }
   }
 
-  return { samples: collapsed, peak, topPeak, botPeak, localAttachments }
+  // An authored extent can mean either a true lifecycle boundary (the default)
+  // or a visual stage. In the latter case, a same-stage handoff can briefly
+  // raise a node to its full value at the extent's edge and immediately drain
+  // it again. The slot already reserves that peak, but a pure time-series band
+  // has zero width at that instant. Hold the real peak state across the stage
+  // so fixed-stage Sankeys read node height like a conventional Sankey without
+  // changing event dates, ribbon attachments, or mass accounting.
+  let renderedSamples = collapsed
+  if (nodeSizing === "max" && xStart != null && xEnd != null && xEnd > xStart) {
+    let peakSample: ProcessSankeySample | undefined
+    let peakMass = 0
+    for (const sample of collapsed) {
+      const mass = sample.topMass + sample.botMass
+      if (mass > peakMass) {
+        peakMass = mass
+        peakSample = sample
+      }
+    }
+    if (peakSample) {
+      const peakState = {
+        topMass: peakSample.topMass,
+        botMass: peakSample.botMass,
+        ...(peakSample.boundaryOffset != null && { boundaryOffset: peakSample.boundaryOffset }),
+      }
+      renderedSamples = [
+        ...collapsed.filter((sample) => sample.t < xStart),
+        { t: xStart, ...peakState },
+        { t: xEnd, ...peakState },
+        ...collapsed.filter((sample) => sample.t > xEnd),
+      ]
+    }
+  }
+
+  return { samples: renderedSamples, peak, topPeak, botPeak, localAttachments }
 }
 
 export function collectEndpointPositions(

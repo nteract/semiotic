@@ -2,10 +2,58 @@
  * Germany history-river theme tokens.
  * Structure lives in process-river.css — root markup:
  *   className="process-river germany-becoming"
+ *
+ * Light mode keeps the editorial cream paper. Dark mode retints paper and
+ * ink so body copy never inherits the docs site’s light slate text onto a
+ * fixed light ground (the contrast bug that made stage/method type unreadable).
  */
 @import "./process-river.css";
 
+/* Default = dark (docs site default) so ink/paper match before hydration. */
 .germany-becoming {
+  --river-ink: #e8e3d4;
+  --river-paper: #141a17;
+  --river-paper-deep: #1c2420;
+  --river-red: #c56a5d;
+  --river-blue: #7aa0d4;
+  --river-green: #6fa88a;
+  --river-gold: #e1bf6a;
+  --river-kicker: #a9bba9;
+  --river-section-kicker: #9aab9a;
+  --river-muted: #a8a494;
+  --river-caption: #b0a898;
+  --river-rule: #3a453d;
+  --river-rule-soft: #2e3832;
+  --river-control-border: #4a564e;
+  --river-control-bg: rgba(255, 255, 255, 0.05);
+  --river-control-btn: #243029;
+  --river-reader-bg: #1c2621;
+  --river-reader-accent: #c56a5d;
+  --river-reader-year: #d08074;
+  --river-shell-rule: #3a453d;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(255, 255, 255, 0.035) 80px 81px);
+  --river-findings-bg: #1a2420;
+  --river-findings-grid: #3a453d;
+  --river-findings-card: #222e28;
+  --river-findings-muted: #c5cbc5;
+  --river-findings-ink: #f0ebe0;
+  --river-outside-bg: #1a221e;
+  --river-outside-meta: #c9a59c;
+  --river-warning-bg: #243029;
+  --river-code-bg: #0e1311;
+  --river-code-ink: #ede8da;
+  --river-footer-bg: #7a342c;
+  --river-footer-ink: #f4efdf;
+  --river-mast-ink: #f4efdf;
+  --river-mast-bg:
+    linear-gradient(120deg, rgba(10, 16, 14, 0.99), rgba(24, 34, 29, 0.94)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.04) 84px 85px);
+  --river-tooltip-kicker: #e09a90;
+}
+
+html[data-theme="light"] .germany-becoming {
   --river-ink: #202922;
   --river-paper: #f2eddc;
   --river-paper-deep: #e5ddc6;
@@ -14,10 +62,36 @@
   --river-green: #315d4a;
   --river-gold: #e1bf6a;
   --river-kicker: #a9bba9;
+  --river-section-kicker: #5f6f5f;
+  --river-muted: #6d6759;
+  --river-caption: #625d51;
+  --river-rule: #b9b09a;
+  --river-rule-soft: #b7ae99;
+  --river-control-border: #a9a08b;
+  --river-control-bg: rgba(255, 255, 255, 0.32);
+  --river-control-btn: #ddd5bf;
+  --river-reader-bg: #e7dfca;
+  --river-reader-accent: var(--river-red);
+  --river-reader-year: var(--river-red);
+  --river-shell-rule: #8f8775;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.28)),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(51, 51, 51, 0.035) 80px 81px);
   --river-findings-bg: #25332c;
   --river-findings-grid: #58635b;
   --river-findings-card: #2e3d35;
   --river-findings-muted: #d2d8d2;
+  --river-findings-ink: #f4efdf;
   --river-outside-bg: #e1d8c0;
+  --river-outside-meta: #72544c;
+  --river-warning-bg: #e2dac5;
+  --river-code-bg: #171f1b;
+  --river-code-ink: #ede8da;
   --river-footer-bg: var(--river-red);
+  --river-footer-ink: #f4efdf;
+  --river-mast-ink: #f4efdf;
+  --river-mast-bg:
+    linear-gradient(120deg, rgba(16, 26, 22, 0.98), rgba(31, 43, 36, 0.91)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.04) 84px 85px);
+  --river-tooltip-kicker: #8f302c;
 }

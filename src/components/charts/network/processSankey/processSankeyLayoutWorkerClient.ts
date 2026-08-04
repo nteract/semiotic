@@ -1,4 +1,10 @@
 import { commonJsWorkerModuleUrl } from "../../../stream/workerModuleUrl"
+import {
+  ModuleWorkerSession,
+  createSharedWorkerSessionHolder,
+  moduleWorkerErrorFromPayload,
+  parseModuleWorkerErrorField,
+} from "../../../stream/moduleWorkerSession"
 import type { BuildScenesInput, BuildScenesResult } from "./buildScenes"
 import type { ProcessSankeyLayout } from "./algorithm"
 import type { ProcessSankeyLayoutConfig } from "./streamingLayout"
@@ -13,7 +19,9 @@ export type ProcessSankeyLayoutExecution = "auto" | "worker" | "sync"
  * declarative styleRules / label priority resolve identically to sync.
  */
 export interface ProcessSankeyWorkerRequest {
-  input: Omit<BuildScenesInput, "colorOf" | "styleRules" | "labelPriorityAccessor" | "colorBy" | "valueAccessor"> & {
+  input: Omit<BuildScenesInput, "colorOf" | "styleRules" | "labelPriorityAccessor" | "colorBy" | "valueAccessor" | "edgeOpacity"> & {
+    /** Numeric form only; opacity resolver functions stay on the main thread. */
+    edgeOpacity: number
     /** Declarative styleRules only. Function when/style force main-thread. */
     styleRules?: BuildScenesInput["styleRules"]
     /** String field form only; functions force main-thread. */
@@ -34,11 +42,6 @@ export interface ProcessSankeyWorkerResponse {
   timelineExtent: number
 }
 
-interface WireRequest {
-  requestId: number
-  request: ProcessSankeyWorkerRequest
-}
-
 interface WireResponse {
   requestId?: number
   layout?: ProcessSankeyWorkerResponse["layout"] & { sides?: [string, unknown][] | Map<string, unknown> }
@@ -48,12 +51,6 @@ interface WireResponse {
   domain?: [number, number]
   timelineExtent?: number
   error?: { message: string; name?: string; stack?: string }
-}
-
-interface Pending {
-  cleanup: () => void
-  reject: (error: Error) => void
-  resolve: (payload: ProcessSankeyWorkerResponse) => void
 }
 
 /**
@@ -106,15 +103,6 @@ export function createProcessSankeyLayoutWorker(): Worker {
   })
 }
 
-function abortError(): Error {
-  if (typeof DOMException !== "undefined") {
-    return new DOMException("ProcessSankey layout aborted", "AbortError")
-  }
-  const error = new Error("ProcessSankey layout aborted")
-  error.name = "AbortError"
-  return error
-}
-
 function reviveLayout(layout: WireResponse["layout"]): ProcessSankeyLayout | null {
   if (!layout) return null
   const sidesEntries = layout.sides
@@ -130,122 +118,72 @@ function reviveLayout(layout: WireResponse["layout"]): ProcessSankeyLayout | nul
 }
 
 /**
- * Long-lived ProcessSankey layout worker session. One Worker is reused across
- * layouts so module parse + startup cost is paid once per page.
+ * Long-lived ProcessSankey layout worker session. Built on
+ * {@link ModuleWorkerSession} (shared with force layout).
  */
 export class ProcessSankeyLayoutWorkerSession {
-  private nextRequestId = 1
-  private pending = new Map<number, Pending>()
-  private worker: Worker
-  private dead = false
+  private readonly session: ModuleWorkerSession<
+    ProcessSankeyWorkerRequest,
+    ProcessSankeyWorkerResponse
+  >
 
   constructor(worker: Worker = createProcessSankeyLayoutWorker()) {
-    this.worker = worker
-    this.worker.onmessage = (event: MessageEvent<WireResponse>) => {
-      const response = event.data
-      const requestId = response.requestId
-      const pending =
-        requestId != null
-          ? this.pending.get(requestId)
-          : this.pending.values().next().value
-      if (!pending) return
-      if (requestId != null) this.pending.delete(requestId)
-      else this.pending.clear()
-      pending.cleanup()
-      if (response.error) {
-        const error = new Error(response.error.message)
-        error.name = response.error.name ?? "Error"
-        if (response.error.stack) error.stack = response.error.stack
-        pending.reject(error)
-        return
-      }
-      pending.resolve({
-        layout: reviveLayout(response.layout),
-        layoutConfig: response.layoutConfig ?? { bands: [], ribbons: [], showLabels: true },
-        issues: response.issues ?? [],
-        warnings: response.warnings ?? [],
-        domain: response.domain ?? [0, 1],
-        timelineExtent: response.timelineExtent ?? 0,
-      })
-    }
-    this.worker.onerror = (event: ErrorEvent) => {
-      this.rejectAll(new Error(event.message || "ProcessSankey layout worker failed"))
-      this.terminate()
-    }
+    this.session = new ModuleWorkerSession({
+      name: "ProcessSankey layout",
+      createWorker: () => worker,
+      parseMessage: (data) => {
+        const response = data as WireResponse
+        const { requestId, error } = parseModuleWorkerErrorField(response)
+        if (error) {
+          return {
+            requestId,
+            ok: false as const,
+            error: moduleWorkerErrorFromPayload(error),
+          }
+        }
+        return {
+          requestId,
+          ok: true as const,
+          payload: {
+            layout: reviveLayout(response.layout),
+            layoutConfig: response.layoutConfig ?? {
+              bands: [],
+              ribbons: [],
+              showLabels: true,
+            },
+            issues: response.issues ?? [],
+            warnings: response.warnings ?? [],
+            domain: response.domain ?? [0, 1],
+            timelineExtent: response.timelineExtent ?? 0,
+          },
+        }
+      },
+    })
   }
 
   get isDead(): boolean {
-    return this.dead
+    return this.session.isDead
   }
 
   request(
     request: ProcessSankeyWorkerRequest,
     signal?: AbortSignal,
   ): Promise<ProcessSankeyWorkerResponse> {
-    if (this.dead) {
-      return Promise.reject(new Error("ProcessSankey layout worker session is closed"))
-    }
-    if (signal?.aborted) return Promise.reject(abortError())
-
-    const requestId = this.nextRequestId
-    this.nextRequestId += 1
-    const wire: WireRequest = { requestId, request }
-
-    return new Promise((resolve, reject) => {
-      const onAbort = () => {
-        this.pending.delete(requestId)
-        signal?.removeEventListener("abort", onAbort)
-        reject(abortError())
-      }
-      const cleanup = () => signal?.removeEventListener("abort", onAbort)
-      this.pending.set(requestId, { cleanup, reject, resolve })
-      signal?.addEventListener("abort", onAbort, { once: true })
-
-      try {
-        this.worker.postMessage(wire)
-      } catch (error) {
-        this.pending.delete(requestId)
-        cleanup()
-        reject(error instanceof Error ? error : new Error(String(error)))
-      }
-    })
+    return this.session.request(request, signal)
   }
 
   terminate(): void {
-    if (this.dead) return
-    this.dead = true
-    this.rejectAll(new Error("ProcessSankey layout worker terminated"))
-    this.worker.terminate()
-  }
-
-  private rejectAll(error: Error): void {
-    for (const pending of this.pending.values()) {
-      pending.cleanup()
-      pending.reject(error)
-    }
-    this.pending.clear()
+    this.session.terminate()
   }
 }
 
-let sharedSession: ProcessSankeyLayoutWorkerSession | null = null
-
-function getSharedSession(): ProcessSankeyLayoutWorkerSession {
-  if (!sharedSession || sharedSession.isDead) {
-    sharedSession = new ProcessSankeyLayoutWorkerSession()
-  }
-  return sharedSession
-}
+const sharedProcessSankeySession = createSharedWorkerSessionHolder(
+  () => new ProcessSankeyLayoutWorkerSession(),
+)
 
 /** Test helper: drop the shared session so the next call creates a fresh Worker. */
 export function _resetSharedProcessSankeyLayoutSessionForTest(): void {
-  if (sharedSession) {
-    try {
-      sharedSession.terminate()
-    } catch {
-      /* ignore */
-    }
-    sharedSession = null
-  }
+  sharedProcessSankeySession.resetForTest()
 }
 
 export function runProcessSankeyLayoutWorker(
@@ -255,8 +193,7 @@ export function runProcessSankeyLayoutWorker(
   if (!canUseProcessSankeyWorker()) {
     return Promise.reject(new Error("Web Workers are unavailable"))
   }
-  if (signal?.aborted) return Promise.reject(abortError())
-  return getSharedSession().request(request, signal)
+  return sharedProcessSankeySession.get().request(request, signal)
 }
 
 /**
@@ -315,10 +252,11 @@ export function processSankeyStyleRulesNeedMainThread(
 export function processSankeyNeedsMainThread(
   input: Pick<
     BuildScenesInput,
-    "styleRules" | "labelPriorityAccessor" | "colorBy" | "valueAccessor"
+    "styleRules" | "labelPriorityAccessor" | "colorBy" | "valueAccessor" | "edgeOpacity"
   >,
 ): boolean {
   if (processSankeyStyleRulesNeedMainThread(input.styleRules)) return true
+  if (typeof input.edgeOpacity === "function") return true
   // Function accessors cannot structured-clone; label density would diverge.
   if (typeof input.labelPriorityAccessor === "function") return true
   // Function colorBy/valueAccessor only affect styleRules rule context.

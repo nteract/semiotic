@@ -252,6 +252,9 @@ const BallotTransferLedgerExamplePage = lazy(
 const GermanyStillBecomingExamplePage = lazy(
   () => import("./pages/examples/GermanyStillBecomingExamplePage"),
 )
+const GoodEarthLyingFlatExamplePage = lazy(
+  () => import("./pages/examples/GoodEarthLyingFlatExamplePage"),
+)
 const UnitedStatesHistoryRiverExamplePage = lazy(
   () => import("./pages/examples/UnitedStatesHistoryRiverExamplePage"),
 )
@@ -340,6 +343,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "ApolloLunarChoreographyExamplePage.jsx": ApolloLunarChoreographyExamplePage,
   "BallotTransferLedgerExamplePage.jsx": BallotTransferLedgerExamplePage,
   "GermanyStillBecomingExamplePage.jsx": GermanyStillBecomingExamplePage,
+  "GoodEarthLyingFlatExamplePage.jsx": GoodEarthLyingFlatExamplePage,
   "UnitedStatesHistoryRiverExamplePage.jsx": UnitedStatesHistoryRiverExamplePage,
   "ScrollYoureTellingExamplePage.jsx": ScrollYoureTellingExamplePage,
   "DigitalHumanitiesThunderdomeExamplePage.jsx": DigitalHumanitiesThunderdomeExamplePage,

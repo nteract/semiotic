@@ -9,6 +9,7 @@ import {
   startTransition,
   advanceTransition,
   getNodeIdentity,
+  resolveMarkOpacity,
   type TransitionContext,
   type PrevPosition,
   type PrevPath,
@@ -466,5 +467,71 @@ describe("pipelineTransitions — glyph", () => {
     expect(moved.size).toBe(40)
     expect(moved._targetX).toBeUndefined()
     expect(state.activeTransition).toBeNull()
+  })
+})
+
+describe("pipelineTransitions — fillOpacity-aware mark opacity", () => {
+  function makePoint(overrides: Partial<PointSceneNode> = {}): PointSceneNode {
+    return {
+      type: "point",
+      x: 50,
+      y: 50,
+      r: 8,
+      datum: { x: 1, y: 1 },
+      style: { fill: "#6366f1", fillOpacity: 0.7 },
+      pointId: "p1",
+      ...overrides,
+    }
+  }
+
+  it("resolveMarkOpacity prefers opacity, then fillOpacity, then 1", () => {
+    expect(resolveMarkOpacity(undefined)).toBe(1)
+    expect(resolveMarkOpacity({})).toBe(1)
+    expect(resolveMarkOpacity({ fillOpacity: 0.7 })).toBe(0.7)
+    expect(resolveMarkOpacity({ opacity: 0.4, fillOpacity: 0.7 })).toBe(0.4)
+  })
+
+  it("snapshotPositions records effective alpha from fillOpacity when opacity is absent", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makePoint()], prevPos, prevPath)
+    expect([...prevPos.values()][0].opacity).toBe(0.7)
+  })
+
+  it("intro-style enter targets fillOpacity (not 1) so completion matches the authored alpha", () => {
+    // Landing scatter uses fillOpacity: 0.7 with no style.opacity. Before the
+    // fix, intro targeted 1, baked style.opacity=1 on complete, then a dirty
+    // rebuild (tab-away resume) recreated marks at fillOpacity 0.7 — a visible
+    // fade. Target must be the effective paint alpha.
+    const prevPos = new Map<string, PrevPosition>()
+    prevPos.set("p:p1", { x: 50, y: 50, r: 0, opacity: 0 })
+    const prevPath = new Map<string, PrevPath>()
+
+    const point = makePoint()
+    const state: TransitionState = {
+      scene: [point as SceneNode],
+      exitNodes: [],
+      activeTransition: null,
+    }
+    startTransition(ctx, { duration: 600, easing: "linear" }, state, prevPos, prevPath)
+
+    expect(state.activeTransition).not.toBeNull()
+    expect(point._targetOpacity).toBe(0.7)
+    expect(point._targetR).toBe(8)
+    expect(point.r).toBe(0)
+
+    const startTime = state.activeTransition!.startTime
+    const cfg = { duration: 600, easing: "linear" as const }
+    advanceTransition(startTime + 300, cfg, state, prevPos, prevPath)
+    expect(point.style.opacity!).toBeCloseTo(0.35, 5)
+
+    // Overshoot duration slightly so rawT is unambiguously ≥ 1
+    advanceTransition(startTime + 601, cfg, state, prevPos, prevPath)
+    expect(state.activeTransition).toBeNull()
+    expect(point.r).toBe(8)
+    expect(point.style.opacity).toBe(0.7)
+    // Matches a fresh scene that only has fillOpacity — no tab-back fade.
+    expect(resolveMarkOpacity(point.style)).toBe(0.7)
+    expect(resolveMarkOpacity({ fill: "#6366f1", fillOpacity: 0.7 })).toBe(0.7)
   })
 })

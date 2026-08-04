@@ -98,6 +98,30 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
   }
 }
 
+// ── Opacity helpers ────────────────────────────────────────────────────
+
+/**
+ * Effective paint alpha for fill-based marks.
+ *
+ * Matches the canvas renderer convention (`style.opacity ?? style.fillOpacity ?? 1`)
+ * used by points, glyphs, rects, heatcells, and candlesticks. Intro/update
+ * transitions must target this same value — otherwise a mark authored with
+ * only `fillOpacity: 0.7` animates toward 1, bakes `style.opacity = 1` on
+ * completion, and then "fades" back to 0.7 on the next dirty rebuild
+ * (e.g. tab-away → tab-back via FrameRuntime visibility resume).
+ *
+ * Line/area marks keep stroke alpha on `style.opacity` alone; their under-
+ * path fill uses `fillOpacity` independently and is not covered here.
+ */
+export function resolveMarkOpacity(
+  style?: { opacity?: number; fillOpacity?: number } | null
+): number {
+  if (!style) return 1
+  if (style.opacity != null) return style.opacity
+  if (style.fillOpacity != null) return style.fillOpacity
+  return 1
+}
+
 // ── Snapshot ────────────────────────────────────────────────────────────
 
 /**
@@ -116,20 +140,37 @@ export function snapshotPositions(
     const key = getNodeIdentity(ctx, node, i)
     if (!key) continue
     if (node.type === "point") {
-      prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
+      prevPositionMap.set(key, {
+        x: node.x,
+        y: node.y,
+        r: node.r,
+        opacity: resolveMarkOpacity(node.style),
+      })
     } else if (node.type === "glyph") {
       // `r` carries the glyph's size so position AND scale interpolate.
       prevPositionMap.set(key, {
         x: node.x,
         y: node.y,
         r: node.size,
-        opacity: node.style.opacity,
+        opacity: resolveMarkOpacity(node.style),
         glyph: node.glyph,
       })
     } else if (node.type === "rect") {
-      prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
+      prevPositionMap.set(key, {
+        x: node.x,
+        y: node.y,
+        w: node.w,
+        h: node.h,
+        opacity: resolveMarkOpacity(node.style),
+      })
     } else if (node.type === "heatcell") {
-      prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
+      prevPositionMap.set(key, {
+        x: node.x,
+        y: node.y,
+        w: node.w,
+        h: node.h,
+        opacity: resolveMarkOpacity(node.style),
+      })
     } else if (node.type === "candlestick") {
       // `w` carries bodyWidth so the exit stub can render at the same width
       // the bar had before disappearing — otherwise exits would snap to the
@@ -142,7 +183,7 @@ export function snapshotPositions(
         closeY: node.closeY,
         highY: node.highY,
         lowY: node.lowY,
-        opacity: node.style?.opacity,
+        opacity: resolveMarkOpacity(node.style),
       })
     } else if (node.type === "line") {
       prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
@@ -243,7 +284,7 @@ export function startTransition(
       if (prev) {
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, r: node.r }
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         if (prev.x !== target.x || prev.y !== target.y || prev.r !== target.r) {
           node._targetX = target.x
           node._targetY = target.y
@@ -254,7 +295,7 @@ export function startTransition(
           hasChanges = true
         }
       } else {
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         node.style = { ...node.style, opacity: 0 }
         hasChanges = true
       }
@@ -262,7 +303,7 @@ export function startTransition(
       if (prev) {
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, size: node.size }
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         if (prev.x !== target.x || prev.y !== target.y || prev.r !== target.size) {
           node._targetX = target.x
           node._targetY = target.y
@@ -273,7 +314,7 @@ export function startTransition(
           hasChanges = true
         }
       } else {
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         node.style = { ...node.style, opacity: 0 }
         hasChanges = true
       }
@@ -281,7 +322,7 @@ export function startTransition(
       if (prev) {
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
           node._targetX = target.x
           node._targetY = target.y
@@ -294,7 +335,7 @@ export function startTransition(
           hasChanges = true
         }
       } else {
-        node._targetOpacity = node.style.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         node.style = { ...node.style, opacity: 0 }
         hasChanges = true
       }
@@ -302,7 +343,7 @@ export function startTransition(
       if (prev) {
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-        node._targetOpacity = node.style?.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
           node._targetX = target.x
           node._targetY = target.y
@@ -315,7 +356,7 @@ export function startTransition(
           hasChanges = true
         }
       } else {
-        node._targetOpacity = node.style?.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         node.style = { ...(node.style || {}), opacity: 0 }
         hasChanges = true
       }
@@ -326,7 +367,7 @@ export function startTransition(
           x: node.x, openY: node.openY, closeY: node.closeY,
           highY: node.highY, lowY: node.lowY,
         }
-        node._targetOpacity = node.style?.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         const moved = prev.x !== target.x
           || prev.openY !== target.openY
           || prev.closeY !== target.closeY
@@ -347,7 +388,7 @@ export function startTransition(
         }
       } else {
         // Entering candlestick — fade in from 0
-        node._targetOpacity = node.style?.opacity ?? 1
+        node._targetOpacity = resolveMarkOpacity(node.style)
         node.style = { ...(node.style || {}), opacity: 0 }
         hasChanges = true
       }

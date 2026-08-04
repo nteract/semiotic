@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.8] - 2026-08-04
+
+### Added
+
+- **ProcessSankey is a full temporal process chart, not a thin Sankey wrapper.**
+  Layout is modular (mass simulation, packing/reuse, bonded multi-slot groups,
+  crossing-min / inside-out / combined ordering, hug placement with post-scale
+  geometry refine, quality metrics, and optional module Web Worker offload).
+  Ribbons support feeder runway (`ribbonMinRun`, including `"auto"`), system
+  in/out lifecycle cutouts, style-rules hatch fills, density-budgeted labels
+  (`showLabels="auto"`), selection/linkedHover with `selectionDatum` raw/scene
+  modes, and a push API via `useProcessSankeyPush`. Pure quality helpers
+  (`diagnoseProcessSankeyLayout` / `Props` / `explainProcessSankeyLayout`) feed
+  `diagnoseConfig`. SSR and CSR share `buildProcessSankeyScenes`.
+  **`inventoryAtTime`** folds a ProcessSankey edge ledger into node stock at a
+  given time (opening-stock lift for source-like nodes). **`toProcessSankeyTime`**
+  is the shared domain/accessor/tooltip time coercion.
+- **History-river docs examples.** `/examples/germany-still-becoming` and
+  `/examples/united-states-drawn-together` tell vertical, time-down stock-and-flow
+  stories on ProcessSankey (shared `ProcessRiverExampleLayout`, checked-in
+  compact data projections, sync layout for deterministic docs paint). Integration
+  and visual baselines cover hug placement and SSR/CSR parity.
+- **A causal-process Sankey example.** `/examples/good-earth-lying-flat` uses a
+  six-stage, vertical ProcessSankey to trace how modern security strategies can
+  become risk, involution, precaution, and withdrawal. Carbon theming, claim
+  lenses, confidence-aware ribbons, and incoming/outgoing `HatchFill` node
+  junctions keep the interpretive argument explicit and inspectable.
+
+### Changed
+
+- **Network entry graph budgets** rise with ProcessSankey layout/worker surface
+  (`semiotic` / `network` / `ai` gzip graphs). Capability, API-surface, llms,
+  JSDoc (≥2 examples), and visual-baseline gates know ProcessSankey push and
+  linked-hover burn-down status.
+- **Dependabot bumps** for React Router 7.18.x alignment, Playwright, size-limit,
+  Vite React plugin, testing-library, and setup-node 7.
+
+### Fixed
+
+- **Docs river examples** use the shared `process-river__*` shell classes and
+  `layoutExecution="sync"` so Playwright source-route tests paint and stay free
+  of worker/module-URL races in Vite. History-river demos share
+  `HISTORY_RIVER_PROCESS_SANKEY` defaults, `ProcessRiverStageReader`, and
+  scroll-linked stage selection; code snippets note that production apps should
+  prefer `layoutExecution="auto"`.
+- **ProcessSankey release hygiene**: dead helpers and unused types cleaned,
+  showLabels schema enum is string-only (`"auto"`), file-size splits for
+  ordering/packing, CI-friendly ordering budget, and refreshed visual snapshots
+  for hug + process-sankey SSR/CSR sheets. Shared `toProcessSankeyTime` /
+  `readChartAccessor`, pure `inventoryAtTime` ledger helper, and
+  `ModuleWorkerSession` (force + ProcessSankey layout workers).
+- **Stage-bound ProcessSankey nodes** can opt into `nodeSizing="max"`, holding
+  their peak causal mass across an authored extent so same-stage handoffs no
+  longer make a node visually smaller than an attached incoming or outgoing
+  ribbon.
+
 ## [3.8.7] - 2026-07-27
 
 ### Changed

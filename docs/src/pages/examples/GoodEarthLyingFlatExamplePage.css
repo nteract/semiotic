@@ -1,0 +1,199 @@
+@import "./process-river.css";
+
+/* The diagram is self-contained in both docs themes: dark values are the
+   first paint, and the light override arrives with the docs theme attribute. */
+.good-earth {
+  --river-ink: #f4f4f4;
+  --river-paper: #161616;
+  --river-paper-deep: #262626;
+  --river-red: #fa4d56;
+  --river-blue: #33b1ff;
+  --river-green: #42be65;
+  --river-gold: #f1c21b;
+  --river-kicker: #a8a8a8;
+  --river-section-kicker: #a8a8a8;
+  --river-muted: #a8a8a8;
+  --river-caption: #c6c6c6;
+  --river-rule: #525252;
+  --river-rule-soft: #393939;
+  --river-control-border: #6f6f6f;
+  --river-control-bg: rgba(255, 255, 255, 0.045);
+  --river-control-btn: #393939;
+  --river-reader-bg: #262626;
+  --river-reader-accent: #4589ff;
+  --river-reader-year: #f1c21b;
+  --river-shell-rule: #525252;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.025)),
+    repeating-linear-gradient(90deg, transparent 0 93px, rgba(255, 255, 255, 0.06) 94px 95px);
+  --river-findings-bg: #161616;
+  --river-findings-grid: #525252;
+  --river-findings-card: #262626;
+  --river-findings-muted: #c6c6c6;
+  --river-findings-ink: #f4f4f4;
+  --river-warning-bg: #393939;
+  --river-code-bg: #161616;
+  --river-code-ink: #f4f4f4;
+  --river-footer-bg: #0043ce;
+  --river-footer-ink: #ffffff;
+  --river-mast-ink: #f4f4f4;
+  --river-mast-bg:
+    linear-gradient(118deg, rgba(22, 22, 22, 0.99), rgba(38, 38, 38, 0.96)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.06) 84px 85px);
+  --river-tooltip-kicker: #78a9ff;
+  --good-earth-chip: #393939;
+  --good-earth-chip-active: #0f62fe;
+}
+
+html[data-theme="light"] .good-earth {
+  --river-ink: #161616;
+  --river-paper: #ffffff;
+  --river-paper-deep: #f4f4f4;
+  --river-red: #da1e28;
+  --river-blue: #0f62fe;
+  --river-green: #24a148;
+  --river-gold: #f1c21b;
+  --river-kicker: #525252;
+  --river-section-kicker: #525252;
+  --river-muted: #525252;
+  --river-caption: #525252;
+  --river-rule: #8d8d8d;
+  --river-rule-soft: #e0e0e0;
+  --river-control-border: #8d8d8d;
+  --river-control-bg: #ffffff;
+  --river-control-btn: #f4f4f4;
+  --river-reader-bg: #f4f4f4;
+  --river-reader-accent: #0f62fe;
+  --river-reader-year: #8a3ffc;
+  --river-shell-rule: #8d8d8d;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45)),
+    repeating-linear-gradient(90deg, transparent 0 93px, rgba(22, 22, 22, 0.06) 94px 95px);
+  --river-findings-bg: #262626;
+  --river-findings-grid: #525252;
+  --river-findings-card: #393939;
+  --river-findings-muted: #c6c6c6;
+  --river-findings-ink: #f4f4f4;
+  --river-warning-bg: #f4f4f4;
+  --river-code-bg: #161616;
+  --river-code-ink: #f4f4f4;
+  --river-footer-bg: #0f62fe;
+  --river-footer-ink: #ffffff;
+  --river-mast-ink: #f4f4f4;
+  --river-mast-bg:
+    linear-gradient(118deg, rgba(22, 22, 22, 0.99), rgba(57, 57, 57, 0.96)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.06) 84px 85px);
+  --river-tooltip-kicker: #0f62fe;
+  --good-earth-chip: #e0e0e0;
+  --good-earth-chip-active: #0f62fe;
+}
+
+.good-earth .process-river__masthead h2 {
+  font-size: clamp(53px, 8vw, 122px);
+  line-height: 0.79;
+}
+
+.good-earth .process-river__reading-key b { color: var(--river-red); }
+
+.good-earth__lens-control {
+  min-width: 440px;
+  max-width: 500px;
+  padding: 18px;
+  border: 1px solid var(--river-control-border);
+  background: var(--river-control-bg);
+}
+
+.good-earth__lens-control > span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--river-muted);
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.13em;
+}
+
+.good-earth__lens-control > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--river-rule);
+}
+
+.good-earth__lens-control button {
+  min-height: 49px;
+  padding: 7px 8px;
+  border: 0;
+  color: var(--river-ink);
+  background: var(--good-earth-chip);
+  font: 600 10px/1.25 "IBM Plex Sans", Inter, ui-sans-serif, sans-serif;
+  cursor: pointer;
+}
+
+.good-earth__lens-control button[aria-pressed="true"] {
+  color: #fffaf0;
+  background: var(--good-earth-chip-active);
+}
+
+.good-earth__lens-control button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--river-gold);
+  outline-offset: -3px;
+}
+
+.good-earth__reader-index {
+  display: block;
+  margin: 12px 0 18px;
+  color: var(--river-reader-year);
+  font: 400 28px/1 Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+.good-earth__family-key {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--river-rule);
+}
+
+.good-earth__family-key span {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 8px;
+  align-items: center;
+  color: var(--river-ink);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.good-earth__family-key i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.good-earth__reader .process-river__selection small {
+  display: block;
+  color: var(--river-muted);
+  font-size: 10px;
+  line-height: 1.4;
+  text-transform: capitalize;
+}
+
+.good-earth__tooltip b { color: var(--river-blue); }
+.good-earth__tooltip small { text-transform: capitalize; }
+
+@media (max-width: 700px) {
+  .good-earth .process-river__masthead h2 {
+    font-size: clamp(44px, 16vw, 72px);
+    line-height: 0.84;
+  }
+
+  .good-earth__lens-control {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .good-earth__lens-control > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .good-earth__lens-control button:last-child { grid-column: span 2; }
+}

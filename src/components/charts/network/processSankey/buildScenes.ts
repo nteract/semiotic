@@ -90,13 +90,14 @@ export interface BuildScenesInput {
    * feeders with proven stock/runway are affected.
    */
   ribbonMinRun?: number | "auto"
-  edgeOpacity: number
+  /** A shared opacity, or a raw-edge resolver for confidence-aware flows. */
+  edgeOpacity: number | ((edge: Datum) => number)
   /** Resolves a node's color by id+index (lets the caller plug in
    *  the same theme/colorScheme/colorBy resolution the HOC uses). */
   colorOf: (id: string, idx: number) => string
   layoutOpts: Pick<ProcessSankeyOptions,
     "pairing" | "packing" | "laneOrder" | "lifetimeMode" | "maxValueScale" |
-    "lanePlacement" | "groupPadding"
+    "lanePlacement" | "nodeSizing" | "groupPadding"
   >
   /** Render node labels: true, false, or density-budgeted `"auto"`. */
   showLabels?: boolean | "auto"
@@ -287,12 +288,21 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
     const sourceIdx = nodeIndexById.get(e.source) ?? 0
     const fill = colorOf(e.source, sourceIdx)
     const { pathD, bezier } = buildRibbonGeometry(ribbonInputs)
+    const rawDatum = (e.__raw ?? (e as Datum)) as Datum
+    const requestedOpacity = typeof edgeOpacity === "function"
+      ? Number(edgeOpacity(rawDatum))
+      : edgeOpacity
+    // Keep an invalid author resolver from producing an invisible or broken
+    // canvas mark. The default preserves the long-standing ProcessSankey look.
+    const opacity = Number.isFinite(requestedOpacity)
+      ? Math.max(0, Math.min(1, requestedOpacity))
+      : 0.35
     ribbons.push({
       id: e.id,
       pathD,
       fill,
-      opacity: edgeOpacity,
-      rawDatum: (e.__raw ?? (e as Datum)),
+      opacity,
+      rawDatum,
       bezier,
     })
   })

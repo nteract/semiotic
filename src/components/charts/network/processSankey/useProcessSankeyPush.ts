@@ -8,11 +8,7 @@ import { useFrameImperativeHandle } from "../../shared/useFrameImperativeHandle"
 import { inferNodesFromEdges } from "../../shared/networkUtils"
 import { filterSparseArray } from "../../shared/sparseArray"
 import type { StreamNetworkFrameHandle } from "../../../stream/networkTypes"
-
-function accessor<T extends Datum, V>(a: ChartAccessor<T, V>, d: T): V {
-  if (typeof a === "function") return a(d)
-  return d[a as string] as V
-}
+import { readChartAccessor } from "./accessors"
 
 export interface UseProcessSankeyPushOptions<
   TNode extends Datum,
@@ -96,13 +92,13 @@ export function useProcessSankeyPush<
     const seen = new Set<string>()
     const merged: TNode[] = []
     for (const n of controlled) {
-      const id = String(accessor(nodeIdAccessor, n))
+      const id = String(readChartAccessor(nodeIdAccessor, n))
       if (seen.has(id)) continue
       seen.add(id)
       merged.push(n)
     }
     for (const n of pushed) {
-      const id = String(accessor(nodeIdAccessor, n))
+      const id = String(readChartAccessor(nodeIdAccessor, n))
       if (seen.has(id)) continue
       seen.add(id)
       merged.push(n)
@@ -124,22 +120,22 @@ export function useProcessSankeyPush<
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
 
   const resolveEdgeId = useCallback((e: TEdge, i: number): string => {
-    const fromAccessor = accessor(edgeIdAccessor, e) as unknown as string | undefined
+    const fromAccessor = readChartAccessor(edgeIdAccessor, e) as unknown as string | undefined
     if (fromAccessor != null) return String(fromAccessor)
-    return `${accessor(sourceAccessor, e)}-${accessor(targetAccessor, e)}-${i}`
+    return `${readChartAccessor(sourceAccessor, e)}-${readChartAccessor(targetAccessor, e)}-${i}`
   }, [edgeIdAccessor, sourceAccessor, targetAccessor])
 
   const looksLikeEdge = useCallback((item: Datum | undefined | null): boolean => {
     if (item == null) return false
     const e = item as TEdge
     return (
-      accessor(sourceAccessor as ChartAccessor<TEdge, string>, e) != null &&
-      accessor(targetAccessor as ChartAccessor<TEdge, string>, e) != null
+      readChartAccessor(sourceAccessor as ChartAccessor<TEdge, string>, e) != null &&
+      readChartAccessor(targetAccessor as ChartAccessor<TEdge, string>, e) != null
     )
   }, [sourceAccessor, targetAccessor])
 
   const getNodeId = useCallback(
-    (n: TNode): string => String(accessor(nodeIdAccessor, n)),
+    (n: TNode): string => String(readChartAccessor(nodeIdAccessor, n)),
     [nodeIdAccessor],
   )
 
@@ -190,7 +186,7 @@ export function useProcessSankeyPush<
         const currentNodes = pushedNodesRef.current
         const nextNodes: TNode[] = []
         for (const n of currentNodes) {
-          const nid = String(accessor(nodeIdAccessor, n))
+          const nid = String(readChartAccessor(nodeIdAccessor, n))
           if (ids.has(nid)) removed.push(n as Datum)
           else nextNodes.push(n)
         }
@@ -214,7 +210,7 @@ export function useProcessSankeyPush<
         const currentNodes = pushedNodesRef.current
         let touchedNodes = false
         const nextNodes = currentNodes.map((n) => {
-          const nid = String(accessor(nodeIdAccessor, n))
+          const nid = String(readChartAccessor(nodeIdAccessor, n))
           if (!ids.has(nid)) return n
           previous.push(n as Datum)
           touchedNodes = true

@@ -99,11 +99,16 @@ export {
   diagnoseProcessSankeyLayout,
   diagnoseProcessSankeyProps,
   explainProcessSankeyLayout,
+  inventoryAtTime,
+  toProcessSankeyTime,
 } from "./charts/network/processSankey/algorithm"
 export type {
   ProcessSankeyNode as ProcessSankeyValidatorNode,
   ProcessSankeyEdge as ProcessSankeyValidatorEdge,
   ProcessSankeyIssue,
+  InventoryEdge,
+  InventoryAtTimeOptions,
+  ProcessSankeyTimeLike,
 } from "./charts/network/processSankey/algorithm"
 
 // Declarative threshold-aware node style rules (ForceDirectedGraph/Sankey/Chord `styleRules`) + hatch fills.

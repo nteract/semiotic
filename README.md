@@ -17,22 +17,32 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.7
+## What's New in 3.8.8
 
-3.8.7 hardens the physics, server-rendering, and agent-evaluation paths exercised after the 3.8.6
-release:
+3.8.8 centers on **ProcessSankey** — temporal process flow with a real time axis — plus the
+history-river docs that exercise it hard:
 
-- Physics reduced-motion settling now admits paced spawns and completes time-driven event tapes;
-  runtime preference changes no longer accumulate a giant animation delta. Chain-reaction tiles
-  and lane labels no longer overlap, and physics chrome follows the active theme.
-- BigNumber now has native static render evidence, exact source facts flow through reader
-  grounding, and agent guidance keeps value-component props separate from chart-HOC props.
-- Static SVG preserves chart-level primitive styling and heatmap cell borders, while
-  horizontal legends clear axis ticks and titles consistently in browser and server renders.
-- Physics charts participate in shared linked hover, while the clearer `UnitPileChart` and
-  `PacketFlowChart` names ship with permanent aliases for their previous names.
-- The public model-evaluation reading room preserves the complete baseline and three targeted
-  follow-up trials, including the unresolved Luna gauge result rather than smoothing it away.
+- Packing, bonded lane groups, crossing-aware ordering, hug placement, quality metrics, feeder
+  runway, lifecycle cutouts, worker layout, push, and selection/linkedHover are all first-class.
+- Vertical history rivers for Germany and the United States ship as docs examples (sync layout
+  for deterministic paint; compact checked-in data projections).
+- Agent/docs gates (capabilities, API surface, JSDoc examples, llms, visual baselines) track
+  ProcessSankey; network entry-graph budgets absorb the new surface.
+
+```jsx
+import { ProcessSankey } from "semiotic/network"
+
+<ProcessSankey
+  nodes={nodes}
+  edges={timedEdges}
+  domain={[t0, t1]}
+  packing="reuse"
+  laneOrder="crossing-min+inside-out"
+  lanePlacement="hug"
+/>
+```
+
+Simple charts stay five lines:
 
 ```jsx
 import { LineChart } from "semiotic/xy"
@@ -443,20 +453,20 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **153.2 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **153.4 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **123.7 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **146.4 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **123.0 KiB** |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **170.5 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **153.6 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **153.7 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **123.8 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **146.6 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **123.4 KiB** |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **170.8 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **134.3 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **285.6 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **164.8 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **286.0 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **193.1 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **286.2 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **165.3 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **286.7 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **193.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **36.4 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **108.7 KiB** |

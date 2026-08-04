@@ -1,8 +1,14 @@
-import React, { useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import { ProcessSankey } from "semiotic"
 import { unwrapDatum } from "semiotic/recipes"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ProcessRiverExampleLayout from "./ProcessRiverExampleLayout"
+import ProcessRiverStageReader from "./ProcessRiverStageReader"
+import useProcessRiverScrollStage from "./useProcessRiverScrollStage"
+import {
+  HISTORY_RIVER_LAYOUT_NOTE,
+  HISTORY_RIVER_PROCESS_SANKEY,
+} from "./processRiverChartDefaults"
 import {
   GERMANY_AXIS_TICKS,
   GERMANY_COLORS,
@@ -24,21 +30,23 @@ import {
 } from "./data/germanyStillBecoming"
 import "./GermanyStillBecomingExamplePage.css"
 
+const SCROLL_STAGES = GERMANY_STAGES.map((stage) => ({
+  id: stage.id,
+  time: stage.order,
+}))
+
 const implementationCode = `import { ProcessSankey } from "semiotic"
+
+${HISTORY_RIVER_LAYOUT_NOTE}
 
 <ProcessSankey
   nodes={historicalContainers}
   edges={massConservingTransitions}
   domain={[-0.18, 11.18]}
   axisTicks={historicalStages}
-  orientation="vertical"
   nodeLabel="shortLabel"
   colorBy="lineageFamily"
-  packing="reuse"
-  laneOrder="crossing-min+inside-out"
-  lanePlacement="hug"
-  ribbonLane="both"
-  lifetimeMode="full"
+  {...historyRiverDefaults}
 />
 
 // Each transition totals 100%. Width follows a fixed contribution
@@ -108,47 +116,35 @@ function MetricControl({ metricId, onChange }) {
 }
 
 function StageReader({ stage, selectedDatum, metricId, onStageChange }) {
-  const events = germanyEventsForStage(stage.id)
+  const events = germanyEventsForStage(stage.id).map((event) => ({
+    id: event.id,
+    date: event.date,
+    event_type: event.event_type,
+    title: event.title,
+    body: event.notes,
+  }))
   const metric = METRIC_BY_ID.get(metricId) ?? GERMANY_METRICS[0]
   const selectedNode = selectedDatum?.node_id ? selectedDatum : null
   const selectedEdge = selectedDatum?.link_id ? selectedDatum : null
+  const selection = (selectedNode || selectedEdge)
+    ? {
+        kindLabel: `SELECTED ${selectedNode ? "CONTAINER" : "PASSAGE"}`,
+        title: selectedNode?.label ?? `${selectedEdge.sourceLabel} → ${selectedEdge.targetLabel}`,
+        body: selectedNode?.description ?? selectedEdge.notes,
+        value: `${percent((selectedNode ?? selectedEdge)[metric.id])} by ${metric.shortLabel}`,
+      }
+    : null
 
   return (
-    <aside className="process-river__reader" aria-live="polite">
-      <span className="process-river__reader-kicker">CURRENT OPENING</span>
-      <label className="process-river__stage-select">
-        <span>Inspect a stage</span>
-        <select value={stage.id} onChange={(event) => onStageChange(event.target.value)}>
-          {GERMANY_STAGES.map((option) => (
-            <option key={option.id} value={option.id}>{option.benchmark} — {option.label}</option>
-          ))}
-        </select>
-      </label>
-      <strong className="process-river__reader-year">{stage.benchmark}</strong>
-      <h3>{stage.label}</h3>
-      <p>{stage.description}</p>
-
-      {events.length > 0 && (
-        <div className="process-river__reader-events">
-          {events.map((event) => (
-            <article key={event.id}>
-              <small>{event.date} / {event.event_type}</small>
-              <strong>{event.title}</strong>
-              <p>{event.notes}</p>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {(selectedNode || selectedEdge) && (
-        <div className="process-river__selection">
-          <span>SELECTED {selectedNode ? "CONTAINER" : "PASSAGE"}</span>
-          <strong>{selectedNode?.label ?? `${selectedEdge.sourceLabel} → ${selectedEdge.targetLabel}`}</strong>
-          <p>{selectedNode?.description ?? selectedEdge.notes}</p>
-          <b>{percent((selectedNode ?? selectedEdge)[metric.id])} by {metric.shortLabel}</b>
-        </div>
-      )}
-    </aside>
+    <ProcessRiverStageReader
+      kicker="CURRENT OPENING · FOLLOWS SCROLL"
+      selectLabel="Inspect a stage"
+      stages={GERMANY_STAGES}
+      stage={stage}
+      events={events}
+      selection={selection}
+      onStageChange={onStageChange}
+    />
   )
 }
 
@@ -180,6 +176,11 @@ export default function GermanyStillBecomingExamplePage() {
   // Bucket width so ProcessSankey packing/order does not re-run every pixel of resize.
   const [chartWidth, chartRef] = useResponsiveWidth(300, 980, { bucket: 40 })
   const compact = chartWidth < 620
+  const chartHeight = compact ? 1900 : 2200
+  const chartMargin = useMemo(
+    () => ({ top: 34, right: compact ? 8 : 28, bottom: 24, left: compact ? 58 : 88 }),
+    [compact],
+  )
   const activeMetric = METRIC_BY_ID.get(metricId) ?? GERMANY_METRICS[0]
   const selectedStage = germanyStageById(selectedStageId)
 
@@ -187,6 +188,21 @@ export default function GermanyStillBecomingExamplePage() {
     ...edge,
     value: edge[metricId],
   })), [metricId])
+
+  const handleScrollStage = useCallback((stageId) => {
+    setSelectedStageId(stageId)
+    setSelectedDatum(null)
+  }, [])
+
+  useProcessRiverScrollStage({
+    chartRef,
+    stages: SCROLL_STAGES,
+    domain: GERMANY_DOMAIN,
+    height: chartHeight,
+    margin: chartMargin,
+    activeStageId: selectedStageId,
+    onStageIdChange: handleScrollStage,
+  })
 
   function inspectDatum(hover) {
     const datum = unwrapDatum(hover)
@@ -225,27 +241,17 @@ export default function GermanyStillBecomingExamplePage() {
         chartRef,
         chart: (
           <ProcessSankey
+            {...HISTORY_RIVER_PROCESS_SANKEY}
             nodes={GERMANY_PROCESS_NODES}
             edges={weightedEdges}
             domain={GERMANY_DOMAIN}
             axisTicks={GERMANY_AXIS_TICKS}
-            orientation="vertical"
             nodeLabel={germanyNodeLabel}
             width={Math.max(300, chartWidth)}
-            height={compact ? 1900 : 2200}
-            margin={{ top: 34, right: compact ? 8 : 28, bottom: 24, left: compact ? 58 : 88 }}
+            height={chartHeight}
+            margin={chartMargin}
             colorBy="category"
             colorScheme={GERMANY_COLORS}
-            showLegend={false}
-            pairing="temporal"
-            packing="reuse"
-            laneOrder="crossing-min+inside-out"
-            lanePlacement="hug"
-            ribbonLane="both"
-            lifetimeMode="full"
-            // Docs stories stay on the main thread so first paint is immediate
-            // and Vite dev does not wait on a layout worker module URL.
-            layoutExecution="sync"
             showLabels={compact ? "auto" : true}
             edgeOpacity={0.82}
             tooltip={(hover) => <GermanyBecomingTooltip hover={hover} metricId={metricId} edges={weightedEdges} />}

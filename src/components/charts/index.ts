@@ -148,11 +148,16 @@ export type { ProcessSankeyProps, ProcessSankeyTick } from "./network/ProcessSan
 export {
   validateProcessSankey,
   formatProcessSankeyIssue,
+  inventoryAtTime,
+  toProcessSankeyTime,
 } from "./network/processSankey/algorithm"
 export type {
   ProcessSankeyNode as ProcessSankeyValidatorNode,
   ProcessSankeyEdge as ProcessSankeyValidatorEdge,
   ProcessSankeyIssue,
+  InventoryEdge,
+  InventoryAtTimeOptions,
+  ProcessSankeyTimeLike,
 } from "./network/processSankey/algorithm"
 
 export { TreeDiagram } from "./network/TreeDiagram"
