@@ -97,14 +97,19 @@ function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx
 function darkenColor(hex: string, factor?: number | undefined): string
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
+function diagnoseProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter"> | null | undefined): Diagnosis[]
+function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diagnosis[]
 function estimateLabelWidth(text: string | number, fontSize: number): number
+function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter" | "slots"> | null | undefined): string | null
 function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
+function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest
+function inventoryAtTime(nodeId: string, time: number, edges: readonly InventoryEdge[], options?: InventoryAtTimeOptions | undefined): number
 function isHatchFill(fill: unknown): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
@@ -135,6 +140,7 @@ function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Ma
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
+function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
 function toURL(config: ChartConfig): string
 function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult
 function useCategoryColors(): CategoryColorMap | null
@@ -150,6 +156,7 @@ function useSelection(options: UseSelectionOptions): UseSelectionResult
 function useSelectionActions(name: string, clientId?: string | undefined): UseSelectionActionsResult
 function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
 function useTheme(): SemioticTheme
+function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: { usageMode?: ProcessSankeyUsageMode; } | undefined): ProcessSankeyIssue[]
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
 interface AccessibleNavTreeProps
 interface ActivateObservation
@@ -222,6 +229,8 @@ interface HoverData
 interface IntentManifest
 interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
+interface InventoryAtTimeOptions
+interface InventoryEdge
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
@@ -260,6 +269,7 @@ interface OrbitDiagramProps<TDatum extends Datum = Datum>
 interface OrbitNode
 interface OrdinalScales
 interface PieChartProps<TDatum extends Datum = Datum>
+interface ProcessSankeyIssue
 interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface ProcessSankeyTick
 interface QuadrantChartProps<TDatum extends Datum = Datum>
@@ -411,6 +421,7 @@ type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
 type OnObservationCallback = (observation: ChartObservation) => void
 type OrdinalChartType = "bar" | "clusterbar" | "point" | "swarm" | "pie" | "donut" | "boxplot" | "violin" | "histogram" | "ridgeline" | "timeline" | "funnel" | "bar-funnel" | "swimlane" | "custom"
 type OrdinalSceneNode = RectSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | WedgeSceneNode | BoxplotSceneNode | ViolinSceneNode | ConnectorSceneNode | TrapezoidSceneNode
+type ProcessSankeyTimeLike = number | Date | string
 type PushIdAccessor<T> = keyof T | ((datum: T, index: number) => string | number | null | undefined)
 type QuadrantsConfigOverride = {
     [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;
