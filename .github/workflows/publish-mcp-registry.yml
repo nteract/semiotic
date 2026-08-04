@@ -40,7 +40,7 @@ jobs:
           git show --no-patch --format='commit=%H%nsubject=%s' HEAD
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
