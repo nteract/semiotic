@@ -91,8 +91,18 @@ export class ModuleWorkerSession<TRequest, TResponse> {
           ? this.pending.get(requestId)
           : this.pending.values().next().value
       if (!pending) return
-      if (requestId != null) this.pending.delete(requestId)
-      else this.pending.clear()
+      if (requestId != null) {
+        this.pending.delete(requestId)
+      } else {
+        // A response without an id can only identify the oldest request. Do
+        // not silently orphan any concurrent requests that cannot be matched.
+        for (const other of this.pending.values()) {
+          if (other === pending) continue
+          other.cleanup()
+          other.reject(new Error(`${this.options.name} worker response missing requestId`))
+        }
+        this.pending.clear()
+      }
       pending.cleanup()
       if (!parsed.ok) {
         pending.reject(parsed.error)

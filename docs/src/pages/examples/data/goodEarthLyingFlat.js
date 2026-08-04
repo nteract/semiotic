@@ -1,4 +1,4 @@
-import dataset from "../../../../strategy/good-earth-to-lying-flat-process-sankey.json"
+import dataset from "./good-earth-to-lying-flat-process-sankey.json"
 
 const NODE_HALF_LIFE = 0.12
 export const GOOD_EARTH_ALWAYS_LENS = "__node__"

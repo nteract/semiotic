@@ -109,6 +109,33 @@ describe("ModuleWorkerSession", () => {
     })
   })
 
+  it("rejects unmatched concurrent requests when a response has no request id", async () => {
+    const worker = createFakeWorker()
+    const session = new ModuleWorkerSession<{ n: number }, { doubled: number }>({
+      name: "Test",
+      createWorker: () => worker,
+      parseMessage: (data) => {
+        const response = data as { requestId?: number; doubled: number }
+        return {
+          requestId: response.requestId,
+          ok: true,
+          payload: { doubled: response.doubled },
+        }
+      },
+    })
+
+    const first = session.request({ n: 1 })
+    const second = session.request({ n: 2 })
+    const secondRejection = expect(second).rejects.toThrow(
+      "Test worker response missing requestId",
+    )
+
+    worker.triggerMessage({ doubled: 2 })
+
+    await expect(first).resolves.toEqual({ doubled: 2 })
+    await secondRejection
+  })
+
   it("createSharedWorkerSessionHolder reuses until reset", () => {
     let created = 0
     const holder = createSharedWorkerSessionHolder(() => {
