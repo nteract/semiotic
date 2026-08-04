@@ -1,0 +1,23 @@
+/**
+ * Germany history-river theme tokens.
+ * Structure lives in process-river.css — root markup:
+ *   className="process-river germany-becoming"
+ */
+@import "./process-river.css";
+
+.germany-becoming {
+  --river-ink: #202922;
+  --river-paper: #f2eddc;
+  --river-paper-deep: #e5ddc6;
+  --river-red: #9d3c31;
+  --river-blue: #2f4b7c;
+  --river-green: #315d4a;
+  --river-gold: #e1bf6a;
+  --river-kicker: #a9bba9;
+  --river-findings-bg: #25332c;
+  --river-findings-grid: #58635b;
+  --river-findings-card: #2e3d35;
+  --river-findings-muted: #d2d8d2;
+  --river-outside-bg: #e1d8c0;
+  --river-footer-bg: var(--river-red);
+}

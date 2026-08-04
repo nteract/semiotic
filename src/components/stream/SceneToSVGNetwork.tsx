@@ -137,30 +137,38 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
     }
     case "bezier": {
       const e = edge as NetworkBezierEdge
+      const hatchId = `net-bezier-${i}-hatch`
+      const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
       return (
-        <path
-          key={`net-edge-${i}`}
-          d={e.pathD}
-          fill={svgFill(e.style.fill, "#999")}
-          fillOpacity={e.style.fillOpacity}
-          stroke={e.style.stroke || "none"}
-          strokeWidth={e.style.strokeWidth}
-          opacity={e.style.opacity}
-        />
+        <React.Fragment key={`net-edge-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <path
+            d={e.pathD}
+            fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
+            fillOpacity={e.style.fillOpacity}
+            stroke={e.style.stroke || "none"}
+            strokeWidth={e.style.strokeWidth}
+            opacity={e.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "ribbon": {
       const e = edge as NetworkRibbonEdge
+      const hatchId = `net-ribbon-${i}-hatch`
+      const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
       return (
-        <path
-          key={`net-edge-${i}`}
-          d={e.pathD}
-          fill={svgFill(e.style.fill, "#999")}
-          fillOpacity={e.style.fillOpacity}
-          stroke={e.style.stroke || "none"}
-          strokeWidth={e.style.strokeWidth}
-          opacity={e.style.opacity}
-        />
+        <React.Fragment key={`net-edge-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <path
+            d={e.pathD}
+            fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
+            fillOpacity={e.style.fillOpacity}
+            stroke={e.style.stroke || "none"}
+            strokeWidth={e.style.strokeWidth}
+            opacity={e.style.opacity}
+          />
+        </React.Fragment>
       )
     }
     case "curved": {

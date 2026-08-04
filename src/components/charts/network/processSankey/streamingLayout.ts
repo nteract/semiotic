@@ -19,6 +19,7 @@ import type {
   BezierCache,
 } from "../../../stream/networkTypes"
 import type { Datum } from "../../shared/datumTypes"
+import type { HatchFill } from "../../shared/hatchFill"
 
 export interface ProcessSankeyBandSpec {
   id: string
@@ -27,6 +28,7 @@ export interface ProcessSankeyBandSpec {
   fill: string
   stroke?: string
   strokeWidth?: number
+  fillOpacity?: number
   /** Per-edge 20-px gradient stubs (band-color fade-in for
    *  systemInTime, fade-out for systemOutTime). When at least one
    *  stub is present, the band paints outline-only and the stubs
@@ -38,12 +40,25 @@ export interface ProcessSankeyBandSpec {
   labelX: number
   labelY: number
   labelText: string
+  labelAnchor?: "start" | "middle" | "end"
+  labelBaseline?: string
+  /**
+   * When `showLabels="auto"` sheds this label for density, the full text is
+   * retained here so selection/hover can re-surface it without relayout.
+   */
+  labelDeferred?: boolean
+  labelFullText?: string
+  /** Optional hatch fill descriptor for the band (canvas + SSR). */
+  hatchFill?: HatchFill
 }
 
 export interface BandGradientStub {
   pathD: string
   x0: number
   x1: number
+  /** Vertical gradients use y0/y1 and set x0/x1 to a shared lane value. */
+  y0?: number
+  y1?: number
   from: 0 | 1
   to: 0 | 1
 }
@@ -66,11 +81,20 @@ export interface ProcessSankeyRibbonSpec {
   bezier?: BezierCache
 }
 
+export type ProcessSankeySelectionDatum = "raw" | "scene"
+
 export interface ProcessSankeyLayoutConfig {
   bands: ProcessSankeyBandSpec[]
   ribbons: ProcessSankeyRibbonSpec[]
   /** Optional dim opacity for unselected bands/ribbons (linkedHover). */
   showLabels?: boolean
+  /**
+   * Which datum shape selection/linkedHover predicates receive.
+   * `"raw"` (default) unwraps author records so field matchers work without
+   * knowing ProcessSankey's `{ __kind, data, id }` scene payload.
+   * `"scene"` keeps the full payload for tooling that needs `__kind`.
+   */
+  selectionDatum?: ProcessSankeySelectionDatum
 }
 
 /**
@@ -86,13 +110,43 @@ export interface SceneDatumPayload {
   id: string
 }
 
+const DIM_OPACITY = 0.22
+
+function selectionDatumFor(
+  payload: SceneDatumPayload,
+  mode: ProcessSankeySelectionDatum | undefined,
+): Datum {
+  return mode === "scene" ? (payload as unknown as Datum) : payload.data
+}
+
+function sceneDatumMatchesSelection(
+  payload: SceneDatumPayload,
+  selection: { isActive: boolean; predicate: (d: Datum) => boolean } | null | undefined,
+  mode: ProcessSankeySelectionDatum | undefined,
+): boolean {
+  if (!selection?.isActive) return true
+  return selection.predicate(selectionDatumFor(payload, mode))
+}
+
 export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutConfig> = (ctx) => {
-  const { bands = [], ribbons = [], showLabels = true } = ctx.config
+  const {
+    bands = [],
+    ribbons = [],
+    showLabels = true,
+    selectionDatum = "raw",
+  } = ctx.config
+  const selection = ctx.selection ?? null
 
   const sceneEdges: NetworkBezierEdge[] = []
 
   // Ribbons first so bands paint on top of their attachments.
   for (const r of ribbons) {
+    const payload = {
+      __kind: "ribbon" as const,
+      data: r.rawDatum,
+      id: r.id,
+    } satisfies SceneDatumPayload
+    const dimmed = !sceneDatumMatchesSelection(payload, selection, selectionDatum)
     sceneEdges.push({
       type: "bezier",
       pathD: r.pathD,
@@ -104,14 +158,10 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
       ...(r.bezier && { bezierCache: r.bezier }),
       style: {
         fill: r.fill,
-        opacity: r.opacity,
+        opacity: dimmed ? Math.min(r.opacity, DIM_OPACITY) : r.opacity,
         stroke: "none",
       },
-      datum: {
-        __kind: "ribbon",
-        data: r.rawDatum,
-        id: r.id,
-      } satisfies SceneDatumPayload as unknown as Datum,
+      datum: payload as unknown as Datum,
     })
   }
 
@@ -122,6 +172,12 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
   // they're decorating.
   for (const b of bands) {
     if (!b.gradientStubs) continue
+    const bandPayload = {
+      __kind: "band" as const,
+      data: b.rawDatum,
+      id: b.id,
+    } satisfies SceneDatumPayload
+    const dimmed = !sceneDatumMatchesSelection(bandPayload, selection, selectionDatum)
     for (let i = 0; i < b.gradientStubs.length; i++) {
       const stub = b.gradientStubs[i]
       sceneEdges.push({
@@ -130,10 +186,17 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
         interactive: false,
         style: {
           fill: b.fill,
-          fillOpacity: 0.86,
+          fillOpacity: dimmed ? DIM_OPACITY : (b.fillOpacity ?? 0.86),
           stroke: "none",
         },
-        _gradient: { x0: stub.x0, x1: stub.x1, from: stub.from, to: stub.to },
+        _gradient: {
+          x0: stub.x0,
+          x1: stub.x1,
+          ...(stub.y0 != null && { y0: stub.y0 }),
+          ...(stub.y1 != null && { y1: stub.y1 }),
+          from: stub.from,
+          to: stub.to,
+        },
         datum: {
           __kind: "band",
           data: b.rawDatum,
@@ -149,21 +212,26 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     // the only colored regions inside the perimeter. Otherwise paint
     // the usual translucent band.
     const hasStubs = !!(b.gradientStubs && b.gradientStubs.length > 0)
+    const payload = {
+      __kind: "band" as const,
+      data: b.rawDatum,
+      id: b.id,
+    } satisfies SceneDatumPayload
+    const dimmed = !sceneDatumMatchesSelection(payload, selection, selectionDatum)
+    const baseFillOpacity = b.fillOpacity ?? 0.86
+    const bandFill = b.hatchFill ?? b.fill
     sceneEdges.push({
       type: "bezier",
       pathD: b.pathD,
       style: {
         ...(hasStubs
           ? { fill: "none" }
-          : { fill: b.fill, fillOpacity: 0.86 }),
-        stroke: b.stroke ?? b.fill,
+          : { fill: bandFill as string, fillOpacity: dimmed ? DIM_OPACITY : baseFillOpacity }),
+        stroke: b.stroke ?? (typeof b.fill === "string" ? b.fill : "#666"),
         strokeWidth: b.strokeWidth ?? 0.5,
+        ...(dimmed && hasStubs ? { opacity: DIM_OPACITY } : {}),
       },
-      datum: {
-        __kind: "band",
-        data: b.rawDatum,
-        id: b.id,
-      } satisfies SceneDatumPayload as unknown as Datum,
+      datum: payload as unknown as Datum,
     })
   }
 
@@ -171,16 +239,37 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
   // theme-resolved text color (`var(--semiotic-text)` via
   // `currentColor`). Hardcoding `#1e293b` here would force dark labels
   // on dark themes and break high-contrast mode.
+  // Deferred labels (auto density shed) reappear when their band is in the
+  // active selection — no geometry recompute required.
   const labels: NetworkLabel[] = showLabels
-    ? bands.map((b) => ({
-        x: b.labelX,
-        y: b.labelY,
-        text: b.labelText,
-        anchor: "end" as const,
-        baseline: "middle",
-        fontSize: 11,
-        fontWeight: 600,
-      }))
+    ? bands.flatMap((b) => {
+        const deferred = b.labelDeferred && b.labelFullText?.trim()
+        const visible = b.labelText.trim().length > 0
+        const revealDeferred = deferred && selection?.isActive &&
+          sceneDatumMatchesSelection(
+            { __kind: "band", data: b.rawDatum, id: b.id },
+            selection,
+            selectionDatum,
+          )
+        const text = visible
+          ? b.labelText
+          : revealDeferred
+            ? b.labelFullText!
+            : ""
+        if (!text.trim()) return []
+        return [{
+          x: b.labelX,
+          y: b.labelY,
+          text,
+          anchor: b.labelAnchor ?? "end",
+          baseline: b.labelBaseline ?? "middle",
+          fontSize: 11,
+          fontWeight: 600,
+          stroke: "var(--semiotic-surface, #fff)",
+          strokeWidth: 3,
+          paintOrder: "stroke",
+        }]
+      })
     : []
 
   // Color-binding scene nodes — one per node id, off-canvas at r:0 so

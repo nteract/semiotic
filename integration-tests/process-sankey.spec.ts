@@ -76,6 +76,34 @@ test.describe("ProcessSankey - Static", () => {
     expect(await legendItems.count()).toBeGreaterThan(0)
   })
 
+  test("projects the complete scene onto a top-to-bottom time axis", async ({ page }) => {
+    const tc = page.locator('[data-testid="static-vertical"]')
+    await expect(tc).toBeVisible()
+    await expect.poll(() => canvasHasPaint(page, "static-vertical"), { timeout: 5_000 }).toBe(true)
+
+    const canvasSize = await tc.locator("canvas").evaluate((canvas) => ({
+      width: (canvas as HTMLCanvasElement).width,
+      height: (canvas as HTMLCanvasElement).height,
+    }))
+    expect(canvasSize.height).toBeGreaterThan(canvasSize.width)
+
+    // Vertical labels center on their lane coordinate instead of using the
+    // end-anchor expected by a left-to-right timeline.
+    await expect(tc.locator("svg text").filter({ hasText: "Release" })).toHaveAttribute("text-anchor", "middle")
+
+    // The explicit historical ticks belong to one vertical axis: their x
+    // positions are equal while their y positions advance down the chart.
+    const ticks = await tc.locator("svg text").filter({ hasText: /^(Jan|Apr|Jun)$/ }).evaluateAll((elements) =>
+      elements.map((element) => ({
+        x: Number(element.getAttribute("x")),
+        y: Number(element.getAttribute("y")),
+      })),
+    )
+    expect(ticks).toHaveLength(3)
+    expect(new Set(ticks.map((tick) => tick.x)).size).toBe(1)
+    expect(ticks.map((tick) => tick.y)).toEqual([...ticks.map((tick) => tick.y)].sort((a, b) => a - b))
+  })
+
   test("particles render when showParticles is on", async ({ page }) => {
     const tc = page.locator('[data-testid="static-particles"]')
     await expect(tc).toBeVisible()
@@ -154,6 +182,22 @@ test.describe("ProcessSankey - Rendering Integrity", () => {
     const real = errors.filter((e) => !e.includes("act(") && !e.includes("Warning:"))
     expect(real).toEqual([])
   })
+
+  test("does not rebuild an already-consumed scene revision", async ({ page }) => {
+    const duplicateBuilds: string[] = []
+    page.on("console", (message) => {
+      if (message.text().includes("performed scene rebuild with unchanged scene revisions")) {
+        duplicateBuilds.push(message.text())
+      }
+    })
+
+    await page.goto(PAGE)
+    await page.locator('[data-testid="push-seed"]').click()
+    await expect(page.locator('[data-testid="push-count"]')).toHaveText(/pushed [1-9]/)
+    await page.waitForTimeout(250)
+
+    expect(duplicateBuilds).toEqual([])
+  })
 })
 
 // ── Visual regression baselines ────────────────────────────────────────
@@ -178,6 +222,13 @@ test.describe("ProcessSankey - Visual baselines", () => {
     // one extra frame for layout settle.
     await page.waitForTimeout(120)
     await expect(tc).toHaveScreenshot("static-basic.png", { maxDiffPixels: 300 })
+  })
+
+  test("static — capped scale + hug placement", async ({ page }) => {
+    const tc = page.locator('[data-testid="static-hug"]')
+    await expect.poll(() => canvasHasPaint(page, "static-hug"), { timeout: 5_000 }).toBe(true)
+    await page.waitForTimeout(120)
+    await expect(tc).toHaveScreenshot("static-hug.png", { maxDiffPixels: 300 })
   })
 
   // No pixel snapshot for the particle stream — rAF-driven animation

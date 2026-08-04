@@ -450,6 +450,27 @@ async function createPhysicsWorkerBundle({ minify = false } = {}) {
   console.log(`✅ physics worker created${minify ? " (minified)" : ""}`)
 }
 
+async function createProcessSankeyLayoutWorkerBundle({ minify = false } = {}) {
+  await tsupBuild({
+    entry: { processSankeyLayoutWorker: "src/components/charts/network/processSankey/processSankeyLayoutWorker.js" },
+    outDir: "dist",
+    target: "es2020",
+    platform: "browser",
+    format: "esm",
+    splitting: false,
+    bundle: true,
+    clean: false,
+    dts: false,
+    sourcemap: false,
+    minify: minify ? "terser" : false,
+    outExtension: () => ({ js: ".js" }),
+    external: explicitExternals,
+    silent: true,
+  })
+  console.log(`✅ process-sankey layout worker created${minify ? " (minified)" : ""}`)
+}
+
+
 function buildDeclarations() {
   try {
     execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
@@ -620,6 +641,7 @@ async function build() {
 
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })
+  await createProcessSankeyLayoutWorkerBundle({ minify })
 
   assertDirectivePlacement(bundledEntries)
 }

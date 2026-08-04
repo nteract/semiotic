@@ -20,10 +20,25 @@ interface AttachmentLike {
   sideMassAfter: number
   kind: Kind
   value: number
+  boundaryOffset?: number
 }
 
-type RibbonLane = "source" | "target" | "both"
+export type ProcessSankeyRibbonLaneInput = "source" | "target" | "both"
 type XScale = (t: number) => number
+
+const AUTO_MINIMUM_BEND_RADIUS = 8
+const AUTO_MAXIMUM_RUN = 144
+
+export interface ProcessSankeyRibbonInputOptions {
+  /** Desired total ribbon run along the rendered time axis, in pixels.
+   * `"auto"` derives the run needed for an 8px minimum endpoint bend
+   * radius, capped at 144px. Omit to preserve exact attachment timing. */
+  minRun?: number | "auto"
+  /** Earliest proven time at which this feeder's source attachment can be
+   * rendered. The caller owns feeder detection and stock validation; without
+   * this value `minRun` deliberately has no effect. */
+  sourceRunwayStart?: number
+}
 
 /**
  * Build the geometry inputs for a single ProcessSankey ribbon. The
@@ -39,8 +54,9 @@ export function computeProcessSankeyRibbonInputs(
   tgtCenterline: number,
   valueScale: number,
   xScale: XScale,
-  lane: RibbonLane,
+  lane: ProcessSankeyRibbonLaneInput,
   domain: [number, number] | null,
+  options: ProcessSankeyRibbonInputOptions = {},
 ): RibbonGeometryInput {
   const S = valueScale
   const clampTime = (t: number): number => {
@@ -48,7 +64,7 @@ export function computeProcessSankeyRibbonInputs(
     return Math.max(domain[0], Math.min(domain[1], t))
   }
 
-  const sx = xScale(clampTime(srcAtt.time))
+  let sx = xScale(clampTime(srcAtt.time))
   const tx = xScale(clampTime(tgtAtt.time))
 
   // attachmentYRange-equivalent — top/bottom y of the ribbon band at
@@ -57,25 +73,63 @@ export function computeProcessSankeyRibbonInputs(
   // (mass stacked after this in-edge attaches).
   const srcV = srcAtt.value * S
   const tgtV = tgtAtt.value * S
+  const srcBoundary = srcCenterline + (srcAtt.boundaryOffset ?? 0) * S
+  const tgtBoundary = tgtCenterline + (tgtAtt.boundaryOffset ?? 0) * S
   const srcBefore = srcAtt.sideMassBefore * S
   const tgtAfter = tgtAtt.sideMassAfter * S
 
   let sTop: number, sBot: number
   if (srcAtt.side === "top") {
-    sTop = srcCenterline - srcBefore
+    sTop = srcBoundary - srcBefore
     sBot = sTop + srcV
   } else {
-    sBot = srcCenterline + srcBefore
+    sBot = srcBoundary + srcBefore
     sTop = sBot - srcV
   }
 
   let tTop: number, tBot: number
   if (tgtAtt.side === "top") {
-    tTop = tgtCenterline - tgtAfter
+    tTop = tgtBoundary - tgtAfter
     tBot = tTop + tgtV
   } else {
-    tBot = tgtCenterline + tgtAfter
+    tBot = tgtBoundary + tgtAfter
     tTop = tBot - tgtV
+  }
+
+  // A feeder can have years of proven stock immediately before a very short
+  // dated transaction. Rendering that transaction only between start/end can
+  // compress a large cross-lane turn into a few pixels, which is smooth in a
+  // calculus sense but reads as a right angle. Borrow only the source runway
+  // the caller has explicitly proved; logical attachment times and mass
+  // ranges remain untouched.
+  const sourceRunwayStart = options.sourceRunwayStart
+  const minRun = options.minRun
+  const sourceCenter = (sTop + sBot) / 2
+  const targetCenter = (tTop + tBot) / 2
+  const laneDistance = Math.abs(targetCenter - sourceCenter)
+  const logicalRun = tx - sx
+  const hasRunway = typeof sourceRunwayStart === "number" && Number.isFinite(sourceRunwayStart)
+  const numericRun = typeof minRun === "number" && Number.isFinite(minRun) && minRun > 0
+
+  if (hasRunway && laneDistance > 1e-9 && logicalRun > 0 && (minRun === "auto" || numericRun)) {
+    const control = lane === "source" ? 0.85 : lane === "target" ? 0.15 : 0.5
+    // For P0=(0,0), P1=(cD,0), P2=(cD,L), P3=(D,L), the smaller
+    // endpoint radius is 1.5*min(c²,(1-c)²)*D²/L. Solve for D.
+    const radiusCoefficient = 1.5 * Math.min(control * control, (1 - control) * (1 - control))
+    const desiredRun = minRun === "auto"
+      ? Math.min(
+          AUTO_MAXIMUM_RUN,
+          Math.sqrt(AUTO_MINIMUM_BEND_RADIUS * laneDistance / radiusCoefficient),
+        )
+      : minRun
+
+    if (desiredRun > logicalRun) {
+      const runwayX = xScale(clampTime(Math.min(sourceRunwayStart, srcAtt.time)))
+      if (Number.isFinite(runwayX)) {
+        const earliestSourceX = Math.min(sx, runwayX)
+        sx = Math.min(sx, Math.max(earliestSourceX, tx - desiredRun))
+      }
+    }
   }
 
   // `cp1X === cp2X` for ProcessSankey — the lane choice picks a
@@ -91,4 +145,70 @@ export function computeProcessSankeyRibbonInputs(
     cp1X: cx,
     cp2X: cx,
   }
+}
+
+interface FeederBatchEdge {
+  id: string
+  source: string
+  startTime: number
+}
+
+/**
+ * Give every ribbon in one source/timestamp departure batch a shared visual
+ * source. A band is a single contiguous silhouette, so independently pulling
+ * an inner attachment ahead of its neighbors would require holes in that
+ * silhouette. The latest runway floor in the batch remains authoritative;
+ * an edge without proven runway conservatively keeps the whole batch exact.
+ */
+export function synchronizeProcessSankeyFeederBatches(
+  edges: readonly FeederBatchEdge[],
+  inputsByEdge: ReadonlyMap<string, RibbonGeometryInput>,
+  runwayStartByEdge: ReadonlyMap<string, number>,
+  xScale: XScale,
+  lane: ProcessSankeyRibbonLaneInput,
+  sourceGroupByNode?: ReadonlyMap<string, string>,
+): Map<string, RibbonGeometryInput> {
+  const synchronized = new Map(inputsByEdge)
+  const batchesBySource = new Map<string, Map<number, FeederBatchEdge[]>>()
+
+  for (const edge of edges) {
+    const group = sourceGroupByNode?.get(edge.source)
+    const batchOwner = group == null ? `node:${edge.source}` : `group:${group}`
+    const byTime = batchesBySource.get(batchOwner) ?? new Map<number, FeederBatchEdge[]>()
+    const batch = byTime.get(edge.startTime) ?? []
+    batch.push(edge)
+    byTime.set(edge.startTime, batch)
+    batchesBySource.set(batchOwner, byTime)
+  }
+
+  for (const byTime of batchesBySource.values()) {
+    for (const [startTime, batch] of byTime) {
+      if (!batch.some((edge) => runwayStartByEdge.has(edge.id))) continue
+      const batchInputs = batch.map((edge) => inputsByEdge.get(edge.id))
+      if (batchInputs.some((input) => input == null)) continue
+
+      const authoredX = xScale(startTime)
+      const earliestRequestedX = Math.min(...batchInputs.map((input) => input!.sx))
+      if (!(earliestRequestedX < authoredX - 1e-9)) continue
+      const latestSafeX = Math.max(...batch.map((edge) => {
+        const runwayStart = runwayStartByEdge.get(edge.id)
+        return runwayStart == null ? authoredX : Math.min(authoredX, xScale(runwayStart))
+      }))
+      const sharedSourceX = Math.min(authoredX, Math.max(earliestRequestedX, latestSafeX))
+
+      for (const edge of batch) {
+        const input = inputsByEdge.get(edge.id)!
+        const control = lane === "source" ? 0.85 : lane === "target" ? 0.15 : 0.5
+        const cx = sharedSourceX + (input.tx - sharedSourceX) * control
+        synchronized.set(edge.id, {
+          ...input,
+          sx: sharedSourceX,
+          cp1X: cx,
+          cp2X: cx,
+        })
+      }
+    }
+  }
+
+  return synchronized
 }

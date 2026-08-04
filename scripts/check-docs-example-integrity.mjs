@@ -265,7 +265,12 @@ function collectArchitectureProfilePaths(source, definitions = []) {
 }
 
 function readStaticExamplePageTitle(source) {
-  return source.match(/<ExamplePageLayout\b[\s\S]*?\btitle="([^"]+)"/)?.[1]
+  // Direct ExamplePageLayout title, or shared shells that pass pageTitle through
+  // (ProcessRiverExampleLayout → ExamplePageLayout title={pageTitle}).
+  return (
+    source.match(/<ExamplePageLayout\b[\s\S]*?\btitle="([^"]+)"/)?.[1] ??
+    source.match(/\bpageTitle="([^"]+)"/)?.[1]
+  )
 }
 
 function comparePathSets(failures, label, actual, expected) {

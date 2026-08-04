@@ -25,7 +25,16 @@ interface SemanticFrameInteractionOptions<Hover extends HoverLike> {
   chartType: string
 }
 
-/** Add semantic observations around the legacy Stream Frame callbacks. */
+/**
+ * Add semantic observations around the legacy Stream Frame callbacks.
+ *
+ * Returns `undefined` for hover/click when neither a user callback nor
+ * `onObservation` is present. Frames historically treated any truthy
+ * `customHoverBehavior` as “selection may have changed” and marked the
+ * scene dirty — which re-ran `computeScene` (and intro/data transitions)
+ * on every pointermove. Observation emission alone does not change the
+ * retained scene, so an always-present wrapper is the wrong signal.
+ */
 export function useSemanticFrameInteractions<Hover extends HoverLike>({
   customHoverBehavior: customHoverBehaviorProp,
   customClickBehavior: customClickBehaviorProp,
@@ -33,6 +42,9 @@ export function useSemanticFrameInteractions<Hover extends HoverLike>({
   chartId,
   chartType
 }: SemanticFrameInteractionOptions<Hover>) {
+  const needsHover = Boolean(customHoverBehaviorProp || onObservation)
+  const needsClick = Boolean(customClickBehaviorProp || onObservation)
+
   const customHoverBehavior = useCallback((
     hover: Hover | null,
     context?: SemanticInteractionContext
@@ -66,8 +78,8 @@ export function useSemanticFrameInteractions<Hover extends HoverLike>({
   }, [chartId, chartType, customClickBehaviorProp, onObservation])
 
   return {
-    customHoverBehavior,
-    customClickBehavior,
-    hasClickBehavior: Boolean(customClickBehaviorProp || onObservation)
+    customHoverBehavior: needsHover ? customHoverBehavior : undefined,
+    customClickBehavior: needsClick ? customClickBehavior : undefined,
+    hasClickBehavior: needsClick
   }
 }

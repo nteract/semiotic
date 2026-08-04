@@ -937,7 +937,20 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       keyCounts.set(baseKey, count + 1)
       return `${baseKey}:${count}`
     } else if (node.type === "rect") {
-      return `r:${node.group || ""}:${node.datum?.category ?? ""}`
+      // Prefer the o-accessor (category) over a hard-coded `datum.category`
+      // field. Cluster/grouped bars keep the raw row (e.g. `{ region, quarter }`)
+      // and only bar/stack builders inject `category: col.name`. Without
+      // getO(), every sub-bar in a group collapsed to `r:{group}:` and
+      // legitimate rebuilds treated most bars as enter/exit animations.
+      const cat = node.datum
+        ? (node.datum.category != null && node.datum.category !== ""
+          ? String(node.datum.category)
+          : String(this.getO(node.datum) ?? ""))
+        : ""
+      const baseKey = `r:${node.group || ""}:${cat}`
+      const count = keyCounts.get(baseKey) || 0
+      keyCounts.set(baseKey, count + 1)
+      return count === 0 ? baseKey : `${baseKey}:${count}`
     } else if (node.type === "wedge") {
       return `w:${node.category ?? ""}`
     }

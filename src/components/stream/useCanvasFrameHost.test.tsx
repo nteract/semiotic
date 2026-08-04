@@ -112,6 +112,27 @@ describe("useCanvasFrameHost", () => {
     expect(fixture.dirtyRef.current).toBe(true)
     expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
   })
+
+  it("lets a family repaint dependency changes without rebuilding its scene", () => {
+    const canvasPaintInvalidator = vi.fn()
+    const fixture = createInput({
+      canvasPaintDependencies: ["first"],
+      canvasPaintInvalidator,
+      skipInitialCanvasPaintInvalidation: true,
+    })
+    const { rerender } = renderHook(
+      ({ input }) => useCanvasFrameHost(input),
+      { initialProps: { input: fixture.input } },
+    )
+    fixture.scheduleRender.mockClear()
+    fixture.dirtyRef.current = false
+
+    rerender({ input: { ...fixture.input, canvasPaintDependencies: ["second"] } })
+
+    expect(canvasPaintInvalidator).toHaveBeenCalledTimes(1)
+    expect(fixture.dirtyRef.current).toBe(false)
+    expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("CanvasFrameBackground", () => {

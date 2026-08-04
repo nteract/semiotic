@@ -70,16 +70,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/charts/network/ProcessSankey.tsx",
-      "maxLines": 1112,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
-      "path": "src/components/charts/network/processSankey/algorithm.ts",
-      "maxLines": 1374,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/charts/shared/annotationRules.tsx",
       "maxLines": 1077,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +4 (2026-07-17): band/x-band omitted bounds extend to scale domain (CSR parity with SSR)."

@@ -33,6 +33,13 @@ const sampleEdges = [
   { id: "alice-eng", source: "Alice", target: "Eng", value: 8, startTime: D(2026, 1, 20), endTime: D(2026, 2, 10) },
 ]
 
+function maximumPathY(pathD: string): number {
+  const pairs = [...pathD.matchAll(
+    /(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?),(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)/gi,
+  )]
+  return Math.max(...pairs.map((pair) => Number(pair[2])))
+}
+
 describe("ProcessSankey HOC", () => {
   beforeEach(() => {
     lastFrameProps = null
@@ -54,6 +61,203 @@ describe("ProcessSankey HOC", () => {
     expect(alice.rawDatum).toMatchObject({ id: "Alice", category: "Person" })
     expect(typeof alice.labelX).toBe("number")
     expect(typeof alice.labelY).toBe("number")
+  })
+
+  it("projects time top-to-bottom in vertical orientation", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          orientation="vertical"
+          width={600}
+          height={600}
+          margin={0}
+        />
+      </TooltipProvider>,
+    )
+    const ribbon = lastFrameProps?.layoutConfig.ribbons[0]
+    const points = ribbon?.bezier?.points
+    expect(points).toHaveLength(4)
+    expect(points?.[0].y).toBeLessThan(points?.[3].y ?? 0)
+    expect(lastFrameProps?.layoutConfig.bands.every((item) => item.labelAnchor === "middle")).toBe(true)
+  })
+
+  it("borrows proven feeder runway without changing authored event timing", () => {
+    const nodes = [
+      { id: "Feeder", xExtent: [0, 100] },
+      { id: "Main", xExtent: [0, 100] },
+    ]
+    const edge = {
+      id: "feeder-main",
+      source: "Feeder",
+      target: "Main",
+      value: 1,
+      startTime: 96,
+      endTime: 100,
+    }
+    const { rerender } = render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={nodes}
+          edges={[edge]}
+          domain={[0, 100]}
+          orientation="vertical"
+          packing="off"
+          laneOrder="insertion"
+          width={600}
+          height={600}
+          margin={0}
+        />
+      </TooltipProvider>,
+    )
+
+    const exactRibbon = lastFrameProps?.layoutConfig.ribbons[0]
+    const exactSourceTime = exactRibbon?.bezier?.points?.[0].y
+    const exactTargetTime = exactRibbon?.bezier?.points?.[3].y
+
+    rerender(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={nodes}
+          edges={[edge]}
+          domain={[0, 100]}
+          orientation="vertical"
+          packing="off"
+          laneOrder="insertion"
+          ribbonMinRun="auto"
+          width={600}
+          height={600}
+          margin={0}
+        />
+      </TooltipProvider>,
+    )
+
+    const smoothedRibbon = lastFrameProps?.layoutConfig.ribbons[0]
+    const smoothedPoints = smoothedRibbon?.bezier?.points
+    expect(smoothedPoints?.[0].y).toBeLessThan(exactSourceTime ?? 0)
+    expect(smoothedPoints?.[0].y).toBeGreaterThanOrEqual(0)
+    expect(smoothedPoints?.[3].y).toBe(exactTargetTime)
+    expect(smoothedRibbon?.rawDatum).toMatchObject({ startTime: 96, endTime: 100 })
+    const feederBand = lastFrameProps?.layoutConfig.bands.find((band) => band.id === "Feeder")
+    expect(maximumPathY(feederBand?.pathD ?? "")).toBe(smoothedPoints?.[0].y)
+    const renderedEdges = lastFrameProps?.edges
+    expect(Array.isArray(renderedEdges) ? renderedEdges[0]?.bezier : undefined)
+      .toEqual(smoothedRibbon?.bezier)
+  })
+
+  it("reserves vertical margin only for chrome that is rendered", () => {
+    const { rerender } = render(
+      <TooltipProvider>
+        <ProcessSankey nodes={sampleNodes} edges={sampleEdges} domain={DOMAIN} />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.margin).toMatchObject({ top: 8, bottom: 8 })
+
+    rerender(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          axisTicks={[{ date: DOMAIN[0], label: "Start" }]}
+          showQualityReadout
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.margin).toMatchObject({ top: 24, bottom: 28 })
+  })
+
+  it("keeps explicit vertical margins authoritative", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          axisTicks={[{ date: DOMAIN[0], label: "Start" }]}
+          showQualityReadout
+          margin={{ top: 3, bottom: 5 }}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.margin).toMatchObject({ top: 3, bottom: 5 })
+  })
+
+  it("resolves visible lane labels independently from stable node ids", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={[
+            { id: "LUNAR_ORBIT", label: "Lunar orbit" },
+            { id: "LM_LIFEBOAT", label: "LM lifeboat" },
+          ]}
+          edges={[
+            {
+              id: "diversion",
+              source: "LUNAR_ORBIT",
+              target: "LM_LIFEBOAT",
+              value: 3,
+              startTime: D(2026, 1, 20),
+              endTime: D(2026, 2, 10),
+            },
+          ]}
+          domain={DOMAIN}
+          nodeLabel="label"
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.layoutConfig.bands).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "LUNAR_ORBIT", labelText: "Lunar orbit" }),
+        expect.objectContaining({ id: "LM_LIFEBOAT", labelText: "LM lifeboat" }),
+      ]),
+    )
+  })
+
+  it("resolves groupBy and emits same-group ribbons as one contiguous block", () => {
+    const nodes = ["A", "B", "C", "D", "E"].flatMap((prefix) => [
+      { id: `${prefix}-before`, bond: ["A", "C", "E"].includes(prefix) ? "united-states" : undefined, xExtent: [0, 2] },
+      { id: `${prefix}-after`, bond: ["A", "C", "E"].includes(prefix) ? "united-states" : undefined, xExtent: [8, 10] },
+    ])
+    const edges = ["A", "B", "C", "D", "E"].map((prefix) => ({
+      id: prefix,
+      source: `${prefix}-before`,
+      target: `${prefix}-after`,
+      value: 1,
+      startTime: 2,
+      endTime: 8,
+    }))
+
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={nodes}
+          edges={edges}
+          domain={[0, 10]}
+          groupBy="bond"
+          laneOrder="insertion"
+          lifetimeMode="full"
+          margin={0}
+        />
+      </TooltipProvider>,
+    )
+
+    const starts = new Map(lastFrameProps?.layoutConfig.ribbons.map((ribbon) => [
+      ribbon.id,
+      ribbon.bezier?.points[0].y ?? NaN,
+    ]))
+    const grouped = [starts.get("A")!, starts.get("C")!, starts.get("E")!]
+      .sort((a, b) => a - b)
+    for (const id of ["B", "D"]) {
+      const position = starts.get(id)!
+      expect(position < grouped[0] || position > grouped.at(-1)!).toBe(true)
+    }
   })
 
   it("renders an inline error block when domain is malformed (validation gate)", () => {

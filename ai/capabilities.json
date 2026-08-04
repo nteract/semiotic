@@ -446,8 +446,8 @@
     "ProcessSankey": {
       "category": "network",
       "supportsLegend": true,
-      "supportsSelection": false,
-      "supportsLinkedHover": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
       "supportsPush": true,
       "supportsSSR": true,
       "colorModel": "categorical",
@@ -455,7 +455,12 @@
       "specialFeatures": [
         "temporal",
         "particles",
-        "lane-reuse"
+        "lane-reuse",
+        "quality-metrics",
+        "slack-aware-placement",
+        "vertical-orientation",
+        "style-rules",
+        "worker-layout"
       ]
     },
     "SankeyDiagram": {

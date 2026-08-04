@@ -838,6 +838,316 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
     },
   },
+  {
+    id: "apollo-lunar-choreography",
+    path: "/examples/apollo-lunar-choreography",
+    sourceFile: "ApolloLunarChoreographyExamplePage.jsx",
+    isPilot: true,
+    title: "The Third Seat: Apollo’s Lunar Choreography",
+    eyebrow: "ProcessSankey · NASA mission chronology",
+    description:
+      "Align nine lunar voyages at launch to see 27 crew-seats separate, wait, reunite, divert through a lifeboat, and all return home.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/recipes", "semiotic/utils"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-nasa-apollo-ground-elapsed-time-transcription",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "NASA Apollo by the Numbers, Apollo Lunar Surface Journal mission summaries, and Apollo 13 mission chronology",
+        capturedAt: "2026-08-01",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source revision",
+      },
+      accessibility: {
+        summary:
+          "ProcessSankey description and table, an explicit reading key, mission dossiers, prose conclusions, and a published-milestones table",
+        navigation:
+          "Native story-lens, mission, motion, placement, telemetry, argument, duration-bar, and source-link controls",
+        keyboard:
+          "Every authored control is a native button or link; ProcessSankey retains keyboard mark navigation and accessible table output",
+        forcedColors:
+          "Chart shell, controls, story cards, sources, focus states, and selection states retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The media preference disables ProcessSankey particles and authored CSS transitions while preserving the complete process view",
+        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+      },
+      responsive: {
+        status: "container-responsive-and-browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable story-lens, mission, phase, and edge IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic checked-in mission chronology and stable default all-missions lens",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public semiotic, semiotic/recipes, and semiotic/utils entry points",
+          interaction: "nine missions, 32 bounded process edges, six phases, and memoized focus slices",
+          memory: "one checked-in chronology with no duplicate chart snapshots or retained animation history",
+          hiddenPage: "no timers, requests, observers, or authored background work",
+        },
+      },
+    },
+  },
+  {
+    id: "ballot-transfer-ledger",
+    path: "/examples/ballot-transfer-ledger",
+    sourceFile: "BallotTransferLedgerExamplePage.jsx",
+    isPilot: true,
+    title: "The 7,197-Vote Corridor",
+    eyebrow: "ProcessSankey · certified ranked-choice transfers",
+    description:
+      "Audit how three elimination pools erased 96,725 votes of a six-figure lead in New York City’s 2021 Democratic mayoral primary.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-nyc-boe-certified-ranked-choice-rounds-transcription",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source: "NYC Board of Elections Official Ranked Choice Rounds, contest 024306",
+        capturedAt: "2026-08-02",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source revision",
+      },
+      accessibility: {
+        summary:
+          "ProcessSankey description and table, a prose reading rule, transfer-pool inspector, endpoint ledger, and explicit conservation check",
+        navigation:
+          "Native transfer-pool, finding, accessible-table, and official-source controls",
+        keyboard:
+          "Every authored control is a native button or link; ProcessSankey retains keyboard mark navigation and accessible table output",
+        forcedColors:
+          "Chart shell, selectors, inspection panel, finding cards, source link, focus states, and selection states retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The example has no animated particles and disables authored CSS motion under the media preference",
+        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+      },
+      responsive: {
+        status: "container-responsive-and-browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable certified pool, account, and edge IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic checked-in certified transfer ledger and stable Wiley-pool default",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
+          interaction: "seven accounts, 18 bounded process edges, and three local inspector selections",
+          memory: "one checked-in ledger with no duplicate snapshots or retained animation history",
+          hiddenPage: "no timers, requests, observers, or authored background work",
+        },
+      },
+    },
+  },
+  {
+    id: "germany-still-becoming",
+    path: "/examples/germany-still-becoming",
+    sourceFile: "GermanyStillBecomingExamplePage.jsx",
+    isPilot: true,
+    title: "Germany, Still Becoming",
+    eyebrow: "Vertical ProcessSankey · a constitutional history river",
+    description:
+      "Read downward through twelve historical openings as twenty-six contributions to present-day Germany split, merge, disappear into larger states, and return as Länder.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-source-audited-mass-conserving-germany-history-river",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Official German state statistics, German History in Documents and Images, Bundesarchiv, Bundeszentrale für politische Bildung, and the United States Holocaust Memorial Museum",
+        capturedAt: "2026-08-02",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source revision",
+      },
+      accessibility: {
+        summary:
+          "ProcessSankey description and table, conserved-width explanation, stage reader, metric controls, external-flow caveats, and source-linked interpretation",
+        navigation:
+          "Native metric, finding, accessible-table, source-link, and code-copy controls",
+        keyboard:
+          "Every authored control is a native button or link; ProcessSankey retains keyboard mark navigation and accessible table output",
+        forcedColors:
+          "Chart shell, width selector, stage reader, warning, sources, focus states, and pressed states retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The example has no animated particles and disables authored CSS motion under the media preference",
+        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+      },
+      responsive: {
+        status: "container-responsive-and-browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable stage, historical-container, endpoint-atom, and link IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic checked-in river topology and stable c. 750 reader opening",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
+          interaction: "98 containers, 130 conserved links, four local width metrics, and three finding shortcuts",
+          memory: "one checked-in source dataset with no duplicate snapshots or retained animation history",
+          hiddenPage: "no timers, requests, observers, or authored background work",
+        },
+      },
+    },
+  },
+  {
+    id: "united-states-drawn-together",
+    path: "/examples/united-states-drawn-together",
+    sourceFile: "UnitedStatesHistoryRiverExamplePage.jsx",
+    isPilot: true,
+    title: "The United States, Drawn Together",
+    eyebrow: "Vertical ProcessSankey · an institutional history river",
+    description:
+      "Follow jurisdiction routes through three persistent institutions as acquisitions accumulate, territories become states, Civil War routes leave and return, and colonial administrations fade away.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-source-audited-united-states-process-event-ledger",
+          replay: false,
+          schemaVersion: "2",
+        },
+      },
+      provenance: {
+        source:
+          "U.S. Census Bureau, Bureau of Economic Analysis, National Archives, U.S. Senate, Department of the Interior, and source-specific territorial histories bundled with the research dataset",
+        capturedAt: "2026-08-02",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source revision",
+      },
+      accessibility: {
+        summary:
+          "ProcessSankey description and table, jurisdiction-route width explanation, event reader, lifecycle-exit caveats, external-administration ledger, and official sources",
+        navigation:
+          "Native event, accessible-table, source-link, and code-copy controls",
+        keyboard:
+          "Every authored control is native; ProcessSankey retains keyboard mark navigation and accessible table output",
+        forcedColors:
+          "Chart shell, institution key, event reader, warnings, source links, and focus states retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The example has no animated particles and disables authored CSS motion under the media preference",
+        visibility: "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
+      },
+      responsive: {
+        status: "container-responsive-and-browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable milestone, institution, jurisdiction-route, holding, and transaction IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic checked-in event topology and stable 1776 reader opening",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
+          interaction: "28 nodes, 64 dated transactions, three persistent institutions, seven lifecycle exits, and one local event reader",
+          memory: "one checked-in research dataset compiled into an event ledger with no retained stage snapshots or animation history",
+          hiddenPage: "no timers, requests, or authored background work",
+        },
+      },
+    },
+  },
+  {
+    id: "digital-humanities-thunderdome",
+    path: "/examples/digital-humanities-thunderdome",
+    sourceFile: "DigitalHumanitiesThunderdomeExamplePage.jsx",
+    isPilot: true,
+    title: "Thunderdome Has Rounded Corners",
+    eyebrow: "Scrollytelling · AI-age digital humanities",
+    description:
+      "A source-backed argument asks whether AI-assisted coding decolonizes weird code, then tests what implementation changes—and what DHQ’s editorial systems still decide.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/physics", "semiotic/utils", "semiotic/xy"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-pinned-dhq-published-record-snapshot",
+          replay: false,
+          schemaVersion: "2",
+        },
+      },
+      provenance: {
+        source:
+          "Official DHQ XML corpus plus the public dhq-journal repository pinned at acda567f6b46d43f709449e8f71392a51e5286df; compact browser aggregates generated from capture dhq-2007-to-2025-20260729",
+        capturedAt: "2026-07-29",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary:
+          "Eight Semiotic chart summaries and accessible tables pair every visual claim with a prose reading in document order",
+        navigation:
+          "Semantic article landmarks and observer-enhanced current-scene state preserve a complete linear reading without scroll choreography",
+        keyboard:
+          "Scrolling never traps focus; native links and buttons, chart mark navigation, and keyboard-triggered tooltips remain available",
+        forcedColors:
+          "Chapter state, focus rings, chart shells, marks, and tooltips retain system-color boundaries and non-color labels",
+      },
+      motion: {
+        reducedMotion:
+          "prefers-reduced-motion removes smooth scrolling and scene transforms, reveals every scene immediately, settles force layouts, and pauses the physics swarm",
+        visibility:
+          "One IntersectionObserver limits active scene work to the reading viewport and disconnects on cleanup; there are no timers or continuous streams",
+      },
+      responsive: {
+        status: "container-responsive-and-breakpoint-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable scene and chart-datum IDs across stacked and sticky layouts",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "The deterministic inline scene sequence renders on the server; the measured desktop sticky stage and IntersectionObserver begin only after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using public semiotic, semiotic/xy, semiotic/physics, and semiotic/utils entry points",
+          interaction:
+            "one shared IntersectionObserver updates only at scene boundaries; desktop mounts one active chart while the classification projection is memoized",
+          memory:
+            "eight bounded chart scenes with normalized lookups for 832 recommendation records, 697 metadata-clock bodies, and no retained reader telemetry",
+          hiddenPage:
+            "no polling, streaming, or timers; observer and force work are scoped to mounted, visible scenes",
+        },
+      },
+    },
+  },
 ])
 
 const EXAMPLE_REGISTRY_METADATA = [
@@ -1148,6 +1458,50 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["realtime", "geography", "history", "process"],
   },
   {
+    title: "The Third Seat: Apollo’s Lunar Choreography",
+    path: "/examples/apollo-lunar-choreography",
+    eyebrow: "ProcessSankey · NASA mission chronology",
+    description:
+      "Align nine lunar voyages at launch to see 27 crew-seats separate, wait, reunite, divert through a lifeboat, and all return home.",
+    preview: "apollo-third-seat",
+    badges: ["ProcessSankey", "NASA GET", "Source-audited", "Accessible"],
+    frames: ["network"],
+    topics: ["history", "process", "design", "accessibility"],
+  },
+  {
+    title: "The 7,197-Vote Corridor",
+    path: "/examples/ballot-transfer-ledger",
+    eyebrow: "ProcessSankey · certified ranked-choice transfers",
+    description:
+      "Audit how three elimination pools erased 96,725 votes of a six-figure lead in New York City’s 2021 Democratic mayoral primary.",
+    preview: "ballot-transfer-ledger",
+    badges: ["ProcessSankey", "NYC BOE", "Conserved flows", "Accessible"],
+    frames: ["network"],
+    topics: ["civic", "process", "design", "accessibility"],
+  },
+  {
+    title: "Germany, Still Becoming",
+    path: "/examples/germany-still-becoming",
+    eyebrow: "Vertical ProcessSankey · a constitutional history river",
+    description:
+      "Read downward through twelve historical openings as twenty-six contributions to present-day Germany split, merge, disappear into larger states, and return as Länder.",
+    preview: "germany-still-becoming",
+    badges: ["Vertical ProcessSankey", "12 stages", "Conserved widths", "Accessible"],
+    frames: ["network"],
+    topics: ["history", "culture", "civic", "process", "accessibility"],
+  },
+  {
+    title: "The United States, Drawn Together",
+    path: "/examples/united-states-drawn-together",
+    eyebrow: "Vertical ProcessSankey · an institutional history river",
+    description:
+      "Follow jurisdiction routes through persistent States, Territories, and Colonies as acquisitions accumulate, statehood transfers stock, Civil War tears and restores it, and administrations fade away.",
+    preview: "united-states-drawn-together",
+    badges: ["Vertical ProcessSankey", "Persistent inventory", "Lifecycle exits", "Accessible"],
+    frames: ["network"],
+    topics: ["history", "geography", "civic", "process", "accessibility"],
+  },
+  {
     title: "The Scroll You're Telling",
     path: "/examples/scroll-youre-telling",
     eyebrow: "Realtime reader telemetry",
@@ -1157,6 +1511,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Custom chart", "Local", "Intent-aware"],
     frames: ["xy", "custom"],
     topics: ["realtime", "culture", "design", "accessibility"],
+  },
+  {
+    title: "Thunderdome Has Rounded Corners",
+    path: "/examples/digital-humanities-thunderdome",
+    eyebrow: "Scrollytelling · AI-age digital humanities",
+    description:
+      "A source-backed argument asks whether AI-assisted coding decolonizes weird code, then tests what implementation changes—and what DHQ’s editorial systems still decide.",
+    preview: "thunderdome",
+    badges: ["Eight Semiotic views", "Scrollytelling", "DHQ repository"],
+    frames: ["xy", "ordinal", "network", "stream-physics", "custom"],
+    topics: ["ai", "history", "culture", "design", "accessibility"],
   },
   {
     title: "The 12 Kinds of Data Visualization People",
@@ -1437,9 +1802,14 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/oregon-trail": "OregonTrailExamplePage.jsx",
   "/examples/paris-isometric-landmarks": "ParisIsometricLandmarksExamplePage.jsx",
   "/examples/port-congestion-replay": "PortCongestionReplayExamplePage.jsx",
+  "/examples/apollo-lunar-choreography": "ApolloLunarChoreographyExamplePage.jsx",
+  "/examples/ballot-transfer-ledger": "BallotTransferLedgerExamplePage.jsx",
+  "/examples/germany-still-becoming": "GermanyStillBecomingExamplePage.jsx",
+  "/examples/united-states-drawn-together": "UnitedStatesHistoryRiverExamplePage.jsx",
   "/examples/rhetorical-crucible": "DebateConceptCrucibleExamplePage.jsx",
   "/examples/latent-crucible": "LDATopicCrucibleExamplePage.jsx",
   "/examples/scroll-youre-telling": "ScrollYoureTellingExamplePage.jsx",
+  "/examples/digital-humanities-thunderdome": "DigitalHumanitiesThunderdomeExamplePage.jsx",
   "/examples/sentence-structure": "SentenceStructureExamplePage.jsx",
   "/examples/semiotic-architecture": "SemioticArchitectureExamplePage.jsx",
   "/examples/sometimes-better-discrete": "SometimesDiscreteExamplePage.jsx",

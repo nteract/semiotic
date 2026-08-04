@@ -206,6 +206,7 @@
     "dist/**/*.d.ts",
     "dist/forceLayoutWorker.js",
     "dist/physicsWorker.js",
+    "dist/processSankeyLayoutWorker.js",
     "ai/schema.json",
     "ai/surface-manifest.json",
     "ai/system-prompt.md",

@@ -503,6 +503,9 @@ const StreamNetworkFrame = memo(forwardRef<
     },
     [buildSceneWithDiagnostics, syncColorMap]
   )
+  const invalidateCanvasPaint = useCallback(() => {
+    storeRef.current?.markStylePaintPending()
+  }, [])
 
   // Fallback color for edges/particles when no source or target is resolvable.
   // Chain mirrors the secondary→primary fallback used when building
@@ -597,6 +600,10 @@ const StreamNetworkFrame = memo(forwardRef<
     const store = storeRef.current
     if (!store) return
     rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
+    // Custom-layout labels/HTML marks live in React overlays and are read
+    // directly from the imperative store. Publish scene-only theme rebuilds
+    // even when the topology layoutVersion itself did not advance.
+    setLayoutVersion((version) => version + 1)
     scheduleRender()
   }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
 
@@ -889,6 +896,7 @@ const StreamNetworkFrame = memo(forwardRef<
       // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
+      setLayoutVersion(store.layoutVersion)
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
       scheduleRender()
@@ -999,6 +1007,11 @@ const StreamNetworkFrame = memo(forwardRef<
 
       store.ingestBounded(rawNodes, rawEdges, size)
       rebuildSceneNow(store, size)
+      // The canvas repaints imperatively, but labels, accessible data, and
+      // custom HTML marks are React overlays. Synchronize the completed
+      // synchronous layout revision so they update in the same transaction
+      // instead of waiting for hover or another unrelated render.
+      setLayoutVersion(store.layoutVersion)
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
       scheduleRender()
@@ -1075,10 +1088,9 @@ const StreamNetworkFrame = memo(forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          if (paintsCanvas) dirtyRef.current = true
-        }
+        // Hover/tooltip only — do not dirty the retained scene. Selection
+        // restyle is driven by React state → useLayoutSelectionSync.
+        customHoverBehavior?.(null)
         if (paintsCanvas) scheduleRender()
       }
       return
@@ -1086,10 +1098,7 @@ const StreamNetworkFrame = memo(forwardRef<
 
     hoverRef.current = result.hover
     setHoverData(result.hover)
-    if (customHoverBehavior) {
-      customHoverBehavior(result.hover)
-      if (paintsCanvas) dirtyRef.current = true
-    }
+    customHoverBehavior?.(result.hover)
     if (paintsCanvas) scheduleRender()
   }
 
@@ -1098,10 +1107,7 @@ const StreamNetworkFrame = memo(forwardRef<
       const paintsCanvas = hoverPaintsCanvas()
       hoverRef.current = null
       setHoverData(null)
-      if (customHoverBehavior) {
-        customHoverBehavior(null)
-        if (paintsCanvas) dirtyRef.current = true
-      }
+      customHoverBehavior?.(null)
       if (paintsCanvas) scheduleRender()
     }
   }
@@ -1169,10 +1175,8 @@ const StreamNetworkFrame = memo(forwardRef<
         neighborIndexRef.current = -1
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          dirtyRef.current = true
-        }
+        // Focus chrome is SVG/tooltip — do not dirty retained scene geometry.
+        customHoverBehavior?.(null)
         scheduleRender()
       }
 
@@ -1199,7 +1203,7 @@ const StreamNetworkFrame = memo(forwardRef<
       if (e.key === " " && current >= 0) {
         e.preventDefault()
         const point = graph.flat[current]
-        customClickBehavior(buildHoverData(point.datum || {}, point.x, point.y, {
+        customClickBehavior?.(buildHoverData(point.datum || {}, point.x, point.y, {
           nodeOrEdge: "node"
         }), { type: "activate", inputType: "keyboard" })
         return
@@ -1234,10 +1238,7 @@ const StreamNetworkFrame = memo(forwardRef<
         })
         hoverRef.current = hover
         setHoverData(hover)
-        if (customHoverBehavior) {
-          customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
-          dirtyRef.current = true
-        }
+        customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
         scheduleRender()
         return
       }
@@ -1276,10 +1277,7 @@ const StreamNetworkFrame = memo(forwardRef<
       }
       hoverRef.current = hover
       setHoverData(hover)
-      if (customHoverBehavior) {
-        customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
-        dirtyRef.current = true
-      }
+      customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
       scheduleRender()
     },
     [customClickBehavior, customHoverBehavior, scheduleRender]
@@ -1352,9 +1350,10 @@ const StreamNetworkFrame = memo(forwardRef<
     // the paint loop a repaint-only signal (`rebuildSceneNow`). The default
     // mount-time canvas invalidation would re-set `dirtyRef`, forcing the
     // paint loop to rebuild the identical scene a second time (the duplicate
-    // `SceneRevisionDiagnostics` flagged). Skip only the initial invalidation;
-    // dependency-change invalidation (dims/background/renderMode) still fires.
+    // `SceneRevisionDiagnostics` flagged). Later dependency changes still
+    // repaint, but geometry/dimensions have already rebuilt synchronously.
     skipInitialCanvasPaintInvalidation: true,
+    canvasPaintInvalidator: invalidateCanvasPaint,
     canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
   })
 

@@ -184,7 +184,7 @@ for (const e of specEntries) {
   }
 
   // Lock 2: push claim ↔ a recognized push wiring mechanism.
-  // Three paths qualify:
+  // Paths that qualify:
   //   - `useFrameImperativeHandle` — the standard ref bridge used by
   //     XY, network, and the simpler ordinal HOCs.
   //   - `useOrdinalStreaming` — the aggregator-aware push pipeline
@@ -195,9 +195,12 @@ for (const e of specEntries) {
   //     specialized hook (LikertChart via useLikertAggregation).
   //   - `usePhysicsHocHandle` — the StreamPhysicsFrame row-level
   //     bridge used by physics HOCs.
-  // The first two are preferred; the raw call is the fallback for
+  //   - `useProcessSankeyPush` — ProcessSankey's edge/node push buffer
+  //     (extracts useFrameImperativeHandle into a co-located hook so
+  //     the HOC source stays under the file-size budget).
+  // The shared hooks are preferred; the raw call is the fallback for
   // charts whose ref API legitimately needs custom plumbing. All
-  // three signal that the chart exposes a working `ref.current.push`.
+  // signal that the chart exposes a working `ref.current.push`.
   const source = hocSources.get(e.name)
 
   // Lock 3: physics selection claims are bidirectionally tied to the public
@@ -227,11 +230,12 @@ for (const e of specEntries) {
       /\buseFrameImperativeHandle\b/.test(source) ||
       /\buseOrdinalStreaming\b/.test(source) ||
       /\busePhysicsHocHandle\b/.test(source) ||
+      /\buseProcessSankeyPush\b/.test(source) ||
       /\buseImperativeHandle\(/.test(source)
     if (!importsPushHook) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsPush=true but does not wire a push handle ` +
-        `(useFrameImperativeHandle, useOrdinalStreaming, or a raw useImperativeHandle call). ` +
+        `(useFrameImperativeHandle, useOrdinalStreaming, useProcessSankeyPush, or a raw useImperativeHandle call). ` +
         `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`,
       )
     }
