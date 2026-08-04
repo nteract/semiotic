@@ -19,7 +19,8 @@ import type {
   HeatcellSceneNode,
   CandlestickSceneNode,
   GlyphSceneNode,
-  TransitionConfig
+  TransitionConfig,
+  Style,
 } from "./types"
 import type { GlyphDef } from "./glyphDef"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
@@ -114,7 +115,7 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
  * path fill uses `fillOpacity` independently and is not covered here.
  */
 export function resolveMarkOpacity(
-  style?: { opacity?: number; fillOpacity?: number } | null
+  style?: Style | null
 ): number {
   if (!style) return 1
   if (style.opacity != null) return style.opacity

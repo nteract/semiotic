@@ -250,10 +250,10 @@ export function processSankeyStyleRulesNeedMainThread(
  * changing layout/style/validation semantics. Forces the main-thread path.
  */
 export function processSankeyNeedsMainThread(
-  input: Pick<
+  input: Partial<Pick<
     BuildScenesInput,
     "styleRules" | "labelPriorityAccessor" | "colorBy" | "valueAccessor" | "edgeOpacity"
-  >,
+  >>,
 ): boolean {
   if (processSankeyStyleRulesNeedMainThread(input.styleRules)) return true
   if (typeof input.edgeOpacity === "function") return true

@@ -59,7 +59,7 @@ export interface ProcessSankeyNormalizedNode {
   __raw?: Datum
 }
 
-export interface ProcessSankeyNormalizedEdge {
+export interface ProcessSankeyNormalizedEdge extends Datum {
   id: string
   source: string
   target: string

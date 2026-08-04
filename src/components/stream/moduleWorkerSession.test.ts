@@ -40,7 +40,7 @@ function createFakeWorker(): FakeWorker {
     triggerError(message: string) {
       onerror?.({ message } as ErrorEvent)
     },
-  } as FakeWorker
+  } as unknown as FakeWorker
 }
 
 describe("ModuleWorkerSession", () => {
