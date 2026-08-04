@@ -265,9 +265,6 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
           baseline: b.labelBaseline ?? "middle",
           fontSize: 11,
           fontWeight: 600,
-          stroke: "var(--semiotic-surface, #fff)",
-          strokeWidth: 3,
-          paintOrder: "stroke",
         }]
       })
     : []
