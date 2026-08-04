@@ -201,12 +201,54 @@ function accessor<T extends Datum, V>(a: ChartAccessor<T, V>, d: T): V {
 }
 
 /**
- * ProcessSankey — temporal flow between nodes with a real time axis.
+ * ProcessSankey draws timed process flow as lane bands and ribbons on a real time axis.
  *
- * Built on `StreamNetworkFrame` via `customNetworkLayout`. Edges carry
- * `startTime`/`endTime`; nodes have lifetimes (optional `xExtent`); static
- * cycles are OK when edges move forward in time. Layout path: normalize →
- * scenes (sync or worker) → frame + shared chrome.
+ * Prefer this over {@link SankeyDiagram} when edges carry `startTime`/`endTime`
+ * and node lifetime matters (optional `xExtent`). Static graph cycles are fine
+ * as long as edges move forward in time. Layout path: normalize → scenes
+ * (sync or worker) → frame + shared chrome.
+ *
+ * @example
+ * ```tsx
+ * // Operational hospital handoffs (horizontal time)
+ * <ProcessSankey
+ *   domain={[0, 48]}
+ *   nodes={[
+ *     { id: "ER", xExtent: [0, 48] },
+ *     { id: "ICU", xExtent: [4, 48] },
+ *     { id: "Ward", xExtent: [12, 48] },
+ *   ]}
+ *   edges={[
+ *     { id: "e1", source: "ER", target: "ICU", value: 12, startTime: 2, endTime: 6 },
+ *     { id: "e2", source: "ICU", target: "Ward", value: 8, startTime: 14, endTime: 20 },
+ *   ]}
+ *   packing="reuse"
+ *   laneOrder="crossing-min+inside-out"
+ *   showLabels
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // History river (vertical time, hug placement, style rules)
+ * <ProcessSankey
+ *   domain={[1763, 2025]}
+ *   orientation="vertical"
+ *   nodes={institutions}
+ *   edges={jurisdictionEvents}
+ *   nodeLabel="shortLabel"
+ *   colorBy="category"
+ *   groupBy="group"
+ *   systemInTimeAccessor="systemInTime"
+ *   systemOutTimeAccessor="systemOutTime"
+ *   packing="reuse"
+ *   laneOrder="crossing-min+inside-out"
+ *   lanePlacement="hug"
+ *   ribbonMinRun="auto"
+ *   lifetimeMode="full"
+ *   showLabels="auto"
+ * />
+ * ```
  */
 export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(
   props: ProcessSankeyProps<TNode, TEdge>,
