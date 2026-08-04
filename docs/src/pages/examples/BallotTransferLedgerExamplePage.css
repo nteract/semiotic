@@ -42,6 +42,17 @@ html[data-theme="light"] .ballot-ledger {
   --semiotic-text-secondary: var(--ledger-muted);
 }
 
+/* The masthead and inspector remain deliberately dark in both themes.
+   Their foregrounds must not inherit the page's light-mode ink. */
+html[data-theme="light"] .ballot-ledger__masthead,
+html[data-theme="light"] .ballot-ledger__brief aside,
+html[data-theme="light"] .ballot-ledger__inspector,
+html[data-theme="light"] .ballot-ledger__finding-grid article.is-emphasis,
+html[data-theme="light"] .ballot-ledger__method a,
+html[data-theme="light"] .ballot-ledger__footer {
+  color: #f7f4ea;
+}
+
 .ballot-ledger h2,
 .ballot-ledger h3,
 .ballot-ledger h4,

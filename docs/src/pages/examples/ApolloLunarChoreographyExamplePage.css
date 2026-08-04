@@ -250,7 +250,7 @@ html[data-theme="light"] .apollo-example {
 .apollo-example__chart-heading h3,
 .apollo-example__dossier h3 {
   margin: 0;
-  color: #fff8e8;
+  color: var(--apollo-strong);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(34px, 5vw, 62px);
   font-weight: 500;
@@ -693,7 +693,7 @@ html[data-theme="light"] .apollo-example {
   margin: 28px 0 0;
   padding: 16px 20px;
   border-left: 4px solid var(--apollo-blue);
-  color: #c4d1d2;
+  color: var(--apollo-copy);
   background: rgba(7, 19, 28, 0.7);
   font-family: Georgia, serif;
   line-height: 1.6;
@@ -800,7 +800,7 @@ html[data-theme="light"] .apollo-example {
   align-items: center;
   padding: 11px 12px;
   border: 1px solid transparent;
-  color: #d8e1df;
+  color: var(--apollo-copy);
   background: transparent;
   cursor: pointer;
 }
@@ -839,7 +839,7 @@ html[data-theme="light"] .apollo-example {
   width: 100%;
   margin-top: 18px;
   border-collapse: collapse;
-  color: #c6d2d3;
+  color: var(--apollo-copy);
   font-family: "SFMono-Regular", monospace;
   font-size: 10px;
 }
