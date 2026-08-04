@@ -16,6 +16,11 @@ import { useProcessSankeyScenes } from "./processSankey/useProcessSankeyScenes"
 import { useProcessSankeyPush } from "./processSankey/useProcessSankeyPush"
 import { useProcessSankeyTooltipContent } from "./processSankey/processSankeyTooltip"
 import type { ProcessSankeyLayoutExecution } from "./processSankey/processSankeyLayoutWorkerClient"
+import { readChartAccessor } from "./processSankey/accessors"
+import {
+  toProcessSankeyTime,
+  type ProcessSankeyTimeLike,
+} from "./processSankey/time"
 import { renderLoadingState } from "../shared/withChartWrapper"
 import {
   emitProcessSankeyScenes,
@@ -44,14 +49,7 @@ import type { LegendGroup } from "../../types/legendTypes"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 
 type MarginSide = "top" | "right" | "bottom" | "left"
-type TimeLike = number | Date | string
-
-function toTime(value: TimeLike | undefined | null): number {
-  if (value == null) return NaN
-  if (value instanceof Date) return value.getTime()
-  if (typeof value === "number") return value
-  return new Date(value).getTime()
-}
+type TimeLike = ProcessSankeyTimeLike
 
 export interface ProcessSankeyTick {
   date: TimeLike
@@ -121,6 +119,9 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   /** Vertical coordinate assignment. `"hug"` uses any scale-cap slack to
    * pull connected lane attachments together while preserving order/gaps. */
   lanePlacement?: "stack" | "hug"
+  /** How explicit node `xExtent`s size visible bands. `"max"` holds a
+   * node's largest instantaneous mass across its extent, for staged Sankeys. */
+  nodeSizing?: "temporal" | "max"
   /** Pixel gutter inside a bonded node group. Defaults to `0`, so adjacent
    * band silhouettes touch without overlapping. */
   groupPadding?: number
@@ -156,7 +157,8 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
    * `"scene"` keeps the full payload for tooling that needs `__kind`.
    */
   selectionDatum?: "raw" | "scene"
-  edgeOpacity?: number
+  /** A shared opacity, or a per-edge opacity resolver for confidence-aware flows. */
+  edgeOpacity?: number | ((edge: TEdge) => number)
   /** Declarative threshold-aware styling for node bands (raw node datum). */
   styleRules?: StyleRule[]
   /** Layout execution: auto (cost threshold), worker, or sync. SSR always sync. */
@@ -193,11 +195,6 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   frameProps?: Partial<Omit<StreamNetworkFrameProps,
     "nodes" | "edges" | "chartType" | "size" | "customNetworkLayout" | "layoutConfig"
   >>
-}
-
-function accessor<T extends Datum, V>(a: ChartAccessor<T, V>, d: T): V {
-  if (typeof a === "function") return a(d)
-  return d[a as string] as V
 }
 
 /**
@@ -281,6 +278,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     laneOrder = "crossing-min",
     maxValueScale,
     lanePlacement = "stack",
+    nodeSizing = "temporal",
     groupPadding = 0,
     ribbonLane = "both",
     ribbonMinRun = 0,
@@ -342,14 +340,14 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   const { nodes, edges, domain, rawNodeById, rawEdgeById } = useMemo(() => {
     const ns: NormalizedNode[] = (rawNodes ?? []).map((n) => {
       const id = getNodeId(n)
-      const labelValue = nodeLabel ? accessor(nodeLabel, n) : id
+      const labelValue = nodeLabel ? readChartAccessor(nodeLabel, n) : id
       const o: NormalizedNode = { id, label: labelValue == null ? id : String(labelValue), __raw: n as Datum }
-      const groupValue = groupBy ? accessor(groupBy, n) : null
+      const groupValue = groupBy ? readChartAccessor(groupBy, n) : null
       if (groupValue != null && String(groupValue) !== "") o.group = String(groupValue)
-      const xExtent = xExtentAccessor ? accessor(xExtentAccessor, n) : null
+      const xExtent = xExtentAccessor ? readChartAccessor(xExtentAccessor, n) : null
       if (Array.isArray(xExtent) && xExtent.length === 2) {
-        const a = toTime(xExtent[0] as TimeLike)
-        const b = toTime(xExtent[1] as TimeLike)
+        const a = toProcessSankeyTime(xExtent[0] as TimeLike)
+        const b = toProcessSankeyTime(xExtent[1] as TimeLike)
         if (Number.isFinite(a) && Number.isFinite(b)) o.xExtent = [a, b]
       }
       return o
@@ -357,24 +355,27 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => {
       const out: NormalizedEdge = {
         id: getEdgeId(e, i),
-        source: String(accessor(sourceAccessor, e)),
-        target: String(accessor(targetAccessor, e)),
-        value: Number(accessor(valueAccessor, e)),
-        startTime: toTime(accessor(startTimeAccessor, e) as TimeLike),
-        endTime: toTime(accessor(endTimeAccessor, e) as TimeLike),
+        source: String(readChartAccessor(sourceAccessor, e)),
+        target: String(readChartAccessor(targetAccessor, e)),
+        value: Number(readChartAccessor(valueAccessor, e)),
+        startTime: toProcessSankeyTime(readChartAccessor(startTimeAccessor, e) as TimeLike),
+        endTime: toProcessSankeyTime(readChartAccessor(endTimeAccessor, e) as TimeLike),
         __raw: e as Datum,
       }
       if (systemInTimeAccessor) {
-        const v = toTime(accessor(systemInTimeAccessor, e) as TimeLike)
+        const v = toProcessSankeyTime(readChartAccessor(systemInTimeAccessor, e) as TimeLike)
         if (Number.isFinite(v)) out.systemInTime = v
       }
       if (systemOutTimeAccessor) {
-        const v = toTime(accessor(systemOutTimeAccessor, e) as TimeLike)
+        const v = toProcessSankeyTime(readChartAccessor(systemOutTimeAccessor, e) as TimeLike)
         if (Number.isFinite(v)) out.systemOutTime = v
       }
       return out
     })
-    const dom: [number, number] = [toTime(rawDomain[0]), toTime(rawDomain[1])]
+    const dom: [number, number] = [
+      toProcessSankeyTime(rawDomain[0]),
+      toProcessSankeyTime(rawDomain[1]),
+    ]
     const nodeMap = new Map<string, Datum>()
     for (const n of ns) if (n.__raw != null) nodeMap.set(n.id, n.__raw)
     const edgeMap = new Map<string, Datum>()
@@ -450,7 +451,10 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     if (plotW <= 0 || plotH <= 0) return null
     return {
       nodes, edges, domain, plotW, plotH, orientation, ribbonLane, ribbonMinRun,
-      edgeOpacity, colorOf, showLabels, labelPriorityAccessor: labelPriorityAccessor as
+      edgeOpacity: typeof edgeOpacity === "function"
+        ? (edge: Datum) => edgeOpacity(edge as TEdge)
+        : edgeOpacity,
+      colorOf, showLabels, labelPriorityAccessor: labelPriorityAccessor as
         string | ((d: Datum) => number) | undefined,
       maxLabels, selectionDatum, styleRules,
       // Live React surface: warn on duplicate ids, strip bad system times (M6).
@@ -458,14 +462,14 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       colorBy: colorBy as string | ((d: Datum) => unknown) | undefined,
       valueAccessor: valueAccessor as string | ((d: Datum) => unknown) | undefined,
       layoutOpts: {
-        pairing, packing, laneOrder, lifetimeMode, maxValueScale, lanePlacement, groupPadding,
+        pairing, packing, laneOrder, lifetimeMode, maxValueScale, lanePlacement, nodeSizing, groupPadding,
       },
     }
   }, [
     nodes, edges, domain, plotW, plotH, orientation, ribbonLane, ribbonMinRun,
     edgeOpacity, colorOf, showLabels, labelPriorityAccessor, maxLabels, selectionDatum,
     styleRules, colorBy, valueAccessor,
-    pairing, packing, laneOrder, lifetimeMode, maxValueScale, lanePlacement, groupPadding,
+    pairing, packing, laneOrder, lifetimeMode, maxValueScale, lanePlacement, nodeSizing, groupPadding,
   ])
 
   const colorById = useMemo(() => {
@@ -506,7 +510,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     if (!legendActive || !colorBy) return undefined
     const seen = new Map<string, { label: string; color: string }>()
     ;(rawNodes ?? []).forEach((n, i) => {
-      const v = accessor(colorBy as ChartAccessor<TNode, string>, n)
+      const v = readChartAccessor(colorBy as ChartAccessor<TNode, string>, n)
       const label = v == null ? "" : String(v)
       if (!label || seen.has(label)) return
       seen.set(label, { label, color: colorOf(getNodeId(n), i) })
@@ -544,7 +548,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       warnings: warningText,
       timeFormat: timeFormat ? (d) => timeFormat(d) : undefined,
       colorOf,
-      toTime,
+      toTime: toProcessSankeyTime,
       xScale: (t) => Number(xScale(t)),
     })
   }, [
@@ -566,11 +570,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   const safeFrameEdges = useMemo(
     () => (rawEdges ?? []).map((e, i) => {
       const id = getEdgeId(e, i)
-      const rawValue = Number(accessor(valueAccessor, e))
+      const rawValue = Number(readChartAccessor(valueAccessor, e))
       return {
         id,
-        source: String(accessor(sourceAccessor, e)),
-        target: String(accessor(targetAccessor, e)),
+        source: String(readChartAccessor(sourceAccessor, e)),
+        target: String(readChartAccessor(targetAccessor, e)),
         value: Number.isFinite(rawValue) ? rawValue : 0,
         bezier: ribbonBezierById.get(id),
         data: e as Datum,
@@ -643,6 +647,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         })}
         chartId={chartId}
         colorScheme={Array.isArray(colorScheme) ? colorScheme : undefined}
+        // ProcessSankey emits a custom scene. Forward the resolved named
+        // selection so its bands/ribbons can dim in place without a relayout.
+        layoutSelection={setup.activeSelectionHook}
         {...frameProps}
       />
     </div>

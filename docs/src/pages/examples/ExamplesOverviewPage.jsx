@@ -35,6 +35,7 @@ const PREVIEW_COMPONENTS = {
   "apollo-third-seat": MiniApolloThirdSeatPreview,
   "ballot-transfer-ledger": MiniBallotTransferLedgerPreview,
   "germany-still-becoming": MiniGermanyStillBecomingPreview,
+  "good-earth-lying-flat": MiniGoodEarthLyingFlatPreview,
   "united-states-drawn-together": MiniUnitedStatesHistoryRiverPreview,
   "scroll-tell": MiniScrollTellPreview,
   thunderdome: MiniThunderdomePreview,
@@ -340,6 +341,21 @@ function MiniGermanyStillBecomingPreview() {
       <path d="M204 15C204 26 189 28 186 36S191 46 197 55S146 69 109 74S119 84 121 91" fill="none" stroke="#edc948" strokeWidth="7" />
       <text x="8" y="10" fill="#27322b" fontSize="6" fontWeight="800" letterSpacing="0.8">GERMANY, STILL BECOMING</text>
       <text x="234" y="91" textAnchor="end" fill="#756e60" fontSize="5.2" letterSpacing="0.5">12 OPENINGS / 100% CONSERVED</text>
+    </svg>
+  )
+}
+
+function MiniGoodEarthLyingFlatPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0e7" />
+      {[38, 75, 112, 149, 186, 223].map((x) => <line key={x} x1={x} x2={x} y1="13" y2="85" stroke="#bdb5a8" strokeWidth="0.5" strokeDasharray="2 3" />)}
+      <path d="M22 28C33 28 35 27 47 27S62 22 74 22S91 29 106 29S124 49 137 49S153 58 168 58S191 65 214 65" fill="none" stroke="#b65c4c" strokeWidth="10" opacity="0.75" />
+      <path d="M22 59C39 59 42 59 54 59S66 54 78 54S91 61 104 61S119 41 135 41S153 29 168 29S190 38 214 38" fill="none" stroke="#457b8d" strokeWidth="7" opacity="0.75" />
+      <path d="M104 61C119 61 124 67 138 67S152 76 168 76S192 79 214 79" fill="none" stroke="#55765d" strokeWidth="7" opacity="0.76" />
+      <path d="M137 49C148 49 154 46 168 46S192 45 214 45" fill="none" stroke="#875e82" strokeWidth="5" opacity="0.62" />
+      <text x="9" y="10" fill="#20283a" fontSize="6" fontWeight="800" letterSpacing="0.72">GOOD EARTH → LYING FLAT</text>
+      <text x="234" y="92" textAnchor="end" fill="#5e6470" fontSize="5.1" letterSpacing="0.45">6 STAGES / 35 CLAIMS</text>
     </svg>
   )
 }

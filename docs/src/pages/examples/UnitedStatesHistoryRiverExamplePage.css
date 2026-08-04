@@ -2,10 +2,67 @@
  * United States history-river theme tokens + US-only chrome.
  * Structure lives in process-river.css — root markup:
  *   className="process-river usa-becoming"
+ *
+ * Light mode keeps the editorial cream paper. Dark mode retints paper and
+ * ink so body copy never inherits the docs site’s light slate text onto a
+ * fixed light ground.
  */
 @import "./process-river.css";
 
+/* Default = dark (docs site default) so ink/paper match before hydration. */
 .usa-becoming {
+  --river-ink: #e4e0d4;
+  --river-paper: #121a21;
+  --river-paper-deep: #1a2430;
+  --river-red: #d08074;
+  --river-blue: #7aaad4;
+  --river-green: #6fa88a;
+  --river-gold: #e8bd63;
+  --river-kicker: #a9bdc8;
+  --river-section-kicker: #9aadb8;
+  --river-muted: #a8a494;
+  --river-caption: #b0a898;
+  --river-rule: #354553;
+  --river-rule-soft: #2a3744;
+  --river-control-border: #455666;
+  --river-control-bg: rgba(255, 255, 255, 0.05);
+  --river-control-btn: #1e2a36;
+  --river-reader-bg: #1a2732;
+  --river-reader-accent: #7aaad4;
+  --river-reader-year: #d08074;
+  --river-shell-rule: #354553;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(255, 255, 255, 0.035) 80px 81px);
+  --river-findings-bg: #101c26;
+  --river-findings-grid: #354553;
+  --river-findings-card: #172633;
+  --river-findings-muted: #c5cbc5;
+  --river-findings-ink: #f0ebe0;
+  --river-outside-bg: #17222c;
+  --river-outside-meta: #c9a59c;
+  --river-warning-bg: #1e2a36;
+  --river-code-bg: #0a1016;
+  --river-code-ink: #ede8da;
+  --river-footer-bg: #0d1620;
+  --river-footer-ink: #f4efdf;
+  --river-mast-ink: #f4efdf;
+  --river-mast-bg:
+    linear-gradient(122deg, rgba(8, 16, 24, 0.99), rgba(22, 34, 44, 0.95)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.04) 84px 85px);
+  --river-tooltip-kicker: #e09a90;
+  --usa-status-key-border: #455666;
+  --usa-status-key-bg: rgba(255, 255, 255, 0.05);
+  --usa-status-key-grid: #354553;
+  --usa-status-key-row: #1e2a36;
+  --usa-status-key-note: #a8a494;
+  --usa-tooltip-fade-border: #5a9ec4;
+  --usa-tooltip-fade-ink: #c5e0f0;
+  --usa-tooltip-fade-bg: rgba(90, 158, 196, 0.16);
+  --usa-reading-icon: #d08074;
+}
+
+html[data-theme="light"] .usa-becoming {
   --river-ink: #19242d;
   --river-paper: #f3efe3;
   --river-paper-deep: #ded7c6;
@@ -14,45 +71,78 @@
   --river-green: #3e6c58;
   --river-gold: #e8bd63;
   --river-kicker: #a9bdc8;
-  --river-mast-bg:
-    linear-gradient(122deg, rgba(14, 30, 42, 0.985), rgba(39, 57, 67, 0.93)),
-    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255,255,255,0.045) 84px 85px);
+  --river-section-kicker: #5a6a74;
+  --river-muted: #5e5a50;
+  --river-caption: #625d51;
+  --river-rule: #b9b09a;
+  --river-rule-soft: #b7ae99;
+  --river-control-border: #a9a08b;
+  --river-control-bg: rgba(255, 255, 255, 0.32);
+  --river-control-btn: #e5decb;
+  --river-reader-bg: #e7dfca;
   --river-reader-accent: #315c94;
   --river-reader-year: #8f3f3b;
+  --river-shell-rule: #8f8775;
+  --river-shell-bg:
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(36, 54, 65, 0.04) 80px 81px);
   --river-findings-bg: #1c303d;
   --river-findings-grid: #586c77;
   --river-findings-card: #263d49;
+  --river-findings-muted: #d2d8d2;
+  --river-findings-ink: #f4efdf;
   --river-outside-bg: #ded8c9;
+  --river-outside-meta: #72544c;
+  --river-warning-bg: #e2dac5;
+  --river-code-bg: #101820;
+  --river-code-ink: #ede8da;
   --river-footer-bg: #152733;
-  --river-shell-bg:
-    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)),
-    repeating-linear-gradient(90deg, transparent 0 79px, rgba(36,54,65,0.04) 80px 81px);
-  --semiotic-surface: #f3efe3;
+  --river-footer-ink: #f4efdf;
+  --river-mast-ink: #f4efdf;
+  --river-mast-bg:
+    linear-gradient(122deg, rgba(14, 30, 42, 0.985), rgba(39, 57, 67, 0.93)),
+    repeating-linear-gradient(90deg, transparent 0 83px, rgba(255, 255, 255, 0.045) 84px 85px);
+  --river-tooltip-kicker: #93413d;
+  --usa-status-key-border: #a9a08b;
+  --usa-status-key-bg: rgba(255, 255, 255, 0.32);
+  --usa-status-key-grid: #b9b09a;
+  --usa-status-key-row: #e5decb;
+  --usa-status-key-note: #5d5b55;
+  --usa-tooltip-fade-border: #9bc9e2;
+  --usa-tooltip-fade-ink: #274e6c;
+  --usa-tooltip-fade-bg: rgba(155, 201, 226, 0.18);
+  --usa-reading-icon: #a3433f;
 }
 
 .usa-becoming .process-river__masthead h2 {
   font-size: clamp(56px, 8.2vw, 126px);
 }
 
-.usa-becoming .process-river__reading-key b { color: #a3433f; }
+.usa-becoming .process-river__reading-key b {
+  color: var(--usa-reading-icon, #a3433f);
+}
 
 .usa-becoming__outside-note {
   margin-top: 24px !important;
   padding-top: 18px;
-  border-top: 1px solid #aaa18d;
-  color: #5e5a50;
+  border-top: 1px solid var(--river-rule, #aaa18d);
+  color: var(--river-muted, #5e5a50);
   font-size: 13px !important;
 }
 
-.usa-becoming__tooltip span { color: #93413d; }
-.usa-becoming__tooltip b { color: #315c94; }
+.usa-becoming__tooltip span {
+  color: var(--river-tooltip-kicker, #93413d);
+}
+.usa-becoming__tooltip b {
+  color: var(--river-blue, #315c94);
+}
 .usa-becoming__tooltip em {
   display: block;
   margin-top: 8px;
   padding: 7px 9px;
-  border-left: 3px solid #9bc9e2;
-  color: #274e6c;
-  background: rgba(155, 201, 226, 0.18);
+  border-left: 3px solid var(--usa-tooltip-fade-border, #9bc9e2);
+  color: var(--usa-tooltip-fade-ink, #274e6c);
+  background: var(--usa-tooltip-fade-bg, rgba(155, 201, 226, 0.18));
   font-size: 11px;
   font-style: normal;
   line-height: 1.35;
@@ -61,18 +151,24 @@
 .usa-becoming__status-key {
   min-width: 340px;
   padding: 18px;
-  border: 1px solid #a9a08b;
-  background: rgba(255,255,255,0.32);
+  border: 1px solid var(--usa-status-key-border, #a9a08b);
+  color: var(--river-ink, #19242d);
+  background: var(--usa-status-key-bg, rgba(255, 255, 255, 0.32));
 }
 
 .usa-becoming__status-key > span {
   display: block;
   margin-bottom: 12px;
+  color: var(--river-muted, #5e5a50);
   font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0.13em;
 }
 
-.usa-becoming__status-key > div { display: grid; gap: 1px; background: #b9b09a; }
+.usa-becoming__status-key > div {
+  display: grid;
+  gap: 1px;
+  background: var(--usa-status-key-grid, #b9b09a);
+}
 
 .usa-becoming__status-key article {
   display: grid;
@@ -81,12 +177,23 @@
   align-items: center;
   min-height: 48px;
   padding: 8px 10px;
-  background: #e5decb;
+  background: var(--usa-status-key-row, #e5decb);
 }
 
-.usa-becoming__status-key i { width: 22px; height: 28px; }
-.usa-becoming__status-key article span { color: #5d5b55; font-size: 9px; line-height: 1.35; }
-.usa-becoming__status-key article strong { display: block; color: var(--river-ink); font-size: 11px; }
+.usa-becoming__status-key i {
+  width: 22px;
+  height: 28px;
+}
+.usa-becoming__status-key article span {
+  color: var(--usa-status-key-note, #5d5b55);
+  font-size: 9px;
+  line-height: 1.35;
+}
+.usa-becoming__status-key article strong {
+  display: block;
+  color: var(--river-ink, #19242d);
+  font-size: 11px;
+}
 
 @media (max-width: 700px) {
   .usa-becoming .process-river__masthead h2 {
@@ -94,5 +201,8 @@
     line-height: 0.84;
   }
 
-  .usa-becoming__status-key { min-width: 0; padding: 12px; }
+  .usa-becoming__status-key {
+    min-width: 0;
+    padding: 12px;
+  }
 }

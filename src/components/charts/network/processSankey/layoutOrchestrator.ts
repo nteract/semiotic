@@ -225,6 +225,7 @@ export function computeProcessSankeyLayout(
     lifetimeMode = "half",
     maxValueScale,
     lanePlacement = "stack",
+    nodeSizing = "temporal",
     groupPadding: rawGroupPadding = 0,
     ribbonLane = "both",
     domain,
@@ -235,7 +236,7 @@ export function computeProcessSankeyLayout(
   const sides = assignSides(nodes, edges, edgeIndex, pairing)
   let nodeData: Record<string, ProcessSankeyNodeData> = {}
   for (const n of nodes) {
-    nodeData[n.id] = computeNode(n, edgeIndex, sides)
+    nodeData[n.id] = computeNode(n, edgeIndex, sides, undefined, nodeSizing)
   }
 
   // First pass: pack + order once. Later passes rehydrate the same packing
@@ -303,7 +304,7 @@ export function computeProcessSankeyLayout(
   // Recompute samples with new sides
   nodeData = {}
   for (const n of nodes) {
-    nodeData[n.id] = computeNode(n, edgeIndex, sides)
+    nodeData[n.id] = computeNode(n, edgeIndex, sides, undefined, nodeSizing)
   }
   const dry = computeLaneLayout(nodes, edges, nodeData, edgeIndex, {
     plotH, padding: basePadding, valueScale: 1, packing, laneOrder, lifetimeMode,
@@ -374,7 +375,7 @@ export function computeProcessSankeyLayout(
     )
     nodeData = {}
     for (const node of nodes) {
-      nodeData[node.id] = computeNode(node, edgeIndex, sides, endpointPositions)
+      nodeData[node.id] = computeNode(node, edgeIndex, sides, endpointPositions, nodeSizing)
     }
     layout = computeLaneLayout(nodes, edges, nodeData, edgeIndex, {
       plotH, padding, valueScale, packing, laneOrder, lifetimeMode,

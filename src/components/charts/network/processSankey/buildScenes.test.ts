@@ -56,6 +56,25 @@ describe("buildProcessSankeyScenes validation policy", () => {
     expect(bad.issues.some((i) => i.kind === "missing-node")).toBe(true)
   })
 
+  it("resolves and bounds confidence-aware ribbon opacity per raw edge", () => {
+    const scene = buildProcessSankeyScenes({
+      nodes: [{ id: "A" }, { id: "B" }, { id: "C" }],
+      edges: [
+        { id: "high", source: "A", target: "B", value: 1, startTime: 10, endTime: 20, confidence: "high" },
+        { id: "low", source: "A", target: "C", value: 1, startTime: 10, endTime: 20, confidence: "low" },
+      ],
+      domain: [0, 30],
+      plotW: 400,
+      plotH: 300,
+      ribbonLane: "both",
+      edgeOpacity: (edge) => edge.confidence === "high" ? 0.8 : 1.4,
+      colorOf: () => "#111",
+      layoutOpts: { packing: "off", laneOrder: "insertion" },
+    })
+
+    expect(scene.layoutConfig.ribbons.map((ribbon) => ribbon.opacity)).toEqual([0.8, 1])
+  })
+
   it("CSR/SSR margin defaults stay aligned on horizontal gutters", () => {
     const margin = resolveProcessSankeyMarginDefaults(true, true, true, "horizontal")
     expect(margin.left).toBe(80)

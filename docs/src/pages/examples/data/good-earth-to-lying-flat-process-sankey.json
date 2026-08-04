@@ -1,0 +1,437 @@
+{
+  "title": "From The Good Earth to Lying Flat",
+  "subtitle": "How the search for family security becomes accumulation, involution, and withdrawal",
+  "weight_semantics": "Interpretive causal-emphasis units. Values express the relative importance of a pathway within this model; they are not survey estimates or population counts.",
+  "nodes": [
+    {
+      "id": "scarcity_memory",
+      "label": "Scarcity memory",
+      "stage": 0,
+      "family": "inheritance",
+      "description": "Historical memory of famine, dispossession, and insecure livelihood; the Good Earth baseline."
+    },
+    {
+      "id": "growth_bargain",
+      "label": "Reform-era growth bargain",
+      "stage": 0,
+      "family": "inheritance",
+      "description": "Work, study, save, and defer gratification in exchange for upward mobility."
+    },
+    {
+      "id": "property_security",
+      "label": "Property as family security",
+      "stage": 1,
+      "family": "security_strategy",
+      "description": "Housing becomes the urban successor to Wang Lung's land: store of value, marriage credential, and intergenerational insurance."
+    },
+    {
+      "id": "credential_security",
+      "label": "Credentials as mobility",
+      "stage": 1,
+      "family": "security_strategy",
+      "description": "Education becomes the principal route from family sacrifice to occupational security."
+    },
+    {
+      "id": "consumption_success",
+      "label": "Consumption as proof of success",
+      "stage": 1,
+      "family": "security_strategy",
+      "description": "Brands, travel, technology, and lifestyle make reform-era advancement socially visible."
+    },
+    {
+      "id": "housing_machine",
+      "label": "Housing-led accumulation",
+      "stage": 2,
+      "family": "growth_machine",
+      "description": "Savings, local finance, construction, and household expectations become tied to rising property values."
+    },
+    {
+      "id": "credential_race",
+      "label": "Credential arms race",
+      "stage": 2,
+      "family": "growth_machine",
+      "description": "More education is required to preserve the same relative position."
+    },
+    {
+      "id": "status_competition",
+      "label": "Status competition",
+      "stage": 2,
+      "family": "growth_machine",
+      "description": "Relative success matters more as consumption and achievement become publicly comparable."
+    },
+    {
+      "id": "overwork_norm",
+      "label": "Overwork as moral duty",
+      "stage": 2,
+      "family": "growth_machine",
+      "description": "Long hours are framed as deserved sacrifice for family advancement and national development."
+    },
+    {
+      "id": "affordability",
+      "label": "Housing burden & wealth risk",
+      "stage": 3,
+      "family": "bottleneck",
+      "description": "High entry costs and falling or uncertain values weaken housing's promise of automatic security."
+    },
+    {
+      "id": "job_mismatch",
+      "label": "Graduate job mismatch",
+      "stage": 3,
+      "family": "bottleneck",
+      "description": "Credential growth outruns the supply of secure, high-status jobs."
+    },
+    {
+      "id": "involution",
+      "label": "Involution",
+      "stage": 3,
+      "family": "bottleneck",
+      "description": "Escalating effort produces little improvement in relative position or life chances."
+    },
+    {
+      "id": "confidence_loss",
+      "label": "Loss of future confidence",
+      "stage": 3,
+      "family": "bottleneck",
+      "description": "Households doubt that sacrifice today will reliably yield security tomorrow."
+    },
+    {
+      "id": "precaution",
+      "label": "Precautionary saving",
+      "stage": 4,
+      "family": "response",
+      "description": "Households preserve cash and reduce discretionary spending in response to uncertainty."
+    },
+    {
+      "id": "lying_flat",
+      "label": "Lying flat",
+      "stage": 4,
+      "family": "response",
+      "description": "Conscious reduction of career, consumption, and family ambitions as refusal of low-return competition."
+    },
+    {
+      "id": "rat_people",
+      "label": "Low-energy “rat people”",
+      "stage": 4,
+      "family": "response",
+      "description": "More private, aestheticized withdrawal into low-cost, low-energy domestic and online life."
+    },
+    {
+      "id": "defensive_stability",
+      "label": "Defensive stability seeking",
+      "stage": 4,
+      "family": "response",
+      "description": "Competition shifts toward civil-service posts, safe employers, cheap leisure, and other downside-minimizing choices."
+    },
+    {
+      "id": "weak_consumption",
+      "label": "Weak household consumption",
+      "stage": 5,
+      "family": "outcome",
+      "description": "Savings and withdrawal limit the consumption-led growth transition."
+    },
+    {
+      "id": "delayed_family",
+      "label": "Delayed family formation",
+      "stage": 5,
+      "family": "outcome",
+      "description": "Housing, employment, and lifestyle uncertainty postpone marriage and childbearing."
+    },
+    {
+      "id": "private_retreat",
+      "label": "Privatized retreat",
+      "stage": 5,
+      "family": "outcome",
+      "description": "Meaning shifts away from collective advancement toward small, controllable, low-cost private worlds."
+    }
+  ],
+  "edges": [
+    {
+      "source": "scarcity_memory",
+      "target": "property_security",
+      "value": 28,
+      "claim": "Land/property is treated as protection against catastrophe.",
+      "confidence": "high",
+      "type": "historical analogy"
+    },
+    {
+      "source": "scarcity_memory",
+      "target": "credential_security",
+      "value": 17,
+      "claim": "Families diversify security from land into education.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "growth_bargain",
+      "target": "property_security",
+      "value": 25,
+      "claim": "Growth-era savings are capitalized into housing.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "growth_bargain",
+      "target": "credential_security",
+      "value": 20,
+      "claim": "Educational sacrifice is justified by expected mobility.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "growth_bargain",
+      "target": "consumption_success",
+      "value": 10,
+      "claim": "Consumption makes achieved mobility visible.",
+      "confidence": "medium",
+      "type": "cultural"
+    },
+    {
+      "source": "property_security",
+      "target": "housing_machine",
+      "value": 43,
+      "claim": "Family security demand feeds housing-led accumulation.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "property_security",
+      "target": "affordability",
+      "value": 10,
+      "claim": "The security asset also becomes an entry barrier.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "credential_security",
+      "target": "credential_race",
+      "value": 29,
+      "claim": "Credential expansion raises the positional threshold.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "credential_security",
+      "target": "overwork_norm",
+      "value": 8,
+      "claim": "Educational discipline normalizes sacrifice as virtue.",
+      "confidence": "medium",
+      "type": "cultural"
+    },
+    {
+      "source": "consumption_success",
+      "target": "status_competition",
+      "value": 10,
+      "claim": "Visible consumption intensifies relative comparison.",
+      "confidence": "medium",
+      "type": "cultural"
+    },
+    {
+      "source": "housing_machine",
+      "target": "affordability",
+      "value": 24,
+      "claim": "Housing-centered growth raises purchase burdens and exposure to price shifts.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "housing_machine",
+      "target": "confidence_loss",
+      "value": 19,
+      "claim": "Property weakness damages the expected store of family wealth.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "credential_race",
+      "target": "job_mismatch",
+      "value": 12,
+      "claim": "More graduates compete for fewer matching secure positions.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "credential_race",
+      "target": "involution",
+      "value": 17,
+      "claim": "More effort is required to maintain the same rank.",
+      "confidence": "high",
+      "type": "definitional"
+    },
+    {
+      "source": "status_competition",
+      "target": "involution",
+      "value": 7,
+      "claim": "Comparison turns absolute gains into relative inadequacy.",
+      "confidence": "medium",
+      "type": "cultural"
+    },
+    {
+      "source": "status_competition",
+      "target": "overwork_norm",
+      "value": 3,
+      "claim": "Visible success rewards conspicuous effort.",
+      "confidence": "low",
+      "type": "interpretive"
+    },
+    {
+      "source": "overwork_norm",
+      "target": "involution",
+      "value": 11,
+      "claim": "Sacrificial labor intensifies low-return competition.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "affordability",
+      "target": "confidence_loss",
+      "value": 18,
+      "claim": "Housing no longer guarantees an attainable or appreciating security anchor.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "affordability",
+      "target": "delayed_family",
+      "value": 16,
+      "claim": "Housing costs and insecurity raise the threshold for marriage and children.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "job_mismatch",
+      "target": "involution",
+      "value": 7,
+      "claim": "Underemployment makes additional effort feel positional rather than productive.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "job_mismatch",
+      "target": "confidence_loss",
+      "value": 5,
+      "claim": "Credential-job mismatch weakens faith in the mobility bargain.",
+      "confidence": "high",
+      "type": "structural"
+    },
+    {
+      "source": "involution",
+      "target": "lying_flat",
+      "value": 18,
+      "claim": "Some respond to low-return competition by consciously reducing ambition.",
+      "confidence": "high",
+      "type": "cultural response"
+    },
+    {
+      "source": "involution",
+      "target": "rat_people",
+      "value": 7,
+      "claim": "A smaller, stylized response is low-energy social and domestic withdrawal.",
+      "confidence": "medium",
+      "type": "cultural response"
+    },
+    {
+      "source": "involution",
+      "target": "defensive_stability",
+      "value": 17,
+      "claim": "Others remain highly competitive but redirect effort toward safety rather than upside.",
+      "confidence": "high",
+      "type": "interpretive"
+    },
+    {
+      "source": "confidence_loss",
+      "target": "precaution",
+      "value": 24,
+      "claim": "Uncertainty raises saving and debt reduction.",
+      "confidence": "high",
+      "type": "economic"
+    },
+    {
+      "source": "confidence_loss",
+      "target": "lying_flat",
+      "value": 8,
+      "claim": "Low confidence reduces willingness to make long-horizon sacrifices.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "confidence_loss",
+      "target": "defensive_stability",
+      "value": 10,
+      "claim": "Low confidence increases preference for protected or predictable careers.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "precaution",
+      "target": "weak_consumption",
+      "value": 24,
+      "claim": "Defensive saving suppresses discretionary demand.",
+      "confidence": "high",
+      "type": "economic"
+    },
+    {
+      "source": "lying_flat",
+      "target": "weak_consumption",
+      "value": 10,
+      "claim": "Reduced career and status ambition lowers aspirational consumption.",
+      "confidence": "medium",
+      "type": "cultural-economic"
+    },
+    {
+      "source": "lying_flat",
+      "target": "delayed_family",
+      "value": 9,
+      "claim": "Opting out includes postponing costly family milestones.",
+      "confidence": "medium",
+      "type": "cultural-economic"
+    },
+    {
+      "source": "lying_flat",
+      "target": "private_retreat",
+      "value": 7,
+      "claim": "Agency is recovered through smaller, self-controlled lives.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "rat_people",
+      "target": "private_retreat",
+      "value": 7,
+      "claim": "The rat-person identity makes retreat socially legible and humorous.",
+      "confidence": "medium",
+      "type": "cultural"
+    },
+    {
+      "source": "defensive_stability",
+      "target": "weak_consumption",
+      "value": 8,
+      "claim": "Downside-minimizing households favor inexpensive and predictable consumption.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "defensive_stability",
+      "target": "delayed_family",
+      "value": 5,
+      "claim": "Life milestones wait until secure employment is obtained.",
+      "confidence": "medium",
+      "type": "interpretive"
+    },
+    {
+      "source": "defensive_stability",
+      "target": "private_retreat",
+      "value": 14,
+      "claim": "Stability seeking narrows life toward controllable institutions and routines.",
+      "confidence": "low",
+      "type": "interpretive"
+    }
+  ],
+  "stage_labels": {
+    "0": "Inherited moral economy",
+    "1": "Security strategies",
+    "2": "Growth machinery",
+    "3": "Broken promises",
+    "4": "Adaptive responses",
+    "5": "Social outcomes"
+  }
+}

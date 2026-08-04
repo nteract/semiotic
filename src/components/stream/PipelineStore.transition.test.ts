@@ -21,6 +21,50 @@ describe("PipelineStore — Transitions", () => {
     vi.useRealTimers()
   })
 
+  it("intro + dirty rebuild keeps fillOpacity-authored point alpha (tab-back regression)", () => {
+    // Homepage scatter: fillOpacity 0.7, animate intro. Visibility resume dirties
+    // the frame and re-runs computeScene with identical layout. Intro must not
+    // bake style.opacity=1, or the rebuild "fades" marks back to fillOpacity 0.7.
+    const store = new PipelineStore(makeConfig({
+      chartType: "scatter",
+      xAccessor: "x",
+      yAccessor: "y",
+      transition: { duration: 600, easing: "linear" },
+      introAnimation: true,
+      pointStyle: () => ({ fill: "#6366f1", fillOpacity: 0.7, r: 6 }),
+    }))
+
+    store.ingest({ inserts: [{ x: 1, y: 2, id: "a" }, { x: 3, y: 4, id: "b" }], bounded: true })
+    store.computeScene({ width: 200, height: 150 })
+    expect(store.activeTransition).not.toBeNull()
+
+    const start = store.activeTransition!.startTime
+    // Mid intro — partial opacity
+    expect(store.advanceTransition(start + 300)).toBe(true)
+    const mid = store.scene.find(n => n.type === "point") as { style: { opacity?: number } } | undefined
+    expect(mid?.style.opacity).toBeDefined()
+    expect(mid!.style.opacity!).toBeGreaterThan(0)
+    expect(mid!.style.opacity!).toBeLessThan(0.7)
+
+    // Complete intro
+    expect(store.advanceTransition(start + 600)).toBe(false)
+    expect(store.activeTransition).toBeNull()
+    for (const node of store.scene) {
+      if (node.type !== "point") continue
+      // Settled alpha matches fillOpacity — not full 1.0
+      expect(node.style.opacity ?? node.style.fillOpacity).toBeCloseTo(0.7, 5)
+    }
+
+    // Dirty rebuild (visibility resume path): same data/layout, no live transition
+    store.computeScene({ width: 200, height: 150 })
+    expect(store.activeTransition).toBeNull()
+    for (const node of store.scene) {
+      if (node.type !== "point") continue
+      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      expect(alpha).toBeCloseTo(0.7, 5)
+    }
+  })
+
   it("no transition without config", () => {
     const store = new PipelineStore(makeConfig({
       xAccessor: "x",

@@ -1021,6 +1021,67 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     },
   },
   {
+    id: "good-earth-lying-flat",
+    path: "/examples/good-earth-lying-flat",
+    sourceFile: "GoodEarthLyingFlatExamplePage.jsx",
+    isPilot: true,
+    title: "From The Good Earth to Lying Flat",
+    eyebrow: "ProcessSankey · a causal model of security and withdrawal",
+    description:
+      "Trace how housing, credentials, work, and consumption become mechanisms of risk, involution, precaution, delayed adulthood, and multiple forms of retreat.",
+    contract: {
+      publicImports: ["semiotic", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-authored-interpretive-causal-sankey",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Authored argument dataset: good-earth-to-lying-flat-process-sankey.json; weights are explicitly interpretive causal-emphasis units, not population estimates",
+        capturedAt: "2026-08-03",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "argument or source revision",
+      },
+      accessibility: {
+        summary:
+          "ProcessSankey description and table, six authored-stage headings, family color key, confidence readout, claim lens, inspector, caveat, and visible uncertainty semantics",
+        navigation:
+          "Native claim-lens buttons, ProcessSankey keyboard mark navigation, accessible table, inspector, and code-copy control",
+        keyboard:
+          "Every authored control is a native button; the ProcessSankey preserves its keyboard mark navigation and accessible-table output",
+        forcedColors:
+          "Claim-lens states, chart shell, family key, inspector, warning, and focus rings retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The example has no animated particles; claim lenses restyle existing claims without a topology animation",
+        visibility: "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
+      },
+      responsive: {
+        status: "container-responsive-and-browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable authored concept and causal-claim IDs with stable claim-lens categories",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration: "deterministic local JSON adapter, fixed stage extents, and an all-claims default lens",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
+          interaction: "20 fixed concepts, 35 bounded causal claims, and five local lens states",
+          memory: "one checked-in source dataset and no retained animation history or duplicated stage snapshots",
+          hiddenPage: "no timers, requests, observers, or authored background work",
+        },
+      },
+    },
+  },
+  {
     id: "united-states-drawn-together",
     path: "/examples/united-states-drawn-together",
     sourceFile: "UnitedStatesHistoryRiverExamplePage.jsx",
@@ -1491,6 +1552,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["history", "culture", "civic", "process", "accessibility"],
   },
   {
+    title: "From The Good Earth to Lying Flat",
+    path: "/examples/good-earth-lying-flat",
+    eyebrow: "ProcessSankey · a causal model of security and withdrawal",
+    description:
+      "Follow an interpretive argument from inherited insecurity through housing, credentials, and overwork to involution, defensive stability, lying flat, and private retreat.",
+    preview: "good-earth-lying-flat",
+    badges: ["ProcessSankey", "6 authored stages", "Claim lens", "Accessible"],
+    frames: ["network"],
+    topics: ["culture", "history", "process", "design", "accessibility"],
+  },
+  {
     title: "The United States, Drawn Together",
     path: "/examples/united-states-drawn-together",
     eyebrow: "Vertical ProcessSankey · an institutional history river",
@@ -1805,6 +1877,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/apollo-lunar-choreography": "ApolloLunarChoreographyExamplePage.jsx",
   "/examples/ballot-transfer-ledger": "BallotTransferLedgerExamplePage.jsx",
   "/examples/germany-still-becoming": "GermanyStillBecomingExamplePage.jsx",
+  "/examples/good-earth-lying-flat": "GoodEarthLyingFlatExamplePage.jsx",
   "/examples/united-states-drawn-together": "UnitedStatesHistoryRiverExamplePage.jsx",
   "/examples/rhetorical-crucible": "DebateConceptCrucibleExamplePage.jsx",
   "/examples/latent-crucible": "LDATopicCrucibleExamplePage.jsx",

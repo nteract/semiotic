@@ -114,6 +114,41 @@ describe("PipelineStore.cancelIntroAnimation", () => {
     store.cancelIntroAnimation() // should not throw or change state
     expect(store.activeTransition).toBeNull()
   })
+
+  it("snaps scatter points to final r + fillOpacity alpha when cancelled mid-intro", () => {
+    const store = new PipelineStore(makeXYConfig({
+      chartType: "scatter",
+      xAccessor: "x",
+      yAccessor: "y",
+      transition: { duration: 600, easing: "linear" },
+      introAnimation: true,
+      pointStyle: () => ({ fill: "#ec4899", fillOpacity: 0.7, r: 8 }),
+    }))
+    store.ingest({ inserts: [{ x: 1, y: 2 }, { x: 3, y: 4 }], bounded: true })
+    store.computeScene({ width: 200, height: 150 })
+    expect(store.activeTransition).not.toBeNull()
+
+    const start = store.activeTransition!.startTime
+    store.advanceTransition(start + 200)
+    // Mid-intro: radius still growing, opacity partial
+    const midPoint = store.scene.find(n => n.type === "point") as {
+      r: number
+      style: { opacity?: number; fillOpacity?: number }
+      _targetR?: number
+    }
+    expect(midPoint.r).toBeLessThan(8)
+    expect(midPoint.style.opacity!).toBeLessThan(0.7)
+
+    store.cancelIntroAnimation()
+    expect(store.activeTransition).toBeNull()
+    for (const node of store.scene) {
+      if (node.type !== "point") continue
+      expect(node.r).toBe(8)
+      expect(node._targetR).toBeUndefined()
+      expect(node._targetOpacity).toBeUndefined()
+      expect(node.style.opacity ?? node.style.fillOpacity).toBeCloseTo(0.7, 5)
+    }
+  })
 })
 
 describe("OrdinalPipelineStore.cancelIntroAnimation", () => {

@@ -24,6 +24,7 @@ function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function inventoryAtTime(nodeId: string, time: number, edges: readonly InventoryEdge[], options?: InventoryAtTimeOptions | undefined): number
 function isHatchFill(fill: unknown): boolean
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
@@ -35,6 +36,7 @@ function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined
 function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
+function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
 function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: { usageMode?: ProcessSankeyUsageMode; } | undefined): ProcessSankeyIssue[]
@@ -49,6 +51,8 @@ interface GlyphPart
 interface GradientLegendConfig
 interface GradientLegendValue
 interface HatchFill
+interface InventoryAtTimeOptions
+interface InventoryEdge
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
@@ -91,6 +95,7 @@ type NetworkChartType = "force" | "sankey" | "chord" | "tree" | "cluster" | "tre
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSceneEdge = NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
 type NetworkSceneNode = NetworkCircleNode | NetworkRectNode | NetworkArcNode | NetworkSymbolNode | NetworkGlyphNode
+type ProcessSankeyTimeLike = number | Date | string
 type ResponsiveOrientation = "portrait" | "landscape"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

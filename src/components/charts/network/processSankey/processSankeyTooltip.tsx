@@ -8,20 +8,13 @@ import type { ProcessSankeyLayout } from "./processSankeyTypes"
 import { massHistoryRows, pickMassQuantiles } from "./tooltipUtils"
 import { isProcessSankeyScenePayload } from "./streamingLayout"
 import { normalizeTooltip, type TooltipProp } from "../../../Tooltip/Tooltip"
+import { readChartAccessor } from "./accessors"
+import {
+  toProcessSankeyTime,
+  type ProcessSankeyTimeLike,
+} from "./time"
 
-type TimeLike = number | Date | string
-
-function accessor<T extends Datum, V>(a: ChartAccessor<T, V>, d: T): V {
-  if (typeof a === "function") return a(d)
-  return d[a as string] as V
-}
-
-function toTime(value: TimeLike | undefined | null): number {
-  if (value == null) return NaN
-  if (value instanceof Date) return value.getTime()
-  if (typeof value === "number") return value
-  return new Date(value).getTime()
-}
+type TimeLike = ProcessSankeyTimeLike
 
 export interface UseProcessSankeyTooltipOptions<
   _TNode extends Datum,
@@ -132,11 +125,11 @@ export function useProcessSankeyTooltipContent<
     }
 
     const e = userDatum as TEdge
-    const src = accessor(sourceAccessor as ChartAccessor<TEdge, string>, e)
-    const tgt = accessor(targetAccessor as ChartAccessor<TEdge, string>, e)
-    const val = accessor(valueAccessor as ChartAccessor<TEdge, number>, e)
-    const start = accessor(startTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
-    const end = accessor(endTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
+    const src = readChartAccessor(sourceAccessor as ChartAccessor<TEdge, string>, e)
+    const tgt = readChartAccessor(targetAccessor as ChartAccessor<TEdge, string>, e)
+    const val = readChartAccessor(valueAccessor as ChartAccessor<TEdge, number>, e)
+    const start = readChartAccessor(startTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
+    const end = readChartAccessor(endTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
     return (
       <div style={{ minWidth: 160 }}>
         <div style={{ fontWeight: 600, marginBottom: 4 }}>
@@ -146,9 +139,9 @@ export function useProcessSankeyTooltipContent<
           {val != null && (<><span style={{ opacity: 0.6 }}>value</span>
             <span style={{ textAlign: "right" }}>{formatValue(Number(val))}</span></>)}
           {start != null && (<><span style={{ opacity: 0.6 }}>start</span>
-            <span style={{ textAlign: "right" }}>{formatTime(toTime(start as TimeLike))}</span></>)}
+            <span style={{ textAlign: "right" }}>{formatTime(toProcessSankeyTime(start as TimeLike))}</span></>)}
           {end != null && (<><span style={{ opacity: 0.6 }}>end</span>
-            <span style={{ textAlign: "right" }}>{formatTime(toTime(end as TimeLike))}</span></>)}
+            <span style={{ textAlign: "right" }}>{formatTime(toProcessSankeyTime(end as TimeLike))}</span></>)}
         </div>
       </div>
     )

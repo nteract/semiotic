@@ -20,7 +20,6 @@ import {
 import * as React from "react"
 
 // ── Network Charts ─────────────────────────────────────────────────────
-
 export const forceDirectedGraph: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
@@ -320,6 +319,7 @@ export const processSankey: ChartConfig = {
         lifetimeMode: rest.lifetimeMode || "half",
         maxValueScale: typeof rest.maxValueScale === "number" ? rest.maxValueScale : undefined,
         lanePlacement: rest.lanePlacement || "stack",
+        nodeSizing: rest.nodeSizing || "temporal",
         groupPadding: typeof rest.groupPadding === "number" ? rest.groupPadding : 0,
       },
     })

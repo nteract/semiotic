@@ -1157,7 +1157,8 @@ export class GeoPipelineStore implements UpdateResultStore {
     // doesn't currently support.)
     for (const node of pointNodes) {
       if (node.pointId && !prevPos.has(node.pointId)) {
-        node._targetOpacity = node.style?.opacity ?? 1
+        // Match pointCanvasRenderer: opacity ?? fillOpacity ?? 1
+        node._targetOpacity = node.style?.opacity ?? node.style?.fillOpacity ?? 1
         node.style = { ...node.style, opacity: 0 }
         hasMovement = true
       }
@@ -1181,6 +1182,21 @@ export class GeoPipelineStore implements UpdateResultStore {
    */
   cancelIntroAnimation(): void {
     this.activeTransition = null
+    // Snap enter-fade + position targets so a mid-transition cancel cannot
+    // leave points at partial opacity (same contract as XY PipelineStore).
+    for (const node of this.scene) {
+      if (node.type !== "point") continue
+      if (node._targetOpacity != null) {
+        node.style = { ...node.style, opacity: node._targetOpacity }
+        node._targetOpacity = undefined
+      }
+      if (node._targetX != null) {
+        node.x = node._targetX
+        node.y = node._targetY!
+        node._targetX = undefined
+        node._targetY = undefined
+      }
+    }
   }
 
   advanceTransition(now: number): boolean {

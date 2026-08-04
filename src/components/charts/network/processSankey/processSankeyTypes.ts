@@ -146,6 +146,16 @@ export interface ProcessSankeyLayoutQuality {
 /** Control-point placement along a ribbon: prefer source, target, or midpoint. */
 export type ProcessSankeyRibbonLane = "source" | "target" | "both"
 
+/**
+ * How a node uses its explicit `xExtent` for the visible band.
+ *
+ * `"temporal"` preserves the precise mass history. `"max"` holds the
+ * largest instantaneous mass across an authored extent, which is useful for
+ * fixed-stage Sankeys where same-stage handoffs would otherwise make a node's
+ * full value visible only at a zero-width boundary.
+ */
+export type ProcessSankeyNodeSizing = "temporal" | "max"
+
 export interface ProcessSankeyOptions {
   plotH: number
   pairing?: "value" | "temporal"
@@ -157,6 +167,8 @@ export interface ProcessSankeyOptions {
   maxValueScale?: number
   /** Optional slack-aware coordinate assignment. @default "stack" */
   lanePlacement?: "stack" | "hug"
+  /** How explicit node `xExtent`s determine the visible band. @default "temporal" */
+  nodeSizing?: ProcessSankeyNodeSizing
   /** Pixels between adjacent slots in the same node group. @default 0 */
   groupPadding?: number
   /** Renderer control-point placement, used by authored-window transit quality. */

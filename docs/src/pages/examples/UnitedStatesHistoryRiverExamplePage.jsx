@@ -1,8 +1,14 @@
-import React, { useState } from "react"
-import { ProcessSankey } from "semiotic"
+import React, { useCallback, useMemo, useState } from "react"
+import { ProcessSankey, inventoryAtTime } from "semiotic"
 import { unwrapDatum } from "semiotic/recipes"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ProcessRiverExampleLayout from "./ProcessRiverExampleLayout"
+import ProcessRiverStageReader from "./ProcessRiverStageReader"
+import useProcessRiverScrollStage from "./useProcessRiverScrollStage"
+import {
+  HISTORY_RIVER_LAYOUT_NOTE,
+  HISTORY_RIVER_PROCESS_SANKEY,
+} from "./processRiverChartDefaults"
 import {
   US_AXIS_TICKS,
   US_COLORS,
@@ -21,32 +27,35 @@ import {
 } from "./data/unitedStatesHistoryRiver"
 import "./UnitedStatesHistoryRiverExamplePage.css"
 
-const implementationCode = `import { ProcessSankey } from "semiotic"
+const SCROLL_MILESTONES = US_MILESTONES.map((milestone) => ({
+  id: milestone.id,
+  time: milestone.year,
+}))
+
+const implementationCode = `import { ProcessSankey, inventoryAtTime } from "semiotic"
+
+${HISTORY_RIVER_LAYOUT_NOTE}
 
 <ProcessSankey
   nodes={institutionsAndSources}
   edges={jurisdictionEvents}
   domain={[1763, 2025]}
   axisTicks={historicalMilestones}
-  orientation="vertical"
   nodeLabel="shortLabel"
   colorBy="category"
   groupBy="group"
   systemInTimeAccessor="systemInTime"
   systemOutTimeAccessor="systemOutTime"
-  packing="reuse"
-  laneOrder="crossing-min+inside-out"
-  lanePlacement="hug"
-  ribbonLane="both"
   ribbonMinRun="auto"
-  lifetimeMode="full"
+  {...historyRiverDefaults}
 />
 
 // US_STATES, US_TERRITORIES, and US_COLONIES are long-lived nodes.
 // Pre-domain sources blur into view. Acquisitions add stock; statehood
 // transfers it; secession removes and Reconstruction returns it.
 // Colonial exits fade at systemOutTime.
-// Width counts jurisdiction routes—one polity thread per unit.`
+// Width counts jurisdiction routes—one polity thread per unit.
+// inventoryAtTime(nodeId, t, edges) folds the edge ledger for tooltips.`
 
 const FLOW_BY_ID = new Map(US_FLOW_TYPES.map((flow) => [flow.id, flow]))
 
@@ -66,29 +75,9 @@ function datumMilestoneId(datum) {
   return datum?.milestoneId ?? null
 }
 
+/** @deprecated Prefer `inventoryAtTime` from `semiotic` / `semiotic/network`. */
 export function usInventoryAt(nodeId, time, edges = US_PROCESS_EDGES) {
-  const events = []
-  for (const edge of edges) {
-    if (edge.target === nodeId) events.push({ time: edge.endTime, delta: edge.value })
-    if (edge.source === nodeId) events.push({ time: edge.startTime, delta: -edge.value })
-    if (edge.target === nodeId && edge.systemOutTime != null) {
-      events.push({ time: edge.systemOutTime, delta: -edge.value })
-    }
-  }
-  events.sort((a, b) => a.time - b.time || b.delta - a.delta)
-
-  // Predecessor/source nodes begin with authored stock rather than an inbound
-  // transaction. Infer only the opening amount required to keep their ledger
-  // non-negative; persistent institutions already begin at zero.
-  let running = 0
-  let minimum = 0
-  let balanceAtTime = 0
-  for (const event of events) {
-    running += event.delta
-    minimum = Math.min(minimum, running)
-    if (event.time <= time) balanceAtTime += event.delta
-  }
-  return balanceAtTime - minimum
+  return inventoryAtTime(nodeId, time, edges)
 }
 
 function nodeInventorySummary(node, edges = US_PROCESS_EDGES) {
@@ -157,48 +146,36 @@ function StatusKey() {
 }
 
 function EventReader({ milestone, selectedDatum, onMilestoneChange }) {
-  const events = usEventsForMilestone(milestone.id)
+  const events = usEventsForMilestone(milestone.id).map((event) => ({
+    id: event.id,
+    date: event.date,
+    event_type: event.event_type,
+    title: event.title,
+    body: event.status_consequence || event.notes,
+  }))
   const selectedNode = selectedDatum?.id && !selectedDatum.source ? selectedDatum : null
   const selectedEdge = selectedDatum?.source && selectedDatum?.target ? selectedDatum : null
+  const selection = (selectedNode || selectedEdge)
+    ? {
+        kindLabel: `SELECTED ${selectedNode ? "INSTITUTION" : "ROUTE"}`,
+        title: selectedNode?.label ?? `${selectedEdge.sourceLabel} → ${selectedEdge.targetLabel}`,
+        body: selectedNode?.description ?? selectedEdge.notes,
+        value: selectedNode
+          ? nodeInventorySummary(selectedNode)
+          : routes(selectedEdge.value),
+      }
+    : null
 
   return (
-    <aside className="process-river__reader" aria-live="polite">
-      <span className="process-river__reader-kicker">CURRENT EVENT</span>
-      <label className="process-river__stage-select">
-        <span>Inspect an event</span>
-        <select value={milestone.id} onChange={(event) => onMilestoneChange(event.target.value)}>
-          {US_MILESTONES.map((option) => (
-            <option key={option.id} value={option.id}>{option.benchmark} — {option.label}</option>
-          ))}
-        </select>
-      </label>
-      <strong className="process-river__reader-year">{milestone.benchmark}</strong>
-      <h3>{milestone.label}</h3>
-      <p>{milestone.description}</p>
-
-      {events.length > 0 && (
-        <div className="process-river__reader-events">
-          {events.map((event) => (
-            <article key={event.id}>
-              <small>{event.date} / {event.event_type}</small>
-              <strong>{event.title}</strong>
-              <p>{event.status_consequence || event.notes}</p>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {(selectedNode || selectedEdge) && (
-        <div className="process-river__selection">
-          <span>SELECTED {selectedNode ? "INSTITUTION" : "ROUTE"}</span>
-          <strong>{selectedNode?.label ?? `${selectedEdge.sourceLabel} → ${selectedEdge.targetLabel}`}</strong>
-          <p>{selectedNode?.description ?? selectedEdge.notes}</p>
-          <b>{selectedNode
-            ? nodeInventorySummary(selectedNode)
-            : routes(selectedEdge.value)}</b>
-        </div>
-      )}
-    </aside>
+    <ProcessRiverStageReader
+      kicker="CURRENT EVENT · FOLLOWS SCROLL"
+      selectLabel="Inspect an event"
+      stages={US_MILESTONES}
+      stage={milestone}
+      events={events}
+      selection={selection}
+      onStageChange={onMilestoneChange}
+    />
   )
 }
 
@@ -236,7 +213,27 @@ export default function UnitedStatesHistoryRiverExamplePage() {
   // Bucket width so ProcessSankey packing/order does not re-run every pixel of resize.
   const [chartWidth, chartRef] = useResponsiveWidth(300, 980, { bucket: 40 })
   const compact = chartWidth < 620
+  const chartHeight = compact ? 2600 : 2900
+  const chartMargin = useMemo(
+    () => ({ top: 28, right: compact ? 8 : 24, bottom: 22, left: compact ? 68 : 94 }),
+    [compact],
+  )
   const selectedMilestone = usMilestoneById(selectedMilestoneId)
+
+  const handleScrollMilestone = useCallback((milestoneId) => {
+    setSelectedMilestoneId(milestoneId)
+    setSelectedDatum(null)
+  }, [])
+
+  useProcessRiverScrollStage({
+    chartRef,
+    stages: SCROLL_MILESTONES,
+    domain: US_DOMAIN,
+    height: chartHeight,
+    margin: chartMargin,
+    activeStageId: selectedMilestoneId,
+    onStageIdChange: handleScrollMilestone,
+  })
 
   function inspectDatum(hover) {
     const datum = unwrapDatum(hover)
@@ -275,31 +272,21 @@ export default function UnitedStatesHistoryRiverExamplePage() {
         chartRef,
         chart: (
           <ProcessSankey
+            {...HISTORY_RIVER_PROCESS_SANKEY}
             nodes={US_PROCESS_NODES}
             edges={US_PROCESS_EDGES}
             domain={US_DOMAIN}
             axisTicks={US_AXIS_TICKS}
-            orientation="vertical"
             nodeLabel={usNodeLabel}
             width={Math.max(300, chartWidth)}
-            height={compact ? 2600 : 2900}
-            margin={{ top: 28, right: compact ? 8 : 24, bottom: 22, left: compact ? 68 : 94 }}
+            height={chartHeight}
+            margin={chartMargin}
             colorBy="category"
             colorScheme={US_COLORS}
             groupBy="group"
-            showLegend={false}
             systemInTimeAccessor="systemInTime"
             systemOutTimeAccessor="systemOutTime"
-            pairing="temporal"
-            packing="reuse"
-            laneOrder="crossing-min+inside-out"
-            lanePlacement="hug"
-            ribbonLane="both"
             ribbonMinRun="auto"
-            lifetimeMode="full"
-            // Docs stories stay on the main thread so first paint is immediate
-            // and Vite dev does not wait on a layout worker module URL.
-            layoutExecution="sync"
             showLabels={compact ? "auto" : true}
             edgeOpacity={0.8}
             tooltip={(hover) => <UnitedStatesRiverTooltip hover={hover} />}

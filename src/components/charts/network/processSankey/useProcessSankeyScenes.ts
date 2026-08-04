@@ -108,6 +108,7 @@ export function useProcessSankeyScenes(
       input.layoutOpts.lifetimeMode ?? "half",
       input.layoutOpts.maxValueScale ?? "",
       input.layoutOpts.lanePlacement ?? "stack",
+      input.layoutOpts.nodeSizing ?? "temporal",
       input.layoutOpts.groupPadding ?? 0,
       input.domain[0],
       input.domain[1],

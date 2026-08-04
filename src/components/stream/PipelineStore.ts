@@ -103,6 +103,7 @@ import type { UpdateResult } from "./pipelineUpdateContract"
 import { attachUpdateResultStore, type UpdateResultStore } from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
+import { snapXYIntroTargets } from "./pipelineIntroCancellation"
 
 export type { PipelineConfig } from "./pipelineConfig"
 export type {
@@ -1092,6 +1093,11 @@ export class PipelineStore implements UpdateResultStore {
    * sets it to 0. Without the clear, line / area charts would paint
    * blank on the first canvas frame after hydration.
    *
+   * Fill-based marks (point/glyph/rect/heatcell/candlestick) also snap
+   * geometry + opacity targets so a mid-intro cancel cannot leave
+   * `style.opacity` stuck at a partial lerp value (visible as faded
+   * circles after tab-away / SSR swap).
+   *
    * Idempotent — a second call is a no-op since the maps are already
    * empty and the per-node flags are already undefined.
    */
@@ -1099,11 +1105,8 @@ export class PipelineStore implements UpdateResultStore {
     this.prevPositionMap.clear()
     this.prevPathMap.clear()
     this.activeTransition = null
-    for (const node of this.scene) {
-      if (node.type === "line" || node.type === "area") {
-        node._introClipFraction = undefined
-      }
-    }
+    snapXYIntroTargets(this.scene)
+    this.exitNodes = []
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

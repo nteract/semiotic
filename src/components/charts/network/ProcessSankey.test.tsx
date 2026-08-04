@@ -2,8 +2,9 @@ import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFram
 import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import React, { useRef, useEffect } from "react"
-import { render } from "@testing-library/react"
+import { fireEvent, render } from "@testing-library/react"
 import { ProcessSankey } from "./ProcessSankey"
+import { LinkedCharts, useSelection } from "../../LinkedCharts"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
@@ -61,6 +62,87 @@ describe("ProcessSankey HOC", () => {
     expect(alice.rawDatum).toMatchObject({ id: "Alice", category: "Person" })
     expect(typeof alice.labelX).toBe("number")
     expect(typeof alice.labelY).toBe("number")
+  })
+
+  it("uses an explicit category map for both node bands and source ribbons", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={[
+            { id: "Alice", family: "person" },
+            { id: "Eng", family: "team" },
+          ]}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          colorBy="family"
+          colorScheme={{ person: "#ff0000", team: "#0000ff" }}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.layoutConfig.bands.map((band) => band.fill)).toEqual(["#ff0000", "#0000ff"])
+    expect(lastFrameProps?.layoutConfig.ribbons.map((ribbon) => ribbon.fill)).toEqual(["#ff0000"])
+  })
+
+  it("forwards HatchFill node style rules to the canvas band scene", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          styleRules={[{
+            style: () => ({
+              fill: {
+                type: "hatch",
+                background: "#33b1ff",
+                stroke: "#a56eff",
+              },
+            }),
+          }]}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.layoutConfig.bands[0]?.hatchFill).toMatchObject({
+      type: "hatch",
+      background: "#33b1ff",
+      stroke: "#a56eff",
+    })
+  })
+
+  it("forwards a named selection into the custom Sankey scene", () => {
+    function LensWriter() {
+      const lens = useSelection({ name: "process-sankey-lens", fields: ["claimLens"] })
+      return (
+        <button
+          type="button"
+          data-testid="activate-lens"
+          onClick={() => lens.selectPoints({ claimLens: ["economic"] })}
+        >
+          Activate economic lens
+        </button>
+      )
+    }
+
+    const { getByTestId } = render(
+      <LinkedCharts>
+        <TooltipProvider>
+          <LensWriter />
+          <ProcessSankey
+            nodes={sampleNodes}
+            edges={sampleEdges.map((edge) => ({ ...edge, claimLens: "economic" }))}
+            domain={DOMAIN}
+            selection={{ name: "process-sankey-lens" }}
+          />
+        </TooltipProvider>
+      </LinkedCharts>,
+    )
+
+    fireEvent.click(getByTestId("activate-lens"))
+    expect(lastFrameProps?.layoutSelection?.isActive).toBe(true)
+    expect(lastFrameProps?.layoutSelection?.predicate({ claimLens: "economic" })).toBe(true)
+    expect(lastFrameProps?.layoutSelection?.predicate({ claimLens: "cultural" })).toBe(false)
   })
 
   it("projects time top-to-bottom in vertical orientation", () => {

@@ -1,15 +1,50 @@
 /**
  * Shared Process River example shell — structure only.
- * Theme tokens live on a companion root class (`.germany-becoming`, `.usa-becoming`).
- * Root markup: className="process-river germany-becoming" (or usa-becoming).
+ * Theme tokens live on a companion root class
+ * (`.germany-becoming`, `.usa-becoming`, `.good-earth`).
+ * Root markup: className="process-river germany-becoming" (etc.).
+ *
+ * Required tokens (set dark defaults on the brand class; override under
+ * `html[data-theme="light"] .brand`):
+ *   --river-ink, --river-paper, --river-paper-deep,
+ *   --river-red, --river-blue, --river-green, --river-gold,
+ *   --river-kicker, --river-section-kicker, --river-muted, --river-caption,
+ *   --river-rule, --river-rule-soft,
+ *   --river-control-border, --river-control-bg, --river-control-btn,
+ *   --river-reader-bg, --river-reader-accent, --river-reader-year,
+ *   --river-shell-rule, --river-shell-bg,
+ *   --river-findings-bg, --river-findings-grid, --river-findings-card,
+ *   --river-findings-muted, --river-findings-ink,
+ *   --river-outside-bg, --river-outside-meta, --river-warning-bg,
+ *   --river-code-bg, --river-code-ink,
+ *   --river-footer-bg, --river-footer-ink,
+ *   --river-mast-ink, --river-mast-bg, --river-tooltip-kicker
+ *
+ * The shell remaps docs `--text-*` / `--semiotic-*` onto river tokens so site
+ * theme flips cannot leave light type on a fixed cream ground.
  */
 
 .process-river {
   width: 100%;
   overflow: clip;
+  /* Self-contained palette: never inherit docs --text-primary / --surface-*
+     (those flip with the site theme while the river paper used to stay fixed,
+     leaving light grey type on cream paper in dark mode). */
   color: var(--river-ink, #202922);
   background: var(--river-paper, #f2eddc);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --text-primary: var(--river-ink, #202922);
+  --text-secondary: var(--river-muted, #6d6759);
+  --surface-0: var(--river-paper, #f2eddc);
+  --surface-1: var(--river-paper-deep, #e5ddc6);
+  --surface-2: var(--river-control-btn, #ddd5bf);
+  --surface-3: var(--river-rule, #b9b09a);
+  --semiotic-bg: var(--river-paper, #f2eddc);
+  --semiotic-text: var(--river-ink, #202922);
+  --semiotic-text-secondary: var(--river-muted, #6d6759);
+  --semiotic-border: var(--river-rule, #b9b09a);
+  --semiotic-grid: var(--river-rule-soft, #b7ae99);
+  --semiotic-surface: var(--river-paper, #f2eddc);
 }
 
 .process-river * {
@@ -37,10 +72,18 @@
 .process-river__code > span {
   display: block;
   margin-bottom: 16px;
-  color: var(--river-kicker, #a9bba9);
+  color: var(--river-section-kicker, var(--river-kicker, #6d7a6d));
   font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+/* Masthead / findings / code / footer sit on dark grounds — use the
+   bright kicker token. Light-ground sections use --river-section-kicker. */
+.process-river__masthead span,
+.process-river__findings > div > span,
+.process-river__code > span {
+  color: var(--river-kicker, #a9bba9);
 }
 
 .process-river__masthead h2 {
@@ -105,12 +148,14 @@
 .process-river__reading-key span {
   font-size: 13px;
   line-height: 1.5;
+  color: var(--river-ink, #202922);
 }
 
 .process-river__reading-key strong {
   margin-bottom: 5px;
   font-size: 10px;
   letter-spacing: 0.13em;
+  color: var(--river-muted, #6d6759);
 }
 
 .process-river__river-section,
@@ -164,6 +209,7 @@
 .process-river__metric-control > span {
   display: block;
   margin-bottom: 10px;
+  color: var(--river-muted, #6d6759);
   font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0.13em;
 }
@@ -213,8 +259,13 @@
     linear-gradient(rgba(255,255,255,0.28), rgba(255,255,255,0.28)),
     repeating-linear-gradient(90deg, transparent 0 79px, rgba(51,51,51,0.035) 80px 81px));
   --semiotic-text: var(--river-ink, #27322b);
+  --semiotic-bg: var(--river-paper, #f2eddc);
   --semiotic-background: var(--river-paper, #f2eddc);
   --semiotic-surface: var(--river-paper, #f2eddc);
+  --semiotic-text-secondary: var(--river-muted, #6d6759);
+  --semiotic-border: var(--river-rule, #b9b09a);
+  --semiotic-grid: var(--river-rule-soft, #b7ae99);
+  color: var(--river-ink, #27322b);
 }
 
 .process-river__chart-shell .stream-network-frame { max-width: 100%; }
@@ -282,14 +333,21 @@
   font-family: Georgia, serif;
   font-size: 25px;
   line-height: 1.12;
+  color: var(--river-ink, #202922);
 }
 
 .process-river__reader > p,
 .process-river__reader-events p,
 .process-river__selection p {
   margin: 0;
+  color: var(--river-ink, #202922);
   font-size: 13px;
   line-height: 1.55;
+}
+
+.process-river__reader-events strong,
+.process-river__selection strong {
+  color: var(--river-ink, #202922);
 }
 
 .process-river__reader-events,
@@ -314,7 +372,11 @@
   line-height: 1.6;
 }
 
-.process-river__tooltip { max-width: 320px; }
+.process-river__tooltip {
+  max-width: 320px;
+  color: var(--river-ink, #202922);
+  background: var(--river-paper, #f2eddc);
+}
 .process-river__tooltip span,
 .process-river__tooltip strong,
 .process-river__tooltip b,
@@ -326,10 +388,22 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-.process-river__tooltip strong { font-size: 14px; }
-.process-river__tooltip p { margin: 8px 0; font-size: 12px; line-height: 1.4; }
+.process-river__tooltip strong {
+  color: var(--river-ink, #202922);
+  font-size: 14px;
+}
+.process-river__tooltip p {
+  margin: 8px 0;
+  color: var(--river-ink, #202922);
+  font-size: 12px;
+  line-height: 1.4;
+}
 .process-river__tooltip b { color: var(--river-blue, #2f4b7c); font-size: 11px; }
-.process-river__tooltip small { margin-top: 7px; opacity: 0.7; line-height: 1.35; }
+.process-river__tooltip small {
+  margin-top: 7px;
+  color: var(--river-muted, #6d6759);
+  line-height: 1.35;
+}
 
 .process-river__findings {
   color: var(--river-findings-ink, #f4efdf);
@@ -376,6 +450,7 @@
   display: grid;
   grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
   gap: clamp(38px, 7vw, 110px);
+  color: var(--river-ink, #202922);
   background: var(--river-outside-bg, #e1d8c0);
 }
 .process-river__outside-list {
@@ -391,10 +466,16 @@
 .process-river__outside-list strong {
   display: block;
   margin: 8px 0;
+  color: var(--river-ink, #202922);
   font-family: Georgia, serif;
   font-size: 20px;
 }
-.process-river__outside-list p { margin: 0 0 14px; font-size: 12px; line-height: 1.5; }
+.process-river__outside-list p {
+  margin: 0 0 14px;
+  color: var(--river-ink, #202922);
+  font-size: 12px;
+  line-height: 1.5;
+}
 .process-river__outside-list span {
   display: block;
   color: var(--river-outside-meta, #72544c);
@@ -406,11 +487,22 @@
   display: grid;
   grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
   gap: clamp(40px, 8vw, 120px);
+  color: var(--river-ink, #202922);
+}
+.process-river__method h3,
+.process-river__river-heading h3 {
+  color: var(--river-ink, #202922);
+}
+.process-river__river-heading p,
+.process-river__outside > div > p,
+.process-river__method > div > p {
+  color: var(--river-ink, #202922);
 }
 .process-river__warning {
   margin: 24px 0 !important;
   padding: 18px;
   border-left: 5px solid var(--river-red, #9d3c31);
+  color: var(--river-ink, #202922);
   background: var(--river-warning-bg, #e2dac5);
   font-weight: 700;
 }
@@ -420,15 +512,19 @@
   gap: 6px;
   padding: 16px 8px;
   border-bottom: 1px solid var(--river-rule-soft, #b9b09b);
-  color: inherit;
+  color: var(--river-ink, #202922);
   text-decoration: none;
 }
 .process-river__sources a:hover strong { color: var(--river-red, #9d3c31); }
 .process-river__sources small {
+  color: var(--river-muted, #6a6457);
   font: 700 9px/1.3 ui-monospace, monospace;
   text-transform: uppercase;
 }
-.process-river__sources strong { font-family: Georgia, serif; }
+.process-river__sources strong {
+  color: var(--river-ink, #202922);
+  font-family: Georgia, serif;
+}
 .process-river__sources span { color: var(--river-muted, #6a6457); font-size: 11px; }
 
 .process-river__code {

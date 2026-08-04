@@ -22,6 +22,7 @@ export type {
   ProcessSankeyLayout,
   ProcessSankeyLayoutQuality,
   ProcessSankeyRibbonLane,
+  ProcessSankeyNodeSizing,
   ProcessSankeyOptions,
   ProcessSankeyEdgeIndex,
 } from "./processSankeyTypes"
@@ -70,3 +71,9 @@ export {
   explainProcessSankeyLayout,
   PROCESS_SANKEY_QUALITY_THRESHOLDS,
 } from "./layoutQualityProduct"
+
+export { inventoryAtTime } from "./inventoryAtTime"
+export type { InventoryEdge, InventoryAtTimeOptions } from "./inventoryAtTime"
+
+export { toProcessSankeyTime } from "./time"
+export type { ProcessSankeyTimeLike } from "./time"
