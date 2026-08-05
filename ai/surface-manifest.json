@@ -7,7 +7,7 @@
     "src/components/semiotic-ai.ts",
     "ai/mcp-server.ts"
   ],
-  "version": "3.8.8",
+  "version": "3.8.9",
   "components": {
     "schema": 57,
     "aiChartExports": 54,

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "semiotic",
-    "version": "3.8.8"
+    "version": "3.8.9"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 924614,
-      "gzipBytes": 293820,
+      "rawBytes": 924783,
+      "gzipBytes": 293850,
       "packedPackageInputFiles": 4
     },
     {
@@ -152,8 +152,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 925577,
-      "gzipBytes": 294283,
+      "rawBytes": 925746,
+      "gzipBytes": 294312,
       "packedPackageInputFiles": 4
     },
     {
