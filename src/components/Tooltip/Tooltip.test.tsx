@@ -1,5 +1,11 @@
 import { render } from "@testing-library/react"
-import { Tooltip, MultiLineTooltip, MultiPointTooltip, normalizeTooltip } from "./Tooltip"
+import {
+  Tooltip,
+  MultiLineTooltip,
+  MultiPointTooltip,
+  normalizeTooltip,
+  resolveMultiCapableTooltip,
+} from "./Tooltip"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ReactElement, ReactNode } from "react"
@@ -489,6 +495,42 @@ describe("MultiPointTooltip", () => {
     // Fallback: multi content so unsupported charts still get a multi-series tooltip.
     const result = normalizeTooltip("multi")
     expect(typeof result).toBe("function")
+  })
+
+  it("resolveMultiCapableTooltip enables multi mode for the object form", () => {
+    const { tooltipContent, tooltipMode } = resolveMultiCapableTooltip({
+      tooltip: { mode: "multi" },
+      defaultTooltipContent: () => null,
+      multiDefaultContent: MultiPointTooltip(),
+    })
+    expect(tooltipMode).toBe("multi")
+    expect(typeof tooltipContent).toBe("function")
+  })
+
+  it("resolveMultiCapableTooltip wires a custom multi content function with allSeries", () => {
+    let seen: Record<string, unknown> | undefined
+    const { tooltipContent, tooltipMode } = resolveMultiCapableTooltip({
+      tooltip: {
+        mode: "multi",
+        content: (d) => {
+          seen = d
+          return <div>custom</div>
+        },
+      },
+      defaultTooltipContent: () => null,
+    })
+    expect(tooltipMode).toBe("multi")
+
+    render(<>{tooltipContent({
+      __semioticHoverData: true,
+      data: { time: 1, y: 2 },
+      x: 10,
+      y: 20,
+      xValue: 1,
+      allSeries: [{ group: "A", value: 2, color: "red" }],
+    })}</>)
+    expect(seen!.allSeries).toHaveLength(1)
+    expect(seen!.xValue).toBe(1)
   })
 
   it("normalizes bucket-array HoverData to the first datum for custom tooltips", () => {

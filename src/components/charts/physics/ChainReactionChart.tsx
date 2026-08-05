@@ -580,6 +580,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         size={[width, height]}
         responsiveWidth={responsiveWidth}
         responsiveHeight={responsiveHeight}
+        maxDevicePixelRatio={props.maxDevicePixelRatio}
         title={title}
         description={description ?? "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."}
         summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}

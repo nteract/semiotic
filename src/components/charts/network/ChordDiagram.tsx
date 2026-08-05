@@ -289,6 +289,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}

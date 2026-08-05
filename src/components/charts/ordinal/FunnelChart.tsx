@@ -297,6 +297,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: setup.margin,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),

@@ -108,17 +108,12 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
     expect(valuesByGroup.B).toBeCloseTo(10)
   })
 
-  it("renders a custom function tooltip's series rows on hover", async () => {
-    // Regression (reported downstream by Iris): with `tooltip="multi"` a
-    // *custom function* tooltip received a datum with no `allSeries`, because
-    // `normalizeTooltip` unwrapped the hover root down to `.data`. The
-    // tell-tale symptom was a tooltip header with no series rows. Semiotic's
-    // own `MultiPointTooltip` was unaffected — it is wired as `tooltipContent`
-    // directly and never passes through `normalizeTooltip`.
-    //
-    // `tooltip` carries either the string "multi" or a custom function, never
-    // both, so multi mode plus a custom renderer is reached through
-    // `frameProps.tooltipMode` — the shape the downstream report used.
+  it("renders a custom multi tooltip's series rows on hover via tooltip={{ mode: 'multi', content }}", async () => {
+    // Regression (reported downstream by Iris): with multi mode a *custom*
+    // tooltip function used to receive a datum with no `allSeries`, because
+    // `normalizeTooltip` unwrapped the hover root down to `.data`. First-class
+    // `tooltip={{ mode: "multi", content }}` enables multi hover and preserves
+    // allSeries on the unwrapped datum — no frameProps.tooltipMode needed.
     const flatData = [
       { series: "A", x: 0, y: 10 },
       { series: "A", x: 10, y: 30 },
@@ -132,21 +127,24 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
         xAccessor="x"
         yAccessor="y"
         lineBy="series"
-        tooltip={(d: Record<string, unknown>) => {
-          const all = d.allSeries as Array<{ group: string; value: number }> | undefined
-          if (!all) return <div data-testid="rows">NO_SERIES</div>
-          return (
-            <div data-testid="rows">
-              {all.map(s => `${s.group}=${Math.round(s.value)}`).join(" ")}
-            </div>
-          )
+        tooltip={{
+          mode: "multi",
+          content: (d: Record<string, unknown>) => {
+            const all = d.allSeries as Array<{ group: string; value: number }> | undefined
+            if (!all) return <div data-testid="rows">NO_SERIES</div>
+            return (
+              <div data-testid="rows">
+                {all.map(s => `${s.group}=${Math.round(s.value)}`).join(" ")}
+              </div>
+            )
+          },
         }}
         xExtent={[0, 10]}
         yExtent={[0, 30]}
         width={200}
         height={100}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        frameProps={{ showAxes: false, tooltipMode: "multi" }}
+        frameProps={{ showAxes: false }}
       />
     )
 

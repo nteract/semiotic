@@ -227,7 +227,13 @@ const commonProps: Record<string, ChartPropSpec> = {
   // `RidgelinePlot.tooltip: ["function", "object"]`). LLMs that can't
   // supply functions choose the boolean/object variant.
   // String form includes "multi" for charts that wire tooltipMode (Line/Area/…).
-  tooltip: { type: ["boolean", "function", "object", "string"] },
+  // Object form also accepts `{ mode: "multi", content? }` for custom multi
+  // renderers — `content` is a function and is React-only.
+  tooltip: {
+    type: ["boolean", "function", "object", "string"],
+    description:
+      'Tooltip: true/false, "multi", { mode: "multi", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.',
+  },
   annotations: { type: "array" },
   autoPlaceAnnotations: {
     type: ["boolean", "object"],
@@ -237,6 +243,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   responsiveRules: { type: "array", description: "Semantic responsive transforms applied before chart-mode defaults." },
   mobileSemantics: { type: "object", description: "Phone/mobile contract consumed by audits, recipes, adapters, and agents." },
   mobileInteraction: { type: ["boolean", "object"], description: "Touch-first interaction policy for phone-sized chart slots." },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes." },
   axisExtent: {
     type: "string",
     enum: ["nice", "exact"] as const,
@@ -299,6 +306,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes." },
   margin: { type: "object" },
   className: { type: "string" },
   timeAccessor: { type: ["string", "function"], description: "Key for time/x values" },
@@ -334,6 +342,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes." },
   className: { type: "string" },
   title: { type: "string" },
   description: {

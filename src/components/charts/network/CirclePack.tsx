@@ -200,6 +200,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}

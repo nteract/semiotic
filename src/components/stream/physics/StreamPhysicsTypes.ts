@@ -234,6 +234,8 @@ export interface StreamPhysicsFrameProps {
    * to composite over siblings (same contract as StreamXYFrame).
    */
   background?: string
+  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  maxDevicePixelRatio?: number
   backgroundGraphics?: FrameGraphicsProp
   /**
    * Optional rAF seam for deterministic frame-loop scheduling in tests.

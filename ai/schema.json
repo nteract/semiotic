@@ -108,6 +108,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -170,6 +171,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -488,6 +493,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -550,6 +556,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -869,6 +879,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -931,6 +942,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -1234,6 +1249,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -1296,6 +1312,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -1575,6 +1595,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -1637,6 +1658,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -1916,6 +1941,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -1978,6 +2004,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -2191,6 +2221,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -2253,6 +2284,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -2509,6 +2544,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -2571,6 +2607,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -2835,6 +2875,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -2897,6 +2938,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3145,6 +3190,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -3207,6 +3253,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3468,6 +3518,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -3530,6 +3581,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3766,6 +3821,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -3828,6 +3884,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -4054,6 +4114,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -4116,6 +4177,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -4353,6 +4418,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -4415,6 +4481,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -4636,6 +4706,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -4698,6 +4769,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -4941,6 +5016,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -5003,6 +5079,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -5220,6 +5300,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -5282,6 +5363,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -5492,6 +5577,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -5554,6 +5640,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -5777,6 +5867,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -5839,6 +5930,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6044,6 +6139,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6106,6 +6202,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6339,6 +6439,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6401,6 +6502,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6592,6 +6697,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6654,6 +6760,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6857,6 +6967,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6919,6 +7030,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -7155,6 +7270,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -7217,6 +7333,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -7499,6 +7619,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -7561,6 +7682,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -7824,6 +7949,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -7886,6 +8012,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8127,6 +8257,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -8189,6 +8320,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8432,6 +8567,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -8494,6 +8630,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8703,6 +8843,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -8765,6 +8906,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8978,6 +9123,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -9040,6 +9186,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -9203,6 +9353,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": "object"
@@ -9377,6 +9531,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": "object"
@@ -9603,6 +9761,10 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+            },
             "margin": {
               "type": "object"
             },
@@ -9802,6 +9964,10 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+            },
             "margin": {
               "type": "object"
             },
@@ -9987,6 +10153,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": "object"
@@ -10245,6 +10415,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -10307,6 +10478,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -10526,6 +10701,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -10588,6 +10764,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -10833,6 +11013,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -10895,6 +11076,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11068,6 +11253,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11130,6 +11316,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11297,6 +11487,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11359,6 +11550,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11543,6 +11738,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11605,6 +11801,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11816,6 +12016,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11878,6 +12079,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -12069,6 +12274,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -12131,6 +12337,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -12321,6 +12531,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -12383,6 +12594,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -12814,6 +13029,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -12876,6 +13092,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -13529,6 +13749,10 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+            },
             "className": {
               "type": "string"
             },
@@ -13691,6 +13915,10 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+            },
             "className": {
               "type": "string"
             },
@@ -13835,6 +14063,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -13988,6 +14220,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -14228,6 +14464,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -14290,6 +14527,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -14525,6 +14766,10 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+            },
             "className": {
               "type": "string"
             },
@@ -14709,6 +14954,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -14896,6 +15145,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -15988,6 +16241,7 @@
                 "object",
                 "string"
               ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -16050,6 +16304,10 @@
                 "object"
               ],
               "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -16257,6 +16515,10 @@
             "height": {
               "type": "number",
               "description": "Alias for size[1]"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"

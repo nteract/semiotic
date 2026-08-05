@@ -148,6 +148,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     autoPlaceAnnotations,
     background,
     backgroundGraphics,
+    maxDevicePixelRatio,
     bodySemanticItemLimit = 200,
     bodySemanticItems = false,
     bodySemanticUpdateMs = 200,
@@ -754,13 +755,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
       (ann) => ann.pointId != null || ann.bodyId != null || ann.anchor === "latest"
     )
 
-  const { canvasRef } = useFrameCanvasHost(frame, {
+  const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
     hydrated,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
     manageFrameRuntime: false,
     skipInitialCanvasPaintInvalidation: true,
+    maxDevicePixelRatio,
+    // Physics always paints via its own loop; resolutionDirty covers zoom/DPR
+    // without a full dirty rebuild. maxDevicePixelRatio is host-owned.
     canvasPaintDependencies: [background, backgroundGraphics, scheduleRender],
   })
 
@@ -769,7 +773,10 @@ export const StreamPhysicsFrame = memo(forwardRef<
     const store = storeRef.current
     if (!canvas || !store) return
     const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(store.getLastUpdateResult(), false)
-    const dpr = getDevicePixelRatio()
+    // Consume resolution dirty (browser zoom) so a paint-only invalidation
+    // does not stick; physics paint always re-rasterizes when scheduled.
+    resolutionDirtyRef.current = false
+    const dpr = getDevicePixelRatio(maxDevicePixelRatio)
     const ctx = prepareCanvas(canvas, size, margin, dpr)
     if (!ctx) {
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, false, false)
@@ -851,7 +858,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     )
     sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, true, false)
     dirtyRef.current = false
-  }, [canvasRef, sceneRevisionDiagnosticsRef, size, margin, backgroundGraphics, background, syncBodySemanticItems, needsLiveAnnotationAnchors, beforePaint, afterPaint, bodyStyle, selectedBodyStyle, selection, stylePrimitives, renderBodyProp, regionById])
+  }, [canvasRef, resolutionDirtyRef, sceneRevisionDiagnosticsRef, size, margin, backgroundGraphics, background, maxDevicePixelRatio, syncBodySemanticItems, needsLiveAnnotationAnchors, beforePaint, afterPaint, bodyStyle, selectedBodyStyle, selection, stylePrimitives, renderBodyProp, regionById])
 
   const reportExecutionState = useCallback(
     (execution: "sync" | "worker", reason?: string) => {

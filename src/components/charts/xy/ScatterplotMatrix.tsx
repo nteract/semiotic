@@ -91,6 +91,7 @@ interface CellProps {
   hoverSelectionName: string
   unselectedOpacity: number
   showGrid: boolean
+  maxDevicePixelRatio?: number
   tooltip?: TooltipProp
   mobileInteraction?: ResolvedMobileInteractionConfig
   /** "brush" or "hover" — mutually exclusive */
@@ -115,6 +116,7 @@ function ScatterplotCell({
   hoverSelectionName,
   unselectedOpacity,
   showGrid: _showGrid,
+  maxDevicePixelRatio,
   tooltip: _tooltip,
   mobileInteraction,
   mode,
@@ -237,6 +239,7 @@ function ScatterplotCell({
         pointStyle={pointStyle}
         margin={CELL_MARGIN}
         showAxes={false}
+        maxDevicePixelRatio={maxDevicePixelRatio}
         enableHover={mode === "hover"}
         {...buildCustomBehaviorProps({
           forceHoverBehavior: mode === "hover",
@@ -517,6 +520,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     hoverMode = true,
     unselectedOpacity = 0.1,
     showGrid = false,
+    maxDevicePixelRatio,
     tooltip,
     showLegend,
     idAccessor,
@@ -683,6 +687,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   hoverSelectionName={hoverSelectionName}
                   unselectedOpacity={unselectedOpacity}
                   showGrid={showGrid}
+                  maxDevicePixelRatio={maxDevicePixelRatio}
                   tooltip={tooltip}
                   mobileInteraction={mobileInteraction}
                   mode={cellMode}

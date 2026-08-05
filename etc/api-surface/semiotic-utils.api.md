@@ -77,6 +77,7 @@ function validateProps(componentName: string, props: Datum): ValidationResult
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
 interface A11yFinding
 interface AccessibilityAuditResult
+interface AdaptiveTimeTickOptions
 interface ArcBoundingBox
 interface AuditAccessibilityOptions
 interface AuditDataOptions
@@ -155,4 +156,5 @@ type SerializedFieldSelection = {
 type SerializedSelections = Record<string, SerializedSelection>
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
+type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
 ```

@@ -89,6 +89,7 @@ export interface ChainReactionChartProps<TDatum extends Datum = Datum> {
   height?: number
   responsiveWidth?: boolean
   responsiveHeight?: boolean
+  maxDevicePixelRatio?: number
   title?: string
   description?: string
   className?: string

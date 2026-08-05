@@ -240,6 +240,26 @@ describe("axisExtent SSR parity", () => {
     expect(exact.svg).toContain(">23<") // data min
     expect(dflt.svg).not.toContain(">47<")
   })
+
+  it("xy: a per-axis nice override keeps y padding while x stays exact", () => {
+    const mixed = renderChartWithEvidence("LineChart", {
+      data: xyData,
+      xAccessor: "x",
+      yAccessor: "y",
+      axisExtent: "exact",
+      frameProps: {
+        axes: [
+          { orient: "bottom" },
+          { orient: "left", extent: "nice" },
+        ],
+      },
+    })
+    expect(mixed.evidence.yDomain![0]).toBeLessThan(23)
+    expect(mixed.evidence.yDomain![1]).toBeGreaterThan(47)
+    expect(mixed.svg).toContain(">3<")
+    expect(mixed.svg).toContain(">29<")
+    expect(mixed.svg).not.toContain(">47<")
+  })
 })
 
 /**

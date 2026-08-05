@@ -137,6 +137,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   extentPadding: dependency("preserve", DOMAIN_LAYOUT),
   scalePadding: dependency("preserve", DOMAIN_LAYOUT),
   axisExtent: dependency("preserve", DOMAIN_LAYOUT),
+  yAxisExtent: dependency("preserve", DOMAIN_LAYOUT),
   binSize: dependency("preserve", DOMAIN_LAYOUT),
   normalize: dependency("preserve", DOMAIN_LAYOUT),
   heatmapAggregation: dependency("preserve", DOMAIN_LAYOUT),

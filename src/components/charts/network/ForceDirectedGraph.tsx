@@ -452,6 +452,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
       nodeIDAccessor={nodeIDAccessor}
       sourceAccessor={sourceAccessor}

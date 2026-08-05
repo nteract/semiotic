@@ -565,7 +565,7 @@ export class PipelineStore implements UpdateResultStore {
     let yDomain = mergePartialDomain(dataYDomain, config.yExtent)
 
     const yFullySpecified = isFullySpecifiedExtent(config.yExtent)
-    const exactMode = config.axisExtent === "exact"
+    const exactMode = (config.yAxisExtent ?? config.axisExtent) === "exact"
 
     if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {
       const stacked = resolveStackedAreaYDomain({

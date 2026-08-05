@@ -395,11 +395,42 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
 }
 
 /**
+ * First-class multi-series tooltip: enable hover-anywhere multi mode and
+ * optionally supply a custom renderer that receives the unwrapped datum
+ * with `allSeries` / `xValue` re-attached.
+ *
+ * @example
+ * ```tsx
+ * // Built-in multi renderer
+ * <LineChart tooltip="multi" />
+ * <LineChart tooltip={{ mode: "multi" }} />
+ *
+ * // Custom multi renderer (no frameProps.tooltipMode needed)
+ * <LineChart
+ *   tooltip={{
+ *     mode: "multi",
+ *     content: (d) => <MyRows series={d.allSeries} x={d.xValue} />,
+ *   }}
+ * />
+ * ```
+ */
+export interface MultiTooltipConfig {
+  mode: "multi"
+  /**
+   * Custom renderer. Receives the raw hover datum with multi-series
+   * context (`allSeries`, `xValue`) re-attached after unwrap. When
+   * omitted, the built-in multi-series renderer is used.
+   */
+  content?: (data: Record<string, unknown>) => React.ReactNode
+}
+
+/**
  * Type for tooltip prop that chart components accept
  */
 export type TooltipProp =
   | boolean
   | "multi"
+  | MultiTooltipConfig
   | ((data: Record<string, unknown>) => React.ReactNode)
   | ReturnType<typeof Tooltip>
   | ReturnType<typeof MultiLineTooltip>
@@ -410,6 +441,75 @@ export type TooltipProp =
  * Compatible with HoverData and any Record-based hover object.
  */
 export type TooltipContentFn = (d: Datum) => React.ReactNode
+
+/** True when the tooltip prop requests multi-series / hover-anywhere mode. */
+export function isMultiTooltip(tooltip: TooltipProp | undefined): boolean {
+  if (tooltip === "multi") return true
+  return isMultiTooltipConfig(tooltip)
+}
+
+export function isMultiTooltipConfig(
+  tooltip: TooltipProp | undefined,
+): tooltip is MultiTooltipConfig {
+  return (
+    typeof tooltip === "object" &&
+    tooltip !== null &&
+    !Array.isArray(tooltip) &&
+    "mode" in tooltip &&
+    (tooltip as MultiTooltipConfig).mode === "multi"
+  )
+}
+
+/**
+ * Resolve tooltip content + optional `tooltipMode: "multi"` for charts that
+ * support multi-series hover (LineChart, AreaChart, StackedAreaChart, …).
+ *
+ * Handles `tooltip="multi"`, `tooltip={{ mode: "multi", content? }}`, custom
+ * functions, config objects, and `false`/`true`/undefined the same way as
+ * the previous per-chart branches.
+ *
+ * Content functions are typed loosely (`Datum`) so chart-specific defaults
+ * that accept `HoverData` (a Datum subtype at runtime) still type-check when
+ * spread onto Stream frame props.
+ */
+export function resolveMultiCapableTooltip(input: {
+  tooltip: TooltipProp | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  defaultTooltipContent: (d: any) => React.ReactNode
+  /** Used when multi mode is on and no custom content was provided. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  multiDefaultContent?: (d: any) => React.ReactNode
+}): {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tooltipContent: (d: any) => React.ReactNode
+  tooltipMode?: "multi"
+} {
+  const {
+    tooltip,
+    defaultTooltipContent,
+    multiDefaultContent = MultiPointTooltip(),
+  } = input
+
+  if (tooltip === false) {
+    return { tooltipContent: () => null }
+  }
+
+  if (isMultiTooltip(tooltip)) {
+    const custom =
+      isMultiTooltipConfig(tooltip) && typeof tooltip.content === "function"
+        ? normalizeTooltip(tooltip.content)
+        : undefined
+    return {
+      tooltipContent: (custom as false | undefined) || multiDefaultContent,
+      tooltipMode: "multi",
+    }
+  }
+
+  const normalized = normalizeTooltip(tooltip)
+  return {
+    tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
+  }
+}
 
 /**
  * Multi-point tooltip: shows all series values at the hovered X position
@@ -569,6 +669,22 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   if (tooltip === false || tooltip === undefined) {
     // No tooltip
     return false
+  }
+
+  // First-class multi config. Charts that support multi mode should
+  // intercept via `isMultiTooltip` / `resolveMultiCapableTooltip` and set
+  // `tooltipMode: "multi"` on the frame. If we still land here, render a
+  // multi-series content function as a best-effort fallback.
+  if (isMultiTooltipConfig(tooltip)) {
+    if (typeof tooltip.content === "function") {
+      return normalizeTooltip(tooltip.content)
+    }
+    if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+      console.warn(
+        '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Prefer LineChart/AreaChart/StackedAreaChart/DifferenceChart, or pass frameProps.tooltipMode: "multi".',
+      )
+    }
+    return MultiPointTooltip()
   }
 
   // Config object with fields/title — convert to a tooltip function

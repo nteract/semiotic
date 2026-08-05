@@ -533,6 +533,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    ...(props.maxDevicePixelRatio !== undefined && { maxDevicePixelRatio: props.maxDevicePixelRatio }),
     margin: setup.margin,
     showAxes: resolved.showAxes,
     ...(axesConfig && { axes: axesConfig }),

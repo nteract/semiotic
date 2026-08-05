@@ -131,6 +131,12 @@ export interface BaseChartProps {
   responsiveWidth?: boolean
   /** Auto-match height to parent container (requires parent with explicit height). Default: false */
   responsiveHeight?: boolean
+  /**
+   * Maximum canvas backing-store pixel ratio. Defaults to 3 on desktop and 2
+   * on coarse-pointer/small-screen devices. Canvas chart families repaint
+   * automatically when browser zoom or display density changes.
+   */
+  maxDevicePixelRatio?: number
   /** Semantic responsive transformations keyed by measured chart slot, not CSS alone. */
   responsiveRules?: ResponsiveRule[]
   /** Phone/mobile contract consumed by audits, recipes, adapters, and agents. */
@@ -230,7 +236,8 @@ export interface BaseChartProps {
    *  Useful when a fixed scale (gauge, score band, KPI dial) needs
    *  endpoints to read as the actual boundaries.
    *
-   *  Applies to:
+   *  `frameProps.axes[i].extent` can override this independently for an XY
+   *  axis. Applies to:
    *  - XY charts: both x and y axes (linear, time, log).
    *  - Ordinal charts: the value (r) axis only — the categorical
    *    axis is a band scale and doesn't have a numeric tick set.

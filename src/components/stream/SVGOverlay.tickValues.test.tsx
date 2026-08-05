@@ -44,6 +44,43 @@ const baseProps = {
 }
 
 describe("tickValues on XY axes", () => {
+  it("lets one axis override the chart-level extent mode", () => {
+    const x = Object.assign((v: number) => v * 30, {
+      ticks: () => [0, 20, 40, 60, 80],
+      domain: () => [1, 9],
+      range: () => [30, 270],
+    })
+    const y = Object.assign((v: number) => 200 - v / 3, {
+      ticks: () => [0, 200, 400, 600],
+      domain: () => [0, 563],
+      range: () => [200, 0],
+    })
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={{ x, y } as unknown as StreamScales}
+        showAxes={true}
+        axisExtent="exact"
+        axes={[
+          { orient: "bottom" },
+          { orient: "left", extent: "nice" },
+        ]}
+      />,
+    )
+
+    const xText = container.querySelector('[data-orient="bottom"]')?.textContent ?? ""
+    const yText = container.querySelector('[data-orient="left"]')?.textContent ?? ""
+    // Bottom inherits chart-level exact: literal 1/9 bounds with equidistant ticks.
+    expect(xText).toContain("1")
+    expect(xText).toContain("3")
+    expect(xText).toContain("9")
+    // Left overrides to nice: use the scale's rounded magnitude ticks.
+    expect(yText).toContain("200")
+    expect(yText).toContain("400")
+    expect(yText).toContain("600")
+    expect(yText).not.toContain("563")
+  })
+
   it("bottom-axis tickValues overrides d3 auto-ticks", () => {
     const { container } = render(
       <SVGOverlay

@@ -760,6 +760,8 @@ export interface StreamNetworkFrameProps<T = Datum>
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string
+  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  maxDevicePixelRatio?: number
 
   // ── Legend / title ───────────────────────────────
   legend?: LegendValue

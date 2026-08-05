@@ -135,6 +135,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       margin: marginProp,
       className,
       background,
+      maxDevicePixelRatio,
       runtimeMode: _runtimeMode,
       windowSize = 500,
 
@@ -489,12 +490,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // where `frame.hoverLeaveRef.current = ...` is set a few lines below.
     const { hoverHandlerRef, onPointerMove, onPointerLeave } = frame
 
-    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
+    const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       hydrated,
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
       cleanup: () => tileCacheRef.current?.clear(),
+      maxDevicePixelRatio,
       canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
     })
 
@@ -766,7 +768,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         false
       )
 
-      const dpr = getDevicePixelRatio()
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
 
       // Particles / transition / scene rebuild / rotation need a full data paint.
       // Hover-only scheduleRender skips the data canvas and only updates the
@@ -783,13 +785,16 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         computedSceneThisFrame,
         pulseFramePendingRef
       )
+      // Browser zoom / maxDevicePixelRatio: re-rasterize without scene rebuild.
+      const needsResolutionRepaint = resolutionDirtyRef.current
       const needsDataRepaint = needsDataCanvasPaint({
         dirtyOrRebuilt: computedSceneThisFrame,
         transitioning: isTransitioning,
         continuous: particlesWanted,
         liveEncoding: pulseRefresh.changed,
-        forced: rotationApplied || stylePaintPending
+        forced: rotationApplied || stylePaintPending || needsResolutionRepaint
       })
+      resolutionDirtyRef.current = false
 
       // ── Tile canvas (behind data canvas) ──
       // Always attempt when tiles are configured — incomplete loads set
@@ -811,6 +816,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               width: adjustedWidth,
               height: adjustedHeight,
               tileCache: tileCacheRef.current,
+              maxDevicePixelRatio,
               onTileLoad: () => scheduleRender()
             })
 

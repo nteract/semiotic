@@ -306,6 +306,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         size={[width, height]}
         responsiveWidth={props.responsiveWidth}
         responsiveHeight={props.responsiveHeight}
+        maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={setup.margin}
         nodeIDAccessor={nodeIdAccessor}
         childrenAccessor={childrenAccessor as string | ((d: Datum) => Datum[])}

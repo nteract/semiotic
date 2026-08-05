@@ -323,6 +323,27 @@ describe("StreamXYFrame", () => {
       const scales = ref.current!.getScales()
       expect(scales).toBeTruthy()
     })
+
+    it("resolves per-axis extent overrides into the y domain", async () => {
+      const ref = React.createRef<StreamXYFrameHandle>()
+      render(
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          data={[{ x: 1, y: 12 }, { x: 2, y: 87 }]}
+          xAccessor="x"
+          yAccessor="y"
+          extentPadding={0.1}
+          axisExtent="exact"
+          axes={[{ orient: "bottom" }, { orient: "left", extent: "nice" }]}
+          size={[400, 300]}
+        />
+      )
+      await act(async () => { await Promise.resolve() })
+      const domain = ref.current!.getScales()!.y.domain() as [number, number]
+      expect(domain[0]).toBeLessThan(12)
+      expect(domain[1]).toBeGreaterThan(87)
+    })
   })
 
   // ── Hover behavior ────────────────────────────────────────────────────

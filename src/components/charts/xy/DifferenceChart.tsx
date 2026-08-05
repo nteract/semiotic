@@ -10,7 +10,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { type TooltipProp, normalizeTooltip, defaultTooltipStyle } from "../../Tooltip/Tooltip"
+import { type TooltipProp, resolveMultiCapableTooltip, defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYAxisChrome } from "../../legendLayout"
@@ -527,18 +527,18 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     )
   }, [safeData, getX, getA, getB, xFormat, seriesAColor, seriesBColor, seriesALabel, seriesBLabel])
 
-  // `tooltip="multi"` opts into hover-anywhere along the x-axis with
-  // interpolated series values — same shape LineChart/AreaChart use.
-  // The default tooltip handles both single-point and multi shapes
-  // (it reads `hover.allSeries` when present), so we don't swap the
-  // content function; we just enable the frame's multi tooltipMode.
-  const multiTooltip = tooltip === "multi"
-  const tooltipContent = useMemo(() => {
-    if (tooltip === false) return () => null
-    if (multiTooltip) return defaultTooltipContent
-    const normalized = normalizeTooltip(tooltip)
-    return (normalized as ((d: HoverData) => React.ReactNode) | false) || defaultTooltipContent
-  }, [tooltip, multiTooltip, defaultTooltipContent])
+  // `tooltip="multi"` / `{ mode: "multi", content? }` opts into hover-anywhere
+  // along the x-axis with interpolated series values — same shape
+  // LineChart/AreaChart use. The difference-aware default handles both
+  // single-point and multi shapes (it reads `hover.allSeries` when present).
+  const { tooltipContent, tooltipMode } = useMemo(
+    () => resolveMultiCapableTooltip({
+      tooltip,
+      defaultTooltipContent,
+      multiDefaultContent: defaultTooltipContent,
+    }),
+    [tooltip, defaultTooltipContent],
+  )
 
   // Loading / empty state — returned only after every hook above has run, so
   // the hook count is identical whether or not data is present. Mounting empty
@@ -590,9 +590,9 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     showGrid,
     ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent,
-    ...(multiTooltip && { tooltipMode: "multi" as const }),
+    ...(tooltipMode === "multi" && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
       mobileInteraction: setup.mobileInteraction,

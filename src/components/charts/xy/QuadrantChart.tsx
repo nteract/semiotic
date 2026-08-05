@@ -620,6 +620,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    ...(props.maxDevicePixelRatio !== undefined && { maxDevicePixelRatio: props.maxDevicePixelRatio }),
     margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,

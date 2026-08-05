@@ -366,6 +366,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     areas: resolvedAreas!,
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin,
     enableHover: resolved.enableHover,
     tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),

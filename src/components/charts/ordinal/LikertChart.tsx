@@ -501,6 +501,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: effectiveMargin,
     barPadding,
     enableHover,

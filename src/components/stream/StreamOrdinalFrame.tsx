@@ -107,6 +107,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       responsiveWidth,
       responsiveHeight,
       margin: userMargin,
+      maxDevicePixelRatio,
       barPadding,
       roundedTop,
       gradientFill,
@@ -524,12 +525,13 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       adapterRef.current?.setBoundedData(safeData)
     }, [data, safeData])
 
-    const { canvasRef } = useFrameCanvasHost(frame, {
+    const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       storeRef,
       dirtyRef,
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
+      maxDevicePixelRatio,
       canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, renderMode, scheduleRender],
     })
 
@@ -717,6 +719,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         isTransitioning
       )
 
+      // Scene rebuild only on data/layout dirty — not on resolutionDirty
+      // (browser zoom / maxDevicePixelRatio is paint-only).
       if ((wasDirty || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
@@ -729,6 +733,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         dimsChanged
       )
       dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
+      // Ordinal paints whenever scheduled; clear resolution dirty after this
+      // pass so a zoom re-rasterizes once without forcing a later rebuild.
+      resolutionDirtyRef.current = false
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       // Update canvas aria-label imperatively after scene changes
@@ -739,7 +746,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // DPR setup — only resize the canvas buffer when dimensions actually change.
       // Setting canvas.width/height (even to the same value) implicitly clears the
       // buffer and forces GPU reallocation on HiDPI displays.
-      const dpr = getDevicePixelRatio()
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
       const newWidth = size[0] * dpr
       const newHeight = size[1] * dpr
       if (canvas.width !== newWidth || canvas.height !== newHeight) {

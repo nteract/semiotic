@@ -399,32 +399,40 @@ export function renderGridSVG(
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
+  const bottomAxis = axes?.find(axis => axis.orient === "bottom")
+  const topAxis = axes?.find(axis => axis.orient === "top")
+  const leftAxis = axes?.find(axis => axis.orient === "left")
+  const rightAxis = axes?.find(axis => axis.orient === "right")
+  const xAxis = bottomAxis ?? topAxis
+  const yAxis = leftAxis ?? rightAxis
+  const xExtentMode = xAxis?.extent ?? axisExtent
+  const yExtentMode = yAxis?.extent ?? axisExtent
   // Grid lines share the axis tick positions (ticksForMode) so they align
   // under axisExtent:"exact" — matching the client SVGOverlay, which draws
   // grid from the same tick arrays as the axis.
-  const xTickCount = axisExtent === "exact"
+  const xTickCount = xExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = axisExtent === "exact"
+  const yTickCount = yExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const xTicks = ticksForMode(scales.x, xTickCount, axisExtent)
-  const yTicks = ticksForMode(scales.y, yTickCount, axisExtent)
-  const showXGrid = axes?.find(axis => axis.orient === "bottom")?.grid !== false
-  const showYGrid = axes?.find(axis => axis.orient === "left")?.grid !== false
-  const xGridDash = resolveGridDash(axes?.find(axis => axis.orient === "bottom")?.gridStyle)
-  const yGridDash = resolveGridDash(axes?.find(axis => axis.orient === "left")?.gridStyle)
+  const xTicks = xAxis?.tickValues ?? ticksForMode(scales.x, xAxis?.ticks ?? xTickCount, xExtentMode)
+  const yTicks = yAxis?.tickValues ?? ticksForMode(scales.y, yAxis?.ticks ?? yTickCount, yExtentMode)
+  const showXGrid = xAxis?.grid !== false
+  const showYGrid = yAxis?.grid !== false
+  const xGridDash = resolveGridDash(xAxis?.gridStyle)
+  const yGridDash = resolveGridDash(yAxis?.gridStyle)
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
-      {showXGrid && xTicks.map((v: number, i: number) => {
+      {showXGrid && xTicks.map((v, i) => {
         const px = scales.x(v)
         return (
           <line key={`gx-${i}`} x1={px} y1={0} x2={px} y2={layout.height}
             stroke={grid} strokeWidth={0.5} strokeDasharray={xGridDash} />
         )
       })}
-      {showYGrid && yTicks.map((v: number, i: number) => {
+      {showYGrid && yTicks.map((v, i) => {
         const py = scales.y(v)
         return (
           <line key={`gy-${i}`} x1={0} y1={py} x2={layout.width} y2={py}
@@ -570,36 +578,42 @@ export function generateAxesSVG(
   // Match SVGOverlay's responsive tick budget. d3's `ticks(5)` can emit
   // seven "nice" values on a short plot while the browser deliberately
   // requests fewer labels to keep the axis legible.
-  const xTickCount = props.axisExtent === "exact"
+  const bottomAxis = props.axes?.find(axis => axis.orient === "bottom")
+  const topAxis = props.axes?.find(axis => axis.orient === "top")
+  const leftAxis = props.axes?.find(axis => axis.orient === "left")
+  const rightAxis = props.axes?.find(axis => axis.orient === "right")
+  const xAxis = bottomAxis ?? topAxis
+  const yAxis = leftAxis ?? rightAxis
+  const xExtentMode = xAxis?.extent ?? props.axisExtent
+  const yExtentMode = yAxis?.extent ?? props.axisExtent
+  const resolvedXTickCount = xExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = props.axisExtent === "exact"
+  const resolvedYTickCount = yExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const bottomAxis = props.axes?.find(axis => axis.orient === "bottom")
-  const leftAxis = props.axes?.find(axis => axis.orient === "left")
-  const rawXTicks = bottomAxis?.tickValues
-    ?? ticksForMode(scales.x, bottomAxis?.ticks ?? xTickCount, props.axisExtent)
+  const rawXTicks = xAxis?.tickValues
+    ?? ticksForMode(scales.x, xAxis?.ticks ?? resolvedXTickCount, xExtentMode)
   const rawXValues = rawXTicks.map(value => value.valueOf())
-  const xFormatter = bottomAxis?.tickFormat || props.xFormat || props.tickFormatTime || defaultTickFormat
+  const xFormatter = xAxis?.tickFormat || props.xFormat || props.tickFormatTime || defaultTickFormat
   const xTicks = rawXTicks.map((v, index) => ({
     pixel: scales.x(v),
     label: xFormatter(v, index, rawXValues)
   }))
 
-  const rawYTicks = leftAxis?.tickValues
-    ?? ticksForMode(scales.y, leftAxis?.ticks ?? yTickCount, props.axisExtent)
-  const yFormatter = leftAxis?.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
+  const rawYTicks = yAxis?.tickValues
+    ?? ticksForMode(scales.y, yAxis?.ticks ?? resolvedYTickCount, yExtentMode)
+  const yFormatter = yAxis?.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
   const yTicks = rawYTicks.map(v => ({
     pixel: scales.y(v),
     label: yFormatter(v)
   }))
-  const xLabel = bottomAxis?.label ?? props.xLabel
-  const yLabel = leftAxis?.label ?? props.yLabel
+  const xLabel = xAxis?.label ?? props.xLabel
+  const yLabel = yAxis?.label ?? props.yLabel
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
-      {bottomAxis?.baseline !== false && (
+      {xAxis?.baseline !== false && (
         <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
       )}
       {xTicks.map((tick, i) => (
@@ -614,7 +628,7 @@ export function generateAxesSVG(
         </text>
       )}
 
-      {leftAxis?.baseline !== false && (
+      {yAxis?.baseline !== false && (
         <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
       )}
       {yTicks.map((tick, i) => (
