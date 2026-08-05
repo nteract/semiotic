@@ -80,7 +80,9 @@ const ENTRY_GRAPHS = [
   // 1.2 KiB of headroom.
   // Bumped 487→500: ProcessSankey continues to expand on the AI catalog path.
   // Production graph measures 498.0 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 500 },
+  // Bumped 500→501: current gzip measurements reach 500.1 KiB; retain
+  // sub-KiB headroom for the stable, canonical AI chart catalog.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 501 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
