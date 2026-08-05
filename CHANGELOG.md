@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.9] - 2026-08-04
+
 ### Added
 
 - **Zoom-aware canvas resolution** — all Stream Frames now repaint when browser zoom, OS display scale, or display migration changes `devicePixelRatio`, even when CSS layout dimensions stay fixed. The new `maxDevicePixelRatio` chart/frame prop overrides the default desktop (3×) and coarse-pointer/small-screen (2×) backing-store caps for consumers that prefer high-zoom crispness over paint and memory cost. DPR / cap changes are **resolution-only** invalidations: retained geometry is re-rasterized without a full scene rebuild.

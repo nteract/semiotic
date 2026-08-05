@@ -17,28 +17,28 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.8.8
+## What's New in 3.8.9
 
-3.8.8 centers on **ProcessSankey** — temporal process flow with a real time axis — plus the
-history-river docs that exercise it hard:
+3.8.9 sharpens Stream Frame reliability and the chart chrome shared by browser and server rendering:
 
-- Packing, bonded lane groups, crossing-aware ordering, hug placement, quality metrics, feeder
-  runway, lifecycle cutouts, worker layout, push, and selection/linkedHover are all first-class.
-- Vertical history rivers for Germany and the United States ship as docs examples (sync layout
-  for deterministic paint; compact checked-in data projections).
-- Agent/docs gates (capabilities, API surface, JSDoc examples, llms, visual baselines) track
-  ProcessSankey; network entry-graph budgets absorb the new surface.
+- Zoom- and display-aware canvas resolution keeps Stream Frames crisp when browser zoom, display
+  scale, or monitor changes alter `devicePixelRatio`, without rebuilding retained scene geometry.
+- XY axes now support per-axis `"nice"` / `"exact"` extent modes consistently across domain
+  padding, ticks, grids, client SVG, and static SSR — including top- and right-only axis configs.
+- Adaptive time ticks accept IANA time zones, and multi-series tooltips have a first-class
+  configuration object with optional custom content.
 
 ```jsx
-import { ProcessSankey } from "semiotic/network"
+import { LineChart } from "semiotic/xy"
 
-<ProcessSankey
-  nodes={nodes}
-  edges={timedEdges}
-  domain={[t0, t1]}
-  packing="reuse"
-  laneOrder="crossing-min+inside-out"
-  lanePlacement="hug"
+<LineChart
+  data={salesData}
+  xAccessor="month"
+  yAccessor="revenue"
+  axisExtent="exact"
+  frameProps={{
+    axes: [{ orient: "left", extent: "nice" }]
+  }}
 />
 ```
 
@@ -404,20 +404,20 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **145 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **121 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **145 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/xy` | **146 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **122 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **146 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **104 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **154 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **144 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime` | **155 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **146 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **224 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **224 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **240 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
-| `semiotic/utils` | **85 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
+| `semiotic/server` | **226 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **226 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **241 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/utils` | **86 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **84 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **6 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **89 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **90 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/core` | **89 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/react` | **2 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **7 KB** | Theme presets only (tufte, carbon, etc.) |
@@ -428,11 +428,11 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/physics` | **161 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **505 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **507 KB** | All schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic/ai/core` | **81 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **12 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **4 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
-| `semiotic` | **407 KB** | Everything below (full bundle) |
+| `semiotic` | **410 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
@@ -463,7 +463,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **134.9 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **286.9 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **287.0 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **166.1 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **287.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **194.2 KiB** |
