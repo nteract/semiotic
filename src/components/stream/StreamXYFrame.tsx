@@ -329,8 +329,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
-    const xAxisExtent = (axesConfig?.find(axis => axis.orient === "bottom")
-      ?? axesConfig?.find(axis => axis.orient === "top"))?.extent ?? axisExtent
     const yAxisExtent = (axesConfig?.find(axis => axis.orient === "left")
       ?? axesConfig?.find(axis => axis.orient === "right"))?.extent ?? axisExtent
     const safeData = useMemo(() => filterSparseArray(data), [data])
@@ -392,7 +390,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       extentPadding,
       scalePadding,
       axisExtent,
-      xAxisExtent,
       yAxisExtent,
       // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
       // The store's streaming-mode resolution chain
@@ -463,7 +460,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAxisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this

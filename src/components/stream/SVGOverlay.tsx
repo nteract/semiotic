@@ -681,17 +681,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const bottomJagged = bottomAxis?.jaggedBase || false
           const bottomLandmark = bottomAxis?.landmarkTicks
           const leftLandmark = leftAxis?.landmarkTicks
-
           const axisStroke = "var(--semiotic-border, #ccc)"
           const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
-
           // Rotate bottom-axis labels 45° when autoRotate is set AND labels
           // would overlap horizontally. Computed once at component scope so
           // the legend's axis-chrome gutter reads the same value.
           const shouldRotateBottom = shouldRotateBottomTicks
-          const bottomTickLabelY = shouldRotateBottom ? 12 : 18
-          const bottomAxisLabelY = height + (shouldRotateBottom ? 58 : 40)
 
           // Per-axis font-size resolution. Inline `style` references the
           // CSS var with the literal default as the fallback — consumers
@@ -742,7 +738,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 <line y2={5} stroke={axisStroke} strokeWidth={1} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
-                    y={bottomTickLabelY}
+                    y={shouldRotateBottom ? 12 : 18}
                     textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(
                       bottomTickAnchorMode,
                       tick.pixel === xPixelExtent.min,
@@ -768,7 +764,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {xLabel && (
               <text
                 x={width / 2}
-                y={bottomAxisLabelY}
+                y={height + (shouldRotateBottom ? 58 : 40)}
                 textAnchor="middle"
                 fill={labelColor}
                 fontSize={AXIS_LABEL_FONT_SIZE}

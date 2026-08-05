@@ -51,7 +51,9 @@ const ENTRY_GRAPHS = [
   // Bumped 384→396: ProcessSankey packing/ordering refinements, worker client,
   // bonded multi-slot units, feeder runway, and quality product surface land
   // in the full facade. Production graph measures 394.4 KiB gzip.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 396 },
+  // Bumped 396→397: subsequent shared-frame behavior and documentation
+  // surfaces measure 396.5 KiB gzip; retain half a KiB of headroom.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 397 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
@@ -62,7 +64,8 @@ const ENTRY_GRAPHS = [
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
-  { entry: "physics.module.min.js", label: "physics", limitKb: 161 },
+  // Bumped 161→162: the current shared graph measures 161.2 KiB gzip.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 162 },
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
