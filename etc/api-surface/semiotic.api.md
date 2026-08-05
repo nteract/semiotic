@@ -52,6 +52,7 @@ function MobileChartContainer({ children, controls, mobile, breakpoint, chartMod
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function MultiPointTooltip(): TooltipContentFn
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -111,6 +112,7 @@ function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, 
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest
 function inventoryAtTime(nodeId: string, time: number, edges: readonly InventoryEdge[], options?: InventoryAtTimeOptions | undefined): number
 function isHatchFill(fill: unknown): boolean
+function isMultiTooltip(tooltip: TooltipProp | undefined): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
@@ -123,6 +125,7 @@ function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: R
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
+function resolveMultiCapableTooltip(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; }): { tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; }
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: string | CanvasPattern | HatchFill | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
@@ -160,6 +163,7 @@ function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyE
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
 interface AccessibleNavTreeProps
 interface ActivateObservation
+interface AdaptiveTimeTickOptions
 interface AnnotationActivateObservation
 interface AnnotationActivationEvent
 interface AnnotationContext
@@ -263,6 +267,7 @@ interface MotionTimeEncoding<TDatum>
 interface MultiAxisLineChartProps<TDatum extends Datum = Datum>
 interface MultiAxisSeriesConfig<TDatum = Datum>
 interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface NavTreeNode
 interface NetworkLabel
 interface OrbitDiagramProps<TDatum extends Datum = Datum>
@@ -447,7 +452,8 @@ type StreamRendererFn = (ctx: CanvasRenderingContext2D, nodes: SceneNode[], scal
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
 type ThresholdType = "greater" | "lesser"
-type TooltipProp = boolean | "multi" | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
 type VisualizationControlValue = number | [number, number]
 type WindowMode = "sliding" | "growing"
