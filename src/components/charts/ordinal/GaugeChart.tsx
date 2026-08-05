@@ -481,6 +481,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: {
       top: frameCenterY - S / 2,
       bottom: height - frameCenterY - S / 2,

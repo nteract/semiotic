@@ -196,14 +196,37 @@ export function smartTickFormat(value: string | number | Date | null | undefined
 // the redundancy of repeating "Mar 24, 2026" on every tick when only
 // the seconds are changing.
 
-type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
+export type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
 
-/** Options for {@link adaptiveTimeTicks}. UTC remains the default so existing
- * server-rendered charts stay deterministic; set `utc: false` to format in
- * the runtime's local timezone. */
+/**
+ * Options for {@link adaptiveTimeTicks}.
+ *
+ * Timezone resolution (first match wins):
+ * 1. `timeZone: "UTC" | "local" | IANA id` (e.g. `"America/Los_Angeles"`)
+ * 2. legacy `utc: false` → local wall clock
+ * 3. default → UTC (deterministic SSR)
+ */
 export interface AdaptiveTimeTickOptions {
+  /**
+   * Prefer {@link AdaptiveTimeTickOptions.timeZone}. When `timeZone` is
+   * omitted, `utc: false` formats in the runtime's local timezone; the
+   * default `utc: true` keeps UTC for deterministic SSR.
+   */
   utc?: boolean
+  /**
+   * Timezone for label formatting and calendar-boundary detection.
+   * - `"UTC"` — UTC getters (same as the default)
+   * - `"local"` — runtime local zone
+   * - IANA id (e.g. `"America/New_York"`, `"Europe/Berlin"`) — via `Intl`
+   */
+  timeZone?: "UTC" | "local" | (string & {})
 }
+
+/** Resolved zone used by the formatter. `"iana"` carries an IANA id. */
+type ZoneMode =
+  | { kind: "utc" }
+  | { kind: "local" }
+  | { kind: "iana"; id: string }
 
 const MS_SECOND = 1000
 const MS_MINUTE = 60 * MS_SECOND
@@ -237,7 +260,17 @@ const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 type TimeParts = { month: number; day: number; year: number; hours: number; minutes: number; seconds: number }
 
-function timeParts(d: Date, utc: boolean): TimeParts {
+/** Resolve timezone options. `timeZone` wins over the legacy `utc` flag. */
+export function resolveAdaptiveTimeZone(options: AdaptiveTimeTickOptions = {}): ZoneMode {
+  const tz = options.timeZone
+  if (tz === "UTC") return { kind: "utc" }
+  if (tz === "local") return { kind: "local" }
+  if (typeof tz === "string" && tz.length > 0) return { kind: "iana", id: tz }
+  if (options.utc === false) return { kind: "local" }
+  return { kind: "utc" }
+}
+
+function timePartsUtcOrLocal(d: Date, utc: boolean): TimeParts {
   return utc
     ? {
       month: d.getUTCMonth(), day: d.getUTCDate(), year: d.getUTCFullYear(),
@@ -249,9 +282,54 @@ function timeParts(d: Date, utc: boolean): TimeParts {
     }
 }
 
+/**
+ * Calendar parts for an IANA zone via `Intl.DateTimeFormat.formatToParts`.
+ * Uses `hourCycle: "h23"` so midnight is 0 (not 24) and months stay 0-indexed
+ * for MONTH_SHORT. Falls back to UTC if the engine rejects the zone id.
+ */
+function createIanaPartsReader(timeZone: string): (d: Date) => TimeParts {
+  let formatter: Intl.DateTimeFormat
+  try {
+    formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hourCycle: "h23",
+    })
+  } catch {
+    return (d: Date) => timePartsUtcOrLocal(d, true)
+  }
+
+  return (d: Date): TimeParts => {
+    const bag: Record<string, string> = {}
+    for (const part of formatter.formatToParts(d)) {
+      if (part.type !== "literal") bag[part.type] = part.value
+    }
+    return {
+      // Intl month is 1–12; MONTH_SHORT is 0-indexed.
+      month: Math.max(0, (Number(bag.month) || 1) - 1),
+      day: Number(bag.day) || 1,
+      year: Number(bag.year) || 1970,
+      hours: Number(bag.hour) || 0,
+      minutes: Number(bag.minute) || 0,
+      seconds: Number(bag.second) || 0,
+    }
+  }
+}
+
+function makeTimePartsReader(zone: ZoneMode): (d: Date) => TimeParts {
+  if (zone.kind === "utc") return (d) => timePartsUtcOrLocal(d, true)
+  if (zone.kind === "local") return (d) => timePartsUtcOrLocal(d, false)
+  return createIanaPartsReader(zone.id)
+}
+
 /** Full anchor label — gives the reader absolute context. */
-function fullLabel(d: Date, granularity: TimeGranularity, utc: boolean): string {
-  const { month, day, year, hours, minutes, seconds } = timeParts(d, utc)
+function fullLabel(d: Date, granularity: TimeGranularity, partsOf: (d: Date) => TimeParts): string {
+  const { month, day, year, hours, minutes, seconds } = partsOf(d)
   const mon = MONTH_SHORT[month]
   const hh = pad2(hours)
   const mm = pad2(minutes)
@@ -271,9 +349,14 @@ function fullLabel(d: Date, granularity: TimeGranularity, utc: boolean): string 
  * Contextual label — only shows units that changed from `prev`.
  * Re-qualifies upward when a boundary is crossed.
  */
-function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity, utc: boolean): string {
-  const current = timeParts(d, utc)
-  const previous = timeParts(prev, utc)
+function deltaLabel(
+  d: Date,
+  prev: Date,
+  granularity: TimeGranularity,
+  partsOf: (d: Date) => TimeParts,
+): string {
+  const current = partsOf(d)
+  const previous = partsOf(prev)
   const yearChanged  = current.year !== previous.year
   const monthChanged = yearChanged || current.month !== previous.month
   const dayChanged   = monthChanged || current.day !== previous.day
@@ -333,21 +416,24 @@ function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity, utc: bool
  *
  * @param granularity - Optional explicit granularity. If omitted,
  *   auto-detected from the tick spacing on first call.
- * @param options - Set `utc: false` to format in local time. The default is
- *   UTC for backwards-compatible, deterministic SSR output.
+ * @param options - Timezone: `timeZone: "local" | "UTC" | IANA`, or legacy
+ *   `utc: false` for local. Default is UTC for deterministic SSR.
  *
  * @example
  * ```tsx
  * import { adaptiveTimeTicks } from "semiotic"
  *
- * // Auto-detect granularity from the data
+ * // Auto-detect granularity from the data (UTC labels)
  * <LineChart data={ts} xFormat={adaptiveTimeTicks()} />
  *
  * // Explicit granularity
  * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes")} />
  *
- * // Local wall-clock time
- * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes", { utc: false })} />
+ * // Viewer local wall-clock time
+ * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes", { timeZone: "local" })} />
+ *
+ * // Explicit IANA zone (dashboard pinned to a product region)
+ * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes", { timeZone: "America/Los_Angeles" })} />
  * ```
  */
 export function adaptiveTimeTicks(
@@ -356,7 +442,7 @@ export function adaptiveTimeTicks(
 ): (value: string | number | Date, index?: number, allTicks?: number[]) => string {
   let resolved: TimeGranularity | undefined = granularity
   let lastTicksRef: number[] | undefined
-  const utc = options.utc ?? true
+  const partsOf = makeTimePartsReader(resolveAdaptiveTimeZone(options))
 
   return (value: string | number | Date, index?: number, allTicks?: number[]): string => {
     const d = value instanceof Date ? value : new Date(value)
@@ -370,12 +456,12 @@ export function adaptiveTimeTicks(
 
     // First tick: full anchor label
     if (index == null || index === 0 || !allTicks || allTicks.length === 0) {
-      return fullLabel(d, gran, utc)
+      return fullLabel(d, gran, partsOf)
     }
 
     // Subsequent ticks: show only what changed
     const prev = new Date(allTicks[index - 1])
-    return deltaLabel(d, prev, gran, utc)
+    return deltaLabel(d, prev, gran, partsOf)
   }
 }
 

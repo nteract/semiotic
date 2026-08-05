@@ -53,6 +53,8 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   width?: number
   /** Chart height (alternative to size) */
   height?: number
+  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  maxDevicePixelRatio?: number
   /** Chart margins */
   margin?: PartialMargin
   /** CSS class name */
@@ -431,6 +433,7 @@ export const RealtimeHistogram = forwardRef(
         chartType="bar"
         runtimeMode="streaming"
         size={resolvedSize}
+        maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={margin}
         className={resolvedClassName}
         arrowOfTime={arrowOfTime}

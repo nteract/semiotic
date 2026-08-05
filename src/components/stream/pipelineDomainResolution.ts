@@ -54,7 +54,7 @@ export function isFullySpecifiedExtent(
 export function resolveStackedAreaYDomain(options: {
   config: Pick<
     PipelineConfig,
-    "normalize" | "baseline" | "stackOrder" | "extentPadding" | "axisExtent"
+    "normalize" | "baseline" | "stackOrder" | "extentPadding" | "axisExtent" | "yAxisExtent"
   >
   groups: { key: string; data: Datum[] }[]
   getX: (d: Datum) => number
@@ -67,7 +67,7 @@ export function resolveStackedAreaYDomain(options: {
   stackExtentCache: StackExtentCache
 } {
   const { config, groups, getX, getY } = options
-  const exactMode = config.axisExtent === "exact"
+  const exactMode = (config.yAxisExtent ?? config.axisExtent) === "exact"
 
   if (config.normalize) {
     const yDomain: [number, number] = [

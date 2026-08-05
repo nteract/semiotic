@@ -71,6 +71,8 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   width?: number
   /** Chart height (alternative to size) */
   height?: number
+  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  maxDevicePixelRatio?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -497,6 +499,7 @@ export const RealtimeLineChart = forwardRef(
         chartType="line"
         runtimeMode="streaming"
         size={resolvedSize}
+        maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={margin}
         className={resolvedClassName}
         arrowOfTime={arrowOfTime}

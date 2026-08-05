@@ -38,10 +38,16 @@ export interface NetworkFramePaintContext {
   adjustedWidth: number
   adjustedHeight: number
   background?: string
+  maxDevicePixelRatio?: number
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   /** Skip opaque canvas fill when an SVG backgroundGraphics layer is present. */
   hasBackgroundGraphics?: boolean
   dirtyRef: { current: boolean }
+  /**
+   * Browser zoom / maxDevicePixelRatio — re-rasterize only, do not rebuild
+   * the network scene. Cleared by this paint function after consumption.
+   */
+  resolutionDirtyRef?: { current: boolean }
   lastFrameTimeRef: { current: number }
   /** FrameRuntime logical timestamp for this paint. */
   now: number
@@ -80,9 +86,11 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     adjustedWidth,
     adjustedHeight,
     background,
+    maxDevicePixelRatio,
     renderMode,
     hasBackgroundGraphics = false,
     dirtyRef,
+    resolutionDirtyRef,
     lastFrameTimeRef,
     now,
     random,
@@ -150,15 +158,18 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     store.hasActiveThresholds
   // A custom-layout restyle mutates scene styles in place (no rebuild, above)
   // and asks for a repaint via this flag — folded into the paint gate only.
+  // resolutionDirty is the same paint-only path for browser zoom / DPR caps.
   const stylePaintPending = store.consumeStylePaintPending()
+  const needsResolutionRepaint = resolutionDirtyRef?.current === true
   const needsDataRepaint = needsDataCanvasPaint({
     dirtyOrRebuilt: wasDirty,
     transitioning: isTransitioning,
     animationTicked,
     continuous: particlesWanted || isContinuous,
     liveEncoding,
-    forced: stylePaintPending
+    forced: stylePaintPending || needsResolutionRepaint
   })
+  if (resolutionDirtyRef) resolutionDirtyRef.current = false
 
   const staleThreshold = staleness?.threshold ?? 5000
   const currentlyStale =
@@ -167,7 +178,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     now - store.lastIngestTime > staleThreshold
 
   if (needsDataRepaint) {
-    const dpr = getDevicePixelRatio()
+    const dpr = getDevicePixelRatio(maxDevicePixelRatio)
     if (!prepareCanvas(canvas, size, margin, dpr)) return
     c2d.clearRect(-margin.left, -margin.top, size[0], size[1])
 

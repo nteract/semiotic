@@ -68,13 +68,81 @@ export function prepareCanvas(
 
 /**
  * Get the effective canvas devicePixelRatio, defaulting to 1 in non-browser
- * environments. Mobile/coarse-pointer screens are capped at 2x to avoid
- * allocating very large backing stores on high-density phones; desktop stays
- * crisper but still caps pathological DPR values at 3x.
+ * environments. By default, mobile/coarse-pointer screens are capped at 2x to
+ * avoid allocating very large backing stores on high-density phones and
+ * desktop is capped at 3x. `maxDevicePixelRatio` overrides that ceiling.
  */
-export function getDevicePixelRatio(): number {
+export function getDevicePixelRatio(maxDevicePixelRatio?: number): number {
   if (typeof window === "undefined") return 1
   const raw = window.devicePixelRatio || 1
-  const cap = isMobileCanvasEnvironment() ? MOBILE_CANVAS_DPR_CAP : DESKTOP_CANVAS_DPR_CAP
+  const defaultCap = isMobileCanvasEnvironment() ? MOBILE_CANVAS_DPR_CAP : DESKTOP_CANVAS_DPR_CAP
+  const cap = typeof maxDevicePixelRatio === "number" && maxDevicePixelRatio > 0
+    ? maxDevicePixelRatio
+    : defaultCap
   return Math.max(1, Math.min(raw, cap))
+}
+
+/**
+ * Subscribe to browser pixel-density changes (page zoom, display migration,
+ * or OS display-scale changes). A normal ResizeObserver is insufficient:
+ * browsers can update `devicePixelRatio` without changing an element's CSS
+ * dimensions.
+ *
+ * The media query is re-created after every change because it watches the
+ * *current* resolution. Once that query stops matching, the next query must
+ * be armed for the browser's new DPR.
+ */
+export function subscribeToDevicePixelRatioChange(listener: () => void): () => void {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => undefined
+  }
+
+  let mediaQuery: MediaQueryList | null = null
+  let disposed = false
+
+  const removeListener = () => {
+    if (!mediaQuery) return
+    if (typeof mediaQuery.removeEventListener === "function") {
+      mediaQuery.removeEventListener("change", handleChange)
+    } else if (typeof mediaQuery.removeListener === "function") {
+      mediaQuery.removeListener(handleChange)
+    }
+  }
+
+  const armListener = () => {
+    const resolutionQuery = `(resolution: ${window.devicePixelRatio || 1}dppx)`
+    mediaQuery = window.matchMedia(resolutionQuery)
+    // Some test/legacy shims return one unrelated MediaQueryList for every
+    // query. Treat unsupported resolution queries as unavailable rather than
+    // reacting to an unrelated preference change.
+    if (!mediaQuery.media.includes("resolution")) {
+      mediaQuery = null
+      return
+    }
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange)
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(handleChange)
+    }
+  }
+
+  function handleChange() {
+    if (disposed) return
+    removeListener()
+    mediaQuery = null
+    listener()
+    // Re-arm after the current MediaQueryList dispatch completes. A few
+    // polyfills iterate a live Set of listeners; remove+add during that same
+    // iteration can otherwise invoke the callback indefinitely.
+    queueMicrotask(() => {
+      if (!disposed) armListener()
+    })
+  }
+
+  armListener()
+  return () => {
+    disposed = true
+    removeListener()
+    mediaQuery = null
+  }
 }

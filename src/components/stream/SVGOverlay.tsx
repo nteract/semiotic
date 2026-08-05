@@ -173,9 +173,14 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
   const xTicks = useMemo(() => {
     if (!scales) return []
     const bottomAxis = axes?.find(a => a.orient === "bottom")
-    const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
+    // Prefer the bottom axis config; when only a top axis is declared, inherit
+    // its extent/ticks so chart-level + per-axis overrides still apply.
+    const topAxis = axes?.find(a => a.orient === "top")
+    const xAxis = bottomAxis ?? topAxis
+    const extentMode = xAxis?.extent ?? axisExtent
+    const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = bottomAxis?.ticks ?? 5
+    const requested = xAxis?.ticks ?? 5
     // Explicit `tickValues` bypasses both d3's "nice" generator and
     // `axisExtent: "exact"` — the caller has hand-picked the positions
     // and we honor them verbatim. Same contract as the ordinal frame's
@@ -184,8 +189,8 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     // Exact mode (without explicit values) honors the requested count
     // rather than clamping it to `maxFit`; floor at 2 because
     // `equidistantTicks` needs both endpoints.
-    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawTicks = bottomAxis?.tickValues ?? ticksForMode(scales.x, tickCount, axisExtent)
+    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
       value: v,
@@ -202,12 +207,13 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
   const yTicks = useMemo(() => {
     if (!scales) return []
     const leftAxis = axes?.find(a => a.orient === "left")
+    const extentMode = leftAxis?.extent ?? axisExtent
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     // Explicit `tickValues` wins over generated ticks — see xTicks comment.
-    const rawTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const rawTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawTicks.map(v => ({
       value: v,
       pixel: scales.y(v),
@@ -400,18 +406,23 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const xTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const bottomAxis = axes?.find(a => a.orient === "bottom")
-    const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
+    const topAxis = axes?.find(a => a.orient === "top")
+    // Bottom owns the primary x-axis ticks; fall back to top when no bottom
+    // entry is present so a top-only axes config can still set extent/ticks.
+    const xAxis = bottomAxis ?? topAxis
+    const extentMode = xAxis?.extent ?? axisExtent
+    const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = bottomAxis?.ticks ?? 5
+    const requested = xAxis?.ticks ?? 5
     // Exact-mode contract: honor the requested count verbatim. The
     // `maxFit` clamp would silently collapse "give me exactly 7 ticks"
     // to whatever the width permits — pixel-distance filtering below
     // still drops physically-overlapping labels, but we don't pre-clamp
     // away an explicit count.
-    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     // Explicit `tickValues` wins over generated ticks (and skips
     // `includeMax` below since the user already locked in the set).
-    const rawTicks = bottomAxis?.tickValues ?? ticksForMode(scales.x, tickCount, axisExtent)
+    const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
       value: v,
@@ -420,7 +431,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     }))
     const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
     // When autoRotate is enabled, labels will be angled so they need much less horizontal space
-    const minPx = bottomAxis?.autoRotate
+    const minPx = xAxis?.autoRotate
       ? Math.max(20, Math.min(maxLabelWidth + 8, 55))
       : Math.max(55, maxLabelWidth + 8)
     let filtered = filterTicksByPixelDistance(candidates, minPx)
@@ -433,7 +444,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     // already, so this branch is a no-op there. Skip it entirely when
     // the user supplied explicit `tickValues` — they've already picked
     // the set they want, and appending would violate that contract.
-    if (bottomAxis?.includeMax && filtered.length > 0 && axisExtent !== "exact" && !bottomAxis?.tickValues) {
+    if (xAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !xAxis?.tickValues) {
       const domain = scales.x.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.x(domainMax)
@@ -468,11 +479,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const leftAxis = axes?.find(a => a.orient === "left")
+    const extentMode = leftAxis?.extent ?? axisExtent
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawYTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawYTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawYTicks.map(v => ({
       value: v,
       pixel: scales.y(v),
@@ -483,7 +495,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     if (filtered.length > 1) {
       filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
     }
-    if (leftAxis?.includeMax && filtered.length > 0 && axisExtent !== "exact" && !leftAxis?.tickValues) {
+    if (leftAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !leftAxis?.tickValues) {
       const domain = scales.y.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.y(domainMax)
@@ -505,11 +517,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
     if (!showAxes || !scales) return []
     const rightAxis = axes?.find(a => a.orient === "right")
     if (!rightAxis) return []
+    const extentMode = rightAxis.extent ?? axisExtent
     const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = rightAxis.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawYTicksRight = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawYTicksRight = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawYTicksRight.map(v => ({
       value: v,
       pixel: scales.y(v),

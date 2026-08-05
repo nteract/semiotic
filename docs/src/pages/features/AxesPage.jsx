@@ -165,6 +165,14 @@ const axisProps = [
       "Suggested number of ticks to display. The actual count may vary based on D3 tick algorithm.",
   },
   {
+    name: "extent",
+    type: '"nice" | "exact"',
+    required: false,
+    default: null,
+    description:
+      'Per-axis override for chart-level axisExtent. "exact" pins first/last ticks to the domain endpoints; "nice" uses rounded tick intervals. On the left/right (value) axes, exact also skips y-domain extentPadding.',
+  },
+  {
     name: "tickValues",
     type: "array",
     required: false,
@@ -446,11 +454,22 @@ export default function AxesPage() {
       </p>
 
       <p>
-        <strong>Trade-off:</strong> exact mode also pins the scale domain to the data extent — the
-        usual 5% extent padding (which keeps symbols clear of the plot edge) is skipped. Data marks
-        at the extremes will sit at the plot boundary. If you need both exact labels and visual
-        breathing room, pass a hand-picked <code>tickValues</code> array via{" "}
-        <code>frameProps.axes</code> and leave the default <code>"nice"</code> mode in place.
+        XY axes can choose independently. Set <code>frameProps.axes[i].extent</code> to{" "}
+        <code>"nice"</code> or <code>"exact"</code> to override the chart-level mode for that
+        axis. The common dashboard shape is chart-level <code>axisExtent="exact"</code> (or an
+        exact bottom-axis entry) so a selected time window pins on x, with{" "}
+        <code>{`{ orient: "left", extent: "nice" }`}</code> so magnitude ticks stay rounded and
+        y-domain padding is restored.
+      </p>
+
+      <p>
+        <strong>Trade-off:</strong> exact mode on a <strong>value (y)</strong> axis also pins the
+        scale domain to the data extent — the usual 5% extent padding (which keeps symbols clear of
+        the plot edge) is skipped, so marks at the extremes sit on the plot boundary. Exact mode on
+        the time/x axis only affects tick placement; x domains are not padded by{" "}
+        <code>extentPadding</code>. If you need exact y labels <em>and</em> visual breathing room,
+        pass a hand-picked <code>tickValues</code> array via <code>frameProps.axes</code> and leave
+        that axis on <code>"nice"</code> (or override only the axis that needs exact endpoints).
       </p>
 
       <p>
@@ -459,6 +478,58 @@ export default function AxesPage() {
         <code>0</code> or negatives will render with that clamp in place even under exact mode — the
         first tick reads as <code>max(dataMin, 1e-6)</code>, not the literal data minimum.
       </p>
+
+      <h3 id="axis-extent-mixed">Mixed: exact time window, nice magnitude</h3>
+      <p>
+        Pin the query window on x while keeping conventional y ticks. Chart-level{" "}
+        <code>axisExtent="exact"</code> would force ugly intermediate y labels; the left-axis{" "}
+        <code>extent: "nice"</code> override restores rounded magnitude ticks and padding.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: axisExtentTemporalData,
+          xAccessor: "date",
+          yAccessor: "value",
+          xScaleType: "time",
+          xLabel: "Date",
+          yLabel: "Revenue ($)",
+          axisExtent: "exact",
+          frameProps: {
+            axes: [
+              {
+                orient: "bottom",
+                tickFormat: (d) =>
+                  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+              },
+              {
+                orient: "left",
+                extent: "nice",
+                tickFormat: (d) => `$${(d / 1000).toFixed(1)}k`,
+              },
+            ],
+          },
+          size: [600, 320],
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `axisExtentTemporalData`,
+          frameProps: `{
+  axes: [
+    {
+      orient: "bottom",
+      tickFormat: d => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    },
+    {
+      orient: "left",
+      extent: "nice",
+      tickFormat: d => "$" + (d / 1000).toFixed(1) + "k",
+    },
+  ],
+}`,
+        }}
+        hiddenProps={{}}
+      />
 
       <h3 id="axis-extent-time">Time-series LineChart with exact endpoints</h3>
       <p>

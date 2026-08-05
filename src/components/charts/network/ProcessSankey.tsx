@@ -626,6 +626,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         size={[width, height]}
         responsiveWidth={responsiveWidth}
         responsiveHeight={responsiveHeight}
+        maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={margin}
         title={title}
         description={description ?? "Temporal process flow with lifetime-bounded node lanes, mass bands, and value-scaled ribbons."}

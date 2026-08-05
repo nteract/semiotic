@@ -10,7 +10,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveMultiCapableTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName, bandTooltipFields } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
@@ -1062,6 +1062,7 @@ export const LineChart = forwardRef(
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
+    ...(props.maxDevicePixelRatio !== undefined && { maxDevicePixelRatio: props.maxDevicePixelRatio }),
     margin: effectiveMargin,
     showAxes: resolved.showAxes,
     xLabel,
@@ -1085,12 +1086,11 @@ export const LineChart = forwardRef(
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : tooltip === "multi"
-        ? MultiPointTooltip()
-        : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...(tooltip === "multi" && { tooltipMode: "multi" as const }),
+    ...resolveMultiCapableTooltip({
+      tooltip,
+      defaultTooltipContent,
+      multiDefaultContent: MultiPointTooltip(),
+    }),
     ...buildCustomBehaviorProps({
       linkedHover,
       selection,

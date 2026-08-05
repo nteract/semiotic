@@ -176,6 +176,7 @@ export interface TileRenderOptions {
   height: number
   tileCache: TileCache
   onTileLoad?: () => void
+  maxDevicePixelRatio?: number
 }
 
 /**
@@ -186,7 +187,7 @@ export function renderTiles(
   ctx: CanvasRenderingContext2D,
   options: TileRenderOptions
 ): boolean {
-  const { tileURL, projection, width, height, tileCache, onTileLoad } = options
+  const { tileURL, projection, width, height, tileCache, onTileLoad, maxDevicePixelRatio } = options
 
   // Get projection scale and translate for d3-tile
   const projScale = projection.scale()
@@ -203,7 +204,7 @@ export function renderTiles(
     translate: projTranslate as [number, number],
   })
 
-  const dpr = getDevicePixelRatio()
+  const dpr = getDevicePixelRatio(maxDevicePixelRatio)
   let allLoaded = true
 
   for (const t of layout.tiles) {

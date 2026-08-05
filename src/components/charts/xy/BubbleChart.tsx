@@ -497,7 +497,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     enableHover,
     showGrid,
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,

@@ -225,6 +225,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
       accessibleTable,
       className,
       animate: props.animate,
+      maxDevicePixelRatio: props.maxDevicePixelRatio,
       autoPlaceAnnotations,
     }),
     // Emit hover/click into the shared selection store (and fire

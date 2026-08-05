@@ -419,6 +419,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   responsiveWidth?: boolean
   responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  maxDevicePixelRatio?: number
   barPadding?: number
   roundedTop?: number
   /** Gradient fill for bar rects. Offset 0 is the tip; offset 1 is the base. */

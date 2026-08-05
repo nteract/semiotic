@@ -550,6 +550,7 @@ export function resolvePhysicsFrameSharedProps(
     | "description"
     | "emphasis"
     | "hoverRadius"
+    | "maxDevicePixelRatio"
     | "onClick"
     | "onObservation"
     | "opacity"
@@ -605,6 +606,8 @@ export function resolvePhysicsFrameSharedProps(
     legendLayout: props.legendLayout ?? frameProps?.legendLayout,
     legendPosition: props.legendPosition ?? frameProps?.legendPosition,
     margin: modeExtras?.margin ?? frameProps?.margin,
+    maxDevicePixelRatio:
+      props.maxDevicePixelRatio ?? frameProps?.maxDevicePixelRatio,
     onClick:
       props.onClick != null
         ? (datum, event) => {

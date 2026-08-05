@@ -1,0 +1,73 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import {
+  getDevicePixelRatio,
+  subscribeToDevicePixelRatioChange,
+} from "./canvasSetup"
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  Reflect.deleteProperty(window, "matchMedia")
+})
+
+describe("canvas device pixel ratio", () => {
+  it("keeps the default desktop cap but accepts a consumer override", () => {
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 4 })
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 })
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 900 })
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: vi.fn((query: string) => ({
+      matches: query === "(pointer: coarse)" ? false : true,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) })
+
+    expect(getDevicePixelRatio()).toBe(3)
+    expect(getDevicePixelRatio(5)).toBe(4)
+    expect(getDevicePixelRatio(2.5)).toBe(2.5)
+  })
+
+  it("re-arms the resolution query and notifies when effective DPR changes", async () => {
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, writable: true, value: 2 })
+    const queries: Array<{
+      query: string
+      change?: () => void
+      removeEventListener: ReturnType<typeof vi.fn>
+    }> = []
+
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: vi.fn((query: string) => {
+      const record = { query, removeEventListener: vi.fn() } as (typeof queries)[number]
+      queries.push(record)
+      return {
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+          record.change = listener as () => void
+        },
+        removeEventListener: record.removeEventListener,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }
+    }) })
+
+    const listener = vi.fn()
+    const unsubscribe = subscribeToDevicePixelRatioChange(listener)
+    expect(queries[0].query).toBe("(resolution: 2dppx)")
+
+    window.devicePixelRatio = 4
+    queries[0].change?.()
+    await Promise.resolve()
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(queries[0].removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
+    expect(queries[1].query).toBe("(resolution: 4dppx)")
+
+    unsubscribe()
+    expect(queries[1].removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
+  })
+})

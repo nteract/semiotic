@@ -609,6 +609,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: setup.margin,
     enableHover: resolved.enableHover,
     tooltipContent: tooltip === false

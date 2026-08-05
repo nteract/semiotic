@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
-import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
+import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -10,7 +10,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { MultiPointTooltip, resolveMultiCapableTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -430,10 +430,12 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
-    ...(tooltip === "multi"
-      ? { tooltipContent: MultiPointTooltip(), tooltipMode: "multi" as const }
-      : buildTooltipProps({ tooltip, defaultTooltipContent })),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...resolveMultiCapableTooltip({
+      tooltip,
+      defaultTooltipContent,
+      multiDefaultContent: MultiPointTooltip(),
+    }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
       mobileInteraction: setup.mobileInteraction,

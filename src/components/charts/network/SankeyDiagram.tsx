@@ -299,6 +299,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}

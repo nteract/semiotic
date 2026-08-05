@@ -128,6 +128,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       margin: marginProp,
       className,
       background,
+      maxDevicePixelRatio,
       renderMode,
       lineStyle,
       pointStyle,
@@ -328,6 +329,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
+    const xAxisExtent = (axesConfig?.find(axis => axis.orient === "bottom")
+      ?? axesConfig?.find(axis => axis.orient === "top"))?.extent ?? axisExtent
+    const yAxisExtent = (axesConfig?.find(axis => axis.orient === "left")
+      ?? axesConfig?.find(axis => axis.orient === "right"))?.extent ?? axisExtent
     const safeData = useMemo(() => filterSparseArray(data), [data])
 
     // Determine effective hover annotation config
@@ -387,6 +392,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       extentPadding,
       scalePadding,
       axisExtent,
+      xAxisExtent,
+      yAxisExtent,
       // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
       // The store's streaming-mode resolution chain
       // (`timeAccessor || xAccessor || "time"`) already gives `timeAccessor`
@@ -456,7 +463,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, xAxisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this
@@ -603,12 +610,15 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       adapterRef.current?.setBoundedData(safeData)
     }, [data, safeData, lineDataAccessor])
 
-    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
+    const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       storeRef,
       dirtyRef,
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
+      maxDevicePixelRatio,
+      // maxDevicePixelRatio is handled as resolution-only dirty by the host —
+      // do not put it here or zoom/cap changes would rebuild the scene graph.
       canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, renderMode, canvasPreRenderers, scheduleRender],
     })
 
@@ -866,6 +876,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Determine if data canvas needs repaint (data/props changed or animating).
       // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
+      // resolutionDirty (browser zoom / maxDevicePixelRatio) re-rasterizes only —
+      // it must not force a scene rebuild.
+      const needsResolutionRepaint = resolutionDirtyRef.current
       const needsDataRepaint = dirtyRef.current || transitionActive || dimsChanged
       // A custom-layout restyle mutates scene styles in place (no rebuild) and
       // asks for a repaint via this flag — OR'd into the paint gate below, but
@@ -886,7 +899,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
-      const dpr = getDevicePixelRatio()
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
       const theme = themeColorCacheRef.current.resolve(canvas)
       // Cache the theme primary for the hover handler — avoids re-running
       // getComputedStyle on every pointermove event at high pointer rates.
@@ -898,8 +911,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const resolvedStaleness = resolveStaleness(staleness, idleMs)
       const currentlyStale = staleness && resolvedStaleness.isStale
 
-      // ── Data canvas: repaint when data/props changed or a restyle/pulse is pending ─
-      if (needsDataRepaint || stylePaintPending || pulseRefresh.changed) {
+      // ── Data canvas: repaint when data/props changed, restyle/pulse, or resolution-only ─
+      if (needsDataRepaint || stylePaintPending || pulseRefresh.changed || needsResolutionRepaint) {
         const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (ctx) {
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
@@ -1043,6 +1056,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // the next non-transition frame applies the new responsive dimensions
       // instead of leaving canvas scene nodes and SVG overlays out of sync.
       dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
+      // Resolution-only repaints are complete once prepareCanvas ran above.
+      resolutionDirtyRef.current = false
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {

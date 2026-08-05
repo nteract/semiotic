@@ -162,6 +162,7 @@ const StreamNetworkFrame = memo(forwardRef<
     margin: marginProp,
     className,
     background,
+    maxDevicePixelRatio,
     enableHover = true,
     tooltipContent,
     customHoverBehavior: customHoverBehaviorProp,
@@ -1315,9 +1316,11 @@ const StreamNetworkFrame = memo(forwardRef<
       adjustedWidth,
       adjustedHeight,
       background,
+      maxDevicePixelRatio,
       renderMode,
       hasBackgroundGraphics: Boolean(backgroundGraphics),
       dirtyRef,
+      resolutionDirtyRef,
       lastFrameTimeRef,
       now: frameRuntime.now(),
       random: frameRuntime.random,
@@ -1341,7 +1344,7 @@ const StreamNetworkFrame = memo(forwardRef<
     })
   }
 
-  const { canvasRef } = useFrameCanvasHost(frame, {
+  const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
     hydrated,
     wasHydratingFromSSR,
     storeRef,
@@ -1354,6 +1357,7 @@ const StreamNetworkFrame = memo(forwardRef<
     // repaint, but geometry/dimensions have already rebuilt synchronously.
     skipInitialCanvasPaintInvalidation: true,
     canvasPaintInvalidator: invalidateCanvasPaint,
+    maxDevicePixelRatio,
     canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
   })
 

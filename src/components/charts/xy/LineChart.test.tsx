@@ -485,6 +485,15 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.axisExtent).toBe("exact")
     })
 
+    it("forwards maxDevicePixelRatio to the frame", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} maxDevicePixelRatio={5} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.maxDevicePixelRatio).toBe(5)
+    })
+
     it("omits axisExtent when not provided (defaults to nice in the frame)", () => {
       render(
         <TooltipProvider>
@@ -678,6 +687,31 @@ describe("LineChart", () => {
         </TooltipProvider>
       )
       expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+    })
+
+    it('accepts tooltip={{ mode: "multi" }} without a custom content function', () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} tooltip={{ mode: "multi" }} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBe("multi")
+      expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+    })
+
+    it('accepts tooltip={{ mode: "multi", content }} for a custom multi renderer', () => {
+      const content = (d: Record<string, unknown>) => (
+        <div data-testid="custom-multi">{String((d.allSeries as unknown[])?.length ?? 0)}</div>
+      )
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} tooltip={{ mode: "multi", content }} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBe("multi")
+      expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+      // Custom content is wrapped by normalizeTooltip (not identity).
+      expect(lastXYFrameProps.tooltipContent).not.toBe(content)
     })
 
     it("does not set tooltipMode for regular tooltip", () => {

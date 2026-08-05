@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Zoom-aware canvas resolution** — all Stream Frames now repaint when browser zoom, OS display scale, or display migration changes `devicePixelRatio`, even when CSS layout dimensions stay fixed. The new `maxDevicePixelRatio` chart/frame prop overrides the default desktop (3×) and coarse-pointer/small-screen (2×) backing-store caps for consumers that prefer high-zoom crispness over paint and memory cost. DPR / cap changes are **resolution-only** invalidations: retained geometry is re-rasterized without a full scene rebuild.
+- **Per-axis extent modes for XY charts** — `frameProps.axes[i].extent` accepts `"nice" | "exact"` and overrides chart-level `axisExtent` for one axis. Tick generation, grid positions, y-domain padding, client SVG, and static SSR output resolve the same per-axis mode. Use chart-level `"exact"` (or an exact bottom axis) for a pinned time window, then `{ orient: "left", extent: "nice" }` so magnitude ticks stay rounded.
+- **IANA adaptive time ticks** — `adaptiveTimeTicks(granularity, { timeZone })` accepts `"UTC"`, `"local"`, or any IANA id (e.g. `"America/Los_Angeles"`). Labels and calendar-boundary detection use that zone via `Intl`. Legacy `utc: false` still maps to local; `timeZone` wins when both are set. Default remains UTC for deterministic SSR.
+- **First-class multi tooltip config** — `tooltip={{ mode: "multi", content? }}` enables multi-series hover and optionally supplies a custom renderer that receives unwrapped data with `allSeries` / `xValue` re-attached. Equivalent to `tooltip="multi"` when `content` is omitted; no separate `frameProps.tooltipMode` needed.
+
 ## [3.8.8] - 2026-08-04
 
 ### Added
@@ -34,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   become risk, involution, precaution, and withdrawal. Carbon theming, claim
   lenses, confidence-aware ribbons, and incoming/outgoing `HatchFill` node
   junctions keep the interpretive argument explicit and inspectable.
+- **Local adaptive time ticks** — `adaptiveTimeTicks(granularity, { utc: false })`
+  formats labels and detects calendar boundaries in the runtime's local timezone.
+  UTC remains the default so server-rendered charts stay deterministic.
 
 ### Changed
 
@@ -62,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   their peak causal mass across an authored extent so same-stage handoffs no
   longer make a node visually smaller than an attached incoming or outgoing
   ribbon.
+- **Custom multi-series tooltip context** — custom tooltip functions used with
+  multi mode (`frameProps.tooltipMode: "multi"` or an equivalent multi hover path)
+  retain hover-root `allSeries` and `xValue` metadata after the raw datum is
+  unwrapped, matching the data available to the built-in multi tooltip.
 
 ## [3.8.7] - 2026-07-27
 

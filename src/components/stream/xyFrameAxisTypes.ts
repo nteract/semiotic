@@ -28,6 +28,11 @@ export interface XYFrameAxisConfig {
   orient: "left" | "right" | "top" | "bottom"
   label?: string
   ticks?: number
+  /**
+   * Override the chart-level `axisExtent` mode for this axis. Horizontal
+   * (`top`/`bottom`) and vertical (`left`/`right`) axes resolve independently.
+   */
+  extent?: import("../charts/shared/axisExtent").AxisExtentMode
   /** Per-axis tick label formatter. ReactNode return is supported and
    *  renders inside a `<foreignObject>`. */
   tickFormat?: AxisTickFormatter

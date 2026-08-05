@@ -211,6 +211,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
       accessibleTable,
       className,
       animate: props.animate,
+      maxDevicePixelRatio: props.maxDevicePixelRatio,
       autoPlaceAnnotations: props.autoPlaceAnnotations,
     }),
     ...(tooltip === false

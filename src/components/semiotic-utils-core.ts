@@ -27,6 +27,7 @@ export type { ThemePresetName } from "./semiotic-themes"
 
 // ── Format utilities ─────────────────────────────────────────────────────
 export { adaptiveTimeTicks, smartTickFormat } from "./charts/shared/formatUtils"
+export type { AdaptiveTimeTickOptions, TimeGranularity } from "./charts/shared/formatUtils"
 
 // ── Color manipulation ───────────────────────────────────────────────────
 export { darkenColor, lightenColor } from "./charts/shared/colorManipulation"

@@ -795,6 +795,12 @@ export interface StreamXYFrameProps<T = Datum>
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string
+  /**
+   * Maximum canvas backing-store pixel ratio. Defaults to 3 on desktop and 2
+   * on coarse-pointer/small-screen devices. Increase this when mark crispness
+   * at high browser zoom is more important than canvas memory/paint cost.
+   */
+  maxDevicePixelRatio?: number
 
   // ── Style ────────────────────────────────────────
   /** Optional scene paint backend. Exact scene geometry remains interactive. */
@@ -827,7 +833,8 @@ export interface StreamXYFrameProps<T = Datum>
    *  tick generator — round tick labels at the cost of ticks not
    *  reaching the exact data min/max. `"exact"` pins the first
    *  and last tick to the data domain and spaces intermediate
-   *  ticks equidistantly. Applies to both x and y axes. */
+   *  ticks equidistantly. Applies to both x and y axes unless an entry in
+   *  `axes` supplies its own `extent` override. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string

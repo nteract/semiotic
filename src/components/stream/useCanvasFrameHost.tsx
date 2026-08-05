@@ -20,6 +20,7 @@ import type {
 } from "react"
 import type { FrameMargin, UseFrameResult } from "./useFrame"
 import { useHydrationLifecycle } from "./useHydration"
+import { subscribeToDevicePixelRatioChange } from "./canvasSetup"
 
 export interface CanvasFrameHostRuntime {
   readonly isActive: boolean
@@ -49,6 +50,8 @@ export interface UseCanvasFrameHostInput<TStore extends object> {
   manageFrameRuntime?: boolean
   hydrated: boolean
   wasHydratingFromSSR: boolean
+  /** Consumer override for the canvas backing-store DPR ceiling. */
+  maxDevicePixelRatio?: number
   /** Family-specific teardown such as clearing a streaming data adapter. */
   cleanup?: () => void
   /**
@@ -76,6 +79,13 @@ export interface CanvasFrameHostResult {
   canvasRef: RefObject<HTMLCanvasElement | null>
   /** Optional family use for hover/crosshair/highlight canvas content. */
   interactionCanvasRef: RefObject<HTMLCanvasElement | null>
+  /**
+   * Set when only the canvas backing store must re-rasterize retained
+   * geometry (browser zoom / display DPR / maxDevicePixelRatio). Families
+   * should OR this into the paint gate but **not** into scene rebuild so a
+   * zoom does not re-run layout or scale construction.
+   */
+  resolutionDirtyRef: MutableRefObject<boolean>
 }
 
 type FrameCanvasHost = Pick<
@@ -99,11 +109,14 @@ export function useCanvasFrameHost<TStore extends object>(
     dirtyRef,
     frameRuntime,
     manageFrameRuntime,
+    maxDevicePixelRatio,
     scheduleRender,
   } = input
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
+  const resolutionDirtyRef = useRef(false)
   const hasRunCanvasPaintInvalidationRef = useRef(false)
+  const hasSeenMaxDevicePixelRatioRef = useRef(false)
 
   useHydrationLifecycle({
     hydrated: input.hydrated,
@@ -137,6 +150,26 @@ export function useCanvasFrameHost<TStore extends object>(
     scheduleRender,
   ])
 
+  // Page zoom and moving a window between displays can change DPR without
+  // changing this frame's CSS dimensions. Mark resolution-only dirty so the
+  // family re-rasterizes retained geometry without recomputing the scene.
+  useEffect(() => subscribeToDevicePixelRatioChange(() => {
+    resolutionDirtyRef.current = true
+    scheduleRender()
+  }), [scheduleRender])
+
+  // Changing the consumer DPR cap must re-rasterize at the new ceiling even
+  // when window.devicePixelRatio is unchanged. Skip the mount frame so we
+  // don't double-paint with the initial dependency invalidation.
+  useEffect(() => {
+    if (!hasSeenMaxDevicePixelRatioRef.current) {
+      hasSeenMaxDevicePixelRatioRef.current = true
+      return
+    }
+    resolutionDirtyRef.current = true
+    scheduleRender()
+  }, [maxDevicePixelRatio, scheduleRender])
+
   // Overlay/background changes can alter whether opaque canvas paint hides an
   // SVG underlay. Each family provides its own precise dependency list so the
   // host performs the common handoff without taking ownership of overlay
@@ -154,7 +187,7 @@ export function useCanvasFrameHost<TStore extends object>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, input.canvasPaintDependencies)
 
-  return { canvasRef, interactionCanvasRef }
+  return { canvasRef, interactionCanvasRef, resolutionDirtyRef }
 }
 
 /** Bind a family-owned store to the common scheduling runtime from useFrame. */

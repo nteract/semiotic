@@ -50,7 +50,14 @@ import { DirectManipulationControl, VISUALIZATION_CONTROL_TYPES } from "./Direct
 import { DetailsPanel } from "./DetailsPanel"
 
 // ── Tooltip utilities ──────────────────────────────────────────────────
-import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
+import {
+  Tooltip,
+  MultiLineTooltip,
+  MultiPointTooltip,
+  normalizeTooltip,
+  resolveMultiCapableTooltip,
+  isMultiTooltip,
+} from "./Tooltip/Tooltip"
 
 // ── Data structures ────────────────────────────────────────────────────
 import { RingBuffer } from "./realtime/RingBuffer"
@@ -152,7 +159,10 @@ export {
   // Tooltip
   Tooltip,
   MultiLineTooltip,
+  MultiPointTooltip,
   normalizeTooltip,
+  resolveMultiCapableTooltip,
+  isMultiTooltip,
   // Data structures
   RingBuffer,
   IncrementalExtent,
@@ -511,6 +521,10 @@ export type { AnnotationLabelBackground, AnnotationLabelBackgroundConfig, Annota
 // ── Format utilities ───────────────────────────────────────────────────
 
 export { smartTickFormat, adaptiveTimeTicks } from "./charts/shared/formatUtils"
+export type {
+  AdaptiveTimeTickOptions,
+  TimeGranularity,
+} from "./charts/shared/formatUtils"
 
 // Color manipulation utilities
 export { darkenColor, lightenColor } from "./charts/shared/colorManipulation"
@@ -521,7 +535,8 @@ export type {
   TooltipProp,
   TooltipConfig,
   TooltipField,
-  MultiLineTooltipConfig
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
 } from "./Tooltip/Tooltip"
 
 // Smart default-tooltip field selection — reusable by custom-chart authors

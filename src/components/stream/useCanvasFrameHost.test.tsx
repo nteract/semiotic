@@ -84,6 +84,39 @@ describe("useCanvasFrameHost", () => {
     expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
   })
 
+  it("marks resolution-only dirty (not scene dirty) when browser pixel density changes", () => {
+    let resolutionChange: (() => void) | undefined
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: (type: string, listener: () => void) => {
+          if (type === "change") resolutionChange = listener
+        },
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    })
+    const fixture = createInput()
+    const { result, unmount } = renderHook(() => useCanvasFrameHost(fixture.input))
+    fixture.scheduleRender.mockClear()
+    fixture.dirtyRef.current = false
+    result.current.resolutionDirtyRef.current = false
+
+    act(() => resolutionChange?.())
+
+    // Zoom must re-rasterize retained geometry without forcing a scene rebuild.
+    expect(fixture.dirtyRef.current).toBe(false)
+    expect(result.current.resolutionDirtyRef.current).toBe(true)
+    expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
+    unmount()
+    Reflect.deleteProperty(window, "matchMedia")
+  })
+
   it("does not resubscribe when a caller recreates an equivalent input object", () => {
     const fixture = createInput()
     const subscribe = vi.spyOn(fixture.frameRuntime, "subscribe")

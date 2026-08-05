@@ -211,6 +211,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}

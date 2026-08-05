@@ -399,32 +399,36 @@ export function renderGridSVG(
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
+  const bottomAxis = axes?.find(axis => axis.orient === "bottom")
+  const leftAxis = axes?.find(axis => axis.orient === "left")
+  const xExtentMode = bottomAxis?.extent ?? axisExtent
+  const yExtentMode = leftAxis?.extent ?? axisExtent
   // Grid lines share the axis tick positions (ticksForMode) so they align
   // under axisExtent:"exact" — matching the client SVGOverlay, which draws
   // grid from the same tick arrays as the axis.
-  const xTickCount = axisExtent === "exact"
+  const xTickCount = xExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = axisExtent === "exact"
+  const yTickCount = yExtentMode === "exact"
     ? 5
     : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const xTicks = ticksForMode(scales.x, xTickCount, axisExtent)
-  const yTicks = ticksForMode(scales.y, yTickCount, axisExtent)
-  const showXGrid = axes?.find(axis => axis.orient === "bottom")?.grid !== false
-  const showYGrid = axes?.find(axis => axis.orient === "left")?.grid !== false
-  const xGridDash = resolveGridDash(axes?.find(axis => axis.orient === "bottom")?.gridStyle)
-  const yGridDash = resolveGridDash(axes?.find(axis => axis.orient === "left")?.gridStyle)
+  const xTicks = bottomAxis?.tickValues ?? ticksForMode(scales.x, bottomAxis?.ticks ?? xTickCount, xExtentMode)
+  const yTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, leftAxis?.ticks ?? yTickCount, yExtentMode)
+  const showXGrid = bottomAxis?.grid !== false
+  const showYGrid = leftAxis?.grid !== false
+  const xGridDash = resolveGridDash(bottomAxis?.gridStyle)
+  const yGridDash = resolveGridDash(leftAxis?.gridStyle)
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
-      {showXGrid && xTicks.map((v: number, i: number) => {
+      {showXGrid && xTicks.map((v, i) => {
         const px = scales.x(v)
         return (
           <line key={`gx-${i}`} x1={px} y1={0} x2={px} y2={layout.height}
             stroke={grid} strokeWidth={0.5} strokeDasharray={xGridDash} />
         )
       })}
-      {showYGrid && yTicks.map((v: number, i: number) => {
+      {showYGrid && yTicks.map((v, i) => {
         const py = scales.y(v)
         return (
           <line key={`gy-${i}`} x1={0} y1={py} x2={layout.width} y2={py}
@@ -570,16 +574,18 @@ export function generateAxesSVG(
   // Match SVGOverlay's responsive tick budget. d3's `ticks(5)` can emit
   // seven "nice" values on a short plot while the browser deliberately
   // requests fewer labels to keep the axis legible.
-  const xTickCount = props.axisExtent === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = props.axisExtent === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
   const bottomAxis = props.axes?.find(axis => axis.orient === "bottom")
   const leftAxis = props.axes?.find(axis => axis.orient === "left")
+  const xExtentMode = bottomAxis?.extent ?? props.axisExtent
+  const yExtentMode = leftAxis?.extent ?? props.axisExtent
+  const resolvedXTickCount = xExtentMode === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
+  const resolvedYTickCount = yExtentMode === "exact"
+    ? 5
+    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
   const rawXTicks = bottomAxis?.tickValues
-    ?? ticksForMode(scales.x, bottomAxis?.ticks ?? xTickCount, props.axisExtent)
+    ?? ticksForMode(scales.x, bottomAxis?.ticks ?? resolvedXTickCount, xExtentMode)
   const rawXValues = rawXTicks.map(value => value.valueOf())
   const xFormatter = bottomAxis?.tickFormat || props.xFormat || props.tickFormatTime || defaultTickFormat
   const xTicks = rawXTicks.map((v, index) => ({
@@ -588,7 +594,7 @@ export function generateAxesSVG(
   }))
 
   const rawYTicks = leftAxis?.tickValues
-    ?? ticksForMode(scales.y, leftAxis?.ticks ?? yTickCount, props.axisExtent)
+    ?? ticksForMode(scales.y, leftAxis?.ticks ?? resolvedYTickCount, yExtentMode)
   const yFormatter = leftAxis?.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
   const yTicks = rawYTicks.map(v => ({
     pixel: scales.y(v),

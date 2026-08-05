@@ -610,6 +610,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
+    maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: setup.margin,
     enableHover: resolved.enableHover,
     tooltipContent: tooltip === false

@@ -166,6 +166,50 @@ describe("PipelineStore — partial yExtent override on chart-type-specific path
       expect(hi).toBeGreaterThan(87)
     })
 
+    it("a per-y-axis nice override restores padding under chart-level exact mode", () => {
+      const store = new PipelineStore({
+        chartType: "scatter",
+        runtimeMode: "bounded",
+        windowSize: 200,
+        windowMode: "sliding",
+        arrowOfTime: "right",
+        extentPadding: 0.1,
+        axisExtent: "exact",
+        yAxisExtent: "nice",
+        xAccessor: "x",
+        yAccessor: "y",
+      })
+      store.ingest({
+        inserts: [{ x: 1, y: 12 }, { x: 2, y: 87 }],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 200 })
+      const [lo, hi] = store.scales!.y.domain() as [number, number]
+      expect(lo).toBeLessThan(12)
+      expect(hi).toBeGreaterThan(87)
+    })
+
+    it("a per-y-axis exact override removes padding under chart-level nice mode", () => {
+      const store = new PipelineStore({
+        chartType: "scatter",
+        runtimeMode: "bounded",
+        windowSize: 200,
+        windowMode: "sliding",
+        arrowOfTime: "right",
+        extentPadding: 0.1,
+        axisExtent: "nice",
+        yAxisExtent: "exact",
+        xAccessor: "x",
+        yAccessor: "y",
+      })
+      store.ingest({
+        inserts: [{ x: 1, y: 12 }, { x: 2, y: 87 }],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 200 })
+      expect(store.scales!.y.domain()).toEqual([12, 87])
+    })
+
     it("explicit yExtent still wins over exact mode", () => {
       const store = new PipelineStore({
         chartType: "scatter",

@@ -40,6 +40,9 @@ export interface PipelineConfig {
    *  read as the actual data bounds. Default `"nice"` keeps the existing
    *  padded domain so glyphs at the extremes don't clip the plot edge. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
+  /** Resolved per-axis modes. Fall back to `axisExtent` when omitted. */
+  xAxisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
+  yAxisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   /**
    * Hard cap for `windowMode: "growing"`. Defaults to
    * {@link DEFAULT_GROWING_MAX_CAPACITY} (100_000). Canvas scene graphs
