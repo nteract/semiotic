@@ -214,6 +214,31 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
     // the bottom axis (baseline not set) keeps its horizontal baseline.
     expect(svg).not.toMatch(/<line[^>]*\bx1="0"[^>]*\bx2="0"/)
   })
+
+  it("uses top/right axis config when bottom/left axes are absent", () => {
+    const svg = renderChart("LineChart", {
+      data: [{ x: 0, y: 10 }, { x: 1, y: 40 }, { x: 2, y: 25 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 240,
+      showGrid: true,
+      frameProps: {
+        axes: [
+          { orient: "top", tickValues: [0, 2], tickFormat: (v: number) => `top-${v}`, label: "Top axis", grid: false },
+          { orient: "right", tickValues: [10, 40], tickFormat: (v: number) => `right-${v}`, label: "Right axis", gridStyle: "dashed" },
+        ],
+      },
+    })
+
+    expect(svg).toContain(">top-0<")
+    expect(svg).toContain(">right-40<")
+    expect(svg).toContain(">Top axis<")
+    expect(svg).toContain(">Right axis<")
+    const grid = svg.match(/<g[^>]*class="semiotic-grid"[\s\S]*?<\/g>/)?.[0] ?? ""
+    expect(grid).not.toMatch(/<line[^>]*x1="(?!0")/)
+    expect(grid).toContain('stroke-dasharray="6,4"')
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════
