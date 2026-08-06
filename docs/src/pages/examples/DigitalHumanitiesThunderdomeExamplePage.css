@@ -412,55 +412,6 @@
   color: var(--thunder-ink);
 }
 
-.thunderdome-stage__controls {
-  display: grid;
-  gap: 8px;
-  padding: 12px 18px;
-  border-bottom: 1px solid #303741;
-  background: #171c22;
-}
-
-.thunderdome-stage__controls > span {
-  color: #929a99;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.thunderdome-stage__controls > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.thunderdome-stage__controls button {
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid #4a5258;
-  border-radius: 5px;
-  background: #11151a;
-  color: #c5c9c5;
-  cursor: pointer;
-  font: inherit;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.thunderdome-stage__controls button.is-active {
-  border-color: var(--thunder-acid);
-  background: var(--thunder-acid);
-  color: var(--thunder-ink);
-}
-
-.thunderdome-stage__controls > p {
-  margin: 0;
-  color: #aeb4b1;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 10px;
-  line-height: 1.45;
-}
-
 .thunderdome-stage__chart {
   min-width: 0;
   display: grid;
@@ -768,18 +719,8 @@
     display: none;
   }
 
-  .thunderdome-stage__controls,
   .thunderdome-stage figcaption {
     padding-inline: 13px;
-  }
-
-  .thunderdome-stage__controls > div {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .thunderdome-stage__controls button {
-    min-height: 42px;
   }
 
   .thunderdome-after {
@@ -803,7 +744,6 @@
   .thunderdome-hero,
   .thunderdome-stage,
   .thunderdome-stage__header,
-  .thunderdome-stage__controls,
   .thunderdome-stage figcaption,
   .thunderdome-after {
     border-color: CanvasText;
@@ -830,11 +770,10 @@
     fill: CanvasText !important;
   }
 
-  .thunderdome-stage__nav button[aria-current="step"],
-  .thunderdome-stage__controls button[aria-pressed="true"] {
-    border-color: Highlight;
-    background: Highlight;
-    color: HighlightText;
+  .thunderdome-stage__nav button[aria-current="step"] {
+    border-color: CanvasText;
+    background: CanvasText;
+    color: Canvas;
     forced-color-adjust: none;
   }
 }

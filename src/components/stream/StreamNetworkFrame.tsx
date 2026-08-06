@@ -1311,6 +1311,7 @@ const StreamNetworkFrame = memo(forwardRef<
       canvas,
       store,
       sceneRevisionDiagnostics: sceneRevisionDiagnosticsRef.current,
+      suppressDuplicateSceneWarning: true,
       size,
       margin,
       adjustedWidth,

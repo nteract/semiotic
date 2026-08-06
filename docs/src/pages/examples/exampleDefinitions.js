@@ -976,7 +976,8 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       motion: {
         reducedMotion:
           "The media preference disables ProcessSankey particles and authored CSS transitions while preserving the complete process view",
-        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+        visibility:
+          "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
       },
       responsive: {
         status: "container-responsive-and-browser-tested",
@@ -985,14 +986,18 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
       ssr: {
         status: "Vite-build-and-component-SSR-compatible",
-        hydration: "deterministic checked-in mission chronology and stable default all-missions lens",
+        hydration:
+          "deterministic checked-in mission chronology and stable default all-missions lens",
       },
       performance: {
         status: "bounded-and-route-split",
         budgets: {
-          bundle: "lazy example route using public semiotic, semiotic/recipes, and semiotic/utils entry points",
-          interaction: "nine missions, 32 bounded process edges, six phases, and memoized focus slices",
-          memory: "one checked-in chronology with no duplicate chart snapshots or retained animation history",
+          bundle:
+            "lazy example route using public semiotic, semiotic/recipes, and semiotic/utils entry points",
+          interaction:
+            "nine missions, 32 bounded process edges, six phases, and memoized focus slices",
+          memory:
+            "one checked-in chronology with no duplicate chart snapshots or retained animation history",
           hiddenPage: "no timers, requests, observers, or authored background work",
         },
       },
@@ -1026,8 +1031,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       accessibility: {
         summary:
           "ProcessSankey description and table, a prose reading rule, transfer-pool inspector, endpoint ledger, and explicit conservation check",
-        navigation:
-          "Native transfer-pool, finding, accessible-table, and official-source controls",
+        navigation: "Native transfer-pool, finding, accessible-table, and official-source controls",
         keyboard:
           "Every authored control is a native button or link; ProcessSankey retains keyboard mark navigation and accessible table output",
         forcedColors:
@@ -1036,7 +1040,8 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       motion: {
         reducedMotion:
           "The example has no animated particles and disables authored CSS motion under the media preference",
-        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+        visibility:
+          "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
       },
       responsive: {
         status: "container-responsive-and-browser-tested",
@@ -1045,13 +1050,15 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
       ssr: {
         status: "Vite-build-and-component-SSR-compatible",
-        hydration: "deterministic checked-in certified transfer ledger and stable Wiley-pool default",
+        hydration:
+          "deterministic checked-in certified transfer ledger and stable Wiley-pool default",
       },
       performance: {
         status: "bounded-and-route-split",
         budgets: {
           bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
-          interaction: "seven accounts, 18 bounded process edges, and three local inspector selections",
+          interaction:
+            "seven accounts, 18 bounded process edges, and three local inspector selections",
           memory: "one checked-in ledger with no duplicate snapshots or retained animation history",
           hiddenPage: "no timers, requests, observers, or authored background work",
         },
@@ -1087,8 +1094,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       accessibility: {
         summary:
           "ProcessSankey description and table, conserved-width explanation, stage reader, metric controls, external-flow caveats, and source-linked interpretation",
-        navigation:
-          "Native metric, finding, accessible-table, source-link, and code-copy controls",
+        navigation: "Native metric, finding, accessible-table, source-link, and code-copy controls",
         keyboard:
           "Every authored control is a native button or link; ProcessSankey retains keyboard mark navigation and accessible table output",
         forcedColors:
@@ -1097,7 +1103,8 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       motion: {
         reducedMotion:
           "The example has no animated particles and disables authored CSS motion under the media preference",
-        visibility: "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
+        visibility:
+          "ProcessSankey retains its hidden-page suspension; the page has no timers or network requests",
       },
       responsive: {
         status: "container-responsive-and-browser-tested",
@@ -1112,8 +1119,10 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         status: "bounded-and-route-split",
         budgets: {
           bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
-          interaction: "98 containers, 130 conserved links, four local width metrics, and three finding shortcuts",
-          memory: "one checked-in source dataset with no duplicate snapshots or retained animation history",
+          interaction:
+            "98 containers, 130 conserved links, four local width metrics, and three finding shortcuts",
+          memory:
+            "one checked-in source dataset with no duplicate snapshots or retained animation history",
           hiddenPage: "no timers, requests, observers, or authored background work",
         },
       },
@@ -1158,23 +1167,27 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       motion: {
         reducedMotion:
           "The example has no animated particles; claim lenses restyle existing claims without a topology animation",
-        visibility: "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
+        visibility:
+          "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
       },
       responsive: {
         status: "container-responsive-and-browser-tested",
         viewports: [320, 390, 768, 1280],
-        selectionIdentity: "stable authored concept and causal-claim IDs with stable claim-lens categories",
+        selectionIdentity:
+          "stable authored concept and causal-claim IDs with stable claim-lens categories",
       },
       ssr: {
         status: "Vite-build-and-component-SSR-compatible",
-        hydration: "deterministic local JSON adapter, fixed stage extents, and an all-claims default lens",
+        hydration:
+          "deterministic local JSON adapter, fixed stage extents, and an all-claims default lens",
       },
       performance: {
         status: "bounded-and-route-split",
         budgets: {
           bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
           interaction: "20 fixed concepts, 35 bounded causal claims, and five local lens states",
-          memory: "one checked-in source dataset and no retained animation history or duplicated stage snapshots",
+          memory:
+            "one checked-in source dataset and no retained animation history or duplicated stage snapshots",
           hiddenPage: "no timers, requests, observers, or authored background work",
         },
       },
@@ -1209,8 +1222,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       accessibility: {
         summary:
           "ProcessSankey description and table, jurisdiction-route width explanation, event reader, lifecycle-exit caveats, external-administration ledger, and official sources",
-        navigation:
-          "Native event, accessible-table, source-link, and code-copy controls",
+        navigation: "Native event, accessible-table, source-link, and code-copy controls",
         keyboard:
           "Every authored control is native; ProcessSankey retains keyboard mark navigation and accessible table output",
         forcedColors:
@@ -1219,12 +1231,14 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       motion: {
         reducedMotion:
           "The example has no animated particles and disables authored CSS motion under the media preference",
-        visibility: "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
+        visibility:
+          "ProcessSankey retains hidden-page suspension; the page has no timers or network requests",
       },
       responsive: {
         status: "container-responsive-and-browser-tested",
         viewports: [320, 390, 768, 1280],
-        selectionIdentity: "stable milestone, institution, jurisdiction-route, holding, and transaction IDs",
+        selectionIdentity:
+          "stable milestone, institution, jurisdiction-route, holding, and transaction IDs",
       },
       ssr: {
         status: "Vite-build-and-component-SSR-compatible",
@@ -1234,8 +1248,10 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         status: "bounded-and-route-split",
         budgets: {
           bundle: "lazy example route using public semiotic and semiotic/recipes entry points",
-          interaction: "28 nodes, 64 dated transactions, three persistent institutions, seven lifecycle exits, and one local event reader",
-          memory: "one checked-in research dataset compiled into an event ledger with no retained stage snapshots or animation history",
+          interaction:
+            "28 nodes, 64 dated transactions, three persistent institutions, seven lifecycle exits, and one local event reader",
+          memory:
+            "one checked-in research dataset compiled into an event ledger with no retained stage snapshots or animation history",
           hiddenPage: "no timers, requests, or authored background work",
         },
       },
@@ -1249,15 +1265,15 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Thunderdome Has Rounded Corners",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A 2011 digital-humanities argument revisited with DHQ data: making the app is easier now, but selection, metadata, display, and recommendation still decide what readers get.",
+      "A 2011 digital-humanities argument revisited with DHQ data: Media Studies recedes, tools become method, and AI tests what decolonial making really requires.",
     contract: {
-      publicImports: ["semiotic", "semiotic/physics", "semiotic/utils", "semiotic/xy"],
+      publicImports: ["semiotic", "semiotic/utils", "semiotic/xy"],
       data: {
         states: ["snapshot"],
         fixture: {
           kind: "checked-in-pinned-dhq-published-record-snapshot",
           replay: false,
-          schemaVersion: "2",
+          schemaVersion: "3",
         },
       },
       provenance: {
@@ -1279,7 +1295,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       },
       motion: {
         reducedMotion:
-          "prefers-reduced-motion removes smooth scrolling and scene transforms, reveals every scene immediately, settles force layouts, and pauses the physics swarm",
+          "prefers-reduced-motion removes smooth scrolling and scene transforms, reveals every scene immediately, and disables chart transitions",
         visibility:
           "One IntersectionObserver limits active scene work to the reading viewport and disconnects on cleanup; there are no timers or continuous streams",
       },
@@ -1297,11 +1313,11 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         status: "bounded-and-route-split",
         budgets: {
           bundle:
-            "lazy example route using public semiotic, semiotic/xy, semiotic/physics, and semiotic/utils entry points",
+            "lazy example route using public semiotic, semiotic/xy, and semiotic/utils entry points",
           interaction:
-            "one shared IntersectionObserver updates only at scene boundaries; desktop mounts one active chart while the classification projection is memoized",
+            "one shared IntersectionObserver updates only at scene boundaries; desktop mounts one active chart with no local data mutation controls",
           memory:
-            "eight bounded chart scenes with normalized lookups for 832 recommendation records, 697 metadata-clock bodies, and no retained reader telemetry",
+            "eight bounded chart scenes over compact cohort aggregates, one issue profile, and no retained reader telemetry",
           hiddenPage:
             "no polling, streaming, or timers; observer and force work are scoped to mounted, visible scenes",
         },
@@ -1331,7 +1347,16 @@ const EXAMPLE_REGISTRY_METADATA = [
     preview: "last-scarcity",
     badges: ["Before/after Sankey", "Court story beats", "DifferenceChart", "Evidence ledger"],
     frames: ["xy", "ordinal", "network", "custom"],
-    topics: ["ai", "culture", "civic", "process", "realtime", "uncertainty", "design", "accessibility"],
+    topics: [
+      "ai",
+      "culture",
+      "civic",
+      "process",
+      "realtime",
+      "uncertainty",
+      "design",
+      "accessibility",
+    ],
   },
   {
     title: "Ukraine: Four Clocks of a Long War",
@@ -1699,10 +1724,10 @@ const EXAMPLE_REGISTRY_METADATA = [
     path: "/examples/digital-humanities-thunderdome",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A 2011 digital-humanities argument revisited with DHQ data: making the app is easier now, but selection, metadata, display, and recommendation still decide what readers get.",
+      "A 2011 digital-humanities argument revisited with DHQ data: Media Studies recedes, tools become method, and AI tests what decolonial making really requires.",
     preview: "thunderdome",
     badges: ["Eight charts", "Scrollytelling", "DHQ repository"],
-    frames: ["xy", "ordinal", "network", "stream-physics", "custom"],
+    frames: ["xy", "ordinal", "network", "custom"],
     topics: ["ai", "history", "culture", "design", "accessibility"],
   },
   {
@@ -2367,7 +2392,9 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
 
     if (sourceFiles !== undefined) {
       if (!Array.isArray(sourceFiles) || sourceFiles.length === 0) {
-        errors.push(`ExampleDefinition sourceFiles for "${id ?? `index ${index}`}" must be a non-empty array`)
+        errors.push(
+          `ExampleDefinition sourceFiles for "${id ?? `index ${index}`}" must be a non-empty array`,
+        )
       } else {
         const localFiles = new Set()
         sourceFiles.forEach((file) => {

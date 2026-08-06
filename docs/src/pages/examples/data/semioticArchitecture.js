@@ -1340,7 +1340,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   {
     id: "digital-humanities-thunderdome",
     shortLabel: "Thunderdome",
-    note: "A scrollytelling revisit of a 2011 digital-humanities essay, tested on a pinned DHQ corpus: history spiral, editorial Sankey, authorship line, subject bars, metadata lag swarm, classification display rules, recommendation author network, and method-overlap swarm.",
+    note: "A scrollytelling revisit of a 2011 digital-humanities essay, tested on a pinned DHQ corpus: history spiral, editorial Sankey, authorship line, and cohort bars tracing Media Studies, tools and practice, the critical turn, and AI.",
     uses: [
       "input-static",
       "hoc-xy-custom",
@@ -1348,8 +1348,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
       "hoc-xy-lines",
       "hoc-ordinal-bars",
       "frame-ordinal",
-      "hoc-collision-swarm",
-      "hoc-force",
       "feature-accessibility",
       "feature-axes",
       "feature-tooltips",
