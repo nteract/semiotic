@@ -7,7 +7,6 @@
 // Naming: slug = "release-X-Y-Z". Title = "Semiotic X.Y.Z".
 
 import React from "react"
-import { Link } from "react-router-dom"
 
 function Body() {
   return (
@@ -81,7 +80,7 @@ function Body() {
           skill won't complain. */}
       <p>
         {/* TODO: opening sentence about scope of changes. */}
-        Most of <TODO-version> is additive.
+        Most of TODO_VERSION is additive.
         {/* TODO: list breaking changes if any. */}
       </p>
       <ul>

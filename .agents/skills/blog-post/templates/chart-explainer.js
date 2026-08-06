@@ -9,7 +9,8 @@
 import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 // TODO: import the chart HOC and any other chart components used in the demo.
-// import { CHART_NAME, ThemeProvider } from "semiotic"
+// import { CHART_NAME } from "semiotic/<family>" // e.g. "semiotic/xy"
+// import { ThemeProvider } from "semiotic/themes/react"
 import BlogPushDemo from "../components/BlogPushDemo.js"
 
 // TODO: inline demo data. Keep small (5–15 rows) so the reader can
@@ -126,7 +127,7 @@ function Body() {
       {/* WIRING — minimal code snippet. Strip everything optional.
           Use <pre> with explicit styling so dark mode reads. */}
       <pre style={{ background: "var(--surface-1)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>
-{`import { CHART_NAME } from "semiotic"
+{`import { CHART_NAME } from "semiotic/<family>"
 
 <CHART_NAME
   data={rows}

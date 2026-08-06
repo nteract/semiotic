@@ -12,7 +12,8 @@
 import React from "react"
 import { Link } from "react-router-dom"
 // TODO: import the chart components used in the demos.
-// import { CHART_A, CHART_B, ThemeProvider } from "semiotic"
+// import { CHART_A, CHART_B } from "semiotic/<family>" // e.g. "semiotic/network"
+// import { ThemeProvider } from "semiotic/themes/react"
 
 // TODO: inline data or import from a shared example module. If the
 // post compares two approaches with the same data, share the

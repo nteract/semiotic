@@ -141,12 +141,12 @@ describe("BR-5: RidgelinePlot amplitude documentation", () => {
     const fs = await import("fs")
     const path = await import("path")
     // Resolve from project root (vitest cwd)
-    const claude = fs.readFileSync(
+    const reference = fs.readFileSync(
       path.resolve(process.cwd(), "ai/reference.md"),
       "utf-8"
     )
     // RidgelinePlot should be mentioned in the AI reference with amplitude info
-    expect(claude).toContain("RidgelinePlot")
-    expect(claude).toContain("amplitude")
+    expect(reference).toContain("RidgelinePlot")
+    expect(reference).toContain("amplitude")
   })
 })

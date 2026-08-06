@@ -1,6 +1,6 @@
 ---
 name: blog-post
-description: Author a new entry for the Semiotic blog. Use this skill whenever the user asks for a blog post, release summary, chart explainer, or case study to publish at /blog/<slug>.
+description: Author a new entry for the Semiotic blog. Use this skill whenever the user asks for a blog post, release summary, chart explainer, or case study to publish at /blog/SLUG.
 ---
 
 # Writing a Semiotic blog post
