@@ -181,7 +181,7 @@ const SCENES = [
   {
     id: "field-risers",
     number: "07",
-    title: "The turn was toward consequence, not away from making",
+    title: "A turn toward consequence but not away from making",
     chart: "GroupedBarChart",
     chartTitle: "The topics gaining the most ground",
     paragraphs: [
