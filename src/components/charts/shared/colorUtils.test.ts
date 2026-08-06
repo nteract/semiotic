@@ -186,6 +186,11 @@ describe("createColorScale", () => {
     expect(typeof scale("A")).toBe("string")
   })
 
+  it("does not resolve inherited object properties as schemes", () => {
+    const scale = createColorScale([{ score: 1 }, { score: 2 }], "score", "toString")
+    expect(scale("1")).toBe(DEFAULT_COLORS[0])
+  })
+
   it("uses an object-map scheme for exact per-category colors", () => {
     const scale = createColorScale(categoricalData, "cat", { A: "#f00", B: "#0f0" })
     expect(scale("A")).toBe("#f00")

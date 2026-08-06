@@ -133,6 +133,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+function ownValue<T>(record: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined
+}
+
 function normalizeChartType(chartType: string | undefined): ChartKind | undefined {
   const key = String(chartType || "").toLowerCase().replace(/[^a-z0-9]/g, "")
   if (key === "barchart" || key === "bar") return "bar"
@@ -156,7 +160,7 @@ function normalizeEncodings(
   if (!raw || typeof raw !== "object") return encodings
 
   for (const [rawChannel, rawValue] of Object.entries(raw)) {
-    const channel = FLINT_CHANNEL_ALIASES[rawChannel] || rawChannel
+    const channel = ownValue(FLINT_CHANNEL_ALIASES, rawChannel) || rawChannel
     let value = rawValue
     if (Array.isArray(value)) {
       if (value.length === 0) continue
@@ -195,7 +199,7 @@ function semanticType(
   semanticTypes: Record<string, string | FlintSemanticAnnotation> | undefined,
 ): string | undefined {
   if (!fieldName || !semanticTypes) return undefined
-  const entry = semanticTypes[fieldName]
+  const entry = ownValue(semanticTypes, fieldName)
   if (typeof entry === "string") return entry
   return typeof entry?.semanticType === "string" ? entry.semanticType : undefined
 }
@@ -264,7 +268,7 @@ function applyCategoricalScheme(
 ): void {
   if (!scheme) return
   const schemeKey = scheme.toLowerCase()
-  const mapped = CATEGORICAL_SCHEMES[schemeKey]
+  const mapped = ownValue(CATEGORICAL_SCHEMES, schemeKey)
   if (mapped) props.colorScheme = mapped
   else warnings.push(`Flint color scheme "${scheme}" is not mapped to a Semiotic categorical colorScheme.`)
 }
@@ -288,11 +292,11 @@ function applyLabels(
 ): void {
   if (!displayNames) return
   if (family === "xy") {
-    if (fields.x && displayNames[fields.x]) props.xLabel = displayNames[fields.x]
-    if (fields.y && displayNames[fields.y]) props.yLabel = displayNames[fields.y]
+    if (fields.x && ownValue(displayNames, fields.x)) props.xLabel = ownValue(displayNames, fields.x)
+    if (fields.y && ownValue(displayNames, fields.y)) props.yLabel = ownValue(displayNames, fields.y)
   } else {
-    if (fields.category && displayNames[fields.category]) props.categoryLabel = displayNames[fields.category]
-    if (fields.value && displayNames[fields.value]) props.valueLabel = displayNames[fields.value]
+    if (fields.category && ownValue(displayNames, fields.category)) props.categoryLabel = ownValue(displayNames, fields.category)
+    if (fields.value && ownValue(displayNames, fields.value)) props.valueLabel = ownValue(displayNames, fields.value)
   }
 }
 
@@ -388,7 +392,7 @@ function applyCurve(
 ): void {
   const interpolate = stringProp(chartProperties?.interpolate)
   if (!interpolate) return
-  const curve = CURVE_MAP[interpolate]
+  const curve = ownValue(CURVE_MAP, interpolate)
   if (curve) props.curve = curve
   else warnings.push(`Flint interpolate "${interpolate}" is not mapped to a Semiotic curve.`)
 }
@@ -415,10 +419,10 @@ function warnOnUnmappedEncodings(
   warnings: string[],
 ): Record<string, FlintRawEncodingValue> | undefined {
   if (!raw) return undefined
-  const consumed = new Set(CONSUMED_CHANNELS[kind])
+  const consumed = new Set(ownValue(CONSUMED_CHANNELS, kind) ?? [])
   const unmapped: Record<string, FlintRawEncodingValue> = {}
   for (const [channel, value] of Object.entries(raw)) {
-    const normalized = FLINT_CHANNEL_ALIASES[channel] || channel
+    const normalized = ownValue(FLINT_CHANNEL_ALIASES, channel) || channel
     if (!consumed.has(normalized) || Array.isArray(value)) {
       unmapped[channel] = value
     }
@@ -431,7 +435,7 @@ function warnOnUnmappedEncodings(
     warnings.push(`Flint facet channel(s) ${facets.join(", ")} are not supported by this adapter; render multiple Semiotic charts instead.`)
   }
   const nonFacets = channels.filter((channel) => {
-    const normalized = FLINT_CHANNEL_ALIASES[channel] || channel
+    const normalized = ownValue(FLINT_CHANNEL_ALIASES, channel) || channel
     return channel !== "column" && channel !== "row" && !consumed.has(normalized)
   })
   if (nonFacets.length > 0) {

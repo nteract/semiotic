@@ -609,7 +609,9 @@ export type ThemePresetName = keyof typeof THEME_PRESETS
  * Returns undefined if the name is not recognized.
  */
 export function resolveThemePreset(name: string): SemioticTheme | undefined {
-  return (THEME_PRESETS as Record<string, SemioticTheme>)[name]
+  return Object.prototype.hasOwnProperty.call(THEME_PRESETS, name)
+    ? (THEME_PRESETS as Record<string, SemioticTheme>)[name]
+    : undefined
 }
 
 // ── Serialization utilities ───────────────────────────────────────────────

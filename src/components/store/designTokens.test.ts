@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest"
 import { designTokensToTheme, resolveThemePreset, themeToTokens } from "../semiotic-themes"
 
 describe("designTokensToTheme", () => {
+  it("rejects prototype properties as theme preset names", () => {
+    expect(resolveThemePreset("constructor")).toBeUndefined()
+    expect(resolveThemePreset("toString")).toBeUndefined()
+    expect(resolveThemePreset("__proto__")).toBeUndefined()
+  })
+
   it("round-trips a theme through themeToTokens (native semiotic.* path)", () => {
     const theme = resolveThemePreset("tufte")!
     const recovered = designTokensToTheme(themeToTokens(theme))

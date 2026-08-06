@@ -82,7 +82,7 @@ function toURL(config: ChartConfig): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function useHighContrast(): boolean
 function useReducedMotion(): boolean
-function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [import("react").RefObject<HTMLDivElement>, [number, number]]
+function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [RefObject<HTMLDivElement>, [number, number]]
 function useTheme(): SemioticTheme
 function validateProps(componentName: string, props: Datum): ValidationResult
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
