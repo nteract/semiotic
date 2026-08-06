@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Heatmap color-scale plumbing** — `Heatmap` now routes `colorScheme="custom"` and `customColorScale(value)` into the shared heatcell scene graph instead of falling back to Blues in CSR and SSR. `RealtimeHeatmap` now honors its documented named sequential schemes, theme fallback, and custom value-to-color functions. String fills returned by `frameProps.areaStyle` also override individual bounded Heatmap cells in both render paths.
+
 ## [3.8.9] - 2026-08-04
 
 ### Added

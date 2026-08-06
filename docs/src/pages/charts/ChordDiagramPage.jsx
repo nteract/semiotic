@@ -381,9 +381,7 @@ export default function ChordDiagramPage() {
     annotations: [
       { type: "node", id: "Engineering", label: "Largest dept" }
     ],
-    customNodeIcon: ({ d }) => (
-      <rect width={20} height={d.height} fill="steelblue" />
-    )
+    nodeStyle: () => ({ fill: "steelblue", stroke: "#333" })
   }}
 />`}
         language="jsx"

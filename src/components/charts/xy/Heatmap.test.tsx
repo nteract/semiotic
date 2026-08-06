@@ -88,6 +88,34 @@ describe("Heatmap", () => {
     expect(frame).toBeTruthy()
   })
 
+  it("uses customColorScale for canvas cell fills", () => {
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const fillStyles: string[] = []
+    const originalFillRect = ctx.fillRect
+    ctx.fillRect = ((...args: [number, number, number, number]) => {
+      fillStyles.push(String(ctx.fillStyle))
+      return originalFillRect.apply(ctx, args)
+    }) as typeof ctx.fillRect
+    const customColorScale = (value: number) => `rgb(${value}, 7, 9)`
+
+    render(
+      <TooltipProvider>
+        <Heatmap
+          data={sampleData}
+          colorScheme="custom"
+          customColorScale={customColorScale}
+        />
+      </TooltipProvider>
+    )
+
+    expect(fillStyles).toEqual(expect.arrayContaining([
+      "rgb(10, 7, 9)",
+      "rgb(15, 7, 9)",
+      "rgb(20, 7, 9)",
+      "rgb(25, 7, 9)",
+    ]))
+  })
+
   it("shows values when showValues is true", () => {
     const { container } = render(
       <TooltipProvider>

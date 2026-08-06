@@ -176,6 +176,8 @@ export interface PipelineConfig {
   // Heatmap value labels
   showValues?: boolean
   heatmapValueFormat?: (v: number) => string
+  /** Explicit value-to-color function for heatmap cells. */
+  heatmapColorScale?: (value: number) => string
 
   // Point identification (for point-anchored annotations)
   pointIdAccessor?: string | ((d: Datum) => string)

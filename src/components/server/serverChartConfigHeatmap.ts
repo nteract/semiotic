@@ -14,6 +14,9 @@ export const heatmap: ChartConfig = {
       stroke: (rest.cellBorderColor as string | undefined) ?? "#fff",
       strokeWidth: borderWidth,
     })
+    const heatmapColorScale = colorScheme === "custom" && typeof rest.customColorScale === "function"
+      ? rest.customColorScale as (value: number) => string
+      : undefined
     return {
       chartType: "heatmap",
       data,
@@ -21,6 +24,7 @@ export const heatmap: ChartConfig = {
       yAccessor: rest.yAccessor || "y",
       valueAccessor: rest.valueAccessor,
       colorScheme: colorScheme || rest.colorScheme || "blues",
+      ...(heatmapColorScale && { heatmapColorScale }),
       showValues: rest.showValues,
       heatmapValueFormat: rest.valueFormat,
       // `frameProps.areaStyle` remains the documented final escape hatch.

@@ -146,6 +146,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     // no heatcell ever received a label on the SSR path.
     showValues: props.showValues,
     heatmapValueFormat: props.heatmapValueFormat,
+    heatmapColorScale: props.heatmapColorScale,
   }
 
   const store = new PipelineStore(pipelineConfig)

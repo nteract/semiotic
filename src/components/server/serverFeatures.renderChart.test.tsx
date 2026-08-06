@@ -175,6 +175,39 @@ describe("renderChart", () => {
     expect(svg).toContain("<rect")
   })
 
+  it("renders Heatmap with a custom color scale", () => {
+    const svg = renderChart("Heatmap", {
+      data: [
+        { x: "a", y: "1", value: 2 },
+        { x: "b", y: "1", value: 7 },
+      ],
+      colorScheme: "custom",
+      customColorScale: (value: number) => `rgb(${value}, 7, 9)`,
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain('fill="rgb(2, 7, 9)"')
+    expect(svg).toContain('fill="rgb(7, 7, 9)"')
+  })
+
+  it("lets Heatmap frameProps.areaStyle override individual cell fills", () => {
+    const svg = renderChart("Heatmap", {
+      data: [
+        { x: "a", y: "1", value: 2 },
+        { x: "b", y: "1", value: 7 },
+      ],
+      frameProps: {
+        areaStyle: (datum: { value: number }) => ({ fill: `rgb(${datum.value}, 8, 10)` }),
+      },
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain('fill="rgb(2, 8, 10)"')
+    expect(svg).toContain('fill="rgb(7, 8, 10)"')
+  })
+
   it("renders Heatmap cell labels when showValues is enabled", () => {
     const svg = renderChart("Heatmap", {
       data: [

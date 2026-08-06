@@ -953,6 +953,8 @@ export interface StreamXYFrameProps<T = Datum>
   showValues?: boolean
   /** Format function for heatmap cell value labels */
   heatmapValueFormat?: (v: number) => string
+  /** Explicit value-to-color function for heatmap cells. */
+  heatmapColorScale?: (value: number) => string
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */

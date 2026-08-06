@@ -2866,6 +2866,14 @@
                 "reds",
                 "greens",
                 "viridis",
+                "oranges",
+                "purples",
+                "greys",
+                "plasma",
+                "inferno",
+                "magma",
+                "cividis",
+                "turbo",
                 "custom"
               ]
             },
@@ -10306,6 +10314,24 @@
                 "count",
                 "sum",
                 "mean"
+              ]
+            },
+            "colorScheme": {
+              "type": "string",
+              "enum": [
+                "blues",
+                "reds",
+                "greens",
+                "viridis",
+                "oranges",
+                "purples",
+                "greys",
+                "plasma",
+                "inferno",
+                "magma",
+                "cividis",
+                "turbo",
+                "custom"
               ]
             }
           },

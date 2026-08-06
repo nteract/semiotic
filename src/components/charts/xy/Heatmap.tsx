@@ -276,10 +276,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     legendPosition: legendPositionProp,
     legend: legendProp,
     legendInteraction,
-    // Primitive styling props (BaseChartProps) — accepted-but-not-wired for
-    // Heatmap. Cell fills come from the sequential LUT, and cell strokes use
-    // the theme surface fallback; there's no per-primitive style surface for
-    // user overrides to flow through.
+    // Primitive styling props (BaseChartProps) are not mapped onto heatcells.
+    // Use the sequential color props or frameProps.areaStyle for cell fills;
+    // cellBorderColor/cellBorderWidth control the HOC's default stroke.
     stroke: _stroke,
     strokeWidth: _strokeWidth,
     opacity: _opacity,
@@ -426,6 +425,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     yAccessor,
     valueAccessor,
     colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
+    ...(colorScheme === "custom" && customColorScale && { heatmapColorScale: customColorScale }),
     areaStyle: cellStyle,
     showValues,
     heatmapValueFormat: valueFormat,

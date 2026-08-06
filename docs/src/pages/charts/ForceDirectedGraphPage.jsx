@@ -444,9 +444,8 @@ export default function ForceDirectedGraphPage() {
   edges={edges}
   colorBy="group"
   frameProps={{
-    customNodeIcon: ({ d }) => (
-      <circle r={10} fill="gold" stroke="black" />
-    ),
+    nodeStyle: () => ({ fill: "gold", stroke: "black" }),
+    nodeSize: 10,
     annotations: [
       { type: "node", id: "Alice", label: "Key Person" }
     ]

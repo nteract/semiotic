@@ -223,7 +223,7 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
  *   data={data}
  *   sizeBy="value"
  *   frameProps={{
- *     customPointMark: ({ d }) => <circle r={d.r} fill="gold" />
+ *     pointStyle: () => ({ fill: "gold", stroke: "#333" })
  *   }}
  * />
  * ```

@@ -308,7 +308,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: { type: ["string", "function"], default: "value", description: "Key for the cell value" },
       // Heatmap's colorScheme is a sequential scheme name (different enum
       // from the categorical "category10"-family). Override common bag.
-      colorScheme: { type: "string", enum: ["blues", "reds", "greens", "viridis", "custom"] as const },
+      colorScheme: { type: "string", enum: ["blues", "reds", "greens", "viridis", "oranges", "purples", "greys", "plasma", "inferno", "magma", "cividis", "turbo", "custom"] as const },
       // `customColorScale` is a value-color escape hatch — runtime only.
       customColorScale: { type: ["object", "function"], omitFromSchema: true },
       showValues: { type: "boolean", default: false, description: "Display numeric values in cells" },
