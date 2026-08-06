@@ -113,8 +113,8 @@ function Body() {
       <p>
         Semiotic ships more than charts. It ships a contract for agents that need
         to choose charts, generate props, inspect capabilities, and call the MCP
-        server. That is why PR CI checks <code>llms.txt</code> freshness,{" "}
-        comprehensive AI-reference component coverage, <code>context7.json</code>{" "}
+        server. That is why PR CI checks <code>llms.txt</code> freshness, the{" "}
+        <code>check:ai-reference-coverage</code> gate, <code>context7.json</code>{" "}
         package-subpath freshness, MCP registry cross-references, AI/MCP surface
         parity, HOC JSDoc example coverage, and{" "}
         <code>ai/examples.md</code> coverage and drift.
