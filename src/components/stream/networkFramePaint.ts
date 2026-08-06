@@ -33,8 +33,6 @@ export interface NetworkFramePaintContext {
   canvas: HTMLCanvasElement
   store: NetworkPipelineStore
   sceneRevisionDiagnostics?: SceneRevisionDiagnostics
-  /** Network scene rebuilds may be consumed synchronously before paint. */
-  suppressDuplicateSceneWarning?: boolean
   size: [number, number]
   margin: MarginType
   adjustedWidth: number
@@ -83,7 +81,6 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     canvas,
     store,
     sceneRevisionDiagnostics,
-    suppressDuplicateSceneWarning = false,
     size,
     margin,
     adjustedWidth,
@@ -147,12 +144,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     if (wasDirty) syncColorMap?.()
   }
   if (sceneRevisionCheck) {
-    sceneRevisionDiagnostics?.afterCompute(
-      sceneRevisionCheck,
-      computedScene,
-      false,
-      suppressDuplicateSceneWarning
-    )
+    // Network scene rebuilds may be consumed synchronously before paint.
+    sceneRevisionDiagnostics?.afterCompute(sceneRevisionCheck, computedScene, true)
   }
 
   const particlesWanted =

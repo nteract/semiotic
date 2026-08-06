@@ -96,8 +96,7 @@ export class SceneRevisionDiagnostics {
   afterCompute(
     check: SceneRevisionCheck,
     computedScene: boolean,
-    dimsChanged: boolean,
-    suppressDuplicateWarning = false
+    suppressDuplicateWarning: boolean
   ): void {
     if (!IS_DEV) return
     if (computedScene && check.wasUnconsumed) this.lastConsumed = check.revisions
@@ -112,7 +111,6 @@ export class SceneRevisionDiagnostics {
       computedScene &&
       check.sawSignals &&
       !check.wasUnconsumed &&
-      !dimsChanged &&
       !suppressDuplicateWarning &&
       this.lastDuplicateWarning !== check.signature
     ) {
