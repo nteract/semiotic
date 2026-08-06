@@ -128,7 +128,7 @@ when you'd care.
 - **Streaming / push mode section** — REQUIRED for every chart
   explainer. Three pieces:
   1. **A live push demo** using `BlogPushDemo` from
-     `docs/src/blog/components/BlogPushDemo.js`. Hand it a
+     `docs/src/blog/components/BlogPushDemo.jsx`. Hand it a
      `chartRef`, the `frames` array (one entry per step), a
      `pushAt(ref, row, i)` callback that calls the chart's
      push method, and a `resetAt(ref)` callback that calls

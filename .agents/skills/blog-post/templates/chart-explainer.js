@@ -11,7 +11,7 @@ import { Link } from "react-router-dom"
 // TODO: import the chart HOC and any other chart components used in the demo.
 // import { CHART_NAME } from "semiotic/<family>" // e.g. "semiotic/xy"
 // import { ThemeProvider } from "semiotic/themes/react"
-import BlogPushDemo from "../components/BlogPushDemo.js"
+import BlogPushDemo from "../components/BlogPushDemo.jsx"
 
 // TODO: inline demo data. Keep small (5–15 rows) so the reader can
 // imagine the underlying shape. Use realistic categorical names
