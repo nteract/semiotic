@@ -22,8 +22,8 @@ export function useResponsiveSize(
   responsiveWidth?: boolean,
   responsiveHeight?: boolean,
   options: ResponsiveSizeOptions = {},
-): [RefObject<HTMLDivElement>, [number, number]] {
-  const containerRef = useRef<HTMLDivElement>(null!)
+): [RefObject<HTMLDivElement | null>, [number, number]] {
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null)
 
   useEffect(() => {
