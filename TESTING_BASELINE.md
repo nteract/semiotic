@@ -122,7 +122,7 @@ npm run check:surface
 npm run check:ssr
 npm run check:test-quality
 npm run check:jsdoc-coverage
-npm run check:claude-md-coverage
+npm run check:ai-reference-coverage
 npm run check:ai-examples-coverage
 npm run check:ai-contracts
 npm run check:pack
@@ -175,7 +175,7 @@ npm run typescript
 npm run check:chart-specs
 npm run check:surface
 npm run check:ssr
-npm run check:claude-md-coverage
+npm run check:ai-reference-coverage
 npm run lint
 ```
 

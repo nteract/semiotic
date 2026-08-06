@@ -117,7 +117,7 @@ const FEATURES = `## Features
 
 const AI_INTEGRATION = `## AI Integration (machine-readable)
 
-- [CLAUDE.md](/CLAUDE.md): Full AI assistant guide with all props and patterns
+- [Full AI Reference](/CLAUDE.md): Comprehensive on-demand guide with all props and patterns
 - [schema.json](/schema.json): Machine-readable component schemas
 - [API Reference](/api-reference.md): Compact system prompt for context-constrained agents
 - [Examples](/examples.md): Copy-paste code examples for every chart type

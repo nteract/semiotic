@@ -246,7 +246,7 @@ function renderChartInternal(
   if (!config) {
     throw new Error(
       `Unknown chart component: "${component}". ` +
-      `See CLAUDE.md for supported chart types.`
+      `Run \`npx semiotic-ai --list\` for supported chart types.`
     )
   }
   // Some chart families also own a chart-specific `mode` prop (for example

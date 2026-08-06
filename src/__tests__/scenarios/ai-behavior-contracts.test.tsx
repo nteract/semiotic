@@ -56,7 +56,7 @@ describe("AI behavior contract metadata", () => {
       "rendering.renderchart-static-props",
     ]))
 
-    for (const filePath of ["CLAUDE.md", "docs/public/llms-full.txt", "ai/system-prompt.md"]) {
+    for (const filePath of ["ai/reference.md", "docs/public/llms-full.txt", "ai/system-prompt.md"]) {
       const text = readFileSync(resolve(process.cwd(), filePath), "utf8")
       expect(text).toContain(DOC_MARKER_START)
       expect(text).toContain(DOC_MARKER_END)
@@ -83,7 +83,7 @@ describe("AI behavior contract metadata", () => {
     expect(contract?.summary).toContain("does not inherit the common chart-HOC prop list")
     expect(contract?.agentAction).toContain("remove inherited chart-HOC props")
 
-    const guide = readFileSync(resolve(process.cwd(), "CLAUDE.md"), "utf8")
+    const guide = readFileSync(resolve(process.cwd(), "ai/reference.md"), "utf8")
     const commonProps = guide.indexOf("## Common Props (chart HOCs only)")
     const boundary = guide.indexOf("This list is not global.", commonProps)
     const firstChartFamily = guide.indexOf("## XY Charts", commonProps)

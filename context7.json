@@ -2,10 +2,8 @@
   "projectTitle": "Semiotic",
   "description": "React data visualization library — HOC charts (XY, ordinal, network, geo, realtime), Stream Frames, push API, theming, and an AI/MCP surface for agent-driven chart authoring.",
   "folders": [
-    "CLAUDE.md",
     "README.md",
     "CHANGELOG.md",
-    "docs/public/llms-full.txt",
     "docs/src/pages/charts",
     "ai"
   ],

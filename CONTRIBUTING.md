@@ -91,11 +91,16 @@ npm run check:docs-routes
 
 # AI and public-surface contracts
 npm run check:chart-specs
-npm run check:claude-md-coverage
+npm run check:ai-schema
+npm run check:ai-reference-coverage
+npm run check:ai-examples-coverage
+npm run check:ai-contracts
+npm run check:ai-instructions
+npm run check:agent-skill
+npm run check:context7
+npm run check:llms
 npm run check:mcp-registry
 npm run check:surface
-npm run check:ai-contracts
-npm run check:ai-examples-coverage
 
 # Release-oriented checks
 npm run check:ssr
@@ -164,8 +169,10 @@ Run the checks that match the change. For shared library changes, public API cha
 For docs-only changes, run at least:
 
 ```bash
-npm run check:claude-md-coverage
+npm run check:ai-reference-coverage
 npm run check:ai-contracts
+npm run check:ai-instructions
+npm run check:llms
 npm run check:docs-routes
 ```
 

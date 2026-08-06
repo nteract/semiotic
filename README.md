@@ -73,7 +73,10 @@ correct visualizations without trial and error:
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
 - **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with actionable fixes, spanning validation, encoding, accessibility, and misleading-design (deception) checks
 - **`auditData(component, props, data?)`** — chart-aware numeric preflight for inputs that pass schema validation but break the math: non-finite values, zero-span domains, invalid log inputs, negative size geometry, unsafe normalized totals, and scale-dominating outliers. Returns bounded row evidence and flows into `diagnoseConfig`, Chart Clinic, CLI doctor, and opt-in `ChartContainer` notifications
-- **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
+- **`AGENTS.md`** — concise repository workflow shared by modern coding agents;
+  `CLAUDE.md` imports it and Copilot receives a short compatibility bridge
+- **`ai/reference.md`** — complete on-demand product reference, kept out of
+  always-loaded coding-agent context
 - **`llms.txt`** — machine-readable documentation following the emerging standard
 
 Every chart includes a built-in error boundary, dev-mode validation
@@ -734,7 +737,8 @@ Secondary-directory freshness and release ownership are tracked in
 
 Agent-facing API surface:
 
-- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/surface-manifest.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface; `ai/surface-manifest.json` is the generated inventory; `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- **`AGENTS.md`** is the concise repository development contract and **`CLAUDE.md`** imports it for Claude Code. These stay repository-local rather than shipping irrelevant contributor instructions to package consumers.
+- **`ai/reference.md`**, **`ai/schema.json`**, **`ai/surface-manifest.json`**, **`ai/behaviorContracts.cjs`**, and **`agent-skill/semiotic-charts/SKILL.md`** are bundled in the npm tarball (see `package.json#files`). The reference is the on-demand product guide printed by `npx semiotic-ai`; the schema, manifest, contracts, and portable skill provide structured generation and validation guidance.
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

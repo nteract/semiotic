@@ -3,7 +3,7 @@
  * Keeps agent-visible behavior rules synchronized across AI docs.
  *
  * The source of truth is `ai/behaviorContracts.cjs`; this script writes or
- * checks generated sections in CLAUDE.md, docs/public/llms-full.txt, and the
+ * checks generated sections in ai/reference.md, docs/public/llms-full.txt, and the
  * compact MCP/system prompt guidance.
  */
 
@@ -25,7 +25,7 @@ const checkOnly = process.argv.includes("--check")
 
 const targets = [
   {
-    path: "CLAUDE.md",
+    path: "ai/reference.md",
     anchor: "\n## Accessibility",
     compact: false,
   },

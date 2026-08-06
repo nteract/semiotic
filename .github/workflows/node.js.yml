@@ -106,8 +106,8 @@ jobs:
       - name: Check blog metadata registry freshness
         run: npm run check:blog-entries
 
-      - name: Check CLAUDE.md component coverage
-        run: npm run check:claude-md-coverage
+      - name: Check comprehensive AI reference coverage
+        run: npm run check:ai-reference-coverage
 
       - name: Check context7.json freshness
         run: npm run check:context7

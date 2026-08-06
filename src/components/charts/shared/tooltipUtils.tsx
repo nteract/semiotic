@@ -53,7 +53,7 @@ export function formatVal(v: unknown): string {
  *  `formatVal` if the formatter is absent or throws. Keeps a misbehaving
  *  `valueFormat` from breaking the entire tooltip render. Returns
  *  `ReactNode` so HOCs that supply ReactNode-returning axis formatters
- *  (see the `xFormat`/`yFormat` pitfall in CLAUDE.md) render naturally. */
+ *  (see the `xFormat`/`yFormat` pitfall in the AI reference) render naturally. */
 function applyFormat(value: TooltipValue, fmt?: TooltipFormatter): React.ReactNode {
   if (!fmt) return formatVal(value)
   try {

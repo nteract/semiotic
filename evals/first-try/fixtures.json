@@ -1,7 +1,7 @@
 {
   "version": 2,
   "fixtureRevision": "semiotic-first-try-2026-07-27-value-boundary",
-  "context": ["CLAUDE.md", "docs/public/llms.txt"],
+  "context": ["ai/reference.md", "docs/public/llms.txt"],
   "fixtures": [
     {
       "id": "bar-static-custom-fields",

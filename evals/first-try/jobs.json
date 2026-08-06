@@ -8,7 +8,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -31,7 +31,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -66,7 +66,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -101,7 +101,7 @@
       "family": "xy",
       "mode": "push",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -135,7 +135,7 @@
       "family": "xy",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -166,7 +166,7 @@
       "family": "xy",
       "mode": "push",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -200,7 +200,7 @@
       "family": "xy",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -233,7 +233,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -272,7 +272,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -311,7 +311,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -362,7 +362,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -389,7 +389,7 @@
       "family": "xy",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -424,7 +424,7 @@
       "family": "value",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -452,7 +452,7 @@
       "family": "ordinal",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -479,7 +479,7 @@
       "family": "network",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -513,7 +513,7 @@
       "family": "network",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -543,7 +543,7 @@
       "family": "network",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -573,7 +573,7 @@
       "family": "geo",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -606,7 +606,7 @@
       "family": "physics",
       "mode": "static",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -637,7 +637,7 @@
       "family": "physics",
       "mode": "push",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -670,7 +670,7 @@
       "family": "physics",
       "mode": "push",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {
@@ -706,7 +706,7 @@
       "family": "physics",
       "mode": "push",
       "context": [
-        "CLAUDE.md",
+        "ai/reference.md",
         "docs/public/llms.txt"
       ],
       "input": {

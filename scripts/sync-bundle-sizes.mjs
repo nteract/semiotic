@@ -17,8 +17,7 @@
  *
  * Targets:
  *   - README.md                  full table view
- *   - CLAUDE.md                  compact bullet list
- *   - ai/system-prompt.md        compact bullet list
+ *   - ai/reference.md            compact bullet list
  *
  * Sub-path "what's inside" blurbs for the README table are kept in a
  * static map below. They are short by design (one HOC name + count)
@@ -261,7 +260,7 @@ function renderTable(rows) {
 }
 
 function renderCompact(rows) {
-  // Compact one-line summary for CLAUDE.md / ai/system-prompt.md.
+  // Compact one-line summary for ai/reference.md.
   // Lists every subpath inline; full-bundle entry appears last so the
   // "if you import everything" anchor reads naturally.
   const pieces = rows.map((row) => {
@@ -287,7 +286,7 @@ function generatedTableBlock(rows) {
 
 function generatedCompactBlock(rows, { listItem = false } = {}) {
   // `listItem: true` prefixes a markdown bullet so the block can sit
-  // inside an existing list (CLAUDE.md's Quick Start) without breaking
+  // inside an existing list (ai/reference.md's Quick Start) without breaking
   // markdown's list grouping when rendered.
   const prefix = listItem ? "- " : ""
   return [
@@ -346,8 +345,7 @@ function blocksWithinTolerance(rendered, existing) {
 
 const TARGETS = [
   { path: "README.md",           render: (rows) => generatedTableBlock(rows),                       required: true },
-  { path: "CLAUDE.md",           render: (rows) => generatedCompactBlock(rows, { listItem: true }), required: true },
-  { path: "ai/system-prompt.md", render: (rows) => generatedCompactBlock(rows),                     required: true },
+  { path: "ai/reference.md",      render: (rows) => generatedCompactBlock(rows, { listItem: true }), required: true },
 ]
 
 function main() {

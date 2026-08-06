@@ -114,7 +114,7 @@ function Body() {
         Semiotic ships more than charts. It ships a contract for agents that need
         to choose charts, generate props, inspect capabilities, and call the MCP
         server. That is why PR CI checks <code>llms.txt</code> freshness,{" "}
-        <code>CLAUDE.md</code> component coverage, <code>context7.json</code>{" "}
+        comprehensive AI-reference component coverage, <code>context7.json</code>{" "}
         package-subpath freshness, MCP registry cross-references, AI/MCP surface
         parity, HOC JSDoc example coverage, and{" "}
         <code>ai/examples.md</code> coverage and drift.
@@ -155,8 +155,8 @@ function Body() {
       <p>
         Once the PR has proved source-level correctness, CI rebuilds production
         bundles with <code>npm run dist:prod</code>. It then checks the bundle-size
-        docs in the README, <code>CLAUDE.md</code>, and the AI system prompt,
-        runs <code>size-limit</code>, and performs a pack smoke test.
+        docs in the README and <code>ai/reference.md</code>, runs <code>size-limit</code>,
+        and performs a pack smoke test.
       </p>
       <p>
         The pack smoke test is the one that catches the embarrassing release

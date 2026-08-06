@@ -69,7 +69,7 @@ const orgData = {
 // churn the network frame's pipeline config (functions never compare
 // shallow-equal), re-firing the hierarchy-ingest effect on each parent
 // re-render and compounding with the orbit's continuous animation frame
-// loop until React's max-update-depth guard trips. See CLAUDE.md
+// loop until React's max-update-depth guard trips. See ai/reference.md
 // "Performance": memoize function accessors.
 const solarRevolution = (n) => 1 / (n.depth + 1)
 const solarNodeRadius = (n) => (n.depth === 0 ? 16 : n.data?.children ? 8 : 4)

@@ -645,7 +645,7 @@ describe("LineChart — x-band / x-threshold SSR", () => {
  * to honor them would make the static SVG diverge from the canvas instead of
  * matching it.
  *
- * CLAUDE.md's contract: these "apply to any shape the chart draws", resolved
+ * The AI reference contract: these "apply to any shape the chart draws", resolved
  * last so they beat `frameProps.*Style`, the HOC base, and the theme. Every
  * shape-drawing HOC implements that with `mergeShapeStyle`; a server
  * `ChartConfig.buildProps` that builds its style function *without* the same
