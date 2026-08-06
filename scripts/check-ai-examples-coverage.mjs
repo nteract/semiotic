@@ -18,8 +18,8 @@
  *      a starting point for the new chart.
  *
  * The companion checks are: `check:ai-contracts` (regenerates rule
- * sections in CLAUDE.md / llms-full.txt / system-prompt.md);
- * `check:claude-md-coverage` (mentions-of-each-chart in CLAUDE.md);
+ * sections in ai/reference.md / llms-full.txt / system-prompt.md);
+ * `check:ai-reference-coverage` (mentions of each chart in ai/reference.md);
  * `check:chart-specs` (registry round-trip). This file fills the only
  * remaining gap: the hand-curated example reference.
  *

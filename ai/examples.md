@@ -1,6 +1,9 @@
 # Semiotic Examples
 
-Copy-paste-ready examples for every data shape.
+Copy-paste-ready examples for every data shape. This is an on-demand catalog:
+search for the relevant component or task and load that section rather than the
+whole file. Verify the current component schema before using an example because
+the schema is authoritative when prose drifts.
 
 ---
 
@@ -9,7 +12,7 @@ Copy-paste-ready examples for every data shape.
 ### LineChart (single line)
 
 ```jsx
-import { LineChart } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
 
 const data = [
   { month: "Jan", revenue: 4200 },
@@ -34,7 +37,7 @@ Key props: `xAccessor`, `yAccessor`, `curve`, `showPoints`, `fillArea`
 ### LineChart (multi-line)
 
 ```jsx
-import { LineChart } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
 
 const data = [
   { quarter: 1, sales: 120, region: "East" },
@@ -64,7 +67,7 @@ instead of forcing the value through a single field name. This is especially
 useful for multi-line data with a different metric per series.
 
 ```jsx
-import { LineChart } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
 
 const data = [
   { timestamp: 1, metricLabel: "valueA", valueA: 12, valueB: 60 },
@@ -88,7 +91,7 @@ for a direct lookup; use a function for a computed or dynamic value.
 ### Scatterplot
 
 ```jsx
-import { Scatterplot } from "semiotic/ai"
+import { Scatterplot } from "semiotic/xy"
 
 const data = [
   { sepalLength: 5.1, petalLength: 1.4, species: "setosa" },
@@ -113,7 +116,7 @@ Key props: `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
 ### Heatmap
 
 ```jsx
-import { Heatmap } from "semiotic/ai"
+import { Heatmap } from "semiotic/xy"
 
 const data = [
   { day: "Mon", hour: "9am", count: 12 },
@@ -142,7 +145,7 @@ Key props: `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `
 ### Heatmap with Gradient Legend
 
 ```jsx
-import { Heatmap } from "semiotic/ai"
+import { Heatmap } from "semiotic/xy"
 
 <Heatmap
   data={data}
@@ -160,7 +163,7 @@ Key props: `showLegend` enables gradient legend, `legendPosition` ("right"|"left
 ### AreaChart
 
 ```jsx
-import { AreaChart } from "semiotic/ai"
+import { AreaChart } from "semiotic/xy"
 
 const data = [
   { month: 1, revenue: 4200 },
@@ -193,7 +196,7 @@ Key props: `areaBy` (group into multiple areas), `y0Accessor` (band/ribbon), `gr
 **IMPORTANT**: `showLine` on AreaChart only draws the TOP edge of the area (the `yAccessor` line). To render a separate main line (e.g., p50 median), you must layer two charts.
 
 ```jsx
-import { AreaChart, LineChart } from "semiotic/ai"
+import { AreaChart, LineChart } from "semiotic/xy"
 
 const data = [
   { x: 0, p5: 10, p50: 25, p95: 45 },
@@ -240,7 +243,7 @@ Key props: `y0Accessor` defines band bottom, `yAccessor` defines band top, `show
 ### DifferenceChart
 
 ```jsx
-import { DifferenceChart } from "semiotic/ai"
+import { DifferenceChart } from "semiotic/xy"
 
 const tempData = [
   { month: 1,  actual: 38, normal: 32 },
@@ -276,7 +279,7 @@ Key props: `seriesALabel` / `seriesBLabel` (legend + tooltip), `seriesAColor` / 
 ### BumpChart
 
 ```jsx
-import { BumpChart } from "semiotic/ai"
+import { BumpChart } from "semiotic/xy"
 
 const data = [
   { quarter: "Q1", team: "North", sales: 420 },
@@ -308,7 +311,7 @@ Ranks every series within each x-column and connects each series' rank across co
 ### StackedAreaChart
 
 ```jsx
-import { StackedAreaChart } from "semiotic/ai"
+import { StackedAreaChart } from "semiotic/xy"
 
 // IMPORTANT: Use a flat array with an areaBy field for grouping.
 // Do NOT use lineBy or lineDataAccessor — those are LineChart props.
@@ -339,7 +342,7 @@ Key props: **`areaBy`** (required — groups flat data into stacked areas), `col
 ### ConnectedScatterplot
 
 ```jsx
-import { ConnectedScatterplot } from "semiotic/ai"
+import { ConnectedScatterplot } from "semiotic/xy"
 
 const data = [
   { year: 2018, unemployment: 3.9, inflation: 2.4 },
@@ -365,7 +368,7 @@ Key props: `orderAccessor` sequences points along the path, Viridis gradient fro
 ### TemporalHistogram
 
 ```jsx
-import { TemporalHistogram } from "semiotic/ai"
+import { TemporalHistogram } from "semiotic/realtime"
 
 // One row per event; the chart bins events into `binSize` time buckets.
 const events = [
@@ -396,7 +399,7 @@ Static-data sibling of `RealtimeHistogram` — accepts a bounded `data` array in
 ### BarChart
 
 ```jsx
-import { BarChart } from "semiotic/ai"
+import { BarChart } from "semiotic/ordinal"
 
 const data = [
   { region: "North", total: 4200 },
@@ -421,7 +424,7 @@ Key props: `categoryAccessor`, `valueAccessor`, `orientation`, `sort`
 ### StackedBarChart
 
 ```jsx
-import { StackedBarChart } from "semiotic/ai"
+import { StackedBarChart } from "semiotic/ordinal"
 
 const data = [
   { question: "Q1", response: "Agree", count: 45 },
@@ -449,7 +452,7 @@ Key props: **`stackBy`** (required), `normalize` for 100% stacked bars
 ### GroupedBarChart
 
 ```jsx
-import { GroupedBarChart } from "semiotic/ai"
+import { GroupedBarChart } from "semiotic/ordinal"
 
 const data = [
   { year: "2022", product: "Widget", revenue: 120 },
@@ -474,7 +477,7 @@ Key props: **`groupBy`** (required), side-by-side bars within each category
 ### Histogram
 
 ```jsx
-import { Histogram } from "semiotic/ai"
+import { Histogram } from "semiotic/ordinal"
 
 const data = [
   { category: "Group A", value: 12 },
@@ -504,7 +507,7 @@ Key props: `bins` (default 25), `relative` (normalize per-category)
 ### ViolinPlot
 
 ```jsx
-import { ViolinPlot } from "semiotic/ai"
+import { ViolinPlot } from "semiotic/ordinal"
 
 const data = [
   { department: "Engineering", salary: 95000 },
@@ -537,7 +540,7 @@ Key props: `bins`, `curve` (default "catmullRom"), `showIQR` (default true)
 ### TreeDiagram
 
 ```jsx
-import { TreeDiagram } from "semiotic/ai"
+import { TreeDiagram } from "semiotic/network"
 
 const orgChart = {
   name: "CEO",
@@ -573,7 +576,7 @@ Key props: `data` is a single root object, `childrenAccessor`, `layout`, `orient
 ### Treemap
 
 ```jsx
-import { Treemap } from "semiotic/ai"
+import { Treemap } from "semiotic/network"
 
 const diskUsage = {
   name: "root",
@@ -611,7 +614,7 @@ Key props: `valueAccessor` controls rectangle size, `colorByDepth`
 ### CirclePack
 
 ```jsx
-import { CirclePack } from "semiotic/ai"
+import { CirclePack } from "semiotic/network"
 
 const taxonomy = {
   name: "Life",
@@ -650,7 +653,7 @@ Key props: `valueAccessor` controls circle size, nested circles for hierarchy
 ### OrbitDiagram
 
 ```jsx
-import { OrbitDiagram } from "semiotic/ai"
+import { OrbitDiagram } from "semiotic/network"
 
 const pipeline = {
   name: "ML Pipeline",
@@ -701,7 +704,7 @@ Key props: `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`, 
 ### ForceDirectedGraph
 
 ```jsx
-import { ForceDirectedGraph } from "semiotic/ai"
+import { ForceDirectedGraph } from "semiotic/network"
 
 const nodes = [
   { id: "Alice", team: "Engineering", influence: 10 },
@@ -741,7 +744,7 @@ Key props: **`nodes`** and **`edges`** (both required), `nodeIDAccessor` (defaul
 
 ```jsx
 import { useState } from "react"
-import { ForceDirectedGraph } from "semiotic/ai"
+import { ForceDirectedGraph } from "semiotic/network"
 
 const [selected, setSelected] = useState(null)
 
@@ -773,7 +776,7 @@ Key props: `frameProps` passes through to the underlying `StreamNetworkFrame` fo
 ### SankeyDiagram
 
 ```jsx
-import { SankeyDiagram } from "semiotic/ai"
+import { SankeyDiagram } from "semiotic/network"
 
 const edges = [
   { source: "Salary", target: "Budget", value: 5000 },
@@ -797,7 +800,7 @@ Key props: **`edges`** (required, nodes inferred), `valueAccessor` controls band
 ### ProcessSankey
 
 ```jsx
-import { ProcessSankey } from "semiotic/ai"
+import { ProcessSankey } from "semiotic/network"
 
 const nodes = [
   { id: "Alice", category: "Person", xExtent: ["2026-01-06", "2026-01-06"] },
@@ -829,7 +832,7 @@ Key props: **`edges`** with `startTime`/`endTime`, **`domain`** (required `[t0, 
 ### ChordDiagram
 
 ```jsx
-import { ChordDiagram } from "semiotic/ai"
+import { ChordDiagram } from "semiotic/network"
 
 const edges = [
   { source: "US", target: "EU", value: 500 },
@@ -885,7 +888,7 @@ the initial or newly arrived rows from an effect. Formatter callbacks such as
 
 ```jsx
 import { useRef, useEffect } from "react"
-import { RealtimeLineChart } from "semiotic/ai"
+import { RealtimeLineChart } from "semiotic/realtime"
 
 const chartRef = useRef()
 
@@ -913,7 +916,7 @@ Key props: `timeAccessor`, `valueAccessor`, `windowSize`, `stroke`, `strokeWidth
 
 ```jsx
 import { useRef, useEffect } from "react"
-import { RealtimeHistogram } from "semiotic/ai"
+import { RealtimeHistogram } from "semiotic/realtime"
 
 const chartRef = useRef()
 
@@ -943,7 +946,7 @@ Key props: **`binSize`** (required), `timeAccessor` ("time"), `valueAccessor` ("
 
 ```jsx
 import { useRef, useEffect } from "react"
-import { RealtimeHeatmap } from "semiotic/ai"
+import { RealtimeHeatmap } from "semiotic/realtime"
 
 const chartRef = useRef()
 
@@ -976,7 +979,7 @@ Use `StreamNetworkFrame` only when you need low-level control that HOC charts do
 
 ```jsx
 import { useRef, useEffect } from "react"
-import { StreamNetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic/network"
 
 const chartRef = useRef()
 
@@ -1079,8 +1082,8 @@ Key: `renderToStaticSVG(frameType, props)` where frameType is `"xy"` | `"ordinal
 
 ```jsx
 import { useRef } from "react"
-import { Scatterplot } from "semiotic/ai"
-import { exportChart } from "semiotic"
+import { Scatterplot } from "semiotic/xy"
+import { exportChart } from "semiotic/utils"
 
 const containerRef = useRef<HTMLDivElement>(null)
 
@@ -1129,7 +1132,8 @@ Key: `exportChart(wrapperDiv, { format, filename, scale, background })`. It quer
 ### ThemeProvider (React context)
 
 ```jsx
-import { ThemeProvider, DARK_THEME, COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
+import { ThemeProvider } from "semiotic/themes/react"
+import { DARK_THEME, COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic/themes"
 
 // Preset dark theme
 <ThemeProvider theme="dark">
@@ -1195,7 +1199,7 @@ import { ThemeProvider, DARK_THEME, COLOR_BLIND_SAFE_CATEGORICAL } from "semioti
 ### onClick on BarChart
 
 ```jsx
-import { BarChart } from "semiotic/ai"
+import { BarChart } from "semiotic/ordinal"
 
 <BarChart
   data={salesData}
@@ -1217,7 +1221,8 @@ Key props: `onClick` receives the original datum and pixel coordinates. Works on
 ### Synced crosshair across time-series charts
 
 ```jsx
-import { LineChart, LinkedCharts } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
+import { LinkedCharts } from "semiotic/ai"
 
 <LinkedCharts>
   <LineChart
@@ -1244,7 +1249,7 @@ Key props: `linkedHover` with `mode: "x-position"` broadcasts the hovered X valu
 ### Truncated category labels
 
 ```jsx
-import { BarChart } from "semiotic/ai"
+import { BarChart } from "semiotic/ordinal"
 
 <BarChart
   data={data}
@@ -1264,7 +1269,7 @@ Key props: `categoryFormat` receives each tick label and returns a formatted str
 ### Threshold + category highlight on BarChart
 
 ```jsx
-import { BarChart } from "semiotic/ai"
+import { BarChart } from "semiotic/ordinal"
 
 <BarChart
   data={quarterlyData}

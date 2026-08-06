@@ -36,12 +36,12 @@ export default function CliMcpPage() {
 
       <h2 id="semiotic-ai">semiotic-ai (CLI)</h2>
       <p>
-        Run with no flags to print the full <code>CLAUDE.md</code> reference — the same guide the
+        Run with no flags to print the full <code>ai/reference.md</code> guide — the same reference the
         library author keeps in sync with the API. Add a flag to narrow the output. Flags that
         validate read JSON from <code>stdin</code>.
       </p>
 
-      <CodeBlock language="bash">{`# Full AI reference (CLAUDE.md) to stdout
+      <CodeBlock language="bash">{`# Full AI reference (ai/reference.md) to stdout
 npx semiotic-ai
 
 # List components, categories, import paths, and renderability

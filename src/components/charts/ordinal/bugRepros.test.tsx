@@ -137,16 +137,16 @@ describe("BR-3: Histogram shared bins", () => {
 // ── BR-5: RidgelinePlot amplitude docs ──────────────────────────────────
 
 describe("BR-5: RidgelinePlot amplitude documentation", () => {
-  it("amplitude is documented in CLAUDE.md", async () => {
+  it("amplitude is documented in the AI reference", async () => {
     const fs = await import("fs")
     const path = await import("path")
     // Resolve from project root (vitest cwd)
-    const claude = fs.readFileSync(
-      path.resolve(process.cwd(), "CLAUDE.md"),
+    const reference = fs.readFileSync(
+      path.resolve(process.cwd(), "ai/reference.md"),
       "utf-8"
     )
-    // RidgelinePlot should be mentioned in CLAUDE.md with amplitude info
-    expect(claude).toContain("RidgelinePlot")
-    expect(claude).toContain("amplitude")
+    // RidgelinePlot should be mentioned in the AI reference with amplitude info
+    expect(reference).toContain("RidgelinePlot")
+    expect(reference).toContain("amplitude")
   })
 })

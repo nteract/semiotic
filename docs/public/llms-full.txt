@@ -1,4 +1,10 @@
-# Semiotic — AI Assistant Guide
+# Semiotic — Complete AI Reference
+
+This is an on-demand encyclopedia, not a system prompt. Start with
+`ai/system-prompt.md` and the exact component schema, search this file for the
+relevant chart or behavior, and load only that section. Validate generated
+configurations with `prepareChart`, `npx semiotic-ai --doctor`, or the MCP
+diagnostic tools; when possible, confirm a non-empty render with evidence.
 
 ## Quick Start
 - Install: `npm install semiotic`

@@ -33927,7 +33927,7 @@ ${list.join(", ")}
 
 Components marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.
 
-For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.
+For compact guidance, read semiotic://system-prompt and semiotic://behavior-contracts. Retrieve semiotic://examples only when a nearby working pattern is needed; the complete schema and surface manifest are discovery/debugging resources, not default context.
 
 All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.
 
@@ -34936,7 +34936,7 @@ function createServer2(profile = "developer", options = {}) {
     "semiotic://examples",
     {
       title: "Semiotic AI Examples",
-      description: "Copy-paste examples for common Semiotic chart data shapes.",
+      description: "On-demand copy-paste examples for common Semiotic chart data shapes.",
       mimeType: "text/markdown"
     },
     (uri) => textResource(uri, "text/markdown", readAIFile("examples.md"))
@@ -34987,8 +34987,8 @@ function createServer2(profile = "developer", options = {}) {
       "4. Call getSchema for the selected component before writing JSX or renderChart props.",
       '5. Call diagnoseConfig with usageMode="static" for renderChart/static data, or usageMode="push" for ref-based React code that intentionally omits data.',
       "6. Fix all diagnoseConfig errors before presenting code.",
-      "7. If the component is renderable and has static data, call renderChart once to verify it returns SVG.",
-      "8. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "7. If the component is renderable and has static data, call renderChart and verify its render evidence is non-empty and accessible.",
+      "8. Use the chart family's sub-path in production code (for example semiotic/xy); import generation helpers from semiotic/ai or semiotic/ai/core.",
       "",
       "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation."
     ].join("\n"))
@@ -35017,7 +35017,7 @@ function createServer2(profile = "developer", options = {}) {
       '3. Call diagnoseConfig with usageMode="push" if the code intentionally omits data for a ref-push HOC; otherwise use usageMode="static".',
       "4. Treat diagnoseConfig errors as blockers and warnings as review items.",
       "5. If renderable and static data is available, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
-      "6. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "6. If schema and diagnostics are insufficient, check the relevant section of semiotic://examples for a nearby working pattern before inventing props.",
       "7. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
       "",
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step."

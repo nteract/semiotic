@@ -46,7 +46,7 @@ lines.push("")
 
 // Display labels for category headings. Plain capitalization
 // (`xy → Xy`) is wrong for the family acronyms — keep the surface
-// consistent with how the docs and CLAUDE.md refer to them.
+// consistent with how the docs and full AI reference describe them.
 const CATEGORY_DISPLAY_LABEL = {
   xy: "XY",
   ordinal: "Ordinal",

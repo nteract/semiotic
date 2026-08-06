@@ -14,6 +14,14 @@ The cardinal rule: **do not hand-write chart JSX and hope it paints.** Emit a
 `{ component, props }` proposal and run it through the trust loop, which is
 validated and diagnosed; when a renderer is available, proven to paint. Otherwise it returns reasons and ranked alternatives to retry with.
 
+## Context discipline
+
+Start with the task and the exact component schema. Use the MCP `getSchema` tool
+or `npx semiotic-ai --schema <Component>`, then read one nearby example if
+needed. Do not load the full reference, schema, or example catalog by default;
+retrieve broader context only when validation or diagnosis shows that it is
+necessary.
+
 ## The trust loop — generate → validate → diagnose → repair → prove
 
 `prepareChart` (from `semiotic/ai`) composes the whole loop. Call it on every

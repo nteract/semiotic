@@ -24,7 +24,7 @@ const {
 } = require("./behaviorContracts.cjs")
 
 const FILES = {
-  default: path.join(pkgRoot, "CLAUDE.md"),
+  default: path.join(pkgRoot, "ai", "reference.md"),
   "--schema": path.join(__dirname, "schema.json"),
   "--compact": path.join(__dirname, "system-prompt.md"),
   "--examples": path.join(__dirname, "examples.md"),
@@ -39,7 +39,7 @@ const HELP = `
 semiotic-ai — Dump Semiotic AI context to stdout
 
 Usage:
-  npx semiotic-ai              Print CLAUDE.md (full reference)
+  npx semiotic-ai              Print ai/reference.md (full reference)
   npx semiotic-ai --list        List components, categories, imports, and renderability
   npx semiotic-ai --list --json Print component index as JSON
   npx semiotic-ai --schema     Print ai/schema.json (all tool definitions)
