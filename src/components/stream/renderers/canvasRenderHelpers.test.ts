@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
   resolveCurveFactory,
   resolveCanvasFill,
+  resolveCanvasPaint,
   buildLinearFillGradient,
   paintNetworkFill,
   paintNetworkStroke,
@@ -53,6 +54,22 @@ describe("canvasRenderHelpers", () => {
       // engages on a falsy result, not on a "still unresolved" string.
       expect(resolveCanvasFill(ctx, "var(--missing, #abcdef)", "#fallback")).toBe("#abcdef")
       expect(resolveCanvasFill(ctx, "var(--missing)", "#fallback")).toBe("var(--missing)")
+    })
+  })
+
+  describe("resolveCanvasPaint", () => {
+    it("uses the caller fallback for an unresolved CSS variable", () => {
+      expect(resolveCanvasPaint(ctx, "var(--missing)", "#fallback")).toBe(
+        "#fallback"
+      )
+    })
+
+    it("resolves inline CSS fallbacks and preserves CanvasPattern values", () => {
+      expect(
+        resolveCanvasPaint(ctx, "var(--missing, #abcdef)", "#fallback")
+      ).toBe("#abcdef")
+      const pattern = {} as CanvasPattern
+      expect(resolveCanvasPaint(ctx, pattern, "#fallback")).toBe(pattern)
     })
   })
 

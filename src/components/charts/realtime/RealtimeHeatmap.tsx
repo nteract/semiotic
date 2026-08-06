@@ -26,6 +26,7 @@ import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
 
 export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -102,8 +103,8 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   pulse?: PulseConfig
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
-  /** Custom tooltip renderer (alias for tooltipContent) */
-  tooltip?: (d: HoverData) => ReactNode
+  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
+  tooltip?: TooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -226,8 +227,10 @@ export const RealtimeHeatmap = forwardRef(
     // xCenter, yCenter, agg}`. The heatmap-specific helper reads the
     // enriched bin-center coords + aggregation type so users see real
     // data-space values and the cell's count/sum/mean.
-    const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildHeatmapTooltip({ timeAccessor, valueAccessor })
+    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+      tooltip,
+      defaultTooltipContent: buildHeatmapTooltip({ timeAccessor, valueAccessor }),
+    }).tooltipContent
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

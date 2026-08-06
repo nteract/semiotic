@@ -5,6 +5,7 @@ import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
   "living-ledger": MiniLivingLedgerPreview,
+  "last-scarcity": MiniLastScarcityPreview,
   "ukraine-war-history": MiniUkraineWarHistoryPreview,
   "insight-forge": MiniInsightForgePreview,
   "analyst-adventure": MiniAnalystAdventurePreview,
@@ -219,6 +220,79 @@ function MiniLivingLedgerPreview() {
       <text x="15" y="24" fill="#75a79d" fontSize="5.5" letterSpacing="0.7">
         SERVICE WEATHER / EVIDENCE / THRESHOLDS
       </text>
+    </svg>
+  )
+}
+
+function MiniLastScarcityPreview() {
+  const rooms = [
+    { x: 119, y: 19, width: 30, height: 21, fill: "#e7efe8" },
+    { x: 151, y: 19, width: 29, height: 21, fill: "#f2e8df" },
+    { x: 182, y: 19, width: 43, height: 21, fill: "#eee6ed" },
+    { x: 119, y: 42, width: 42, height: 24, fill: "#edf0df" },
+    { x: 163, y: 42, width: 30, height: 24, fill: "#f3e2e1" },
+    { x: 195, y: 42, width: 30, height: 24, fill: "#e4ebef" },
+    { x: 135, y: 68, width: 42, height: 16, fill: "#e1ede4" },
+    { x: 179, y: 68, width: 46, height: 16, fill: "#e8edf0" },
+  ]
+
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#fbfaf5" />
+      <path d="M7 88V9h228v79" fill="none" stroke="#bda36b" strokeWidth="0.8" />
+      <path d="M11 84V13h220v71" fill="none" stroke="#d7c9a8" strokeWidth="0.45" />
+
+      <g fill="none" stroke="#78927b" strokeLinecap="round">
+        <path d="M8 76c14-2 14-16 9-23-4-6-2-16 8-18 10-3 14 7 9 13-5 7-14 2-11-5" strokeWidth="1.05" />
+        <path d="M234 76c-14-2-14-16-9-23 4-6 2-16-8-18-10-3-14 7-9 13 5 7 14 2 11-5" strokeWidth="1.05" />
+        <path d="M17 55c8 1 12 5 13 12M225 55c-8 1-12 5-13 12" strokeWidth="0.7" />
+      </g>
+      <g fill="#a9bda8" stroke="#78927b" strokeWidth="0.45">
+        <path d="M16 52c-7-1-9-6-7-10 6 0 9 4 7 10Z" />
+        <path d="M27 62c-7 0-10 4-9 9 6 1 10-3 9-9Z" />
+        <path d="M226 52c7-1 9-6 7-10-6 0-9 4-7 10Z" />
+        <path d="M215 62c7 0 10 4 9 9-6 1-10-3-9-9Z" />
+      </g>
+
+      <g>
+        <text x="18" y="20" fill="#405e50" fontSize="5.2" fontWeight="800" letterSpacing="0.7">THE GOOD FUTURE</text>
+        <path d="M26 30H92V68H107" fill="none" stroke="#6e8775" strokeWidth="1.15" />
+        <path d="M26 30V68M48 30V68M70 30V68M92 30V68" stroke="#c7d3c5" strokeWidth="0.55" />
+        {[26, 48, 70, 92].map((x, index) => (
+          <g key={x}>
+            <circle cx={x} cy={index % 2 ? 49 : 39} r="5.2" fill="#fffef9" stroke="#5d7968" strokeWidth="1" />
+            <circle cx={x} cy={index % 2 ? 49 : 39} r="1.45" fill={index === 3 ? "#a45e61" : "#78927b"} />
+          </g>
+        ))}
+        <path d="M95 68c8 0 7-13 14-13" fill="none" stroke="#a45e61" strokeWidth="1.2" strokeDasharray="2 2" />
+        <circle cx="108" cy="55" r="2.7" fill="#a45e61" />
+      </g>
+
+      <g>
+        <path d="M114 15h116v73H114Z" fill="#fffef9" stroke="#8c7b57" strokeWidth="0.8" />
+        {rooms.map((room, index) => (
+          <rect
+            key={index}
+            x={room.x}
+            y={room.y}
+            width={room.width}
+            height={room.height}
+            rx="1.5"
+            fill={room.fill}
+            stroke="#66766c"
+            strokeWidth="0.65"
+          />
+        ))}
+        <path d="M134 29c18 1 22 19 43 25s20-14 31-23M140 54c15-18 32-22 57-20M153 75c13-10 27-11 48 0" fill="none" stroke="#9a5c69" strokeWidth="1" />
+        <path d="M134 29c19 17 39 22 76 26M143 76c16-25 38-36 66-46" fill="none" stroke="#aa8b4d" strokeWidth="0.8" strokeDasharray="3 2" />
+        <circle cx="134" cy="29" r="2" fill="#55776a" />
+        <circle cx="177" cy="54" r="2" fill="#9a5c69" />
+        <circle cx="208" cy="30" r="2" fill="#aa8b4d" />
+        <circle cx="202" cy="76" r="2" fill="#506c78" />
+      </g>
+
+      <text x="18" y="88" fill="#2f473c" fontSize="7.2" fontWeight="900" letterSpacing="1">THE LAST SCARCITY</text>
+      <text x="229" y="92" textAnchor="end" fill="#8a7050" fontSize="4.7" fontWeight="700" letterSpacing="0.55">THE PALACE OF ABUNDANCE</text>
     </svg>
   )
 }

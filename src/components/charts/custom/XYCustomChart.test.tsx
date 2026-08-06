@@ -19,6 +19,8 @@ let lastXYFrameProps: {
   summary?: unknown
   accessibleTable?: unknown
   animate?: unknown
+  tooltipContent?: (datum: Record<string, unknown>) => React.ReactNode
+  tooltipMode?: "single" | "multi"
   customHoverBehavior?: (datum: Record<string, unknown> | null) => void
   layoutSelection?: {
     isActive: boolean
@@ -112,6 +114,62 @@ describe("XYCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastXYFrameProps?.colorAccessor).toBe("category")
+  })
+
+  it("normalizes false, config, and custom tooltip props before forwarding", () => {
+    const { rerender } = render(
+      <TooltipProvider>
+        <XYCustomChart data={[{ value: 1 }]} layout={trivialLayout} tooltip={false} />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps?.tooltipContent?.({ data: { value: 1 } })).toBeNull()
+
+    rerender(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ value: 1, label: "Configured" }]}
+          layout={trivialLayout}
+          tooltip={{ title: "label", fields: ["value"] }}
+        />
+      </TooltipProvider>
+    )
+    const configured = render(<>{lastXYFrameProps?.tooltipContent?.({
+      __semioticHoverData: true,
+      data: { value: 1, label: "Configured" },
+    })}</>)
+    expect(configured.container.textContent).toContain("Configured")
+    expect(configured.container.textContent).toContain("1")
+
+    rerender(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ value: 1, label: "Custom" }]}
+          layout={trivialLayout}
+          tooltip={datum => <div>{String(datum.label)}</div>}
+        />
+      </TooltipProvider>
+    )
+    const custom = render(<>{lastXYFrameProps?.tooltipContent?.({
+      __semioticHoverData: true,
+      data: { value: 1, label: "Custom" },
+    })}</>)
+    expect(custom.container.textContent).toBe("Custom")
+    expect(custom.container.querySelector(".semiotic-tooltip")).toBeTruthy()
+  })
+
+  it("forwards multi mode for custom line and area layouts", () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ x: 1, y: 2 }]}
+          layout={trivialLayout}
+          tooltip={{ mode: "multi" }}
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastXYFrameProps?.tooltipMode).toBe("multi")
+    expect(lastXYFrameProps?.tooltipContent).toBeTypeOf("function")
   })
 
   it("composes top-level and frame categorical legends with inferred categories", () => {

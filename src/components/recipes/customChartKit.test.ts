@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, expectTypeOf } from "vitest"
 import { runs, runLengthEncode } from "./runs"
 import { wrapValue, shortestArcDelta, cyclicRangeContains, selectCyclicRange } from "./cyclical"
 import { packIntervals, activeCountOverDomain } from "./intervals"
@@ -22,7 +22,13 @@ import {
 import { rectCollide, axisFixedForcePositions } from "./axisFixedForce"
 import { unwrapDatum, clamp, mean, withAlpha } from "./recipeUtils"
 import { allocateCells } from "./waffle"
-import { hitTargetPoint, hitTargetRect, networkHitTarget, geoAreaHitTarget } from "../stream/hitTarget"
+import {
+  geoAreaHitTarget,
+  hitTargetPoint,
+  hitTargetRect,
+  networkEdgeHitTarget,
+  networkHitTarget,
+} from "../stream/hitTarget"
 import { linearAxis, hatchFill } from "./recipeChrome"
 import { legendSwatches } from "./recipeLegend"
 
@@ -283,6 +289,49 @@ describe("allocateCells", () => {
     expect(allocateCells([{ key: "a", weight: 5 }], 0).every((g) => g.cells === 0)).toBe(true)
     expect(allocateCells([{ key: "a", weight: 0 }], 10).every((g) => g.cells === 0)).toBe(true)
   })
+
+  it("preserves additional datum fields in values and inferred result types", () => {
+    const out = allocateCells(
+      [{ key: "a", weight: 1, label: "Alpha" as const, source: { id: 42 } }],
+      4,
+    )
+
+    expect(out[0]).toMatchObject({ label: "Alpha", source: { id: 42 }, cells: 4 })
+    expectTypeOf(out[0].label).toEqualTypeOf<"Alpha">()
+    expectTypeOf(out[0].source).toEqualTypeOf<{ id: number }>()
+  })
+
+  it("never allocates cells to zero weights and degrades impossible minimums", () => {
+    const out = allocateCells(
+      [
+        { key: "a", weight: 5 },
+        { key: "b", weight: 4 },
+        { key: "c", weight: 3 },
+        { key: "zero", weight: 0 },
+      ],
+      2,
+      { minPerCategory: 1 },
+    )
+
+    expect(out.reduce((sum, group) => sum + group.cells, 0)).toBe(2)
+    expect(out.find((group) => group.key === "zero")?.cells).toBe(0)
+  })
+
+  it("sanitizes fractional, negative, and non-finite allocation inputs", () => {
+    const out = allocateCells(
+      [
+        { key: "valid", weight: 1 },
+        { key: "negative", weight: -1 },
+        { key: "nan", weight: Number.NaN },
+      ],
+      3.9,
+      { minPerCategory: 1 },
+    )
+
+    expect(out.map((group) => group.cells)).toEqual([3, 0, 0])
+    expect(out.map((group) => group.exact)).toEqual([3, 0, 0])
+    expect(allocateCells([{ key: "a", weight: 1 }], Number.POSITIVE_INFINITY)[0].cells).toBe(0)
+  })
 })
 
 describe("rectCollide", () => {
@@ -385,10 +434,65 @@ describe("hitTarget helpers", () => {
   })
 
   it("networkHitTarget picks circle vs rect by shape", () => {
-    const circle = networkHitTarget({ x: 0, y: 0, datum: {}, id: "c", r: 12 })
-    expect(circle).toMatchObject({ type: "circle", cx: 0, cy: 0, r: 12, id: "c" })
+    const circle = networkHitTarget({
+      x: 0,
+      y: 0,
+      datum: {},
+      id: "c",
+      r: 12,
+      accessibleDatum: { Name: "Circle" },
+      accessibility: { tableFields: { Name: "Curated circle" } },
+    })
+    expect(circle).toMatchObject({
+      type: "circle",
+      cx: 0,
+      cy: 0,
+      r: 12,
+      id: "c",
+      accessibleDatum: { Name: "Circle" },
+      accessibility: { tableFields: { Name: "Curated circle" } },
+    })
     const rect = networkHitTarget({ x: 1, y: 2, width: 8, height: 6, datum: {}, id: "r" })
     expect(rect).toMatchObject({ type: "rect", x: 1, y: 2, w: 8, h: 6, id: "r" })
+  })
+
+  it("networkEdgeHitTarget emits semantic pointer or table-only edges", () => {
+    const line = networkEdgeHitTarget({
+      x1: 0,
+      y1: 1,
+      x2: 10,
+      y2: 11,
+      datum: { source: "a", target: "b" },
+      id: 42,
+      label: "A to B",
+      accessibility: { tableFields: { Relationship: "supports" } },
+      interactive: false,
+    })
+    expect(line).toMatchObject({
+      type: "line",
+      x1: 0,
+      y1: 1,
+      x2: 10,
+      y2: 11,
+      id: "42",
+      label: "A to B",
+      accessibility: { tableFields: { Relationship: "supports" } },
+      interactive: false,
+    })
+    expect(line.style.opacity).toBe(0)
+
+    const path = networkEdgeHitTarget({
+      pathD: "M0,0 C5,0 5,10 10,10",
+      datum: { source: "a", target: "b" },
+      accessibleDatum: { Relationship: "curved support" },
+    })
+    expect(path).toMatchObject({
+      type: "curved",
+      pathD: "M0,0 C5,0 5,10 10,10",
+      accessibleDatum: { Relationship: "curved support" },
+      interactive: true,
+    })
+    expect(path.style.opacity).toBe(0)
   })
 
   it("geoAreaHitTarget emits a transparent interactive geoarea node", () => {

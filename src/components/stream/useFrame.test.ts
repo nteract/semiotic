@@ -486,6 +486,29 @@ describe("useFrame — theme-change effect", () => {
     expect(rafCallbacks).toHaveLength(1)
   })
 
+  it("can skip a redundant mount invalidation while retaining theme-change repaint", () => {
+    const dirtyRef = { current: true } as React.MutableRefObject<boolean>
+    const { result } = renderHook(
+      () => ({
+        frame: useFrame({
+          ...DEFAULT_INPUT,
+          themeDirtyRef: dirtyRef,
+          skipInitialThemeInvalidation: true,
+        }),
+        setTheme: useThemeSelector(
+          (s: { setTheme: (t: "light" | "dark" | "high-contrast") => void }) => s.setTheme,
+        ),
+      }),
+      { wrapper },
+    )
+
+    expect(rafCallbacks).toHaveLength(0)
+    dirtyRef.current = false
+    act(() => result.current.setTheme("dark"))
+    expect(dirtyRef.current).toBe(true)
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
   it("preserves the frame's dirtyRef initial value when the ref already starts true", () => {
     // Ordinal/Network init dirtyRef to true; the theme effect should be
     // a no-op-with-respect-to-value (still true) rather than flipping it.

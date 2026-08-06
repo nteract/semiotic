@@ -31,6 +31,7 @@ let lastNetworkFrameProps: {
   summary?: unknown
   accessibleTable?: unknown
   animate?: unknown
+  tooltipContent?: (datum: Record<string, unknown>) => React.ReactNode
 } | null = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
@@ -131,6 +132,90 @@ describe("NetworkCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastNetworkFrameProps?.colorBy).toBe("group")
+  })
+
+  it.each([
+    ["omitted", undefined],
+    ["true", true],
+  ])("leaves the frame's default tooltip active when tooltip is %s", (_label, tooltip) => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart
+          nodes={nodes}
+          layout={trivialLayout}
+          tooltip={tooltip}
+        />
+      </TooltipProvider>
+    )
+
+    expect("tooltipContent" in (lastNetworkFrameProps ?? {})).toBe(false)
+  })
+
+  it("normalizes false, declarative, and custom tooltip props", () => {
+    const hover = {
+      __semioticHoverData: true,
+      nodeOrEdge: "node",
+      data: { id: "a", label: "Alpha", value: 3 },
+      x: 10,
+      y: 20,
+    }
+    const custom = vi.fn((datum: Record<string, unknown>) => (
+      <span>{String(datum.label)}</span>
+    ))
+    const { rerender } = render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} layout={trivialLayout} tooltip={false} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps?.tooltipContent?.(hover)).toBeNull()
+
+    rerender(
+      <TooltipProvider>
+        <NetworkCustomChart
+          nodes={nodes}
+          layout={trivialLayout}
+          tooltip={{ title: "label", fields: ["value"] }}
+        />
+      </TooltipProvider>
+    )
+    const configured = render(<>{lastNetworkFrameProps?.tooltipContent?.(hover)}</>)
+    expect(configured.container.textContent).toContain("Alpha")
+    expect(configured.container.textContent).toContain("3")
+
+    rerender(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} layout={trivialLayout} tooltip={custom} />
+      </TooltipProvider>
+    )
+    const customized = render(<>{lastNetworkFrameProps?.tooltipContent?.(hover)}</>)
+    expect(custom).toHaveBeenCalledWith(hover.data)
+    expect(customized.container.textContent).toBe("Alpha")
+    expect(customized.container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+  })
+
+  it.each([
+    ["string", "multi" as const],
+    ["object", { mode: "multi" as const }],
+  ])("degrades unsupported %s multi mode to useful single-datum content", (_label, tooltip) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      render(
+        <TooltipProvider>
+          <NetworkCustomChart nodes={nodes} layout={trivialLayout} tooltip={tooltip} />
+        </TooltipProvider>
+      )
+      const content = render(<>{lastNetworkFrameProps?.tooltipContent?.({
+        __semioticHoverData: true,
+        nodeOrEdge: "node",
+        data: { id: "a", label: "Alpha", value: 3 },
+        x: 10,
+        y: 20,
+      })}</>)
+      expect(content.container.textContent).toContain("Alpha")
+      expect(content.container.textContent).toContain("3")
+    } finally {
+      warn.mockRestore()
+    }
   })
 
   it("filters sparse rows out of nodes and edges", () => {

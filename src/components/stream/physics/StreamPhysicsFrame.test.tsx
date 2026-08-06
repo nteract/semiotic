@@ -17,6 +17,7 @@ import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "./StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "./PhysicsPipelineStore"
+import type { PhysicsCanvasPaintContext } from "./StreamPhysicsTypes"
 import { createPhysicsWorkerRuntime } from "./PhysicsWorkerRuntime"
 import type {
   PhysicsWorkerRequest,
@@ -340,7 +341,8 @@ describe("StreamPhysicsFrame", () => {
     const afterPaint = vi.fn(
       (
         ctx: CanvasRenderingContext2D,
-        bodies: Array<{ id: string; x: number; y: number }>
+        bodies: Array<{ id: string; x: number; y: number }>,
+        _paint: PhysicsCanvasPaintContext,
       ) => {
         ctx.strokeStyle = "#123456"
         ctx.beginPath()
@@ -354,7 +356,8 @@ describe("StreamPhysicsFrame", () => {
     const beforePaint = vi.fn(
       (
         ctx: CanvasRenderingContext2D,
-        bodies: Array<{ id: string; x: number; y: number }>
+        bodies: Array<{ id: string; x: number; y: number }>,
+        _paint: PhysicsCanvasPaintContext,
       ) => {
         ctx.strokeStyle = "#654321"
         for (const body of bodies) {
@@ -378,7 +381,12 @@ describe("StreamPhysicsFrame", () => {
     expect(renderBody).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ id: "custom-body" }),
-      expect.objectContaining({ fill: "#abcdef" })
+      expect.objectContaining({ fill: "#abcdef" }),
+      expect.objectContaining({
+        resolvePaint: expect.any(Function),
+        theme: expect.objectContaining({ background: expect.any(String) }),
+        withAlpha: expect.any(Function)
+      })
     )
     expect(afterPaint).toHaveBeenCalled()
     expect(afterPaint.mock.calls[0][1].map((body) => body.id)).toEqual([
@@ -387,6 +395,9 @@ describe("StreamPhysicsFrame", () => {
     expect(beforePaint.mock.calls[0][1].map((body) => body.id)).toEqual([
       "custom-body"
     ])
+    expect(beforePaint.mock.calls[0][2]).toEqual(
+      expect.objectContaining({ resolvePaint: expect.any(Function) })
+    )
   })
 
   it("keeps backgroundGraphics visible by skipping the canvas background fill", () => {
@@ -406,6 +417,9 @@ describe("StreamPhysicsFrame", () => {
       )
 
       expect(container.querySelector("[data-testid='physics-bg']")).not.toBeNull()
+      expect(
+        container.querySelector(".stream-frame-background__backdrop")
+      ).toBeNull()
       expect(cap.styles).toHaveLength(0)
     } finally {
       cap.restore()

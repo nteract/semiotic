@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useResponsiveSize } from "semiotic/utils"
 
 /**
  * Track a host element's width, clamped to a minimum, for full-bleed example
@@ -18,28 +18,12 @@ import { useEffect, useRef, useState } from "react"
  *   re-running on every resize pixel tick.
  */
 export default function useResponsiveWidth(minWidth, maxWidth = Infinity, options = {}) {
-  const ref = useRef(null)
-  const [width, setWidth] = useState(minWidth)
   const bucket = options?.bucket > 0 ? options.bucket : 0
-
-  useEffect(() => {
-    const host = ref.current
-    if (!host || typeof ResizeObserver === "undefined") return
-    const resolve = (raw) => {
-      const clamped = Math.max(minWidth, Math.min(maxWidth, Math.floor(raw)))
-      if (!bucket) return clamped
-      return Math.max(minWidth, Math.min(maxWidth, Math.round(clamped / bucket) * bucket))
-    }
-    const update = () =>
-      setWidth((prev) => {
-        const next = resolve(host.clientWidth)
-        return next === prev ? prev : next
-      })
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(host)
-    return () => observer.disconnect()
-  }, [minWidth, maxWidth, bucket])
-
+  const [ref, [width]] = useResponsiveSize(
+    [minWidth, 0],
+    true,
+    false,
+    { minWidth, maxWidth, widthStep: bucket },
+  )
   return [width, ref]
 }

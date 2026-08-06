@@ -581,7 +581,7 @@ export const CARBON_DARK: SemioticTheme = {
 // ── Named theme registry ──────────────────────────────────────────────────
 
 /** All named theme presets, keyed by slug. */
-export const THEME_PRESETS: Record<string, SemioticTheme> = {
+export const THEME_PRESETS = {
   light: LIGHT_THEME,
   dark: DARK_THEME,
   "high-contrast": HIGH_CONTRAST_THEME,
@@ -599,7 +599,7 @@ export const THEME_PRESETS: Record<string, SemioticTheme> = {
   "playful-dark": PLAYFUL_DARK,
   carbon: CARBON_LIGHT,
   "carbon-dark": CARBON_DARK,
-}
+} satisfies Record<string, SemioticTheme>
 
 /** All valid named theme strings for ThemeProvider. */
 export type ThemePresetName = keyof typeof THEME_PRESETS
@@ -609,14 +609,20 @@ export type ThemePresetName = keyof typeof THEME_PRESETS
  * Returns undefined if the name is not recognized.
  */
 export function resolveThemePreset(name: string): SemioticTheme | undefined {
-  return THEME_PRESETS[name]
+  return Object.prototype.hasOwnProperty.call(THEME_PRESETS, name)
+    ? (THEME_PRESETS as Record<string, SemioticTheme>)[name]
+    : undefined
 }
 
 // ── Serialization utilities ───────────────────────────────────────────────
 
 // themeToCSS/themeToTokens live in the React-free serialization module so the
 // preset data and its serializers can be tree-shaken independently.
-export { themeToCSS, themeToTokens } from "./store/themeSerialization"
+export {
+  themeToCSS,
+  themeToCSSVariables,
+  themeToTokens
+} from "./store/themeSerialization"
 
 // W3C Design Tokens → theme (the inverse of themeToTokens; imports a brand's
 // design-token file into a Semiotic theme).

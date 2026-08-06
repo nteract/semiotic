@@ -52,11 +52,15 @@ import { DetailsPanel } from "./DetailsPanel"
 // ── Tooltip utilities ──────────────────────────────────────────────────
 import {
   Tooltip,
+  TooltipRoot,
   MultiLineTooltip,
   MultiPointTooltip,
   normalizeTooltip,
+  resolveTooltipContent,
   resolveMultiCapableTooltip,
   isMultiTooltip,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
 } from "./Tooltip/Tooltip"
 
 // ── Data structures ────────────────────────────────────────────────────
@@ -158,11 +162,15 @@ export {
   DetailsPanel,
   // Tooltip
   Tooltip,
+  TooltipRoot,
   MultiLineTooltip,
   MultiPointTooltip,
   normalizeTooltip,
+  resolveTooltipContent,
   resolveMultiCapableTooltip,
   isMultiTooltip,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
   // Data structures
   RingBuffer,
   IncrementalExtent,
@@ -425,7 +433,7 @@ export type {
 export type { SemioticTheme } from "./ThemeProvider"
 export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeProvider"
 export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/ThemeStore"
-export { themeToCSS, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes"
+export { themeToCSS, themeToCSSVariables, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes"
 export type { ThemePresetName } from "./semiotic-themes"
 
 // ── Error boundary types ───────────────────────────────────────────────
@@ -537,6 +545,8 @@ export type {
   TooltipField,
   MultiLineTooltipConfig,
   MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
 } from "./Tooltip/Tooltip"
 
 // Smart default-tooltip field selection — reusable by custom-chart authors

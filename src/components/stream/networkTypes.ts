@@ -385,8 +385,20 @@ export interface NetworkGlyphNode {
   _pulseGlowRadius?: number
 }
 
+/**
+ * Semantic and interaction metadata shared by every network edge shape.
+ * Custom layouts can expose a curated accessible-table row without changing
+ * the render datum, and can opt decorative/table-only edges out of pointer
+ * hit testing with `interactive: false`.
+ */
+interface NetworkEdgeMetadata extends SceneAccessibilityMetadata {
+  id?: string
+  label?: string
+  interactive?: boolean
+}
+
 /** Line edge — used by force */
-export interface NetworkLineEdge {
+export interface NetworkLineEdge extends NetworkEdgeMetadata {
   type: "line"
   x1: number
   y1: number
@@ -399,13 +411,9 @@ export interface NetworkLineEdge {
 }
 
 /** Bezier band edge — used by sankey */
-export interface NetworkBezierEdge {
+export interface NetworkBezierEdge extends NetworkEdgeMetadata {
   type: "bezier"
   pathD: string
-  /** When false, the hit tester skips this edge. Used for
-   *  decorative scene-edges like ProcessSankey's gradient stubs —
-   *  they paint visually but shouldn't intercept hover. */
-  interactive?: boolean
   bezierCache?: BezierCache
   style: Style
   datum: SceneDatum
@@ -419,7 +427,7 @@ export interface NetworkBezierEdge {
 }
 
 /** Ribbon edge — used by chord */
-export interface NetworkRibbonEdge {
+export interface NetworkRibbonEdge extends NetworkEdgeMetadata {
   type: "ribbon"
   pathD: string
   style: Style
@@ -431,7 +439,7 @@ export interface NetworkRibbonEdge {
 }
 
 /** Curved edge — used by tree, cluster */
-export interface NetworkCurvedEdge {
+export interface NetworkCurvedEdge extends NetworkEdgeMetadata {
   type: "curved"
   pathD: string
   style: Style

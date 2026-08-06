@@ -1,16 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
+import { collectBrowserErrors } from "./helpers/browser"
 
 const ROUTE = "/examples/digital-humanities-thunderdome"
 const PAGE_TITLE = "Thunderdome Has Rounded Corners"
-
-function collectBrowserErrors(page: Page) {
-  const errors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text())
-  })
-  page.on("pageerror", (error) => errors.push(error.message))
-  return errors
-}
 
 async function settleDocument(page: Page) {
   await page.evaluate(
@@ -29,7 +21,7 @@ async function openExample(page: Page) {
     timeout: 60_000
   })
   await expect(
-    page.getByRole("region", { name: "Eight-round scrollytelling argument" })
+    page.getByRole("region", { name: "Eight chart sections" })
   ).toBeVisible()
   await settleDocument(page)
 }
@@ -68,8 +60,13 @@ async function expectActiveSvgMatchesHost(stage: Locator) {
         stage.locator(".thunderdome-stage__chart").evaluate((host) => {
           const svg = host.querySelector("svg")
           if (!svg) return Number.POSITIVE_INFINITY
+          const styles = getComputedStyle(host)
+          const horizontalPadding =
+            Number.parseFloat(styles.paddingLeft) +
+            Number.parseFloat(styles.paddingRight)
           return Math.abs(
-            host.getBoundingClientRect().width -
+            host.clientWidth -
+              horizontalPadding -
               svg.getBoundingClientRect().width
           )
         }),
@@ -90,18 +87,18 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await openExample(page)
 
     const arena = page.getByRole("region", {
-      name: "Eight-round scrollytelling argument"
+      name: "Eight chart sections"
     })
     await expect(arena).toHaveClass(/is-sticky/)
     await expect(arena.locator(".thunderdome-round")).toHaveCount(8)
     await expect(arena.locator(".thunderdome-stage")).toHaveCount(1)
 
     const stageColumn = arena.getByRole("complementary", {
-      name: "Active Semiotic view"
+      name: "Active chart"
     })
     const stage = stageColumn.locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "XYCustomChart"
+      "From punch cards to agents, 1949–2026"
     )
     await expect(stage.locator(".stream-xy-frame")).toHaveAttribute(
       "aria-label",
@@ -111,7 +108,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
 
     await scrollRoundIntoObserver(page, "03")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "LineChart"
+      "One author vs. multi-author published items"
     )
     await expect(stage.locator(".stream-xy-frame")).toHaveAttribute(
       "aria-label",
@@ -119,7 +116,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     )
     await expect(
       stage.getByRole("button", {
-        name: "Round 03: More names appear on the work."
+        name: "Section 03: More names on the byline"
       })
     ).toHaveAttribute("aria-current", "step")
     await expectActiveSvgMatchesHost(stage)
@@ -137,37 +134,37 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       Math.abs(stickyPosition.renderedTop - stickyPosition.top)
     ).toBeLessThanOrEqual(2)
 
-    await scrollRoundIntoObserver(page, "07")
-    await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "ForceDirectedGraph"
+    const mediaRound = await scrollRoundIntoObserver(page, "05")
+    await expect(mediaRound.getByRole("heading", { level: 2 })).toHaveText(
+      "DHQ stopped treating the digital as a medium"
     )
-    await expect(stage.locator(".stream-network-frame")).toHaveAttribute(
+    await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
+      "Media Studies falls out of DHQ’s connective tissue"
+    )
+    await expect(stage.locator(".stream-ordinal-frame")).toHaveAttribute(
       "aria-label",
-      /force-directed author projection built from two top-three/i
+      /grouped horizontal bar chart comparing how often Media Studies appears overall and within Tools, Project Report, Digital Humanities, and Cultural Criticism/i
     )
     await expect(
       stage.getByRole("button", {
-        name: "Round 07: Follow the recommendation to its authors."
+        name: "Section 05: DHQ stopped treating the digital as a medium"
       })
     ).toHaveAttribute("aria-current", "step")
     await expectActiveSvgMatchesHost(stage)
 
-    const methods = stage.getByRole("group", {
-      name: "Recommendation method"
-    })
-    await expect(
-      methods.getByRole("button", { name: "Controlled keywords" })
-    ).toHaveAttribute("aria-pressed", "true")
-    await expect(stage.locator(".thunderdome-stage__controls > p")).toContainText(
-      "18 printed author names"
+    await scrollRoundIntoObserver(page, "08")
+    await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
+      "How DHQ filed AI and code in volume 17.2"
     )
-    await methods.getByRole("button", { name: "SPECTER embeddings" }).click()
-    await expect(
-      methods.getByRole("button", { name: "SPECTER embeddings" })
-    ).toHaveAttribute("aria-pressed", "true")
-    await expect(stage.locator(".thunderdome-stage__controls > p")).toContainText(
-      "6 printed author names"
+    await expect(stage.locator(".stream-ordinal-frame")).toHaveAttribute(
+      "aria-label",
+      /horizontal bar chart of eight selected DHQ controlled-tag counts across the 26 items published in volume 17\.2/i
     )
+    await expect(
+      stage.getByRole("button", {
+        name: "Section 08: AI fits the methods and collides with the mythology"
+      })
+    ).toHaveAttribute("aria-current", "step")
     await expectActiveSvgMatchesHost(stage)
 
     const viewport = await page.evaluate(() => ({
@@ -187,10 +184,10 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await scrollRoundIntoObserver(page, "01")
 
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "XYCustomChart"
+      "From punch cards to agents, 1949–2026"
     )
 
     const sceneHistory = await page.evaluate(async () => {
@@ -238,7 +235,10 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       return history.filter(Boolean)
     })
 
-    expect(sceneHistory).toEqual(["XYCustomChart", "SankeyDiagram"])
+    expect(sceneHistory).toEqual([
+      "From punch cards to agents, 1949–2026",
+      "Named public clusters in the 806-item corpus"
+    ])
     expect(browserErrors).toEqual([])
   })
 
@@ -254,7 +254,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
         ".thunderdome-stage h3"
       )
       const target = document.querySelector<HTMLButtonElement>(
-        '[aria-label="Round 03: More names appear on the work."]'
+        '[aria-label="Section 03: More names on the byline"]'
       )
       if (!heading || !target) return []
 
@@ -275,11 +275,14 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       return history.filter(Boolean)
     })
 
-    expect(sceneHistory).toEqual(["XYCustomChart", "LineChart"])
+    expect(sceneHistory).toEqual([
+      "From punch cards to agents, 1949–2026",
+      "One author vs. multi-author published items"
+    ])
     expect(browserErrors).toEqual([])
   })
 
-  test("keeps classification uncertainty negotiable and exposes the changed flow table", async ({
+  test("shows where the tools tag elides practice and exposes the ordinal data table", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 })
@@ -287,50 +290,48 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await openExample(page)
     await scrollRoundIntoObserver(page, "06")
 
+    const toolsRound = page.locator("#thunderdome-round-06")
+    await expect(toolsRound.getByRole("heading", { level: 2 })).toHaveText(
+      "The tools tag is not where all the tools are"
+    )
+    await expect(toolsRound).toContainText(
+      "That is a category of discourse, not an inventory of every article that computes."
+    )
+    await expect(toolsRound).toContainText(
+      "Practice became method, case, and situated intervention rather than “here is a tool.”"
+    )
+
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "SankeyDiagram"
+      "Tools, project reports, and either one"
     )
-
-    const policy = stage.getByRole("group", { name: "Classification policy" })
-    const displayOneTag = policy.getByRole("button", {
-      name: "Display one tag"
-    })
-    const retainMultipleTags = policy.getByRole("button", {
-      name: "Retain multiple tags"
-    })
-    await expect(displayOneTag).toHaveAttribute("aria-pressed", "true")
-    await expect(retainMultipleTags).toHaveAttribute("aria-pressed", "false")
-    await expect(stage.getByRole("button", { name: /^View data summary/ })).toBeAttached()
+    await expect(stage.locator(".stream-ordinal-frame")).toHaveAttribute(
+      "aria-label",
+      /grouped horizontal bar chart comparing DHQ’s Tools tag, Project Report tag, and the deduplicated union/i
+    )
+    await expect(
+      stage.getByRole("button", { name: /^View data summary/ })
+    ).toBeAttached()
     await expectActiveSvgMatchesHost(stage)
-    const classificationFinding = stage.locator(
-      ".thunderdome-stage__controls > p"
-    )
-    await expect(classificationFinding).toContainText(
-      "791 published items are reduced to one displayed tag."
-    )
 
-    await retainMultipleTags.click()
-    await expect(displayOneTag).toHaveAttribute("aria-pressed", "false")
-    await expect(retainMultipleTags).toHaveAttribute("aria-pressed", "true")
-    await expect(classificationFinding).toContainText(
-      "791 published items retain their multiple source tags."
-    )
-
-    const dataSummaryTrigger = stage.getByRole("button", { name: /^View data summary/ })
-    await expect(dataSummaryTrigger).toBeAttached()
-    await expectActiveSvgMatchesHost(stage)
+    const dataSummaryTrigger = stage.getByRole("button", {
+      name: /^View data summary/
+    })
     await dataSummaryTrigger.focus()
     await dataSummaryTrigger.press("Enter")
-    await expect(stage.locator(".semiotic-accessible-data-table-summary")).toBeVisible()
-    await expect(stage.getByRole("table")).toBeVisible()
+    await expect(
+      stage.locator(".semiotic-accessible-data-table-summary")
+    ).toBeVisible()
+    await expect(
+      stage.getByRole("table", { name: "Sample data for clusterbar chart" })
+    ).toBeVisible()
 
     expect(browserErrors).toEqual([])
   })
 
-  test("keeps chart labels and selected controls legible in forced colors", async ({
+  test("keeps chart labels and active section navigation legible in forced colors", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 })
@@ -340,30 +341,30 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await scrollRoundIntoObserver(page, "06")
 
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
-    const displayOneTag = stage.getByRole("button", {
-      name: "Display one tag"
+    const activeNav = stage.getByRole("button", {
+      name: "Section 06: The tools tag is not where all the tools are"
     })
-    const retainMultipleTags = stage.getByRole("button", {
-      name: "Retain multiple tags"
+    const inactiveNav = stage.getByRole("button", {
+      name: "Section 05: DHQ stopped treating the digital as a medium"
     })
 
     const forcedColorState = await stage.evaluate((element) => {
       const chartLabel = element.querySelector("svg text")
-      const selected = element.querySelector(
-        '.thunderdome-stage__controls button[aria-pressed="true"]'
+      const active = element.querySelector(
+        '.thunderdome-stage__nav button[aria-current="step"]'
       )
-      const unselected = element.querySelector(
-        '.thunderdome-stage__controls button[aria-pressed="false"]'
+      const inactive = element.querySelector(
+        ".thunderdome-stage__nav button:not([aria-current])"
       )
-      if (!chartLabel || !selected || !unselected) return null
+      if (!chartLabel || !active || !inactive) return null
       return {
         stageBackground: getComputedStyle(element).backgroundColor,
         labelFill: getComputedStyle(chartLabel).fill,
-        selectedBackground: getComputedStyle(selected).backgroundColor,
-        selectedColor: getComputedStyle(selected).color,
-        unselectedBackground: getComputedStyle(unselected).backgroundColor
+        activeBackground: getComputedStyle(active).backgroundColor,
+        activeColor: getComputedStyle(active).color,
+        inactiveBackground: getComputedStyle(inactive).backgroundColor
       }
     })
 
@@ -371,14 +372,14 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     expect(forcedColorState?.labelFill).not.toBe(
       forcedColorState?.stageBackground
     )
-    expect(forcedColorState?.selectedBackground).not.toBe(
-      forcedColorState?.unselectedBackground
+    expect(forcedColorState?.activeBackground).not.toBe(
+      forcedColorState?.inactiveBackground
     )
-    expect(forcedColorState?.selectedColor).not.toBe(
-      forcedColorState?.selectedBackground
+    expect(forcedColorState?.activeColor).not.toBe(
+      forcedColorState?.activeBackground
     )
-    await expect(displayOneTag).toHaveAttribute("aria-pressed", "true")
-    await expect(retainMultipleTags).toHaveAttribute("aria-pressed", "false")
+    await expect(activeNav).toHaveAttribute("aria-current", "step")
+    await expect(inactiveNav).not.toHaveAttribute("aria-current", "step")
     expect(browserErrors).toEqual([])
   })
 
@@ -390,21 +391,22 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await openExample(page)
 
     const arena = page.getByRole("region", {
-      name: "Eight-round scrollytelling argument"
+      name: "Eight chart sections"
     })
     await expect(arena).toHaveClass(/is-inline/)
     await expect(
-      arena.getByRole("complementary", { name: "Active Semiotic view" })
+      arena.getByRole("complementary", { name: "Active chart" })
     ).toHaveCount(0)
 
     const rounds = arena.locator(".thunderdome-round")
     const stages = arena.locator(".thunderdome-stage.is-inline")
     const frames = stages.locator(
-      ".stream-network-frame, .stream-xy-frame, .stream-ordinal-frame, .stream-physics-frame"
+      ".stream-network-frame, .stream-xy-frame, .stream-ordinal-frame"
     )
     await expect(rounds).toHaveCount(8)
     await expect(stages).toHaveCount(8)
     await expect(frames).toHaveCount(8, { timeout: 60_000 })
+    await expect(stages.locator(".semiotic-chart-title")).toHaveCount(0)
     await expect(
       stages.getByRole("button", { name: /^View data summary/ })
     ).toHaveCount(8)

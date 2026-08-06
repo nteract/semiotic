@@ -208,6 +208,8 @@ export interface CanvasFrameBackgroundProps {
   children: ReactNode
   size: readonly [number, number]
   margin: FrameMargin
+  /** Optional full-frame paint beneath translated background graphics. */
+  backdropFill?: string
   /** Preserve a family's existing SVG overflow behavior when it needs it. */
   overflowVisible?: boolean
 }
@@ -220,9 +222,10 @@ export function CanvasFrameBackground({
   children,
   size,
   margin,
+  backdropFill,
   overflowVisible = false,
 }: CanvasFrameBackgroundProps): React.ReactNode {
-  if (!children) return null
+  if (!children && !backdropFill) return null
   return (
     <svg
       style={{
@@ -235,6 +238,16 @@ export function CanvasFrameBackground({
         overflow: overflowVisible ? "visible" : undefined,
       }}
     >
+      {backdropFill && backdropFill !== "transparent" ? (
+        <rect
+          className="stream-frame-background__backdrop"
+          x={0}
+          y={0}
+          width={size[0]}
+          height={size[1]}
+          fill={backdropFill}
+        />
+      ) : null}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {children}
       </g>

@@ -176,6 +176,9 @@ const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
 const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedgerExamplePage"))
+const TheLastScarcityExamplePage = lazy(
+  () => import("./pages/examples/TheLastScarcityExamplePage"),
+)
 const UkraineWarHistoryExamplePage = lazy(
   () => import("./pages/examples/UkraineWarHistoryExamplePage"),
 )
@@ -313,6 +316,7 @@ const EqualPlacesAtlasExamplePage = lazy(
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
+  "TheLastScarcityExamplePage.jsx": TheLastScarcityExamplePage,
   "UkraineWarHistoryExamplePage.jsx": UkraineWarHistoryExamplePage,
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
   "AnalystAdventureExamplePage.jsx": AnalystAdventureExamplePage,

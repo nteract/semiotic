@@ -1,16 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
+import { collectBrowserErrors } from "./helpers/browser"
 
 const ROUTE = "/examples/apollo-lunar-choreography"
 const PAGE_TITLE = "The Third Seat: Apollo’s Lunar Choreography"
-
-function collectBrowserErrors(page: Page) {
-  const errors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text())
-  })
-  page.on("pageerror", (error) => errors.push(error.message))
-  return errors
-}
 
 async function canvasHasPaint(page: Page) {
   return page.locator(".apollo-example__chart-shell canvas").evaluate((canvas) => {

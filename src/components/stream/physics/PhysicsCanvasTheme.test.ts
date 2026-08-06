@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { _resetCSSColorCacheForTest } from "../renderers/resolveCSSColor"
 import {
+  createPhysicsCanvasThemeCache,
   physicsCanvasColorWithAlpha,
   resolvePhysicsCanvasTheme
 } from "./PhysicsCanvasTheme"
@@ -51,6 +52,40 @@ describe("physics canvas theme", () => {
       expect(theme.primary).toBe("#4455aa")
       expect(theme.danger).toBe("#dd3344")
       expect(theme.textSecondary).toBe("#667788")
+    } finally {
+      ctx.canvas.remove()
+    }
+  })
+
+  it("reads computed style once per theme resolution", () => {
+    const ctx = canvasContext()
+    const original = window.getComputedStyle
+    let calls = 0
+    window.getComputedStyle = ((element: Element) => {
+      calls += 1
+      return original.call(window, element)
+    }) as typeof window.getComputedStyle
+
+    try {
+      resolvePhysicsCanvasTheme(ctx)
+      expect(calls).toBe(1)
+    } finally {
+      window.getComputedStyle = original
+      ctx.canvas.remove()
+    }
+  })
+
+  it("caches the derived palette until the CSS color version changes", () => {
+    const ctx = canvasContext()
+    try {
+      ctx.canvas.style.setProperty("--semiotic-primary", "#112233")
+      const cache = createPhysicsCanvasThemeCache()
+      const first = cache.resolve(ctx)
+      ctx.canvas.style.setProperty("--semiotic-primary", "#abcdef")
+
+      expect(cache.resolve(ctx)).toBe(first)
+      _resetCSSColorCacheForTest()
+      expect(cache.resolve(ctx).primary).toBe("#abcdef")
     } finally {
       ctx.canvas.remove()
     }

@@ -3,6 +3,7 @@ import { act, render, screen } from "@testing-library/react"
 import { vi } from "vitest"
 import { ThemeProvider, useTheme, DARK_THEME, HIGH_CONTRAST_THEME, LIGHT_THEME } from "./ThemeProvider"
 import type { SemioticTheme } from "./ThemeProvider"
+import { themeToCSSVariables } from "./store/themeSerialization"
 
 function ThemeProbe({
   seen
@@ -74,6 +75,26 @@ describe("ThemeProvider", () => {
     expect(seen.map(theme => theme.mode)).toEqual(["dark"])
   })
 
+  it.each([
+    ["light", "light"],
+    ["dark", "dark"],
+    ["carbon", "light"],
+    ["carbon-dark", "dark"]
+  ] as const)(
+    "publishes the resolved semantic mode for the %s preset",
+    (preset, mode) => {
+      const { container } = render(
+        <ThemeProvider theme={preset}>
+          <div>chart</div>
+        </ThemeProvider>
+      )
+      const wrapper = container.firstElementChild as HTMLElement
+      expect(wrapper).toHaveAttribute("data-semiotic-theme", preset)
+      expect(wrapper).toHaveAttribute("data-semiotic-theme-mode", mode)
+      expect(wrapper.style.colorScheme).toBe(mode)
+    }
+  )
+
   it("emits CSS variables from the initial theme", () => {
     const { container } = render(
       <ThemeProvider theme="dark">
@@ -85,6 +106,26 @@ describe("ThemeProvider", () => {
     expect(wrapper.style.getPropertyValue("--semiotic-bg")).toBe(DARK_THEME.colors.background)
     expect(wrapper.style.getPropertyValue("--semiotic-text")).toBe(DARK_THEME.colors.text)
     expect(wrapper.style.getPropertyValue("--semiotic-cell-border")).toBe(DARK_THEME.colors.border)
+    expect(wrapper.style.getPropertyValue("--semiotic-category-1")).toBe(
+      DARK_THEME.colors.categorical[0]
+    )
+    expect(wrapper.dataset.semioticThemeMode).toBe("dark")
+    expect(wrapper.style.colorScheme).toBe("dark")
+  })
+
+  it("keeps ThemeProvider CSS variables in parity with serialization", () => {
+    const { container } = render(
+      <ThemeProvider theme="dark">
+        <div>chart</div>
+      </ThemeProvider>
+    )
+    const wrapper = container.firstElementChild as HTMLElement
+
+    for (const [name, value] of Object.entries(
+      themeToCSSVariables(DARK_THEME)
+    )) {
+      expect(wrapper.style.getPropertyValue(name), name).toBe(value)
+    }
   })
 
   it("emits --semiotic-tick-font-size and --semiotic-axis-label-font-size from typography", () => {
@@ -121,6 +162,19 @@ describe("ThemeProvider", () => {
     expect(seen[0].mode).toBe("dark")
     expect(seen[0].colors.background).toBe(DARK_THEME.colors.background)
     expect(seen[0].colors.categorical).toEqual(["#111111", "#222222"])
+  })
+
+  it("emits resolved mode metadata for object themes", () => {
+    const { container } = render(
+      <ThemeProvider theme={{ mode: "dark", colors: { primary: "#abcdef" } }}>
+        <div>chart</div>
+      </ThemeProvider>
+    )
+    const wrapper = container.firstElementChild as HTMLElement
+
+    expect(wrapper).not.toHaveAttribute("data-semiotic-theme")
+    expect(wrapper).toHaveAttribute("data-semiotic-theme-mode", "dark")
+    expect(wrapper.style.colorScheme).toBe("dark")
   })
 
   it("still responds to theme prop changes after mount", () => {

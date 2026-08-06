@@ -278,7 +278,7 @@ export const BLOCKS_VIEW_STYLES = `
   .blocks-view-mode.blocks-view-fallback.blocks-view-has-blocks .example-page-content .live-example *,
   .blocks-view-mode.blocks-view-fallback.blocks-view-has-blocks .example-page-content svg,
   .blocks-view-mode.blocks-view-fallback.blocks-view-has-blocks .example-page-content canvas {
-    display: revert;
+    display: revert !important;
   }
 
   .blocks-example .code-block {

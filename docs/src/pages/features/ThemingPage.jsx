@@ -1058,6 +1058,33 @@ const tokens = themeToTokens(resolveThemePreset("carbon"))
         dynamic switching.
       </p>
 
+      <h3 id="preserve-authored-light-style">Preserve an authored light design</h3>
+      <p>
+        When adding dark mode to an existing custom chart, keep its original
+        light colors as CSS-variable fallbacks and define only the dark
+        overrides. This preserves the light rendering exactly while giving SVG,
+        canvas, controls, and native form chrome one semantic mode boundary.
+        The resolved <code>data-semiotic-theme-mode</code> attribute also works
+        for custom theme objects; it is not coupled to a preset name.
+      </p>
+      <CodeBlock language="jsx">{`/* Original light values stay at the use site. */
+const paper = "var(--essay-chart-paper, #fffefa)"
+const ink = "var(--essay-chart-ink, #203b32)"
+
+/* Add only the alternate mode. */
+[data-semiotic-theme-mode="dark"] .essay {
+  --essay-chart-paper: #161616;
+  --essay-chart-ink: #f4f4f4;
+  color-scheme: dark;
+}
+
+<rect fill={paper} stroke={ink} />`}</CodeBlock>
+      <p>
+        Test the complete light → dark → light round trip. Exact restoration is
+        important for settled canvases, whose retained scene may otherwise keep
+        stale resolved CSS paint after the DOM has changed.
+      </p>
+
       <h2 id="props">Props Reference</h2>
 
       <h3>ThemeProvider</h3>

@@ -20,6 +20,7 @@ import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { ChartRecipe } from "../../ai/chartRecipes"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 export interface NetworkCustomChartProps<
   TNode extends Datum = Datum,
@@ -48,6 +49,8 @@ export interface NetworkCustomChartProps<
   colorBy?: ChartAccessor<TNode, string | number>
   colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
+  /** Tooltip content/configuration. Custom callbacks receive the authored node or edge datum. */
+  tooltip?: TooltipProp
   /**
    * Annotations rendered over the chart. A custom network layout's marks are
    * anchorable by id: emit a scene node with `id: <foo>` and an annotation with
@@ -118,6 +121,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     className,
     colorBy,
     colorScheme,
+    tooltip,
     selection,
     linkedHover,
     onObservation,
@@ -194,6 +198,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
   )
 
   const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
+  const normalizedTooltip = useMemo(() => normalizeTooltip(tooltip), [tooltip])
   const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
   const emptyEl = loadingEl
     ? null
@@ -228,6 +233,11 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
       maxDevicePixelRatio: props.maxDevicePixelRatio,
       autoPlaceAnnotations,
     }),
+    ...(tooltip === false
+      ? { tooltipContent: () => null }
+      : normalizedTooltip
+        ? { tooltipContent: normalizedTooltip }
+        : {}),
     // Emit hover/click into the shared selection store (and fire
     // onObservation/onClick) only when something consumes them — mirrors
     // the built-in network HOC gating while still honoring mobile

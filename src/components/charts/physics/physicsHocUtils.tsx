@@ -13,7 +13,12 @@ import type {
   PhysicsSemanticItem,
   StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsFrame"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import {
+  isMultiTooltip,
+  isMultiTooltipConfig,
+  normalizeTooltip,
+  type TooltipProp
+} from "../../Tooltip/Tooltip"
 import type { Datum } from "../shared/datumTypes"
 import type {
   BaseChartProps,
@@ -520,18 +525,40 @@ export function composePhysicsFrameGraphics(
 
 export function resolvePhysicsTooltipProps(
   tooltip: TooltipProp | undefined,
-  frameProps?: Partial<StreamPhysicsFrameProps>
+  frameProps?: Partial<StreamPhysicsFrameProps>,
+  options: { unwrapSourceDatum?: boolean } = {}
 ): Pick<StreamPhysicsFrameProps, "enableHover" | "tooltipContent"> {
   if (tooltip === false) {
     return { enableHover: false }
   }
+  // Physics marks have no shared-axis series lookup, so a bare multi request
+  // degrades to the normalized single-datum fallback. A custom multi content
+  // callback is still honored, but receives one raw datum and no allSeries.
+  const normalizedInput =
+    isMultiTooltip(tooltip) &&
+    !(isMultiTooltipConfig(tooltip) && typeof tooltip.content === "function")
+      ? "multi"
+      : tooltip
+  const normalized = normalizeTooltip(normalizedInput)
+  const tooltipContent = typeof normalized === "function"
+    ? options.unwrapSourceDatum
+      ? ((hover) => {
+          const frameDatum = hover.data as Datum | undefined
+          const sourceDatum = frameDatum?.sourceDatum
+          return normalized({
+            ...hover,
+            data:
+              sourceDatum && typeof sourceDatum === "object"
+                ? sourceDatum
+                : hover.data,
+            __semioticHoverData: true
+          })
+        }) satisfies NonNullable<StreamPhysicsFrameProps["tooltipContent"]>
+      : normalized as StreamPhysicsFrameProps["tooltipContent"]
+    : frameProps?.tooltipContent
   return {
     enableHover: frameProps?.enableHover,
-    tooltipContent:
-      (normalizeTooltip(tooltip) as
-        | StreamPhysicsFrameProps["tooltipContent"]
-        | false) ||
-      frameProps?.tooltipContent
+    tooltipContent
   }
 }
 

@@ -3,7 +3,11 @@
 import * as React from "react"
 import type { Style } from "../../stream/types"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
-import type { PhysicsSemanticItem } from "../../stream/physics/StreamPhysicsFrame"
+import type {
+  PhysicsCanvasPaintContext,
+  PhysicsSemanticItem
+} from "../../stream/physics/StreamPhysicsFrame"
+import { resolveCanvasPaint } from "../../stream/renderers/canvasRenderHelpers"
 import type { Datum } from "../shared/datumTypes"
 import type {
   CrucibleBodyDatum,
@@ -13,23 +17,6 @@ import type {
 } from "./crucibleTypes"
 
 const PAPER = "var(--semiotic-bg, #fffaf0)"
-
-function canvasColor(
-  ctx: CanvasRenderingContext2D,
-  value: Style[keyof Style] | undefined,
-  fallback: string
-): string {
-  if (typeof value !== "string") return fallback
-  if (typeof getComputedStyle !== "function" || !ctx.canvas)
-    return value || fallback
-  const token = value.startsWith("var(")
-    ? value.match(/var\((--[^,\s)]+)/)?.[1]
-    : value.startsWith("--")
-      ? value
-      : null
-  if (!token) return value || fallback
-  return getComputedStyle(ctx.canvas).getPropertyValue(token).trim() || fallback
-}
 
 export function displayNumber(value: number): string {
   if (!Number.isFinite(value)) return "0"
@@ -89,17 +76,19 @@ export function crucibleBodySemanticItem<TDatum extends Datum>(
 export function drawCrucibleBody(
   ctx: CanvasRenderingContext2D,
   body: PhysicsBodyState,
-  style: Style
+  style: Style,
+  paintContext?: PhysicsCanvasPaintContext
 ): void {
   const wrapped = body.datum as CrucibleBodyDatum | undefined
   if (!wrapped?.__crucible) return
   const radius = body.shape.type === "circle" ? body.shape.radius : 8
-  const fill = canvasColor(
-    ctx,
-    style.fill,
-    wrapped.kind === "product" ? "#b8792d" : "#356b63"
-  )
-  const stroke = canvasColor(ctx, style.stroke, "#26323a")
+  const fillFallback = wrapped.kind === "product" ? "#b8792d" : "#356b63"
+  const resolvePaint =
+    paintContext?.resolvePaint ??
+    ((paint: Style["fill"] | Style["stroke"] | null | undefined, fallback: string) =>
+      resolveCanvasPaint(ctx, paint, fallback))
+  const fill = resolvePaint(style.fill, fillFallback)
+  const stroke = resolvePaint(style.stroke, "#26323a")
 
   ctx.save()
   ctx.translate(body.x, body.y)
@@ -110,7 +99,8 @@ export function drawCrucibleBody(
     typeof style.strokeWidth === "number" ? style.strokeWidth : 1.25
 
   if (wrapped.kind === "product") {
-    ctx.shadowColor = fill
+    // CanvasPattern is a valid fill but shadowColor only accepts CSS colors.
+    ctx.shadowColor = typeof fill === "string" ? fill : fillFallback
     ctx.shadowBlur = 10
     ctx.beginPath()
     for (let index = 0; index < 6; index += 1) {
@@ -126,7 +116,7 @@ export function drawCrucibleBody(
     ctx.stroke()
     ctx.beginPath()
     ctx.arc(0, 0, Math.max(2, radius * 0.36), 0, Math.PI * 2)
-    ctx.strokeStyle = canvasColor(ctx, PAPER, "#fffaf0")
+    ctx.strokeStyle = resolvePaint(PAPER, "#fffaf0")
     ctx.globalAlpha *= 0.72
     ctx.stroke()
   } else {

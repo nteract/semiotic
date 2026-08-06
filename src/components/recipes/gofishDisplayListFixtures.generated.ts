@@ -5,9 +5,13 @@
 // gofish-graphics' toDisplayList({ w, h }) layout pass, baked at the
 // viewport noted in each document. They stand in for what a host would get
 // by calling `await spec.toDisplayList({ w, h })` at runtime.
-import type { DisplayList } from "gofish-ir"
+//
+// Typed against the local structural mirror in gofishIR.ts so declaration
+// generation and runtime consumers do not depend on the gofish-ir
+// devDependency (used only by this generator to bake the fixtures).
+import type { GofishDisplayListDocument } from "./gofishIR"
 
-type DisplayListDocument = DisplayList.DisplayListDocument
+type DisplayListDocument = GofishDisplayListDocument
 
 /**
  * Flower meadow — GoFish's real flower chart, verbatim: a meadow where each lake is a green stem (a bar whose height is the lake's total catch) topped by a polar fan of petals, one per species, sized by count. It is layer([stems, flowers]) — the flowers selectAll the stems and stack a polar petal fan on each. The composition's root is a combinator (no ChartBuilder.toDisplayList), so it is baked through GoFish's mark-resolution contract; see gofish-displaylist-findings.md.

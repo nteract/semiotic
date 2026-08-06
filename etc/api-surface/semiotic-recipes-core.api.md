@@ -29,7 +29,7 @@ function activeCountOverDomain<T = Datum>(items: readonly T[], options: ActiveCo
 function addPoints(a: Point, b: Point): Point
 function adjacencyMatrix(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: AdjacencyMatrixOptions | undefined): AdjacencyMatrix
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
-function allocateCells(weights: readonly CellWeight[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCells[]
+function allocateCells<T extends CellWeight>(weights: readonly T[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCells<T>[]
 function analyzeNetEnsemble(nodes: readonly { id: string; }[], edges: readonly { source: string; target: string; }[], options?: { fingerprintRounds?: number; } | undefined): NetEnsembleAnalysis
 function angleScale(domain: readonly [number, number], opts?: AngleScaleOptions | undefined): (value: number) => number
 function annotationBudget(width: number, height: number, config?: AnnotationDensityConfig | undefined): number
@@ -40,6 +40,7 @@ function arcPath(a: Point, b: Point, heightRatio?: number | undefined): string
 function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): { initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions; }
 function axisFixedForceLayout(s):: NetworkLayoutContext<import("../semiotic-recipes-core").AxisFixedForceConfig>): import("../semiotic-network").NetworkLayoutResult
 function axisFixedForcePositions(nodes: readonly Datum[], edges: readonly Datum[], plot: PlotRect, config: AxisFixedForceConfig): AxisFixedForceResult
+function balanceSnapshotsToFlows<TBefore, TAfter = TBefore>(before: readonly TBefore[], after: readonly TAfter[], options: BalanceSnapshotsToFlowsOptions<TBefore, TAfter>): BalancedSnapshotsResult
 function bandLabel(p: BandLabelProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | null
 function betweenness(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function bfsDistances(adjacency: Map<string, Set<string>>, start: string): Record<string, number>
@@ -134,6 +135,8 @@ function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | unde
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mulberry32(seed: number): () => number
 function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
+function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
+function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function nonNegativeFinite(value: number | undefined): number
@@ -221,7 +224,6 @@ interface ActiveCountOptions<T>
 interface AdjacencyMatrix
 interface AdjacencyMatrixOptions
 interface AllocateCellsOptions
-interface AllocatedCells
 interface AngleScaleOptions
 interface AnnotationAudience
 interface AnnotationDensityConfig
@@ -234,6 +236,9 @@ interface ArcLayoutOptions
 interface ArrivalReplayOptions
 interface AxisFixedForceConfig
 interface AxisFixedForceResult
+interface BalanceSnapshotsToFlowsOptions<TBefore, TAfter = TBefore>
+interface BalancedSnapshotFlow
+interface BalancedSnapshotsResult
 interface BandLabelProps
 interface BobaConfig
 interface BodyGroupSpec<TDatum extends Datum = Datum>
@@ -318,11 +323,14 @@ interface NetEnsembleAnalysis
 interface NetEnsembleComponent
 interface NetEnsembleConfig
 interface NetEnsembleMotif
+interface NetworkEdgeHitTargetBaseProps
 interface NetworkHitTargetCircleProps
 interface NetworkHitTargetRectProps
 interface NetworkHtmlMark
 interface NetworkLayoutContext<C extends object = Record<string, unknown>>
 interface NetworkLayoutResult
+interface NetworkLineEdgeHitTargetProps
+interface NetworkPathEdgeHitTargetProps
 interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
 interface PackIntervalsOptions<T>
@@ -403,6 +411,7 @@ interface ServiceResourcePoolController
 interface ServiceResourcePoolOptions
 interface ServiceResourcePoolSnapshot
 interface SilhouetteSample
+interface SnapshotResidual
 interface SpanArcPathOptions
 interface SpanInterval
 interface SpawnFromTokensOptions<D = unknown>
@@ -428,6 +437,14 @@ interface WeightedOrderRelation<T>
 interface WordTrailsConfig
 interface WordTrailsProgressiveRevealOptions
 interface WordTrailsWordInfo
+type AllocatedCells<T extends CellWeight = CellWeight> = T & {
+    /** The category's exact (fractional) share of `totalCells`. */
+    exact: number;
+    /** The integer cells assigned to this category. */
+    cells: number;
+    /** Fractional leftover (`exact - floor(exact)`), the largest-remainder key. */
+    remainder: number;
+}
 type AnnotationCohesion = "blended" | "layer"
 type AutoPlaceAnnotations = boolean | AutoPlaceAnnotationsConfig
 type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig

@@ -16,6 +16,7 @@ import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
 import type {
   PhysicsBodySemanticItemAccessor,
   PhysicsBodyStyleContext,
+  PhysicsCanvasPaintContext,
   StreamPhysicsBodyForceContext,
   StreamPhysicsFrameHandle,
   StreamPhysicsFrameProps
@@ -764,8 +765,12 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
   )
 
   const beforePaint = useCallback(
-    (ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]) => {
-      frameProps.beforePaint?.(ctx, bodies)
+    (
+      ctx: CanvasRenderingContext2D,
+      bodies: PhysicsBodyState[],
+      paint: PhysicsCanvasPaintContext
+    ) => {
+      frameProps.beforePaint?.(ctx, bodies, paint)
       if (showBonds) drawCrucibleBonds(ctx, bodies, runtimeRef.current.state)
     },
     [frameProps, showBonds]

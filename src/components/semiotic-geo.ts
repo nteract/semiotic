@@ -7,6 +7,17 @@ import StreamGeoFrame from "./stream/StreamGeoFrame"
 
 export { StreamGeoFrame }
 
+export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
+
 // Chart HOCs
 export { ChoroplethMap } from "./charts/geo/ChoroplethMap"
 export { ProportionalSymbolMap } from "./charts/geo/ProportionalSymbolMap"

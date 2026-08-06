@@ -225,7 +225,9 @@ export function createColorScale(
       .unknown("#999") as (v: string) => string
   }
 
-  const colorScheme = COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES] || COLOR_SCHEMES.category10
+  const colorScheme = Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, scheme)
+    ? COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES]
+    : COLOR_SCHEMES.category10
 
   if (isNumeric && typeof colorScheme === "function") {
     // Use sequential scale for numeric data

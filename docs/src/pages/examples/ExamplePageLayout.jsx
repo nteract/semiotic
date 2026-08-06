@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from "react"
+import React, { lazy, Suspense, useEffect, useId, useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   BLOCKS_VIEW_STYLES,
@@ -9,7 +9,7 @@ import {
 import CodeBlock from "../../components/CodeBlock"
 import { EXAMPLES } from "./examplesManifest"
 import { getExampleDefinition } from "./exampleDefinitions"
-import { getExampleSourceLoader } from "./exampleSourceMap"
+import { getExampleSourceLoaders } from "./exampleSourceMap"
 
 const SOURCE_LOAD_ERROR = "Failed to load source."
 const ExampleContractPanels = lazy(() => import("./PilotExamplePanels"))
@@ -35,9 +35,11 @@ export default function ExamplePageLayout({
     () => getExampleDefinition(normalizedPath),
     [normalizedPath],
   )
-  const sourceLoader = useMemo(() => getExampleSourceLoader(normalizedPath), [normalizedPath])
-  const [sourceCode, setSourceCode] = useState("")
-  const hasFullCodeFallback = useFullCodeFallback && Boolean(sourceLoader)
+  const sourceLoaders = useMemo(() => getExampleSourceLoaders(normalizedPath), [normalizedPath])
+  const [sourceFiles, setSourceFiles] = useState([])
+  const [activeSourceFile, setActiveSourceFile] = useState("")
+  const sourceTabsId = useId()
+  const hasFullCodeFallback = useFullCodeFallback && sourceLoaders.length > 0
   const blocksView = useBlocksViewState()
   const { blockCount, blocksMode, registerBlock, setBlocksMode } = blocksView
   const fallbackBlockId = useMemo(() => `example-full-code-${normalizedPath}`, [normalizedPath])
@@ -49,24 +51,58 @@ export default function ExamplePageLayout({
 
   useEffect(() => {
     let cancelled = false
-    setSourceCode("")
+    setSourceFiles([])
+    setActiveSourceFile("")
     // The raw page source is a large second representation of the story. Only
     // fetch it after the reader explicitly switches to Full Code, rather than
     // paying for it on every example route visit.
-    if (!blocksMode || !hasFullCodeFallback || !sourceLoader) return undefined
+    if (!blocksMode || !hasFullCodeFallback) return undefined
 
-    sourceLoader()
-      .then((source) => {
-        if (!cancelled) setSourceCode(source)
+    Promise.all(
+      sourceLoaders.map(async ({ file, load }) => ({ file, source: await load() })),
+    )
+      .then((files) => {
+        if (!cancelled) {
+          setSourceFiles(files)
+          setActiveSourceFile(files[0]?.file ?? "")
+        }
       })
       .catch(() => {
-        if (!cancelled) setSourceCode(SOURCE_LOAD_ERROR)
+        if (!cancelled) {
+          setSourceFiles([{ file: "Source", source: SOURCE_LOAD_ERROR }])
+          setActiveSourceFile("Source")
+        }
       })
 
     return () => {
       cancelled = true
     }
-  }, [blocksMode, hasFullCodeFallback, sourceLoader])
+  }, [blocksMode, hasFullCodeFallback, sourceLoaders])
+  const selectedSource =
+    sourceFiles.find(({ file }) => file === activeSourceFile) ?? sourceFiles[0]
+  const selectedSourceIndex = Math.max(
+    0,
+    sourceFiles.findIndex(({ file }) => file === selectedSource?.file),
+  )
+  const selectSourceAt = (index, { focus = false } = {}) => {
+    const nextIndex = (index + sourceFiles.length) % sourceFiles.length
+    const nextFile = sourceFiles[nextIndex]
+    if (!nextFile) return
+    setActiveSourceFile(nextFile.file)
+    if (focus) {
+      document.getElementById(`${sourceTabsId}-tab-${nextIndex}`)?.focus()
+    }
+  }
+  const handleSourceTabKeyDown = (event, index) => {
+    let nextIndex
+    if (event.key === "ArrowRight") nextIndex = index + 1
+    else if (event.key === "ArrowLeft") nextIndex = index - 1
+    else if (event.key === "Home") nextIndex = 0
+    else if (event.key === "End") nextIndex = sourceFiles.length - 1
+    else return
+    event.preventDefault()
+    selectSourceAt(nextIndex, { focus: true })
+  }
   const pageClassName = [
     "example-page",
     blocksMode ? "blocks-view-mode" : "",
@@ -153,18 +189,57 @@ export default function ExamplePageLayout({
           {blocksMode && hasFullCodeFallback && (
             <section className="blocks-example blocks-example--source">
               <h2 className="blocks-example-title">Full Code</h2>
-              <CodeBlock
-                code={sourceCode || "Loading source..."}
-                language="jsx"
-                showCopyButton
-                wrap
-              />
+              {sourceFiles.length > 1 && (
+                <div role="tablist" aria-label="Example source files" style={styles.sourceTabs}>
+                  {sourceFiles.map(({ file }, sourceIndex) => (
+                    <button
+                      key={file}
+                      id={`${sourceTabsId}-tab-${sourceIndex}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={file === selectedSource?.file}
+                      aria-controls={`${sourceTabsId}-panel`}
+                      tabIndex={file === selectedSource?.file ? 0 : -1}
+                      onClick={() => selectSourceAt(sourceIndex)}
+                      onKeyDown={(event) => handleSourceTabKeyDown(event, sourceIndex)}
+                      style={{
+                        ...styles.sourceTab,
+                        ...(file === selectedSource?.file ? styles.sourceTabActive : null),
+                      }}
+                    >
+                      {file}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div
+                id={`${sourceTabsId}-panel`}
+                role={sourceFiles.length > 1 ? "tabpanel" : undefined}
+                aria-labelledby={
+                  sourceFiles.length > 1
+                    ? `${sourceTabsId}-tab-${selectedSourceIndex}`
+                    : undefined
+                }
+              >
+                <CodeBlock
+                  code={selectedSource?.source || "Loading source..."}
+                  language={sourceLanguage(selectedSource?.file)}
+                  showCopyButton
+                  wrap
+                />
+              </div>
             </section>
           )}
         </div>
       </article>
     </BlocksViewProvider>
   )
+}
+
+function sourceLanguage(file = "") {
+  if (file.endsWith(".css")) return "css"
+  if (file.endsWith(".ts") || file.endsWith(".tsx")) return "typescript"
+  return "jsx"
 }
 
 const styles = {
@@ -245,5 +320,27 @@ const styles = {
   },
   content: {
     minWidth: 0,
+  },
+  sourceTabs: {
+    display: "flex",
+    gap: "6px",
+    marginBottom: "10px",
+    overflowX: "auto",
+    paddingBottom: "4px",
+  },
+  sourceTab: {
+    flex: "0 0 auto",
+    padding: "6px 9px",
+    border: "1px solid var(--surface-3)",
+    borderRadius: "4px",
+    background: "var(--surface-1)",
+    color: "var(--text-secondary)",
+    cursor: "pointer",
+    fontFamily: "monospace",
+    fontSize: "11px",
+  },
+  sourceTabActive: {
+    borderColor: "var(--accent)",
+    color: "var(--text-primary)",
   },
 }

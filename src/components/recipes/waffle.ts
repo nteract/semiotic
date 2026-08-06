@@ -182,7 +182,7 @@ export interface CellWeight {
   weight: number
 }
 
-export interface AllocatedCells extends CellWeight {
+export type AllocatedCells<T extends CellWeight = CellWeight> = T & {
   /** The category's exact (fractional) share of `totalCells`. */
   exact: number
   /** The integer cells assigned to this category. */
@@ -192,9 +192,10 @@ export interface AllocatedCells extends CellWeight {
 }
 
 export interface AllocateCellsOptions {
-  /** Cells guaranteed to every category with a positive weight, even when its
-   *  proportional share rounds below this. Over-allocation is then clawed back
-   *  from the largest categories. @default 0 */
+  /** Cells guaranteed to every category with a positive weight, when the cell
+   *  budget permits. If the requested minimum cannot fit, the largest feasible
+   *  common minimum is used. Over-allocation is then clawed back from the
+   *  largest categories. @default 0 */
   minPerCategory?: number
 }
 
@@ -220,26 +221,41 @@ export interface AllocateCellsOptions {
  * // → [{ key: "monument", cells: 70, … }, { key: "museum", cells: 20, … }, { key: "park", cells: 10, … }]
  * ```
  */
-export function allocateCells(
-  weights: readonly CellWeight[],
+export function allocateCells<T extends CellWeight>(
+  weights: readonly T[],
   totalCells: number,
   opts?: AllocateCellsOptions,
-): AllocatedCells[] {
-  const minPer = Math.max(0, Math.floor(opts?.minPerCategory ?? 0))
-  const total = weights.reduce((s, w) => s + Math.max(0, w.weight), 0)
-  if (totalCells <= 0 || total <= 0) {
+): AllocatedCells<T>[] {
+  const cellBudget = Number.isFinite(totalCells) ? Math.max(0, Math.floor(totalCells)) : 0
+  const safeWeight = (weight: number) => Number.isFinite(weight) ? Math.max(0, weight) : 0
+  const positiveCategoryCount = weights.reduce(
+    (count, weight) => count + (safeWeight(weight.weight) > 0 ? 1 : 0),
+    0,
+  )
+  const requestedMin = Math.max(0, Math.floor(opts?.minPerCategory ?? 0))
+  const minPer = positiveCategoryCount > 0
+    ? Math.min(requestedMin, Math.floor(cellBudget / positiveCategoryCount))
+    : 0
+  const total = weights.reduce((sum, weight) => sum + safeWeight(weight.weight), 0)
+  if (cellBudget <= 0 || total <= 0) {
     return weights.map((w) => ({ ...w, exact: 0, cells: 0, remainder: 0 }))
   }
 
-  const groups: AllocatedCells[] = weights.map((w) => {
-    const exact = (Math.max(0, w.weight) / total) * totalCells
-    return { ...w, exact, cells: Math.max(minPer, Math.floor(exact)), remainder: exact - Math.floor(exact) }
+  const groups: AllocatedCells<T>[] = weights.map((w) => {
+    const weight = safeWeight(w.weight)
+    const exact = (weight / total) * cellBudget
+    return {
+      ...w,
+      exact,
+      cells: weight > 0 ? Math.max(minPer, Math.floor(exact)) : 0,
+      remainder: exact - Math.floor(exact),
+    }
   })
 
   let assigned = groups.reduce((sum, g) => sum + g.cells, 0)
   // Over-allocated (the per-category minimum overshot): claw back from the
   // categories holding the most cells, breaking ties toward the smallest remainder.
-  while (assigned > totalCells) {
+  while (assigned > cellBudget) {
     const reducible = groups
       .filter((g) => g.cells > minPer)
       .sort((a, b) => b.cells - a.cells || a.remainder - b.remainder || a.key.localeCompare(b.key))[0]
@@ -249,10 +265,14 @@ export function allocateCells(
   }
   // Under-allocated: hand the leftover cells to the largest remainders. The sort
   // keys (remainder/weight/key) don't change as we bump `.cells`, so rank once.
-  const ranked = [...groups].sort(
-    (a, b) => b.remainder - a.remainder || b.weight - a.weight || a.key.localeCompare(b.key),
-  )
-  for (let i = 0; assigned < totalCells; i++) {
+  const ranked = groups
+    .filter((group) => safeWeight(group.weight) > 0)
+    .sort(
+      (a, b) => b.remainder - a.remainder
+        || safeWeight(b.weight) - safeWeight(a.weight)
+        || a.key.localeCompare(b.key),
+    )
+  for (let i = 0; assigned < cellBudget; i++) {
     ranked[i % ranked.length].cells++
     assigned++
   }

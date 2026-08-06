@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { ThemeProvider } from "semiotic"
 import {
   ChoroplethMap,
@@ -9,6 +9,7 @@ import {
 } from "semiotic/geo"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
+import useReadingLineSections from "../../hooks/useReadingLineSections"
 import ExamplePageLayout from "./ExamplePageLayout"
 import sfNeighborhoods from "./data/sfAnalysisNeighborhoods.json"
 import "./DataVizForDummiesExamplePage.css"
@@ -222,7 +223,12 @@ const CHAPTER_STATS = {
 export default function DataVizForDummiesFiveExamplePage() {
   const [docsTheme] = useDocsTheme()
   const chartTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
-  const [activeSection, setActiveSection] = useState(SECTIONS[0].id)
+  const { activeId: activeSection } = useReadingLineSections({
+    ids: SECTIONS.map((section) => section.id),
+    readingLine: 0.4,
+    rootMargin: "-22% 0px -58%",
+    threshold: [0, 0.15, 0.4, 0.7],
+  })
   const [regionMetric, setRegionMetric] = useState("attendance")
   const [symbolMetric, setSymbolMetric] = useState("prospects")
   const [flowMotion, setFlowMotion] = useState(false)
@@ -232,22 +238,6 @@ export default function DataVizForDummiesFiveExamplePage() {
   const chartWidth =
     pageWidth < 780 ? Math.max(280, pageWidth - 28) : Math.min(710, pageWidth - 350)
   const compact = pageWidth < 780
-
-  useEffect(() => {
-    const elements = SECTIONS.map(({ id }) => document.getElementById(id)).filter(Boolean)
-    if (!elements.length || typeof IntersectionObserver === "undefined") return undefined
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        if (visible?.target?.id) setActiveSection(visible.target.id)
-      },
-      { rootMargin: "-22% 0px -58%", threshold: [0, 0.15, 0.4, 0.7] },
-    )
-    elements.forEach((element) => observer.observe(element))
-    return () => observer.disconnect()
-  }, [])
 
   return (
     <ExamplePageLayout title="Data Viz for Dummies V">

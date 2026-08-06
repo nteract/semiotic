@@ -10,6 +10,8 @@ class RingBuffer<T>
 class RunningStats
 class WindowAccumulator
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function MultiPointTooltip(): TooltipContentFn
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function RealtimeLineChart<TDatum extends Datum = Datum>(props: RealtimeLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -18,10 +20,13 @@ function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: RealtimeWat
 function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNetworkFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-network").StreamNetworkFrameHandle>): React.ReactNode
 function StreamXYFrame(: import("../../../dist/semiotic-realtime-core").StreamXYFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-realtime-core").StreamXYFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
 function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function bandBounds(w: AggregatedWindow, band: AggregateBand, stat: AggregateStat, sigma?: number | undefined): [number, number] | null
 function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function markTooltipChrome<T>(component: T): T
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function parseWindowDuration(spec: string | number): number | null
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
@@ -57,6 +62,8 @@ interface MotionPlacementEncoding<TDatum>
 interface MotionPoint
 interface MotionProcessEncoding<TDatum>
 interface MotionTimeEncoding<TDatum>
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface RealtimeHeatmapProps<TDatum extends Datum = Datum>
 interface RealtimeHistogramProps<TDatum extends Datum = Datum>
 interface RealtimeLineChartProps<TDatum extends Datum = Datum>
@@ -76,6 +83,9 @@ interface SwarmStyle
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
 interface TemporalHistogramProps<TDatum extends Datum = Datum>
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 interface WaterfallStyle
 interface WindowAccumulatorConfig
 type AggregateBand = "stddev" | "minmax" | "none"
@@ -94,6 +104,8 @@ type PushIdAccessor<T> = keyof T | ((datum: T, index: number) => string | number
 type StreamChartType = "line" | "area" | "stackedarea" | "mixed" | "scatter" | "bubble" | "heatmap" | "bar" | "swarm" | "waterfall" | "candlestick" | "custom"
 type StreamStatus = "idle" | "active" | "stale"
 type ThresholdType = "greater" | "lesser"
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 type WindowMode = "sliding" | "growing"
 type WindowType = "tumbling" | "hopping" | "session"
 ```

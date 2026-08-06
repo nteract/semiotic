@@ -1,11 +1,17 @@
 import { render } from "@testing-library/react"
+import { vi } from "vitest"
 import {
   Tooltip,
+  TooltipRoot,
   MultiLineTooltip,
   MultiPointTooltip,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
   normalizeTooltip,
+  resolveTooltipContent,
   resolveMultiCapableTooltip,
 } from "./Tooltip"
+import { ThemeProvider } from "../ThemeProvider"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ReactElement, ReactNode } from "react"
@@ -219,6 +225,29 @@ describe("normalizeTooltip", () => {
     expect(result).not.toBe(fn)
   })
 
+  it("does not add a second chrome root around TooltipRoot content", () => {
+    const wrapped = normalizeTooltip((d: Datum) => (
+      <TooltipRoot chrome="css" className="consumer-tooltip">{d.name}</TooltipRoot>
+    )) as (d: Datum) => ReactElement
+
+    const rendered = wrapped({ name: "Owned" })
+    expect(rendered.type).toBe(TooltipRoot)
+    const { container } = render(<>{rendered}</>)
+    expect(container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+    expect(container.querySelector(".consumer-tooltip")?.textContent).toBe("Owned")
+  })
+
+  it("respects wrapper components explicitly marked as chrome owners", () => {
+    const Owned = markTooltipChrome(function Owned({ label }: { label: string }) {
+      return <TooltipRoot chrome="css" className="owned-wrapper">{label}</TooltipRoot>
+    })
+    const wrapped = normalizeTooltip(() => <Owned label="Wrapper" />) as (datum: Datum) => ReactElement
+
+    const rendered = wrapped({})
+    expect(rendered.type).toBe(Owned)
+    expect(hasOwnTooltipChrome(rendered)).toBe(true)
+  })
+
   it("unwraps HoverData for user tooltip functions", () => {
     const fn = (d: Datum) => d.task
     const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
@@ -271,6 +300,23 @@ describe("normalizeTooltip", () => {
     const rendered = wrapped(rawDatum)
     expect(rendered).not.toBeNull()
     expect(rendered?.props.children).toBe("visible label")
+  })
+
+  it("gives declarative configs the same datum for raw and HoverData inputs", () => {
+    const configured = normalizeTooltip({ title: "label", fields: ["value"] })
+    expect(configured).toBeTypeOf("function")
+    const renderConfigured = configured as (datum: Datum) => React.ReactNode
+    const raw = render(<>{renderConfigured({ label: "Alpha", value: 42 })}</>)
+    const wrapped = render(<>{renderConfigured({
+      __semioticHoverData: true,
+      data: { label: "Alpha", value: 42 },
+      x: 20,
+      y: 30,
+    })}</>)
+
+    expect(raw.container.textContent).toBe(wrapped.container.textContent)
+    expect(wrapped.container.textContent).toContain("Alpha")
+    expect(wrapped.container.textContent).toContain("42")
   })
 
   it("returns false for undefined", () => {
@@ -354,6 +400,84 @@ describe("normalizeTooltip", () => {
     const rendered = wrapped(hoverData)
     expect(rendered).not.toBeNull()
     expect(rendered?.props.children).toBe("A")
+  })
+})
+
+describe("TooltipRoot", () => {
+  it("marks both default and CSS-owned roots while only default mode paints chrome", () => {
+    const { container } = render(
+      <>
+        <TooltipRoot data-testid="default-root">Default</TooltipRoot>
+        <TooltipRoot data-testid="css-root" chrome="css" style={{ padding: 3 }}>CSS</TooltipRoot>
+      </>
+    )
+    const defaultRoot = container.querySelector("[data-testid='default-root']") as HTMLElement
+    const cssRoot = container.querySelector("[data-testid='css-root']") as HTMLElement
+
+    expect(defaultRoot.dataset.semioticTooltipChrome).toBe("true")
+    expect(defaultRoot.style.background).toContain("--semiotic-tooltip-bg")
+    expect(cssRoot.dataset.semioticTooltipChrome).toBe("true")
+    expect(cssRoot.style.background).toBe("")
+    expect(cssRoot.style.padding).toBe("3px")
+  })
+
+  it("consumes tooltip CSS variables from the nearest ThemeProvider", () => {
+    const themed = {
+      mode: "dark" as const,
+      tooltip: {
+        background: "#17202a",
+        text: "#f8f9f9",
+        borderRadius: "2px",
+        fontSize: "13px",
+        shadow: "none",
+      },
+    }
+    const { container } = render(
+      <ThemeProvider theme={themed}>
+        <TooltipRoot>Theme aware</TooltipRoot>
+      </ThemeProvider>
+    )
+    const scope = container.firstChild as HTMLElement
+    const root = container.querySelector(".semiotic-tooltip") as HTMLElement
+
+    expect(scope.style.getPropertyValue("--semiotic-tooltip-bg")).toBe("#17202a")
+    expect(scope.style.getPropertyValue("--semiotic-tooltip-text")).toBe("#f8f9f9")
+    expect(root.style.background).toContain("--semiotic-tooltip-bg")
+    expect(root.style.color).toContain("--semiotic-tooltip-text")
+  })
+})
+
+describe("resolveTooltipContent", () => {
+  const defaultContent = () => <div>default</div>
+
+  it.each([
+    [undefined, defaultContent],
+    [true, defaultContent],
+  ])("uses the chart default for %s", (tooltip, expected) => {
+    expect(resolveTooltipContent({
+      tooltip,
+      defaultTooltipContent: defaultContent,
+    }).tooltipContent).toBe(expected)
+  })
+
+  it("suppresses content for false", () => {
+    const { tooltipContent: resolved } = resolveTooltipContent({
+      tooltip: false,
+      defaultTooltipContent: defaultContent,
+    })
+    expect(resolved({ data: { value: 1 } })).toBeNull()
+  })
+
+  it("keeps legacy HoverData callback semantics when requested", () => {
+    const legacy = vi.fn(() => <div>legacy</div>)
+    const { tooltipContent: resolved } = resolveTooltipContent({
+      tooltip: legacy,
+      defaultTooltipContent: defaultContent,
+      customFunctionContext: "hover",
+    })
+    const hover = { __semioticHoverData: true, data: { value: 4 }, x: 10, y: 20 }
+    resolved(hover)
+    expect(legacy).toHaveBeenCalledWith(hover)
   })
 })
 
@@ -495,6 +619,35 @@ describe("MultiPointTooltip", () => {
     // Fallback: multi content so unsupported charts still get a multi-series tooltip.
     const result = normalizeTooltip("multi")
     expect(typeof result).toBe("function")
+    const { container } = render(<>{typeof result === "function" ? result({
+      __semioticHoverData: true,
+      data: { label: "Single geometry", value: 9 },
+      x: 10,
+      y: 20,
+    }) : null}</>)
+    expect(container.textContent).toContain("Single geometry")
+    expect(container.textContent).toContain("9")
+  })
+
+  it("uses the same useful single-datum fallback for an unsupported object multi request", () => {
+    const result = normalizeTooltip({ mode: "multi" })
+    expect(typeof result).toBe("function")
+    const { container } = render(<>{typeof result === "function" ? result({
+      __semioticHoverData: true,
+      data: { label: "Single geometry", value: 9 },
+      x: 10,
+      y: 20,
+    }) : null}</>)
+    expect(container.textContent).toContain("Single geometry")
+    expect(container.textContent).toContain("9")
+  })
+
+  it("formats circular object values without throwing", () => {
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+    const fn = Tooltip({ fields: ["payload"] })
+    expect(() => render(<>{fn({ payload: circular })}</>)).not.toThrow()
+    expect(render(<>{fn({ payload: circular })}</>).container.textContent).toContain("[Object]")
   })
 
   it("resolveMultiCapableTooltip enables multi mode for the object form", () => {

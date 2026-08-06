@@ -11,7 +11,7 @@ import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveMultiCapableTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -422,11 +422,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
-    // tooltip={false} → return-null function actually disables hover popups;
-    // undefined would fall through to StreamXYFrame's built-in default tooltip.
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
+    ...resolveMultiCapableTooltip({ tooltip, defaultTooltipContent }),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
     ...(yExtent && { yExtent }),

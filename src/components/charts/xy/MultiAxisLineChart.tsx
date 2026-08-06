@@ -7,7 +7,12 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CurveType } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import {
+  MultiPointTooltip,
+  isMultiTooltipConfig,
+  resolveMultiCapableTooltip,
+  type TooltipProp,
+} from "../../Tooltip/Tooltip"
 import { useChartMode } from "../shared/hooks"
 import { useThemeCategorical } from "../shared/hooks"
 import { COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
@@ -467,12 +472,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   })
 
   // ── Tooltip ───────────────────────────────────────────────────────────
-  const tooltipFn = useMemo(() => {
-    if (tooltip === false) return () => null
-    const userTooltip = normalizeTooltip(tooltip)
-    if (userTooltip) return userTooltip
-
-    // Default: show series name, x value, and original y value
+  const defaultTooltipContent = useMemo(() => {
+    // Default: show series name, x value, and original y value.
     return (d: Datum) => {
       const datum = d.data || d
       const seriesName = datum[SERIES_FIELD]
@@ -501,7 +502,70 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
         React.createElement("div", null, `${seriesName}: ${fmt(originalVal)}`)
       )
     }
-  }, [tooltip, seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
+  }, [seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
+
+  // StreamXYFrame interpolates multi-series values in the shared unitized
+  // coordinate system. Translate them back to each axis's original units
+  // before either the built-in or a custom multi renderer sees them.
+  const mapMultiAxisHover = useCallback((datum: Datum): Datum => {
+    const allSeries = Array.isArray(datum.allSeries)
+      ? datum.allSeries as Array<{
+          group: string
+          value: number
+          color: string
+          datum?: Datum
+        }>
+      : []
+    const mappedSeries = allSeries.map((hit) => {
+      const seriesIndex = seriesLabels.indexOf(hit.group)
+      const mappedValue = isDualAxis && seriesIndex >= 0 && extents[seriesIndex]
+        ? invertUnitized(hit.value, extents[seriesIndex])
+        : hit.value
+      let rawDatum = hit.datum
+      if (rawDatum) {
+        rawDatum = { ...rawDatum }
+        delete rawDatum[UNITIZED_FIELD]
+        delete rawDatum[SERIES_FIELD]
+      }
+      return { ...hit, value: mappedValue, datum: rawDatum }
+    })
+    const mappedData = datum.data && typeof datum.data === "object" && !Array.isArray(datum.data)
+      ? { ...datum.data }
+      : datum.data
+    if (mappedData && typeof mappedData === "object" && !Array.isArray(mappedData)) {
+      delete mappedData[UNITIZED_FIELD]
+      delete mappedData[SERIES_FIELD]
+    }
+    const mapped: Datum = { ...datum, data: mappedData, allSeries: mappedSeries }
+    delete mapped[UNITIZED_FIELD]
+    delete mapped[SERIES_FIELD]
+    return mapped
+  }, [extents, isDualAxis, seriesLabels])
+
+  const builtInMultiTooltip = useMemo(() => MultiPointTooltip(), [])
+  const multiDefaultContent = useCallback(
+    (datum: Datum) => builtInMultiTooltip(mapMultiAxisHover(datum)),
+    [builtInMultiTooltip, mapMultiAxisHover],
+  )
+
+  const resolvedTooltipInput = useMemo<TooltipProp | undefined>(() => {
+    if (!isMultiTooltipConfig(tooltip) || typeof tooltip.content !== "function") {
+      return tooltip
+    }
+    return {
+      mode: "multi",
+      content: (datum) => tooltip.content!(mapMultiAxisHover(datum)),
+    }
+  }, [mapMultiAxisHover, tooltip])
+
+  const tooltipProps = useMemo(
+    () => resolveMultiCapableTooltip({
+      tooltip: resolvedTooltipInput,
+      defaultTooltipContent,
+      multiDefaultContent,
+    }),
+    [defaultTooltipContent, multiDefaultContent, resolvedTooltipInput],
+  )
 
   // Loading / empty state — returned only after every hook above has run, so
   // the hook count is identical whether or not data is present. Mounting empty
@@ -555,7 +619,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(props.animate != null && { animate: props.animate }),
     ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
-    tooltipContent: tooltipFn,
+    ...tooltipProps,
     ...(annotations && { annotations }),
     ...buildCustomBehaviorProps({
       linkedHover,

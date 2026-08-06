@@ -158,6 +158,33 @@ describe("physics settled SVG renderer", () => {
     expect(foregroundIndex).toBeGreaterThan(bodyIndex)
   })
 
+  it("can explicitly own a backdrop beneath custom background graphics", () => {
+    const store = new PhysicsPipelineStore({ fixedDt: 1 / 60 })
+    store.spawnNow(circle("backdrop-body", 20, 20))
+
+    const result = renderPhysicsSettledSVG(store, {
+      width: 120,
+      height: 80,
+      background: "#should-remain-suppressed",
+      backgroundGraphicsBackdrop: "var(--semiotic-bg, transparent)",
+      backgroundGraphics: <g data-testid="custom-background" />
+    })
+
+    const backdropIndex = result.svg.indexOf(
+      'class="stream-frame-background__backdrop"'
+    )
+    const backgroundIndex = result.svg.indexOf(
+      'data-testid="custom-background"'
+    )
+    expect(backdropIndex).toBeGreaterThan(-1)
+    expect(result.svg).toContain('width="120" height="80"')
+    expect(result.svg).toContain(
+      'fill="var(--semiotic-bg, transparent)"'
+    )
+    expect(backgroundIndex).toBeGreaterThan(backdropIndex)
+    expect(result.svg).not.toContain("#should-remain-suppressed")
+  })
+
   it("passes the sanitized idPrefix through to renderBodySVG", () => {
     // A custom renderBodySVG emitting `<defs>` (a filter, a gradient) needs
     // this prefix to namespace its own ids — otherwise two settled-physics

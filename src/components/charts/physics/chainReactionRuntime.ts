@@ -32,6 +32,7 @@ interface DependencyBallDatum {
   sourceID: string
   targetID: string
   route: DependencyPoint[]
+  sourceDatum?: Datum
 }
 
 export const EMPTY_SPAWNS: PhysicsQueuedSpawn[] = []
@@ -220,7 +221,8 @@ export function dependencyBodyForce(
 
 export function ballSpawn(
   edge: DependencyMachineEdge,
-  route: DependencyTrackRoute
+  route: DependencyTrackRoute,
+  sourceDatum?: Datum
 ): PhysicsQueuedSpawn {
   const start = route.points[0] ?? { x: 0, y: 0 }
   const next = route.points[1] ?? start
@@ -243,7 +245,8 @@ export function ballSpawn(
       edgeID: edge.id,
       sourceID: edge.sourceID,
       targetID: edge.targetID,
-      route: route.points
+      route: route.points,
+      ...(sourceDatum ? { sourceDatum } : {})
     } satisfies DependencyBallDatum
   }
 }

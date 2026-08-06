@@ -565,6 +565,28 @@ describe("StreamXYFrame", () => {
       fireEvent.keyDown(frame, { key: "Escape" })
     })
 
+    it("renders configured tooltip content for keyboard-focused marks", async () => {
+      const { container } = render(
+        <StreamXYFrame
+          chartType="scatter"
+          data={[
+            { x: 1, y: 10, label: "Alpha" },
+            { x: 2, y: 20, label: "Bravo" },
+          ]}
+          xAccessor="x"
+          yAccessor="y"
+          size={[300, 200]}
+          enableHover
+          tooltipContent={hover => <div data-testid="keyboard-tooltip">{hover.data?.label}</div>}
+        />
+      )
+
+      fireEvent.keyDown(container.querySelector(".stream-xy-frame")!, { key: "ArrowRight" })
+      await waitFor(() => {
+        expect(container.querySelector("[data-testid='keyboard-tooltip']")?.textContent).toBe("Alpha")
+      })
+    })
+
     it("emits additive focus and activation observations from the keyboard", async () => {
       const ref = React.createRef<StreamXYFrameHandle>()
       const observations: Array<{ type: string; inputType?: string }> = []

@@ -7,6 +7,17 @@ import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 export { StreamNetworkFrame }
 
+export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
+
 // Chart HOCs
 export { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
 export { useForceLayout } from "./charts/network/useForceLayout"
@@ -41,8 +52,18 @@ export type {
 // hitTarget — invisible, interaction-bearing scene node for custom network
 // layouts (keyboard nav + focus ring, pointId annotation anchoring,
 // onObservation, shared selection). See also semiotic/recipes.
-export { networkHitTarget, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
-export type { NetworkHitTargetCircleProps, NetworkHitTargetRectProps } from "./stream/hitTarget"
+export {
+  networkEdgeHitTarget,
+  networkHitTarget,
+  DEFAULT_HIT_RADIUS,
+} from "./stream/hitTarget"
+export type {
+  NetworkEdgeHitTargetBaseProps,
+  NetworkHitTargetCircleProps,
+  NetworkHitTargetRectProps,
+  NetworkLineEdgeHitTargetProps,
+  NetworkPathEdgeHitTargetProps,
+} from "./stream/hitTarget"
 // glyph — the composite-pictogram scene node for custom network layouts.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"

@@ -4,15 +4,15 @@ import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
 // process also imports this module through plain Node, where `import.meta`
 // exists but has no Vite `glob` helper; source panels are client-only there.
 const RAW_EXAMPLE_SOURCE_MODULES = typeof import.meta.glob === "function"
-  ? import.meta.glob("./*ExamplePage.jsx", {
+  ? import.meta.glob(["./**/*.{js,jsx,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
     eager: false,
     query: "?raw",
     import: "default",
   })
   : {}
 
-function toRawSourceModuleKey(definition) {
-  const sourceFile = typeof definition?.sourceFile === "string" ? definition.sourceFile.trim() : ""
+function toRawSourceModuleKey(sourceFile) {
+  sourceFile = typeof sourceFile === "string" ? sourceFile.trim() : ""
   if (!sourceFile) return null
   const withPrefix = sourceFile.startsWith("./") ? sourceFile : `./${sourceFile}`
   return withPrefix.replace(/\?raw$/, "")
@@ -28,11 +28,20 @@ function cleanExampleLoader(loader) {
 const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
   EXAMPLE_DEFINITIONS
     .map((definition) => {
-      const key = toRawSourceModuleKey(definition)
-      if (key == null) return undefined
-      const loader = RAW_EXAMPLE_SOURCE_MODULES[key]
-      if (!loader) return undefined
-      return [definition.path, cleanExampleLoader(loader)]
+      const files = definition.sourceFiles?.length
+        ? definition.sourceFiles
+        : definition.sourceFile
+          ? [definition.sourceFile]
+          : []
+      const loaders = files
+        .map((file) => {
+          const key = toRawSourceModuleKey(file)
+          const loader = key == null ? undefined : RAW_EXAMPLE_SOURCE_MODULES[key]
+          return loader ? { file, loader: cleanExampleLoader(loader) } : undefined
+        })
+        .filter(Boolean)
+      if (!loaders.length) return undefined
+      return [definition.path, loaders]
     })
     .filter(Boolean)
 )
@@ -40,16 +49,36 @@ const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
 export const SOURCE_LOADERS_BY_PATH = EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH
 
 const CLEAN_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
-  Object.entries(SOURCE_LOADERS_BY_PATH).map(([path, loader]) => [
+  Object.entries(SOURCE_LOADERS_BY_PATH).map(([path, entries]) => [
     path,
-    () => loader().then(cleanExampleSourceForFullCode),
+    entries.map(({ file, loader }) => ({
+      file,
+      load: () => loader().then(cleanExampleSourceForFullCode),
+    })),
+  ]),
+)
+
+const AGGREGATE_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
+  Object.entries(CLEAN_SOURCE_LOADERS_BY_PATH).map(([path, entries]) => [
+    path,
+    () =>
+      Promise.all(entries.map(async ({ file, load }) => ({ file, source: await load() }))).then(
+        (files) => files
+          .map(({ file, source }) => `// --- ${file} ---\n${source}`)
+          .join("\n\n"),
+      ),
   ]),
 )
 
 export const EXAMPLE_SOURCE_PATHS = Object.keys(SOURCE_LOADERS_BY_PATH)
 
+export function getExampleSourceLoaders(pathname) {
+  return CLEAN_SOURCE_LOADERS_BY_PATH[pathname] ?? []
+}
+
+/** Backward-compatible aggregate loader for consumers that expect one string. */
 export function getExampleSourceLoader(pathname) {
-  return CLEAN_SOURCE_LOADERS_BY_PATH[pathname]
+  return AGGREGATE_SOURCE_LOADERS_BY_PATH[pathname]
 }
 
 const NARRATIVE_CODE_NAMES = ["implementationCode", "combinedCode"]

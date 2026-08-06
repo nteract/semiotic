@@ -7,6 +7,7 @@ import {
   EXAMPLE_SOURCE_PATHS,
   cleanExampleSourceForFullCode,
   getExampleSourceLoader,
+  getExampleSourceLoaders,
 } from "./exampleSourceMap"
 
 describe("example Full Code source cleanup", () => {
@@ -65,6 +66,23 @@ export default function Example() {
       expect(loader).toBeTypeOf("function")
       expect(definition).toHaveProperty("sourceFile")
     }
+  })
+
+  it("exposes complete multi-file source bundles without eagerly loading them", () => {
+    const definition = EXAMPLE_DEFINITIONS.find(
+      ({ path }) => path === "/examples/the-last-scarcity",
+    )
+    const loaders = getExampleSourceLoaders("/examples/the-last-scarcity")
+    expect(loaders).toHaveLength(definition.sourceFiles.length)
+    expect(loaders.map(({ file }) => file)).toEqual(
+      expect.arrayContaining([
+        "TheLastScarcityExamplePage.jsx",
+        "TheLastScarcityExamplePage.css",
+        "last-scarcity/PalaceMap.jsx",
+        "last-scarcity/lastScarcityData.js",
+      ]),
+    )
+    expect(loaders.every(({ load }) => typeof load === "function")).toBe(true)
   })
 
   it("keeps source-loader contract valid while validating example definitions", () => {

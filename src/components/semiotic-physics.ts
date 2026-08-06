@@ -47,6 +47,12 @@ import {
 import StreamPhysicsFrame, {
   StreamPhysicsFrame as NamedStreamPhysicsFrame
 } from "./stream/physics/StreamPhysicsFrame"
+import {
+  Tooltip,
+  TooltipRoot,
+  MultiLineTooltip,
+  markTooltipChrome
+} from "./Tooltip/Tooltip"
 import { PhysicsPipelineStore } from "./stream/physics/PhysicsPipelineStore"
 import {
   BuiltInPhysicsEngineAdapter,
@@ -122,6 +128,10 @@ export {
   PhysicsCustomChart,
   PhysicsPileChart,
   UnitPileChart,
+  Tooltip,
+  TooltipRoot,
+  MultiLineTooltip,
+  markTooltipChrome,
   PhysicsPipelineStore,
   PhysicsSedimentAccumulator,
   ProcessFlowChart,
@@ -187,6 +197,16 @@ export {
 }
 
 export default StreamPhysicsFrame
+
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode
+} from "./Tooltip/Tooltip"
 
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
@@ -369,6 +389,7 @@ export type {
   PhysicsBodySemanticItemContext,
   PhysicsBodySelection,
   PhysicsBodyStyleContext,
+  PhysicsCanvasPaintContext,
   StreamPhysicsBodyForce,
   StreamPhysicsBodyForceContext,
   StreamPhysicsPopOptions,

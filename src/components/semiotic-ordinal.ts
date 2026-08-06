@@ -7,6 +7,17 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 
 export { StreamOrdinalFrame }
 
+export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
+
 // Chart HOCs
 export { BarChart } from "./charts/ordinal/BarChart"
 export { StackedBarChart } from "./charts/ordinal/StackedBarChart"

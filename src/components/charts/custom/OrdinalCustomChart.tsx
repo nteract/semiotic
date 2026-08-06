@@ -14,6 +14,7 @@ import { SafeRender } from "../shared/withChartWrapper"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import type { ChartRecipe } from "../../ai/chartRecipes"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -46,6 +47,8 @@ export interface OrdinalCustomChartProps<
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
+  /** Tooltip content/configuration. Custom callbacks receive the authored datum. */
+  tooltip?: TooltipProp
   showAxes?: boolean
   showGrid?: boolean
   annotations?: Datum[]
@@ -105,6 +108,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     className,
     colorBy,
     colorScheme,
+    tooltip,
     showAxes = false,
     annotations,
     onObservation,
@@ -163,6 +167,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     () => (sel?.isActive ? { isActive: true, predicate: sel.predicate } : null),
     [sel?.isActive, sel?.predicate]
   )
+  const normalizedTooltip = useMemo(() => normalizeTooltip(tooltip), [tooltip])
 
   if (earlyReturn) return earlyReturn
 
@@ -195,6 +200,11 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     showGrid,
     annotations,
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...(tooltip === false
+      ? { tooltipContent: () => null }
+      : normalizedTooltip
+        ? { tooltipContent: normalizedTooltip }
+        : {}),
     // selection/linkedHover/onObservation/onClick are wired through these
     // synthesized hover/click behavior props — the bare prop names don't
     // exist on StreamOrdinalFrameProps.

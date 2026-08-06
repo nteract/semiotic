@@ -17,6 +17,7 @@ export {
 } from "./store/ThemeStore"
 export {
   themeToCSS,
+  themeToCSSVariables,
   themeToTokens,
   resolveThemePreset,
   THEME_PRESETS,
@@ -28,6 +29,10 @@ export type { ThemePresetName } from "./semiotic-themes"
 // ── Format utilities ─────────────────────────────────────────────────────
 export { adaptiveTimeTicks, smartTickFormat } from "./charts/shared/formatUtils"
 export type { AdaptiveTimeTickOptions, TimeGranularity } from "./charts/shared/formatUtils"
+
+// ── Responsive sizing math (React-free) ─────────────────────────────────
+export { resolveResponsiveDimension } from "./stream/responsiveSize"
+export type { ResponsiveSizeOptions } from "./stream/responsiveSize"
 
 // ── Color manipulation ───────────────────────────────────────────────────
 export { darkenColor, lightenColor } from "./charts/shared/colorManipulation"
@@ -188,7 +193,27 @@ export { RingBuffer } from "./realtime/RingBuffer"
 export { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // ── Tooltip utilities ────────────────────────────────────────────────────
-export { normalizeTooltip, MultiPointTooltip } from "./Tooltip/Tooltip"
+export {
+  Tooltip,
+  TooltipRoot,
+  MultiLineTooltip,
+  MultiPointTooltip,
+  normalizeTooltip,
+  resolveTooltipContent,
+  resolveMultiCapableTooltip,
+  isMultiTooltip,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
+} from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
 
 // ── Accessibility hooks ─────────────────────────────────────────────────
 // ── Radial chart geometry ────────────────────────────────────────────────

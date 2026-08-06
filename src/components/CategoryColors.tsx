@@ -1,7 +1,11 @@
 "use client"
 import * as React from "react"
 import { createContext, useContext, useMemo } from "react"
-import { COLOR_SCHEMES, DEFAULT_COLORS, resolveExplicitColor } from "./charts/shared/colorUtils"
+import {
+  DEFAULT_COLORS,
+  resolveCategoricalPalette,
+  resolveExplicitColor
+} from "./charts/shared/colorUtils"
 
 /**
  * Category→color mapping. Maps category values (like "North", "error", "active")
@@ -72,7 +76,7 @@ export function CategoryColorProvider({
 
       const palette = Array.isArray(colorScheme)
         ? colorScheme
-        : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] as readonly string[]) || DEFAULT_COLORS
+        : resolveCategoricalPalette(colorScheme, undefined)
       const map: CategoryColorMap = {}
       for (let i = 0; i < categories.length; i++) {
         map[categories[i]] = palette[i % palette.length]

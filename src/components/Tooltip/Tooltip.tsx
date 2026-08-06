@@ -3,6 +3,18 @@ import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { normalizeHoverDatum } from "../stream/hoverUtils"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
+import {
+  TooltipRoot,
+  hasOwnTooltipChrome,
+} from "./tooltipChrome"
+
+export {
+  TooltipRoot,
+  defaultTooltipStyle,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
+} from "./tooltipChrome"
+export type { TooltipRootProps, TooltipChromeMode } from "./tooltipChrome"
 
 /**
  * Configuration for a single tooltip field
@@ -77,23 +89,6 @@ export interface MultiLineTooltipConfig extends TooltipConfig {
 }
 
 /**
- * Default tooltip styles following best practices
- */
-export const defaultTooltipStyle: React.CSSProperties = {
-  background: "var(--semiotic-tooltip-bg, rgba(0, 0, 0, 0.85))",
-  color: "var(--semiotic-tooltip-text, white)",
-  padding: "8px 12px",
-  borderRadius: "var(--semiotic-tooltip-radius, 6px)",
-  fontSize: "var(--semiotic-tooltip-font-size, 14px)",
-  fontFamily: "var(--semiotic-font-family, inherit)",
-  lineHeight: "1.5",
-  boxShadow: "var(--semiotic-tooltip-shadow, 0 2px 8px rgba(0, 0, 0, 0.15))",
-  pointerEvents: "none",
-  maxWidth: "300px",
-  wordWrap: "break-word"
-}
-
-/**
  * Extract value from data using accessor
  */
 function getValue(data: Record<string, unknown>, accessor: Accessor): unknown {
@@ -133,7 +128,14 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     const obj = value as Record<string, unknown>
     if (obj.id !== undefined) return String(obj.id)
     if (obj.name !== undefined) return String(obj.name)
-    return JSON.stringify(value)
+    try {
+      return JSON.stringify(value)
+    } catch {
+      // Layout engines commonly add parent/source/target references to user
+      // data, turning otherwise ordinary objects into cycles. A tooltip must
+      // degrade to a readable placeholder instead of taking down the chart.
+      return Array.isArray(value) ? `[Array(${value.length})]` : "[Object]"
+    }
   }
 
   return String(value)
@@ -226,13 +228,8 @@ export function Tooltip(config: TooltipConfig = {}) {
       }
     }
 
-    const mergedStyle = { ...defaultTooltipStyle, ...style }
-
     return (
-      <div
-        className={`semiotic-tooltip ${className}`.trim()}
-        style={mergedStyle}
-      >
+      <TooltipRoot className={className} style={style}>
         {titleContent && <div style={{ fontWeight: fieldLines.length > 0 ? "bold" : "normal" }}>{titleContent}</div>}
         {fieldLines.map((line, index) => (
           <div key={index} style={{ marginTop: index === 0 && titleContent ? "4px" : 0 }}>
@@ -240,7 +237,7 @@ export function Tooltip(config: TooltipConfig = {}) {
             {line.value}
           </div>
         ))}
-      </div>
+      </TooltipRoot>
     )
   }
 }
@@ -360,18 +357,13 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
       })
     }
 
-    const mergedStyle = { ...defaultTooltipStyle, ...style }
-
     // Safety check: ensure lines is an array
     if (!Array.isArray(lines) || lines.length === 0) {
       return null
     }
 
     return (
-      <div
-        className={`semiotic-tooltip semiotic-tooltip-multiline ${className}`.trim()}
-        style={mergedStyle}
-      >
+      <TooltipRoot className={`semiotic-tooltip-multiline ${className}`.trim()} style={style}>
         {lines.map((line, index) => (
           <div
             key={index}
@@ -389,7 +381,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
             {line.value}
           </div>
         ))}
-      </div>
+      </TooltipRoot>
     )
   }
 }
@@ -479,6 +471,13 @@ export function resolveMultiCapableTooltip(input: {
   /** Used when multi mode is on and no custom content was provided. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   multiDefaultContent?: (d: any) => React.ReactNode
+  /**
+   * Preserve a legacy HOC contract whose plain function receives the full
+   * HoverData wrapper. Multi config `content` always receives the normalized
+   * raw datum plus `allSeries` / `xValue` as documented.
+   * @default "datum"
+   */
+  customFunctionContext?: "datum" | "hover"
 }): {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tooltipContent: (d: any) => React.ReactNode
@@ -488,6 +487,7 @@ export function resolveMultiCapableTooltip(input: {
     tooltip,
     defaultTooltipContent,
     multiDefaultContent = MultiPointTooltip(),
+    customFunctionContext = "datum",
   } = input
 
   if (tooltip === false) {
@@ -505,6 +505,42 @@ export function resolveMultiCapableTooltip(input: {
     }
   }
 
+  if (customFunctionContext === "hover" && typeof tooltip === "function") {
+    return { tooltipContent: tooltip }
+  }
+
+  const normalized = normalizeTooltip(tooltip)
+  return {
+    tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
+  }
+}
+
+/**
+ * Resolve the default/custom/disabled contract for chart families whose frame
+ * only supports single-datum hover. This is the single-mode counterpart to
+ * `resolveMultiCapableTooltip` and is useful for legacy wrappers that expose a
+ * raw HoverData callback while also accepting the shared config/boolean API.
+ */
+export function resolveTooltipContent(input: {
+  tooltip: TooltipProp | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  defaultTooltipContent: (d: any) => React.ReactNode
+  /** @default "datum" */
+  customFunctionContext?: "datum" | "hover"
+}): {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tooltipContent: (d: any) => React.ReactNode
+} {
+  const {
+    tooltip,
+    defaultTooltipContent,
+    customFunctionContext = "datum",
+  } = input
+
+  if (tooltip === false) return { tooltipContent: () => null }
+  if (customFunctionContext === "hover" && typeof tooltip === "function") {
+    return { tooltipContent: tooltip }
+  }
   const normalized = normalizeTooltip(tooltip)
   return {
     tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
@@ -524,9 +560,9 @@ export function MultiPointTooltip(): TooltipContentFn {
       // the hover root are gone.
       const val = d.data?.value ?? d.data?.y
       return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <TooltipRoot>
           <div>{formatValue(val)}</div>
-        </div>
+        </TooltipRoot>
       )
     }
 
@@ -535,7 +571,7 @@ export function MultiPointTooltip(): TooltipContentFn {
     const headerValue = d.xValue ?? d.data?.time ?? d.data?.x
 
     return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+      <TooltipRoot>
         {headerValue != null && (
           <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
             {formatValue(headerValue)}
@@ -548,7 +584,7 @@ export function MultiPointTooltip(): TooltipContentFn {
             <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatValue(s.value)}</span>
           </div>
         ))}
-      </div>
+      </TooltipRoot>
     )
   }
 }
@@ -658,10 +694,15 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       }
       const result = userFn(datum)
       if (result === null || result === undefined) return null
+      // A custom renderer can own its chrome either with TooltipRoot, the
+      // explicit data marker, an inline background, or a component-level
+      // ownsChrome flag. Preserve that element directly; wrapping it here
+      // would create the same double-box artifact FlippingTooltip avoids.
+      if (hasOwnTooltipChrome(result)) return result
       return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <TooltipRoot>
           {result}
-        </div>
+        </TooltipRoot>
       )
     }
   }
@@ -673,24 +714,32 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
 
   // First-class multi config. Charts that support multi mode should
   // intercept via `isMultiTooltip` / `resolveMultiCapableTooltip` and set
-  // `tooltipMode: "multi"` on the frame. If we still land here, render a
-  // multi-series content function as a best-effort fallback.
+  // `tooltipMode: "multi"` on the frame. If we still land here, use the
+  // same useful single-datum fallback as the string form below. A
+  // MultiPointTooltip cannot render meaningful rows without `allSeries`,
+  // which single-mode ordinal/network/geo/physics frames do not provide.
   if (isMultiTooltipConfig(tooltip)) {
     if (typeof tooltip.content === "function") {
       return normalizeTooltip(tooltip.content)
     }
     if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
       console.warn(
-        '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Prefer LineChart/AreaChart/StackedAreaChart/DifferenceChart, or pass frameProps.tooltipMode: "multi".',
+        '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Use a line/area-family chart with multi support, or pass frameProps.tooltipMode: "multi" to StreamXYFrame.',
       )
     }
-    return MultiPointTooltip()
+    const singleFallback = MultiLineTooltip()
+    return normalizeTooltip((datum) => singleFallback(datum))
   }
 
   // Config object with fields/title — convert to a tooltip function
   if (typeof tooltip === "object" && tooltip !== null && ("fields" in tooltip || "title" in tooltip)) {
     const config = tooltip as TooltipConfig
-    return Tooltip(config)
+    const configuredTooltip = Tooltip(config)
+    // Declarative configs follow the same raw-datum contract as callback
+    // tooltips. Reuse the function normalizer so Stream Frame HoverData is
+    // unwrapped consistently across XY, ordinal, network, geo, physics, and
+    // realtime wrappers.
+    return normalizeTooltip((datum) => configuredTooltip(datum))
   }
 
   // `tooltip="multi"` is only wired when the HOC sets tooltipMode:"multi"
@@ -701,10 +750,11 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   if (tooltip === "multi") {
     if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
       console.warn(
-        '[semiotic] tooltip="multi" reached normalizeTooltip — prefer charts that set tooltipMode (LineChart, AreaChart, StackedAreaChart, DifferenceChart). Rendering MultiLineTooltip content as a fallback.',
+        '[semiotic] tooltip="multi" reached normalizeTooltip on a single-tooltip chart. Rendering multi-field content as a backward-compatible fallback.',
       )
     }
-    return MultiLineTooltip()
+    const singleFallback = MultiLineTooltip()
+    return normalizeTooltip((datum) => singleFallback(datum))
   }
 
   // Should not reach here but return a generic tooltip

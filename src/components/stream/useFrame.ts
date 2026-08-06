@@ -47,7 +47,10 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
+import {
+  clearCSSColorCache,
+  subscribeToCSSColorInvalidation
+} from "./renderers/resolveCSSColor"
 import type { HoverPointerCoords } from "./hoverUtils"
 import { FrameRuntime, type FrameClock, type FrameRandom } from "./FrameRuntime"
 import { reserveFrameChromeMargin } from "./titleLayout"
@@ -180,6 +183,12 @@ export interface UseFrameInput {
    * timing on those three).
    */
   themeDirtyRef?: React.MutableRefObject<boolean>
+  /**
+   * Skip the mount-time invalidation while retaining later theme-change
+   * repaints. Useful for frames that synchronously paint their initial settled
+   * state and would otherwise queue a redundant animation frame on mount.
+   */
+  skipInitialThemeInvalidation?: boolean
 }
 
 export interface UseFrameResult {
@@ -485,12 +494,31 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // Both the canvas-arg and argless call sites in the four frames
   // reduced to a single global counter bump; we use the argless form.
   const themeDirtyRef = input.themeDirtyRef
+  const didRunThemeEffectRef = useRef(false)
   useIsomorphicLayoutEffect(() => {
     if (!themeDirtyRef) return
+    const initialRun = !didRunThemeEffectRef.current
+    didRunThemeEffectRef.current = true
+    if (initialRun && input.skipInitialThemeInvalidation) return
     clearCSSColorCache()
     themeDirtyRef.current = true
     scheduleRender()
-  }, [currentTheme, scheduleRender, themeDirtyRef])
+  }, [currentTheme, input.skipInitialThemeInvalidation, scheduleRender, themeDirtyRef])
+
+  // A scoped CSS override or external color-scheme/class toggle can change
+  // canvas paints without changing ThemeStore. The shared CSS-color observer
+  // invalidates its cache and notifies only frames in the affected DOM branch;
+  // this subscription supplies the missing repaint for already-settled frames.
+  useEffect(() => {
+    if (!themeDirtyRef) return
+    return subscribeToCSSColorInvalidation(
+      () => responsiveRef.current,
+      () => {
+        themeDirtyRef.current = true
+        scheduleRender()
+      }
+    )
+  }, [responsiveRef, scheduleRender, themeDirtyRef])
 
   return {
     reducedMotion,

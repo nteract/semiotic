@@ -60,6 +60,34 @@ function accessibleDatumFor(node: AccessibleSceneNode): unknown {
 }
 
 /**
+ * Extract one semantic row from a network node or edge.
+ *
+ * Network geometry has several shapes (circle/rect nodes and
+ * line/bezier/ribbon/curved edges), but its accessible row contract is the
+ * same for all of them: an explicit `accessibility.tableFields` projection
+ * wins, then `accessibleDatum`, then the render datum. Keeping this separate
+ * from `extractAllRows` avoids treating a network line edge like an XY line
+ * series (whose datum is an array of vertices).
+ */
+export function extractNetworkDataRow(
+  element: AccessibleSceneNode,
+  fallbackLabel: string,
+): DataRow {
+  const accessibility = nodeRecord(element.accessibility)
+  const authoredLabel =
+    typeof accessibility.label === "string" && accessibility.label.length > 0
+      ? accessibility.label
+      : typeof element.label === "string" && element.label.length > 0
+        ? element.label
+        : fallbackLabel
+
+  return {
+    label: authoredLabel,
+    values: datumToValues(accessibleDatumFor(element)),
+  }
+}
+
+/**
  * Extract user-facing table rows from scene nodes. Geometry is ignored; rich
  * accessibleDatum/tableFields metadata takes precedence over the render datum.
  */

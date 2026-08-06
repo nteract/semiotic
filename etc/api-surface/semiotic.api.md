@@ -13,7 +13,7 @@ const COLOR_BLIND_SAFE_CATEGORICAL: string[]
 const DARK_THEME: SemioticTheme
 const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
-const THEME_PRESETS: Record<string, SemioticTheme>
+const THEME_PRESETS: { light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme; }
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
 function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
@@ -80,6 +80,7 @@ function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<T
 function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -107,6 +108,7 @@ function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
+function hasOwnTooltipChrome(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest
@@ -118,6 +120,7 @@ function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefin
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
 function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
@@ -125,11 +128,12 @@ function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: R
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
-function resolveMultiCapableTooltip(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; }): { tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; }
+function resolveMultiCapableTooltip(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; }
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: string | CanvasPattern | HatchFill | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function resolveThemePreset(name: string): SemioticTheme | undefined
+function resolveTooltipContent(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
@@ -141,6 +145,7 @@ function styleRulesToXYStyle(rules: readonly StyleRule[] | undefined, xAccessor:
 function summarizeIntentManifest(manifest: IntentManifest): string
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
+function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
@@ -338,6 +343,7 @@ interface ThresholdAlertConfig
 interface ToConfigOptions
 interface TooltipConfig
 interface TooltipField
+interface TooltipRootProps
 interface TreeDiagramProps<TNode extends Datum = Datum>
 interface TreemapProps<TNode extends Datum = Datum>
 interface UseBrushSelectionOptions
@@ -453,6 +459,7 @@ type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
 type ThresholdType = "greater" | "lesser"
 type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
+type TooltipChromeMode = "default" | "css"
 type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
 type VisualizationControlValue = number | [number, number]

@@ -48,6 +48,11 @@ let observerInstalled = false
 let installedObserver: MutationObserver | null = null
 let installedMql: MediaQueryList | null = null
 let installedMqlHandler: ((e: MediaQueryListEvent) => void) | null = null
+type CSSColorInvalidationSubscriber = {
+  getElement: () => Element | null
+  listener: () => void
+}
+const invalidationSubscribers = new Set<CSSColorInvalidationSubscriber>()
 type LegacyMediaQueryList = MediaQueryList & {
   addListener?: (listener: (event: MediaQueryListEvent) => void) => void
   removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
@@ -60,10 +65,43 @@ function ensureGlobalObserver(): void {
   if (typeof window === "undefined" || typeof document === "undefined") return
   observerInstalled = true
 
-  const bumpVersion = () => { currentVersion++ }
+  const invalidateAndNotify = (targets?: readonly Element[]) => {
+    const affectedSubscribers: CSSColorInvalidationSubscriber[] = []
+    for (const subscriber of invalidationSubscribers) {
+      const element = subscriber.getElement()
+      if (!element) continue
+      const affected =
+        !targets ||
+        targets.some(
+          (target) =>
+            target === element ||
+            target.contains(element) ||
+            element.contains(target)
+        )
+      if (affected) affectedSubscribers.push(subscriber)
+    }
+
+    // Attribute mutations are observed on the whole document, but only a
+    // mutation in (or on) a subscribed canvas branch can change a cached
+    // computed custom property. Avoid invalidating every canvas cache for
+    // unrelated DOM churn elsewhere in the document.
+    if (targets && affectedSubscribers.length === 0) return
+
+    currentVersion++
+    for (const subscriber of affectedSubscribers) subscriber.listener()
+  }
 
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
-    installedObserver = new MutationObserver(bumpVersion)
+    installedObserver = new MutationObserver((records) => {
+      const targets = Array.from(
+        new Set(
+          records
+            .map((record) => record.target)
+            .filter((target): target is Element => target instanceof Element)
+        )
+      )
+      invalidateAndNotify(targets)
+    })
     // Observe the whole document tree so intermediate-wrapper scoped CSS vars
     // (`<div style={{ "--semiotic-danger": "#4b0082" }}>` around a chart)
     // invalidate the canvas color cache the same way ThemeProvider / dark-mode
@@ -71,7 +109,13 @@ function ensureGlobalObserver(): void {
     // we only re-resolve vars on the next paint, not re-layout.
     installedObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class", "style", "data-theme", "data-semiotic-theme"],
+      attributeFilter: [
+        "class",
+        "style",
+        "data-theme",
+        "data-semiotic-theme",
+        "data-semiotic-theme-mode"
+      ],
       subtree: true,
     })
   }
@@ -79,7 +123,7 @@ function ensureGlobalObserver(): void {
   if (typeof window.matchMedia === "function") {
     try {
       installedMql = window.matchMedia("(prefers-color-scheme: dark)")
-      installedMqlHandler = bumpVersion
+      installedMqlHandler = () => invalidateAndNotify()
       if (typeof installedMql.addEventListener === "function") {
         installedMql.addEventListener("change", installedMqlHandler)
       } else if (typeof (installedMql as LegacyMediaQueryList).addListener === "function") {
@@ -89,6 +133,24 @@ function ensureGlobalObserver(): void {
     } catch {
       // matchMedia can throw in older browsers / jsdom — safe to ignore
     }
+  }
+}
+
+/**
+ * Repaint subscription for settled canvases whose CSS cascade changes without
+ * a ThemeStore update (ancestor class/style changes or system color-scheme
+ * media changes). Notifications are scoped to the subscribed element's DOM
+ * branch; requestAnimationFrame coalescing remains owned by the frame.
+ */
+export function subscribeToCSSColorInvalidation(
+  getElement: () => Element | null,
+  listener: () => void
+): () => void {
+  ensureGlobalObserver()
+  const subscriber = { getElement, listener }
+  invalidationSubscribers.add(subscriber)
+  return () => {
+    invalidationSubscribers.delete(subscriber)
   }
 }
 
@@ -171,5 +233,6 @@ export function _resetCSSColorCacheForTest(): void {
     installedMql = null
     installedMqlHandler = null
   }
+  invalidationSubscribers.clear()
   observerInstalled = false
 }

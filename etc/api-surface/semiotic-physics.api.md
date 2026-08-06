@@ -18,6 +18,7 @@ function EventDropChart(: import("../../../dist/semiotic-physics").EventDropChar
 function GaltonBoardChart(: import("../../../dist/semiotic-physics").GaltonBoardChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function GuantletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -25,6 +26,8 @@ function PhysicsPileChart(: import("../../../dist/semiotic-physics").UnitPileCha
 function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): React.JSX.Element
 function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlowChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function StreamPhysicsFrame(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function UnitPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
 function absorbRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
@@ -87,6 +90,7 @@ function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function isHatchFill(fill: unknown): boolean
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function membraneRegion(options: ProcessRegionBaseOptions & { cost: number; dampingScale?: number; energyScale?: number; color?: string; }): StreamPhysicsRegionEffect
 function normalizePhysicsAnnotations(annotations: Datum[] | undefined): Datum[] | undefined
@@ -264,6 +268,8 @@ interface MotionPlacementEncoding<TDatum>
 interface MotionPoint
 interface MotionProcessEncoding<TDatum>
 interface MotionTimeEncoding<TDatum>
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface PacketFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum>
 interface PhysicalFlowOptions<TNode extends Datum = Datum, TLink extends Datum = Datum>
 interface PhysicalFlowPoint
@@ -279,6 +285,7 @@ interface PhysicsBodySemanticItemContext
 interface PhysicsBodySpec
 interface PhysicsBodyState
 interface PhysicsBodyStyleContext
+interface PhysicsCanvasPaintContext
 interface PhysicsChartLayout
 interface PhysicsColliderBodyFilterSpec
 interface PhysicsColliderSpec
@@ -383,6 +390,9 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 interface UnitPileChartProps<TDatum extends Datum = Datum>
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {
     bandwidth?: () => number;
@@ -559,4 +569,6 @@ type ServiceLevelCaseState = "waiting" | "protected" | "unhappy" | "resolved" | 
 type StreamPhysicsBodyForce = StreamPhysicsRegionVector | ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined)
 type StreamPhysicsRegionKind = "region" | "membrane" | "charge-gate" | "force-field" | "sink" | "source"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

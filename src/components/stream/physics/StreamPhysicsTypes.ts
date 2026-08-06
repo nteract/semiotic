@@ -31,6 +31,7 @@ import type {
 import type { PhysicsController } from "./PhysicsControllers"
 import type { PhysicsExecution } from "./PhysicsWorkerProtocol"
 import type { StreamPhysicsPopOptions } from "./physicsBodyCanvas"
+import type { PhysicsCanvasTheme } from "./PhysicsCanvasTheme"
 
 export interface PhysicsBodySelection {
   isActive?: boolean
@@ -226,6 +227,16 @@ export interface PhysicsHoverData {
   y: number
 }
 
+/** Theme-aware paint helpers supplied to custom physics canvas callbacks. */
+export interface PhysicsCanvasPaintContext {
+  theme: PhysicsCanvasTheme
+  resolvePaint: (
+    paint: Style["fill"] | Style["stroke"] | null | undefined,
+    fallback: string
+  ) => string | CanvasPattern
+  withAlpha: (color: string, opacity: number) => string
+}
+
 export interface StreamPhysicsFrameProps {
   accessibleTable?: boolean
   /**
@@ -237,6 +248,11 @@ export interface StreamPhysicsFrameProps {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   backgroundGraphics?: FrameGraphicsProp
+  /**
+   * Explicit full-frame SVG fill beneath `backgroundGraphics` and the canvas.
+   * Omit to preserve the historical transparent custom-background contract.
+   */
+  backgroundGraphicsBackdrop?: string
   /**
    * Optional rAF seam for deterministic frame-loop scheduling in tests.
    * When omitted, the browser's requestAnimationFrame is used.
@@ -379,15 +395,18 @@ export interface StreamPhysicsFrameProps {
   renderBody?: (
     ctx: CanvasRenderingContext2D,
     body: PhysicsBodyState,
-    style: Style
+    style: Style,
+    paint: PhysicsCanvasPaintContext
   ) => void
   beforePaint?: (
     ctx: CanvasRenderingContext2D,
-    bodies: PhysicsBodyState[]
+    bodies: PhysicsBodyState[],
+    paint: PhysicsCanvasPaintContext
   ) => void
   afterPaint?: (
     ctx: CanvasRenderingContext2D,
-    bodies: PhysicsBodyState[]
+    bodies: PhysicsBodyState[],
+    paint: PhysicsCanvasPaintContext
   ) => void
 }
 

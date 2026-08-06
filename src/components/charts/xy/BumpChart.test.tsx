@@ -6,6 +6,7 @@ import type { XYCustomChartProps } from "../custom/XYCustomChart"
 import type { Datum } from "../shared/datumTypes"
 import { BumpChart, rankBumpData } from "./BumpChart"
 import { LIGHT_THEME, ThemeProvider } from "../../ThemeProvider"
+import { isMultiTooltipConfig } from "../../Tooltip/Tooltip"
 
 let capturedProps: XYCustomChartProps | null = null
 
@@ -356,5 +357,78 @@ describe("BumpChart", () => {
     }
     expect(screen.getByText("2024 · Rank 1")).toBeInTheDocument()
     expect(screen.getByText("Value: $12")).toBeInTheDocument()
+  })
+
+  it("maps multi-tooltip ranks back to source values", () => {
+    render(
+      <BumpChart
+        data={data}
+        xAccessor="year"
+        yAccessor="score"
+        lineBy="team"
+        tooltip={{ mode: "multi" }}
+        showLabels={false}
+      />,
+    )
+
+    const tooltip = capturedProps?.tooltip
+    expect(isMultiTooltipConfig(tooltip)).toBe(true)
+    const rankedAt2022 = (capturedProps?.data as Datum[]).filter(row => row.x === 0)
+    if (isMultiTooltipConfig(tooltip)) {
+      render(<>{tooltip.content?.({
+        data: rankedAt2022[0],
+        xValue: 0,
+        allSeries: rankedAt2022.map((row, index) => ({
+          group: row.__bumpSeries as string,
+          value: row.y as number,
+          color: ["#f00", "#0f0", "#00f"][index],
+          datum: row,
+        })),
+      })}</>)
+    }
+
+    expect(screen.getByText("2022")).toBeInTheDocument()
+    expect(screen.getByText("Rank 1 · 90")).toBeInTheDocument()
+    expect(screen.getByText("Rank 2 · 70")).toBeInTheDocument()
+    expect(screen.getByText("Rank 3 · 50")).toBeInTheDocument()
+  })
+
+  it("passes original rows and mapped values to custom multi content", () => {
+    const content = vi.fn((_datum: Datum) => <div>custom multi</div>)
+    render(
+      <BumpChart
+        data={data}
+        xAccessor="year"
+        yAccessor="score"
+        lineBy="team"
+        tooltip={{ mode: "multi", content }}
+        showLabels={false}
+      />,
+    )
+
+    const tooltip = capturedProps?.tooltip
+    const rankedAt2022 = (capturedProps?.data as Datum[]).filter(row => row.x === 0)
+    if (isMultiTooltipConfig(tooltip)) {
+      tooltip.content?.({
+        data: rankedAt2022[0],
+        xValue: 0,
+        allSeries: rankedAt2022.map(row => ({
+          group: row.__bumpSeries as string,
+          value: row.y as number,
+          color: "#f00",
+          datum: row,
+        })),
+      })
+    }
+
+    const received = content.mock.calls[0]?.[0]
+    expect(received).toBeDefined()
+    expect(received?.year).toBe(2022)
+    expect(received?.xValue).toBe(2022)
+    expect(received?.allSeries).toMatchObject([
+      { group: "Alpha", value: 90, rank: 1, datum: data[0] },
+      { group: "Bravo", value: 70, rank: 2, datum: data[1] },
+      { group: "Cinder", value: 50, rank: 3, datum: data[2] },
+    ])
   })
 })

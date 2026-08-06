@@ -71,10 +71,10 @@
   position: absolute;
   inset: auto auto 28px max(28px, calc((100vw - 1180px) / 2 + 28px));
   color: rgba(244, 240, 231, 0.33);
-  content: "TWO ABSTRACTIONS ENTER";
+  content: "A 2011 ARGUMENT, REVISITED";
   font-size: 9px;
   font-weight: 850;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.18em;
 }
 
 .thunderdome-hero__main {
@@ -209,13 +209,13 @@
 }
 
 .thunderdome-setup h2 {
-  max-width: 12ch;
+  max-width: 14ch;
   margin: 0;
   color: var(--text-primary);
-  font-size: clamp(34px, 4.2vw, 54px);
+  font-size: clamp(30px, 3.8vw, 46px);
   font-weight: 880;
-  letter-spacing: -0.05em;
-  line-height: 0.98;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
 }
 
 .thunderdome-setup__copy {
@@ -277,7 +277,7 @@
   display: flex;
   align-items: baseline;
   gap: 13px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .thunderdome-round__head > span {
@@ -288,74 +288,44 @@
   letter-spacing: 0.06em;
 }
 
-.thunderdome-round__head p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 9px;
-  font-weight: 850;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
 .thunderdome-round > h2 {
-  max-width: 15ch;
-  margin: 0 0 23px;
+  max-width: 18ch;
+  margin: 0 0 20px;
   color: var(--text-primary);
-  font-size: clamp(29px, 3.35vw, 43px);
+  font-size: clamp(28px, 3.2vw, 40px);
   font-weight: 860;
-  letter-spacing: -0.045em;
-  line-height: 1.02;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
 }
 
 .thunderdome-round > p {
-  max-width: 49ch;
+  max-width: 52ch;
   margin: 0 0 15px;
   color: var(--text-secondary);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 16px;
-  line-height: 1.68;
+  line-height: 1.7;
 }
 
-.thunderdome-round__ledger {
-  max-width: 500px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  margin: 13px 0 0;
-  overflow: hidden;
-  border: 1px solid var(--surface-3);
-  border-radius: 7px;
-  background: var(--surface-3);
+.thunderdome-round__limits {
+  max-width: 52ch;
+  margin: 6px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-3);
+  color: var(--text-secondary) !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 500;
+  line-height: 1.5 !important;
+  opacity: 0.82;
 }
 
-.thunderdome-round__ledger > div {
-  padding: 12px 13px;
-  background: var(--surface-1);
-}
-
-.thunderdome-round__ledger dt {
-  margin: 0 0 5px;
-  color: #62751d;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-[data-theme="dark"] .thunderdome-round__ledger dt {
-  color: var(--thunder-acid);
-}
-
-.thunderdome-round__ledger > div:last-child dt {
-  color: var(--thunder-coral);
-}
-
-.thunderdome-round__ledger dd {
-  margin: 0;
+.thunderdome-round__limits span {
   color: var(--text-primary);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.45;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .thunderdome-stage-column {
@@ -413,14 +383,6 @@
   white-space: nowrap;
 }
 
-.thunderdome-stage__header .thunderdome-stage__status {
-  flex: 0 0 auto;
-  padding: 5px 8px;
-  border: 1px solid #5a6350;
-  border-radius: 999px;
-  color: var(--thunder-acid);
-}
-
 .thunderdome-stage__nav {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -448,55 +410,6 @@
 .thunderdome-stage__nav button[aria-current="step"] {
   background: var(--thunder-coral);
   color: var(--thunder-ink);
-}
-
-.thunderdome-stage__controls {
-  display: grid;
-  gap: 8px;
-  padding: 12px 18px;
-  border-bottom: 1px solid #303741;
-  background: #171c22;
-}
-
-.thunderdome-stage__controls > span {
-  color: #929a99;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.thunderdome-stage__controls > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.thunderdome-stage__controls button {
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid #4a5258;
-  border-radius: 5px;
-  background: #11151a;
-  color: #c5c9c5;
-  cursor: pointer;
-  font: inherit;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.thunderdome-stage__controls button.is-active {
-  border-color: var(--thunder-acid);
-  background: var(--thunder-acid);
-  color: var(--thunder-ink);
-}
-
-.thunderdome-stage__controls > p {
-  margin: 0;
-  color: #aeb4b1;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 10px;
-  line-height: 1.45;
 }
 
 .thunderdome-stage__chart {
@@ -673,13 +586,17 @@
   position: relative;
   z-index: 1;
   display: block;
-  margin-top: 54px;
+  max-width: 48ch;
+  margin-top: 40px;
   padding-top: 18px;
-  border-top: 2px solid var(--thunder-ink);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  border-top: 1px solid var(--thunder-ink);
+  color: var(--thunder-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-transform: none;
 }
 
 .thunderdome-source {
@@ -787,10 +704,6 @@
     padding: 58px 0 58px 18px;
   }
 
-  .thunderdome-round__ledger {
-    grid-template-columns: 1fr;
-  }
-
   .thunderdome-stage.is-inline {
     width: calc(100% + 18px);
     margin-left: -18px;
@@ -806,18 +719,8 @@
     display: none;
   }
 
-  .thunderdome-stage__controls,
   .thunderdome-stage figcaption {
     padding-inline: 13px;
-  }
-
-  .thunderdome-stage__controls > div {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .thunderdome-stage__controls button {
-    min-height: 42px;
   }
 
   .thunderdome-after {
@@ -841,7 +744,6 @@
   .thunderdome-hero,
   .thunderdome-stage,
   .thunderdome-stage__header,
-  .thunderdome-stage__controls,
   .thunderdome-stage figcaption,
   .thunderdome-after {
     border-color: CanvasText;
@@ -868,11 +770,10 @@
     fill: CanvasText !important;
   }
 
-  .thunderdome-stage__nav button[aria-current="step"],
-  .thunderdome-stage__controls button[aria-pressed="true"] {
-    border-color: Highlight;
-    background: Highlight;
-    color: HighlightText;
+  .thunderdome-stage__nav button[aria-current="step"] {
+    border-color: CanvasText;
+    background: CanvasText;
+    color: Canvas;
     forced-color-adjust: none;
   }
 }
