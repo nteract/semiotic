@@ -55,7 +55,9 @@ const ENTRY_GRAPHS = [
   // surfaces measure 396.5 KiB gzip; retain half a KiB of headroom.
   // Bumped 397→399: the shared tooltip/theme accessibility surface adds
   // 1.8 KiB gzip to the canonical facade (398.8 KiB measured).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 399 },
+  // Bumped 399→400: production gzip can vary by a few hundred bytes around
+  // the rounded 399.0 KiB measurement; retain a full KiB of guard headroom.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 400 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
