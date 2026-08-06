@@ -8,11 +8,14 @@ const DEFAULT_HIT_RADIUS: 8
 function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
 function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNetworkFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-network").StreamNetworkFrameHandle>): React.ReactNode
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
@@ -28,7 +31,10 @@ function inventoryAtTime(nodeId: string, time: number, edges: readonly Inventory
 function isHatchFill(fill: unknown): boolean
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
+function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
+function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
@@ -56,7 +62,10 @@ interface InventoryEdge
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface NetworkCustomChartProps<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface NetworkEdgeHitTargetBaseProps
 interface NetworkGlyphNode
 interface NetworkHitTargetCircleProps
 interface NetworkHitTargetRectProps
@@ -64,6 +73,8 @@ interface NetworkHtmlMark
 interface NetworkLabel
 interface NetworkLayoutContext<C extends object = Record<string, unknown>>
 interface NetworkLayoutResult
+interface NetworkLineEdgeHitTargetProps
+interface NetworkPathEdgeHitTargetProps
 interface OrbitDiagramProps<TDatum extends Datum = Datum>
 interface ProcessSankeyIssue
 interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
@@ -84,6 +95,9 @@ interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface ThresholdAlertConfig
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 interface TreeDiagramProps<TNode extends Datum = Datum>
 interface TreemapProps<TNode extends Datum = Datum>
 interface UseForceLayoutResult
@@ -98,4 +112,6 @@ type NetworkSceneNode = NetworkCircleNode | NetworkRectNode | NetworkArcNode | N
 type ProcessSankeyTimeLike = number | Date | string
 type ResponsiveOrientation = "portrait" | "landscape"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

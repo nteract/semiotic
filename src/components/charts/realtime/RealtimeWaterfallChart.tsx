@@ -24,6 +24,7 @@ import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
 
 export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -102,8 +103,8 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Custom tooltip renderer (alias for tooltipContent) */
-  tooltip?: (d: HoverData) => ReactNode
+  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
+  tooltip?: TooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -221,8 +222,10 @@ export const RealtimeWaterfallChart = forwardRef(
     // enriches each rect's datum with `baseline`, `cumEnd`, and
     // `delta`; surface those so a hovered bar reads "x: <time>",
     // "Δ: +5.2", "total: 87.4" instead of just "y: 5.2".
-    const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildWaterfallTooltip({ timeAccessor, valueAccessor })
+    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+      tooltip,
+      defaultTooltipContent: buildWaterfallTooltip({ timeAccessor, valueAccessor }),
+    }).tooltipContent
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

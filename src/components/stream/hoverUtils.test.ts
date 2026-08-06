@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { buildHoverData } from "./hoverUtils"
+import { buildHoverData, getPointerHitRadius } from "./hoverUtils"
+
+describe("getPointerHitRadius", () => {
+  it("expands touch targets without changing mouse precision", () => {
+    expect(getPointerHitRadius(5, "mouse")).toBe(5)
+    expect(getPointerHitRadius(5, "pen")).toBe(5)
+    expect(getPointerHitRadius(5, "touch")).toBeGreaterThan(5)
+    expect(getPointerHitRadius(60, "touch")).toBe(60)
+  })
+})
 
 describe("buildHoverData", () => {
   it("builds HoverData with raw datum + pixel coordinates", () => {

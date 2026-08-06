@@ -7,6 +7,7 @@ import type { Style } from "../../stream/types"
 import StreamPhysicsFrame, {
   type PhysicsBodySemanticItemAccessor,
   type PhysicsBodyStyleContext,
+  type PhysicsCanvasPaintContext,
   type StreamPhysicsBodyForceContext,
   type StreamPhysicsFrameHandle,
   type StreamPhysicsFrameProps,
@@ -61,6 +62,7 @@ import {
   defaultGauntletTooltipContent,
   drawGauntletBody,
   drawTethers,
+  GAUNTLET_SURFACE_PAINT,
   GauntletChrome,
   GauntletProjectionOverlay,
   gauntletProjectionSemanticItems,
@@ -617,7 +619,12 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           datum.kind === CORE_KIND
             ? "var(--semiotic-primary, #0f766e)"
             : datum.property?.color ?? "var(--semiotic-primary, #38bdf8)",
-        stroke: datum.kind === CORE_KIND ? "#f8fafc" : "#0f172a",
+        // Halo + outline follow theme paper/ink so cores and property marks
+        // stay legible under light and dark ThemeProvider modes.
+        stroke:
+          datum.kind === CORE_KIND
+            ? GAUNTLET_SURFACE_PAINT
+            : "var(--semiotic-text, #0f172a)",
         opacity: 0.96,
         ...frameStyle
       }
@@ -672,9 +679,13 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   )
 
   const beforePaint = useCallback(
-    (ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]) => {
-      frameProps.beforePaint?.(ctx, bodies)
-      if (showTethers) drawTethers(ctx, bodies)
+    (
+      ctx: CanvasRenderingContext2D,
+      bodies: PhysicsBodyState[],
+      paint: PhysicsCanvasPaintContext
+    ) => {
+      frameProps.beforePaint?.(ctx, bodies, paint)
+      if (showTethers) drawTethers(ctx, bodies, paint)
     },
     [frameProps, showTethers]
   )
@@ -730,6 +741,10 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       onBodyHover={onBodyHover}
       accessibleTable={props.accessibleTable ?? frameProps.accessibleTable}
       backgroundGraphics={backgroundGraphics}
+      backgroundGraphicsBackdrop={
+        frameProps.backgroundGraphicsBackdrop ??
+        "var(--semiotic-bg, transparent)"
+      }
       bodyForces={bodyForces}
       bodySemanticItems={(frameProps.bodySemanticItems as PhysicsBodySemanticItemAccessor | undefined) ?? gauntletSemanticItem}
       bodyStyle={bodyStyle}

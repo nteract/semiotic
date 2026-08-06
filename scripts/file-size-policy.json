@@ -120,11 +120,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/stream/AccessibleDataTable.tsx",
-      "maxLines": 884,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/stream/GeoPipelineStore.ts",
       "maxLines": 1264,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +39 (2026-07-11): custom-layout failure recovery (preserve last-good scene, lastCustomLayoutFailure, onLayoutError) +6 (2026-07-17): minor follow-on touch; +1 (2026-07-21): ceiling ratcheted to the reviewed implementation."

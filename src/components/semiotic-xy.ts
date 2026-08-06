@@ -7,6 +7,25 @@ import StreamXYFrame from "./stream/StreamXYFrame"
 
 export { StreamXYFrame }
 
+// Shared tooltip utilities stay available from the family entry point so a
+// custom tooltip does not require pulling in the root bundle.
+export {
+  Tooltip,
+  TooltipRoot,
+  MultiLineTooltip,
+  MultiPointTooltip,
+  markTooltipChrome,
+} from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
+
 // Chart HOCs
 export { LineChart } from "./charts/xy/LineChart"
 export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"

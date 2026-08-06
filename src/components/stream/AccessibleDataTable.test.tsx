@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
   NetworkAccessibleDataTable,
@@ -166,6 +166,112 @@ describe("AccessibleDataTable styling hooks", () => {
     expect(region).toHaveClass("semiotic-accessible-data-table")
     expect(region).toHaveClass("semiotic-accessible-data-table-visible")
     expect(region).toHaveClass("semiotic-accessible-data-table-network")
+  })
+})
+
+describe("NetworkAccessibleDataTable semantic rows", () => {
+  it("uses Palace-like tableFields and accessibleDatum while retaining degree metrics", () => {
+    render(
+      <NetworkAccessibleDataTable
+        tableId="semantic-network"
+        chartType="Network chart"
+        nodes={[
+          {
+            type: "circle",
+            id: "innovation",
+            datum: {
+              id: "innovation",
+              internalLayoutValue: "must stay hidden",
+            },
+            accessibleDatum: {
+              Name: "Ignored because tableFields wins",
+            },
+            accessibility: {
+              label: "Palace chapter: innovation",
+              tableFields: {
+                Chapter: "I",
+                Title: "The tools got better",
+                Summary: "Measurement changes what the palace can see",
+              },
+            },
+          },
+          {
+            type: "rect",
+            id: "court",
+            datum: { id: "court", internalRoomIndex: "must stay hidden too" },
+            accessibleDatum: { Name: "Court", Kind: "room" },
+            label: "Palace room: court",
+          },
+        ]}
+        edges={[
+          {
+            type: "line",
+            datum: {
+              source: "innovation",
+              target: "court",
+              value: 2,
+              internalSpline: "must stay hidden on edges",
+            },
+            accessibility: {
+              label: "Evidence connects innovation to the court",
+              tableFields: {
+                Relationship: "evidence supports setting",
+                Evidence: "measurement",
+              },
+            },
+          },
+        ]}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+
+    const nodeTable = screen.getByRole("table", {
+      name: /node data and degree summary/i,
+    })
+    expect(within(nodeTable).getByText("The tools got better")).toBeInTheDocument()
+    expect(within(nodeTable).getByText("Court")).toBeInTheDocument()
+    expect(within(nodeTable).getByRole("columnheader", { name: "degree" })).toBeInTheDocument()
+    expect(within(nodeTable).getByRole("row", { name: "Palace chapter: innovation" })).toBeInTheDocument()
+
+    const edgeTable = screen.getByRole("table", { name: /edge data/i })
+    expect(within(edgeTable).getByText("evidence supports setting")).toBeInTheDocument()
+    expect(within(edgeTable).getByText("measurement")).toBeInTheDocument()
+    expect(
+      within(edgeTable).getByRole("row", {
+        name: "Evidence connects innovation to the court",
+      })
+    ).toBeInTheDocument()
+
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "2 nodes, 1 edges. Mean degree: 1, max degree: 1."
+    )
+    expect(screen.queryByText(/must stay hidden/)).toBeNull()
+    expect(screen.queryByText("Ignored because tableFields wins")).toBeNull()
+  })
+
+  it("still exposes semantic edge rows when a custom layout has no scene nodes", () => {
+    render(
+      <NetworkAccessibleDataTable
+        tableId="edges-only-network"
+        chartType="Network chart"
+        nodes={[]}
+        edges={[
+          {
+            type: "line",
+            datum: { source: "archive", target: "court", relation: "informs" },
+          },
+        ]}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+
+    expect(screen.queryByRole("table", { name: /node data/i })).toBeNull()
+    const edgeTable = screen.getByRole("table", { name: /edge data/i })
+    expect(within(edgeTable).getByText("archive → court")).toBeInTheDocument()
+    expect(within(edgeTable).getByText("informs")).toBeInTheDocument()
+    expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edges.")
   })
 })
 

@@ -7,14 +7,51 @@ import ExamplePageLayout from "./ExamplePageLayout"
 const sourceLoader = vi.hoisted(() =>
   vi.fn(() => Promise.reject(new Error("missing source"))),
 )
+const pageLoader = vi.hoisted(() => vi.fn(() => Promise.resolve("export default function Page() {}")))
+const cssLoader = vi.hoisted(() => vi.fn(() => Promise.resolve(".page { color: red; }")))
 
 vi.mock("./exampleSourceMap", () => ({
-  getExampleSourceLoader: () => sourceLoader,
+  getExampleSourceLoaders: (path) => path.includes("the-last-scarcity")
+    ? [
+        { file: "TheLastScarcityExamplePage.jsx", load: pageLoader },
+        { file: "TheLastScarcityExamplePage.css", load: cssLoader },
+      ]
+    : [{ file: "ExamplePage.jsx", load: sourceLoader }],
 }))
 
 describe("ExamplePageLayout", () => {
   beforeEach(() => {
     sourceLoader.mockClear()
+    pageLoader.mockClear()
+    cssLoader.mockClear()
+  })
+
+  it("loads multi-file examples lazily and exposes file tabs", async () => {
+    render(
+      <MemoryRouter initialEntries={["/examples/the-last-scarcity"]}>
+        <ExamplePageLayout title="The Last Scarcity">
+          <p>Narrative content</p>
+        </ExamplePageLayout>
+      </MemoryRouter>,
+    )
+
+    const toggle = await screen.findByRole("button", { name: "Show full code view" })
+    await waitFor(() => expect(toggle.disabled).toBe(false))
+    fireEvent.click(toggle)
+    await waitFor(() => {
+      expect(pageLoader).toHaveBeenCalledTimes(1)
+      expect(cssLoader).toHaveBeenCalledTimes(1)
+    })
+    const pageTab = await screen.findByRole("tab", { name: "TheLastScarcityExamplePage.jsx" })
+    const cssTab = screen.getByRole("tab", { name: "TheLastScarcityExamplePage.css" })
+    expect(pageTab).toHaveAttribute("aria-selected", "true")
+    expect(pageTab).toHaveAttribute("tabindex", "0")
+    expect(cssTab).toHaveAttribute("tabindex", "-1")
+    fireEvent.keyDown(pageTab, { key: "ArrowRight" })
+    expect(cssTab).toHaveFocus()
+    expect(cssTab).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", cssTab.id)
+    expect(await screen.findByText(/color: red/)).toBeTruthy()
   })
 
   it("shows a stable source-load fallback when Full Code source rejects", async () => {

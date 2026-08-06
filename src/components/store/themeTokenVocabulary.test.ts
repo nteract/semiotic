@@ -15,8 +15,8 @@
 import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { themeToCSS } from "./themeSerialization"
-import { LIGHT_THEME } from "./ThemeStore"
+import { themeToCSS, themeToCSSVariables } from "./themeSerialization"
+import { HIGH_CONTRAST_THEME, LIGHT_THEME } from "./ThemeStore"
 
 /**
  * Names intentionally *not* theme-emitted: opt-in overrides a consumer sets to
@@ -24,7 +24,6 @@ import { LIGHT_THEME } from "./ThemeStore"
  * with a reason — if a name belongs to the theme, emit it instead.
  */
 const CONSUMER_KNOBS: Record<string, string> = {
-  "--semiotic-cell-border": "Heatmap/Treemap cell divider; falls back to --semiotic-border",
   "--semiotic-data-table-bg": "accessible data-table surface override",
   "--semiotic-data-table-border": "accessible data-table border override",
   "--semiotic-data-table-text": "accessible data-table text override",
@@ -56,18 +55,28 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
 }
 
 /**
- * The authoritative vocabulary is every name `themeToCSS` knows how to emit —
- * read from the serializer itself rather than from one serialized theme, since
- * optional blocks (focus, selection, tooltip, annotation, typography) only
- * appear when a given preset populates them.
+ * The authoritative vocabulary is the canonical variable projection itself.
+ * Populate every optional role plus ample categorical slots so the gate also
+ * validates names used by palettes larger than the built-in defaults.
  */
 function emittedTokens(): Set<string> {
-  const source = readFileSync(
-    join(process.cwd(), "src", "components", "store", "themeSerialization.ts"),
-    "utf8"
-  )
-  const names = source.match(/--semiotic-[a-z0-9-]+/g) ?? []
-  return new Set(names)
+  const exhaustiveTheme = {
+    ...HIGH_CONTRAST_THEME,
+    colors: {
+      ...HIGH_CONTRAST_THEME.colors,
+      annotation: "#000000",
+      cellBorder: "#000000",
+      categorical: Array.from({ length: 64 }, () => "#000000"),
+      diverging: "RdBu",
+    },
+    typography: {
+      ...HIGH_CONTRAST_THEME.typography,
+      legendSize: 12,
+      tickFontFamily: "sans-serif",
+      titleFontSize: 16,
+    },
+  }
+  return new Set(Object.keys(themeToCSSVariables(exhaustiveTheme)))
 }
 
 function referencedTokens(): Map<string, string[]> {
@@ -106,6 +115,8 @@ describe("theme token vocabulary", () => {
     const css = themeToCSS(LIGHT_THEME, ":root")
     const produced = new Set(css.match(/--semiotic-[a-z0-9-]+/g) ?? [])
     expect([...produced].filter((token) => !emitted.has(token))).toEqual([])
+    expect(css).toContain("--semiotic-cell-border:")
+    expect(css).toContain("--semiotic-category-1:")
   })
 
   it("never references a --semiotic-* name the theme does not emit", () => {

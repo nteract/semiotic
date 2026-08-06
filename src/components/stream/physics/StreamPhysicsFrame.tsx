@@ -21,7 +21,11 @@ import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import { isInteractiveKeyboardTarget } from "../../charts/shared/semanticInteractions"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
-import { resolvePhysicsCanvasTheme } from "./PhysicsCanvasTheme"
+import {
+  createPhysicsCanvasThemeCache,
+  physicsCanvasColorWithAlpha
+} from "./PhysicsCanvasTheme"
+import { resolveCanvasPaint } from "../renderers/canvasRenderHelpers"
 import {
   PhysicsSVGOverlay,
   bodiesToAnnotationAnchors,
@@ -86,6 +90,7 @@ import {
 } from "./physicsRegionRuntime"
 import type {
   PhysicsHoverData,
+  PhysicsCanvasPaintContext,
   PhysicsSemanticItem,
   StreamPhysicsBodyForce,
   StreamPhysicsFrameHandle,
@@ -107,6 +112,7 @@ export type {
   PhysicsBodySemanticItemAccessor,
   PhysicsBodySemanticItemContext,
   PhysicsBodyStyleContext,
+  PhysicsCanvasPaintContext,
   PhysicsHoverData,
   PhysicsSemanticItem,
   StreamPhysicsBodyForce,
@@ -148,6 +154,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     autoPlaceAnnotations,
     background,
     backgroundGraphics,
+    backgroundGraphicsBackdrop,
     maxDevicePixelRatio,
     bodySemanticItemLimit = 200,
     bodySemanticItems = false,
@@ -195,7 +202,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     responsiveHeight,
     responsiveWidth,
     selectedBodyStyle = {
-      stroke: "#111827",
+      stroke: "var(--semiotic-text, #111827)",
       strokeWidth: 2,
       opacity: 1
     },
@@ -422,6 +429,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
   const semanticFocusIndexRef = useRef(-1)
   const lastFrameTimeRef = useRef<number | null>(null)
   const dirtyRef = useRef(true)
+  const themeCacheRef = useRef<ReturnType<
+    typeof createPhysicsCanvasThemeCache
+  > | null>(null)
+  if (!themeCacheRef.current) {
+    themeCacheRef.current = createPhysicsCanvasThemeCache()
+  }
   const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamPhysicsFrame")
   const executionStateKeyRef = useRef("")
   const svgInstanceId = useId().replace(/:/g, "")
@@ -438,6 +451,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
     responsiveHeight,
     userMargin: marginProp,
     marginDefault: DEFAULT_MARGIN,
+    themeDirtyRef: dirtyRef,
+    skipInitialThemeInvalidation: true,
     foregroundGraphics,
     backgroundGraphics,
     frameScheduler,
@@ -783,10 +798,19 @@ export const StreamPhysicsFrame = memo(forwardRef<
       return
     }
 
-    const theme = resolvePhysicsCanvasTheme(ctx)
+    const theme = themeCacheRef.current!.resolve(ctx)
+    const paintContext: PhysicsCanvasPaintContext = {
+      theme,
+      resolvePaint: (paint, fallback) =>
+        resolveCanvasPaint(ctx, paint, fallback),
+      withAlpha: physicsCanvasColorWithAlpha
+    }
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
     if (!backgroundGraphics && background !== "transparent") {
-      ctx.fillStyle = background ?? theme.background
+      ctx.fillStyle =
+        background == null
+          ? theme.background
+          : paintContext.resolvePaint(background, theme.background)
       ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
     }
 
@@ -816,7 +840,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     }
     if (beforePaint) {
       ctx.save()
-      beforePaint(ctx, bodies)
+      beforePaint(ctx, bodies, paintContext)
       ctx.restore()
     }
     for (const body of bodies) {
@@ -840,7 +864,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       )
       if (renderBodyProp) {
         ctx.save()
-        renderBodyProp(ctx, body, style)
+        renderBodyProp(ctx, body, style, paintContext)
         ctx.restore()
       } else {
         drawBody(ctx, body, style)
@@ -848,7 +872,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     }
     if (afterPaint) {
       ctx.save()
-      afterPaint(ctx, bodies)
+      afterPaint(ctx, bodies, paintContext)
       ctx.restore()
     }
     drawPopAnimations(
@@ -1437,6 +1461,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
           ? undefined
           : background,
       backgroundGraphics: resolvedBackground,
+      backgroundGraphicsBackdrop,
       className: "stream-physics-frame__svg",
       foregroundGraphics: resolvedForeground,
       idPrefix: `physics-${svgInstanceId}`,
@@ -1500,7 +1525,11 @@ export const StreamPhysicsFrame = memo(forwardRef<
         aria-label={ariaLabel}
         style={{ position: "relative", width: "100%", height: "100%" }}
       >
-        <CanvasFrameBackground size={size} margin={margin}>
+        <CanvasFrameBackground
+          size={size}
+          margin={margin}
+          backdropFill={backgroundGraphicsBackdrop}
+        >
           {resolvedBackground}
         </CanvasFrameBackground>
         <canvas

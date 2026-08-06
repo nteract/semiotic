@@ -12,9 +12,12 @@ const COLOR_BLIND_SAFE_CATEGORICAL: string[]
 const DARK_THEME: SemioticTheme
 const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
-const THEME_PRESETS: Record<string, SemioticTheme>
+const THEME_PRESETS: { light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme; }
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
@@ -43,28 +46,35 @@ function fromConfig(config: ChartConfig): { componentName: string; props: Datum;
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
+function hasOwnTooltipChrome(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchFillKey(h: HatchFill): string
 function isHatchFill(fill: unknown): boolean
+function isMultiTooltip(tooltip: TooltipProp | undefined): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
 function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
 function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
+function resolveMultiCapableTooltip(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; }
+function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveThemePreset(name: string): SemioticTheme | undefined
+function resolveTooltipContent(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function smartTickFormat(value: string | number | Date | null | undefined): string
 function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
+function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
@@ -72,6 +82,7 @@ function toURL(config: ChartConfig): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function useHighContrast(): boolean
 function useReducedMotion(): boolean
+function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [import("react").RefObject<HTMLDivElement>, [number, number]]
 function useTheme(): SemioticTheme
 function validateProps(componentName: string, props: Datum): ValidationResult
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
@@ -104,6 +115,8 @@ interface MobileVisualizationCustomContract
 interface MobileVisualizationFinding
 interface MobileVisualizationInteractionContract
 interface MobileVisualizationLabelContract
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface NavTreeNode
 interface NumericAggregateContract
 interface NumericContracts
@@ -124,6 +137,7 @@ interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
 interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
+interface ResponsiveSizeOptions
 interface SemioticTheme
 interface SerializedSelection
 interface StyleRule
@@ -132,6 +146,9 @@ interface StyleRuleStyle
 interface StyleRuleThreshold
 interface SweepAngles
 interface ToConfigOptions
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 interface VegaLiteEncoding
 interface VegaLiteSpec
 type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
@@ -157,4 +174,6 @@ type SerializedSelections = Record<string, SerializedSelection>
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
 type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

@@ -1,4 +1,7 @@
-import { resolveCSSColor } from "../renderers/resolveCSSColor"
+import {
+  getCSSColorCacheVersion,
+  resolveCSSColor
+} from "../renderers/resolveCSSColor"
 
 export interface PhysicsCanvasTheme {
   annotationBackground: string
@@ -101,13 +104,10 @@ const THEME_CANDIDATES: Record<
 
 function readCSSVar(
   ctx: CanvasRenderingContext2D,
+  style: CSSStyleDeclaration | null,
   candidate: CSSVarCandidate
 ): string {
-  const canvas = ctx.canvas
-  if (typeof getComputedStyle !== "function" || !canvas) {
-    return candidate.fallback
-  }
-  const style = getComputedStyle(canvas)
+  if (!style) return candidate.fallback
   for (const name of candidate.names) {
     const value = style.getPropertyValue(name).trim()
     if (!value) continue
@@ -142,16 +142,25 @@ export function physicsCanvasColorWithAlpha(
 export function resolvePhysicsCanvasTheme(
   ctx: CanvasRenderingContext2D
 ): PhysicsCanvasTheme {
-  const primary = readCSSVar(ctx, THEME_CANDIDATES.primary)
-  const danger = readCSSVar(ctx, THEME_CANDIDATES.danger)
-  const warning = readCSSVar(ctx, THEME_CANDIDATES.warning)
-  const success = readCSSVar(ctx, THEME_CANDIDATES.success)
-  const border = readCSSVar(ctx, THEME_CANDIDATES.border)
-  const background = readCSSVar(ctx, THEME_CANDIDATES.background)
-  const text = readCSSVar(ctx, THEME_CANDIDATES.text)
-  const textSecondary = readCSSVar(ctx, THEME_CANDIDATES.textSecondary)
-  const focus = readCSSVar(ctx, THEME_CANDIDATES.focus)
-  const grid = readCSSVar(ctx, THEME_CANDIDATES.grid)
+  const canvas = ctx.canvas
+  const style =
+    typeof getComputedStyle === "function" && canvas
+      ? getComputedStyle(canvas)
+      : null
+  const primary = readCSSVar(ctx, style, THEME_CANDIDATES.primary)
+  const danger = readCSSVar(ctx, style, THEME_CANDIDATES.danger)
+  const warning = readCSSVar(ctx, style, THEME_CANDIDATES.warning)
+  const success = readCSSVar(ctx, style, THEME_CANDIDATES.success)
+  const border = readCSSVar(ctx, style, THEME_CANDIDATES.border)
+  const background = readCSSVar(ctx, style, THEME_CANDIDATES.background)
+  const text = readCSSVar(ctx, style, THEME_CANDIDATES.text)
+  const textSecondary = readCSSVar(
+    ctx,
+    style,
+    THEME_CANDIDATES.textSecondary
+  )
+  const focus = readCSSVar(ctx, style, THEME_CANDIDATES.focus)
+  const grid = readCSSVar(ctx, style, THEME_CANDIDATES.grid)
 
   return {
     annotationBackground: physicsCanvasColorWithAlpha(background, 0.94),
@@ -175,5 +184,32 @@ export function resolvePhysicsCanvasTheme(
     text,
     textSecondary,
     warning
+  }
+}
+
+/**
+ * Version-keyed per-frame cache for the derived physics palette. Continuous
+ * simulations can call this every tick without forcing style recalculation;
+ * ThemeProvider and scoped CSS invalidation bump the shared color-cache
+ * version before the next paint.
+ */
+export function createPhysicsCanvasThemeCache() {
+  let canvas: HTMLCanvasElement | null = null
+  let version = -1
+  let theme = DEFAULT_PHYSICS_CANVAS_THEME
+
+  return {
+    resolve(ctx: CanvasRenderingContext2D): PhysicsCanvasTheme {
+      const nextCanvas = ctx.canvas ?? null
+      const nextVersion = getCSSColorCacheVersion()
+      if (nextCanvas === canvas && nextVersion === version) return theme
+      canvas = nextCanvas
+      version = nextVersion
+      theme = resolvePhysicsCanvasTheme(ctx)
+      return theme
+    },
+    invalidate(): void {
+      version = -1
+    }
   }
 }

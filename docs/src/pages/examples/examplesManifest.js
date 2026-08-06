@@ -28,6 +28,6 @@ export const EXAMPLE_FILTERS = {
 }
 
 export const EXAMPLES = EXAMPLE_DEFINITIONS.map((definition) => {
-  const { id, sourceFile, isPilot, contract, ...example } = definition
+  const { id, sourceFile, sourceFiles, isPilot, contract, ...example } = definition
   return example
 })

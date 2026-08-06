@@ -7,6 +7,13 @@
  */
 
 export { waffleLayout, allocateCells } from "./recipes/waffle"
+export { balanceSnapshotsToFlows } from "./recipes/balanceSnapshotsToFlows"
+export type {
+  BalancedSnapshotFlow,
+  BalancedSnapshotsResult,
+  BalanceSnapshotsToFlowsOptions,
+  SnapshotResidual,
+} from "./recipes/balanceSnapshotsToFlows"
 // unitize: the pictogram/tally allocator — value → repeated unit signs with a
 // fractional final sign (allocateCells divides fixed cells; unitize counts).
 export { unitize, unitizeRange } from "./recipes/unitize"
@@ -218,6 +225,7 @@ export type {
 export {
   hitTargetPoint,
   hitTargetRect,
+  networkEdgeHitTarget,
   networkHitTarget,
   geoHitTarget,
   geoAreaHitTarget,
@@ -227,8 +235,11 @@ export type {
   GeoAreaHitTargetProps,
   HitTargetPointProps,
   HitTargetRectProps,
+  NetworkEdgeHitTargetBaseProps,
   NetworkHitTargetCircleProps,
   NetworkHitTargetRectProps,
+  NetworkLineEdgeHitTargetProps,
+  NetworkPathEdgeHitTargetProps,
 } from "./stream/hitTarget"
 
 // Run-length encoding — collapse a per-step categorical/boolean series into

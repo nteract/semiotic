@@ -5,7 +5,10 @@ _Edit dist/semiotic-utils-react.d.ts's sources, then re-run `npm run docs:api-su
 
 ```
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
+function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
 function useHighContrast(): boolean
 function useReducedMotion(): boolean
+function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [import("react").RefObject<HTMLDivElement>, [number, number]]
 function useTheme(): SemioticTheme
+interface ResponsiveSizeOptions
 ```

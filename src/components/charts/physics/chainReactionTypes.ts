@@ -1,4 +1,5 @@
 import type { Datum } from "../shared/datumTypes"
+import type { TooltipProp } from "../../Tooltip/Tooltip"
 import type {
   BlockerAmplification,
   DependencyAccessor,
@@ -95,4 +96,6 @@ export interface ChainReactionChartProps<TDatum extends Datum = Datum> {
   className?: string
   accessibleTable?: boolean
   enableHover?: boolean
+  /** Standard single-datum tooltip configuration for dependency balls. */
+  tooltip?: TooltipProp
 }

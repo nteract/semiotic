@@ -179,4 +179,26 @@ describe("CanvasFrameBackground", () => {
     expect(container.querySelector("svg")?.style.pointerEvents).toBe("none")
     expect(container.querySelector("g")?.getAttribute("transform")).toBe("translate(40,10)")
   })
+
+  it("can own an explicit full-frame backdrop without translating it", () => {
+    const { container } = render(
+      <CanvasFrameBackground
+        size={[240, 120]}
+        margin={{ top: 10, right: 20, bottom: 30, left: 40 }}
+        backdropFill="var(--semiotic-bg, transparent)"
+      >
+        <circle cx={0} cy={0} r={4} />
+      </CanvasFrameBackground>,
+    )
+
+    const backdrop = container.querySelector(
+      ".stream-frame-background__backdrop"
+    )
+    expect(backdrop?.getAttribute("width")).toBe("240")
+    expect(backdrop?.getAttribute("height")).toBe("120")
+    expect(backdrop?.getAttribute("fill")).toBe(
+      "var(--semiotic-bg, transparent)"
+    )
+    expect(backdrop?.parentElement).toBe(container.querySelector("svg"))
+  })
 })

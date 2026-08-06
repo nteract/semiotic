@@ -44,6 +44,23 @@ export {
   RealtimeHeatmap
 }
 
+export {
+  Tooltip,
+  TooltipRoot,
+  MultiLineTooltip,
+  MultiPointTooltip,
+  markTooltipChrome,
+} from "./Tooltip/Tooltip"
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig,
+  MultiTooltipConfig,
+  TooltipRootProps,
+  TooltipChromeMode,
+} from "./Tooltip/Tooltip"
+
 // Windowed aggregation types
 export type {
   WindowType,

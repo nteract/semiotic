@@ -25,6 +25,7 @@ import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
 
 export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -105,8 +106,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Custom tooltip renderer (alias for tooltipContent) */
-  tooltip?: (d: HoverData) => ReactNode
+  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
+  tooltip?: TooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -220,8 +221,10 @@ export const RealtimeSwarmChart = forwardRef(
     const margin = userMargin ?? resolved.marginDefaults
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
     // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
-    const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
+    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+      tooltip,
+      defaultTooltipContent: buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor }),
+    }).tooltipContent
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

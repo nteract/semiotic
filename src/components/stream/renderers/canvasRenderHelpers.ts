@@ -69,11 +69,39 @@ export function resolveCanvasFill(
 }
 
 /**
+ * Resolve a fill or stroke into a value that Canvas can actually paint.
+ *
+ * This is the strict counterpart to the compatibility-preserving
+ * `resolveCanvasFill`: an undefined custom property without a CSS fallback
+ * (`var(--missing)`) is not a valid Canvas paint and therefore uses the
+ * caller's fallback instead of being assigned verbatim. New direct-paint
+ * renderers should prefer this helper for both `fillStyle` and `strokeStyle`.
+ */
+export function resolveCanvasPaint(
+  ctx: CanvasRenderingContext2D,
+  paint: string | HatchFill | CanvasPattern | null | undefined,
+  fallback: string,
+): string | CanvasPattern {
+  const resolved = resolveCanvasFill(ctx, paint, fallback)
+  if (
+    typeof resolved === "string" &&
+    resolved.trim().startsWith("var(")
+  ) {
+    const resolvedFallback = resolveCSSColor(ctx, fallback)
+    return resolvedFallback && !resolvedFallback.trim().startsWith("var(")
+      ? resolvedFallback
+      : fallback
+  }
+  return resolved
+}
+
+/**
  * Narrow a possibly-`HatchFill` `style.fill` to the `string | CanvasPattern`
  * a canvas `fillStyle` accepts, for the direct-assign sites that don't
  * otherwise route through {@link resolveCanvasFill}. Returns `undefined` for a
- * nullish (or unresolvable) fill so callers can apply their own fallback with
- * `?? "…"`.
+ * nullish fill. For backward compatibility an unresolved `var(--missing)` is
+ * preserved; new renderers that require a guaranteed-valid paint should use
+ * {@link resolveCanvasPaint} with an explicit fallback.
  *
  * Delegates to {@link resolveCanvasFill} so behavior stays consistent: string
  * fills (including `var(--…)`) resolve through `resolveCSSColor` — a raw CSS

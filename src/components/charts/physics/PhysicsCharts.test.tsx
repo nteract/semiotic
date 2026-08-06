@@ -406,6 +406,11 @@ describe("physics chart HOCs", () => {
     )
 
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
+    expect(
+      container
+        .querySelector(".stream-frame-background__backdrop")
+        ?.getAttribute("fill")
+    ).toBe("var(--semiotic-bg, transparent)")
     expect(getByText("Review")).toBeTruthy()
     ref.current?.push({
       id: "plan-b",

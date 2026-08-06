@@ -278,6 +278,7 @@ export type {
 export type {
   PhysicsBodySelection as UnstablePhysicsBodySelection,
   PhysicsBodyStyleContext as UnstablePhysicsBodyStyleContext,
+  PhysicsCanvasPaintContext as UnstablePhysicsCanvasPaintContext,
   StreamPhysicsExecutionState as UnstableStreamPhysicsExecutionState,
   StreamPhysicsFrameHandle as UnstableStreamPhysicsFrameHandle,
   StreamPhysicsFrameProps as UnstableStreamPhysicsFrameProps

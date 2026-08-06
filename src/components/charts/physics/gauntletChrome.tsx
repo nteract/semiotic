@@ -8,7 +8,11 @@ import type { Datum } from "../shared/datumTypes"
 import type { Style } from "../../stream/types"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
 import type { PhysicsHoverData } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsSemanticItem } from "../../stream/physics/StreamPhysicsTypes"
+import type {
+  PhysicsCanvasPaintContext,
+  PhysicsSemanticItem
+} from "../../stream/physics/StreamPhysicsTypes"
+import { resolveCanvasPaint } from "../../stream/renderers/canvasRenderHelpers"
 import {
   CORE_KIND,
   NEGATIVE_KIND,
@@ -18,6 +22,9 @@ import {
   type GauntletLayout,
   type GauntletProjectState
 } from "./gauntletPhysics"
+
+export const GAUNTLET_SURFACE_PAINT =
+  "var(--semiotic-surface, var(--semiotic-bg, #fff))"
 
 export function defaultGauntletTooltipContent(hover: PhysicsHoverData): React.ReactNode {
   const datum = hover.data as GauntletBodyDatum | undefined
@@ -44,15 +51,25 @@ export function defaultGauntletTooltipContent(hover: PhysicsHoverData): React.Re
   )
 }
 
-export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBodyState, style: Style): void {
+export function drawGauntletBody(
+  ctx: CanvasRenderingContext2D,
+  body: PhysicsBodyState,
+  style: Style,
+  paintContext?: PhysicsCanvasPaintContext
+): void {
   const datum = body.datum as GauntletBodyDatum | undefined
   if (!datum?.__gauntlet) return
   const radius = body.shape.type === "circle" ? body.shape.radius : 8
+  const resolvePaint =
+    paintContext?.resolvePaint ??
+    ((paint: Style["fill"] | Style["stroke"] | null | undefined, fallback: string) =>
+      resolveCanvasPaint(ctx, paint, fallback))
   ctx.save()
   ctx.translate(body.x, body.y)
   if (datum.kind === CORE_KIND) {
-    ctx.fillStyle = resolveCanvasColor(ctx, style.fill, "#0f766e")
-    ctx.strokeStyle = resolveCanvasColor(ctx, style.stroke, "#f8fafc")
+    ctx.fillStyle = resolvePaint(style.fill, "#0f766e")
+    // Paper-colored halo: light mode → light ring, dark mode → dark ring.
+    ctx.strokeStyle = resolvePaint(style.stroke, "#fff")
     ctx.lineWidth = 2.4
     ctx.beginPath()
     ctx.arc(0, 0, radius, 0, Math.PI * 2)
@@ -60,8 +77,8 @@ export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBod
     ctx.stroke()
   } else {
     const property = datum.property
-    ctx.fillStyle = resolveCanvasColor(ctx, style.fill ?? property?.color, "#38bdf8")
-    ctx.strokeStyle = resolveCanvasColor(ctx, style.stroke, "#0f172a")
+    ctx.fillStyle = resolvePaint(style.fill ?? property?.color, "#38bdf8")
+    ctx.strokeStyle = resolvePaint(style.stroke, "#0f172a")
     ctx.lineWidth = 1.1
     ctx.beginPath()
     if (datum.kind === NEGATIVE_KIND) {
@@ -71,7 +88,12 @@ export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBod
     }
     ctx.fill()
     ctx.stroke()
-    ctx.fillStyle = resolveCanvasColor(ctx, "var(--semiotic-bg, #07111f)", "#07111f")
+    // Monogram ink tracks plot paper so saturated property fills stay readable
+    // in both ThemeProvider modes (light paper → light letter; dark paper → dark).
+    ctx.fillStyle = resolvePaint(
+      GAUNTLET_SURFACE_PAINT,
+      "#fff"
+    )
     ctx.font = `900 ${datum.kind === NEGATIVE_KIND ? 9 : 8}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
@@ -80,24 +102,24 @@ export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBod
   ctx.restore()
 }
 
-export function resolveCanvasColor(
+export function drawTethers(
   ctx: CanvasRenderingContext2D,
-  value: Style[keyof Style] | undefined,
-  fallback: string
-): string {
-  if (typeof value !== "string") return fallback
-  if (typeof getComputedStyle !== "function" || !ctx.canvas) return value || fallback
-  const token = value.startsWith("var(")
-    ? value.match(/var\((--[^,\s)]+)/)?.[1]
-    : value.startsWith("--")
-      ? value
-      : null
-  if (!token) return value || fallback
-  return getComputedStyle(ctx.canvas).getPropertyValue(token).trim() || fallback
-}
-
-export function drawTethers(ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]): void {
+  bodies: PhysicsBodyState[],
+  paintContext?: PhysicsCanvasPaintContext
+): void {
   const cores = new Map(bodies.filter((body) => (body.datum as GauntletBodyDatum | undefined)?.kind === CORE_KIND).map((body) => [(body.datum as GauntletBodyDatum).projectId, body]))
+  const resolvePaint =
+    paintContext?.resolvePaint ??
+    ((paint: Style["fill"] | Style["stroke"] | null | undefined, fallback: string) =>
+      resolveCanvasPaint(ctx, paint, fallback))
+  const danger = resolvePaint(
+    "var(--semiotic-danger, #ef4444)",
+    "#ef4444"
+  )
+  const secondaryText = resolvePaint(
+    "var(--semiotic-text-secondary, #64748b)",
+    "#64748b"
+  )
   ctx.save()
   ctx.lineWidth = 1.1
   ctx.setLineDash([3, 4])
@@ -107,7 +129,8 @@ export function drawTethers(ctx: CanvasRenderingContext2D, bodies: PhysicsBodySt
     const core = cores.get(datum.projectId)
     if (!core) continue
     ctx.globalAlpha = datum.kind === NEGATIVE_KIND ? 0.24 : 0.36
-    ctx.strokeStyle = datum.kind === NEGATIVE_KIND ? "#d94a45" : "#7a8794"
+    ctx.strokeStyle =
+      datum.kind === NEGATIVE_KIND ? danger : secondaryText
     ctx.beginPath()
     ctx.moveTo(core.x, core.y)
     ctx.lineTo(body.x, body.y)

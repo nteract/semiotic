@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest"
-import { createMockCanvasContext } from "../../../test-utils/canvasMock"
+import { describe, expect, it, vi } from "vitest"
+import {
+  createMockCanvasContext,
+  recordCanvasOps
+} from "../../../test-utils/canvasMock"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
+import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
+import { _resetCSSColorCacheForTest } from "../../stream/renderers/resolveCSSColor"
 import {
   applyGauntletEffect,
   buildGauntletPhysics,
@@ -8,7 +13,11 @@ import {
   replaceGauntletNegative,
   type GauntletProjectState
 } from "./GauntletChart"
-import { drawGauntletBody } from "./gauntletChrome"
+import {
+  drawGauntletBody,
+  drawTethers,
+  GAUNTLET_SURFACE_PAINT
+} from "./gauntletChrome"
 import {
   buildLayout,
   defaultPlacement,
@@ -21,6 +30,46 @@ import {
   projectRouteTarget,
   spawnBodiesForGauntletEffect
 } from "./gauntletRuntime"
+
+function themedGauntletContext(tokens: Record<string, string>) {
+  const canvas = document.createElement("canvas")
+  for (const [name, value] of Object.entries(tokens)) {
+    canvas.style.setProperty(name, value)
+  }
+  document.body.appendChild(canvas)
+  const mock = Object.assign(createMockCanvasContext(), { canvas })
+  return {
+    canvas,
+    mock,
+    ctx: mock as unknown as CanvasRenderingContext2D
+  }
+}
+
+function gauntletBody(
+  kind: "gauntlet-core" | "gauntlet-positive" | "gauntlet-negative",
+  property?: { id: string; label: string; short: string; color: string }
+): PhysicsBodyState {
+  return {
+    id: `gauntlet:person:${kind}:${property?.id ?? "core"}`,
+    x: kind === "gauntlet-core" ? 40 : kind === "gauntlet-positive" ? 28 : 52,
+    y: kind === "gauntlet-core" ? 40 : kind === "gauntlet-positive" ? 24 : 56,
+    prevX: 40,
+    prevY: 40,
+    vx: 0,
+    vy: 0,
+    angle: 0,
+    mass: 1,
+    shape: { type: "circle", radius: kind === "gauntlet-core" ? 12 : 7 },
+    sleeping: false,
+    datum: {
+      __gauntlet: true,
+      kind,
+      projectId: "person",
+      property,
+      sourceDatum: { id: "person" }
+    }
+  }
+}
 
 describe("GauntletChart physics primitives", () => {
   it("scales its corridor and default bodies into a sparkline viewport", () => {
@@ -270,6 +319,93 @@ describe("GauntletChart physics primitives", () => {
 
     expect(ctx.rect).toHaveBeenCalledWith(-7, -7, 14, 14)
     expect(ctx.arc).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    {
+      mode: "light",
+      tokens: {
+        "--semiotic-bg": "transparent",
+        "--semiotic-surface": "#ffffff",
+        "--semiotic-primary": "#0f62fe",
+        "--semiotic-text": "#161616",
+        "--semiotic-text-secondary": "#525252",
+        "--semiotic-danger": "#da1e28"
+      },
+      expected: {
+        surface: "#ffffff",
+        primary: "#0f62fe",
+        text: "#161616",
+        tether: "#525252",
+        danger: "#da1e28"
+      }
+    },
+    {
+      mode: "dark",
+      tokens: {
+        "--semiotic-bg": "#161616",
+        "--semiotic-surface": "#262626",
+        "--semiotic-primary": "#4589ff",
+        "--semiotic-text": "#f4f4f4",
+        "--semiotic-text-secondary": "#a8a8a8",
+        "--semiotic-danger": "#fa4d56"
+      },
+      expected: {
+        surface: "#262626",
+        primary: "#4589ff",
+        text: "#f4f4f4",
+        tether: "#a8a8a8",
+        danger: "#fa4d56"
+      }
+    }
+  ])("resolves $mode theme paint for bodies, monograms, and tethers", ({ tokens, expected }) => {
+    const { canvas, ctx, mock } = themedGauntletContext(tokens)
+    const ops = recordCanvasOps(mock)
+    const textPaints: string[] = []
+    ctx.fillText = vi.fn(() => textPaints.push(String(ctx.fillStyle)))
+    const core = gauntletBody("gauntlet-core")
+    const positive = gauntletBody("gauntlet-positive", {
+      id: "security",
+      label: "Security",
+      short: "S",
+      color: "#4f705a"
+    })
+    const negative = gauntletBody("gauntlet-negative", {
+      id: "fear",
+      label: "Fear",
+      short: "F",
+      color: "#9a5e67"
+    })
+
+    try {
+      drawGauntletBody(ctx, core, {
+        fill: "var(--semiotic-primary, #0f766e)",
+        stroke: GAUNTLET_SURFACE_PAINT
+      })
+      drawGauntletBody(ctx, positive, {
+        fill: "#4f705a",
+        stroke: "var(--semiotic-text, #0f172a)"
+      })
+      drawTethers(ctx, [core, positive, negative])
+
+      expect(ops.fillStyles.slice(0, 2)).toEqual([
+        expected.primary,
+        "#4f705a"
+      ])
+      expect(ops.strokeStyles.slice(0, 2)).toEqual([
+        expected.surface,
+        expected.text
+      ])
+      expect(textPaints).toEqual([expected.surface])
+      expect(ops.strokeStyles.slice(2)).toEqual([
+        expected.tether,
+        expected.danger
+      ])
+      expect(ops.strokeAlphas.slice(2)).toEqual([0.36, 0.24])
+    } finally {
+      canvas.remove()
+      _resetCSSColorCacheForTest()
+    }
   })
 
   it("pops negative gauntlet bodies by live body identity after prior removals shift state indices", () => {

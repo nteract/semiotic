@@ -17,8 +17,11 @@ import type {
   PhysicsQueuedSpawn
 } from "../../stream/physics/PhysicsPipelineStore"
 import StreamPhysicsFrame, {
-  type StreamPhysicsFrameHandle
+  type StreamPhysicsFrameHandle,
+  type StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsFrame"
+import { TooltipRoot } from "../../Tooltip/Tooltip"
+import { resolvePhysicsTooltipProps } from "./physicsHocUtils"
 import {
   calculateBlockerAmplification,
   compileDependencyMachine,
@@ -211,7 +214,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
       const route = layout.routeByEdgeID.get(edge.id)
       if (!route) continue
       current.inFlight.add(edge.id)
-      spawns.push(ballSpawn(edge, route))
+      spawns.push(ballSpawn(edge, route, machine.byID.get(edge.sourceID)?.datum))
     }
     if (spawns.length) {
       commitRuntime(current)
@@ -535,6 +538,28 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     ? ["play", "pause", "step", "reset", "settle"]
     : controls || []
 
+  const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, undefined, {
+    unwrapSourceDatum: true
+  })
+  const defaultTooltipContent = useCallback<
+    NonNullable<StreamPhysicsFrameProps["tooltipContent"]>
+  >((hover) => {
+    const datum = hover.data as Datum
+    const sourceID = String(datum.sourceID ?? "")
+    const targetID = String(datum.targetID ?? "")
+    const source = machine.byID.get(sourceID)
+    const target = machine.byID.get(targetID)
+    return (
+      <TooltipRoot>
+        <div style={{ fontWeight: 700 }}>
+          {source?.label ?? sourceID} → {target?.label ?? targetID}
+        </div>
+        <div>Dependency in flight</div>
+        {target?.lane ? <div>Target lane: {target.lane}</div> : null}
+      </TooltipRoot>
+    )
+  }, [machine])
+
   if (!machine.valid) {
     return (
       <div className={className} role="alert" style={{ width, maxWidth: "100%" }}>
@@ -585,7 +610,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         description={description ?? "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."}
         summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}
         accessibleTable={false}
-        enableHover={enableHover}
+        enableHover={tooltipProps.enableHover ?? enableHover}
         initialSpawns={EMPTY_SPAWNS}
         bodyForces={dependencyBodyForce}
         bodyStyle={{
@@ -600,6 +625,11 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         paused={reduced}
         continuous={runtime.inFlight.size > 0}
         onTick={handleTick as never}
+        tooltipContent={
+          props.tooltip === false
+            ? undefined
+            : tooltipProps.tooltipContent ?? defaultTooltipContent
+        }
         config={{
           bodyLimit: Math.max(16, machine.edges.length + 4),
           colliders,

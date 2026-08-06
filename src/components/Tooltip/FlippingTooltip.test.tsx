@@ -14,7 +14,7 @@ import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
-import { defaultTooltipStyle } from "./Tooltip"
+import { defaultTooltipStyle, TooltipRoot } from "./Tooltip"
 
 // The string `FlippingTooltip` assigns to `wrapper.style.background`
 // when it auto-applies chrome. jsdom keeps `var(...)` declarations
@@ -95,6 +95,29 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     )
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
+  })
+
+  it("treats zero-alpha rgba background as missing chrome", () => {
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div style={{ background: "rgba(12, 24, 36, 0)" }}>Transparent rgba</div>
+      </FlippingTooltip>
+    )
+    expect((container.firstChild as HTMLElement).style.background).toBe(
+      EXPECTED_CHROME_BACKGROUND,
+    )
+  })
+
+  it("respects TooltipRoot in CSS-owned mode without a second box", () => {
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <TooltipRoot chrome="css" className="consumer-tooltip">CSS owned</TooltipRoot>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe("")
+    expect(container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+    expect(container.querySelector(".consumer-tooltip")?.textContent).toBe("CSS owned")
   })
 
   it("respects an inline `background` style as chrome ownership (no double-wrap)", () => {

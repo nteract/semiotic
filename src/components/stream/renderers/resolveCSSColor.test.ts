@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { resolveCSSColor, clearCSSColorCache, _resetCSSColorCacheForTest } from "./resolveCSSColor"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import {
+  resolveCSSColor,
+  clearCSSColorCache,
+  subscribeToCSSColorInvalidation,
+  _resetCSSColorCacheForTest
+} from "./resolveCSSColor"
 
 function makeCtx(varName?: string, value?: string): CanvasRenderingContext2D {
   const canvas = document.createElement("canvas")
@@ -83,6 +88,31 @@ describe("resolveCSSColor", () => {
       clearCSSColorCache()
     }
     expect(resolveCSSColor(ctx, "var(--semiotic-danger)")).toBe("#0000ff")
+  })
+
+  it("notifies only canvas branches affected by a scoped style mutation", async () => {
+    const wrapper = document.createElement("div")
+    const canvas = document.createElement("canvas")
+    const unrelated = document.createElement("div")
+    wrapper.appendChild(canvas)
+    document.body.append(wrapper, unrelated)
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(
+      () => canvas,
+      listener
+    )
+
+    try {
+      unrelated.style.setProperty("--semiotic-primary", "#111111")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).not.toHaveBeenCalled()
+
+      wrapper.style.setProperty("--semiotic-primary", "#222222")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).toHaveBeenCalledTimes(1)
+    } finally {
+      unsubscribe()
+    }
   })
 
   it("isolates caches between canvases", () => {

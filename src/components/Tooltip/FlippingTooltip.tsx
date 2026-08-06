@@ -1,5 +1,8 @@
 import * as React from "react"
-import { defaultTooltipStyle } from "./Tooltip"
+import {
+  defaultTooltipStyle,
+  hasOwnTooltipChrome,
+} from "./tooltipChrome"
 
 interface FlippingTooltipProps {
   /** X position within the chart area (relative to margin.left) */
@@ -40,41 +43,7 @@ interface FlippingTooltipProps {
  * When none of these fire, `FlippingTooltip` paints `defaultTooltipStyle`
  * on its wrapper so the tooltip can never come out chrome-less.
  */
-export function hasOwnChrome(node: React.ReactNode): boolean {
-  if (!React.isValidElement(node)) return false
-  // Component-level opt-in. The auto-chrome path only inspects props
-  // on the *immediate* React element, which works for intrinsic
-  // HTML (`<div className="…">`) but misses components whose render
-  // output paints chrome internally. Result: <DefaultNetworkTooltip />
-  // (and any other "I own my chrome" component) silently got the
-  // wrapper's chrome layered on top, producing the double-padded
-  // double-background "box around the tooltip" regression. A static
-  // `ownsChrome` flag on the component type lets those declare
-  // ownership without exposing the className on their wrapping
-  // React element.
-  const type = node.type as { ownsChrome?: boolean } | string
-  if (typeof type !== "string" && type && type.ownsChrome === true) return true
-  const props = node.props as {
-    className?: unknown
-    style?: React.CSSProperties
-  } & Record<string, unknown>
-  if (props["data-semiotic-tooltip-chrome"] === true) return true
-  if (props["data-semiotic-tooltip-chrome"] === "true") return true
-  const style = props.style
-  if (style && typeof style === "object") {
-    if (style.background != null && style.background !== "" && style.background !== "transparent") {
-      return true
-    }
-    if (
-      style.backgroundColor != null &&
-      style.backgroundColor !== "" &&
-      style.backgroundColor !== "transparent"
-    ) {
-      return true
-    }
-  }
-  return false
-}
+export const hasOwnChrome = hasOwnTooltipChrome
 
 /**
  * Viewport-aware tooltip wrapper that flips horizontally and vertically
@@ -86,12 +55,9 @@ export function hasOwnChrome(node: React.ReactNode): boolean {
  *
  * Two defensive behaviors:
  *
- *   - **Chrome guarantee.** If the rendered tooltip content lacks the
- *     `semiotic-tooltip` className on its root, the wrapper applies
- *     `defaultTooltipStyle` to itself so the tooltip always has a
- *     visible background, padding, and shadow. Shared tooltip helpers
- *     keep working unchanged (their `semiotic-tooltip` class causes the
- *     wrapper to stay transparent).
+ *   - **Chrome guarantee.** If the rendered tooltip content does not declare
+ *     chrome ownership, the wrapper applies `defaultTooltipStyle` so the
+ *     tooltip always has a visible background, padding, and shadow.
  *   - **Non-finite position guard.** Returns `null` when `x` or `y` is
  *     `NaN` / `Infinity`. The frame's hover plumbing can occasionally
  *     produce a non-finite hit-test result during a scale rebuild or
@@ -185,7 +151,7 @@ export function FlippingTooltip({
   // chrome's `maxWidth` constraint to keep the existing flip math
   // working; the chrome's `wordWrap: break-word` still handles long
   // tokens. `pointerEvents` is set on the wrapper regardless.
-  const ownsChrome = hasOwnChrome(children)
+  const ownsChrome = hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
   const compositeClassName = ownsChrome ? className : `${className} semiotic-tooltip`.trim()
   // Late guard return: bail AFTER all hooks have run so the hook call

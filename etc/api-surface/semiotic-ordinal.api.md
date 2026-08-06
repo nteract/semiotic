@@ -15,6 +15,7 @@ function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHa
 function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -22,6 +23,8 @@ function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartPro
 function StreamOrdinalFrame(: import("../../../dist/semiotic-ordinal").StreamOrdinalFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-ordinal").StreamOrdinalFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
 function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
@@ -37,6 +40,7 @@ function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefin
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
 function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
@@ -70,6 +74,8 @@ interface LegendGroup
 interface LegendItem
 interface LegendLayout
 interface LikertChartProps<TDatum extends Datum = Datum>
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface OrdinalCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
@@ -89,6 +95,9 @@ interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface SwimlaneChartProps<TDatum extends Datum = Datum>
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 type AnnotationLabelBackground = boolean | "halo" | "box" | "none" | AnnotationLabelBackgroundConfig
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
@@ -98,4 +107,6 @@ type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: Ord
 type OrdinalSceneNode = RectSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | WedgeSceneNode | BoxplotSceneNode | ViolinSceneNode | ConnectorSceneNode | TrapezoidSceneNode
 type ResponsiveOrientation = "portrait" | "landscape"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

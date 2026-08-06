@@ -19,6 +19,8 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
   description?: string
   background?: string
   backgroundGraphics?: FrameGraphicsProp
+  /** Explicit full-frame fill beneath custom background graphics. */
+  backgroundGraphicsBackdrop?: string
   className?: string
   foregroundGraphics?: FrameGraphicsProp
   idPrefix?: string
@@ -73,6 +75,7 @@ export function renderPhysicsSettledSVG(
     description,
     background,
     backgroundGraphics,
+    backgroundGraphicsBackdrop,
     className,
     foregroundGraphics,
     idPrefix = "physics",
@@ -102,6 +105,17 @@ export function renderPhysicsSettledSVG(
     >
       {title && <title id={titleId}>{title}</title>}
       {description && <desc id={descId}>{description}</desc>}
+      {backgroundGraphicsBackdrop &&
+      backgroundGraphicsBackdrop !== "transparent" ? (
+        <rect
+          className="stream-frame-background__backdrop"
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={backgroundGraphicsBackdrop}
+        />
+      ) : null}
       {!backgroundGraphics && background && background !== "transparent" ? (
         <rect x={0} y={0} width={width} height={height} fill={background} />
       ) : null}

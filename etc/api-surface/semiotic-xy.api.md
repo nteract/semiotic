@@ -15,11 +15,15 @@ function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & Rea
 function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function MultiPointTooltip(): TooltipContentFn
 function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
 function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function StreamXYFrame(: import("../../../dist/semiotic-realtime-core").StreamXYFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-realtime-core").StreamXYFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function glyphExtent(def: GlyphDef, size: number): number
@@ -31,6 +35,7 @@ function hitTargetRect(props: HitTargetRectProps): RectSceneNode
 function isHatchFill(fill: unknown): boolean
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
 function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
@@ -67,6 +72,8 @@ interface LegendItem
 interface LegendLayout
 interface LineChartProps<TDatum extends Datum = Datum>
 interface MultiAxisLineChartProps<TDatum extends Datum = Datum>
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface QuadrantChartProps<TDatum extends Datum = Datum>
 interface QuadrantConfig
 interface QuadrantsConfig
@@ -87,6 +94,9 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
@@ -99,4 +109,6 @@ type ResponsiveOrientation = "portrait" | "landscape"
 type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 type SemanticGradientStop = SemanticGradientStopInput
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

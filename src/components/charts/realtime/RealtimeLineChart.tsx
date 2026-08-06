@@ -41,6 +41,11 @@ import {
 } from "./aggregate"
 import { type EventTimeConfig, createReorderBuffer } from "./eventTime"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  MultiPointTooltip,
+  resolveMultiCapableTooltip,
+  type TooltipProp,
+} from "../../Tooltip/Tooltip"
 
 /** Read a numeric time/value off a datum via accessor, with a field-name fallback. */
 function readNum<TDatum extends Datum>(
@@ -125,8 +130,8 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Custom tooltip renderer (alias for tooltipContent) */
-  tooltip?: (d: HoverData) => ReactNode
+  /** Standard tooltip config or raw-datum renderer. Pass `"multi"` for hover-anywhere line values. Use `tooltipContent` when the full HoverData wrapper is required. */
+  tooltip?: TooltipProp
   /** Configurable opacity decay for older data */
   decay?: DecayConfig
   /** Flash effect on newly inserted data */
@@ -277,8 +282,24 @@ export const RealtimeLineChart = forwardRef(
     // Accessor-aware default tooltip — reads data-space `time` /
     // `value` fields off `hover.data` so the user sees real values
     // out of the box. See `buildDefaultRealtimeTooltip` for shape.
-    const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
+    const defaultTooltipContent = buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
+    const multiPointTooltip = MultiPointTooltip()
+    const tooltipProps = resolveMultiCapableTooltip({
+      tooltip,
+      defaultTooltipContent,
+      // RealtimeLineChart currently has one value channel. Give its otherwise
+      // unnamed line a useful label while retaining the shared multi renderer.
+      multiDefaultContent: (hover: Datum) => multiPointTooltip({
+        ...hover,
+        allSeries: Array.isArray(hover.allSeries)
+          ? hover.allSeries.map((hit: Record<string, unknown>) => ({
+              ...hit,
+              group: hit.group || (typeof valueAccessor === "string" ? valueAccessor : "value"),
+            }))
+          : hover.allSeries,
+      }),
+    })
+    const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -517,6 +538,7 @@ export const RealtimeLineChart = forwardRef(
         background={background}
         hoverAnnotation={enableHover}
         tooltipContent={resolvedTooltip}
+        tooltipMode={tooltipProps.tooltipMode}
         {...buildCustomBehaviorProps({
           linkedHover,
           selection,

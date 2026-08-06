@@ -10,7 +10,11 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import type { TooltipProp } from "../../Tooltip/Tooltip"
+import {
+  resolveMultiCapableTooltip,
+  type TooltipProp,
+} from "../../Tooltip/Tooltip"
+import { DefaultTooltip } from "../../stream/xyDefaultTooltip"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
@@ -165,6 +169,19 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     [sel?.isActive, sel?.predicate]
   )
 
+  // XYCustomChart is still an XY frame: custom layouts that emit line/area
+  // scene nodes can use the same hover-anywhere multi-series contract as the
+  // built-in line and area HOCs. Resolving here also fixes config objects and
+  // `false`, which used to be cast directly into `tooltipContent` and could
+  // reach the frame as a non-callable value.
+  const tooltipProps = useMemo(
+    () => resolveMultiCapableTooltip({
+      tooltip: props.tooltip,
+      defaultTooltipContent: (hover) => <DefaultTooltip hover={hover} />,
+    }),
+    [props.tooltip],
+  )
+
   if (earlyReturn) return earlyReturn
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
@@ -193,7 +210,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     showGrid,
     ...setup.legendBehaviorProps,
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
-    ...(props.tooltip != null && { tooltipContent: props.tooltip as StreamXYFrameProps["tooltipContent"] }),
+    ...tooltipProps,
     ...buildCustomBehaviorProps({
       linkedHover,
       selection,

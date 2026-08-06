@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { collectBrowserErrors } from "./helpers/browser"
 
 const ROUTE = "/examples/sentence-structure"
 const PAGE_TITLE = "The Sentence Is Not the Words"
@@ -16,15 +17,6 @@ const STRUCTURAL_VIEWS = [
   ["phrase relationships", "phrase-net"],
   ["textual variants", "variants"],
 ] as const
-
-function collectBrowserErrors(page: Page) {
-  const errors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text())
-  })
-  page.on("pageerror", (error) => errors.push(error.message))
-  return errors
-}
 
 async function openExample(page: Page) {
   await page.goto(ROUTE, { waitUntil: "domcontentloaded" })

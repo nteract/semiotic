@@ -1,13 +1,19 @@
 "use client"
 import * as React from "react"
 import { useDataSummary } from "../DataSummaryContext"
-import type { Datum } from "../charts/shared/datumTypes"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
 import {
   extractAllRows,
   type AccessibleSceneNode as AnySceneNode,
-  type DataRow,
 } from "./accessibleDataRows"
+import {
+  buildNetworkTableModel,
+  computeFieldStats,
+  fmt,
+  fmtCell,
+  formatSummary,
+  type NetworkTableElement,
+} from "./accessibleDataTableModel"
 
 export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
@@ -86,110 +92,6 @@ export function computeNetworkAriaLabel(
   if (edgeCount > 0) parts.push(`${edgeCount} edges`)
   if (parts.length === 0) return `${chartType}, empty`
   return `${chartType}, ${parts.join(", ")}`
-}
-
-// ── Formatting ──────────────────────────────────────────────────────────
-
-const fmt = (v: number | undefined | null): string => {
-  if (v == null) return ""
-  const n = Math.round(v * 100) / 100
-  if (Number.isNaN(n)) return ""
-  return String(n)
-}
-
-// ── Statistical summary ─────────────────────────────────────────────────
-
-interface FieldStats {
-  name: string
-  count: number
-  numeric: boolean
-  min?: number
-  max?: number
-  mean?: number
-  uniqueValues?: string[]
-}
-
-/** Compute per-field statistics from extracted rows. Defensive against weird values. */
-function computeFieldStats(rows: DataRow[]): FieldStats[] {
-  if (!rows || rows.length === 0) return []
-
-  // Collect all field names
-  const fieldNames = new Set<string>()
-  for (const r of rows) {
-    if (!r || !r.values) continue
-    for (const k of Object.keys(r.values)) fieldNames.add(k)
-  }
-
-  const stats: FieldStats[] = []
-  for (const name of fieldNames) {
-    const nums: number[] = []
-    const strs = new Set<string>()
-
-    for (const r of rows) {
-      if (!r || !r.values) continue
-      const v = r.values[name]
-      if (v == null || v === "") continue
-      if (typeof v === "number" && !Number.isNaN(v) && Number.isFinite(v)) {
-        nums.push(v)
-      } else if (typeof v === "number") {
-        // NaN/Infinity — skip rather than corrupt stats
-      } else if (typeof v !== "object" && typeof v !== "function") {
-        strs.add(String(v))
-      }
-      // Objects/functions silently skipped — not meaningful for stats
-    }
-
-    if (nums.length > 0) {
-      let min = nums[0],
-        max = nums[0],
-        sum = 0
-      for (const n of nums) {
-        if (n < min) min = n
-        if (n > max) max = n
-        sum += n
-      }
-      stats.push({
-        name,
-        count: nums.length,
-        numeric: true,
-        min,
-        max,
-        mean: sum / nums.length
-      })
-    } else if (strs.size > 0) {
-      const unique = Array.from(strs)
-      stats.push({
-        name,
-        count: unique.length,
-        numeric: false,
-        uniqueValues: unique.slice(0, 5)
-      })
-    }
-  }
-
-  return stats
-}
-
-/** Format a summary string from field stats. */
-function formatSummary(totalRows: number, fieldStats: FieldStats[]): string {
-  const parts: string[] = [`${totalRows} data points.`]
-
-  for (const fs of fieldStats) {
-    if (fs.numeric) {
-      parts.push(
-        `${fs.name}: ${fmt(fs.min)} to ${fmt(fs.max)}, mean ${fmt(fs.mean)}.`
-      )
-    } else {
-      const vals = fs.uniqueValues!
-      const label =
-        vals.length <= 3
-          ? vals.join(", ")
-          : `${vals.slice(0, 3).join(", ")}… (${fs.count} unique)`
-      parts.push(`${fs.name}: ${label}.`)
-    }
-  }
-
-  return parts.join(" ")
 }
 
 // ── AccessibleDataTable ─────────────────────────────────────────────────
@@ -314,17 +216,6 @@ const SHOW_MORE_BUTTON_STYLE: React.CSSProperties = {
     "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
   color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
   fontFamily: "inherit"
-}
-
-function fmtCell(v: unknown): string {
-  if (v == null || v === "") return "—"
-  if (typeof v === "number") {
-    if (Number.isNaN(v)) return "—"
-    return fmt(v)
-  }
-  if (typeof v === "boolean") return v ? "true" : "false"
-  if (typeof v === "object") return "—" // Don't render [object Object]
-  return String(v)
 }
 
 /**
@@ -511,15 +402,8 @@ export function AccessibleDataTable({
 // ── NetworkAccessibleDataTable ──────────────────────────────────────────
 
 interface NetworkAccessibleDataTableProps {
-  nodes: Array<{
-    datum?: Datum | null
-    id?: string
-    cx?: number
-    cy?: number
-    x?: number
-    y?: number
-  }>
-  edges: Array<{ datum?: Datum | null; source?: string; target?: string }>
+  nodes: NetworkTableElement[]
+  edges: NetworkTableElement[]
   chartType: string
   tableId?: string
   chartTitle?: string
@@ -536,7 +420,8 @@ export function NetworkAccessibleDataTable({
   chartTitle
 }: NetworkAccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
-  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
+  const [visibleNodeCount, setVisibleNodeCount] = React.useState(SAMPLE_SIZE)
+  const [visibleEdgeCount, setVisibleEdgeCount] = React.useState(SAMPLE_SIZE)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
@@ -548,9 +433,12 @@ export function NetworkAccessibleDataTable({
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   // Reset paging on any collapse path (close button, blur, ChartContainer
-  // toggle) so reopening never re-renders the full node set at once.
+  // toggle) so reopening never re-renders the full network at once.
   React.useEffect(() => {
-    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
+    if (!isExpanded) {
+      setVisibleNodeCount(SAMPLE_SIZE)
+      setVisibleEdgeCount(SAMPLE_SIZE)
+    }
   }, [isExpanded])
 
   // Only the skip-link path (which focuses the region container itself) auto-
@@ -573,7 +461,10 @@ export function NetworkAccessibleDataTable({
     [visible]
   )
 
-  if (!nodes || nodes.length === 0) {
+  const safeNodes = Array.isArray(nodes) ? nodes : []
+  const safeEdges = Array.isArray(edges) ? edges : []
+
+  if (safeNodes.length === 0 && safeEdges.length === 0) {
     return tableId ? (
       <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
     ) : null
@@ -591,109 +482,42 @@ export function NetworkAccessibleDataTable({
         aria-label={regionLabel}
       >
         <button type="button" onClick={() => setSrExpanded(true)}>
-          View data summary ({nodes.length} nodes, {edges.length} edges)
+          View data summary ({safeNodes.length} nodes, {safeEdges.length} edges)
         </button>
       </div>
     )
   }
 
-  // JIT: compute degree stats on activation — defensive against weird data shapes
-  const safeNodes = Array.isArray(nodes) ? nodes : []
-  const safeEdges = Array.isArray(edges) ? edges : []
+  const { nodeRows, edgeRows, hasWeights, summary } =
+    buildNetworkTableModel(safeNodes, safeEdges)
 
-  // Compute per-node degree stats: in-degree, out-degree (count and weighted)
-  const inDeg = new Map<string, number>()
-  const outDeg = new Map<string, number>()
-  const wInDeg = new Map<string, number>()
-  const wOutDeg = new Map<string, number>()
+  const shownNodeCount = Math.min(visibleNodeCount, nodeRows.length)
+  const sampleNodes = nodeRows.slice(0, shownNodeCount)
+  const remainingNodes = nodeRows.length - shownNodeCount
+  const shownEdgeCount = Math.min(visibleEdgeCount, edgeRows.length)
+  const sampleEdges = edgeRows.slice(0, shownEdgeCount)
+  const remainingEdges = edgeRows.length - shownEdgeCount
 
-  for (const e of safeEdges) {
-    if (!e || typeof e !== "object") continue
-    const raw: Datum = e.datum ?? { source: e.source, target: e.target }
-    const srcRaw = typeof raw.source === "object" ? raw.source?.id : raw.source
-    const tgtRaw = typeof raw.target === "object" ? raw.target?.id : raw.target
-    const hasVal = typeof raw.value === "number" && Number.isFinite(raw.value)
-    const val = hasVal ? raw.value : 0
-    if (srcRaw != null && srcRaw !== "") {
-      const src = String(srcRaw)
-      outDeg.set(src, (outDeg.get(src) ?? 0) + 1)
-      wOutDeg.set(src, (wOutDeg.get(src) ?? 0) + val)
-    }
-    if (tgtRaw != null && tgtRaw !== "") {
-      const tgt = String(tgtRaw)
-      inDeg.set(tgt, (inDeg.get(tgt) ?? 0) + 1)
-      wInDeg.set(tgt, (wInDeg.get(tgt) ?? 0) + val)
-    }
+  const nodeColumnSet = new Set<string>()
+  for (const row of sampleNodes) {
+    for (const key of Object.keys(row.semantic.values)) nodeColumnSet.add(key)
   }
+  const nodeColumns = Array.from(nodeColumnSet)
 
-  type NodeDegreeRow = {
-    id: string
-    degree: number
-    inDeg: number
-    outDeg: number
-    wDegree: number
-    wInDeg: number
-    wOutDeg: number
+  const edgeColumnSet = new Set<string>()
+  for (const row of sampleEdges) {
+    for (const key of Object.keys(row.values)) edgeColumnSet.add(key)
   }
-  const nodeRows: NodeDegreeRow[] = []
-  for (let ni = 0; ni < safeNodes.length; ni++) {
-    const n = safeNodes[ni]
-    if (!n || typeof n !== "object") continue
-    const rawId = n.datum?.id ?? n.id
-    const id = rawId != null ? String(rawId) : `node-${ni}`
-    const ind = inDeg.get(id) ?? 0
-    const outd = outDeg.get(id) ?? 0
-    const wind = wInDeg.get(id) ?? 0
-    const woutd = wOutDeg.get(id) ?? 0
-    nodeRows.push({
-      id,
-      degree: ind + outd,
-      inDeg: ind,
-      outDeg: outd,
-      wDegree: wind + woutd,
-      wInDeg: wind,
-      wOutDeg: woutd
-    })
-  }
-
-  // Sort by degree descending for most useful summary
-  nodeRows.sort((a, b) => b.degree - a.degree)
-
-  let avgDegree = 0
-  let maxDegree = 0
-  if (nodeRows.length > 0) {
-    let sum = 0
-    for (const r of nodeRows) {
-      sum += r.degree
-      if (r.degree > maxDegree) maxDegree = r.degree
-    }
-    avgDegree = sum / nodeRows.length
-  }
-
-  // Show weighted columns when any edge carries a numeric value
-  const hasWeights = safeEdges.some((e) => {
-    const raw: Datum = e?.datum ?? { source: e?.source, target: e?.target }
-    return typeof raw?.value === "number" && Number.isFinite(raw.value)
-  })
-
-  const summaryParts = [`${nodeRows.length} nodes, ${safeEdges.length} edges.`]
-  if (nodeRows.length > 0) {
-    summaryParts.push(
-      `Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`
-    )
-  }
-
-  const shownCount = Math.min(visibleCount, nodeRows.length)
-  const sampleNodes = nodeRows.slice(0, shownCount)
-  const remaining = nodeRows.length - shownCount
+  const edgeColumns = Array.from(edgeColumnSet)
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
-    // visibleCount resets via the collapse effect above.
+    // Page counts reset via the collapse effect above.
   }
 
-  const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
+  const showMoreNodes = () => setVisibleNodeCount((c) => c + PAGE_SIZE)
+  const showMoreEdges = () => setVisibleEdgeCount((c) => c + PAGE_SIZE)
 
   return (
     <div
@@ -720,62 +544,124 @@ export function NetworkAccessibleDataTable({
         role="note"
         style={SUMMARY_NOTE_STYLE}
       >
-        {summaryParts.join(" ")}
+        {summary}
       </div>
-      <table
-        className="semiotic-accessible-data-table-table"
-        role="table"
-        aria-label={`Node degree summary for ${chartType}`}
-        style={VISIBLE_TABLE_STYLE}
-      >
-        <caption
-          className="semiotic-accessible-data-table-caption"
-          style={CAPTION_STYLE}
+      {nodeRows.length > 0 && (
+        <table
+          className="semiotic-accessible-data-table-table"
+          role="table"
+          aria-label={`Node data and degree summary for ${chartType}`}
+          style={VISIBLE_TABLE_STYLE}
         >
-          {remaining > 0
-            ? `Top ${shownCount} of ${nodeRows.length} nodes by degree`
-            : `All ${nodeRows.length} nodes by degree`}
-        </caption>
-        <thead>
-          <tr>
-            <th style={VISIBLE_TH_STYLE}>id</th>
-            <th style={VISIBLE_TH_STYLE}>degree</th>
-            <th style={VISIBLE_TH_STYLE}>in</th>
-            <th style={VISIBLE_TH_STYLE}>out</th>
-            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. degree</th>}
-            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. in</th>}
-            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. out</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sampleNodes.map((row, i) => (
-            <tr key={i}>
-              <td style={VISIBLE_TD_STYLE}>{row.id}</td>
-              <td style={VISIBLE_TD_STYLE}>{row.degree}</td>
-              <td style={VISIBLE_TD_STYLE}>{row.inDeg}</td>
-              <td style={VISIBLE_TD_STYLE}>{row.outDeg}</td>
-              {hasWeights && (
-                <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>
-              )}
-              {hasWeights && (
-                <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>
-              )}
-              {hasWeights && (
-                <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>
-              )}
+          <caption
+            className="semiotic-accessible-data-table-caption"
+            style={CAPTION_STYLE}
+          >
+            {remainingNodes > 0
+              ? `Top ${shownNodeCount} of ${nodeRows.length} nodes by degree`
+              : `All ${nodeRows.length} nodes by degree`}
+          </caption>
+          <thead>
+            <tr>
+              <th style={VISIBLE_TH_STYLE}>node</th>
+              {nodeColumns.map((column) => (
+                <th key={column} style={VISIBLE_TH_STYLE}>
+                  {column}
+                </th>
+              ))}
+              <th style={VISIBLE_TH_STYLE}>degree</th>
+              <th style={VISIBLE_TH_STYLE}>in</th>
+              <th style={VISIBLE_TH_STYLE}>out</th>
+              {hasWeights && <th style={VISIBLE_TH_STYLE}>w. degree</th>}
+              {hasWeights && <th style={VISIBLE_TH_STYLE}>w. in</th>}
+              {hasWeights && <th style={VISIBLE_TH_STYLE}>w. out</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {remaining > 0 && (
+          </thead>
+          <tbody>
+            {sampleNodes.map((row, i) => (
+              <tr key={i} aria-label={row.semantic.label}>
+                <td style={VISIBLE_TD_STYLE}>{row.semantic.label}</td>
+                {nodeColumns.map((column) => (
+                  <td key={column} style={VISIBLE_TD_STYLE}>
+                    {fmtCell(row.semantic.values[column])}
+                  </td>
+                ))}
+                <td style={VISIBLE_TD_STYLE}>{row.degree}</td>
+                <td style={VISIBLE_TD_STYLE}>{row.inDeg}</td>
+                <td style={VISIBLE_TD_STYLE}>{row.outDeg}</td>
+                {hasWeights && (
+                  <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>
+                )}
+                {hasWeights && (
+                  <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>
+                )}
+                {hasWeights && (
+                  <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {remainingNodes > 0 && (
         <button
           type="button"
           className="semiotic-accessible-data-table-show-more"
-          onClick={showMore}
+          onClick={showMoreNodes}
           style={SHOW_MORE_BUTTON_STYLE}
         >
-          Show {Math.min(PAGE_SIZE, remaining)} more{" "}
-          {remaining === 1 ? "node" : "nodes"} ({remaining} remaining)
+          Show {Math.min(PAGE_SIZE, remainingNodes)} more{" "}
+          {remainingNodes === 1 ? "node" : "nodes"} ({remainingNodes} remaining)
+        </button>
+      )}
+      {edgeRows.length > 0 && (
+        <table
+          className="semiotic-accessible-data-table-table semiotic-accessible-data-table-edges"
+          role="table"
+          aria-label={`Edge data for ${chartType}`}
+          style={{ ...VISIBLE_TABLE_STYLE, marginTop: 12 }}
+        >
+          <caption
+            className="semiotic-accessible-data-table-caption"
+            style={CAPTION_STYLE}
+          >
+            {remainingEdges > 0
+              ? `First ${shownEdgeCount} of ${edgeRows.length} edges`
+              : `All ${edgeRows.length} edges`}
+          </caption>
+          <thead>
+            <tr>
+              <th style={VISIBLE_TH_STYLE}>edge</th>
+              {edgeColumns.map((column) => (
+                <th key={column} style={VISIBLE_TH_STYLE}>
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sampleEdges.map((row, i) => (
+              <tr key={i} aria-label={row.label}>
+                <td style={VISIBLE_TD_STYLE}>{row.label}</td>
+                {edgeColumns.map((column) => (
+                  <td key={column} style={VISIBLE_TD_STYLE}>
+                    {fmtCell(row.values[column])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {remainingEdges > 0 && (
+        <button
+          type="button"
+          className="semiotic-accessible-data-table-show-more"
+          onClick={showMoreEdges}
+          style={SHOW_MORE_BUTTON_STYLE}
+        >
+          Show {Math.min(PAGE_SIZE, remainingEdges)} more{" "}
+          {remainingEdges === 1 ? "edge" : "edges"} ({remainingEdges} remaining)
         </button>
       )}
     </div>

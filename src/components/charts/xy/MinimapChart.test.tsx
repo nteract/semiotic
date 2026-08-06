@@ -242,6 +242,20 @@ describe("MinimapChart", () => {
     }
   })
 
+  it("enables multi-series hover on the detail frame only", () => {
+    render(
+      <TooltipProvider>
+        <MinimapChart data={sampleData} tooltip={{ mode: "multi" }} />
+      </TooltipProvider>
+    )
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)!
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
+
+    expect(mainProps.tooltipMode).toBe("multi")
+    expect(mainProps.tooltipContent).toBeTypeOf("function")
+    expect(overviewProps.tooltipMode).not.toBe("multi")
+  })
+
   it("applies controlled brushExtent to main chart", () => {
     render(
       <TooltipProvider>

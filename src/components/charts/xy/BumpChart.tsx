@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { forwardRef, useCallback, useMemo } from "react"
+import { forwardRef, useMemo } from "react"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type {
   StreamXYFrameProps,
@@ -16,13 +16,13 @@ import { XYCustomChart } from "../custom/XYCustomChart"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
-import { defaultTooltipStyle, normalizeTooltip } from "../../Tooltip/Tooltip"
 import { resolveStyleRules, type StyleRule } from "../shared/styleRules"
 import { resolveDefaultFill, useThemeCategorical } from "../shared/hooks"
 import { buildBumpRibbonGeometry } from "../../geometry/bumpRibbonGeometry"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 import { useTheme } from "../../ThemeProvider"
+import { useBumpTooltip } from "./bumpTooltip"
 
 const OTHER_COLOR_GROUP = "Other"
 
@@ -559,6 +559,7 @@ export interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartP
   enableHover?: boolean
   /** Dim every trajectory except the hovered series. Default `true`. */
   hoverHighlight?: boolean | "series"
+  /** Tooltip configuration. Pass `"multi"` to compare every trajectory at the hovered x position. */
   tooltip?: TooltipProp
   /** Annotation objects. X coordinates may use the original x values. */
   annotations?: Datum[]
@@ -699,40 +700,12 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     frameAreaStyle, framePointStyle, labelStyle, showPoints, pointRadius, showLabels,
   ])
 
-  const formatX = useCallback((value: number | Date | string, index?: number) => {
-    if (ranked.xValues.length === 0) return ""
-    const numericIndex = Math.max(0, Math.min(ranked.xValues.length - 1, Math.round(Number(value))))
-    const raw = ranked.xValues[numericIndex] as number | Date | string
-    return xFormat ? xFormat(raw, index) : String(raw instanceof Date ? raw.toLocaleDateString() : raw)
-  }, [ranked.xValues, xFormat])
-
-  const formatValue = useCallback((value: number) => {
-    return yFormat ? yFormat(value) : value.toLocaleString()
-  }, [yFormat])
-
-  const normalizedTooltip = useMemo(
-    () => tooltip === "multi" ? undefined : normalizeTooltip(tooltip),
-    [tooltip],
-  )
-  const tooltipContent = useCallback((hover: Datum) => {
-    const internal = (hover?.data ?? hover) as RankedBumpDatum<TDatum> | undefined
-    if (!internal) return null
-    if (tooltip === false) return null
-    if (normalizedTooltip) {
-      return normalizedTooltip({
-        ...hover,
-        data: internal.__bumpRaw,
-        __semioticHoverData: true,
-      })
-    }
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        <div style={{ fontWeight: 700 }}>{internal.__bumpSeries}</div>
-        <div>{formatX(internal.x)} · Rank {internal.__bumpRank}</div>
-        <div>Value: {formatValue(internal.__bumpValue)}</div>
-      </div>
-    )
-  }, [formatValue, formatX, normalizedTooltip, tooltip])
+  const { tooltip: resolvedTooltip, formatX } = useBumpTooltip<TDatum>({
+    tooltip,
+    xValues: ranked.xValues,
+    xFormat,
+    yFormat,
+  })
 
   const handleClick = useMemo(() => {
     if (!onClick) return undefined
@@ -782,7 +755,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
       hoverHighlight={hoverHighlight}
       colorBy="__bumpSeries"
       colorScheme={resolvedColorScheme}
-      tooltip={tooltipContent}
+      tooltip={resolvedTooltip}
       onClick={handleClick}
       hoverRadius={props.hoverRadius}
       width={props.width}

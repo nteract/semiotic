@@ -1,6 +1,18 @@
-import type { PointSceneNode, RectSceneNode, SceneDatum } from "./types"
+import type {
+  PointSceneNode,
+  RectSceneNode,
+  SceneAccessibilityMetadata,
+  SceneDatum,
+} from "./types"
 import type { GeoAreaSceneNode } from "./geoTypes"
-import type { NetworkCircleNode, NetworkRectNode } from "./networkTypes"
+import type {
+  NetworkBezierEdge,
+  NetworkCircleNode,
+  NetworkCurvedEdge,
+  NetworkLineEdge,
+  NetworkRectNode,
+  NetworkRibbonEdge,
+} from "./networkTypes"
 
 /**
  * `hitTarget` — the invisible, interaction-bearing scene node for custom charts.
@@ -214,6 +226,10 @@ export interface NetworkHitTargetCircleProps {
   r?: number
   /** Optional accessible label override for the node. */
   label?: string
+  /** Full user-facing row when the render datum is geometry-oriented. */
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  /** Accessible label and/or a curated data-table projection. */
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
 }
 
 export interface NetworkHitTargetRectProps {
@@ -231,6 +247,10 @@ export interface NetworkHitTargetRectProps {
   id?: string | number
   /** Optional accessible label override for the node. */
   label?: string
+  /** Full user-facing row when the render datum is geometry-oriented. */
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  /** Accessible label and/or a curated data-table projection. */
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
 }
 
 /**
@@ -276,6 +296,8 @@ export function networkHitTarget(
       datum: props.datum,
       id,
       label: props.label,
+      accessibleDatum: props.accessibleDatum,
+      accessibility: props.accessibility,
     }
   }
   return {
@@ -287,5 +309,86 @@ export function networkHitTarget(
     datum: props.datum,
     id,
     label: props.label,
+    accessibleDatum: props.accessibleDatum,
+    accessibility: props.accessibility,
+  }
+}
+
+export interface NetworkEdgeHitTargetBaseProps {
+  /** Raw edge datum surfaced by pointer observation and the data table. */
+  datum: SceneDatum
+  /** Optional stable semantic identity for the edge. */
+  id?: string | number
+  /** Human-readable row label for the accessible data table. */
+  label?: string
+  /** Full user-facing row when the render datum is geometry-oriented. */
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  /** Accessible label and/or a curated data-table projection. */
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /**
+   * Whether the transparent edge participates in pointer hit testing. Set to
+   * false when the edge exists only to add a semantic table row.
+   * @default true
+   */
+  interactive?: boolean
+}
+
+export interface NetworkLineEdgeHitTargetProps
+  extends NetworkEdgeHitTargetBaseProps {
+  type?: "line"
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+export interface NetworkPathEdgeHitTargetProps
+  extends NetworkEdgeHitTargetBaseProps {
+  /** Curved paths are the most general default; bezier/ribbon reuse the same path contract. */
+  type?: "curved" | "bezier" | "ribbon"
+  pathD: string
+}
+
+/**
+ * A transparent semantic edge for a custom network layout whose visible links
+ * live in `overlays`. It contributes an edge row to the accessible data table
+ * and, by default, retains the frame's geometry-based pointer observation.
+ * Network keyboard traversal remains node-based; set `interactive: false` for
+ * an accessibility-table-only edge that should not intercept the pointer.
+ */
+export function networkEdgeHitTarget(
+  props: NetworkLineEdgeHitTargetProps,
+): NetworkLineEdge
+export function networkEdgeHitTarget(
+  props: NetworkPathEdgeHitTargetProps,
+): NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
+export function networkEdgeHitTarget(
+  props: NetworkLineEdgeHitTargetProps | NetworkPathEdgeHitTargetProps,
+): NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge {
+  const common = {
+    style: { ...TRANSPARENT_STYLE },
+    datum: props.datum,
+    id: idString(props.id),
+    label: props.label,
+    accessibleDatum: props.accessibleDatum,
+    accessibility: props.accessibility,
+    interactive: props.interactive ?? true,
+  }
+
+  if ("pathD" in props) {
+    return {
+      type: props.type ?? "curved",
+      pathD: props.pathD,
+      ...common,
+    }
+  }
+
+  return {
+    type: "line",
+    x1: props.x1,
+    y1: props.y1,
+    x2: props.x2,
+    y2: props.y2,
+    ...common,
   }
 }

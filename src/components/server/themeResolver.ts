@@ -8,7 +8,7 @@
 
 import type { SemioticTheme } from "../store/ThemeStore"
 import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, applyThemeAccessibility } from "../store/ThemeStore"
-import { THEME_PRESETS } from "../semiotic-themes"
+import { resolveThemePreset } from "../semiotic-themes"
 
 type PartialThemeObject = Omit<Partial<SemioticTheme>, "colors" | "typography" | "tooltip"> & {
   colors?: Partial<SemioticTheme["colors"]>
@@ -33,7 +33,7 @@ export function resolveTheme(theme: ThemeInput): SemioticTheme {
     if (theme === "light") return LIGHT_THEME
     if (theme === "dark") return DARK_THEME
     if (theme === "high-contrast") return HIGH_CONTRAST_THEME
-    const preset = THEME_PRESETS[theme]
+    const preset = resolveThemePreset(theme)
     if (preset) return preset
     // Unknown preset name — fall back to light
     return LIGHT_THEME

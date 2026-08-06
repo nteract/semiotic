@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
   ForceDirectedGraph,
   GroupedBarChart,
@@ -6,10 +6,14 @@ import {
   SankeyDiagram,
   SwarmPlot,
   ThemeProvider,
+  TooltipRoot,
+  markTooltipChrome,
 } from "semiotic"
 import { CollisionSwarmChart } from "semiotic/physics"
 import { XYCustomChart } from "semiotic/xy"
-import { useReducedMotion } from "semiotic/utils"
+import { unwrapDatum, useReducedMotion } from "semiotic/utils"
+import ChartMethodDisclosure from "../../components/ChartMethodDisclosure"
+import useReadingLineSections from "../../hooks/useReadingLineSections"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
@@ -37,8 +41,7 @@ const ORBIS_URL =
   "https://journalofdigitalhumanities.org/1-3/modeling-networks-and-scholarship-with-orbis-by-elijah-meeks-and-karl-grossner/"
 const LDA_ISSUE_URL =
   "https://journalofdigitalhumanities.org/2-1/dh-contribution-to-topic-modeling/"
-const INDEX_THOMISTICUS_URL =
-  "https://dhq.digitalhumanities.org/vol/12/2/000380/000380.html"
+const INDEX_THOMISTICUS_URL = "https://dhq.digitalhumanities.org/vol/12/2/000380/000380.html"
 const DHQ_EXPLORE_URL = "https://dhq.digitalhumanities.org/dhq/explore/explore.html"
 const DHQ_AI_POLICY_URL =
   "https://github.com/Digital-Humanities-Quarterly/dhq-journal/blob/main/submissions/ai_policies.html"
@@ -65,25 +68,25 @@ const COMPACT_CHART_TITLES = Object.freeze({
   authorship: "Published co-authorship",
   subjects: "DHQ’s current vocabulary",
   "metadata-clock": "Metadata arrives late",
-  classification: "One tag or several",
+  classification: "What tidiness throws away",
   "recommendation-walk": "Authors along a reading route",
-  overlap: "Three definitions of nearby",
+  overlap: "Shared “read next” picks",
 })
 
 const COMPACT_CLASSIFICATION_LABELS = Object.freeze({
   all: "All items",
-  single: "One tag",
-  multiple: "Multiple",
+  single: "Already one tag",
+  multiple: "Many tags",
   absent: "No tag",
-  "single-display": "One shown",
-  "multiple-retained": "Retain many",
+  "single-display": "Shown as one",
+  "multiple-retained": "Still many",
   unclassified: "Unclassified",
 })
 
 const RECOMMENDATION_METHOD_LABELS = Object.freeze({
-  keywords: "Controlled keywords",
-  bm25: "BM25 full text",
-  specter: "SPECTER embeddings",
+  keywords: "Editorial keywords",
+  bm25: "Full-text search",
+  specter: "Title/abstract embeddings",
 })
 
 const METADATA_CLOCK_CHART_DATA = METADATA_CLOCK_ITEMS.map((item) => ({
@@ -97,237 +100,178 @@ const SCENES = [
   {
     id: "long-view",
     number: "01",
-    eyebrow: "The long view",
-    title: "AI did not arrive in an empty tool shed.",
+    title: "The tools came long before this AI wave",
     chart: "XYCustomChart",
-    chartTitle: "Interfaces to implementation, 1949–2026",
+    chartTitle: "From punch cards to agents, 1949–2026",
     paragraphs: [
       <>
-        The canonical Aquinas project began in 1949 as Roberto Busa, IBM, punch cards,
-        operators, and years of checking.{" "}
+        Digital humanities did not wait for chatbots to invent mediation. In 1949, Roberto Busa’s
+        Aquinas project already meant IBM, punch cards, operators, and years of checking.{" "}
         <a href={INDEX_THOMISTICUS_URL} target="_blank" rel="noopener noreferrer">
           DHQ’s reconstruction
         </a>{" "}
-        makes the human work inside that automation hard to miss. TEI later put shared
-        encoding under community governance. The web made archives into interfaces.
+        makes the human work inside that automation hard to miss. Later, TEI put shared encoding
+        under community rules. The web turned archives into interfaces people could click.
       </>,
       <>
         <a href={ORBIS_URL} target="_blank" rel="noopener noreferrer">
           ORBIS
         </a>{" "}
-        turned an argument about Roman movement into a contestable network model. The{" "}
+        turned an argument about Roman movement into a network model you could argue with. The{" "}
         <a href={LDA_ISSUE_URL} target="_blank" rel="noopener noreferrer">
           LDA special issue
         </a>{" "}
-        was my attempt to make the colonization-or-collaboration problem concrete: put an
-        imported model beside its maker, practitioners, applications, criticism, and tools.
-        These were not steps toward less mediation. They moved the boundary between
-        interpretation and implementation.
+        was my attempt to make the old collaboration problem concrete: put an imported model beside
+        its makers, users, critics, and tools. None of that reduced mediation. It moved the boundary
+        between interpretation and implementation.
       </>,
-      "AI-assisted coding moves that boundary again. It can produce a transformation, an interface, and a visualization while the question is still being worked out. That is more consequential than calling AI another tool, and less magical than claiming the tool has disappeared.",
+      "AI-assisted coding moves that boundary again. A scholar can now ask for a transformation, an interface, and a chart while the research question is still half-formed. That is more than “another tool,” and less than magic. The tool did not disappear. The person with the question can generate more of the software.",
     ],
-    keeps: "Thirteen documented changes in the interface to implementation",
-    drops: "A story of smooth progress or comparable labor across the cases",
+    shows: "Thirteen documented changes in how ideas become software",
+    omits: "A story of smooth progress, or equal labor in every project",
     caption:
-      "A custom Semiotic spiral from the Index Thomisticus to DHQ’s 2026 AI policy. The spiral is chronology, not a scale of importance.",
+      "A chronological spiral from the Index Thomisticus to DHQ’s 2026 AI policy. Order is time, not importance.",
   },
   {
     id: "editorial-shape",
     number: "02",
-    eyebrow: "Editorial grouping",
-    title: "A journal does not simply sample a field.",
+    title: "Editors group the field before you read it",
     chart: "SankeyDiagram",
     chartTitle: "Named public clusters in the 806-item corpus",
     paragraphs: [
-      `DHQ reports ${EDITORIAL_STATISTICS.peerReviewedPublished} peer-reviewed articles and case studies through 2025: ${EDITORIAL_STATISTICS.regularPublished} through the regular stream and ${EDITORIAL_STATISTICS.specialPublished} through special issues. The journal warns that those routes have different selection histories, so I am not turning them into competing acceptance rates.`,
-      `The public table of contents gives us a second, narrower measure. In this 806-item corpus, ${PUBLICATION_STRUCTURE.placedInNamedClusters} items appear inside ${PUBLICATION_STRUCTURE.namedClusterCount} named clusters. Those clusters gather work under a question before a reader or recommendation system encounters it.`,
-      "A subject concentration can record activity in digital humanities, an invitation made by editors, or both. The ability to build a new interface does not redistribute the earlier decision about what enters the interface together.",
+      `DHQ reports ${EDITORIAL_STATISTICS.peerReviewedPublished} peer-reviewed articles and case studies through 2025: ${EDITORIAL_STATISTICS.regularPublished} in the regular stream and ${EDITORIAL_STATISTICS.specialPublished} in special issues. Those routes have different histories, so they are not simply competing acceptance rates.`,
+      `In this 806-item public corpus, ${PUBLICATION_STRUCTURE.placedInNamedClusters} items sit inside ${PUBLICATION_STRUCTURE.namedClusterCount} named clusters. A cluster gathers work under a shared question before a reader, or a recommendation system, ever arrives.`,
+      "A spike in a subject can mean the field got busier there. It can also mean editors invited that conversation. Building a new app does not undo the earlier decision about what enters the reading room together.",
     ],
-    keeps: "Published placement and separately reported publication streams",
-    drops: "Item-level acceptance routes, editorial motives, and comparable acceptance rates",
+    shows: "Where published items sit in public named clusters",
+    omits: "Why a paper was accepted, or comparable acceptance rates by route",
     caption:
-      "All 806 corpus items flow through public named-cluster placement and publication window. The separate 386/324 journal totals have different inclusion rules.",
+      "All 806 corpus items flow through named-cluster placement and publication window. Separate journal totals use different inclusion rules.",
   },
   {
     id: "authorship",
     number: "03",
-    eyebrow: "Published authorship",
-    title: "More names appear on the work.",
+    title: "More names on the byline",
     chart: "LineChart",
-    chartTitle: "Annual share of one- and multi-byline published items",
+    chartTitle: "One author vs. multi-author published items",
     paragraphs: [
-      "The standard AI demonstration is solitary: one scholar, one prompt, one finished application. DHQ’s published record was moving in another direction before the present AI wave.",
-      "Items with two or more listed authors rise from 32.1% in 2007–11 to 54.7% in 2022–25. The annual line jumps because the journal published between 6 and 79 items per year, so every point keeps its denominator.",
-      "A byline is still a narrow record. It cannot tell us who wrote code, cleaned data, designed an interface, found funding, or kept a server alive. It tells us that named coauthorship became more common.",
+      "The standard AI demo is solitary: one person, one prompt, one finished app. DHQ’s published record was already moving the other way before the present AI wave.",
+      "Items with two or more listed authors rise from 32.1% in 2007–11 to 54.7% in 2022–25. The line jumps year to year because the journal published between 6 and 79 items annually. Small denominators make every year loud.",
+      "A byline is a narrow record. It does not say who wrote code, cleaned data, designed an interface, found funding, or kept a server alive. It only says that named coauthorship became more common.",
     ],
-    keeps: "A bounded change in names listed on published items",
-    drops: "Labor roles, contribution shares, and an explanation for why teams formed",
+    shows: "How often published items list one name or several",
+    omits: "Who did what labor, or why teams formed",
     caption:
-      "Annual percentages of published items with one versus two-or-more listed authors. Each point reports its year’s publication count.",
+      "Annual share of published items with one listed author versus two or more. Each year keeps its own publication count.",
   },
   {
     id: "subjects",
     number: "04",
-    eyebrow: "Current tag shares",
-    title: "This is what DHQ calls its subjects now.",
+    title: "What DHQ calls its subjects now",
     chart: "GroupedBarChart",
     chartTitle: "Eight controlled tags across four publication windows",
     paragraphs: [
-      "In the current XML, media studies appears on 36.7% of items published in 2007–11 and 3.4% in 2022–25. History rises from 15.6% to 21.2%; race rises from 0.9% to 14.4%. Project report reaches its highest share, 26.7%, in 2017–21.",
-      "These are DHQ’s controlled tags, not topics inferred by a model. They are also multi-label: an item can contribute to several bars. The vocabulary and denominators remain inspectable, which gives us something firmer than a topic cloud.",
-      "Read alone, the chart looks like a history of subjects. Before accepting that reading, we need another date.",
+      "In the current XML, media studies sits on 36.7% of items published in 2007–11 and 3.4% in 2022–25. History rises from 15.6% to 21.2%. Race rises from 0.9% to 14.4%. Project report peaks at 26.7% in 2017–21.",
+      "These are DHQ’s controlled tags, not topics guessed by a model. An item can carry several tags at once, so the bars are not a pie that must sum to 100. The vocabulary is inspectable, which is firmer ground than a free-form topic cloud.",
+      "Read alone, the chart looks like a history of subjects. Before trusting that reading, we need another clock.",
     ],
-    keeps: "Current controlled-tag incidence and publication denominators",
-    drops: "Mutually exclusive topics, field-wide prevalence, and publication-time labels",
+    shows: "How often current controlled tags appear by publication window",
+    omits:
+      "Mutually exclusive topics, field-wide prevalence, or labels assigned at publication time",
     caption:
-      "Eight DHQ-controlled tags in the pinned archive, grouped by publication window. An item may contribute to several bars.",
+      "Eight DHQ-controlled tags in the pinned archive, by publication window. One item may feed several bars.",
   },
   {
     id: "metadata-clock",
     number: "05",
-    eyebrow: "Repository time",
-    title: "Publication is only one clock.",
+    title: "Publication is not the only clock",
     chart: "CollisionSwarmChart",
-    chartTitle: "How long current metadata can lag publication",
+    chartTitle: "How far current metadata can lag publication",
     paragraphs: [
-      `On July 11, 2023, one commit updated controlled keywords in 615 article XML files. Across the keyword-named commits on July 11 and 12, ${METADATA_CLOCK_SUMMARY.repositoryFilesTouched} distinct article files in this corpus were changed.`,
-      "Each body is tethered to the number of years between publication and that observed repository pass. A current tag attached to a 2008 article can arrive in the Git record fifteen years later.",
-      "The previous chart remains true, but its question changes. It shows how DHQ’s current vocabulary describes its published past. It does not reconstruct what every article was called in its publication year.",
+      `On July 11, 2023, one commit updated controlled keywords in 615 article XML files. Across keyword-named commits on July 11 and 12, ${METADATA_CLOCK_SUMMARY.repositoryFilesTouched} distinct article files in this corpus changed.`,
+      "Each body sits on the number of years between publication and that repository pass. A tag you see on a 2008 article can arrive in Git fifteen years later.",
+      "So the previous chart is still true, and its question changes. It shows how DHQ’s current vocabulary describes its published past. It does not tell us what every article was called in the year it came out.",
     ],
-    keeps: "Publication dates and an observed repository keywording pass",
-    drops: "First-assignment dates, pre-Git history, and reasons for changing a tag",
+    shows: "Publication dates next to one observed keywording pass in the repository",
+    omits: "When each tag was first assigned, or why a tag changed",
     caption:
-      "One Semiotic physics body per corpus article touched by keyword-named commits on July 11–12, 2023. Bodies are grouped by publication window.",
+      "One body per corpus article touched by keyword-named commits on July 11–12, 2023. Lanes are publication windows.",
   },
   {
     id: "classification",
     number: "06",
-    eyebrow: "Display policy",
-    title: "791 records have more than one tag.",
+    title: "Most articles have more than one tag",
     chart: "SankeyDiagram",
-    chartTitle: "What happens when multiple source tags become one display tag?",
+    chartTitle: "What a tidy interface throws away",
     paragraphs: [
-      "Of the 806 published items in this snapshot, 791 carry multiple controlled tags. Five carry one, and ten have none. Multiplicity is the ordinary condition of this archive.",
-      "The first button sends every multi-tag record toward one displayed tag. The second keeps the multiplicity in view. The source records do not change; the first Sankey is cleaner because the interface discarded a relation.",
-      "A natural-language interface can make the same decision without showing the button. AI-assisted coding gives more scholars the power to put that choice back in front of the reader, provided they know the choice exists.",
+      "Of the 806 published items here, 791 carry more than one subject tag. Five have one. Ten have none. Multiplicity is normal in the archive and inconvenient in a UI.",
+      "Interfaces love a single subject chip. Toggle the chart between a tidy single-tag view and a view that keeps the pile. Watch the fat middle band: when you force one tag, hundreds of multi-tag articles disappear. The archive is the same either way. The interface decides whether you get to see the mess.",
+      "A chatbot can make that same cut for you without showing a control. Once you can generate the interface yourself, you also inherit the responsibility to notice when tidiness is doing interpretive work.",
     ],
-    keeps: "Source multiplicity, record conservation, and the exact display rule",
-    drops: "A single true subject or a claim that DHQ used either display rule",
+    shows: "How a display rule can hide multi-tag articles",
+    omits: "What DHQ’s public site currently shows readers",
     caption:
-      "The same 806 published records under two display policies. The control changes only how multi-tag records are routed.",
+      "Toggle between one-tag display and keeping multiple tags. The thick band is the 791 multi-tag articles.",
   },
   {
     id: "recommendation-walk",
     number: "07",
-    eyebrow: "Recommended reading",
-    title: "Follow the recommendation to its authors.",
+    title: "Follow a recommendation to its authors",
     chart: "ForceDirectedGraph",
-    chartTitle: "Two recommendation steps projected onto printed author names",
+    chartTitle: "Two recommendation steps, printed author names",
     paragraphs: [
       <>
         DHQ’s{" "}
         <a href={DHQ_EXPLORE_URL} target="_blank" rel="noopener noreferrer">
           Explore page
         </a>{" "}
-        offers three answers to “what belongs nearby?” Controlled keywords follow an
-        editorial vocabulary. BM25 follows terms in the full text. SPECTER follows
-        embeddings made from titles and abstracts.
+        offers three answers to “what should I read next?” Controlled keywords follow an editorial
+        vocabulary. BM25 looks at words in the full text. SPECTER looks at embeddings of titles and
+        abstracts.
       </>,
-      `This view starts with Anna Sollazzo’s 2026 article, takes the top three recommendations, takes the top three again, and projects those reading routes onto the exact author names printed in DHQ. Switch methods and the neighborhood changes. Across the focal article’s three top-ten lists, ${RECOMMENDATION_SUMMARY.seed.distinctTopTenTargets} distinct articles occupy 30 slots; none appears in all three.`,
-      "This is an information route, not an issue roster. It shows which named authors a reader can reach after two algorithmic choices. It does not tell us who influenced whom, and it does not quietly merge matching strings into people.",
+      `Start from one 2026 article, take each system’s top three suggestions, then take the top three again, and map those paths onto the author names printed in DHQ. Switch methods and the neighborhood changes. Across that article’s three top-ten “read next” lists, ${RECOMMENDATION_SUMMARY.seed.distinctTopTenTargets} different articles fill 30 slots. None appears on all three lists.`,
+      "This is a map of where a recommendation system sends you, and whose names you meet along the way. It is not a map of influence.",
     ],
-    keeps: "Two explicit recommendation steps and exact printed byline names",
-    drops: "Person identity, influence, recommendation quality, and reader behavior",
+    shows: "Who you can reach in two hops of “read next”",
+    omits: "Whether anyone actually followed these paths",
     caption:
-      "A multimodal projection from article-to-article recommendations onto author names. Shared-byline edges remain visible; recommendation edges are reading routes.",
+      "Recommended articles projected onto printed author names. Switch the definition of “nearby” above.",
   },
   {
     id: "overlap",
     number: "08",
-    eyebrow: "All public source articles",
-    title: "The three methods mostly disagree.",
+    title: "Three methods of nearby mostly disagree",
     chart: "SwarmPlot",
-    chartTitle: "Pairwise overlap among three top-ten recommendation lists",
+    chartTitle: "How many “read next” picks two systems share",
     paragraphs: [
-      `The author walk could be an unusual case, so this view uses all ${RECOMMENDATION_SUMMARY.indexedArticles} public articles present in the three recommendation files. Each point is one source article under one pair of methods, positioned by the number of shared targets in their top ten.`,
-      `Controlled keywords and BM25 share ${RECOMMENDATION_SUMMARY.pairSummary[0].mean} recommendations on average. BM25 and SPECTER share ${RECOMMENDATION_SUMMARY.pairSummary[1].mean}; controlled keywords and SPECTER share ${RECOMMENDATION_SUMMARY.pairSummary[2].mean}. Only ${RECOMMENDATION_SUMMARY.allThreeDirectedEdges.toLocaleString()} of ${RECOMMENDATION_SUMMARY.unionDirectedEdges.toLocaleString()} distinct directed edges occur in all three systems—about ${RECOMMENDATION_SUMMARY.allThreeDirectedShare.toFixed(2)}%.`,
-      `For ${RECOMMENDATION_SUMMARY.sourcesWithNoAllThreeTarget} source articles, not one target appears in all three top-ten lists. The tools do not merely accelerate the same reading practice. They formalize different ones.`,
+      `Maybe that one article was unlucky. So check every public article with recommendations (${RECOMMENDATION_SUMMARY.indexedArticles} of them). For each article, each system offers ten “read this next” suggestions. Pick any two systems and count how many of those ten suggestions they share. Zero means totally different reading lists. Ten would mean identical lists.`,
+      `On average, controlled keywords and full-text search share only about ${RECOMMENDATION_SUMMARY.pairSummary[0].mean} of ten. Full text and embeddings share about ${RECOMMENDATION_SUMMARY.pairSummary[1].mean}. Keywords and embeddings share about ${RECOMMENDATION_SUMMARY.pairSummary[2].mean}. Across the whole archive, only about ${RECOMMENDATION_SUMMARY.allThreeDirectedShare.toFixed(0)}% of “A recommends B” links show up in all three systems.`,
+      `${RECOMMENDATION_SUMMARY.sourcesWithNoAllThreeTarget} of ${RECOMMENDATION_SUMMARY.indexedArticles} starting articles have no “read next” pick that all three systems agree on. These tools are not three views of the same neighborhood. They are three different neighborhoods with a polite shared label.`,
     ],
-    keeps: "Complete pairwise overlap distributions for 832 public articles",
-    drops: "A judgment about relevance, a winning method, or evidence of readership",
+    shows: "How little the three recommenders agree, article by article",
+    omits: "Which recommender is “best”",
     caption:
-      "One point per source article and method pair. Overlap counts shared targets among two top-ten lists; zero means the pair returns twenty distinct articles.",
+      "Each point is one article under one pair of recommenders. Position is how many of ten “read next” picks the pair share (0 = no overlap).",
   },
 ]
+const SCENE_IDS = SCENES.map((scene) => `thunderdome-round-${scene.number}`)
 
 export default function DigitalHumanitiesThunderdomeExamplePage() {
   const reducedMotion = useReducedMotion()
   const [classificationMode, setClassificationMode] = useState("default")
   const [recommendationMode, setRecommendationMode] = useState("keywords")
-  const [activeIndex, setActiveIndex] = useState(0)
   const [pageWidth, pageRef] = useResponsiveWidth(320, 1120)
-  const sceneRefs = useRef([])
-  const activeIndexRef = useRef(0)
-  const requestedSceneRef = useRef(null)
   const inlineLayout = reducedMotion || pageWidth < 860
-
-  const commitSceneIndex = useCallback((index) => {
-    if (!Number.isInteger(index) || index < 0 || index >= SCENES.length) return
-    if (activeIndexRef.current === index) return
-    activeIndexRef.current = index
-    setActiveIndex(index)
-  }, [])
-
-  useEffect(() => {
-    if (inlineLayout || typeof IntersectionObserver === "undefined") return undefined
-    const elements = sceneRefs.current.filter(Boolean)
-    if (!elements.length) return undefined
-
-    const sceneAtReadingLine = () => {
-      const readingLine = window.innerHeight * 0.43
-      let lastPassedIndex = null
-
-      for (const element of elements) {
-        const index = Number(element.dataset.sceneIndex)
-        if (!Number.isInteger(index)) continue
-        const bounds = element.getBoundingClientRect()
-        if (bounds.top <= readingLine && bounds.bottom > readingLine) return index
-        if (bounds.top <= readingLine) lastPassedIndex = index
-      }
-
-      return lastPassedIndex
-    }
-
-    const observer = new IntersectionObserver(
-      () => {
-        const index = sceneAtReadingLine()
-        if (!Number.isInteger(index)) return
-
-        // Stage navigation commits immediately. Ignore observer callbacks from
-        // the chapter being left until the requested chapter reaches the
-        // reading line, so a stale callback cannot restore the previous view.
-        if (requestedSceneRef.current != null && requestedSceneRef.current !== index) return
-        requestedSceneRef.current = null
-        commitSceneIndex(index)
-      },
-      { rootMargin: "-42% 0px -57%", threshold: 0 },
-    )
-
-    elements.forEach((element) => observer.observe(element))
-    return () => observer.disconnect()
-  }, [commitSceneIndex, inlineLayout])
-
-  const goToScene = useCallback(
-    (index) => {
-      requestedSceneRef.current = index
-      commitSceneIndex(index)
-      sceneRefs.current[index]?.scrollIntoView({
-        behavior: reducedMotion ? "auto" : "smooth",
-        block: "center",
-      })
-    },
-    [commitSceneIndex, reducedMotion],
-  )
+  const { activeIndex, navigateTo, registerSection } = useReadingLineSections({
+    ids: SCENE_IDS,
+    enabled: !inlineLayout,
+    readingLine: 0.43,
+    rootMargin: "-42% 0px -57%",
+    threshold: 0,
+    reducedMotion,
+    scrollBlock: "center",
+  })
+  const goToScene = (index) => navigateTo(index, { focus: false })
 
   const activeScene = SCENES[activeIndex] ?? SCENES[0]
 
@@ -336,22 +280,22 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
       <div className="thunderdome" ref={pageRef}>
         <header className="thunderdome-hero">
           <div className="thunderdome-hero__main">
-            <p className="thunderdome-kicker">Digital humanities · 1949 → 2026</p>
-            <h2>The humanist can make the app now.</h2>
+            <p className="thunderdome-kicker">Digital humanities · 1949 to 2026</p>
+            <h2>The humanist can make the app now</h2>
             <p className="thunderdome-hero__lede">
               In 2011 a Stanford graduate student told me that collaboration with computer
-              scientists could feel more like colonization. I thought that was true. I was one
-              of the technical people scholars had to ask whether an idea was possible, and my
-              answer was bounded by the software I knew and the code I could write.
+              scientists could feel more like colonization. I thought that was true. I was one of
+              the technical people scholars had to ask whether an idea was possible, and my answer
+              was bounded by the software I knew and the code I could write.
             </p>
             <p className="thunderdome-hero__lede">
               That arrangement has changed. A scholar can ask a model to build the database,
-              interface, and visualization, then argue with the result until it runs. If
-              colonization by toolbuilders was the problem, why isn’t the ability to make our
-              own weird code being hailed as decolonization?
+              interface, and chart, then argue with the result until it runs. If the old problem was
+              dependency on toolbuilders, why isn’t the ability to make our own weird code being
+              treated as a real shift in power?
             </p>
             <div className="thunderdome-hero__actions">
-              <a href="#thunderdome-arena">Test the claim</a>
+              <a href="#thunderdome-arena">See the argument in charts</a>
               <a href={ORIGINAL_ARTICLE_URL} target="_blank" rel="noopener noreferrer">
                 Read the 2011 essay <span aria-hidden="true">↗</span>
               </a>
@@ -359,83 +303,75 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
           </div>
 
           <aside className="thunderdome-hero__docket" aria-label="The old and new questions">
-            <p>Argument docket · revision 03</p>
+            <p>Two questions</p>
             <div>
-              <span>The old question</span>
-              <strong>Who gets to say which humanistic questions software can represent?</strong>
+              <span>Then</span>
+              <strong>Who gets to decide which humanistic questions software can represent?</strong>
             </div>
             <div>
-              <span>The new question</span>
+              <span>Now</span>
               <strong>
-                What changes when the person with the question can also generate the
-                implementation?
+                What changes when the person with the question can also generate the software?
               </strong>
             </div>
-            <small>Filed by Elijah Meeks · tested with DHQ and Semiotic</small>
+            <small>Elijah Meeks · tested with Digital Humanities Quarterly and Semiotic</small>
           </aside>
         </header>
 
         <section className="thunderdome-setup" aria-labelledby="thunderdome-setup-title">
           <div>
-            <p className="thunderdome-kicker">The case</p>
-            <h2 id="thunderdome-setup-title">Use a journal to test the claim.</h2>
+            <p className="thunderdome-kicker">Why this journal</p>
+            <h2 id="thunderdome-setup-title">A public record you can argue with</h2>
           </div>
           <div className="thunderdome-setup__copy">
             <p>
-              I do not think the answer is that nothing changed. The ability to make and revise
-              an application without waiting for a technical specialist matters.
-              Implementation, however, is only one place where choices get made.
+              Something real did change. Being able to make and revise an application without
+              waiting for a technical specialist matters. Implementation is still only one place
+              where choices get made.
             </p>
             <p>
-              DHQ is a useful case because I know it as a former editor and author, and because
-              its public record is unusually inspectable. The XML corpus gives us{" "}
-              {DHQ_DOSSIER.sourceItems} published items through 2025. The repository adds issue
-              structure, retrospective metadata, and three working recommendation systems. DHQ
-              is the case, not a substitute for the whole field.
+              Digital Humanities Quarterly is a useful case because I know it as a former editor and
+              author, and because its public record is unusually inspectable. The XML corpus gives
+              us {DHQ_DOSSIER.sourceItems} published items through 2025. The repository adds issue
+              structure, later metadata edits, and three working recommendation systems. DHQ is the
+              case, not a stand-in for the whole field.
             </p>
           </div>
         </section>
 
         <a className="thunderdome-skip" href="#thunderdome-after">
-          Skip the eight-round arena
+          Skip to the conclusion
         </a>
 
         <ThemeProvider theme="carbon-dark">
           <section
             id="thunderdome-arena"
             className={`thunderdome-arena ${inlineLayout ? "is-inline" : "is-sticky"}`}
-            aria-label="Eight-round scrollytelling argument"
+            aria-label="Eight chart sections"
           >
             <div className="thunderdome-rounds">
               {SCENES.map((scene, index) => (
                 <article
                   id={`thunderdome-round-${scene.number}`}
                   key={scene.id}
-                  ref={(element) => {
-                    sceneRefs.current[index] = element
-                  }}
+                  ref={(element) => registerSection(SCENE_IDS[index], element)}
                   data-scene-index={index}
                   className={`thunderdome-round ${activeIndex === index ? "is-active" : ""}`}
                   aria-current={!inlineLayout && activeIndex === index ? "step" : undefined}
                 >
                   <div className="thunderdome-round__head">
                     <span>{scene.number}</span>
-                    <p>{scene.eyebrow}</p>
                   </div>
                   <h2>{scene.title}</h2>
                   {scene.paragraphs.map((paragraph, paragraphIndex) => (
                     <p key={`${scene.id}-${paragraphIndex}`}>{paragraph}</p>
                   ))}
-                  <dl className="thunderdome-round__ledger">
-                    <div>
-                      <dt>This view carries</dt>
-                      <dd>{scene.keeps}</dd>
-                    </div>
-                    <div>
-                      <dt>This view drops</dt>
-                      <dd>{scene.drops}</dd>
-                    </div>
-                  </dl>
+                  <ChartMethodDisclosure
+                    inline
+                    className="thunderdome-round__limits"
+                    shows={scene.shows}
+                    doesNotShow={scene.omits}
+                  />
 
                   {inlineLayout ? (
                     <ArenaStage
@@ -454,7 +390,7 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
             </div>
 
             {!inlineLayout ? (
-              <aside className="thunderdome-stage-column" aria-label="Active Semiotic view">
+              <aside className="thunderdome-stage-column" aria-label="Active chart">
                 <ArenaStage
                   scene={activeScene}
                   index={activeIndex}
@@ -471,41 +407,51 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
         </ThemeProvider>
 
         <section id="thunderdome-after" className="thunderdome-after">
-          <p className="thunderdome-kicker">The answer</p>
-          <h2>Implementation power moved. The rest of the argument is still here.</h2>
+          <p className="thunderdome-kicker">Where that leaves us</p>
+          <h2>We may have ended one colonization and walked into another</h2>
           <div>
             <p>
-              If we keep the 2011 metaphor narrow, AI-assisted coding is decolonizing one part
-              of the old arrangement: it weakens the technical veto. Humanists can make much
-              more weird code, much faster, without first persuading a programmer that the idea
-              is possible. Digital humanities should admit that this is a redistribution of
-              power, not treat it only as convenience or threat.
+              In 2011 the problem was blunt: humanists with questions often had to ask technical
+              people whether the software could represent those questions at all. Collaboration
+              could feel like colonization because the person who knew the tools also got to shape
+              what counted as possible. That was the Thunderdome I was writing about: two
+              abstractions enter, and the implementation usually wins.
             </p>
             <p>
-              Decolonization is not a synonym for easier access. Models and platforms compress
-              inherited code, conventions, blind spots, and labor into a very agreeable tool.
-              DHQ shows the choices that remain before and after generation: selection,
-              grouping, authorship, taxonomy, retrospective description, display, retrieval,
-              testing, and maintenance.
+              AI-assisted coding weakens that veto. A scholar can now generate a database, an
+              interface, and a chart without first persuading a programmer. That is a real shift in
+              power, and digital humanities should say so instead of treating it only as convenience
+              or threat.
+            </p>
+            <p>
+              So why does it still feel like colonization, only quieter? Because the gate moved. The
+              old colonizer was a person with scarce skills. The new one is an agreeable stack:
+              models trained on other people’s code, platforms that hide defaults, tag systems that
+              tidy multi-subject work into one chip, recommendation engines that disagree while
+              pretending to answer the same question, metadata rewritten years after publication.
+              You can build the app yourself and still inherit someone else’s ontology, someone
+              else’s “nearby,” and someone else’s idea of what a readable display looks like.
             </p>
             <p>
               DHQ is not simply anti-AI. Its{" "}
               <a href={DHQ_AI_POLICY_URL} target="_blank" rel="noopener noreferrer">
                 2026 policy
               </a>{" "}
-              permits supportive uses while keeping agency, disclosure, accuracy, and
-              responsibility with the human author. That is the useful standard for weird code
-              too: expose enough of the transformation for somebody else to argue with it.
+              allows supportive uses while keeping agency, disclosure, accuracy, and responsibility
+              with the human author. That is the right standard for weird code too. If you can make
+              the app, you can also leave the seams visible: which records were flattened, which
+              recommender defined nearby, which past was rewritten by a later tag pass.
             </p>
           </div>
-          <strong className="thunderdome-after__closing">
-            The humanist can make the app now. What does the app let everyone else argue with?
-          </strong>
+          <p className="thunderdome-after__closing">
+            The humanist can make the app now. The insidious risk is building a friendlier cage and
+            calling the freedom to assemble it decolonization.
+          </p>
         </section>
 
         <footer className="thunderdome-source">
           <p>
-            Reframed from Elijah Meeks,{" "}
+            Drawn from Elijah Meeks,{" "}
             <a href={ORIGINAL_ARTICLE_URL} target="_blank" rel="noopener noreferrer">
               “Digital Humanities as Thunderdome”
             </a>
@@ -516,8 +462,7 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
             .
           </p>
           <p>
-            {DHQ_DATA_NOTE} Core-corpus scope: {DHQ_PROVENANCE.scope}. Repository evidence is
-            pinned to{" "}
+            {DHQ_DATA_NOTE} Core corpus: {DHQ_PROVENANCE.scope}. Repository evidence is pinned to{" "}
             <a
               href={`${DHQ_PROVENANCE.repositoryUrl}/tree/${DHQ_PROVENANCE.repositoryCommit}`}
               target="_blank"
@@ -525,13 +470,13 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
             >
               {DHQ_PROVENANCE.repositoryCommit.slice(0, 12)}
             </a>
-            . Recommendation edges describe navigational similarity, not citation or
-            influence; byline strings are not resolved person identities.
+            . Recommendation edges describe navigational similarity, not citation or influence.
+            Printed bylines are not resolved person identities.
           </p>
           <p>
-            This example was developed with AI-assisted repository inspection, analysis, and
-            coding. The thesis, source choices, interpretation, and responsibility remain human.
-            Every data visualization on the page is rendered with Semiotic.
+            This example used AI-assisted repository inspection, analysis, and coding. The thesis,
+            source choices, interpretation, and responsibility remain human. Charts are rendered
+            with Semiotic.
           </p>
         </footer>
       </div>
@@ -562,20 +507,19 @@ function ArenaStage({
     <figure className={`thunderdome-stage ${inline ? "is-inline" : ""}`}>
       <header className="thunderdome-stage__header">
         <div>
-          <span>Fig. {scene.number} · Semiotic</span>
-          <h3>{scene.chart}</h3>
+          <span>{scene.number}</span>
+          <h3>{scene.chartTitle}</h3>
         </div>
-        <span className="thunderdome-stage__status">source-backed</span>
       </header>
 
       {!inline && onSceneChange ? (
-        <nav className="thunderdome-stage__nav" aria-label="Arena rounds">
+        <nav className="thunderdome-stage__nav" aria-label="Chart sections">
           {SCENES.map((round, roundIndex) => (
             <button
               type="button"
               key={round.id}
               onClick={() => onSceneChange(roundIndex)}
-              aria-label={`Round ${round.number}: ${round.title}`}
+              aria-label={`Section ${round.number}: ${round.title}`}
               aria-current={roundIndex === index ? "step" : undefined}
             >
               {round.number}
@@ -586,15 +530,15 @@ function ArenaStage({
 
       {scene.id === "classification" ? (
         <div className="thunderdome-stage__controls">
-          <span>Classification policy</span>
-          <div role="group" aria-label="Classification policy">
+          <span>Interface choice</span>
+          <div role="group" aria-label="How multi-tag articles are displayed">
             <button
               type="button"
               className={classificationMode === "default" ? "is-active" : ""}
               aria-pressed={classificationMode === "default"}
               onClick={() => onClassificationMode("default")}
             >
-              Display one tag
+              Tidy: one tag each
             </button>
             <button
               type="button"
@@ -602,16 +546,20 @@ function ArenaStage({
               aria-pressed={classificationMode === "preserve"}
               onClick={() => onClassificationMode("preserve")}
             >
-              Retain multiple tags
+              Honest: keep the pile
             </button>
           </div>
-          <p aria-live="polite">{classification.summary.finding}</p>
+          <p aria-live="polite">
+            {classification.summary.mode === "preserve"
+              ? `${classification.summary.multiple} multi-tag articles stay multi-tag on the right.`
+              : `${classification.summary.multiple} multi-tag articles are forced into the single-tag bucket.`}
+          </p>
         </div>
       ) : null}
 
       {scene.id === "recommendation-walk" ? (
         <div className="thunderdome-stage__controls">
-          <span>Definition of nearby</span>
+          <span>Which “read next” engine</span>
           <div role="group" aria-label="Recommendation method">
             {Object.entries(RECOMMENDATION_METHOD_LABELS).map(([method, label]) => (
               <button
@@ -626,7 +574,7 @@ function ArenaStage({
             ))}
           </div>
           <p aria-live="polite">
-            {recommendationWalk.nodes.length} printed author names reached through{" "}
+            {recommendationWalk.nodes.length} author names after two hops through{" "}
             {recommendationWalk.articleCount} articles.
           </p>
         </div>
@@ -658,14 +606,7 @@ function ArenaStage({
   )
 }
 
-function SceneChart({
-  scene,
-  width,
-  height,
-  classification,
-  recommendationWalk,
-  reducedMotion,
-}) {
+function SceneChart({ scene, width, height, classification, recommendationWalk, reducedMotion }) {
   const animate = reducedMotion ? false : CHART_MOTION
   const compact = width < 500
   const chartTitle = compact ? COMPACT_CHART_TITLES[scene.id] : scene.chartTitle
@@ -851,10 +792,14 @@ function SceneChart({
         title={chartTitle}
         description={
           classification.summary.mode === "default"
-            ? "A Sankey diagram in which every multi-tag DHQ record is reduced to one displayed tag, while records without tags stay unclassified."
-            : "A Sankey diagram in which multi-tag DHQ records retain their source multiplicity, while records without tags stay unclassified."
+            ? "Sankey of 806 DHQ articles: the thick multi-tag band is forced into a single displayed tag."
+            : "Sankey of 806 DHQ articles: the thick multi-tag band stays multi-tag on the right."
         }
-        summary={classification.summary.finding}
+        summary={
+          classification.summary.mode === "preserve"
+            ? `${classification.summary.multiple} multi-tag articles keep their pile visible.`
+            : `${classification.summary.multiple} multi-tag articles are collapsed into one displayed tag.`
+        }
         tooltip={flowTooltip}
       />
     )
@@ -906,19 +851,19 @@ function SceneChart({
       pointOpacity={0.34}
       categoryPadding={28}
       categoryFormat={compactPairLabel}
-      valueLabel="Shared targets in two top-ten lists"
-      valueFormat={(value) => `${Math.round(Number(value))}`}
+      valueLabel="Shared “read next” picks out of 10"
+      valueFormat={(value) => `${Math.round(Number(value))} of 10`}
       showGrid
       showLegend={false}
       margin={{
         top: 54,
         right: compact ? 18 : 28,
         bottom: 58,
-        left: compact ? 102 : 172,
+        left: compact ? 118 : 168,
       }}
       title={chartTitle}
-      description={`A horizontal swarm plot of ${RECOMMENDATION_OVERLAPS.length.toLocaleString()} pairwise method comparisons across ${RECOMMENDATION_SUMMARY.indexedArticles} public DHQ source articles. Horizontal position is the number of shared targets between two top-ten lists.`}
-      summary={`Pairwise mean overlap ranges from ${RECOMMENDATION_SUMMARY.pairSummary[0].mean} to ${RECOMMENDATION_SUMMARY.pairSummary[1].mean} of ten. Similarity depends strongly on the retrieval method.`}
+      description={`For each of ${RECOMMENDATION_SUMMARY.indexedArticles} articles, each recommender offers ten “read next” picks. Each point compares two recommenders and counts how many of those ten picks they share.`}
+      summary={`On average the pairs share only about ${RECOMMENDATION_SUMMARY.pairSummary[0].mean} to ${RECOMMENDATION_SUMMARY.pairSummary[1].mean} of ten suggestions. ${RECOMMENDATION_SUMMARY.sourcesWithNoAllThreeTarget} articles have no pick that all three systems agree on.`}
       tooltip={overlapTooltip}
     />
   )
@@ -1007,17 +952,13 @@ function historySpiralLayout(context) {
   return { nodes, overlays }
 }
 
-function datumOf(value) {
-  return value?.data ?? value?.datum ?? value ?? {}
-}
-
 function compactClassificationLabel(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   return COMPACT_CLASSIFICATION_LABELS[datum.id] ?? datum.label ?? datum.id
 }
 
 function compactPublicationLabel(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   if (datum.id === "all") return "All 806"
   if (datum.id === "placement:named public cluster") return "Named cluster"
   if (datum.id === "placement:outside named cluster") return "Outside cluster"
@@ -1026,15 +967,23 @@ function compactPublicationLabel(value) {
 
 function compactPairLabel(value) {
   const label = String(value)
-  if (label === "K/B") return "Keywords / BM25"
-  if (label === "B/S") return "BM25 / SPECTER"
-  if (label === "K/S") return "Keywords / SPECTER"
-  if (label === "keywords-bm25") return "Keywords / BM25"
-  if (label === "bm25-specter") return "BM25 / SPECTER"
-  if (label === "keywords-specter") return "Keywords / SPECTER"
-  if (label.startsWith("Controlled keywords / BM25")) return "Keywords / BM25"
-  if (label.startsWith("BM25 full text / SPECTER")) return "BM25 / SPECTER"
-  if (label.startsWith("Controlled keywords / SPECTER")) return "Keywords / SPECTER"
+  if (
+    label === "K/B" ||
+    label === "keywords-bm25" ||
+    label.startsWith("Controlled keywords / BM25")
+  ) {
+    return "Keywords vs full text"
+  }
+  if (label === "B/S" || label === "bm25-specter" || label.startsWith("BM25 full text / SPECTER")) {
+    return "Full text vs embeddings"
+  }
+  if (
+    label === "K/S" ||
+    label === "keywords-specter" ||
+    label.startsWith("Controlled keywords / SPECTER")
+  ) {
+    return "Keywords vs embeddings"
+  }
   return label
 }
 
@@ -1047,12 +996,13 @@ function endpointLabel(endpoint) {
 
 function TooltipShell({ title, children }) {
   return (
-    <div className="thunderdome-tooltip">
+    <TooltipRoot chrome="css" className="thunderdome-tooltip">
       <strong>{title}</strong>
       {children}
-    </div>
+    </TooltipRoot>
   )
 }
+markTooltipChrome(TooltipShell)
 
 function TooltipSourceLink({ href }) {
   if (!href) return null
@@ -1064,7 +1014,7 @@ function TooltipSourceLink({ href }) {
 }
 
 function timelineTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   return (
     <TooltipShell title={`${datum.date ?? ""} · ${datum.title ?? "Timeline event"}`}>
       <span>{datum.interface ?? datum.kind}</span>
@@ -1076,7 +1026,7 @@ function timelineTooltip(value) {
 }
 
 function flowTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   if (datum.source != null && datum.target != null) {
     return (
       <TooltipShell title={`${endpointLabel(datum.source)} → ${endpointLabel(datum.target)}`}>
@@ -1093,7 +1043,7 @@ function flowTooltip(value) {
 }
 
 function collaborationTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   return (
     <TooltipShell title={datum.bylinePattern ?? "Byline pattern"}>
       <span>{datum.year}</span>
@@ -1105,7 +1055,7 @@ function collaborationTooltip(value) {
 }
 
 function sourceTagTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   return (
     <TooltipShell title={datum.tag ?? "DHQ source tag"}>
       <span>{datum.period}</span>
@@ -1117,7 +1067,7 @@ function sourceTagTooltip(value) {
 }
 
 function metadataClockTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   return (
     <TooltipShell title={datum.title ?? `DHQ ${datum.articleId}`}>
       <span>
@@ -1131,7 +1081,7 @@ function metadataClockTooltip(value) {
 }
 
 function networkTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   if (datum.source != null && datum.target != null) {
     const route = datum.routes?.[0]
     return (
@@ -1157,13 +1107,17 @@ function networkTooltip(value) {
 }
 
 function overlapTooltip(value) {
-  const datum = datumOf(value)
+  const datum = unwrapDatum(value) ?? {}
   const article = RECOMMENDATION_ARTICLE_INDEX[datum.articleId] ?? []
+  const shared = Math.round(Number(datum.overlap) || 0)
   return (
     <TooltipShell title={article[0] ?? `DHQ ${datum.articleId}`}>
       <span>{compactPairLabel(datum.pairId)}</span>
-      <small>{datum.overlap} shared targets in two top-ten lists</small>
-      <small>DHQ article {datum.articleId}</small>
+      <small>
+        {shared} of 10 “read next” picks in common
+        {shared === 0 ? " (totally different lists)" : ""}
+      </small>
+      <small>Starting article {datum.articleId}</small>
       <TooltipSourceLink href={article[1]} />
     </TooltipShell>
   )

@@ -22,12 +22,13 @@ const PASTELS_DARK: SemioticTheme
 const PASTELS_LIGHT: SemioticTheme
 const PLAYFUL_DARK: SemioticTheme
 const PLAYFUL_LIGHT: SemioticTheme
-const THEME_PRESETS: Record<string, SemioticTheme>
+const THEME_PRESETS: { light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme; }
 const TUFTE_DARK: SemioticTheme
 const TUFTE_LIGHT: SemioticTheme
 function designTokensToTheme(tokens: Datum, options?: DesignTokensToThemeOptions | undefined): SemioticTheme
 function resolveThemePreset(name: string): SemioticTheme | undefined
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
+function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
 function themeToTokens(theme: SemioticTheme): Datum
 interface DesignTokensToThemeOptions
 interface SemioticTheme

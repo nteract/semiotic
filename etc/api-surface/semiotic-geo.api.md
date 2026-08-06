@@ -9,8 +9,11 @@ function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<T
 function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function StreamGeoFrame(: import("../../../dist/semiotic-geo").StreamGeoFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-geo").StreamGeoFrameHandle>): React.ReactNode
+function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
@@ -25,6 +28,7 @@ function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function isHatchFill(fill: unknown): boolean
 function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
 function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mergeData<T extends Datum>(features: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], data: T[], options: { featureKey: string; dataKey: string; }): import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
 function resolveReferenceGeography(name: ReferenceGeography): Promise<import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]>
@@ -66,6 +70,8 @@ interface HitTargetPointProps
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
+interface MultiLineTooltipConfig
+interface MultiTooltipConfig
 interface ProportionalSymbolMapProps<TDatum extends Datum = Datum>
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
@@ -79,6 +85,9 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface TooltipConfig
+interface TooltipField
+interface TooltipRootProps
 type AreasProp = GeoJSON.Feature[] | ReferenceGeography
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
@@ -94,4 +103,6 @@ type ProjectionProp = GeoProjection | ProjectionName | ProjectionConfig
 type ReferenceGeography = "world-110m" | "world-50m" | "land-110m" | "land-50m"
 type ResponsiveOrientation = "portrait" | "landscape"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+type TooltipChromeMode = "default" | "css"
+type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
 ```

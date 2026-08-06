@@ -63,6 +63,7 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
  * @property {readonly string[]} topics Topic filters.
  * @property {boolean} isPilot Whether this definition drives the incremental registry migration.
  * @property {string} sourceFile Page source file used by the lazy Full Code loader.
+ * @property {readonly string[]} [sourceFiles] Complete multi-file source bundle, relative to the examples directory.
  * @property {ExampleContract} contract Public experience and maintenance contract.
  *
  * @typedef {{ status: "not-assessed" }} UnassessedExampleContractField
@@ -70,7 +71,7 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
  * @typedef {object} ExampleContract
  * @property {"declared" | "not-assessed"} assessment Whether the record is route-specific or explicitly unassessed.
  * @property {readonly string[] | UnassessedExampleContractField} publicImports Public Semiotic entry points used by the page.
- * @property {{ states: readonly ExampleDataState[], fixture: { kind: string, replay: boolean, schemaVersion: string } } | UnassessedExampleContractField} data
+ * @property {{ states: readonly ExampleDataState[], fixture: { kind: string, replay: boolean, schemaVersion: string, inventory?: Record<string, number> } } | UnassessedExampleContractField} data
  * @property {{ source: string, capturedAt: string, freshnessOwner: string, reviewCadence: string } | UnassessedExampleContractField} provenance
  * @property {{ summary: string, navigation: string, keyboard: string, forcedColors: string } | UnassessedExampleContractField} accessibility
  * @property {{ reducedMotion: string, visibility: string } | UnassessedExampleContractField} motion
@@ -152,6 +153,104 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
           memory:
             "180 bounded replay days, nine service systems, and a bounded 72-particle observation stream",
           hiddenPage: "physics suspendWhenHidden enabled and replay interval cleaned up",
+        },
+      },
+    },
+  },
+  {
+    id: "the-last-scarcity",
+    path: "/examples/the-last-scarcity",
+    sourceFile: "TheLastScarcityExamplePage.jsx",
+    sourceFiles: [
+      "TheLastScarcityExamplePage.jsx",
+      "TheLastScarcityExamplePage.css",
+      "last-scarcity/AbundanceConstitution.jsx",
+      "last-scarcity/CapabilityFlood.jsx",
+      "last-scarcity/EvidenceLayer.jsx",
+      "last-scarcity/FreedTimeWheel.jsx",
+      "last-scarcity/MimeticCourt.jsx",
+      "last-scarcity/NarrativeInstruments.jsx",
+      "last-scarcity/PalaceMap.jsx",
+      "last-scarcity/ReciprocityPath.jsx",
+      "last-scarcity/ScarcityMigration.jsx",
+      "last-scarcity/atusProfiles.js",
+      "last-scarcity/lastScarcityData.js",
+      "last-scarcity/useLocalReadingTelemetry.js",
+    ],
+    isPilot: true,
+    title: "The Last Scarcity",
+    eyebrow: "Interactive essay · AI abundance",
+    description:
+      "When intelligence gets cheap, scarcity moves. An interactive essay with a before/after competition Sankey, a three-beat court of desire, and a companion promise-vs-data DifferenceChart.",
+    contract: {
+      publicImports: [
+        "semiotic",
+        "semiotic/network",
+        "semiotic/ordinal",
+        "semiotic/physics",
+        "semiotic/recipes",
+        "semiotic/utils",
+        "semiotic/xy",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-nine-source-evidence-ledger-and-deterministic-palace-scenarios",
+          replay: true,
+          schemaVersion: "1",
+          inventory: {
+            chapters: 9,
+            sources: 9,
+            claims: 19,
+            recipes: 9,
+          },
+        },
+      },
+      provenance: {
+        source:
+          "Authored deterministic argument grounded in a bundled nine-source manifest, nineteen-claim ledger, transparent 100-unit model, and nine semantic recipe manifests",
+        capturedAt: "2026-08-05",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source or argument revision",
+      },
+      accessibility: {
+        summary:
+          "Nine linear chapters pair chart descriptions and tables with a Palace transcript, claim-class badges, source caveats, recipe inspections, and a complete evidence drawer",
+        navigation:
+          "Skip link, semantic chapter sequence, persistent room rail, Palace room transcript, native scenario controls, chart navigation, and focus-managed evidence drawer",
+        keyboard:
+          "Native buttons, ranges, details, links, chapter focus targets, custom-chart mark navigation, accessible tables, and stable room, claim, node, and edge identities",
+        forcedColors:
+          "Palace surfaces, chart shells, evidence badges, controls, selection states, allocation marks, telemetry traces, and focus rings retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion:
+          "The system preference or reader control resolves the capability replay to its final state, disables chart and CSS animation, replaces smooth scrolling, and collapses scenario trails",
+        visibility:
+          "The capability timer exists only while its chapter is active and replaying; local telemetry is opt-in, skips hidden-page dwell, and clears its interval and ephemeral trace on disable or unmount",
+      },
+      responsive: {
+        status: "container-responsive-and-breakpoint-designed",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable chapter, room, claim, source, recipe, scenario-datum, modeled-edge, and reader-choice IDs across inline and sticky layouts",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "Checked-in snapshots, scenario defaults, and the nine-chapter transcript are deterministic; hash navigation, observation, replay, and opt-in telemetry begin only after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using seven public Semiotic entry points and locally split narrative, evidence, telemetry, and chart instruments",
+          interaction:
+            "nine chapter states, ten Palace rooms, fifteen Palace edges, ten replay events, eleven Court agents, and memoized responsive scenario layouts",
+          memory:
+            "nine source records, nineteen claims, nine recipe manifests, bounded 40-event realtime windows, an 18-point constitution trail, and at most 40 ephemeral chapter transitions",
+          hiddenPage:
+            "no external requests or persistent storage; replay work stops outside its active chapter and telemetry does not accumulate hidden-page dwell",
         },
       },
     },
@@ -1150,7 +1249,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Thunderdome Has Rounded Corners",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A source-backed argument asks whether AI-assisted coding decolonizes weird code, then tests what implementation changes—and what DHQ’s editorial systems still decide.",
+      "A 2011 digital-humanities argument revisited with DHQ data: making the app is easier now, but selection, metadata, display, and recommendation still decide what readers get.",
     contract: {
       publicImports: ["semiotic", "semiotic/physics", "semiotic/utils", "semiotic/xy"],
       data: {
@@ -1222,6 +1321,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Deterministic replay", "Evidence lineage", "SentenceFilter", "Physics pipeline"],
     frames: ["xy", "ordinal", "network", "geo", "stream-physics", "custom"],
     topics: ["climate", "uncertainty", "realtime", "design", "accessibility"],
+  },
+  {
+    title: "The Last Scarcity",
+    path: "/examples/the-last-scarcity",
+    eyebrow: "Interactive essay · AI abundance",
+    description:
+      "When intelligence gets cheap, scarcity moves. An interactive essay with a before/after competition Sankey, a three-beat court of desire, and a companion promise-vs-data DifferenceChart.",
+    preview: "last-scarcity",
+    badges: ["Before/after Sankey", "Court story beats", "DifferenceChart", "Evidence ledger"],
+    frames: ["xy", "ordinal", "network", "custom"],
+    topics: ["ai", "culture", "civic", "process", "realtime", "uncertainty", "design", "accessibility"],
   },
   {
     title: "Ukraine: Four Clocks of a Long War",
@@ -1589,9 +1699,9 @@ const EXAMPLE_REGISTRY_METADATA = [
     path: "/examples/digital-humanities-thunderdome",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A source-backed argument asks whether AI-assisted coding decolonizes weird code, then tests what implementation changes—and what DHQ’s editorial systems still decide.",
+      "A 2011 digital-humanities argument revisited with DHQ data: making the app is easier now, but selection, metadata, display, and recommendation still decide what readers get.",
     preview: "thunderdome",
-    badges: ["Eight Semiotic views", "Scrollytelling", "DHQ repository"],
+    badges: ["Eight charts", "Scrollytelling", "DHQ repository"],
     frames: ["xy", "ordinal", "network", "stream-physics", "custom"],
     topics: ["ai", "history", "culture", "design", "accessibility"],
   },
@@ -1844,6 +1954,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
+  "/examples/the-last-scarcity": "TheLastScarcityExamplePage.jsx",
   "/examples/ukraine-war-history": "UkraineWarHistoryExamplePage.jsx",
   "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
@@ -1909,10 +2020,12 @@ const PILOT_EXAMPLE_DEFINITIONS_BY_PATH = new Map(
 export const EXAMPLE_DEFINITIONS = Object.freeze(
   EXAMPLE_REGISTRY_METADATA.map((example) => {
     const pilot = PILOT_EXAMPLE_DEFINITIONS_BY_PATH.get(example.path)
+    const sourceFile = EXAMPLE_SOURCE_FILES_BY_PATH[example.path] ?? pilot?.sourceFile
     return Object.freeze({
       id: example.path.slice("/examples/".length),
       ...example,
-      sourceFile: EXAMPLE_SOURCE_FILES_BY_PATH[example.path] ?? pilot?.sourceFile,
+      sourceFile,
+      sourceFiles: pilot?.sourceFiles ?? (sourceFile ? [sourceFile] : undefined),
       isPilot: Boolean(pilot),
       contract: pilot
         ? Object.freeze({
@@ -1950,6 +2063,7 @@ const REQUIRED_DEFINITION_FIELDS = ["id", "path", "title", "eyebrow", "descripti
 const OPTIONAL_DEFINITION_FIELDS = [
   "isPilot",
   "sourceFile",
+  "sourceFiles",
   "contract",
   "preview",
   "badges",
@@ -2104,6 +2218,20 @@ function validateExampleContract(errors, definition, index) {
   if (!isBoolean(fixture?.replay)) {
     errors.push(`ExampleDefinition contract data.fixture.replay for "${label}" must be a boolean`)
   }
+  if (fixture?.inventory !== undefined) {
+    const inventory = fixture.inventory
+    if (
+      !isRecord(inventory) ||
+      Object.keys(inventory).length === 0 ||
+      !Object.entries(inventory).every(
+        ([name, count]) => isNonEmptyString(name) && Number.isInteger(count) && count >= 0,
+      )
+    ) {
+      errors.push(
+        `ExampleDefinition contract data.fixture.inventory for "${label}" must use non-negative integer counts`,
+      )
+    }
+  }
 
   const provenance = contract.provenance
   for (const field of ["source", "capturedAt", "freshnessOwner", "reviewCadence"]) {
@@ -2202,7 +2330,7 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
       }
     })
 
-    const { id, path, sourceFile } = definition ?? {}
+    const { id, path, sourceFile, sourceFiles } = definition ?? {}
     const isPilot = definition?.isPilot === true
     if (isPilot && !isNonEmptyString(sourceFile)) {
       errors.push(`ExampleDefinition at index ${index} must define "sourceFile" for pilot examples`)
@@ -2235,6 +2363,32 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
         errors.push(`Duplicate ExampleDefinition sourceFile "${sourceFile}"`)
       }
       seenSourceFiles.add(sourceFile)
+    }
+
+    if (sourceFiles !== undefined) {
+      if (!Array.isArray(sourceFiles) || sourceFiles.length === 0) {
+        errors.push(`ExampleDefinition sourceFiles for "${id ?? `index ${index}`}" must be a non-empty array`)
+      } else {
+        const localFiles = new Set()
+        sourceFiles.forEach((file) => {
+          const valid =
+            isNonEmptyString(file) &&
+            /\.(?:js|jsx|ts|tsx|css)$/.test(file) &&
+            !file.startsWith("/") &&
+            !file.split("/").includes("..")
+          if (!valid) {
+            errors.push(
+              `ExampleDefinition sourceFiles entry "${file}" for "${id ?? `index ${index}`}" must be a safe relative source path`,
+            )
+          } else if (localFiles.has(file)) {
+            errors.push(`Duplicate sourceFiles entry "${file}" for ExampleDefinition "${id}"`)
+          }
+          localFiles.add(file)
+        })
+        if (isNonEmptyString(sourceFile) && !localFiles.has(sourceFile)) {
+          errors.push(`ExampleDefinition sourceFiles for "${id}" must include its sourceFile`)
+        }
+      }
     }
 
     if (!isBoolean(definition?.isPilot)) {

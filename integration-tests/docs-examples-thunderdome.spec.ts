@@ -1,16 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
+import { collectBrowserErrors } from "./helpers/browser"
 
 const ROUTE = "/examples/digital-humanities-thunderdome"
 const PAGE_TITLE = "Thunderdome Has Rounded Corners"
-
-function collectBrowserErrors(page: Page) {
-  const errors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text())
-  })
-  page.on("pageerror", (error) => errors.push(error.message))
-  return errors
-}
 
 async function settleDocument(page: Page) {
   await page.evaluate(
@@ -29,7 +21,7 @@ async function openExample(page: Page) {
     timeout: 60_000
   })
   await expect(
-    page.getByRole("region", { name: "Eight-round scrollytelling argument" })
+    page.getByRole("region", { name: "Eight chart sections" })
   ).toBeVisible()
   await settleDocument(page)
 }
@@ -68,8 +60,13 @@ async function expectActiveSvgMatchesHost(stage: Locator) {
         stage.locator(".thunderdome-stage__chart").evaluate((host) => {
           const svg = host.querySelector("svg")
           if (!svg) return Number.POSITIVE_INFINITY
+          const styles = getComputedStyle(host)
+          const horizontalPadding =
+            Number.parseFloat(styles.paddingLeft) +
+            Number.parseFloat(styles.paddingRight)
           return Math.abs(
-            host.getBoundingClientRect().width -
+            host.clientWidth -
+              horizontalPadding -
               svg.getBoundingClientRect().width
           )
         }),
@@ -90,18 +87,18 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await openExample(page)
 
     const arena = page.getByRole("region", {
-      name: "Eight-round scrollytelling argument"
+      name: "Eight chart sections"
     })
     await expect(arena).toHaveClass(/is-sticky/)
     await expect(arena.locator(".thunderdome-round")).toHaveCount(8)
     await expect(arena.locator(".thunderdome-stage")).toHaveCount(1)
 
     const stageColumn = arena.getByRole("complementary", {
-      name: "Active Semiotic view"
+      name: "Active chart"
     })
     const stage = stageColumn.locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "XYCustomChart"
+      "From punch cards to agents, 1949–2026"
     )
     await expect(stage.locator(".stream-xy-frame")).toHaveAttribute(
       "aria-label",
@@ -111,7 +108,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
 
     await scrollRoundIntoObserver(page, "03")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "LineChart"
+      "One author vs. multi-author published items"
     )
     await expect(stage.locator(".stream-xy-frame")).toHaveAttribute(
       "aria-label",
@@ -119,7 +116,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     )
     await expect(
       stage.getByRole("button", {
-        name: "Round 03: More names appear on the work."
+        name: "Section 03: More names on the byline"
       })
     ).toHaveAttribute("aria-current", "step")
     await expectActiveSvgMatchesHost(stage)
@@ -139,7 +136,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
 
     await scrollRoundIntoObserver(page, "07")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "ForceDirectedGraph"
+      "Two recommendation steps, printed author names"
     )
     await expect(stage.locator(".stream-network-frame")).toHaveAttribute(
       "aria-label",
@@ -147,7 +144,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     )
     await expect(
       stage.getByRole("button", {
-        name: "Round 07: Follow the recommendation to its authors."
+        name: "Section 07: Follow a recommendation to its authors"
       })
     ).toHaveAttribute("aria-current", "step")
     await expectActiveSvgMatchesHost(stage)
@@ -156,17 +153,17 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       name: "Recommendation method"
     })
     await expect(
-      methods.getByRole("button", { name: "Controlled keywords" })
+      methods.getByRole("button", { name: "Editorial keywords" })
     ).toHaveAttribute("aria-pressed", "true")
     await expect(stage.locator(".thunderdome-stage__controls > p")).toContainText(
-      "18 printed author names"
+      "18 author names"
     )
-    await methods.getByRole("button", { name: "SPECTER embeddings" }).click()
+    await methods.getByRole("button", { name: "Title/abstract embeddings" }).click()
     await expect(
-      methods.getByRole("button", { name: "SPECTER embeddings" })
+      methods.getByRole("button", { name: "Title/abstract embeddings" })
     ).toHaveAttribute("aria-pressed", "true")
     await expect(stage.locator(".thunderdome-stage__controls > p")).toContainText(
-      "6 printed author names"
+      "6 author names"
     )
     await expectActiveSvgMatchesHost(stage)
 
@@ -187,10 +184,10 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await scrollRoundIntoObserver(page, "01")
 
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "XYCustomChart"
+      "From punch cards to agents, 1949–2026"
     )
 
     const sceneHistory = await page.evaluate(async () => {
@@ -238,7 +235,10 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       return history.filter(Boolean)
     })
 
-    expect(sceneHistory).toEqual(["XYCustomChart", "SankeyDiagram"])
+    expect(sceneHistory).toEqual([
+      "From punch cards to agents, 1949–2026",
+      "Named public clusters in the 806-item corpus"
+    ])
     expect(browserErrors).toEqual([])
   })
 
@@ -254,7 +254,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
         ".thunderdome-stage h3"
       )
       const target = document.querySelector<HTMLButtonElement>(
-        '[aria-label="Round 03: More names appear on the work."]'
+        '[aria-label="Section 03: More names on the byline"]'
       )
       if (!heading || !target) return []
 
@@ -275,7 +275,10 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       return history.filter(Boolean)
     })
 
-    expect(sceneHistory).toEqual(["XYCustomChart", "LineChart"])
+    expect(sceneHistory).toEqual([
+      "From punch cards to agents, 1949–2026",
+      "One author vs. multi-author published items"
+    ])
     expect(browserErrors).toEqual([])
   })
 
@@ -288,18 +291,20 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await scrollRoundIntoObserver(page, "06")
 
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "SankeyDiagram"
+      "What a tidy interface throws away"
     )
 
-    const policy = stage.getByRole("group", { name: "Classification policy" })
+    const policy = stage.getByRole("group", {
+      name: "How multi-tag articles are displayed"
+    })
     const displayOneTag = policy.getByRole("button", {
-      name: "Display one tag"
+      name: "Tidy: one tag each"
     })
     const retainMultipleTags = policy.getByRole("button", {
-      name: "Retain multiple tags"
+      name: "Honest: keep the pile"
     })
     await expect(displayOneTag).toHaveAttribute("aria-pressed", "true")
     await expect(retainMultipleTags).toHaveAttribute("aria-pressed", "false")
@@ -309,14 +314,14 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       ".thunderdome-stage__controls > p"
     )
     await expect(classificationFinding).toContainText(
-      "791 published items are reduced to one displayed tag."
+      "791 multi-tag articles are forced into the single-tag bucket."
     )
 
     await retainMultipleTags.click()
     await expect(displayOneTag).toHaveAttribute("aria-pressed", "false")
     await expect(retainMultipleTags).toHaveAttribute("aria-pressed", "true")
     await expect(classificationFinding).toContainText(
-      "791 published items retain their multiple source tags."
+      "791 multi-tag articles stay multi-tag on the right."
     )
 
     const dataSummaryTrigger = stage.getByRole("button", { name: /^View data summary/ })
@@ -325,7 +330,12 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await dataSummaryTrigger.focus()
     await dataSummaryTrigger.press("Enter")
     await expect(stage.locator(".semiotic-accessible-data-table-summary")).toBeVisible()
-    await expect(stage.getByRole("table")).toBeVisible()
+    await expect(
+      stage.getByRole("table", { name: "Node data and degree summary for Network chart" })
+    ).toBeVisible()
+    await expect(
+      stage.getByRole("table", { name: "Edge data for Network chart" })
+    ).toBeVisible()
 
     expect(browserErrors).toEqual([])
   })
@@ -340,13 +350,13 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await scrollRoundIntoObserver(page, "06")
 
     const stage = page
-      .getByRole("complementary", { name: "Active Semiotic view" })
+      .getByRole("complementary", { name: "Active chart" })
       .locator(".thunderdome-stage")
     const displayOneTag = stage.getByRole("button", {
-      name: "Display one tag"
+      name: "Tidy: one tag each"
     })
     const retainMultipleTags = stage.getByRole("button", {
-      name: "Retain multiple tags"
+      name: "Honest: keep the pile"
     })
 
     const forcedColorState = await stage.evaluate((element) => {
@@ -390,11 +400,11 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     await openExample(page)
 
     const arena = page.getByRole("region", {
-      name: "Eight-round scrollytelling argument"
+      name: "Eight chart sections"
     })
     await expect(arena).toHaveClass(/is-inline/)
     await expect(
-      arena.getByRole("complementary", { name: "Active Semiotic view" })
+      arena.getByRole("complementary", { name: "Active chart" })
     ).toHaveCount(0)
 
     const rounds = arena.locator(".thunderdome-round")

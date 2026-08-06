@@ -27,16 +27,15 @@ import { bobaDisplayList } from "./gofishBobaHandwritten"
  *   `node --experimental-strip-types scripts/gen-gofish-fixtures.ts --write`
  */
 
-// The generated module types its docs against gofish-ir's `DisplayList`
-// namespace; the adapter's local `GofishDisplayListDocument` is the same shape,
-// so we re-expose them under the adapter's type for callers of the public API.
+// Generated fixtures are typed as GofishDisplayListDocument (local structural
+// mirror of gofish-ir's DisplayList schema). Re-export under stable IR names.
 
-export const flowerIR = flowerDisplayList as GofishDisplayListDocument
-export const polarribbonIR = polarribbonDisplayList as GofishDisplayListDocument
-export const treemapIR = treemapDisplayList as GofishDisplayListDocument
-export const bottleIR = bottleDisplayList as GofishDisplayListDocument
+export const flowerIR: GofishDisplayListDocument = flowerDisplayList
+export const polarribbonIR: GofishDisplayListDocument = polarribbonDisplayList
+export const treemapIR: GofishDisplayListDocument = treemapDisplayList
+export const bottleIR: GofishDisplayListDocument = bottleDisplayList
 export const bobaIR = bobaDisplayList
-export const pythonIR = pythonDisplayList as GofishDisplayListDocument
+export const pythonIR: GofishDisplayListDocument = pythonDisplayList
 
 export interface GofishIRExample {
   /** Generated keys (derived so new baked fixtures never drift this) plus the hand-written `boba`. */
@@ -54,7 +53,7 @@ export interface GofishIRExample {
 const baked: GofishIRExample[] = generatedExamples.map((e) => ({
   key: e.key,
   label: e.label,
-  doc: e.doc as GofishDisplayListDocument,
+  doc: e.doc,
   blurb: e.blurb,
   source: e.source
 }))

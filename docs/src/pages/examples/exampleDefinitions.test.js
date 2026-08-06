@@ -173,4 +173,30 @@ describe("validateExampleDefinitions", () => {
     const result = validateExampleDefinitions(EXAMPLE_DEFINITIONS)
     expect(result.ok).toBe(true)
   })
+
+  it("declares the complete Last Scarcity source bundle", () => {
+    const definition = getExampleDefinition("/examples/the-last-scarcity")
+    expect(definition.sourceFiles).toContain(definition.sourceFile)
+    expect(definition.sourceFiles).toContain("last-scarcity/lastScarcityData.js")
+    expect(definition.sourceFiles).toContain("TheLastScarcityExamplePage.css")
+  })
+
+  it("validates optional structured fixture inventories", () => {
+    const definition = getExampleDefinition("/examples/the-last-scarcity")
+    const result = validateExampleDefinitions([{
+      ...definition,
+      contract: {
+        ...definition.contract,
+        data: {
+          ...definition.contract.data,
+          fixture: {
+            ...definition.contract.data.fixture,
+            inventory: { claims: -1 },
+          },
+        },
+      },
+    }])
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(" ")).toMatch(/fixture\.inventory.*non-negative integer/i)
+  })
 })

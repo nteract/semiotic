@@ -1,5 +1,6 @@
 import React from "react"
 import { Link } from "react-router-dom"
+import { ThemeProvider } from "semiotic"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useElementSize from "../../hooks/useElementSize"
 import ThemeToggle from "../../components/ThemeToggle"
@@ -15,47 +16,50 @@ const semioticLogoDark = new URL(
 
 export default function ExamplesLayout({ children }) {
   const [theme, toggleTheme] = useDocsTheme()
+  const chartTheme = theme === "dark" ? "carbon-dark" : "carbon"
   const [topBarRef, topBarSize] = useElementSize({ height: 77 })
 
   return (
-    <div
-      style={{ ...styles.shell, "--examples-sticky-offset": `${topBarSize.height}px` }}
-      className="examples-shell"
-    >
-      <header ref={topBarRef} style={styles.topBar} className="examples-top-bar">
-        <div style={styles.topBarInner} className="examples-top-bar-inner">
-          <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
-            <img
-              src={theme === "dark" ? semioticLogoDark : semioticLogo}
-              alt="Semiotic"
-              style={styles.logo}
-            />
-          </Link>
-          <Link to="/examples" style={styles.sectionLink}>Examples</Link>
-          <div style={styles.topBarRight} className="examples-top-bar-right">
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
-            <Link to="/getting-started" style={styles.utilityLink}>Docs</Link>
-            <a
-              href="https://github.com/nteract/semiotic"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.utilityLink}
-            >
-              GitHub
-            </a>
+    <ThemeProvider theme={chartTheme}>
+      <div
+        style={{ ...styles.shell, "--examples-sticky-offset": `${topBarSize.height}px` }}
+        className="examples-shell"
+      >
+        <header ref={topBarRef} style={styles.topBar} className="examples-top-bar">
+          <div style={styles.topBarInner} className="examples-top-bar-inner">
+            <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
+              <img
+                src={theme === "dark" ? semioticLogoDark : semioticLogo}
+                alt="Semiotic"
+                style={styles.logo}
+              />
+            </Link>
+            <Link to="/examples" style={styles.sectionLink}>Examples</Link>
+            <div style={styles.topBarRight} className="examples-top-bar-right">
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+              <Link to="/getting-started" style={styles.utilityLink}>Docs</Link>
+              <a
+                href="https://github.com/nteract/semiotic"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.utilityLink}
+              >
+                GitHub
+              </a>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main style={styles.main} className="examples-main">{children}</main>
+        <main style={styles.main} className="examples-main">{children}</main>
 
-      <footer style={styles.footer}>
-        <div style={styles.footerInner} className="examples-footer-inner">
-          <Link to="/examples" style={styles.footerLink}>All examples</Link>
-          <span style={styles.footerNote}>Built with Semiotic</span>
-        </div>
-      </footer>
-    </div>
+        <footer style={styles.footer}>
+          <div style={styles.footerInner} className="examples-footer-inner">
+            <Link to="/examples" style={styles.footerLink}>All examples</Link>
+            <span style={styles.footerNote}>Built with Semiotic</span>
+          </div>
+        </footer>
+      </div>
+    </ThemeProvider>
   )
 }
 

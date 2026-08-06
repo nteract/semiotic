@@ -11,6 +11,7 @@ import {
 import type { SemioticTheme, SemioticThemeUpdate, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
 import { resolveThemePreset } from "./semiotic-themes"
 import type { ThemePresetName } from "./semiotic-themes"
+import { themeToCSSVariables } from "./store/themeSerialization"
 import { addMqlListener } from "./stream/useMediaPreferences"
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -151,53 +152,9 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
 
   const style: React.CSSProperties & Record<string, string> = {
     position: "relative",
-    "--semiotic-bg": theme.colors.background,
-    "--semiotic-text": theme.colors.text,
-    "--semiotic-text-secondary": theme.colors.textSecondary,
-    "--semiotic-grid": theme.colors.grid,
-    "--semiotic-border": theme.colors.border,
-    "--semiotic-cell-border": theme.colors.cellBorder || theme.colors.border,
-    "--semiotic-primary": theme.colors.primary,
-    "--semiotic-font-family": theme.typography.fontFamily,
-    ...(theme.colors.focus ? { "--semiotic-focus": theme.colors.focus } : {}),
-    ...(theme.tooltip?.background ? { "--semiotic-tooltip-bg": theme.tooltip.background } : {}),
-    ...(theme.tooltip?.text ? { "--semiotic-tooltip-text": theme.tooltip.text } : {}),
-    ...(theme.tooltip?.borderRadius ? { "--semiotic-tooltip-radius": theme.tooltip.borderRadius } : {}),
-    ...(theme.tooltip?.fontSize ? { "--semiotic-tooltip-font-size": theme.tooltip.fontSize } : {}),
-    ...(theme.tooltip?.shadow ? { "--semiotic-tooltip-shadow": theme.tooltip.shadow } : {}),
-    ...(theme.borderRadius ? { "--semiotic-border-radius": theme.borderRadius } : {}),
-    ...(theme.colors.selection ? { "--semiotic-selection-color": theme.colors.selection } : {}),
-    ...(theme.colors.selectionOpacity != null ? { "--semiotic-selection-opacity": String(theme.colors.selectionOpacity) } : {}),
-    ...(theme.colors.diverging ? { "--semiotic-diverging": theme.colors.diverging } : {}),
-    ...(theme.colors.annotation ? { "--semiotic-annotation-color": theme.colors.annotation } : {}),
-    ...(theme.typography.legendSize != null ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
-    ...(theme.typography.titleFontSize != null ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
-    ...(theme.typography.tickFontFamily != null ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
-    // Axis tick + label font sizes — emitted from the canonical
-    // typography fields (`tickSize`, `labelSize`) so consumers can
-    // override either via theme OR via a CSS-var override on any DOM
-    // ancestor (`<div style={{ "--semiotic-tick-font-size": "14px" }}>`).
-    // SVGOverlay reads these vars via inline `style={{ fontSize: var(...) }}`
-    // with the literal default as the fallback — overriding the var
-    // wins without needing `!important`.
-    ...(theme.typography.tickSize != null ? { "--semiotic-tick-font-size": `${theme.typography.tickSize}px` } : {}),
-    ...(theme.typography.labelSize != null ? { "--semiotic-axis-label-font-size": `${theme.typography.labelSize}px` } : {}),
-    // ── Semantic role CSS variables ────────────────────────────────────
-    // `secondary` and `surface` are documented on SemioticTheme as falling
-    // back to `primary` / `background` when unset — always emitted so
-    // `var(--semiotic-secondary)` and `var(--semiotic-surface)` reliably
-    // resolve, even on custom themes that omit them.
-    "--semiotic-secondary": theme.colors.secondary || theme.colors.primary,
-    "--semiotic-surface": theme.colors.surface || theme.colors.background,
-    // Status roles (success/danger/warning/error/info) have no documented
-    // fallback — emitted only when declared. All built-in presets declare
-    // them; custom themes that don't will leave `var(--semiotic-danger)`
-    // etc. unresolved. Document this on the theme type if that changes.
-    ...(theme.colors.success ? { "--semiotic-success": theme.colors.success } : {}),
-    ...(theme.colors.danger ? { "--semiotic-danger": theme.colors.danger } : {}),
-    ...(theme.colors.warning ? { "--semiotic-warning": theme.colors.warning } : {}),
-    ...(theme.colors.error ? { "--semiotic-error": theme.colors.error } : {}),
-    ...(theme.colors.info ? { "--semiotic-info": theme.colors.info } : {}),
+    colorScheme:
+      theme.mode === "auto" ? "light dark" : theme.mode,
+    ...themeToCSSVariables(theme),
   }
 
   const themeName = React.useContext(ThemeNameContext)
@@ -205,6 +162,7 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
   if (themeName) {
     dataAttrs["data-semiotic-theme"] = themeName
   }
+  dataAttrs["data-semiotic-theme-mode"] = theme.mode
 
   return <div style={style} {...dataAttrs}>{children}</div>
 }
