@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, type RefObject } from "react"
 import {
   resolveResponsiveDimension,
   type ResponsiveSizeOptions,
@@ -22,7 +22,7 @@ export function useResponsiveSize(
   responsiveWidth?: boolean,
   responsiveHeight?: boolean,
   options: ResponsiveSizeOptions = {},
-): [React.RefObject<HTMLDivElement>, [number, number]] {
+): [RefObject<HTMLDivElement>, [number, number]] {
   const containerRef = useRef<HTMLDivElement>(null!)
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null)
 

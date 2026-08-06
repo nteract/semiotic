@@ -53,7 +53,9 @@ const ENTRY_GRAPHS = [
   // in the full facade. Production graph measures 394.4 KiB gzip.
   // Bumped 396→397: subsequent shared-frame behavior and documentation
   // surfaces measure 396.5 KiB gzip; retain half a KiB of headroom.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 397 },
+  // Bumped 397→399: the shared tooltip/theme accessibility surface adds
+  // 1.8 KiB gzip to the canonical facade (398.8 KiB measured).
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 399 },
   { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
@@ -65,7 +67,9 @@ const ENTRY_GRAPHS = [
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
   // Bumped 161→162: the current shared graph measures 161.2 KiB gzip.
-  { entry: "physics.module.min.js", label: "physics", limitKb: 162 },
+  // Bumped 162→163: the consistent tooltip/theme surface adds 0.7 KiB gzip
+  // to the physics facade (162.7 KiB measured).
+  { entry: "physics.module.min.js", label: "physics", limitKb: 163 },
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
@@ -82,7 +86,9 @@ const ENTRY_GRAPHS = [
   // Production graph measures 498.0 KiB gzip.
   // Bumped 500→501: current gzip measurements reach 500.1 KiB; retain
   // sub-KiB headroom for the stable, canonical AI chart catalog.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 501 },
+  // Bumped 501→503: the shared tooltip/theme accessibility surface adds
+  // 1.1 KiB gzip to the AI catalog (502.2 KiB measured).
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 503 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
