@@ -132,11 +132,9 @@ const CONSUMED_CHANNELS: Record<ChartKind, string[]> = {
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
-
 function ownValue<T>(record: Record<string, T>, key: string): T | undefined {
   return Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined
 }
-
 function normalizeChartType(chartType: string | undefined): ChartKind | undefined {
   const key = String(chartType || "").toLowerCase().replace(/[^a-z0-9]/g, "")
   if (key === "barchart" || key === "bar") return "bar"
@@ -193,7 +191,6 @@ function isDiscrete(enc: FlintChartEncoding | undefined): boolean {
 function isContinuous(enc: FlintChartEncoding | undefined): boolean {
   return enc?.type === "quantitative" || enc?.type === "temporal"
 }
-
 function semanticType(
   fieldName: string | undefined,
   semanticTypes: Record<string, string | FlintSemanticAnnotation> | undefined,
