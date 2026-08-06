@@ -116,6 +116,60 @@ describe("Heatmap", () => {
     ]))
   })
 
+  it("falls back to the scheme LUT when customColorScale is not callable", () => {
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const fillStyles: string[] = []
+    const originalFillRect = ctx.fillRect
+    ctx.fillRect = ((...args: [number, number, number, number]) => {
+      fillStyles.push(String(ctx.fillStyle))
+      return originalFillRect.apply(ctx, args)
+    }) as typeof ctx.fillRect
+
+    // A non-callable scale used to reach the scene builder and throw on
+    // invocation, while the server path silently dropped it. Both now degrade
+    // to the named scheme, so the two render paths agree.
+    expect(() =>
+      render(
+        <TooltipProvider>
+          <Heatmap
+            data={sampleData}
+            colorScheme="custom"
+            customColorScale={{ range: ["#000", "#fff"] } as unknown as (value: number) => string}
+          />
+        </TooltipProvider>
+      )
+    ).not.toThrow()
+
+    expect(fillStyles.length).toBeGreaterThan(0)
+    expect(fillStyles.some((fill) => fill.includes("NaN") || fill === "")).toBe(false)
+  })
+
+  it("uses frameProps.colorScheme as the final custom-scale override", () => {
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const fillStyles: string[] = []
+    const originalFillRect = ctx.fillRect
+    ctx.fillRect = ((...args: [number, number, number, number]) => {
+      fillStyles.push(String(ctx.fillStyle))
+      return originalFillRect.apply(ctx, args)
+    }) as typeof ctx.fillRect
+
+    render(
+      <TooltipProvider>
+        <Heatmap
+          data={sampleData}
+          colorScheme="blues"
+          customColorScale={(value) => `rgb(${value}, 17, 19)`}
+          frameProps={{ colorScheme: "custom" }}
+        />
+      </TooltipProvider>
+    )
+
+    expect(fillStyles).toEqual(expect.arrayContaining([
+      "rgb(10, 17, 19)",
+      "rgb(25, 17, 19)",
+    ]))
+  })
+
   it("shows values when showValues is true", () => {
     const { container } = render(
       <TooltipProvider>

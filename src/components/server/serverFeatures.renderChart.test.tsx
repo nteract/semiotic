@@ -19,6 +19,7 @@ import {
   renderChart,
   renderDashboard,
 } from "./renderToStaticSVG"
+import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -189,6 +190,54 @@ describe("renderChart", () => {
 
     expect(svg).toContain('fill="rgb(2, 7, 9)"')
     expect(svg).toContain('fill="rgb(7, 7, 9)"')
+  })
+
+  it("uses Heatmap frameProps.colorScheme as the final custom-scale override", () => {
+    const svg = renderChart("Heatmap", {
+      data: [
+        { x: "a", y: "1", value: 2 },
+        { x: "b", y: "1", value: 7 },
+      ],
+      colorScheme: "blues",
+      customColorScale: (value: number) => `rgb(${value}, 17, 19)`,
+      frameProps: { colorScheme: "custom" },
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain('fill="rgb(2, 17, 19)"')
+    expect(svg).toContain('fill="rgb(7, 17, 19)"')
+
+    const namedSchemeSvg = renderChart("Heatmap", {
+      data: [
+        { x: "a", y: "1", value: 2 },
+        { x: "b", y: "1", value: 7 },
+      ],
+      colorScheme: "custom",
+      customColorScale: (value: number) => `rgb(${value}, 17, 19)`,
+      frameProps: { colorScheme: "viridis" },
+      width: 400,
+      height: 300,
+    })
+
+    expect(namedSchemeSvg).not.toContain('fill="rgb(2, 17, 19)"')
+    expect(namedSchemeSvg).toContain(`fill="${getSequentialInterpolator("viridis")(0)}"`)
+  })
+
+  it("uses the theme sequential scheme for Heatmap SSR", () => {
+    const svg = renderChart("Heatmap", {
+      data: [
+        { x: "a", y: "1", value: 2 },
+        { x: "b", y: "1", value: 7 },
+      ],
+      theme: { colors: { sequential: "viridis" } },
+      width: 400,
+      height: 300,
+    })
+    const viridis = getSequentialInterpolator("viridis")
+
+    expect(svg).toContain(`fill="${viridis(0)}"`)
+    expect(svg).toContain(`fill="${viridis(1)}"`)
   })
 
   it("lets Heatmap frameProps.areaStyle override individual cell fills", () => {

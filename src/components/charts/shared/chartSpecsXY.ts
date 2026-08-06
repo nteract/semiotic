@@ -309,8 +309,10 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       // Heatmap's colorScheme is a sequential scheme name (different enum
       // from the categorical "category10"-family). Override common bag.
       colorScheme: { type: "string", enum: ["blues", "reds", "greens", "viridis", "oranges", "purples", "greys", "plasma", "inferno", "magma", "cividis", "turbo", "custom"] as const },
-      // `customColorScale` is a value-color escape hatch — runtime only.
-      customColorScale: { type: ["object", "function"], omitFromSchema: true },
+      // `customColorScale` is a value-color escape hatch — runtime only. It must
+      // be callable: the scene builder invokes it per cell. A d3 scale qualifies
+      // (`scaleSequential` returns a function), so "function" is not a narrowing.
+      customColorScale: { type: "function", omitFromSchema: true },
       showValues: { type: "boolean", default: false, description: "Display numeric values in cells" },
       // Heatmap is XY-shaped but has a valueAccessor (not yAccessor), so
       // it carries `valueFormat` for cell-value formatting — pulled from

@@ -302,7 +302,7 @@ export const RealtimeHeatmap = forwardRef(
         heatmapYBins={heatmapYBins}
         heatmapAggregation={aggregation}
         colorScheme={colorScheme !== "custom" ? colorScheme : undefined}
-        heatmapColorScale={colorScheme === "custom" ? customColorScale : undefined}
+        heatmapColorScale={colorScheme === "custom" && typeof customColorScale === "function" ? customColorScale : undefined}
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}

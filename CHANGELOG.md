@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Heatmap color-scale plumbing** — `Heatmap` now routes `colorScheme="custom"` and `customColorScale(value)` into the shared heatcell scene graph instead of falling back to Blues in CSR and SSR. `RealtimeHeatmap` now honors its documented named sequential schemes, theme fallback, and custom value-to-color functions. String fills returned by `frameProps.areaStyle` also override individual bounded Heatmap cells in both render paths.
+- **Heatmap color-scale plumbing** — `Heatmap` now routes `colorScheme="custom"` and `customColorScale(value)` into the shared heatcell scene graph instead of falling back to Blues in CSR and SSR. It also preserves `frameProps.colorScheme` precedence and the theme's sequential scheme in SSR. `RealtimeHeatmap` now honors its documented named sequential schemes, theme fallback, and custom value-to-color functions. String fills returned by `frameProps.areaStyle` also override individual bounded Heatmap cells in both render paths.
+- **`customColorScale` must be callable** — the `Heatmap` and `RealtimeHeatmap` chart specs declared `customColorScale` as `["object", "function"]`, so a non-callable object scale passed validation, was silently dropped by the server path, and threw on the client when the scene builder invoked it. The spec now declares `"function"` (matching the TypeScript type, which never allowed anything else), so `validateProps` / `--doctor` report it up front, and both client paths degrade to the named scheme instead of throwing. d3 scales such as `scaleSequential` are callable and unaffected.
 
 ## [3.8.9] - 2026-08-04
 

@@ -297,6 +297,19 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   // Matches ChoroplethMap's pattern for theme-driven magnitude encoding.
   const themeSequential = useThemeSequential()
   const colorScheme = colorSchemeProp ?? themeSequential ?? "blues"
+  const frameColorScheme = typeof frameProps.colorScheme === "string"
+    ? frameProps.colorScheme
+    : undefined
+  const effectiveColorScheme = frameColorScheme ?? colorScheme
+  // Both scales are gated on callability: the scene builder invokes them per
+  // cell, so a non-callable value would throw inside the render loop rather
+  // than degrade. Falling through to the named-scheme LUT matches what the
+  // server path does, and dev-mode validateProps reports the bad prop.
+  const effectiveHeatmapColorScale = typeof frameProps.heatmapColorScale === "function"
+    ? frameProps.heatmapColorScale
+    : effectiveColorScheme === "custom" && typeof customColorScale === "function"
+      ? customColorScale
+      : undefined
 
   const showLegend = showLegendProp ?? false
   const legendPosition = legendPositionProp ?? "right"
@@ -340,14 +353,14 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
 
   // Create color scale
   const colorScale = useMemo(() => {
-    if (colorScheme === "custom" && customColorScale) {
-      return customColorScale
+    if (effectiveHeatmapColorScale) {
+      return effectiveHeatmapColorScale
     }
 
-    const interpolator = getSequentialInterpolator(colorScheme as string)
+    const interpolator = getSequentialInterpolator(effectiveColorScheme)
 
     return scaleSequential(interpolator).domain(valueDomain)
-  }, [colorScheme, customColorScale, valueDomain])
+  }, [effectiveColorScheme, effectiveHeatmapColorScale, valueDomain])
 
   const cellStyle = useMemo(() => {
     const borderWidth = Number.isFinite(cellBorderWidth)
@@ -424,8 +437,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     xAccessor,
     yAccessor,
     valueAccessor,
-    colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
-    ...(colorScheme === "custom" && customColorScale && { heatmapColorScale: customColorScale }),
+    colorScheme: effectiveColorScheme !== "custom" ? effectiveColorScheme : undefined,
+    ...(effectiveHeatmapColorScale && { heatmapColorScale: effectiveHeatmapColorScale }),
     areaStyle: cellStyle,
     showValues,
     heatmapValueFormat: valueFormat,
