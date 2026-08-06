@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
   resolveCSSColor,
   clearCSSColorCache,
+  getCSSColorCacheVersion,
   subscribeToCSSColorInvalidation,
   _resetCSSColorCacheForTest
 } from "./resolveCSSColor"
@@ -103,13 +104,17 @@ describe("resolveCSSColor", () => {
     )
 
     try {
+      const beforeUnrelatedMutation = getCSSColorCacheVersion()
       unrelated.style.setProperty("--semiotic-primary", "#111111")
       await new Promise((resolve) => setTimeout(resolve, 0))
       expect(listener).not.toHaveBeenCalled()
+      expect(getCSSColorCacheVersion()).toBe(beforeUnrelatedMutation)
 
+      const beforeRelatedMutation = getCSSColorCacheVersion()
       wrapper.style.setProperty("--semiotic-primary", "#222222")
       await new Promise((resolve) => setTimeout(resolve, 0))
       expect(listener).toHaveBeenCalledTimes(1)
+      expect(getCSSColorCacheVersion()).toBe(beforeRelatedMutation + 1)
     } finally {
       unsubscribe()
     }

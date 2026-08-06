@@ -66,7 +66,7 @@ function ensureGlobalObserver(): void {
   observerInstalled = true
 
   const invalidateAndNotify = (targets?: readonly Element[]) => {
-    currentVersion++
+    const affectedSubscribers: CSSColorInvalidationSubscriber[] = []
     for (const subscriber of invalidationSubscribers) {
       const element = subscriber.getElement()
       if (!element) continue
@@ -78,8 +78,17 @@ function ensureGlobalObserver(): void {
             target.contains(element) ||
             element.contains(target)
         )
-      if (affected) subscriber.listener()
+      if (affected) affectedSubscribers.push(subscriber)
     }
+
+    // Attribute mutations are observed on the whole document, but only a
+    // mutation in (or on) a subscribed canvas branch can change a cached
+    // computed custom property. Avoid invalidating every canvas cache for
+    // unrelated DOM churn elsewhere in the document.
+    if (targets && affectedSubscribers.length === 0) return
+
+    currentVersion++
+    for (const subscriber of affectedSubscribers) subscriber.listener()
   }
 
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
