@@ -331,7 +331,10 @@ test.describe("docs example local contract evidence", () => {
         await page.goto(route, { waitUntil: "domcontentloaded" })
 
         const h1 = page.locator("h1").first()
-        await expect(h1, `${route} must expose an H1`).toBeVisible()
+        // A cold Vite transform can take longer than the normal assertion
+        // window for the largest lazy example modules. The route is still
+        // bounded by the suite timeout; give its semantic shell time to mount.
+        await expect(h1, `${route} must expose an H1`).toBeVisible({ timeout: 30_000 })
         await settleDocument(page)
 
         const semantic = await page.evaluate(() => ({
