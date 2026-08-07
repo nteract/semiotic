@@ -39,7 +39,10 @@ function applyHeatcellStyle(
   ctx: XYSceneContext
 ): HeatcellSceneNode {
   const style = ctx.config.areaStyle?.(datum)
-  if (style) node.style = style
+  if (style) {
+    if (typeof style.fill === "string") node.fill = style.fill
+    node.style = style
+  }
   return node
 }
 
@@ -141,7 +144,8 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const schemeName = typeof ctx.config.colorScheme === "string"
     ? ctx.config.colorScheme
     : ctx.config.themeSequential || "blues"
-  const lut = getColorLut(schemeName)
+  const customColorScale = ctx.config.heatmapColorScale
+  const lut = customColorScale ? undefined : getColorLut(schemeName)
   const valRange = maxVal - minVal || 1
   const lutScale = (COLOR_LUT_SIZE - 1) / valRange
 
@@ -159,7 +163,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     const yi = (key - xi) / xCount
 
     const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
-    const fill = lut[lutIdx]
+    const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
     const labelOpts = showValues
       ? { value: val, showValues: true as const, valueFormat }
       : undefined
@@ -231,6 +235,12 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   if (!isFinite(minVal)) return []
 
   const valRange = maxVal - minVal || 1
+  const customColorScale = ctx.config.heatmapColorScale
+  const schemeName = typeof ctx.config.colorScheme === "string"
+    ? ctx.config.colorScheme
+    : ctx.config.themeSequential || "blues"
+  const lut = customColorScale ? undefined : getColorLut(schemeName)
+  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
   const cellW = layout.width / xBins
   const cellH = layout.height / yBins
   const showValues = ctx.config.showValues
@@ -251,11 +261,8 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
         default: val = counts[idx]; break
       }
 
-      const t = (val - minVal) / valRange
-      const r = 220 - (180 * t + 0.5) | 0
-      const g = 220 - (100 * t + 0.5) | 0
-      const b = 255 - (50 * t + 0.5) | 0
-      const fill = `rgb(${r},${g},${b})`
+      const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+      const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
 
       const labelOpts = showValues
         ? { value: val, showValues: true as const, valueFormat }

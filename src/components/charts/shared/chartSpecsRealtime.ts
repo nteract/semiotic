@@ -179,6 +179,9 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       heatmapXBins: { type: "number" },
       heatmapYBins: { type: "number" },
       aggregation: { type: "string", enum: ["count", "sum", "mean"] as const },
+      colorScheme: { type: "string", enum: ["blues", "reds", "greens", "viridis", "oranges", "purples", "greys", "plasma", "inferno", "magma", "cividis", "turbo", "custom"] as const },
+      // Must be callable — see the Heatmap spec's note.
+      customColorScale: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],

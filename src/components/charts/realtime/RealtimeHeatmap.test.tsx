@@ -76,4 +76,26 @@ describe("RealtimeHeatmap", () => {
     )
     expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
+
+  it("uses a custom color scale for aggregated cells", () => {
+    const customColorScale = vi.fn((value: number) => `rgb(${value}, 11, 13)`)
+
+    render(
+      <TooltipProvider>
+        <RealtimeHeatmap
+          data={[{ x: 5, y: 5, value: 2 }, { x: 95, y: 95, value: 7 }]}
+          timeAccessor="x"
+          valueAccessor="value"
+          timeExtent={[0, 100]}
+          valueExtent={[0, 100]}
+          aggregation="sum"
+          colorScheme="custom"
+          customColorScale={customColorScale}
+        />
+      </TooltipProvider>
+    )
+
+    expect(customColorScale).toHaveBeenCalledWith(2)
+    expect(customColorScale).toHaveBeenCalledWith(7)
+  })
 })

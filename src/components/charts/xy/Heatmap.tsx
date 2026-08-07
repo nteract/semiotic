@@ -276,10 +276,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     legendPosition: legendPositionProp,
     legend: legendProp,
     legendInteraction,
-    // Primitive styling props (BaseChartProps) — accepted-but-not-wired for
-    // Heatmap. Cell fills come from the sequential LUT, and cell strokes use
-    // the theme surface fallback; there's no per-primitive style surface for
-    // user overrides to flow through.
+    // Primitive styling props (BaseChartProps) are not mapped onto heatcells.
+    // Use the sequential color props or frameProps.areaStyle for cell fills;
+    // cellBorderColor/cellBorderWidth control the HOC's default stroke.
     stroke: _stroke,
     strokeWidth: _strokeWidth,
     opacity: _opacity,
@@ -298,6 +297,19 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   // Matches ChoroplethMap's pattern for theme-driven magnitude encoding.
   const themeSequential = useThemeSequential()
   const colorScheme = colorSchemeProp ?? themeSequential ?? "blues"
+  const frameColorScheme = typeof frameProps.colorScheme === "string"
+    ? frameProps.colorScheme
+    : undefined
+  const effectiveColorScheme = frameColorScheme ?? colorScheme
+  // Both scales are gated on callability: the scene builder invokes them per
+  // cell, so a non-callable value would throw inside the render loop rather
+  // than degrade. Falling through to the named-scheme LUT matches what the
+  // server path does, and dev-mode validateProps reports the bad prop.
+  const effectiveHeatmapColorScale = typeof frameProps.heatmapColorScale === "function"
+    ? frameProps.heatmapColorScale
+    : effectiveColorScheme === "custom" && typeof customColorScale === "function"
+      ? customColorScale
+      : undefined
 
   const showLegend = showLegendProp ?? false
   const legendPosition = legendPositionProp ?? "right"
@@ -341,14 +353,14 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
 
   // Create color scale
   const colorScale = useMemo(() => {
-    if (colorScheme === "custom" && customColorScale) {
-      return customColorScale
+    if (effectiveHeatmapColorScale) {
+      return effectiveHeatmapColorScale
     }
 
-    const interpolator = getSequentialInterpolator(colorScheme as string)
+    const interpolator = getSequentialInterpolator(effectiveColorScheme)
 
     return scaleSequential(interpolator).domain(valueDomain)
-  }, [colorScheme, customColorScale, valueDomain])
+  }, [effectiveColorScheme, effectiveHeatmapColorScale, valueDomain])
 
   const cellStyle = useMemo(() => {
     const borderWidth = Number.isFinite(cellBorderWidth)
@@ -425,7 +437,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     xAccessor,
     yAccessor,
     valueAccessor,
-    colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
+    colorScheme: effectiveColorScheme !== "custom" ? effectiveColorScheme : undefined,
+    ...(effectiveHeatmapColorScale && { heatmapColorScale: effectiveHeatmapColorScale }),
     areaStyle: cellStyle,
     showValues,
     heatmapValueFormat: valueFormat,

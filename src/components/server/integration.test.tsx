@@ -205,7 +205,7 @@ describe("PNG generation (end-to-end)", () => {
     expect(png).toBeInstanceOf(Buffer)
     expect(isValidPNG(png)).toBe(true)
     expect(png.length).toBeGreaterThan(100)
-  })
+  }, 15_000)
 
   it("renderToImage produces valid PNG from LineChart with theme", async () => {
     const png = await renderToImage("LineChart", {

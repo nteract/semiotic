@@ -464,7 +464,8 @@ export default function ScatterplotPage() {
             code={`import { StreamXYFrame } from "semiotic"
 
 <StreamXYFrame
-  points={measurements}
+  chartType="scatter"
+  data={measurements}
   xAccessor="height"
   yAccessor="weight"
   pointStyle={d => ({
@@ -477,9 +478,6 @@ export default function ScatterplotPage() {
     { orient: "bottom", label: "Height (cm)" }
   ]}
   hoverAnnotation={true}
-  customPointMark={({ d }) => (
-    <circle r={d.r} strokeWidth={1} stroke="#fff" />
-  )}
   size={[600, 400]}
 />`}
             language="jsx"
@@ -502,7 +500,7 @@ export default function ScatterplotPage() {
     annotations: [
       { type: "enclose", coordinates: outliers, label: "Outliers" }
     ],
-    customPointMark: ({ d }) => <circle r={d.r} strokeWidth={1} />
+    pointStyle: () => ({ stroke: "#fff", strokeWidth: 1 })
   }}
 />`}
         language="jsx"

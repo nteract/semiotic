@@ -77,6 +77,10 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   heatmapYBins?: number
   /** Aggregation mode: "count", "sum", or "mean" (default: "count") */
   aggregation?: "count" | "sum" | "mean"
+  /** Sequential color scheme for aggregated cell values. */
+  colorScheme?: "blues" | "reds" | "greens" | "viridis" | "oranges" | "purples" | "greys" | "plasma" | "inferno" | "magma" | "cividis" | "turbo" | "custom" | (string & {})
+  /** Custom value-to-color function used when colorScheme is "custom". */
+  customColorScale?: (value: number) => string
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -194,6 +198,8 @@ export const RealtimeHeatmap = forwardRef(
       heatmapXBins = 20,
       heatmapYBins = 20,
       aggregation = "count",
+      colorScheme,
+      customColorScale,
       background,
       tooltipContent,
       tooltip,
@@ -295,6 +301,8 @@ export const RealtimeHeatmap = forwardRef(
         heatmapXBins={heatmapXBins}
         heatmapYBins={heatmapYBins}
         heatmapAggregation={aggregation}
+        colorScheme={colorScheme !== "custom" ? colorScheme : undefined}
+        heatmapColorScale={colorScheme === "custom" && typeof customColorScale === "function" ? customColorScale : undefined}
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}

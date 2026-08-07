@@ -364,7 +364,8 @@ export default function BubbleChartPage() {
             code={`import { StreamXYFrame } from "semiotic"
 
 <StreamXYFrame
-  points={countryData}
+  chartType="bubble"
+  data={countryData}
   xAccessor="gdp"
   yAccessor="lifeExpectancy"
   pointStyle={d => ({
@@ -379,9 +380,6 @@ export default function BubbleChartPage() {
     { orient: "bottom", label: "GDP per Capita" }
   ]}
   hoverAnnotation={true}
-  customPointMark={({ d }) => (
-    <circle r={d.r} />
-  )}
   size={[600, 400]}
 />`}
             language="jsx"
@@ -405,7 +403,7 @@ export default function BubbleChartPage() {
     annotations: [
       { type: "enclose", coordinates: largeBubbles, label: "High population" }
     ],
-    customPointMark: ({ d }) => <circle r={d.r} fill="gold" />
+    pointStyle: () => ({ fill: "gold", stroke: "#333" })
   }}
 />`}
         language="jsx"

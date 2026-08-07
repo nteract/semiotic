@@ -87,6 +87,25 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(fills[0]).not.toBe(fills[1])
   })
 
+  it("uses an explicit heatmap color scale with raw cell values", () => {
+    const data = [
+      { x: 0, y: 0, value: 2 },
+      { x: 1, y: 0, value: 7 },
+    ]
+    const ctx = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        heatmapColorScale: (value) => `custom-${value}`,
+      },
+    })
+
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+
+    expect(nodes.map((node) => node.fill)).toEqual(["custom-2", "custom-7"])
+  })
+
   it("handles string axes — preserves insertion order and positions cells correctly", () => {
     // String axes are non-numeric, so values are taken in insertion order (not sorted).
     const data = [
@@ -152,20 +171,21 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(node.valueFormat).toBe(fmt)
   })
 
-  it("carries areaStyle onto heat cells for border rendering", () => {
+  it("applies string areaStyle fills and border styles to heat cells", () => {
     const data = [{ x: 0, y: 0, value: 9 }]
     const ctx = makeCtx({
       config: {
         xAccessor: "x",
         yAccessor: "y",
         valueAccessor: "value",
-        areaStyle: () => ({ stroke: "#ed1c24", strokeWidth: 0 }),
+        areaStyle: () => ({ fill: "#663399", stroke: "#ed1c24", strokeWidth: 0 }),
       },
     })
 
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
 
-    expect(nodes[0].style).toEqual({ stroke: "#ed1c24", strokeWidth: 0 })
+    expect(nodes[0].fill).toBe("#663399")
+    expect(nodes[0].style).toEqual({ fill: "#663399", stroke: "#ed1c24", strokeWidth: 0 })
   })
 })
 
@@ -575,16 +595,16 @@ describe("buildStreamingHeatmapScene", () => {
   // two different scheme names to verify the theme value flows through.
   it("uses themeSequential when colorScheme is not set explicitly", () => {
     const data = [
-      { x: 0, y: 0, value: 10 },
-      { x: 1, y: 1, value: 50 },
+      { x: 5, y: 5, value: 10 },
+      { x: 95, y: 95, value: 50 },
     ]
     const ctxBlues = makeCtx({
-      config: { themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      config: { heatmapAggregation: "count", heatmapXBins: 5, heatmapYBins: 5, themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
     const ctxViridis = makeCtx({
-      config: { themeSequential: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      config: { heatmapAggregation: "count", heatmapXBins: 5, heatmapYBins: 5, themeSequential: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
@@ -599,14 +619,14 @@ describe("buildStreamingHeatmapScene", () => {
   })
 
   it("explicit colorScheme wins over themeSequential", () => {
-    const data = [{ x: 0, y: 0, value: 10 }, { x: 1, y: 1, value: 50 }]
+    const data = [{ x: 5, y: 5, value: 10 }, { x: 95, y: 95, value: 50 }]
     const ctxA = makeCtx({
-      config: { colorScheme: "viridis", themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      config: { heatmapAggregation: "count", heatmapXBins: 5, heatmapYBins: 5, colorScheme: "viridis", themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
     const ctxB = makeCtx({
-      config: { colorScheme: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      config: { heatmapAggregation: "count", heatmapXBins: 5, heatmapYBins: 5, colorScheme: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
@@ -615,5 +635,28 @@ describe("buildStreamingHeatmapScene", () => {
     // themeSequential is shadowed by explicit colorScheme, so both runs
     // produce identical fills even with different themeSequential values.
     expect(nodesA[1].fill).toBe(nodesB[1].fill)
+  })
+
+  it("uses a custom color scale with aggregated streaming values", () => {
+    const data = [
+      { x: 5, y: 5, value: 2 },
+      { x: 6, y: 6, value: 3 },
+      { x: 95, y: 95, value: 7 },
+    ]
+    const ctx = makeCtx({
+      config: {
+        heatmapAggregation: "sum",
+        heatmapXBins: 5,
+        heatmapYBins: 5,
+        valueAccessor: "value",
+        heatmapColorScale: (value) => `stream-${value}`,
+      },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+
+    expect(nodes.map((node) => node.fill)).toEqual(["stream-5", "stream-7"])
   })
 })

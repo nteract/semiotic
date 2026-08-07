@@ -355,6 +355,49 @@ describe("validateProps — ordinal component validation", () => {
   })
 })
 
+describe("validateProps — heatmap custom color scale", () => {
+  const data = [{ x: "a", y: "b", value: 10 }]
+
+  it("accepts a callable customColorScale", () => {
+    const result = validateProps("Heatmap", {
+      data,
+      colorScheme: "custom",
+      customColorScale: (value: number) => `rgb(${value}, 0, 0)`,
+    })
+    expect(result.errors.some((e) => e.includes("customColorScale"))).toBe(false)
+  })
+
+  it("rejects a non-callable customColorScale instead of silently dropping it", () => {
+    // The scene builder invokes this per cell, so an object scale is a hard
+    // error rather than something to degrade quietly. Previously the spec
+    // declared ["object", "function"], so this passed validation, was dropped
+    // by the server path, and threw on the client.
+    const result = validateProps("Heatmap", {
+      data,
+      colorScheme: "custom",
+      customColorScale: { range: ["#000", "#fff"] },
+    })
+    expect(result.valid).toBe(false)
+    expect(
+      result.errors.some(
+        (e) => e.includes("customColorScale") && e.includes("function")
+      )
+    ).toBe(true)
+  })
+
+  it("rejects a non-callable customColorScale on RealtimeHeatmap too", () => {
+    const result = validateProps("RealtimeHeatmap", {
+      colorScheme: "custom",
+      customColorScale: { range: ["#000", "#fff"] },
+    })
+    expect(
+      result.errors.some(
+        (e) => e.includes("customColorScale") && e.includes("function")
+      )
+    ).toBe(true)
+  })
+})
+
 describe("validateProps — unknown component", () => {
   it("rejects unknown component name", () => {
     const result = validateProps("FakeChart", { data: [] })

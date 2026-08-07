@@ -144,8 +144,8 @@ const heatmapProps = [
   { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values from each data point." },
   { name: "yAccessor", type: "string | function", required: false, default: '"y"', description: "Field name or function to access y values from each data point." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access cell values for color encoding." },
-  { name: "colorScheme", type: "string", required: false, default: '"blues"', description: 'Color scheme: "blues", "reds", "greens", "viridis", or "custom".' },
-  { name: "customColorScale", type: "d3 scale", required: false, default: null, description: 'Custom color scale (used when colorScheme is "custom").' },
+  { name: "colorScheme", type: "string", required: false, default: 'theme sequential or "blues"', description: 'Built-in sequential scheme name, or "custom" with customColorScale.' },
+  { name: "customColorScale", type: "(value: number) => string", required: false, default: null, description: 'Custom value-to-color scale (used when colorScheme is "custom").' },
   { name: "showValues", type: "boolean", required: false, default: "false", description: "Show values as text labels in cells." },
   { name: "valueFormat", type: "function", required: false, default: null, description: "Format function for cell value labels." },
   { name: "cellBorderColor", type: "string", required: false, default: '"#fff"', description: "Border color of heatmap cells." },
@@ -210,8 +210,8 @@ export default function HeatmapPage() {
 
       <p>
         A heatmap requires <code>data</code> with x, y, and value fields. The
-        default accessors match <code>"x"</code>, <code>"y"</code>, and{" "}
-        <code>"value"</code>.
+        default accessors match <code>&quot;x&quot;</code>, <code>&quot;y&quot;</code>, and{" "}
+        <code>&quot;value&quot;</code>.
       </p>
 
       <StreamingToggle
@@ -283,8 +283,12 @@ export default function HeatmapPage() {
 
       <h3 id="color-schemes">Color Schemes</h3>
       <p>
-        Choose from built-in color schemes: <code>"blues"</code>,{" "}
-        <code>"reds"</code>, <code>"greens"</code>, or <code>"viridis"</code>.
+        Choose from the built-in single-hue and multi-hue sequential schemes, including{" "}
+        <code>&quot;blues&quot;</code>, <code>&quot;purples&quot;</code>, <code>&quot;viridis&quot;</code>, and{" "}
+        <code>&quot;turbo&quot;</code>.
+        For a fully custom ramp, set <code>colorScheme=&quot;custom&quot;</code> and pass a{" "}
+        <code>customColorScale</code> function. For datum-level overrides, return a{" "}
+        string <code>fill</code> from <code>frameProps.areaStyle</code>.
       </p>
 
       <LiveExample

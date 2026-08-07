@@ -80,6 +80,7 @@ export interface XYSceneConfig {
   heatmapYBins?: number
   showValues?: boolean
   heatmapValueFormat?: (v: number) => string
+  heatmapColorScale?: (value: number) => string
 
   // Bar (realtime histogram)
   binSize?: number

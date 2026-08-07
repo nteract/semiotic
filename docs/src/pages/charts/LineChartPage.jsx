@@ -1250,7 +1250,7 @@ export default function LineChartPage() {
     annotations: [
       { type: "x", month: 6, label: "Mid-year" }
     ],
-    customLineMark: ({ d }) => <circle r={5} fill="red" />
+    lineStyle: () => ({ stroke: "red", strokeWidth: 2 })
   }}
 />`}
         language="jsx"

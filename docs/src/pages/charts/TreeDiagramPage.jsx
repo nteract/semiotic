@@ -277,14 +277,12 @@ export default function TreeDiagramPage() {
   layout="tree"
   orientation="vertical"
   frameProps={{
-    customNodeIcon: ({ d }) => (
-      <g>
-        <rect x={-30} y={-12} width={60} height={24}
-              rx={4} fill="white" stroke="#333" />
-        <text textAnchor="middle" dy={4}
-              fontSize={10}>{d.name}</text>
-      </g>
-    ),
+    nodeStyle: () => ({
+      fill: "white",
+      stroke: "#333",
+      strokeWidth: 1
+    }),
+    nodeSize: 10,
     annotations: [
       { type: "node", name: "CEO", label: "You are here" }
     ]

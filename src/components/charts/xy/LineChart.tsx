@@ -349,7 +349,7 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
  *   data={data}
  *   frameProps={{
  *     lineType: { type: "line", interpolator: d3.curveCardinal },
- *     customLineMark: ({ d }) => <path stroke="red" />
+ *     lineStyle: () => ({ stroke: "red", strokeWidth: 2 })
  *   }}
  * />
  * ```

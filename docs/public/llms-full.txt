@@ -40,7 +40,7 @@ validated against their own schema. In particular, `BigNumber` uses `label`, `de
 **ConnectedScatterplot** — + `orderAccessor`, `regression`
 **QuadrantChart** — Scatterplot + `quadrants`, `xCenter`, `yCenter`
 **MultiAxisLineChart** — Dual Y-axis. `series` (`[{yAccessor, label?, color?, format?, extent?}]`). Falls back to multi-line if ≠ 2 series.
-**Heatmap** — `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
+**Heatmap** — `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `customColorScale`, `showValues`, `cellBorderColor`
 **ScatterplotMatrix** — `fields` (numeric field names)
 **MinimapChart** — Overview + detail with linked zoom. Wraps an XY chart.
 **CandlestickChart** — `xAccessor`, `highAccessor` (req), `lowAccessor` (req), `openAccessor`+`closeAccessor` (optional → OHLC; high/low only → range). `candlestickStyle` ({upColor, downColor, wickColor, rangeColor, bodyWidth, wickWidth}). Honors `mode`.
@@ -134,7 +134,7 @@ Helpers exported: `buildFormatter`, `formatSignedDelta`, `formatDeltaPercent`, `
 
 Push API: `ref.current.push({time, value})`. All pushed data must include a time field.
 
-**RealtimeLineChart**, **RealtimeHistogram** (+ `brush`, `onBrush`, `linkedBrush`, `direction`; **stacked** via `categoryAccessor` + `colors` — bars sum by category within each bin; **mirrored/diverging** via `direction="down"` flipping the value domain — pair two halves with a shared `timeExtent`/`valueExtent` for an up/down detail view, and overlay extra instances on the same extent for layered envelopes), **TemporalHistogram** (static sibling — same props minus `windowSize`/`windowMode`), **RealtimeSwarmChart**, **RealtimeWaterfallChart**, **RealtimeHeatmap**, **Streaming Sankey** (StreamNetworkFrame + `showParticles`).
+**RealtimeLineChart**, **RealtimeHistogram** (+ `brush`, `onBrush`, `linkedBrush`, `direction`; **stacked** via `categoryAccessor` + `colors` — bars sum by category within each bin; **mirrored/diverging** via `direction="down"` flipping the value domain — pair two halves with a shared `timeExtent`/`valueExtent` for an up/down detail view, and overlay extra instances on the same extent for layered envelopes), **TemporalHistogram** (static sibling — same props minus `windowSize`/`windowMode`), **RealtimeSwarmChart**, **RealtimeWaterfallChart**, **RealtimeHeatmap** (+ sequential `colorScheme`; use `colorScheme="custom"` with `customColorScale(value)` for a custom ramp), **Streaming Sankey** (StreamNetworkFrame + `showParticles`).
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.
 

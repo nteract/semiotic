@@ -135,6 +135,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     swarmStyle: props.swarmStyle,
     colorScheme: effectiveColorScheme,
     themeCategorical: theme.colors.categorical,
+    themeSequential: theme.colors.sequential,
     themeSemantic: resolveThemeSemanticColors(theme),
     customLayout: props.customLayout,
     layoutConfig: props.layoutConfig,
@@ -146,6 +147,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     // no heatcell ever received a label on the SSR path.
     showValues: props.showValues,
     heatmapValueFormat: props.heatmapValueFormat,
+    heatmapColorScale: props.heatmapColorScale,
   }
 
   const store = new PipelineStore(pipelineConfig)

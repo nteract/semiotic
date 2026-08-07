@@ -177,6 +177,8 @@ const realtimeHeatmapProps = [
   { name: "heatmapXBins", type: "number", required: false, default: "20", description: "Number of bins along the x-axis." },
   { name: "heatmapYBins", type: "number", required: false, default: "20", description: "Number of bins along the y-axis." },
   { name: "aggregation", type: '"count" | "sum" | "mean"', required: false, default: '"count"', description: "How values are aggregated within each grid cell." },
+  { name: "colorScheme", type: "string", required: false, default: 'theme sequential or "blues"', description: 'Sequential color scheme, or "custom" with customColorScale.' },
+  { name: "customColorScale", type: "(value: number) => string", required: false, default: null, description: 'Custom value-to-color scale used when colorScheme is "custom".' },
   { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show canvas-drawn axes." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on cells." },
@@ -229,7 +231,7 @@ export default function RealtimeHeatmapPage() {
         RealtimeHeatmap renders a streaming 2D heatmap by binning continuous x/y
         data into a grid and color-encoding aggregated values. It wraps{" "}
         <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
-        <code>chartType="heatmap"</code> and <code>runtimeMode="streaming"</code>.
+        <code>chartType=&quot;heatmap&quot;</code> and <code>runtimeMode=&quot;streaming&quot;</code>.
         Create a ref and call <code>ref.current.push(point)</code> to stream data
         in. Supports count, sum, and mean aggregation modes, plus realtime
         encoding features like decay and pulse.
@@ -295,7 +297,7 @@ function StreamingHeatmap() {
 
       <h3 id="sum-aggregation">Sum Aggregation</h3>
       <p>
-        Use <code>aggregation="sum"</code> to sum a numeric field per cell
+        Use <code>aggregation=&quot;sum&quot;</code> to sum a numeric field per cell
         instead of counting. Useful for intensity or energy maps where each
         event carries a weight.
       </p>
