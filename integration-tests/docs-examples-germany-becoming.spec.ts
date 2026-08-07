@@ -77,7 +77,10 @@ test.describe("Germany history river", () => {
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".process-river__chart-shell table")).toHaveCount(1)
+    const dataTables = page.locator(".process-river__chart-shell").getByRole("table")
+    await expect(dataTables).toHaveCount(2)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /nodes by degree/ }) })).toHaveCount(1)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /edges/ }) })).toHaveCount(1)
 
     await expect(page.getByRole("link", { name: /Forging an Empire, Bismarckian Germany/ })).toHaveAttribute("href", /germanhistorydocs\.org/)
     expect(problems.errors).toEqual([])

@@ -19,7 +19,6 @@ import {
   measureTransitOcclusion,
   slotStableId,
   totalPixelEdgeLength,
-  type ProcessSankeyRibbonLane,
   type SlotByNode,
 } from "./layoutGeometry"
 import {
@@ -34,48 +33,20 @@ import {
   unitRelationsFromSlots,
   type BondedSlotUnit,
 } from "./orderingBond"
+import { centerBoundaryHubs } from "./boundaryHubOrdering"
+import type {
+  ProcessSankeyOrderMetrics,
+  ProcessSankeyOrderingOptions,
+  ProcessSankeyOrderingResult,
+} from "./orderingTypes"
+
+export type {
+  ProcessSankeyOrderMetrics,
+  ProcessSankeyOrderingOptions,
+  ProcessSankeyOrderingResult,
+} from "./orderingTypes"
 
 export { bondProcessSankeySlotGroups }
-
-export interface ProcessSankeyOrderMetrics {
-  crossings: number
-  weightedLength: number
-  pixelLength: number
-  transitOcclusion: number
-  cost: number
-}
-
-export interface ProcessSankeyOrderingResult {
-  before: ProcessSankeyOrderMetrics
-  after: ProcessSankeyOrderMetrics
-  /** Stable slot ids before optimization, used by quality baselines. */
-  initialOrder: string[]
-  /** Candidate counts make the performance budget testable without timers. */
-  evaluations: { fullCrossing: number; localCrossing: number }
-}
-
-export interface ProcessSankeyOrderingOptions {
-  plotH: number
-  padding: number
-  valueScale: number
-  groupPadding?: number
-  laneOrder?: "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
-  ribbonLane?: ProcessSankeyRibbonLane
-  domain?: [number, number]
-  /**
-   * Placement used when scoring pixel/transit cost. Must match the final
-   * layout's `lanePlacement` so a hug + maxValueScale pass can refine order
-   * against rendered geometry (M3), not only the dry stack scale=1 proxy.
-   */
-  lanePlacement?: "stack" | "hug"
-  /**
-   * `"full"` runs barycenter + exact search + geometry refine.
-   * `"geometry-refine"` only runs the bounded exact-transit adjacent-swap
-   * (and unit-aware transpose when multi-slot bonds exist) — used after the
-   * final valueScale / hug geometry is known.
-   */
-  mode?: "full" | "geometry-refine"
-}
 
 function isCrossingCandidate(a: ProcessSankeyEdge, b: ProcessSankeyEdge): boolean {
   if (a.source === b.source || a.target === b.target ||
@@ -235,27 +206,25 @@ export function orderProcessSankeySlots(
 
   const outgoingPartners = new Map<string, Set<string>>()
   const incomingPartners = new Map<string, Set<string>>()
-  for (const edge of edges) {
-    if (!outgoingPartners.has(edge.source)) outgoingPartners.set(edge.source, new Set())
-    if (!incomingPartners.has(edge.target)) incomingPartners.set(edge.target, new Set())
-    outgoingPartners.get(edge.source)!.add(edge.target)
-    incomingPartners.get(edge.target)!.add(edge.source)
+  const allPartners = new Map<string, Set<string>>()
+  const addPartner = (map: Map<string, Set<string>>, id: string, partner: string): void => {
+    if (!map.has(id)) map.set(id, new Set())
+    map.get(id)!.add(partner)
   }
+  for (const edge of edges) {
+    addPartner(outgoingPartners, edge.source, edge.target)
+    addPartner(incomingPartners, edge.target, edge.source)
+    addPartner(allPartners, edge.source, edge.target)
+    addPartner(allPartners, edge.target, edge.source)
+  }
+
   const isExclusiveHandoff = (edge: ProcessSankeyEdge): boolean => {
-    const sourceNeighbors = new Set([
-      ...(outgoingPartners.get(edge.source) ?? []),
-      ...(incomingPartners.get(edge.source) ?? []),
-    ])
-    const targetNeighbors = new Set([
-      ...(outgoingPartners.get(edge.target) ?? []),
-      ...(incomingPartners.get(edge.target) ?? []),
-    ])
     // Pure exclusive source, or a temporary branch whose only overall neighbor
     // is this partner (secession leave/return).
     return (outgoingPartners.get(edge.source)?.size === 1 &&
       outgoingPartners.get(edge.source)!.has(edge.target)) ||
-      (sourceNeighbors.size === 1 && sourceNeighbors.has(edge.target)) ||
-      (targetNeighbors.size === 1 && targetNeighbors.has(edge.source))
+      allPartners.get(edge.source)?.size === 1 ||
+      allPartners.get(edge.target)?.size === 1
   }
   const exclusiveEdgeRoutes = edges.flatMap((edge) => {
     if (!isExclusiveHandoff(edge)) return []
@@ -769,6 +738,20 @@ export function orderProcessSankeySlots(
     order = constrainedInitialOrder
     after = exactBefore
   }
+
+  const centered = centerBoundaryHubs({
+    order,
+    after,
+    nodes,
+    edges,
+    outgoingPartners,
+    incomingPartners,
+    slotForNode,
+    averageGap,
+    evaluate: evaluateExactTransit,
+  })
+  order = centered.order
+  after = centered.after
   applyOrder(slots, slotByNode, order)
   return {
     before: exactBefore,

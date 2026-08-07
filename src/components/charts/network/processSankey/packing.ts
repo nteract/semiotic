@@ -127,13 +127,7 @@ function exclusivePartnerWeights(
     if (result.has(id)) return
     const outs = outgoing.get(id)
     const inns = incoming.get(id)
-    // Pure source-only feeder → one sink.
-    if (outs && outs.size === 1 && (!inns || inns.size === 0)) {
-      const [partner, weight] = [...outs][0]
-      result.set(id, { partner, weight })
-      return
-    }
-    // Temporary exclusive branch: only one overall neighbor.
+    // Pure source/sink or temporary branch: only one overall neighbor.
     const neighbors = new Map<string, number>()
     for (const [partner, weight] of outs ?? []) {
       neighbors.set(partner, (neighbors.get(partner) ?? 0) + weight)
@@ -169,10 +163,8 @@ function exclusiveRolesCompatible(
 ): boolean {
   const roleA = exclusive.get(a)
   const roleB = exclusive.get(b)
-  if (!roleA || !roleB) return true
-  if (roleA.partner === roleB.partner) return true
-  if (roleA.partner === b || roleB.partner === a) return true
-  return false
+  return !roleA || !roleB || roleA.partner === roleB.partner ||
+    roleA.partner === b || roleB.partner === a
 }
 
 function mixesExclusiveRoles(
@@ -218,6 +210,7 @@ function buildPackingConflicts(
   railLifetime: Readonly<Record<string, ProcessSankeyLaneLifetime>>,
   edges: readonly ProcessSankeyEdge[],
   groupById: ReadonlyMap<string, string | undefined>,
+  exclusive: ReadonlyMap<string, { partner: string; weight: number }>,
 ): PackingConflicts {
   const directPairs = new Set<string>()
   const predecessors = new Map(ids.map((id) => [id, new Set<string>()]))
@@ -270,7 +263,10 @@ function buildPackingConflicts(
       // That keeps exclusive feeder blocks on the same row as their sink
       // (straight process continuation) without letting unrelated later nodes
       // colonize the bonded rows and drag foreign traffic through the block.
-      if ((groupA != null) !== (groupB != null) && !directPairs.has(pairKey(a, b))) {
+      if ((groupA != null) !== (groupB != null) &&
+          !directPairs.has(pairKey(a, b)) &&
+          !(exclusive.has(a) && exclusive.has(b) &&
+            exclusiveRolesCompatible(a, b, exclusive))) {
         return true
       }
       if (windowsOverlap(windows[a], windows[b])) return true
@@ -684,10 +680,10 @@ export function packProcessSankeySlots(
   const ids = chronologicalIds(nodes, windows)
   const nodeById = new Map(nodes.map((node) => [node.id, node]))
   const groupById = new Map(nodes.map((node) => [node.id, node.group || undefined]))
-  const packingConflicts = buildPackingConflicts(
-    ids, windows, laneLifetime, edges, groupById,
-  )
   const exclusive = exclusivePartnerWeights(edges)
+  const packingConflicts = buildPackingConflicts(
+    ids, windows, laneLifetime, edges, groupById, exclusive,
+  )
   const baseline = chronologicalColoring(ids, packingConflicts, exclusive)
   const continuitySeed = {
     ...baseline,

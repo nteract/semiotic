@@ -47,7 +47,10 @@ test.describe("Apollo lunar choreography", () => {
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".apollo-example__chart-shell table")).toHaveCount(1)
+    const dataTables = page.locator(".apollo-example__chart-shell").getByRole("table")
+    await expect(dataTables).toHaveCount(2)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /nodes by degree/ }) })).toHaveCount(1)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /edges/ }) })).toHaveCount(1)
 
     const storyLenses = page.getByRole("group", { name: "Story lens" })
     await storyLenses.getByRole("button", { name: /Apollo 13 The choreography breaks/ }).click()

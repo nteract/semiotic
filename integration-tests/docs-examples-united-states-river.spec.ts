@@ -69,7 +69,10 @@ test.describe("United States institutional history river", () => {
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".usa-becoming .process-river__chart-shell table")).toHaveCount(1)
+    const dataTables = page.locator(".usa-becoming .process-river__chart-shell").getByRole("table")
+    await expect(dataTables).toHaveCount(2)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /nodes by degree/ }) })).toHaveCount(1)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /edges/ }) })).toHaveCount(1)
 
     await expect(page.getByRole("link", { name: /Territorial Acquisitions of the United States/ })).toHaveAttribute("href", /census\.gov/)
     await expect(page.getByRole("link", { name: /Philippine chronology/ })).toHaveAttribute("href", /doi\.gov/)

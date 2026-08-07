@@ -13,7 +13,11 @@ async function readThemePaints(page: Page) {
       return { fill: style.fill, stroke: style.stroke }
     }
     const style = getComputedStyle(root)
+    // Interactive chapter controls and the live gauntlet readout intentionally
+    // change as the story settles; count only static paper surfaces so the
+    // theme round-trip fingerprint is not coupled to narrative timing.
     const explicitLightSurfaces = [...root.querySelectorAll("*")].filter((node) => {
+      if (node.tagName === "BUTTON" || node.closest(".ls-agon__readout")) return false
       const background = getComputedStyle(node).backgroundColor
       return ["rgb(255, 255, 255)", "rgb(255, 254, 250)", "rgb(247, 245, 236)"].includes(
         background,

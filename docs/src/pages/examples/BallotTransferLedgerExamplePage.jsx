@@ -39,6 +39,9 @@ const implementationCode = `import { ProcessSankey } from "semiotic"
   ribbonLane="both"
   lifetimeMode="half"
   showLaneRails
+  edgeOpacity={(edge) =>
+    edge.poolId === selectedPoolId ? 0.92 : edge.poolId ? 0.1 : 0.26
+  }
   accessibleTable
 />
 
@@ -48,7 +51,8 @@ const implementationCode = `import { ProcessSankey } from "semiotic"
   target: "GARCIA",
   value: 130384,
   startTime: 6.85,
-  endTime: 7.15
+  endTime: 7.15,
+  poolId: "wiley"
 }`
 
 const FINAL_ROWS = Object.freeze([
@@ -86,6 +90,11 @@ function roundLabel(value) {
 function categoryColor(target) {
   const category = ROUND_FIVE_TALLY.find((row) => row.id === target)?.category
   return NYC_RCV_COLORS[category] ?? NYC_RCV_COLORS.baseline
+}
+
+function transferEdgeOpacity(edge, selectedPoolId) {
+  if (!edge.poolId) return 0.26
+  return edge.poolId === selectedPoolId ? 0.92 : 0.1
 }
 
 export function BallotTransferTooltip({ hover }) {
@@ -236,7 +245,8 @@ export default function BallotTransferLedgerExamplePage() {
               <span>02 / Follow the ledger</span>
               <h3 id="ballot-chart-title">942,031 ballots through the final three eliminations</h3>
               <p>
-                The count begins at Round 5. Read left to right; select a pool below or click a transfer ribbon to audit it.
+                The count begins at Round 5. Read left to right; select a pool below or click a transfer ribbon to keep
+                that transfer saturated while the others recede.
               </p>
             </div>
             <div className="ballot-ledger__legend" aria-label="Candidate color key">
@@ -259,7 +269,19 @@ export default function BallotTransferLedgerExamplePage() {
             ))}
           </div>
 
-          <div className="ballot-ledger__chart-shell" ref={chartRef}>
+          <div
+            className="ballot-ledger__chart-shell"
+            data-selected-pool={selectedPoolId}
+            data-transfer-edge-opacities={JSON.stringify(
+              Object.fromEntries(
+                NYC_RCV_PROCESS_EDGES.map((edge) => [
+                  edge.id,
+                  transferEdgeOpacity(edge, selectedPoolId),
+                ]),
+              ),
+            )}
+            ref={chartRef}
+          >
             <ProcessSankey
               nodes={NYC_RCV_PROCESS_NODES}
               edges={NYC_RCV_PROCESS_EDGES}
@@ -281,7 +303,7 @@ export default function BallotTransferLedgerExamplePage() {
               lifetimeMode="half"
               showLaneRails
               showLabels
-              edgeOpacity={0.7}
+              edgeOpacity={(edge) => transferEdgeOpacity(edge, selectedPoolId)}
               tooltip={(hover) => <BallotTransferTooltip hover={hover} />}
               onClick={inspectChartDatum}
               timeFormat={(value) => roundLabel(Math.round(Number(value)))}

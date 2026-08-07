@@ -62,7 +62,9 @@ const ENTRY_GRAPHS = [
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 147 },
+  // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling
+  // row reuse measure 147.1 KiB gzip, retaining less than 1 KiB of headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 148 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
@@ -88,9 +90,9 @@ const ENTRY_GRAPHS = [
   // Production graph measures 498.0 KiB gzip.
   // Bumped 500→501: current gzip measurements reach 500.1 KiB; retain
   // sub-KiB headroom for the stable, canonical AI chart catalog.
-  // Bumped 501→503: the shared tooltip/theme accessibility surface adds
-  // 1.1 KiB gzip to the AI catalog (502.2 KiB measured).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 503 },
+  // Bumped 503→504: boundary-hub ordering and its typed helper add 0.1 KiB
+  // gzip to the AI catalog (503.1 KiB measured); retain reviewable headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 504 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
