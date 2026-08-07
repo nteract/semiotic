@@ -50,6 +50,12 @@ async function canvasFingerprint(page: Page) {
   })
 }
 
+async function edgeOpacityAudit(page: Page) {
+  const value = await page.locator(".ballot-ledger__chart-shell")
+    .getAttribute("data-transfer-edge-opacities")
+  return JSON.parse(value ?? "{}") as Record<string, number>
+}
+
 async function openExample(page: Page) {
   await page.goto(ROUTE, { waitUntil: "domcontentloaded" })
   await expect(page.getByRole("heading", { level: 1, name: PAGE_TITLE })).toBeVisible({
@@ -112,6 +118,15 @@ test.describe("NYC ballot transfer ledger", () => {
       const previous = fingerprints.at(-1)
       await poolSelector.getByRole("button", { name }).click()
       await expect(chart).toHaveAttribute("data-selected-pool", poolId)
+      const opacities = await edgeOpacityAudit(page)
+      const selected = Object.entries(opacities)
+        .filter(([edgeId]) => edgeId.startsWith(`${poolId}-`))
+      const unselected = Object.entries(opacities)
+        .filter(([edgeId]) => !edgeId.startsWith(`${poolId}-`) && !edgeId.startsWith("round-5-"))
+      expect(selected.length).toBeGreaterThan(0)
+      expect(selected.every(([, opacity]) => opacity === 0.92)).toBe(true)
+      expect(unselected.every(([, opacity]) => opacity === 0.1)).toBe(true)
+      expect(opacities["round-5-adams"]).toBe(0.26)
       await expect.poll(() => canvasFingerprint(page)).not.toBe(previous)
       fingerprints.push(await canvasFingerprint(page))
     }

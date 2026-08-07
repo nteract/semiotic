@@ -51,7 +51,8 @@ const implementationCode = `import { ProcessSankey } from "semiotic"
   target: "GARCIA",
   value: 130384,
   startTime: 6.85,
-  endTime: 7.15
+  endTime: 7.15,
+  poolId: "wiley"
 }`
 
 const FINAL_ROWS = Object.freeze([
@@ -271,6 +272,14 @@ export default function BallotTransferLedgerExamplePage() {
           <div
             className="ballot-ledger__chart-shell"
             data-selected-pool={selectedPoolId}
+            data-transfer-edge-opacities={JSON.stringify(
+              Object.fromEntries(
+                NYC_RCV_PROCESS_EDGES.map((edge) => [
+                  edge.id,
+                  transferEdgeOpacity(edge, selectedPoolId),
+                ]),
+              ),
+            )}
             ref={chartRef}
           >
             <ProcessSankey

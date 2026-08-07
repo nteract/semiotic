@@ -25,7 +25,6 @@ interface CenterBoundaryHubsOptions<T extends BoundaryHubMetrics> {
   after: T
   nodes: readonly ProcessSankeyNode[]
   edges: readonly ProcessSankeyEdge[]
-  slots: readonly ProcessSankeySlot[]
   outgoingPartners: ReadonlyMap<string, ReadonlySet<string>>
   incomingPartners: ReadonlyMap<string, ReadonlySet<string>>
   slotForNode: ReadonlyMap<string, ProcessSankeySlot>
@@ -39,7 +38,6 @@ export function centerBoundaryHubs<T extends BoundaryHubMetrics>({
   after,
   nodes,
   edges,
-  slots,
   outgoingPartners,
   incomingPartners,
   slotForNode,
@@ -93,7 +91,15 @@ export function centerBoundaryHubs<T extends BoundaryHubMetrics>({
   for (const node of nodes) {
     const hub = slotForNode.get(node.id)!
     if (!node.group && hub.group && (incomingPartners.get(node.id)?.size ?? 0) >= 3) {
-      centerBoundaryHub(hub, slots.filter((slot) => slot.group === hub.group))
+      // Use the actual incoming fan, not every member of the sink's bonded
+      // group; unrelated occupants must not widen the centering span.
+      centerBoundaryHub(
+        hub,
+        [...(incomingPartners.get(node.id) ?? [])]
+          .map((id) => slotForNode.get(id)!)
+          .filter((slot) => slot === hub || slot.group === hub.group)
+          .filter((slot, index, all) => all.indexOf(slot) === index),
+      )
     }
   }
   return { order, after }

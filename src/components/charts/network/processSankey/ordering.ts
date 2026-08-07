@@ -744,7 +744,6 @@ export function orderProcessSankeySlots(
     after,
     nodes,
     edges,
-    slots,
     outgoingPartners,
     incomingPartners,
     slotForNode,

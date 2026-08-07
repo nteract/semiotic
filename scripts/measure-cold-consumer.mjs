@@ -61,8 +61,9 @@ if (nextReadme == null) {
 if (write) {
   writeFileSync(baselinePath, reportText)
   writeFileSync(readmePath, nextReadme)
-  console.log(`✓ wrote ${baselinePath.slice(REPO_ROOT.length + 1)}`)
-  console.log("✓ wrote README.md cold-consumer measurement block")
+  console.log("COLD-CONSUMER BASELINE: UPDATED")
+  console.log(`  - ${baselinePath.slice(REPO_ROOT.length + 1)}`)
+  console.log("  - README.md measurement block")
   process.exit(0)
 }
 
@@ -74,7 +75,8 @@ if (!comparison.current) {
 if (nextReadme !== readme) stale.push("README.md")
 
 if (stale.length > 0) {
-  console.error("✗ packed cold-consumer measurements are stale:")
+  console.error("COLD-CONSUMER CHECK: FAIL")
+  console.error("The committed measurements do not match this build:")
   for (const filePath of stale) console.error(`  - ${filePath}`)
   if (comparison.structuralErrors.length > 0) {
     console.error("\nExact measurement-contract differences:")
@@ -97,7 +99,7 @@ if (stale.length > 0) {
   process.exit(1)
 }
 
-console.log(`✓ packed cold-consumer named-import baseline is current (${report.measurements.length} public exports)`)
+console.log(`COLD-CONSUMER CHECK: PASS (${report.measurements.length} public exports)`)
 
 function readBaselineReport(filePath) {
   if (!existsSync(filePath)) {

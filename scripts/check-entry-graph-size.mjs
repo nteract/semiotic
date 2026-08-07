@@ -90,9 +90,9 @@ const ENTRY_GRAPHS = [
   // Production graph measures 498.0 KiB gzip.
   // Bumped 500→501: current gzip measurements reach 500.1 KiB; retain
   // sub-KiB headroom for the stable, canonical AI chart catalog.
-  // Bumped 501→503: the shared tooltip/theme accessibility surface adds
-  // 1.1 KiB gzip to the AI catalog (502.2 KiB measured).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 503 },
+  // Bumped 503→504: boundary-hub ordering and its typed helper add 0.1 KiB
+  // gzip to the AI catalog (503.1 KiB measured); retain reviewable headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 504 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
