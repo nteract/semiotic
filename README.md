@@ -456,8 +456,8 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **155.8 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **156.0 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **155.9 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **156.1 KiB** |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **124.9 KiB** |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **148.1 KiB** |
 | `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **126.1 KiB** |
@@ -466,18 +466,18 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **135.7 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **288.1 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **167.2 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **288.5 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **195.8 KiB** |
-| `import { suggestCharts } from "semiotic/ai/core"` | browser | **36.5 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **288.3 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **167.3 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **288.7 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **196.0 KiB** |
+| `import { suggestCharts } from "semiotic/ai/core"` | browser | **36.6 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.6 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.5 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **3.4 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **3.4 KiB** |
 | `import { ThemeProvider } from "semiotic/themes/react"` | browser | **4.5 KiB** |
-| `import { validateProps } from "semiotic/utils"` | browser | **8.6 KiB** |
+| `import { validateProps } from "semiotic/utils"` | browser | **8.7 KiB** |
 | `import { smartTickFormat } from "semiotic/utils/core"` | browser | **0.9 KiB** |
 | `import { useReducedMotion } from "semiotic/utils/react"` | browser | **0.3 KiB** |
 | `import { waffleLayout } from "semiotic/recipes"` | browser | **2.5 KiB** |
