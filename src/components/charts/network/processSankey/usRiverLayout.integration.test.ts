@@ -77,6 +77,10 @@ describe("US river layout — bonded feeder proximity", () => {
     // with what they feed, not parked in a far lane).
     expect(states).toBeGreaterThanOrEqual(fMin)
     expect(states).toBeLessThanOrEqual(fMax)
+    // A three-way feeder block should meet its sink through the middle row,
+    // rather than making the sink inherit whichever edge member happens to
+    // carry the greatest value.
+    expect(Math.abs(states * 2 - fMin - fMax)).toBeLessThanOrEqual(1)
 
     // Crossing-min must not regress vs the bonded packing seed.
     if (full.crossingsBefore != null && full.crossingsAfter != null) {

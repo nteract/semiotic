@@ -29,6 +29,27 @@ async function canvasHasPaint(page: Page) {
   })
 }
 
+async function canvasFingerprint(page: Page) {
+  return page.locator(".ballot-ledger__chart-shell canvas").evaluate((canvas) => {
+    const element = canvas as HTMLCanvasElement
+    const context = element.getContext("2d")
+    if (!context || element.width === 0 || element.height === 0) return "empty"
+    const pixels = context.getImageData(0, 0, element.width, element.height).data
+    let hash = 2166136261
+    for (let index = 0; index < pixels.length; index += 16) {
+      hash ^= pixels[index]
+      hash = Math.imul(hash, 16777619)
+      hash ^= pixels[index + 1]
+      hash = Math.imul(hash, 16777619)
+      hash ^= pixels[index + 2]
+      hash = Math.imul(hash, 16777619)
+      hash ^= pixels[index + 3]
+      hash = Math.imul(hash, 16777619)
+    }
+    return `${element.width}x${element.height}:${hash >>> 0}`
+  })
+}
+
 async function openExample(page: Page) {
   await page.goto(ROUTE, { waitUntil: "domcontentloaded" })
   await expect(page.getByRole("heading", { level: 1, name: PAGE_TITLE })).toBeVisible({
@@ -63,12 +84,40 @@ test.describe("NYC ballot transfer ledger", () => {
     const skipToTable = page.getByRole("link", { name: "Skip to data table" })
     await skipToTable.focus()
     await skipToTable.press("Enter")
-    await expect(page.locator(".ballot-ledger__chart-shell table")).toHaveCount(1)
+    const dataTables = page.locator(".ballot-ledger__chart-shell").getByRole("table")
+    await expect(dataTables).toHaveCount(2)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /nodes by degree/ }) })).toHaveCount(1)
+    await expect(dataTables.filter({ has: page.locator("caption", { hasText: /edges/ }) })).toHaveCount(1)
 
     const source = page.getByRole("link", { name: /NYC Board of Elections/ })
     await expect(source).toHaveAttribute("href", /vote\.nyc/)
     expect(problems.errors).toEqual([])
     expect(problems.duplicateSceneWarnings).toEqual([])
+  })
+
+  test("highlights every selected transfer pool in the chart", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await openExample(page)
+
+    const chart = page.locator(".ballot-ledger__chart-shell")
+    const poolSelector = page.getByRole("group", { name: "Inspect a transfer pool" })
+    await expect(chart).toHaveAttribute("data-selected-pool", "wiley")
+    const fingerprints = [await canvasFingerprint(page)]
+
+    for (const [name, poolId] of [
+      [/Round 5 → Round 6 Field of three/, "field"],
+      [/Round 6 → Round 7 Yang/, "yang"],
+      [/Round 7 → Final Wiley/, "wiley"],
+    ] as const) {
+      const previous = fingerprints.at(-1)
+      await poolSelector.getByRole("button", { name }).click()
+      await expect(chart).toHaveAttribute("data-selected-pool", poolId)
+      await expect.poll(() => canvasFingerprint(page)).not.toBe(previous)
+      fingerprints.push(await canvasFingerprint(page))
+    }
+
+    expect(new Set(fingerprints.slice(0, 3)).size).toBe(3)
+    expect(fingerprints[3]).toBe(fingerprints[0])
   })
 
   test("keeps the ledger legible in a narrow analyst viewport", async ({ page }) => {

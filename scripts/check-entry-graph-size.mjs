@@ -62,7 +62,9 @@ const ENTRY_GRAPHS = [
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 147 },
+  // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling
+  // row reuse measure 147.1 KiB gzip, retaining less than 1 KiB of headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 148 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared

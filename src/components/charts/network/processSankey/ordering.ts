@@ -235,27 +235,25 @@ export function orderProcessSankeySlots(
 
   const outgoingPartners = new Map<string, Set<string>>()
   const incomingPartners = new Map<string, Set<string>>()
-  for (const edge of edges) {
-    if (!outgoingPartners.has(edge.source)) outgoingPartners.set(edge.source, new Set())
-    if (!incomingPartners.has(edge.target)) incomingPartners.set(edge.target, new Set())
-    outgoingPartners.get(edge.source)!.add(edge.target)
-    incomingPartners.get(edge.target)!.add(edge.source)
+  const allPartners = new Map<string, Set<string>>()
+  const addPartner = (map: Map<string, Set<string>>, id: string, partner: string): void => {
+    if (!map.has(id)) map.set(id, new Set())
+    map.get(id)!.add(partner)
   }
+  for (const edge of edges) {
+    addPartner(outgoingPartners, edge.source, edge.target)
+    addPartner(incomingPartners, edge.target, edge.source)
+    addPartner(allPartners, edge.source, edge.target)
+    addPartner(allPartners, edge.target, edge.source)
+  }
+
   const isExclusiveHandoff = (edge: ProcessSankeyEdge): boolean => {
-    const sourceNeighbors = new Set([
-      ...(outgoingPartners.get(edge.source) ?? []),
-      ...(incomingPartners.get(edge.source) ?? []),
-    ])
-    const targetNeighbors = new Set([
-      ...(outgoingPartners.get(edge.target) ?? []),
-      ...(incomingPartners.get(edge.target) ?? []),
-    ])
     // Pure exclusive source, or a temporary branch whose only overall neighbor
     // is this partner (secession leave/return).
     return (outgoingPartners.get(edge.source)?.size === 1 &&
       outgoingPartners.get(edge.source)!.has(edge.target)) ||
-      (sourceNeighbors.size === 1 && sourceNeighbors.has(edge.target)) ||
-      (targetNeighbors.size === 1 && targetNeighbors.has(edge.source))
+      allPartners.get(edge.source)?.size === 1 ||
+      allPartners.get(edge.target)?.size === 1
   }
   const exclusiveEdgeRoutes = edges.flatMap((edge) => {
     if (!isExclusiveHandoff(edge)) return []
@@ -768,6 +766,41 @@ export function orderProcessSankeySlots(
   } else if (after.cost > exactBefore.cost) {
     order = constrainedInitialOrder
     after = exactBefore
+  }
+
+  const centerBoundaryHub = (
+    hub: ProcessSankeySlot,
+    partners: readonly ProcessSankeySlot[],
+  ): void => {
+    const partnerPositions = [...new Set(partners.map((slot) => order.indexOf(slot)))]
+      .sort((a, b) => a - b)
+    const hubPosition = order.indexOf(hub)
+    const first = partnerPositions[0]
+    const last = partnerPositions[partnerPositions.length - 1]
+    if (partnerPositions.length < 3 || !partnerPositions.includes(hubPosition) ||
+        last - first + 1 !== partnerPositions.length ||
+        Math.abs(hubPosition * 2 - first - last) <= 1) return
+    const candidate = [...order]
+    candidate.splice(hubPosition, 1)
+    candidate.splice((first + last) >> 1, 0, hub)
+    const projected = bondedSlotOrder(candidate)
+    const metrics = evaluateExactTransit(projected)
+    if (metrics.crossings <= after.crossings) { order = projected; after = metrics }
+  }
+  // Boundary fans meet through their middle row, not whichever edge is widest.
+  for (const [source, partners] of outgoingPartners) {
+    if (!incomingPartners.has(source) && partners.size >= 3) {
+      centerBoundaryHub(
+        slotForNode.get(source)!,
+        [...partners].map((id) => slotForNode.get(id)!),
+      )
+    }
+  }
+  for (const node of nodes) {
+    const hub = slotForNode.get(node.id)!
+    if (!node.group && hub.group && (incomingPartners.get(node.id)?.size ?? 0) >= 3) {
+      centerBoundaryHub(hub, slots.filter((slot) => slot.group === hub.group))
+    }
   }
   applyOrder(slots, slotByNode, order)
   return {
