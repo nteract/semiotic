@@ -360,12 +360,20 @@ describe("United States persistent-process adapter", () => {
     const layout = processLayout()
     expect(layout.layoutQuality.crossings).toBe(0)
     expect(Number.isFinite(layout.layoutQuality.transitOcclusion)).toBe(true)
-    // Pixel length and transit are the visual authorities. Slot-index weighted
-    // length is only a coarse proxy: multi-slot bonded units move as blocks and
-    // may trade a few index-steps for a large pixel/transit win (and zero
-    // crossings). Require the visual metrics improve; allow modest index slack.
+    // Boundary-fan centering is an authored topology constraint: a feeder block
+    // meets its sink through the middle row. It can trade a modest amount of
+    // pixel length for a substantial transit-occlusion reduction, while the
+    // slot-index weighted length remains a coarse proxy for bonded units.
+    const foundingSlots = [
+      layout.slotByNode.MIDDLE_COLONIES,
+      layout.slotByNode.NEW_ENGLAND_COLONIES,
+      layout.slotByNode.SOUTHERN_COLONIES,
+    ]
+    expect(Math.abs(
+      layout.slotByNode.US_STATES * 2 - Math.min(...foundingSlots) - Math.max(...foundingSlots),
+    )).toBeLessThanOrEqual(1)
     expect(layout.layoutQuality.pixelLength)
-      .toBeLessThan(layout.layoutQualityBefore.pixelLength)
+      .toBeLessThanOrEqual(layout.layoutQualityBefore.pixelLength * 1.15)
     expect(layout.layoutQuality.transitOcclusion)
       .toBeLessThanOrEqual(layout.layoutQualityBefore.transitOcclusion)
     expect(layout.layoutQuality.weightedLength)

@@ -8,6 +8,7 @@ import {
   type ProcessSankeyNode,
   type ProcessSankeyOptions,
 } from "./algorithm"
+import { acceptsBoundaryHubCandidate } from "./boundaryHubOrdering"
 import {
   processHospitalFixture,
   processLineageFixture,
@@ -251,6 +252,13 @@ describe("ProcessSankey capped scale and hug placement", () => {
 })
 
 describe("ProcessSankey ordering hardening", () => {
+  it("rejects equal-crossing candidates outside their centering allowance", () => {
+    const current = { crossings: 1, cost: 100 }
+    expect(acceptsBoundaryHubCandidate({ crossings: 1, cost: 101 }, current)).toBe(false)
+    expect(acceptsBoundaryHubCandidate({ crossings: 1, cost: 101 }, current, 1)).toBe(true)
+    expect(acceptsBoundaryHubCandidate({ crossings: 0, cost: 10_000 }, current)).toBe(true)
+  })
+
   it("keeps reusable same-target feeders clear of unrelated persistent lanes", () => {
     const fixture = destinationCoherenceFixture()
     const layout = computeProcessSankeyLayout(fixture.nodes, fixture.edges, {

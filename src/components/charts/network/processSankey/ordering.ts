@@ -19,7 +19,6 @@ import {
   measureTransitOcclusion,
   slotStableId,
   totalPixelEdgeLength,
-  type ProcessSankeyRibbonLane,
   type SlotByNode,
 } from "./layoutGeometry"
 import {
@@ -34,48 +33,20 @@ import {
   unitRelationsFromSlots,
   type BondedSlotUnit,
 } from "./orderingBond"
+import { centerBoundaryHubs } from "./boundaryHubOrdering"
+import type {
+  ProcessSankeyOrderMetrics,
+  ProcessSankeyOrderingOptions,
+  ProcessSankeyOrderingResult,
+} from "./orderingTypes"
+
+export type {
+  ProcessSankeyOrderMetrics,
+  ProcessSankeyOrderingOptions,
+  ProcessSankeyOrderingResult,
+} from "./orderingTypes"
 
 export { bondProcessSankeySlotGroups }
-
-export interface ProcessSankeyOrderMetrics {
-  crossings: number
-  weightedLength: number
-  pixelLength: number
-  transitOcclusion: number
-  cost: number
-}
-
-export interface ProcessSankeyOrderingResult {
-  before: ProcessSankeyOrderMetrics
-  after: ProcessSankeyOrderMetrics
-  /** Stable slot ids before optimization, used by quality baselines. */
-  initialOrder: string[]
-  /** Candidate counts make the performance budget testable without timers. */
-  evaluations: { fullCrossing: number; localCrossing: number }
-}
-
-export interface ProcessSankeyOrderingOptions {
-  plotH: number
-  padding: number
-  valueScale: number
-  groupPadding?: number
-  laneOrder?: "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
-  ribbonLane?: ProcessSankeyRibbonLane
-  domain?: [number, number]
-  /**
-   * Placement used when scoring pixel/transit cost. Must match the final
-   * layout's `lanePlacement` so a hug + maxValueScale pass can refine order
-   * against rendered geometry (M3), not only the dry stack scale=1 proxy.
-   */
-  lanePlacement?: "stack" | "hug"
-  /**
-   * `"full"` runs barycenter + exact search + geometry refine.
-   * `"geometry-refine"` only runs the bounded exact-transit adjacent-swap
-   * (and unit-aware transpose when multi-slot bonds exist) — used after the
-   * final valueScale / hug geometry is known.
-   */
-  mode?: "full" | "geometry-refine"
-}
 
 function isCrossingCandidate(a: ProcessSankeyEdge, b: ProcessSankeyEdge): boolean {
   if (a.source === b.source || a.target === b.target ||
@@ -768,40 +739,20 @@ export function orderProcessSankeySlots(
     after = exactBefore
   }
 
-  const centerBoundaryHub = (
-    hub: ProcessSankeySlot,
-    partners: readonly ProcessSankeySlot[],
-  ): void => {
-    const partnerPositions = [...new Set(partners.map((slot) => order.indexOf(slot)))]
-      .sort((a, b) => a - b)
-    const hubPosition = order.indexOf(hub)
-    const first = partnerPositions[0]
-    const last = partnerPositions[partnerPositions.length - 1]
-    if (partnerPositions.length < 3 || !partnerPositions.includes(hubPosition) ||
-        last - first + 1 !== partnerPositions.length ||
-        Math.abs(hubPosition * 2 - first - last) <= 1) return
-    const candidate = [...order]
-    candidate.splice(hubPosition, 1)
-    candidate.splice((first + last) >> 1, 0, hub)
-    const projected = bondedSlotOrder(candidate)
-    const metrics = evaluateExactTransit(projected)
-    if (metrics.crossings <= after.crossings) { order = projected; after = metrics }
-  }
-  // Boundary fans meet through their middle row, not whichever edge is widest.
-  for (const [source, partners] of outgoingPartners) {
-    if (!incomingPartners.has(source) && partners.size >= 3) {
-      centerBoundaryHub(
-        slotForNode.get(source)!,
-        [...partners].map((id) => slotForNode.get(id)!),
-      )
-    }
-  }
-  for (const node of nodes) {
-    const hub = slotForNode.get(node.id)!
-    if (!node.group && hub.group && (incomingPartners.get(node.id)?.size ?? 0) >= 3) {
-      centerBoundaryHub(hub, slots.filter((slot) => slot.group === hub.group))
-    }
-  }
+  const centered = centerBoundaryHubs({
+    order,
+    after,
+    nodes,
+    edges,
+    slots,
+    outgoingPartners,
+    incomingPartners,
+    slotForNode,
+    averageGap,
+    evaluate: evaluateExactTransit,
+  })
+  order = centered.order
+  after = centered.after
   applyOrder(slots, slotByNode, order)
   return {
     before: exactBefore,
