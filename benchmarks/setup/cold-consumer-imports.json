@@ -71,8 +71,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 463114,
-      "gzipBytes": 151673,
+      "rawBytes": 464323,
+      "gzipBytes": 152177,
       "packedPackageInputFiles": 26
     },
     {
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 928782,
-      "gzipBytes": 295192,
+      "rawBytes": 929945,
+      "gzipBytes": 295737,
       "packedPackageInputFiles": 4
     },
     {
@@ -152,8 +152,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 929745,
-      "gzipBytes": 295616,
+      "rawBytes": 930908,
+      "gzipBytes": 296156,
       "packedPackageInputFiles": 4
     },
     {
