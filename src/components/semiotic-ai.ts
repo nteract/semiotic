@@ -152,6 +152,8 @@ export type {
 // Details panel
 export { DetailsPanel } from "./DetailsPanel"
 export type { DetailsPanelProps } from "./DetailsPanel"
+export { ObservationReadout, observedDatum } from "./ObservationReadout"
+export type { ObservationReadoutProps } from "./ObservationReadout"
 
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"

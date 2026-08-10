@@ -94,6 +94,7 @@ function MobileChartContainer({ children, controls, mobile, breakpoint, chartMod
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
+function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -197,6 +198,7 @@ function listIntents(): IntentDescriptor[]
 function loadConversationArc(events: readonly ConversationArcEvent[], options?: LoadConversationArcOptions | undefined): readonly ConversationArcEvent[]
 function mobileVisualizationCaveats(): string[]
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
+function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
 function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
@@ -409,6 +411,7 @@ interface NumericContracts
 interface NumericFieldContract
 interface NumericFieldProfile
 interface NumericFieldSummary
+interface ObservationReadoutProps<TDatum extends Datum = Datum>
 interface ObservedAuditFinding
 interface ObservedSceneAuditResult
 interface OpenAIResponsesTool

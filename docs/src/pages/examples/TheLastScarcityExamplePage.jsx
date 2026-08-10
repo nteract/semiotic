@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { useReducedMotion } from "semiotic/utils"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import useReadingLineSections from "../../hooks/useReadingLineSections"
+import useExplainerMotion from "../../hooks/useExplainerMotion"
 import ExamplePageLayout from "./ExamplePageLayout"
 import AbundanceConstitution from "./last-scarcity/AbundanceConstitution"
 import CapabilityFlood from "./last-scarcity/CapabilityFlood"
@@ -34,9 +34,7 @@ const CHAPTER_IDS = CHAPTERS.map((chapter) => chapter.id)
 const CHAPTER_OBSERVER_THRESHOLDS = [0, 0.15, 0.4]
 
 export default function TheLastScarcityExamplePage() {
-  const systemReducedMotion = useReducedMotion()
-  const [readerReducedMotion, setReaderReducedMotion] = useState(false)
-  const reducedMotion = systemReducedMotion || readerReducedMotion
+  const { reducedMotion, systemReducedMotion, toggleReaderReducedMotion } = useExplainerMotion()
   const [telemetryEnabled, setTelemetryEnabled] = useState(false)
   const [allocation, setAllocation] = useState(INITIAL_FREED_HOURS)
   const [freedHours, setFreedHours] = useState(4)
@@ -175,8 +173,9 @@ export default function TheLastScarcityExamplePage() {
               <button
                 type="button"
                 className="ls-utility-button"
-                aria-pressed={readerReducedMotion}
-                onClick={() => setReaderReducedMotion((current) => !current)}
+                aria-pressed={reducedMotion}
+                disabled={systemReducedMotion}
+                onClick={toggleReaderReducedMotion}
               >
                 {reducedMotion ? "Reduced motion on" : "Reduce motion"}
               </button>

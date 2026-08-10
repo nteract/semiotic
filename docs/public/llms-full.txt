@@ -27,6 +27,7 @@ validated against their own schema. In particular, `BigNumber` uses `label`, `de
 **Primitive styling** (`color`/`stroke`/`strokeWidth`/`opacity`): apply to any shape the chart draws. Precedence: top-level prop > `frameProps.*Style` fn return > HOC base > theme. Use CSS vars (`stroke="var(--semiotic-border)"`) for cascade-overridable theming. Per-datum: use `frameProps.pieceStyle`/`pointStyle`/`lineStyle` fn form.
 
 `onClick` receives `(datum, { x, y })`. `onObservation` receives `{ type, datum?, x?, y?, timestamp, chartType, chartId }`.
+`ObservationReadout` renders an inline live-region description from those events. Pass `chartId` inside `LinkedCharts` to subscribe to the observation store, or pass the latest event through `observation`; its render function receives the unwrapped user datum. `observedDatum(event)` exposes the same normalization without rendering UI.
 
 ## XY Charts (`semiotic/xy`)
 

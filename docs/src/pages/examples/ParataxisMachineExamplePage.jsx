@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react"
-import { useReducedMotion } from "semiotic/utils"
+import React, { useEffect, useMemo, useState } from "react"
+import { LinkedCharts, useSelectionActions } from "semiotic"
+import useExplainerMotion from "../../hooks/useExplainerMotion"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
   AmbiguityMatrix,
@@ -48,9 +49,7 @@ const SYNTAX_MODES = {
 }
 
 export default function ParataxisMachineExamplePage() {
-  const systemReducedMotion = useReducedMotion()
-  const [readerReducedMotion, setReaderReducedMotion] = useState(false)
-  const reducedMotion = systemReducedMotion || readerReducedMotion
+  const { reducedMotion, systemReducedMotion, toggleReaderReducedMotion } = useExplainerMotion()
   const [heroConnectors, setHeroConnectors] = useState(false)
   const [pairId, setPairId] = useState(CLAUSE_PAIRS[0].id)
   const [selectedRelation, setSelectedRelation] = useState(null)
@@ -80,6 +79,7 @@ export default function ParataxisMachineExamplePage() {
       }),
     [clauseCount, explicitness, sandboxGenre, sandboxSeed],
   )
+  const machineLines = useMemo(() => machineText.split("\n"), [machineText])
   const sandboxDanger = Math.round(Math.min(96, 34 + clauseCount * 9 + (100 - explicitness) * 0.34))
 
   const choosePair = (nextPair) => {
@@ -89,6 +89,8 @@ export default function ParataxisMachineExamplePage() {
 
   return (
     <ExamplePageLayout title="Parataxis Machine">
+      <LinkedCharts showLegend={false} selections={{ "parataxis-pair": { resolution: "union" } }}>
+        <PairSelectionSync pairId={pair.id} />
       <div className={`parataxis-machine ${reducedMotion ? "is-reduced-motion" : ""}`}>
         <a className="pm-skip-link" href="#pm-narrative">
           Skip to the argument
@@ -154,8 +156,9 @@ export default function ParataxisMachineExamplePage() {
           ))}
           <button
             type="button"
-            aria-pressed={readerReducedMotion}
-            onClick={() => setReaderReducedMotion((current) => !current)}
+            aria-pressed={reducedMotion}
+            disabled={systemReducedMotion}
+            onClick={toggleReaderReducedMotion}
           >
             {reducedMotion ? "MOTION: STILL" : "MOTION: LIVE"}
           </button>
@@ -172,7 +175,7 @@ export default function ParataxisMachineExamplePage() {
               same, but the interpretation changes.
             </SectionHeading>
 
-            <div className="pm-specimen-selector" role="list" aria-label="Clause specimens">
+            <div className="pm-specimen-selector" role="group" aria-label="Clause specimens">
               {CLAUSE_PAIRS.map((item, index) => (
                 <button
                   key={item.id}
@@ -246,13 +249,12 @@ export default function ParataxisMachineExamplePage() {
               infer the relationship. Fragmentation goes further by using incomplete clauses.
             </SectionHeading>
 
-            <div className="pm-mode-switch" role="tablist" aria-label="Syntax transformation">
+            <div className="pm-mode-switch" role="group" aria-label="Syntax transformation">
               {Object.entries(SYNTAX_MODES).map(([id, mode]) => (
                 <button
                   key={id}
                   type="button"
-                  role="tab"
-                  aria-selected={syntaxMode === id}
+                  aria-pressed={syntaxMode === id}
                   className={syntaxMode === id ? "is-active" : ""}
                   onClick={() => setSyntaxMode(id)}
                 >
@@ -502,14 +504,18 @@ export default function ParataxisMachineExamplePage() {
               </aside>
               <p className="pm-ai-sources">
                 Research basis: next-token prediction and instruction tuning are described in the
-                <a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noreferrer">
+                <a
+                  href="https://arxiv.org/abs/2203.02155"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   InstructGPT paper
                 </a>
                 . Recent ACL studies have measured
                 <a
                   href="https://aclanthology.org/2025.acl-long.443/"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   syntactic differences between human and LLM-written news
                 </a>
@@ -517,7 +523,7 @@ export default function ParataxisMachineExamplePage() {
                 <a
                   href="https://aclanthology.org/2025.findings-acl.120/"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   reduced variation when models recreate text domains
                 </a>
@@ -525,7 +531,7 @@ export default function ParataxisMachineExamplePage() {
                 <a
                   href="https://aclanthology.org/2026.starsem-conference.2/"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   syntactic priming from prompt examples
                 </a>
@@ -657,10 +663,10 @@ export default function ParataxisMachineExamplePage() {
                   <span>COMPRESSION RISK {sandboxDanger}</span>
                 </div>
                 <blockquote>
-                  {machineText.split("\n").map((line, index) => (
+                  {machineLines.map((line, index) => (
                     <React.Fragment key={`${sandboxSeed}-${index}`}>
                       <span>{line}</span>
-                      {index < machineText.split("\n").length - 1 &&
+                      {index < machineLines.length - 1 &&
                         (showSandboxBridge ? (
                           <i>{["then", "but", "therefore"][index % 3]}</i>
                         ) : (
@@ -728,6 +734,7 @@ export default function ParataxisMachineExamplePage() {
           </details>
         </main>
       </div>
+      </LinkedCharts>
     </ExamplePageLayout>
   )
 }
@@ -761,4 +768,14 @@ function SectionHeading({ number, kicker, title, children }) {
       <blockquote>{children}</blockquote>
     </header>
   )
+}
+
+function PairSelectionSync({ pairId }) {
+  const { selectPoints } = useSelectionActions("parataxis-pair", "parataxis-pair-selector")
+
+  useEffect(() => {
+    selectPoints({ pair: [pairId] })
+  }, [pairId, selectPoints])
+
+  return null
 }

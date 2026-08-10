@@ -48,6 +48,7 @@ import { DirectManipulationControl, VISUALIZATION_CONTROL_TYPES } from "./Direct
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
+import { ObservationReadout, observedDatum } from "./ObservationReadout"
 
 // ── Tooltip utilities ──────────────────────────────────────────────────
 import {
@@ -160,6 +161,9 @@ export {
   VISUALIZATION_CONTROL_TYPES,
   // Details panel
   DetailsPanel,
+  // Inline observation narration
+  ObservationReadout,
+  observedDatum,
   // Tooltip
   Tooltip,
   TooltipRoot,
@@ -493,6 +497,7 @@ export type { ChartGridProps } from "./ChartGrid"
 export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
 export type { ContextLayoutProps } from "./ContextLayout"
 export type { DetailsPanelProps } from "./DetailsPanel"
+export type { ObservationReadoutProps } from "./ObservationReadout"
 
 // ── Chart state serialization types ───────────────────────────────────
 

@@ -23,6 +23,9 @@ test.describe("Parataxis Machine", () => {
     await expect(page.locator(".stream-xy-frame")).toHaveCount(2)
     await expect(page.locator(".stream-ordinal-frame")).toHaveCount(1)
     await expect(page.locator(".pm-constellation-svg")).toBeAttached()
+    await expect(
+      page.getByRole("group", { name: "Clause specimens" })
+    ).toBeVisible()
 
     const connectorToggle = page.getByRole("button", {
       name: "Show connectors"
@@ -42,7 +45,15 @@ test.describe("Parataxis Machine", () => {
     )
     await expect(page.locator(".pm-gap")).toContainText("but")
 
-    await page.getByRole("tab", { name: "Declared relation" }).click()
+    const syntaxModes = page.getByRole("group", {
+      name: "Syntax transformation"
+    })
+    await syntaxModes
+      .getByRole("button", { name: "Declared relation" })
+      .click()
+    await expect(
+      syntaxModes.getByRole("button", { name: "Declared relation" })
+    ).toHaveAttribute("aria-pressed", "true")
     await expect(page.locator(".pm-collapse-stage")).toContainText(
       "She took the stairs"
     )
@@ -51,7 +62,7 @@ test.describe("Parataxis Machine", () => {
       "the elevator was broken."
     )
 
-    await page.getByRole("tab", { name: "Fragmented" }).click()
+    await syntaxModes.getByRole("button", { name: "Fragmented" }).click()
     await expect(page.locator(".pm-collapse-stage")).toHaveClass(
       /mode-scattered/
     )
@@ -93,9 +104,10 @@ test.describe("Parataxis Machine", () => {
     await expect(page.locator(".parataxis-machine")).toHaveClass(
       /is-reduced-motion/
     )
-    await expect(
-      page.getByRole("button", { name: "MOTION: STILL" })
-    ).toBeVisible()
+    const motionToggle = page.getByRole("button", { name: "MOTION: STILL" })
+    await expect(motionToggle).toBeVisible()
+    await expect(motionToggle).toBeDisabled()
+    await expect(motionToggle).toHaveAttribute("aria-pressed", "true")
     await expect(
       page.getByText(
         "Parataxis puts clauses next to one another and leaves their relationship unstated."

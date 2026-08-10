@@ -21,6 +21,7 @@ import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/with
 import { validateArrayData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 /**
  * Heatmap component props
@@ -316,7 +317,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: [],
@@ -326,10 +327,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     mobileInteraction: resolved.mobileInteraction,
   })
 
-  // `useResolvedSelection` is still called so the selection store subscribes
-  // to Heatmap — consumers can read the active selection from `selection` even
-  // though Heatmap itself has no per-cell selection-driven dim state.
-  useResolvedSelection(selection)
+  const resolvedSelection = useResolvedSelection(selection)
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
@@ -362,7 +360,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     return scaleSequential(interpolator).domain(valueDomain)
   }, [effectiveColorScheme, effectiveHeatmapColorScale, valueDomain])
 
-  const cellStyle = useMemo(() => {
+  const baseCellStyle = useMemo(() => {
     const borderWidth = Number.isFinite(cellBorderWidth)
       ? Math.max(0, cellBorderWidth)
       : 1
@@ -371,6 +369,10 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       strokeWidth: borderWidth,
     })
   }, [cellBorderColor, cellBorderWidth])
+  const cellStyle = useMemo(
+    () => wrapStyleWithSelection(baseCellStyle, activeSelectionHook, resolvedSelection),
+    [activeSelectionHook, baseCellStyle, resolvedSelection],
+  )
 
   // showValues is handled natively by the canvas renderer and SSR SVG path.
   // No SVG summaryRenderMode overlay needed — the previous `summaryStyle` /

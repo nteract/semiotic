@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react"
+import React, { useMemo } from "react"
+import { ObservationReadout } from "semiotic"
 import { NetworkCustomChart } from "semiotic/network"
 import { BarChart } from "semiotic/ordinal"
 import { networkHitTarget, unwrapDatum } from "semiotic/recipes"
@@ -15,7 +16,6 @@ const RISK_COLORS = {
 
 export function ClauseConstellation({ pair, selectedRelation, reducedMotion }) {
   const [width, hostRef] = useResponsiveWidth(320, 800, { bucket: 20 })
-  const [hovered, setHovered] = useState(null)
   const candidates = useMemo(
     () =>
       Object.entries(pair.candidates)
@@ -49,7 +49,6 @@ export function ClauseConstellation({ pair, selectedRelation, reducedMotion }) {
   return (
     <div ref={hostRef} className="pm-constellation">
       <NetworkCustomChart
-        key={`${pair.id}-${selectedRelation}`}
         chartId="parataxis-clause-constellation"
         nodes={nodes}
         edges={edges}
@@ -61,10 +60,6 @@ export function ClauseConstellation({ pair, selectedRelation, reducedMotion }) {
         enableHover
         accessibleTable
         animate={!reducedMotion}
-        onObservation={(event) => {
-          if (event.type === "hover" && event.datum) setHovered(unwrapDatum(event.datum))
-          if (event.type === "hover-end") setHovered(null)
-        }}
         description={`A clause constellation for “${pair.clauses.join(" ")}” Candidate relations appear in the undeclared space between the two clauses.`}
         summary={`${candidates.length} editorially annotated relation candidates. ${selectedRelation ? `${RELATION_META[selectedRelation].label} is selected.` : "No relation is declared."}`}
         tooltip={(datum) => {
@@ -75,12 +70,26 @@ export function ClauseConstellation({ pair, selectedRelation, reducedMotion }) {
         }}
         frameProps={{ background: "transparent" }}
       />
-      <p className="pm-chart-readout" aria-live="polite">
-        <span>{hovered ? "SELECTED ITEM" : "EDITORIAL NOTE"}</span>
-        {hovered?.kind === "relation"
-          ? `${hovered.label}: ${hovered.confidence}% plausibility in this demonstration.`
-          : (hovered?.label ?? pair.note)}
-      </p>
+      <ObservationReadout
+        as="p"
+        className="pm-chart-readout"
+        chartId="parataxis-clause-constellation"
+        fallback={
+          <>
+            <span>EDITORIAL NOTE</span>
+            {pair.note}
+          </>
+        }
+      >
+        {(datum) => (
+          <>
+            <span>SELECTED ITEM</span>
+            {datum.kind === "relation"
+              ? `${datum.label}: ${datum.confidence}% plausibility in this demonstration.`
+              : datum.label}
+          </>
+        )}
+      </ObservationReadout>
     </div>
   )
 }
@@ -258,6 +267,11 @@ export function AmbiguityMatrix({ selectedPairId }) {
         customColorScale={ambiguityColor}
         cellBorderColor="var(--pm-paper)"
         cellBorderWidth={2}
+        selection={{
+          name: "parataxis-pair",
+          unselectedOpacity: 0.18,
+          selectedStyle: { stroke: "#f2b84b", strokeWidth: 3 },
+        }}
         showValues={width >= 520}
         valueFormat={(value) => (value ? `${value}` : "")}
         xLabel="Possible bridge"
