@@ -57,7 +57,7 @@ import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveFrameGraphics } from "./frameGraphics"
 
 // Canvas setup
-import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -899,6 +899,14 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+
+      // Canvas geometry is host lifecycle, not interaction-paint state. Keep
+      // both stacked layers aligned on the initial synchronous mount paint,
+      // responsive resizes, and DPR changes even when hover is disabled or no
+      // pointer has entered the chart yet.
+      syncCanvasSize(canvas, size, dpr)
+      syncCanvasSize(interactionCanvas, size, dpr)
+
       const theme = themeColorCacheRef.current.resolve(canvas)
       // Cache the theme primary for the hover handler — avoids re-running
       // getComputedStyle on every pointermove event at high pointer rates.

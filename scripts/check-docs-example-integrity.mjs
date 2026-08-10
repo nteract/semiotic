@@ -17,28 +17,41 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
-const CODE_EXTENSIONS = new Set([".js", ".jsx", ".ts", ".tsx"])
+const CODE_EXTENSIONS = new Set([".js", ".jsx", ".mjs", ".ts", ".tsx"])
 const DYNAMIC_PAGE_TITLES = new Set(["/examples/paris-isometric-landmarks"])
 
 export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
   const paths = resolvePaths(root)
   const failures = []
-  const { EXAMPLES: examples = [], EXAMPLE_FILTERS: filters = {} } = await loadManifest(
-    paths.examplesManifest,
-  )
+  const { EXAMPLES: examples = [], EXAMPLE_FILTERS: filters = {} } =
+    await loadManifest(paths.examplesManifest)
   const definitionModule = await loadManifest(paths.exampleDefinitions)
   const exampleDefinitions = definitionModule.EXAMPLE_DEFINITIONS ?? []
 
   validateManifest(failures, examples, filters)
-  validatePilotDefinitions(failures, exampleDefinitions, definitionModule.validateExampleDefinitions)
+  validatePilotDefinitions(
+    failures,
+    exampleDefinitions,
+    definitionModule.validateExampleDefinitions
+  )
 
   const examplePaths = new Set(examples.map((example) => example.path))
-  const appRouteEntries = collectAppExampleRoutes(read(paths.appSource), exampleDefinitions)
+  const appRouteEntries = collectAppExampleRoutes(
+    read(paths.appSource),
+    exampleDefinitions
+  )
   const legacySourceLoaderEntries = collectSourceLoaders(read(paths.sourceMap))
-  const definitionSourceLoaderEntries = collectDefinitionSourceLoaders(exampleDefinitions)
-  const sourceLoaderEntries = [...legacySourceLoaderEntries, ...definitionSourceLoaderEntries]
+  const definitionSourceLoaderEntries =
+    collectDefinitionSourceLoaders(exampleDefinitions)
+  const sourceLoaderEntries = [
+    ...legacySourceLoaderEntries,
+    ...definitionSourceLoaderEntries
+  ]
   const previewKeyEntries = collectPreviewKeys(read(paths.previews))
-  const architectureProfileEntries = collectArchitectureProfilePaths(read(paths.architecture), exampleDefinitions)
+  const architectureProfileEntries = collectArchitectureProfilePaths(
+    read(paths.architecture),
+    exampleDefinitions
+  )
   const appPaths = new Set(appRouteEntries)
   const sourceLoaders = new Map(sourceLoaderEntries)
   const previewKeys = new Set(previewKeyEntries)
@@ -49,18 +62,34 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
   validateDuplicatePaths(
     failures,
     "raw source loaders",
-    sourceLoaderEntries.map(([path]) => path),
+    sourceLoaderEntries.map(([path]) => path)
   )
   validateDuplicatePaths(failures, "preview renderers", previewKeyEntries)
-  validateDuplicatePaths(failures, "architecture profiles", architectureProfileEntries)
+  validateDuplicatePaths(
+    failures,
+    "architecture profiles",
+    architectureProfileEntries
+  )
 
   comparePathSets(failures, "App routes", appPaths, examplePaths)
-  comparePathSets(failures, "raw source loaders", new Set(sourceLoaders.keys()), examplePaths)
-  comparePathSets(failures, "architecture profiles", architecturePaths, examplePaths)
+  comparePathSets(
+    failures,
+    "raw source loaders",
+    new Set(sourceLoaders.keys()),
+    examplePaths
+  )
+  comparePathSets(
+    failures,
+    "architecture profiles",
+    architecturePaths,
+    examplePaths
+  )
 
   for (const example of examples) {
     if (!previewKeys.has(example.preview)) {
-      failures.push(`Example ${example.path} has no explicit preview renderer for "${example.preview}"`)
+      failures.push(
+        `Example ${example.path} has no explicit preview renderer for "${example.preview}"`
+      )
     }
 
     const sourceFile = sourceLoaders.get(example.path)
@@ -68,17 +97,19 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     const sourcePath = resolve(paths.examplesDirectory, sourceFile)
     if (!examplePageFiles.has(sourceFile) || !existsSync(sourcePath)) {
       failures.push(
-        `Example ${example.path} source loader points to missing or case-mismatched ${sourceFile}`,
+        `Example ${example.path} source loader points to missing or case-mismatched ${sourceFile}`
       )
       continue
     }
 
     const pageTitle = readStaticExamplePageTitle(read(sourcePath))
     if (!pageTitle && !DYNAMIC_PAGE_TITLES.has(example.path)) {
-      failures.push(`Example ${example.path} has no static ExamplePageLayout title to verify`)
+      failures.push(
+        `Example ${example.path} has no static ExamplePageLayout title to verify`
+      )
     } else if (pageTitle && pageTitle !== example.title) {
       failures.push(
-        `Example ${example.path} title drift: manifest has "${example.title}", page has "${pageTitle}"`,
+        `Example ${example.path} title drift: manifest has "${example.title}", page has "${pageTitle}"`
       )
     }
   }
@@ -93,20 +124,29 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     routeCount: appPaths.size,
     sourceLoaderCount: sourceLoaders.size,
     previewCount: previewKeys.size,
-    architectureProfileCount: architecturePaths.size,
+    architectureProfileCount: architecturePaths.size
   }
 }
 
 function resolvePaths(root) {
   return {
-    examplesManifest: resolve(root, "docs/src/pages/examples/examplesManifest.js"),
-    exampleDefinitions: resolve(root, "docs/src/pages/examples/exampleDefinitions.js"),
+    examplesManifest: resolve(
+      root,
+      "docs/src/pages/examples/examplesManifest.js"
+    ),
+    exampleDefinitions: resolve(
+      root,
+      "docs/src/pages/examples/exampleDefinitions.js"
+    ),
     appSource: resolve(root, "docs/src/App.jsx"),
     sourceMap: resolve(root, "docs/src/pages/examples/exampleSourceMap.js"),
     previews: resolve(root, "docs/src/pages/examples/ExamplesOverviewPage.jsx"),
-    architecture: resolve(root, "docs/src/pages/examples/data/semioticArchitecture.js"),
+    architecture: resolve(
+      root,
+      "docs/src/pages/examples/data/semioticArchitecture.js"
+    ),
     examplesDirectory: resolve(root, "docs/src/pages/examples"),
-    docsSource: resolve(root, "docs/src"),
+    docsSource: resolve(root, "docs/src")
   }
 }
 
@@ -119,13 +159,17 @@ function validatePilotDefinitions(failures, definitions, validateDefinitions) {
   if (typeof validateDefinitions === "function") {
     const result = validateDefinitions(definitions)
     if (!result?.ok) {
-      for (const error of result?.errors ?? ["Example definitions registry is invalid"]) {
+      for (const error of result?.errors ?? [
+        "Example definitions registry is invalid"
+      ]) {
         failures.push(`Example definitions registry: ${error}`)
       }
     }
   }
 
-  for (const definition of definitions.filter((definition) => definition?.isPilot)) {
+  for (const definition of definitions.filter(
+    (definition) => definition?.isPilot
+  )) {
     if (!definition.path || !definition.sourceFile) {
       failures.push("Pilot example definition must declare path and sourceFile")
     }
@@ -134,12 +178,19 @@ function validatePilotDefinitions(failures, definitions, validateDefinitions) {
 
 async function loadManifest(filePath) {
   const source = read(filePath)
-  const resolvedSource = source.replace(/from\s+["'](\.[^"']+)["']/g, (_, relativePath) => {
-    const extension = extname(relativePath) ? "" : ".js"
-    const resolvedPath = pathToFileURL(resolve(dirname(filePath), `${relativePath}${extension}`)).href
-    return `from ${JSON.stringify(resolvedPath)}`
-  })
-  return import(`data:text/javascript;base64,${Buffer.from(resolvedSource).toString("base64")}`)
+  const resolvedSource = source.replace(
+    /from\s+["'](\.[^"']+)["']/g,
+    (_, relativePath) => {
+      const extension = extname(relativePath) ? "" : ".js"
+      const resolvedPath = pathToFileURL(
+        resolve(dirname(filePath), `${relativePath}${extension}`)
+      ).href
+      return `from ${JSON.stringify(resolvedPath)}`
+    }
+  )
+  return import(
+    `data:text/javascript;base64,${Buffer.from(resolvedSource).toString("base64")}`
+  )
 }
 
 function validateManifest(failures, examples, filters) {
@@ -154,7 +205,8 @@ function validateManifest(failures, examples, filters) {
       failures.push(`Example has an invalid path: ${String(example.path)}`)
       continue
     }
-    if (paths.has(example.path)) failures.push(`Examples manifest repeats ${example.path}`)
+    if (paths.has(example.path))
+      failures.push(`Examples manifest repeats ${example.path}`)
     paths.add(example.path)
 
     for (const field of ["title", "eyebrow", "description", "preview"]) {
@@ -168,17 +220,22 @@ function validateManifest(failures, examples, filters) {
   }
 
   for (const filter of [...(filters.frames ?? []), ...(filters.topics ?? [])]) {
-    if (!filter?.id || !filter?.label) failures.push("Example filter metadata has an empty id or label")
+    if (!filter?.id || !filter?.label)
+      failures.push("Example filter metadata has an empty id or label")
   }
 
   for (const frame of frames) {
     if (!examples.some((example) => example.frames?.includes(frame))) {
-      failures.push(`Example frame filter "${frame}" is stale because no example uses it`)
+      failures.push(
+        `Example frame filter "${frame}" is stale because no example uses it`
+      )
     }
   }
   for (const topic of topics) {
     if (!examples.some((example) => example.topics?.includes(topic))) {
-      failures.push(`Example topic filter "${topic}" is stale because no example uses it`)
+      failures.push(
+        `Example topic filter "${topic}" is stale because no example uses it`
+      )
     }
   }
 }
@@ -190,7 +247,8 @@ function validateTags(failures, path, kind, values, allowed) {
   }
   validateDuplicateTags(failures, path, kind, values)
   for (const value of values) {
-    if (!allowed.has(value)) failures.push(`Example ${path} uses unknown ${kind} tag "${value}"`)
+    if (!allowed.has(value))
+      failures.push(`Example ${path} uses unknown ${kind} tag "${value}"`)
   }
 }
 
@@ -209,15 +267,23 @@ function validateDuplicateTags(failures, path, kind, values) {
 function collectAppExampleRoutes(source, definitions = []) {
   const paths = []
   const uncommented = source.replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
-  for (const match of uncommented.matchAll(/\bpath\s*=\s*["'](examples\/[^"']+)["']/g)) {
+  for (const match of uncommented.matchAll(
+    /\bpath\s*=\s*["'](examples\/[^"']+)["']/g
+  )) {
     paths.push("/" + match[1])
   }
 
-  if (source.includes("const EXAMPLE_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({")) {
+  if (
+    source.includes(
+      "const EXAMPLE_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({"
+    )
+  ) {
     paths.push(
       ...definitions
         .map((definition) => definition?.path)
-        .filter((path) => typeof path === "string" && path.startsWith("/examples/")),
+        .filter(
+          (path) => typeof path === "string" && path.startsWith("/examples/")
+        )
     )
   }
 
@@ -226,7 +292,8 @@ function collectAppExampleRoutes(source, definitions = []) {
 
 function collectSourceLoaders(source) {
   const loaders = []
-  const pattern = /["'](\/examples\/[^"']+)["']\s*:\s*\(\)\s*=>\s*import\(\s*["']\.\/([^?"']+)\?raw["']\s*\)/g
+  const pattern =
+    /["'](\/examples\/[^"']+)["']\s*:\s*\(\)\s*=>\s*import\(\s*["']\.\/([^?"']+)\?raw["']\s*\)/g
   for (const match of source.matchAll(pattern)) {
     loaders.push([match[1], match[2]])
   }
@@ -240,9 +307,12 @@ function collectDefinitionSourceLoaders(definitions) {
 }
 
 function collectPreviewKeys(source) {
-  const object = source.match(/const PREVIEW_COMPONENTS = \{([\s\S]*?)^\}/m)?.[1] ?? ""
+  const object =
+    source.match(/const PREVIEW_COMPONENTS = \{([\s\S]*?)^\}/m)?.[1] ?? ""
   const keys = []
-  for (const match of object.matchAll(/^\s{2}(?:["']([^"']+)["']|([A-Za-z_$][\w$-]*))\s*:/gm)) {
+  for (const match of object.matchAll(
+    /^\s{2}(?:["']([^"']+)["']|([A-Za-z_$][\w$-]*))\s*:/gm
+  )) {
     keys.push(match[1] ?? match[2])
   }
   return keys
@@ -250,14 +320,20 @@ function collectPreviewKeys(source) {
 
 function collectArchitectureProfilePaths(source, definitions = []) {
   const paths = [...source.matchAll(/\bpath:\s*["'](\/examples\/[^"']+)/g)].map(
-    (match) => match[1],
+    (match) => match[1]
   )
 
-  if (source.includes("const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {")) {
+  if (
+    source.includes(
+      "const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {"
+    )
+  ) {
     paths.push(
       ...definitions
         .map((definition) => definition?.path)
-        .filter((path) => typeof path === "string" && path.startsWith("/examples/")),
+        .filter(
+          (path) => typeof path === "string" && path.startsWith("/examples/")
+        )
     )
   }
 
@@ -275,10 +351,14 @@ function readStaticExamplePageTitle(source) {
 
 function comparePathSets(failures, label, actual, expected) {
   for (const path of expected) {
-    if (!actual.has(path)) failures.push(`Examples manifest path ${path} is missing from ${label}`)
+    if (!actual.has(path))
+      failures.push(`Examples manifest path ${path} is missing from ${label}`)
   }
   for (const path of actual) {
-    if (!expected.has(path)) failures.push(`${label} has an example path absent from the manifest: ${path}`)
+    if (!expected.has(path))
+      failures.push(
+        `${label} has an example path absent from the manifest: ${path}`
+      )
   }
 }
 
@@ -295,7 +375,9 @@ function validateNoPrivateSourceImports(failures, directory) {
     if (/\.test\.[^.]+$/.test(filePath)) continue
     const source = read(filePath)
     if (/\bfrom\s+["'][^"']*\/src\/components(?:\/|["'])/.test(source)) {
-      failures.push(`Example source imports a private src/components module: ${relativeToRoot(filePath)}`)
+      failures.push(
+        `Example source imports a private src/components module: ${relativeToRoot(filePath)}`
+      )
     }
   }
 }
@@ -304,10 +386,14 @@ function validateStaticExampleLinks(failures, directory, examplePaths) {
   for (const filePath of collectCodeFiles(directory)) {
     if (/\.test\.[^.]+$/.test(filePath)) continue
     const source = read(filePath)
-    for (const match of source.matchAll(/\b(?:to|href)\s*=\s*["'](\/examples(?:\/[^"'#?]+)?)["']/g)) {
+    for (const match of source.matchAll(
+      /\b(?:to|href)\s*=\s*["'](\/examples(?:\/[^"'#?]+)?)["']/g
+    )) {
       const destination = match[1]
       if (destination !== "/examples" && !examplePaths.has(destination)) {
-        failures.push(`Broken static example link ${destination} in ${relativeToRoot(filePath)}`)
+        failures.push(
+          `Broken static example link ${destination} in ${relativeToRoot(filePath)}`
+        )
       }
     }
   }
@@ -331,7 +417,10 @@ function relativeToRoot(filePath) {
   return filePath.slice(ROOT.length + 1)
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   const result = await validateDocsExampleIntegrity()
   if (!result.ok) {
     console.error("Docs example integrity check failed:")
@@ -343,7 +432,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.log(JSON.stringify(result))
   } else {
     console.log(
-      `✅ docs example integrity passed (${result.exampleCount} examples, ${result.routeCount} routes, ${result.previewCount} previews, ${result.architectureProfileCount} profiles)`,
+      `✅ docs example integrity passed (${result.exampleCount} examples, ${result.routeCount} routes, ${result.previewCount} previews, ${result.architectureProfileCount} profiles)`
     )
   }
 }

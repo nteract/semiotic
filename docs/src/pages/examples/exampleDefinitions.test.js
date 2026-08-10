@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  compareExampleDefinitionsNewestFirst,
   EXAMPLE_DATA_STATES,
   EXAMPLE_DEFINITIONS,
   getExampleDefinition,
@@ -174,6 +175,35 @@ describe("validateExampleDefinitions", () => {
     expect(result.ok).toBe(true)
   })
 
+  it("publishes the newest example first with a deterministic route tie-break", () => {
+    expect(EXAMPLE_DEFINITIONS[0]).toMatchObject({
+      path: "/examples/how-a-hit-travels",
+      title: "How a Hit Travels",
+    })
+    expect([...EXAMPLE_DEFINITIONS].sort(compareExampleDefinitionsNewestFirst)).toEqual(
+      EXAMPLE_DEFINITIONS,
+    )
+
+    const publishedAt = "2026-08-09T12:00:00Z"
+    const tied = [
+      { path: "/examples/zulu", publishedAt },
+      { path: "/examples/alpha", publishedAt },
+    ].sort(compareExampleDefinitionsNewestFirst)
+    expect(tied.map(({ path }) => path)).toEqual(["/examples/alpha", "/examples/zulu"])
+  })
+
+  it("requires valid RFC3339 publication timestamps", () => {
+    const definition = EXAMPLE_DEFINITIONS[0]
+    const result = validateExampleDefinitions([
+      { ...definition, publishedAt: "2026-02-30T12:00:00Z" },
+    ])
+
+    expect(result.ok).toBe(false)
+    expect(result.errors).toContain(
+      'ExampleDefinition publishedAt for "how-a-hit-travels" must be a valid RFC3339 timestamp',
+    )
+  })
+
   it("declares the complete Last Scarcity source bundle", () => {
     const definition = getExampleDefinition("/examples/the-last-scarcity")
     expect(definition.sourceFiles).toContain(definition.sourceFile)
@@ -181,21 +211,31 @@ describe("validateExampleDefinitions", () => {
     expect(definition.sourceFiles).toContain("TheLastScarcityExamplePage.css")
   })
 
+  it("declares the complete How a Hit Travels source bundle", () => {
+    const definition = getExampleDefinition("/examples/how-a-hit-travels")
+    expect(definition.sourceFiles).toContain(definition.sourceFile)
+    expect(definition.sourceFiles).toContain("HowAHitTravelsExamplePage.css")
+    expect(definition.sourceFiles).toContain("how-a-hit-travels/similarityConstellationRecipe.js")
+    expect(definition.sourceFiles).toContain("how-a-hit-travels/buildHitTravelsData.mjs")
+  })
+
   it("validates optional structured fixture inventories", () => {
     const definition = getExampleDefinition("/examples/the-last-scarcity")
-    const result = validateExampleDefinitions([{
-      ...definition,
-      contract: {
-        ...definition.contract,
-        data: {
-          ...definition.contract.data,
-          fixture: {
-            ...definition.contract.data.fixture,
-            inventory: { claims: -1 },
+    const result = validateExampleDefinitions([
+      {
+        ...definition,
+        contract: {
+          ...definition.contract,
+          data: {
+            ...definition.contract.data,
+            fixture: {
+              ...definition.contract.data.fixture,
+              inventory: { claims: -1 },
+            },
           },
         },
       },
-    }])
+    ])
     expect(result.ok).toBe(false)
     expect(result.errors.join(" ")).toMatch(/fixture\.inventory.*non-negative integer/i)
   })

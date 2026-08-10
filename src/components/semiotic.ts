@@ -437,8 +437,8 @@ export type {
 export type { SemioticTheme } from "./ThemeProvider"
 export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeProvider"
 export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/ThemeStore"
-export { themeToCSS, themeToCSSVariables, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes"
-export type { ThemePresetName } from "./semiotic-themes"
+export { themeToCSS, themeToCSSVariables, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes-core"
+export type { ThemePresetName } from "./semiotic-themes-core"
 
 // ── Error boundary types ───────────────────────────────────────────────
 

@@ -1,9 +1,17 @@
 import React from "react"
+import { MemoryRouter } from "react-router-dom"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
-import { ExamplePreview } from "./ExamplesOverviewPage"
+import ExamplesOverviewPage, { ExamplePreview } from "./ExamplesOverviewPage"
 
 describe("ExamplePreview", () => {
+  it("renders the How a Hit Travels constellation preview", () => {
+    const { container } = render(<ExamplePreview preview="how-a-hit-travels" />)
+
+    expect(container.querySelector("[data-example-preview-missing]")).toBeNull()
+    expect(container.textContent).toContain("HOW A HIT TRAVELS")
+  })
+
   it("uses the explicit combined preview instead of a catch-all fallback", () => {
     const { container } = render(<ExamplePreview preview="combined" />)
 
@@ -54,5 +62,17 @@ describe("ExamplePreview", () => {
     render(<ExamplePreview preview="not-a-preview" />)
 
     expect(screen.getByRole("img", { name: "Missing example preview: not-a-preview" })).toBeTruthy()
+  })
+})
+
+describe("ExamplesOverviewPage", () => {
+  it("places the newest example first", () => {
+    render(
+      <MemoryRouter>
+        <ExamplesOverviewPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByRole("link")[0].getAttribute("href")).toBe("/examples/how-a-hit-travels")
   })
 })

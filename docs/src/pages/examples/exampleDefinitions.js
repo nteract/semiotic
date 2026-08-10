@@ -57,6 +57,7 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
  * @property {string} title Reader-facing title.
  * @property {string} eyebrow Short chart/family label.
  * @property {string} description Overview-card copy.
+ * @property {string} publishedAt RFC3339 timestamp used for canonical newest-first ordering.
  * @property {string} preview Overview-card preview identifier.
  * @property {readonly string[]} [badges] Overview-card capability labels.
  * @property {readonly string[]} frames Frame-family filters.
@@ -82,6 +83,90 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
+  {
+    id: "how-a-hit-travels",
+    path: "/examples/how-a-hit-travels",
+    sourceFile: "HowAHitTravelsExamplePage.jsx",
+    sourceFiles: [
+      "HowAHitTravelsExamplePage.jsx",
+      "HowAHitTravelsExamplePage.css",
+      "how-a-hit-travels/SimilarityConstellation.jsx",
+      "how-a-hit-travels/JourneyFingerprint.jsx",
+      "how-a-hit-travels/similarityConstellationRecipe.js",
+      "how-a-hit-travels/buildHitTravelsData.mjs",
+      "how-a-hit-travels/hitTravelsData.generated.js",
+    ],
+    isPilot: true,
+    title: "How a Hit Travels",
+    eyebrow: "Data journalism · global streaming",
+    description:
+      "Follow Netflix’s weekly Top 10 across overlapping country-chart neighborhoods, from simultaneous arrivals to durable regional favorites.",
+    contract: {
+      publicImports: ["semiotic/ai", "semiotic/network", "semiotic/recipes", "semiotic/xy"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-derived-netflix-weekly-top-10-story-snapshot",
+          replay: true,
+          schemaVersion: "1",
+          inventory: {
+            weeks: 266,
+            countries: 24,
+            titles: 10,
+            omittedTitles: 18,
+            claims: 3,
+          },
+        },
+      },
+      provenance: {
+        source:
+          "Netflix public weekly Top 10 country and global files, reduced to a checked-in generated story snapshot with source URLs, checksums, and derivation metadata",
+        capturedAt: "2026-08-09",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source refresh",
+      },
+      accessibility: {
+        summary:
+          "The story pairs every constellation state with plain-language counts, title fingerprints, exact country histories, evidence notes, and accessible chart tables",
+        navigation:
+          "Semantic story sections, mode and week controls, title and country selection, chart navigation, evidence disclosure, and a settled mobile reading",
+        keyboard:
+          "Native buttons, range controls, chart navigation, accessible tables, and stable title, country, relationship, and claim identities",
+        forcedColors:
+          "Constellation marks, selection states, fingerprints, controls, evidence boundaries, and focus rings retain system-color contrast",
+      },
+      motion: {
+        reducedMotion:
+          "The system preference or reader control replaces animated travel with complete stepped states while preserving every exact value",
+        visibility:
+          "The checked-in snapshot makes no live requests; any reader-controlled replay is bounded and stops when it is no longer active",
+      },
+      responsive: {
+        status: "container-responsive-and-breakpoint-designed",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable title, country, relationship, week, and claim IDs across geographic, constellation, desktop, and mobile views",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "Checked-in data, fixed similarity coordinates, deterministic initial selection, and stable entity IDs preserve the server-rendered settled view",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using four public Semiotic entry points and a compact generated story snapshot",
+          interaction:
+            "twenty-four reference countries, a sparse fixed edge set, ten title profiles, and memoized selection projections",
+          memory:
+            "one immutable 266-week derived manifest, ten bounded title journeys, eighteen omitted-title records, and three claim records",
+          hiddenPage:
+            "no polling, streaming, external fetch, or persistent telemetry; replay state remains bounded",
+        },
+      },
+    },
+  },
   {
     id: "living-ledger",
     path: "/examples/living-ledger",
@@ -1492,10 +1577,27 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   },
 ])
 
+// Publication timestamps, not insertion position, own the public sequence.
+// New examples can be added anywhere and still appear first when their RFC3339
+// timestamp is newer; paths make same-instant imports deterministic. Existing
+// timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "How a Hit Travels",
+    path: "/examples/how-a-hit-travels",
+    publishedAt: "2026-08-09T23:01:36-07:00",
+    eyebrow: "Data journalism · global streaming",
+    description:
+      "Follow Netflix’s weekly Top 10 across overlapping country-chart neighborhoods, from simultaneous arrivals to durable regional favorites.",
+    preview: "how-a-hit-travels",
+    badges: ["266 weeks", "24-country settled view", "Evidence ledger", "Accessible explorer"],
+    frames: ["network", "custom"],
+    topics: ["culture", "geography", "uncertainty", "design", "accessibility"],
+  },
   {
     title: "The Living Ledger",
     path: "/examples/living-ledger",
+    publishedAt: "2026-07-15T22:04:41-07:00",
     eyebrow: "Evidence lineage · ecosystem services",
     description:
       "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
@@ -1507,6 +1609,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Last Scarcity",
     path: "/examples/the-last-scarcity",
+    publishedAt: "2026-08-05T20:22:58-07:00",
     eyebrow: "Interactive essay · AI abundance",
     description:
       "When intelligence gets cheap, scarcity moves. An interactive essay with a before/after competition Sankey, a three-beat court of desire, and a companion promise-vs-data DifferenceChart.",
@@ -1527,6 +1630,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Hellhole Changed Addresses",
     path: "/examples/hellhole-changed-addresses",
+    publishedAt: "2026-08-09T19:00:55-07:00",
     eyebrow: "First the city · then the suburb",
     description:
       "Watch American dread abandon downtown for the cul-de-sac, then move a birth-year observer through the handoff while real conditions, preferences, and Census flows heckle the story.",
@@ -1538,6 +1642,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Parataxis Machine",
     path: "/examples/parataxis-machine",
+    publishedAt: "2026-08-09T19:00:55-07:00",
     eyebrow: "How implied connections work",
     description:
       "See how writers leave relationships between clauses unstated, why readers infer those links, and why the pattern appears so often in AI-generated prose.",
@@ -1549,6 +1654,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Ukraine: Four Clocks of a Long War",
     path: "/examples/ukraine-war-history",
+    publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "FlowMap · TemporalHistogram · history",
     description:
       "Compare yearly military, civilian, and unspecified-use aid flows with documented equipment losses, economic shocks, and coalition change.",
@@ -1560,6 +1666,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Insight Forge",
     path: "/examples/insight-forge",
+    publishedAt: "2026-07-12T09:00:38-07:00",
     eyebrow: "Portable evidence · packaging failure",
     description:
       "Investigate a packaging failure room by room. Evidence you accept becomes a portable artifact that can filter and annotate the next view.",
@@ -1571,6 +1678,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Analyst Adventure: The Case of the Vanishing Visionary",
     path: "/examples/analyst-adventure",
+    publishedAt: "2026-07-14T10:53:40-07:00",
     eyebrow: "Five Stream Frames · analytical adventure",
     description:
       "Investigate a missing CEO across temporal, categorical, geographic, network, and physics rooms where reading each chart determines the story.",
@@ -1582,6 +1690,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Sentence Is Not the Words",
     path: "/examples/sentence-structure",
+    publishedAt: "2026-07-14T10:53:40-07:00",
     eyebrow: "Linked linguistic views · natural-language controls",
     description:
       "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
@@ -1593,6 +1702,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Rhetorical Crucible",
     path: "/examples/rhetorical-crucible",
+    publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "Word Trails × physics · three debate assays",
     description:
       "Follow the same word as it leaves each candidate retort unalloyed or in different temporal company—without mistaking rhetoric for motive.",
@@ -1604,6 +1714,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Latent Crucible",
     path: "/examples/latent-crucible",
+    publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "LDA Topic Modeling × Word Trails",
     description:
       "See anonymous topics congeal as a real seeded Gibbs sampler reassigns word tokens across a small, fully inspectable corpus.",
@@ -1615,6 +1726,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Release Machine",
     path: "/examples/chain-reaction",
+    publishedAt: "2026-07-12T09:00:38-07:00",
     eyebrow: "Which blocker is really costing you?",
     description:
       "Two blockers are both 90% done and both late. A swimlane says when and who; a dependency machine says which one keeps nine unfinished tasks from even becoming possible.",
@@ -1626,6 +1738,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Watermarks, Made Physical",
     path: "/examples/watermarks",
+    publishedAt: "2026-07-07T18:19:32-07:00",
     eyebrow: "Late events, closing windows",
     description:
       "Events arrive out of order. A watermark decides when a window can close; late arrivals roll into a visible gutter.",
@@ -1637,6 +1750,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Stakeholder Journey",
     path: "/examples/stakeholder-journey",
+    publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "From first use to real contribution",
     description:
       "Same people, two community setups: after habit forms, invitation either opens a path to commitment or leaves usage private.",
@@ -1648,6 +1762,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Merge Pressure",
     path: "/examples/merge-pressure",
+    publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "Review queues under AI throughput",
     description:
       "Pull requests share finite human review, recirculate through CI, and only merged work counts toward shipping the feature.",
@@ -1659,6 +1774,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Not in MY Backyard",
     path: "/examples/not-in-my-backyard",
+    publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "Housing plan vs cumulative drag",
     description:
       "A housing approval simulator: a plan enters with lift and drag, loses features at civic gates, gains burden, and may get approved without becoming housing.",
@@ -1670,6 +1786,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Brushable Weather Rings",
     path: "/examples/climate-radial-weather",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Point controls + radial weather",
     description:
       "Align daily weather around annual rings, brush a seasonal interval, and inspect the selected days on a straight timeline.",
@@ -1681,6 +1798,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Lake Travis, in Signs",
     path: "/examples/lake-travis-isotype",
+    publishedAt: "2026-07-03T13:48:30-07:00",
     eyebrow: "Four custom frames · ISOTYPE",
     description:
       "A lake-level and weather dashboard rebuilt with repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
@@ -1692,6 +1810,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Nathan's Hot Dog Contest, Recounted",
     path: "/examples/hot-dog-contest-variations",
+    publishedAt: "2026-07-06T14:27:10-07:00",
     eyebrow: "TemporalHistogram · ISOTYPE · source audit",
     description:
       "Compare annual winners, count totals in repeated units, inspect rule changes, and separate eating pace from contest duration.",
@@ -1703,6 +1822,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Buildings Behind AI",
     path: "/examples/data-centers-isotype",
+    publishedAt: "2026-07-03T13:48:30-07:00",
     eyebrow: "Altitude sections · evidence ledger",
     description:
       "Count the physical scale of AI infrastructure through relief maps and repeated units for power, water, capacity, and compute. Every claim keeps its denominator and source.",
@@ -1714,6 +1834,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Grid Is the Real AI Infrastructure",
     path: "/examples/the-grid",
+    publishedAt: "2026-07-17T20:46:46-07:00",
     eyebrow: "Fuel mix · demand vs forecast · spare capacity",
     description:
       "What is generating, whether demand beat the forecast, and how little spare capacity is left—for the grid regions under AI data centers. Twin of The Buildings Behind AI.",
@@ -1725,6 +1846,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Creative Gravity of America",
     path: "/examples/creative-contours",
+    publishedAt: "2026-07-06T11:42:28-07:00",
     eyebrow: "Isometric creative-industry terrain",
     description:
       "Metro creative industries become contour shelves on a stacked isometric United States: screen, sound, games, design, and research as height—not topography.",
@@ -1736,6 +1858,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Sometimes it's better to be discrete",
     path: "/examples/sometimes-better-discrete",
+    publishedAt: "2026-07-05T13:34:05-07:00",
     eyebrow: "TokenLayer · task-aware ISOTYPE",
     description:
       "Estimate a bus-waiting probability, reveal the count, and compare how density curves, quantile dots, hypothetical outcomes, and commuter icons support different tasks.",
@@ -1747,6 +1870,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Where You Draw the Line",
     path: "/examples/where-you-draw-the-line",
+    publishedAt: "2026-07-12T16:30:00-07:00",
     eyebrow: "Explorable MAUP laboratory",
     description:
       "Move one border across an unchanged field, then watch the aggregate answer move through a 1D transect, a constructed city, and a 2D-plus-time reporting stack.",
@@ -1758,6 +1882,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "All the Wars of the United States",
     path: "/examples/us-war-timeline",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom ordinal timeline",
     description:
       "A layered timeline of conflicts, geopolitical spheres, historical periods, concurrency, and the comparatively rare years of peace.",
@@ -1769,6 +1894,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "A Genealogy of Cubism and Abstract Art",
     path: "/examples/art-movement-genealogy",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Automatic chronological network",
     description:
       "A constraint-laid influence graph styled after Alfred H. Barr Jr.'s iconic 1936 Cubism and Abstract Art cover.",
@@ -1780,6 +1906,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Paris, Isometric City of Lights",
     path: "/examples/paris-isometric-landmarks",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom isometric GeoFrame",
     description:
       "Five-by-five strategy-game views of Paris, Austin, San Francisco, and Tokyo, populated from DBpedia landmarks with resilient local snapshots.",
@@ -1791,6 +1918,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Wheel of Urines",
     path: "/examples/urine-wheel",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom radial network",
     description:
       "A medieval uroscopy diagnostic redrawn as a node-link diagram in a ring — twenty named urine colors, each spoked to the stage of digestion it signifies.",
@@ -1802,6 +1930,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The New York & Erie Railroad",
     path: "/examples/erie-railroad-organization",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom botanical hierarchy",
     description:
       "McCallum and Henshaw's landmark 1855 organization diagram rebuilt as computed railroad trunks, workforce boughs, and navigable roles.",
@@ -1813,6 +1942,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Wikipedia, as it happens",
     path: "/examples/wikipedia-realtime",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Five coordinated realtime swarms",
     description:
       "A live, filterable view of English Wikipedia edits with actor classification, signed change encodings, aggregation, and revision-level drilldown.",
@@ -1824,6 +1954,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Your Local Government Explorer",
     path: "/examples/local-government-explorer",
+    publishedAt: "2026-06-27T21:13:03-07:00",
     eyebrow: "ZIP-driven civic data + networks",
     description:
       "Resolve any postal place into its county's federal disaster record and spending, live 311 service requests, LOCUS municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
@@ -1834,6 +1965,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Long Way Around",
     path: "/examples/port-congestion-replay",
+    publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Real chokepoint data, four-frame replay",
     description:
       "Replay three periods of IMF PortWatch traffic: a quiet spring, the Ever Given blockage, and the Red Sea detour. Four linked views show where routes and transit times diverged.",
@@ -1844,6 +1976,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Third Seat: Apollo’s Lunar Choreography",
     path: "/examples/apollo-lunar-choreography",
+    publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "ProcessSankey · NASA mission chronology",
     description:
       "Align nine lunar voyages at launch to see 27 crew-seats separate, wait, reunite, divert through a lifeboat, and all return home.",
@@ -1855,6 +1988,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The 7,197-Vote Corridor",
     path: "/examples/ballot-transfer-ledger",
+    publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "ProcessSankey · certified ranked-choice transfers",
     description:
       "Audit how three elimination pools erased 96,725 votes of a six-figure lead in New York City’s 2021 Democratic mayoral primary.",
@@ -1866,6 +2000,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Germany, Still Becoming",
     path: "/examples/germany-still-becoming",
+    publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Vertical ProcessSankey · a constitutional history river",
     description:
       "Read downward through twelve historical openings as twenty-six contributions to present-day Germany split, merge, disappear into larger states, and return as Länder.",
@@ -1877,6 +2012,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "From The Good Earth to Lying Flat",
     path: "/examples/good-earth-lying-flat",
+    publishedAt: "2026-08-03T23:13:28-07:00",
     eyebrow: "ProcessSankey · a causal model of security and withdrawal",
     description:
       "Follow an interpretive argument from inherited insecurity through housing, credentials, and overwork to involution, defensive stability, lying flat, and private retreat.",
@@ -1888,6 +2024,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The United States, Drawn Together",
     path: "/examples/united-states-drawn-together",
+    publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Vertical ProcessSankey · an institutional history river",
     description:
       "Follow jurisdiction routes through persistent States, Territories, and Colonies as acquisitions accumulate, statehood transfers stock, Civil War tears and restores it, and administrations fade away.",
@@ -1899,6 +2036,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Scroll You're Telling",
     path: "/examples/scroll-youre-telling",
+    publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Realtime reader telemetry",
     description:
       "Read a short history of data journalism while the page plots your scroll position, velocity, and dwell time alongside the essay.",
@@ -1910,6 +2048,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Thunderdome Has Rounded Corners",
     path: "/examples/digital-humanities-thunderdome",
+    publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
       "A 2011 digital-humanities argument revisited with DHQ data: Media Studies recedes, tools become method, and AI tests what decolonial making really requires.",
@@ -1921,6 +2060,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The 12 Kinds of Data Visualization People",
     path: "/examples/dataviz-people",
+    publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Twelve personas · twelve chart grammars",
     description:
       "An expanded remake of the Nightingale essay: Excel brute forcers, Tableau zen masters, Accurat-style studios, news orgs, scientists, industry oracles, fun freelancers, procedural artists, finance annotators, DevOps terminal wizards, workshop nomads, and academic dissectors each get a chart body.",
@@ -1932,6 +2072,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Can You Know a Book Better Without Reading It?",
     path: "/examples/distant-reading",
+    publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Distant reading · literary signals",
     description:
       "A rich remake of the Nightingale essay as an interactive distant-reading room: chapter signal fields, phase summaries, corpus fingerprints, and narrative-flow Sankeys for four public-domain novels.",
@@ -1943,6 +2084,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "We Live in a World of Funnels",
     path: "/examples/world-of-funnels",
+    publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Funnel analysis · Pop Art flows",
     description:
       "An interactive remake of the funnel essay: classic conversion funnels, A/B testing, branching Sankey paths, and temporal path motifs argue through precision and accuracy.",
@@ -1954,6 +2096,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "What the Machine Sees",
     path: "/examples/what-the-machine-sees",
+    publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "The intelligence layer, end to end",
     description:
       "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
@@ -1972,6 +2115,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Benchmark Is a Chart, Too",
     path: "/examples/the-benchmark-is-a-chart-too",
+    publishedAt: "2026-07-26T22:11:36-07:00",
     eyebrow: "Answer vs abstain · scorer audit",
     description:
       "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
@@ -1983,6 +2127,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Living System of Semiotic",
     path: "/examples/semiotic-architecture",
+    publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Interactive architecture map",
     description:
       "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
@@ -1993,6 +2138,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Octopus: It has its tentacles in everything",
     path: "/examples/octopus-metaphor",
+    publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Network + GeoCustomChart metaphor",
     description:
       "A history of the octopus as an information-visualization metaphor: moral networks, imperial octopus maps, and a final Semiotic-as-octopus frame diagram.",
@@ -2004,6 +2150,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Point Climate Anomaly",
     path: "/examples/climate-anomaly",
+    publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Difference chart + uncertainty band",
     description:
       "A polished climate readout comparing this year's daily temperature with an adjusted historical mean and the 5th-95th percentile range.",
@@ -2014,6 +2161,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Gestalt of Data Visualization",
     path: "/examples/gestalt-principles",
+    publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Five chapters · perception → Semiotic",
     description:
       "A chapterized remake of the 2015 Gestalt Principles essays — similarity, common fate, proximity, figure/ground, continuity — each demonstrated on a live Semiotic chart, in a Bauhaus 'perception lab' look.",
@@ -2024,6 +2172,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Semiotic Standard: Chart Deployment Codes",
     path: "/examples/semiotic-standard",
+    publishedAt: "2026-07-19T13:55:31-07:00",
     eyebrow: "16 charts · context → sparkline",
     description:
       "An Alien-inspired field standard for when to deploy 16 Semiotic charts across XY, ordinal, network, geographic, and physics frames—then redeploy the same charts as sparklines.",
@@ -2035,6 +2184,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies",
     path: "/examples/data-viz-for-dummies",
+    publishedAt: "2026-07-22T11:15:56-07:00",
     eyebrow: "Chart families · data and task taxonomy",
     description:
       "Scout chart families like a sports roster: organize them by data or task, then learn ranking, comparison, change, distribution, relationship, flow, and hierarchy through one fictional season.",
@@ -2046,6 +2196,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies II",
     path: "/examples/data-viz-for-dummies-2",
+    publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Composition, spread, attrition, and networks",
     description:
       "Call in chart specialists for composition, volume, spread, two-dimensional patterns, attrition, reciprocal exchange, and network topology—all through one fictional arena.",
@@ -2057,6 +2208,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies III",
     path: "/examples/data-viz-for-dummies-3",
+    publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Chart substitutions · tradeoff lab",
     description:
       "Study when to substitute dot, violin, ridgeline, difference, connected scatter, tree, and circle-pack charts for familiar starters—and name the tradeoff each switch accepts.",
@@ -2068,6 +2220,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies IV",
     path: "/examples/data-viz-for-dummies-4",
+    publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Specialist charts · decision-led rotation",
     description:
       "Complete the core Semiotic roster by matching pie, donut, gauge, Likert, swarm, bubble, multivariate, layered-time, navigation, orbit, and temporal-flow charts to the specific questions that earn them a place.",
@@ -2079,6 +2232,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies V",
     path: "/examples/data-viz-for-dummies-5",
+    publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Geographic charts · location earns its ink",
     description:
       "Take the fictional Rookie City season on the road and learn when regional color, located magnitude, geographic flow, experienced distance, tiled context, and custom projected geometry make a map necessary.",
@@ -2090,6 +2244,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Data Viz for Dummies VI",
     path: "/examples/data-viz-for-dummies-6",
+    publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Physics instruments · mechanisms earn their motion",
     description:
       "Enter the basement laboratory for a rigorous, lightly unhinged guide to settling, arrival, capacity, compound bodies, transformation, dependency, and custom physics charts.",
@@ -2101,6 +2256,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Mobile Data Visualization That Works",
     path: "/examples/mobile-data-visualization",
+    publishedAt: "2026-07-05T10:36:35-07:00",
     eyebrow: "Mobile-first review · Semiotic demos",
     description:
       "A research-backed field guide for phone-sized visualization: density budgets, small multiples, touch-first controls, constraint breakpoints, and source-led design choices built as live Semiotic demos.",
@@ -2112,6 +2268,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Drawing Networks",
     path: "/examples/network-visualization",
+    publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Network forms + an interactive toy",
     description:
       "Compare arc diagrams, matrices, communities, Sankey, and chord, then use the playground for pathfinding, centrality, and ego-network inspection.",
@@ -2122,6 +2279,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Map of the Oregon Trail",
     path: "/examples/oregon-trail",
+    publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Retro cartography · real geography",
     description:
       "The 1985 Oregon Trail end-game map over real Washington/Oregon/Idaho geography—gray land, CGA-blue rivers, caret mountains, forts, and a wagon from START to FINISH.",
@@ -2133,6 +2291,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "The Equal Places Atlas",
     path: "/examples/equal-places-atlas",
+    publishedAt: "2026-07-24T17:15:42-07:00",
     eyebrow: "Gridified geography · sampled land",
     description:
       "Sample U.S. and world land onto dense projected dot lattices, then compare the silhouette-preserving result with equal-place tile cartograms.",
@@ -2144,6 +2303,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Earthquakes",
     path: "/examples/earthquakes",
+    publishedAt: "2026-07-17T11:16:36-07:00",
     eyebrow: "Spin the globe to filter · M6+ 2021–2025",
     description:
       "An orthographic ProportionalSymbolMap drives a small dashboard: drag-rotate the globe and the KPI tiles, magnitude bars, regional ranks, and quarterly line recount only the events facing you.",
@@ -2155,6 +2315,7 @@ const EXAMPLE_REGISTRY_METADATA = [
   {
     title: "Europa nach den lebenden Sprachen",
     path: "/examples/europa-languages",
+    publishedAt: "2026-07-17T11:16:36-07:00",
     eyebrow: "Rough hachure · Ausfeld 1840",
     description:
       "A hand-tinted remake of Karl von Ausfeld's living-languages plate of Europe. Exact Natural Earth geoareas keep hit testing and accessibility; createRoughRenderMode paints only the ink.",
@@ -2166,6 +2327,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/how-a-hit-travels": "HowAHitTravelsExamplePage.jsx",
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
   "/examples/the-last-scarcity": "TheLastScarcityExamplePage.jsx",
   "/examples/hellhole-changed-addresses": "HellholeChangedAddressesExamplePage.jsx",
@@ -2248,7 +2410,7 @@ export const EXAMPLE_DEFINITIONS = Object.freeze(
           })
         : UNASSESSED_EXAMPLE_CONTRACT,
     })
-  }),
+  }).sort(compareExampleDefinitionsNewestFirst),
 )
 export const EXAMPLE_DEFINITIONS_BY_PATH = Object.freeze(
   Object.fromEntries(EXAMPLE_DEFINITIONS.map((definition) => [definition.path, definition])),
@@ -2272,7 +2434,7 @@ export function getPilotExampleDefinitions() {
  * Example definition schema for the full docs registry. Every route declares
  * either a route-specific contract or an explicit, bounded unassessed record.
  */
-const REQUIRED_DEFINITION_FIELDS = ["id", "path", "title", "eyebrow", "description"]
+const REQUIRED_DEFINITION_FIELDS = ["id", "path", "title", "eyebrow", "description", "publishedAt"]
 
 const OPTIONAL_DEFINITION_FIELDS = [
   "isPilot",
@@ -2323,6 +2485,57 @@ function isUnmeasuredPerformanceContract(value) {
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0
+}
+
+const RFC3339_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/
+
+export function isValidRfc3339Timestamp(value) {
+  if (!isNonEmptyString(value)) return false
+  const match = RFC3339_TIMESTAMP_PATTERN.exec(value)
+  if (!match) return false
+
+  const [
+    ,
+    yearText,
+    monthText,
+    dayText,
+    hourText,
+    minuteText,
+    secondText,
+    ,
+    offsetHourText,
+    offsetMinuteText,
+  ] = match
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  const hour = Number(hourText)
+  const minute = Number(minuteText)
+  const second = Number(secondText)
+  const offsetHour = offsetHourText === undefined ? 0 : Number(offsetHourText)
+  const offsetMinute = offsetMinuteText === undefined ? 0 : Number(offsetMinuteText)
+  const daysInMonth =
+    month >= 1 && month <= 12 ? new Date(Date.UTC(year, month, 0)).getUTCDate() : 0
+
+  return (
+    day >= 1 &&
+    day <= daysInMonth &&
+    hour <= 23 &&
+    minute <= 59 &&
+    second <= 59 &&
+    offsetHour <= 23 &&
+    offsetMinute <= 59 &&
+    Number.isFinite(Date.parse(value))
+  )
+}
+
+export function compareExampleDefinitionsNewestFirst(left, right) {
+  const publishedDifference = Date.parse(right.publishedAt) - Date.parse(left.publishedAt)
+  if (publishedDifference !== 0) return publishedDifference
+  if (left.path < right.path) return -1
+  if (left.path > right.path) return 1
+  return 0
 }
 
 function isStringArray(value, { minimum = 1 } = {}) {
@@ -2545,6 +2758,14 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
     })
 
     const { id, path, sourceFile, sourceFiles } = definition ?? {}
+    if (
+      isNonEmptyString(definition?.publishedAt) &&
+      !isValidRfc3339Timestamp(definition.publishedAt)
+    ) {
+      errors.push(
+        `ExampleDefinition publishedAt for "${id ?? `index ${index}`}" must be a valid RFC3339 timestamp`,
+      )
+    }
     const isPilot = definition?.isPilot === true
     if (isPilot && !isNonEmptyString(sourceFile)) {
       errors.push(`ExampleDefinition at index ${index} must define "sourceFile" for pilot examples`)
@@ -2589,7 +2810,7 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
         sourceFiles.forEach((file) => {
           const valid =
             isNonEmptyString(file) &&
-            /\.(?:js|jsx|ts|tsx|css)$/.test(file) &&
+            /\.(?:js|jsx|mjs|ts|tsx|css)$/.test(file) &&
             !file.startsWith("/") &&
             !file.split("/").includes("..")
           if (!valid) {

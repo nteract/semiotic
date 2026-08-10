@@ -115,6 +115,14 @@ const DATA_TABLE_HIDDEN_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-ta
 const DATA_TABLE_VISIBLE_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-visible`
 const DATA_TABLE_NETWORK_CLASS = `${DATA_TABLE_VISIBLE_CLASS} semiotic-accessible-data-table-network`
 
+const HIDDEN_TRIGGER_STYLE: React.CSSProperties = {
+  boxSizing: "border-box",
+  maxWidth: "100%",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis"
+}
+
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
   position: "absolute",
   top: 0,
@@ -291,7 +299,11 @@ export function AccessibleDataTable({
         role="region"
         aria-label={regionLabel}
       >
-        <button type="button" onClick={() => setSrExpanded(true)}>
+        <button
+          type="button"
+          onClick={() => setSrExpanded(true)}
+          style={HIDDEN_TRIGGER_STYLE}
+        >
           View data summary ({totalCount} elements)
         </button>
       </div>
@@ -481,7 +493,11 @@ export function NetworkAccessibleDataTable({
         role="region"
         aria-label={regionLabel}
       >
-        <button type="button" onClick={() => setSrExpanded(true)}>
+        <button
+          type="button"
+          onClick={() => setSrExpanded(true)}
+          style={HIDDEN_TRIGGER_STYLE}
+        >
           View data summary ({safeNodes.length} nodes, {safeEdges.length} edges)
         </button>
       </div>

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  EXAMPLE_DEFINITIONS,
-  validateExampleDefinitions,
-} from "./exampleDefinitions"
+import { EXAMPLE_DEFINITIONS, validateExampleDefinitions } from "./exampleDefinitions"
 import {
   EXAMPLE_SOURCE_PATHS,
   cleanExampleSourceForFullCode,
@@ -83,6 +80,16 @@ export default function Example() {
       ]),
     )
     expect(loaders.every(({ load }) => typeof load === "function")).toBe(true)
+  })
+
+  it("includes the How a Hit Travels page, recipe, generated data, and build source", () => {
+    const definition = EXAMPLE_DEFINITIONS.find(
+      ({ path }) => path === "/examples/how-a-hit-travels",
+    )
+    const loaders = getExampleSourceLoaders("/examples/how-a-hit-travels")
+
+    expect(loaders.map(({ file }) => file)).toEqual(definition.sourceFiles)
+    expect(loaders.map(({ file }) => file)).toContain("how-a-hit-travels/buildHitTravelsData.mjs")
   })
 
   it("keeps source-loader contract valid while validating example definitions", () => {

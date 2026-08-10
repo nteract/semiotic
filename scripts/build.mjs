@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { existsSync, readFileSync, rmSync, writeFileSync } from "fs"
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "fs"
 import { build as tsupBuild } from "tsup"
 
 const args = process.argv.slice(2)
@@ -527,6 +527,24 @@ function cleanDist() {
   console.log("\u2705 dist cleaned")
 }
 
+function assertNoEmptyJavaScriptArtifacts() {
+  const emptyArtifacts = readdirSync("dist")
+    .filter((name) => /\.(?:cjs|js|mjs)$/.test(name))
+    .filter((name) => statSync(`dist/${name}`).size === 0)
+
+  if (emptyArtifacts.length > 0) {
+    throw new Error(
+      `Empty JavaScript build artifacts detected:\n${emptyArtifacts
+        .map((name) => `   - dist/${name}`)
+        .join("\n")}\n` +
+      "This usually means one bundled entry imports another public facade entry. " +
+      "Point internal imports at the facade's core implementation instead."
+    )
+  }
+
+  console.log("\u2705 JavaScript artifacts verified (no empty bundles)")
+}
+
 async function build() {
   cleanDist()
 
@@ -643,6 +661,7 @@ async function build() {
   await createPhysicsWorkerBundle({ minify })
   await createProcessSankeyLayoutWorkerBundle({ minify })
 
+  assertNoEmptyJavaScriptArtifacts()
   assertDirectivePlacement(bundledEntries)
 }
 

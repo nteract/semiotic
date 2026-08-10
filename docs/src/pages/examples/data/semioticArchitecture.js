@@ -742,6 +742,25 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "how-a-hit-travels",
+    shortLabel: "How a Hit Travels",
+    note: "A fixed country-similarity constellation and linked title fingerprints follow 266 weeks of Netflix’s published Top 10 rankings without turning ordinal rank or co-appearance into audience size or causal transmission.",
+    uses: [
+      "input-static",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-responsive",
+      "feature-theme",
+      "feature-shared-state",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "living-ledger",
     shortLabel: "Living Ledger",
     note: "A deterministic ecosystem-service replay coordinates a custom world atlas, condition-versus-adequacy triage, threshold pulse, six-part ordinal ledger, two-way evidence network, and physics-backed observation pipeline through one serviceSystemId.",

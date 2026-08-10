@@ -8,7 +8,7 @@
 
 import type { SemioticTheme } from "../store/ThemeStore"
 import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, applyThemeAccessibility } from "../store/ThemeStore"
-import { resolveThemePreset } from "../semiotic-themes"
+import { resolveThemePreset } from "../semiotic-themes-core"
 
 type PartialThemeObject = Omit<Partial<SemioticTheme>, "colors" | "typography" | "tooltip"> & {
   colors?: Partial<SemioticTheme["colors"]>

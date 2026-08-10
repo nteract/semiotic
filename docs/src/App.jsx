@@ -175,10 +175,9 @@ const TimelineCookbookPage = lazy(() => import("./pages/cookbook/TimelinePage"))
 const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
+const HowAHitTravelsExamplePage = lazy(() => import("./pages/examples/HowAHitTravelsExamplePage"))
 const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedgerExamplePage"))
-const TheLastScarcityExamplePage = lazy(
-  () => import("./pages/examples/TheLastScarcityExamplePage"),
-)
+const TheLastScarcityExamplePage = lazy(() => import("./pages/examples/TheLastScarcityExamplePage"))
 const HellholeChangedAddressesExamplePage = lazy(
   () => import("./pages/examples/HellholeChangedAddressesExamplePage"),
 )
@@ -279,9 +278,7 @@ const WorldOfFunnelsExamplePage = lazy(() => import("./pages/examples/WorldOfFun
 const WhatTheMachineSeesExamplePage = lazy(
   () => import("./pages/examples/WhatTheMachineSeesExamplePage"),
 )
-const ModelEvaluationExamplePage = lazy(
-  () => import("./pages/examples/ModelEvaluationExamplePage"),
-)
+const ModelEvaluationExamplePage = lazy(() => import("./pages/examples/ModelEvaluationExamplePage"))
 const SemioticArchitectureExamplePage = lazy(
   () => import("./pages/examples/SemioticArchitectureExamplePage"),
 )
@@ -321,6 +318,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "HowAHitTravelsExamplePage.jsx": HowAHitTravelsExamplePage,
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "TheLastScarcityExamplePage.jsx": TheLastScarcityExamplePage,
   "HellholeChangedAddressesExamplePage.jsx": HellholeChangedAddressesExamplePage,

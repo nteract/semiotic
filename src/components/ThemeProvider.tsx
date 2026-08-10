@@ -9,8 +9,8 @@ import {
   resolveThemeUpdate
 } from "./store/ThemeStore"
 import type { SemioticTheme, SemioticThemeUpdate, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
-import { resolveThemePreset } from "./semiotic-themes"
-import type { ThemePresetName } from "./semiotic-themes"
+import { resolveThemePreset } from "./semiotic-themes-core"
+import type { ThemePresetName } from "./semiotic-themes-core"
 import { themeToCSSVariables } from "./store/themeSerialization"
 import { addMqlListener } from "./stream/useMediaPreferences"
 
