@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest"
+import { spawnSync } from "node:child_process"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join, resolve } from "node:path"
 import { HIT_TRAVELS_DATA } from "./hitTravelsData.generated"
 
 const REFERENCE_COUNTRY_IDS = [
@@ -39,6 +43,67 @@ function roundedRatio(numerator, denominator) {
 }
 
 describe("How a Hit Travels generated snapshot", () => {
+  it("rejects global inputs with missing or empty weekly hours viewed", () => {
+    const fixtureDirectory = mkdtempSync(join(tmpdir(), "semiotic-hit-travels-"))
+    const countryPath = join(fixtureDirectory, "countries.tsv")
+    const globalPath = join(fixtureDirectory, "global.tsv")
+    const outputPath = join(fixtureDirectory, "output.js")
+    const buildPath = resolve("docs/src/pages/examples/how-a-hit-travels/buildHitTravelsData.mjs")
+    const countryHeader = [
+      "country_name",
+      "country_iso2",
+      "week",
+      "category",
+      "weekly_rank",
+      "show_title",
+      "season_title",
+    ].join("\t")
+    const countryRow = [
+      "United States",
+      "US",
+      "2026-08-02",
+      "Films (English)",
+      "1",
+      "Example",
+      "N/A",
+    ].join("\t")
+    const globalFields = [
+      "week",
+      "category",
+      "weekly_rank",
+      "show_title",
+      "season_title",
+      "weekly_views",
+    ]
+    const runBuilder = () =>
+      spawnSync(
+        process.execPath,
+        [buildPath, "--countries", countryPath, "--global", globalPath, "--output", outputPath],
+        { encoding: "utf8" },
+      )
+
+    try {
+      writeFileSync(countryPath, `${countryHeader}\n${countryRow}\n`)
+      writeFileSync(
+        globalPath,
+        `${globalFields.join("\t")}\n2026-08-02\tFilms (English)\t1\tExample\tN/A\t100\n`,
+      )
+      const missingColumn = runBuilder()
+      expect(missingColumn.status).not.toBe(0)
+      expect(missingColumn.stderr).toContain("Global source is missing weekly_hours_viewed")
+
+      writeFileSync(
+        globalPath,
+        `${[...globalFields, "weekly_hours_viewed"].join("\t")}\n2026-08-02\tFilms (English)\t1\tExample\tN/A\t100\t\n`,
+      )
+      const emptyValue = runBuilder()
+      expect(emptyValue.status).not.toBe(0)
+      expect(emptyValue.stderr).toContain("Global source contains invalid weekly hours viewed")
+    } finally {
+      rmSync(fixtureDirectory, { recursive: true, force: true })
+    }
+  })
+
   it("keeps the source manifest and the 24-country visual reference set auditable", () => {
     const { manifest, countries, titles } = HIT_TRAVELS_DATA
 

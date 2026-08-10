@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { render } from "@testing-library/react"
 import { getChartRecipe, getRecipeLayout } from "semiotic/ai"
 import { HIT_TRAVELS_DATA } from "./hitTravelsData.generated"
 import { similarityConstellationLayout } from "./SimilarityConstellation"
@@ -127,6 +128,19 @@ describe("similarityConstellationLayout", () => {
     expect(result.overlays.props.edges).toHaveLength(
       HIT_TRAVELS_DATA.similarityLayouts["distinctive-rank"].edges.length,
     )
+  })
+
+  it("positions overlay countries with an SVG transform plus the animated CSS transform", () => {
+    const result = runLayout("constellation")
+    const { container } = render(result.overlays)
+    const countryGroups = [...container.querySelectorAll(".hat-country")]
+
+    expect(countryGroups).toHaveLength(HIT_TRAVELS_DATA.countries.length)
+    for (const [index, group] of countryGroups.entries()) {
+      const country = result.overlays.props.nodes[index]
+      expect(group.getAttribute("transform")).toBe(`translate(${country.x} ${country.y})`)
+      expect(group.style.transform).toBe(`translate(${country.x}px, ${country.y}px)`)
+    }
   })
 })
 

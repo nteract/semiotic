@@ -232,6 +232,8 @@ function ConstellationOverlay({
         {nodes.map((country) => {
           const selected = country.id === selectedCountryId
           const showLabel = selected || (!compact && LABEL_ANCHORS.has(country.id))
+          // Keep the SVG attribute as the cross-browser positioning baseline
+          // and the CSS property for the animated mode change.
           return (
             <g
               key={country.id}
@@ -243,6 +245,7 @@ function ConstellationOverlay({
               ]
                 .filter(Boolean)
                 .join(" ")}
+              transform={`translate(${country.x} ${country.y})`}
               style={{ transform: `translate(${country.x}px, ${country.y}px)` }}
             >
               <circle

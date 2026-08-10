@@ -485,6 +485,7 @@ function validateRows(countries, global) {
     "show_title",
     "season_title",
     "weekly_views",
+    "weekly_hours_viewed",
   ]
   for (const field of countryFields) {
     if (!(field in countries[0])) throw new Error(`Country source is missing ${field}.`)
@@ -500,6 +501,17 @@ function validateRows(countries, global) {
   )
   if (badRank)
     throw new Error(`Country source contains an invalid weekly rank: ${JSON.stringify(badRank)}`)
+
+  const badHoursViewed = global.find(
+    (row) =>
+      row.weekly_hours_viewed === "" ||
+      !Number.isFinite(Number(row.weekly_hours_viewed)) ||
+      Number(row.weekly_hours_viewed) <= 0,
+  )
+  if (badHoursViewed)
+    throw new Error(
+      `Global source contains invalid weekly hours viewed: ${JSON.stringify(badHoursViewed)}`,
+    )
 }
 
 function familyFor(category) {
