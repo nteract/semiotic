@@ -50,11 +50,6 @@
       "reason": "Cached Net Ensemble geometry and scene emission share one layout contract. Presentation overlays have been extracted; retain the remaining cache-to-scene flow together rather than splitting its internal geometry types across modules. Do not grow past this reviewed ceiling."
     },
     {
-      "path": "src/components/semiotic-ai.ts",
-      "maxLines": 804,
-      "reason": "Deliberately flat public AI entry-point barrel. It is three lines above the hard limit (+2 for 3.8.6's BumpChart component and BumpChartCapability exports) and splitting exports would make import discovery less useful; do not grow past this reviewed ceiling. +1 (ChainReactionChart export, required by the surface-parity gate)."
-    },
-    {
       "path": "src/components/ai/conversationArc.ts",
       "maxLines": 1078,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
