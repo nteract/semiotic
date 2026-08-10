@@ -256,6 +256,172 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     },
   },
   {
+    id: "hellhole-changed-addresses",
+    path: "/examples/hellhole-changed-addresses",
+    sourceFile: "HellholeChangedAddressesExamplePage.jsx",
+    sourceFiles: [
+      "HellholeChangedAddressesExamplePage.jsx",
+      "HellholeChangedAddressesExamplePage.css",
+      "hellhole-changed-addresses/HellholeCharts.jsx",
+      "hellhole-changed-addresses/hellholeData.js",
+    ],
+    isPilot: true,
+    title: "The Hellhole Changed Addresses",
+    eyebrow: "First the city · then the suburb",
+    description:
+      "Watch American dread abandon downtown for the cul-de-sac, then move a birth-year observer through the handoff while real conditions, preferences, and Census flows heckle the story.",
+    contract: {
+      publicImports: [
+        "semiotic/geo",
+        "semiotic/network",
+        "semiotic/ordinal",
+        "semiotic/recipes",
+        "semiotic/utils",
+        "semiotic/xy",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-unscored-seed-source-backed-evidence-and-acs-county-flows",
+          replay: false,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source:
+          "Unscored illustrative cultural stations, published condition and resident estimates, and aggregated 2006–2010 / 2016–2020 U.S. Census Bureau ACS county-to-county flow estimates",
+        capturedAt: "2026-08-07",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source, method, or narrative revision",
+      },
+      accessibility: {
+        summary:
+          "A linear narrative pairs culture, conditions, and residents with chart descriptions, data tables, provenance labels, and explicit release-year-coverage-is-not-exposure-or-belief cautions",
+        navigation:
+          "Semantic chapters, persistent scene controls, URL-serialized lens, birth-year, and comparison-cut controls, chart navigation, evidence details, and tabular alternatives",
+        keyboard:
+          "Native buttons, ranges, links, details, chapter targets, custom-chart mark navigation, accessible tables, and stable evidence, observer, and comparison identities",
+        forcedColors:
+          "Page and chart shells, controls, source links, the missing-data callout, and focus indicators use system colors; direct labels and tabular alternatives keep the evidence readable without relying on mark color",
+      },
+      motion: {
+        reducedMotion:
+          "The system preference removes scroll and chart transitions, presents the HELL transfer as labeled static states, and changes cohort cuts without animated morphing",
+        visibility:
+          "No polling, streaming, runtime network activity, or retained reader telemetry; visibility does not alter the checked-in evidence state",
+      },
+      responsive: {
+        status: "container-responsive-and-breakpoint-designed",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable evidence-point, source, birth-year, comparison-cut, lane, and narrative-scene IDs across inline and sticky layouts",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "Checked-in evidence and the default culture lens render deterministically; URL state and viewport-enhanced presentation resolve without replacing chart identities after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using six public family entry points and a local page, chart, style, and evidence bundle",
+          interaction:
+            "bounded checked-in evidence lanes, a derived cohort field, local URL state, and memoized chart projections",
+          memory:
+            "bounded authored evidence and source records with no retained animation, request, or reader-history buffers",
+          hiddenPage: "no requests, polling, streams, timers, or background mutation",
+        },
+      },
+    },
+  },
+  {
+    id: "parataxis-machine",
+    path: "/examples/parataxis-machine",
+    sourceFile: "ParataxisMachineExamplePage.jsx",
+    sourceFiles: [
+      "ParataxisMachineExamplePage.jsx",
+      "ParataxisMachineExamplePage.css",
+      "parataxis-machine/ParataxisCharts.jsx",
+      "parataxis-machine/parataxisData.js",
+    ],
+    isPilot: true,
+    title: "Parataxis Machine",
+    eyebrow: "How implied connections work",
+    description:
+      "See how writers leave relationships between clauses unstated, why readers infer those links, and why the pattern appears so often in AI-generated prose.",
+    contract: {
+      publicImports: [
+        "semiotic/network",
+        "semiotic/ordinal",
+        "semiotic/recipes",
+        "semiotic/utils",
+        "semiotic/xy",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-synthetic-clause-specimens-and-editorial-rhetorical-annotations",
+          replay: false,
+          schemaVersion: "1",
+          inventory: {
+            clausePairs: 6,
+            relationTypes: 8,
+            spectrumStops: 5,
+            aphorismEntries: 5,
+            genreSignatures: 6,
+          },
+        },
+      },
+      provenance: {
+        source:
+          "Purpose-written synthetic clause specimens and explicitly labeled editorial annotations derived from docs/strategy/parataxis.md",
+        capturedAt: "2026-08-09",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "narrative, annotation, or interaction revision",
+      },
+      accessibility: {
+        summary:
+          "Every Semiotic view supplies a description, dynamic summary, and accessible table; prose labels distinguish synthetic text, editorial annotation, and reader inference",
+        navigation:
+          "Semantic scenes, a sticky scene rail, native connector, specimen, syntax, reader, ledger, metric, and machine controls, plus chart mark navigation",
+        keyboard:
+          "Native links, buttons, details, ranges, and Semiotic chart navigation retain stable clause, relation, ledger, and genre identities",
+        forcedColors:
+          "Panels, controls, selected states, chart shells, and focus rings retain system-color boundaries while text and accessible tables preserve every relation",
+      },
+      motion: {
+        reducedMotion:
+          "The system preference or page-level motion control removes connector drift, clause arrival, dashboard paths, and chart transitions without hiding state",
+        visibility:
+          "No requests, timers, persistent telemetry, continuous simulations, or hidden-page mutation",
+      },
+      responsive: {
+        status: "container-responsive-and-breakpoint-designed",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable clause-pair, relation, syntax-mode, spectrum, aphorism, genre, and sandbox-register IDs across chart and stacked layouts",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "Purpose-written fixtures and default reader states render deterministically; measured chart widths enhance after mount without replacing semantic identities",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using five public family entry points and a local page, chart, data, and style bundle",
+          interaction:
+            "six clause specimens, forty-eight matrix cells, five ledger points, six genre bars, and bounded local control state",
+          memory:
+            "fixed synthetic fixtures and scalar reader choices with no history, request cache, stream window, or telemetry buffer",
+          hiddenPage: "no polling, streams, timers, requests, simulation, or background mutation",
+        },
+      },
+    },
+  },
+  {
     id: "equal-places-atlas",
     path: "/examples/equal-places-atlas",
     sourceFile: "EqualPlacesAtlasExamplePage.jsx",
@@ -1359,6 +1525,28 @@ const EXAMPLE_REGISTRY_METADATA = [
     ],
   },
   {
+    title: "The Hellhole Changed Addresses",
+    path: "/examples/hellhole-changed-addresses",
+    eyebrow: "First the city · then the suburb",
+    description:
+      "Watch American dread abandon downtown for the cul-de-sac, then move a birth-year observer through the handoff while real conditions, preferences, and Census flows heckle the story.",
+    preview: "hellhole-changed-addresses",
+    badges: ["Three evidence lanes", "Paired FlowMaps", "Cohort cuts", "Source registry"],
+    frames: ["geo", "xy", "network", "ordinal", "custom"],
+    topics: ["history", "culture", "geography", "civic", "design", "uncertainty", "accessibility"],
+  },
+  {
+    title: "Parataxis Machine",
+    path: "/examples/parataxis-machine",
+    eyebrow: "How implied connections work",
+    description:
+      "See how writers leave relationships between clauses unstated, why readers infer those links, and why the pattern appears so often in AI-generated prose.",
+    preview: "parataxis-machine",
+    badges: ["Clause constellation", "Ambiguity field", "Aphorism debt", "Sentence machine"],
+    frames: ["xy", "ordinal", "network", "custom"],
+    topics: ["culture", "ai", "uncertainty", "design", "accessibility"],
+  },
+  {
     title: "Ukraine: Four Clocks of a Long War",
     path: "/examples/ukraine-war-history",
     eyebrow: "FlowMap · TemporalHistogram · history",
@@ -1980,6 +2168,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
   "/examples/the-last-scarcity": "TheLastScarcityExamplePage.jsx",
+  "/examples/hellhole-changed-addresses": "HellholeChangedAddressesExamplePage.jsx",
   "/examples/ukraine-war-history": "UkraineWarHistoryExamplePage.jsx",
   "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",

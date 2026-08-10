@@ -1,8 +1,20 @@
 
-import { render } from "@testing-library/react"
+import { useEffect } from "react"
+import { render, waitFor } from "@testing-library/react"
 import { Heatmap } from "./Heatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import { LinkedCharts, useSelectionActions } from "../../LinkedCharts"
+
+function SelectHeatmapRow() {
+  const { selectPoints } = useSelectionActions("heatmap-row", "test-producer")
+
+  useEffect(() => {
+    selectPoints({ y: [1] })
+  }, [selectPoints])
+
+  return null
+}
 
 describe("Heatmap", () => {
   const sampleData = [
@@ -210,6 +222,34 @@ describe("Heatmap", () => {
 
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
+  })
+
+  it("dims cells that do not match an active selection", async () => {
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const alphaValues: number[] = []
+    let currentAlpha = 1
+    Object.defineProperty(ctx, "globalAlpha", {
+      configurable: true,
+      get: () => currentAlpha,
+      set: (value: number) => {
+        currentAlpha = value
+        alphaValues.push(value)
+      },
+    })
+
+    render(
+      <TooltipProvider>
+        <LinkedCharts showLegend={false}>
+          <SelectHeatmapRow />
+          <Heatmap
+            data={sampleData}
+            selection={{ name: "heatmap-row", unselectedOpacity: 0.24 }}
+          />
+        </LinkedCharts>
+      </TooltipProvider>
+    )
+
+    await waitFor(() => expect(alphaValues).toContain(0.24))
   })
 
   it("allows XYFrame prop overrides via frameProps", () => {

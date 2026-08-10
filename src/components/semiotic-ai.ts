@@ -152,6 +152,8 @@ export type {
 // Details panel
 export { DetailsPanel } from "./DetailsPanel"
 export type { DetailsPanelProps } from "./DetailsPanel"
+export { ObservationReadout, observedDatum } from "./ObservationReadout"
+export type { ObservationReadoutProps } from "./ObservationReadout"
 
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
@@ -771,27 +773,8 @@ export type {
 } from "./ai/conversationArc"
 
 // AI Observation hooks
-export { useChartObserver } from "./store/useObservation"
-export type {
-  UseChartObserverOptions,
-  UseChartObserverResult
-} from "./store/useObservation"
-export type {
-  ChartObservation,
-  OnObservationCallback,
-  HoverObservation,
-  HoverEndObservation,
-  BrushObservation,
-  BrushEndObservation,
-  SelectionObservation,
-  SelectionEndObservation,
-  ClickObservation,
-  ClickEndObservation,
-  ObservationInputType,
-  FocusObservation,
-  ActivateObservation,
-  AnnotationActivateObservation
-} from "./store/ObservationStore"
+export { useChartObserver } from "./semiotic-ai-observations"
+export type * from "./semiotic-ai-observations"
 
 export { annotationStableId } from "./charts/shared/annotationActivation"
 export type {

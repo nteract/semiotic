@@ -54,6 +54,7 @@ function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineCh
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -123,6 +124,7 @@ function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefin
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
+function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
@@ -275,6 +277,7 @@ interface MultiLineTooltipConfig
 interface MultiTooltipConfig
 interface NavTreeNode
 interface NetworkLabel
+interface ObservationReadoutProps<TDatum extends Datum = Datum>
 interface OrbitDiagramProps<TDatum extends Datum = Datum>
 interface OrbitNode
 interface OrdinalScales
