@@ -1,0 +1,2368 @@
+.hellhole-example {
+  --hh-ink: #171712;
+  --hh-paper: #f1ead8;
+  --hh-paper-deep: #dfd3b9;
+  --hh-night: #16191b;
+  --hh-concrete: #353a3b;
+  --hh-news: #ece6d9;
+  --hh-sodium: #f2b63f;
+  --hh-oxide: #bd4e2e;
+  --hh-lawn: #527343;
+  --hh-mint: #8fc4a5;
+  --hh-pool: #69baca;
+  --hh-vinyl: #d9cdb5;
+  --hh-alarm: #d64532;
+  --hh-blue: #315f78;
+  --hh-city: #d5683f;
+  --hh-suburb: #3c846d;
+  --hh-resident: #5b6592;
+  --hh-grid: rgba(23, 23, 18, 0.12);
+  color: var(--hh-ink);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+[data-semiotic-theme="carbon-dark"] .hellhole-example,
+[data-theme="dark"] .hellhole-example {
+  --hh-ink: #f3ecdd;
+  --hh-paper: #171918;
+  --hh-paper-deep: #242723;
+  --hh-news: #1d211f;
+  --hh-vinyl: #3a3a31;
+  --hh-grid: rgba(243, 236, 221, 0.12);
+}
+
+.hellhole-example *,
+.hellhole-example *::before,
+.hellhole-example *::after {
+  box-sizing: border-box;
+}
+
+.hellhole-example a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.hellhole-example button,
+.hellhole-example select,
+.hellhole-example input {
+  font: inherit;
+}
+
+.hellhole-kicker {
+  margin: 0 0 12px;
+  color: var(--hh-oxide);
+  font-family: var(--font-code, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.hellhole-skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 8px;
+  left: 8px;
+  padding: 10px 14px;
+  border: 2px solid white;
+  background: #111;
+  color: white !important;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+}
+
+.hellhole-skip-link:focus {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+/* Prologue -------------------------------------------------------------- */
+
+.hellhole-hero {
+  position: relative;
+  min-height: min(820px, 86vh);
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(460px, 1.14fr);
+  gap: clamp(44px, 7vw, 96px);
+  align-items: center;
+  margin-inline: calc(50% - 50vw);
+  padding: clamp(74px, 10vh, 118px) max(28px, calc((100vw - 1180px) / 2 + 28px));
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.48), transparent 48%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px),
+    var(--hh-night);
+  color: #f6f0e4;
+}
+
+.hellhole-hero::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(242, 182, 63, 0.13), transparent 32%),
+    radial-gradient(circle at 86% 68%, rgba(105, 186, 202, 0.12), transparent 30%);
+  content: "";
+  pointer-events: none;
+}
+
+.hellhole-hero__copy {
+  position: relative;
+  z-index: 2;
+}
+
+.hellhole-hero .hellhole-kicker {
+  color: var(--hh-sodium);
+}
+
+.hellhole-hero h2 {
+  max-width: 8.5ch;
+  margin: 0;
+  color: #f7f0e2;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(64px, 8.4vw, 118px);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.78;
+  text-transform: uppercase;
+}
+
+.hellhole-hero h2 span {
+  display: block;
+  margin-left: clamp(20px, 5vw, 78px);
+  color: var(--hh-sodium);
+  transform: rotate(-1.4deg);
+}
+
+.hellhole-hero__lede {
+  max-width: 60ch;
+  margin: 34px 0 0;
+  color: #d6d2c8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(18px, 1.7vw, 22px);
+  line-height: 1.6;
+}
+
+.hellhole-hero__thesis {
+  max-width: 62ch;
+  margin: 22px 0 0;
+  padding-left: 17px;
+  border-left: 4px solid var(--hh-sodium);
+  color: #f3eee4;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.6;
+}
+
+.hellhole-hero__action {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 31px;
+  padding: 0 17px;
+  border: 1px solid var(--hh-sodium);
+  background: var(--hh-sodium);
+  color: var(--hh-ink) !important;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.hellhole-prologue-stage {
+  position: relative;
+  z-index: 1;
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 22px 22px 0 rgba(189, 78, 46, 0.7);
+}
+
+.hellhole-prologue-panel {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 26px;
+  overflow: hidden;
+}
+
+.hellhole-prologue-panel--city {
+  background:
+    repeating-linear-gradient(178deg, transparent 0 10px, rgba(0, 0, 0, 0.12) 10px 11px), #85817a;
+  filter: grayscale(0.42) contrast(1.16);
+}
+
+.hellhole-prologue-panel--suburb {
+  background: linear-gradient(#92cfdf 0 56%, #65904d 56% 100%);
+  color: #141914;
+}
+
+.hellhole-prologue-year {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  left: 20px;
+  padding: 5px 7px;
+  background: rgba(20, 20, 18, 0.82);
+  color: #fff;
+  font-family: var(--font-code, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.hellhole-prologue-panel > strong,
+.hellhole-prologue-panel > small {
+  position: relative;
+  z-index: 2;
+}
+
+.hellhole-prologue-panel > strong {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(25px, 3.2vw, 43px);
+  letter-spacing: 0.02em;
+}
+
+.hellhole-prologue-panel > small {
+  min-height: 40px;
+  margin-top: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.hellhole-city-skyline {
+  position: absolute;
+  inset: auto 0 80px;
+  height: 70%;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 0 8px;
+}
+
+.hellhole-city-skyline i {
+  position: relative;
+  flex: 1;
+  height: 58%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(242, 182, 63, 0.52) 8px 11px),
+    repeating-linear-gradient(0deg, #292d2e 0 12px, #202324 12px 15px);
+  box-shadow: inset 0 0 0 1px #141616;
+}
+
+.hellhole-city-skyline i:nth-child(2) {
+  height: 92%;
+}
+.hellhole-city-skyline i:nth-child(3) {
+  height: 74%;
+}
+.hellhole-city-skyline i:nth-child(4) {
+  height: 100%;
+}
+.hellhole-city-skyline i:nth-child(5) {
+  height: 66%;
+}
+
+.hellhole-house-row {
+  position: absolute;
+  inset: auto 8px 95px;
+  height: 52%;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.hellhole-house-row i {
+  position: relative;
+  flex: 1;
+  height: 48%;
+  border: 4px solid #f0e6cf;
+  background: linear-gradient(90deg, transparent 42%, #e7b154 42% 58%, transparent 58%), #d9c8aa;
+  box-shadow: 0 11px 0 #3b6135;
+}
+
+.hellhole-house-row i::before {
+  position: absolute;
+  inset: -43% -7px auto;
+  height: 56%;
+  background: #7b6d59;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  content: "";
+}
+
+.hellhole-house-row i:nth-child(2) {
+  height: 57%;
+}
+
+.hellhole-stamp {
+  position: absolute;
+  z-index: 5;
+  top: 42%;
+  left: 15%;
+  padding: 5px 12px 1px;
+  border: 5px solid #b9251d;
+  color: #b9251d;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(48px, 7vw, 86px);
+  letter-spacing: 0.05em;
+  line-height: 0.94;
+  opacity: 0.92;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.35);
+  transform: rotate(-9deg);
+  animation: hellhole-stamp-commute 7s cubic-bezier(0.68, -0.2, 0.25, 1.15) infinite;
+}
+
+.hellhole-stamp.is-static {
+  left: 58%;
+  animation: none;
+}
+
+@keyframes hellhole-stamp-commute {
+  0%,
+  32% {
+    left: 10%;
+    transform: rotate(-10deg) scale(0.95);
+  }
+  48%,
+  58% {
+    left: 42%;
+    transform: rotate(1deg) scale(0.74);
+  }
+  74%,
+  100% {
+    left: 58%;
+    transform: rotate(-7deg) scale(0.95);
+  }
+}
+
+.hellhole-prologue-stage figcaption {
+  position: absolute;
+  z-index: 6;
+  right: 12px;
+  bottom: 10px;
+  padding: 5px 8px;
+  background: #111;
+  color: #fff;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Correction and metro line --------------------------------------------- */
+
+.hellhole-correction {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(36px, 7vw, 100px);
+  align-items: start;
+  padding: clamp(72px, 9vw, 112px) 0;
+}
+
+.hellhole-correction h2 {
+  max-width: 14ch;
+  margin: 0;
+  color: var(--hh-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 4.8vw, 58px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+}
+
+.hellhole-correction > div:last-child p {
+  max-width: 58ch;
+  margin: 4px 0 24px;
+  color: var(--text-secondary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(17px, 1.8vw, 21px);
+  line-height: 1.65;
+}
+
+.hellhole-correction button {
+  min-height: 45px;
+  padding: 0 17px;
+  border: 2px solid var(--hh-ink);
+  background: var(--hh-ink);
+  color: var(--hh-paper);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hellhole-reading-field {
+  position: relative;
+}
+
+.hellhole-controller {
+  position: sticky;
+  z-index: 12;
+  top: var(--examples-sticky-offset, 76px);
+  max-height: calc(100vh - var(--examples-sticky-offset, 76px) - 10px);
+  margin-inline: calc(50% - 50vw);
+  padding: 10px max(28px, calc((100vw - 1180px) / 2 + 28px)) 12px;
+  border-block: 1px solid rgba(255, 255, 255, 0.24);
+  overflow-y: auto;
+  background: rgba(20, 23, 22, 0.97);
+  color: #efe9dc;
+  backdrop-filter: blur(14px);
+}
+
+.hellhole-controller__heading {
+  display: grid;
+  grid-template-columns: minmax(145px, 0.28fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+
+.hellhole-controller__heading .hellhole-kicker {
+  margin: 0;
+  color: var(--hh-sodium);
+}
+
+.hellhole-controller__heading > div {
+  min-width: 0;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.hellhole-controller__heading h2 {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hellhole-controller__heading span {
+  color: #c4c1b8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.hellhole-metropolitan-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 8px 0 10px;
+  border-block: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  color: #efe9dc;
+}
+
+.hellhole-metropolitan-line__rail {
+  position: absolute;
+  z-index: 0;
+  top: 23px;
+  right: 12px;
+  left: 12px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #d9cdb5 0 22px, transparent 22px 29px);
+  opacity: 0.45;
+}
+
+.hellhole-metropolitan-line
+  > div:not(.hellhole-metropolitan-line__rail):not(.hellhole-metropolitan-line__fragments) {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.hellhole-metropolitan-line > div > span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #aaa99f;
+  border-radius: 50%;
+  background: #161918;
+  color: var(--hh-sodium);
+  font-size: 18px;
+}
+
+.hellhole-metropolitan-line > div > strong {
+  overflow: hidden;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hellhole-metropolitan-line__hell {
+  position: absolute;
+  z-index: 2;
+  top: 7px;
+  left: 12%;
+  padding: 2px 6px;
+  border: 2px solid var(--hh-alarm);
+  color: #ff5d47;
+  font-family: Impact, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  transform: rotate(-7deg);
+  transition: left 360ms ease;
+}
+
+.hellhole-metropolitan-line__hell.is-culture {
+  left: 64%;
+}
+.hellhole-metropolitan-line__hell.is-conditions {
+  left: 43%;
+}
+.hellhole-metropolitan-line__hell.is-residents {
+  left: 72%;
+  opacity: 0.55;
+}
+
+.hellhole-metropolitan-line__fragments {
+  position: absolute;
+  inset: 8px 8% auto;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.hellhole-metropolitan-line__fragments i {
+  padding: 2px 5px;
+  border: 1px solid var(--hh-alarm);
+  color: #ff7866;
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+}
+
+/* Controls -------------------------------------------------------------- */
+
+.hellhole-spine {
+  position: relative;
+  padding-top: 18px;
+}
+
+.hellhole-controller__drawer {
+  margin-top: 7px;
+}
+
+.hellhole-controller__drawer > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #efe9dc;
+  cursor: pointer;
+  font-family: var(--font-code, monospace);
+  list-style: none;
+}
+
+.hellhole-controller__drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.hellhole-controller__drawer > summary span {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.hellhole-controller__drawer > summary span::before {
+  content: "+ ";
+  color: var(--hh-sodium);
+}
+
+.hellhole-controller__drawer[open] > summary span::before {
+  content: "− ";
+}
+
+.hellhole-controller__drawer > summary small {
+  color: #aaa99f;
+  font-size: 8px;
+}
+
+.hellhole-controller__drawer:not([open]) + .hellhole-live {
+  margin-top: 7px;
+}
+
+.hellhole-controls {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns:
+    minmax(250px, 1.65fr) repeat(2, minmax(105px, 0.62fr)) minmax(190px, 1.15fr)
+    minmax(135px, 0.8fr) minmax(230px, 1.45fr);
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 0;
+  background:
+    linear-gradient(90deg, transparent 0 49.8%, var(--hh-grid) 49.8% 50.2%, transparent 50.2%),
+    var(--surface-1);
+  box-shadow: none;
+}
+
+.hellhole-control-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.hellhole-control-group legend,
+.hellhole-range-control > span,
+.hellhole-select-control > span {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.hellhole-control-group > div {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hellhole-control-group button {
+  min-height: 31px;
+  padding: 0 9px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.hellhole-control-group button span,
+.hellhole-control-group button small {
+  display: block;
+}
+
+.hellhole-control-group button small {
+  margin-top: 1px;
+  font-size: 7px;
+  font-weight: 700;
+  opacity: 0.68;
+}
+
+.hellhole-control-group button[aria-pressed="true"] {
+  border-color: var(--hh-ink);
+  background: var(--hh-ink);
+  color: var(--hh-paper);
+}
+
+.hellhole-range-control,
+.hellhole-select-control {
+  min-width: 0;
+  display: block;
+  padding: 2px 6px;
+}
+
+.hellhole-range-control output {
+  color: var(--hh-oxide);
+  font-size: 11px;
+}
+
+.hellhole-range-control input {
+  width: 100%;
+  accent-color: var(--hh-oxide);
+}
+
+.hellhole-select-control select {
+  width: 100%;
+  min-height: 31px;
+  border: 1px solid var(--surface-3);
+  border-radius: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.hellhole-live {
+  min-height: 28px;
+  margin: 18px 0 0;
+  padding: 7px 10px;
+  border-left: 3px solid var(--hh-blue);
+  background: color-mix(in srgb, var(--hh-blue) 8%, transparent);
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.hellhole-controller .hellhole-live {
+  min-height: 0;
+  margin: 7px 0 0;
+  padding-block: 4px;
+  border-color: var(--hh-sodium);
+  background: rgba(242, 182, 63, 0.08);
+  color: #c4c1b8;
+}
+
+/* Chapter structure ----------------------------------------------------- */
+
+.hellhole-chapter {
+  position: relative;
+  padding: clamp(88px, 12vw, 154px) 0;
+  border-bottom: 1px solid var(--surface-3);
+}
+
+.hellhole-chapter-heading {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 58px);
+  align-items: start;
+  margin-bottom: clamp(38px, 6vw, 72px);
+}
+
+.hellhole-chapter-heading > div:first-child {
+  display: grid;
+  gap: 8px;
+  padding-top: 5px;
+  border-top: 3px solid var(--hh-ink);
+}
+
+.hellhole-chapter-heading > div:first-child span {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.04em;
+}
+
+.hellhole-chapter-heading > div:first-child small,
+.hellhole-chapter-heading > div:last-child > p:first-child {
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.hellhole-chapter-heading > div:last-child > p:first-child {
+  margin: 0 0 10px;
+  color: var(--hh-oxide);
+}
+
+.hellhole-chapter-heading h2 {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--hh-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 5.5vw, 66px);
+  font-weight: 400;
+  letter-spacing: -0.052em;
+  line-height: 0.98;
+}
+
+.hellhole-chapter-heading__subtitle {
+  max-width: 68ch;
+  margin: 20px 0 0;
+  color: var(--text-secondary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.hellhole-prose-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(380px, 1.18fr);
+  gap: clamp(36px, 7vw, 92px);
+  align-items: center;
+}
+
+.hellhole-prose-grid p,
+.hellhole-resident-reading p,
+.hellhole-metric-controls > p {
+  color: var(--text-secondary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.72;
+}
+
+.hellhole-bargain-diagram {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+  padding: 44px 24px 54px;
+  border: 1px solid #a69372;
+  background:
+    linear-gradient(rgba(49, 95, 120, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(49, 95, 120, 0.09) 1px, transparent 1px), var(--hh-paper);
+  background-size: 17px 17px;
+  color: var(--hh-ink);
+  box-shadow: 10px 10px 0 var(--hh-paper-deep);
+}
+
+.hellhole-bargain-diagram > div {
+  min-height: 130px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 17px;
+  border: 2px solid var(--hh-blue);
+  background: color-mix(in srgb, var(--hh-paper) 86%, var(--hh-pool));
+  text-align: center;
+}
+
+.hellhole-bargain-diagram > div:last-of-type {
+  border-color: var(--hh-city);
+}
+
+.hellhole-bargain-diagram > div span {
+  font-family: Impact, sans-serif;
+  font-size: 31px;
+  letter-spacing: 0.05em;
+}
+
+.hellhole-bargain-diagram > div strong {
+  font-size: 10px;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.hellhole-bargain-diagram > i {
+  max-width: 92px;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.hellhole-bargain-diagram > b {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  padding: 5px;
+  background: repeating-linear-gradient(135deg, #b44131 0 6px, #d76d52 6px 12px);
+  color: white;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.hellhole-bargain-diagram figcaption {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hellhole-crisis-ledger,
+.hellhole-count-rate-reach {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.hellhole-evidence-fact {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 15px;
+  padding: 21px;
+  border: 1px solid #5c5a55;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.03) 0 1px, transparent 1px 4px), var(--hh-news);
+  color: var(--hh-ink);
+}
+
+.hellhole-evidence-fact > span {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 29px;
+  letter-spacing: 0.05em;
+}
+
+.hellhole-evidence-fact p {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.hellhole-chapter--crisis blockquote {
+  max-width: 920px;
+  margin: 42px auto 0;
+  padding: 30px 34px;
+  border: 0;
+  border-left: 9px solid var(--hh-sodium);
+  background: var(--hh-night);
+  color: #f2ecdf;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(25px, 3.5vw, 42px);
+  letter-spacing: 0.012em;
+  line-height: 1.08;
+  text-transform: uppercase;
+  transform: rotate(-0.4deg);
+}
+
+/* Charts ---------------------------------------------------------------- */
+
+.hellhole-chart-shell {
+  margin: 0;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-0);
+  box-shadow: 9px 9px 0 var(--surface-3);
+}
+
+.hellhole-chart-shell__meta {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--surface-3);
+  background: var(--surface-1);
+}
+
+.hellhole-chart-shell__meta span,
+.hellhole-chart-shell__meta strong {
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.hellhole-chart-shell__meta span {
+  color: var(--hh-oxide);
+}
+
+.hellhole-chart-shell__meta strong {
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.hellhole-chart-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+}
+
+.hellhole-chart-shell figcaption {
+  padding: 13px 16px;
+  border-top: 1px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.hellhole-chart-shell--hero {
+  position: relative;
+  background:
+    linear-gradient(var(--hh-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hh-grid) 1px, transparent 1px), var(--surface-0);
+  background-size: 24px 24px;
+}
+
+.hellhole-chart-shell .semiotic-frame,
+.hellhole-chart-shell .frame,
+.hellhole-chart-shell svg {
+  max-width: none;
+}
+
+.hellhole-chart-tooltip {
+  max-width: 280px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #ddd5c6;
+  background: #171a19;
+  color: #f4eee1;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.hellhole-chart-tooltip span,
+.hellhole-chart-tooltip small {
+  color: #b8b8b0;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.hellhole-chart-tooltip strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+}
+
+.hellhole-source-pill {
+  width: max-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--hh-blue) !important;
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.hellhole-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 22px;
+}
+
+/* Parallax -------------------------------------------------------------- */
+
+.hellhole-chapter--parallax {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(28px, calc((100vw - 1180px) / 2 + 28px));
+  background:
+    linear-gradient(rgba(49, 95, 120, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(49, 95, 120, 0.1) 1px, transparent 1px), var(--hh-paper);
+  background-size: 22px 22px;
+  color: var(--hh-ink);
+}
+
+.hellhole-parallax-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.5fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.hellhole-chart-shell--lexis {
+  min-width: 0;
+  background: color-mix(in srgb, var(--hh-paper) 92%, white);
+}
+
+.hellhole-observer-cards {
+  display: grid;
+  gap: 12px;
+}
+
+.hellhole-observer-card,
+.hellhole-method-card {
+  display: grid;
+  gap: 9px;
+  padding: 18px;
+  border: 1px solid #8f897d;
+  background: color-mix(in srgb, var(--hh-paper) 92%, white);
+  color: var(--hh-ink);
+}
+
+.hellhole-observer-card:nth-child(2) {
+  border-left: 6px solid var(--hh-suburb);
+}
+
+.hellhole-observer-card:first-child {
+  border-left: 6px solid var(--hh-city);
+}
+
+.hellhole-observer-card > span,
+.hellhole-method-card > span {
+  color: var(--hh-blue);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hellhole-observer-card > strong {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 30px;
+  letter-spacing: 0.025em;
+}
+
+.hellhole-observer-card p,
+.hellhole-method-card p {
+  margin: 0;
+  color: color-mix(in srgb, var(--hh-ink) 72%, transparent);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.hellhole-observer-card dl {
+  display: grid;
+  gap: 5px;
+  margin: 4px 0 0;
+}
+
+.hellhole-observer-card dl div {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 7px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+}
+
+.hellhole-observer-card dt {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hellhole-observer-card dd {
+  margin: 0;
+}
+
+.hellhole-method-card {
+  border-color: var(--hh-blue);
+  background: var(--hh-blue);
+  color: white;
+}
+
+.hellhole-method-card > span,
+.hellhole-method-card p {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hellhole-method-card > strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.hellhole-method-card .hellhole-source-pill {
+  color: white !important;
+}
+
+/* Suburban windows ------------------------------------------------------ */
+
+.hellhole-chapter--secret {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(28px, calc((100vw - 1180px) / 2 + 28px));
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 5px), #233226;
+  color: #f0eadb;
+}
+
+.hellhole-chapter--secret .hellhole-chapter-heading h2,
+.hellhole-chapter--secret .hellhole-chapter-heading__subtitle,
+.hellhole-chapter--secret .hellhole-chapter-heading > div:first-child small {
+  color: #f0eadb;
+}
+
+.hellhole-chapter--secret .hellhole-chapter-heading > div:first-child {
+  border-color: var(--hh-pool);
+}
+
+.hellhole-chart-shell--motifs {
+  border-color: #70806e;
+  background: #17201a;
+  box-shadow: 10px 10px 0 #9a8c71;
+}
+
+.hellhole-chart-shell--motifs .hellhole-chart-shell__meta,
+.hellhole-chart-shell--motifs figcaption {
+  border-color: #4e5b4d;
+  background: #1d281f;
+  color: #cbc9bf;
+}
+
+.hellhole-window-archive {
+  margin-top: 34px;
+  border: 1px solid #7a8876;
+  background: #1a241c;
+}
+
+.hellhole-window-archive summary {
+  padding: 16px 18px;
+  color: #f2ecdf;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hellhole-window-archive > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid #586456;
+  background: #586456;
+}
+
+.hellhole-window-archive article {
+  min-height: 124px;
+  display: grid;
+  align-content: end;
+  gap: 7px;
+  padding: 13px;
+  background: linear-gradient(150deg, transparent 54%, rgba(105, 186, 202, 0.09) 54%), #222e24;
+  outline: none;
+}
+
+.hellhole-window-archive article:hover,
+.hellhole-window-archive article:focus {
+  background: var(--hh-vinyl);
+  color: var(--hh-ink);
+}
+
+.hellhole-window-archive article span,
+.hellhole-window-archive article small {
+  color: #a7afa5;
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.hellhole-window-archive article strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+}
+
+.hellhole-window-archive > p {
+  margin: 0;
+  padding: 14px 18px;
+  border-top: 1px solid #586456;
+  color: #bbc0b7;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* Residents and final fracture ----------------------------------------- */
+
+.hellhole-survey-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.hellhole-survey-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+}
+
+.hellhole-survey-card header {
+  min-height: 78px;
+}
+
+.hellhole-survey-card header span {
+  color: var(--hh-resident);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hellhole-survey-card header h3 {
+  margin: 7px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.hellhole-survey-card footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.hellhole-resident-reading {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(28px, 6vw, 84px);
+  margin-top: 48px;
+}
+
+.hellhole-resident-reading .hellhole-source-row {
+  grid-column: 1 / -1;
+  margin-top: -8px;
+}
+
+.hellhole-flow-comparison {
+  margin-top: clamp(72px, 10vw, 118px);
+  padding-top: 28px;
+  border-top: 8px solid var(--hh-ink);
+}
+
+.hellhole-flow-comparison__heading {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(280px, 0.54fr);
+  gap: clamp(28px, 6vw, 80px);
+  align-items: end;
+  margin-bottom: 34px;
+}
+
+.hellhole-flow-comparison__heading h3 {
+  max-width: 15ch;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 5vw, 62px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.hellhole-flow-comparison__heading > p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.hellhole-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.hellhole-flow-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--surface-3);
+  border-top: 6px solid var(--flow-accent);
+  background: var(--surface-1);
+  box-shadow: 7px 7px 0 var(--hh-paper-deep);
+}
+
+.hellhole-flow-panel.is-outbound {
+  --flow-accent: var(--hh-city);
+}
+
+.hellhole-flow-panel.is-inbound {
+  --flow-accent: var(--hh-suburb);
+}
+
+.hellhole-flow-panel > header {
+  min-height: 112px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 4px 4px 14px;
+}
+
+.hellhole-flow-panel > header span,
+.hellhole-flow-panel > footer {
+  color: var(--flow-accent);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hellhole-flow-panel > header h4 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.hellhole-flow-panel > header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.hellhole-flow-panel__map {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--surface-3);
+  background:
+    radial-gradient(circle at 48% 58%, rgba(105, 186, 202, 0.12), transparent 32%),
+    repeating-linear-gradient(0deg, transparent 0 34px, var(--hh-grid) 34px 35px),
+    repeating-linear-gradient(90deg, transparent 0 34px, var(--hh-grid) 34px 35px),
+    color-mix(in srgb, var(--hh-paper) 82%, var(--surface-1));
+}
+
+.hellhole-flow-panel__map::before {
+  position: absolute;
+  z-index: 0;
+  top: 10px;
+  left: 12px;
+  color: var(--text-secondary);
+  content: "NY–NJ METROPOLITAN DETAIL · DISPLAY ANCHORS";
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.hellhole-flow-panel__map .semiotic-frame,
+.hellhole-flow-panel__map .frame,
+.hellhole-flow-panel__map svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  max-width: 100%;
+}
+
+.hellhole-flow-panel__map .annotation-note-label,
+.hellhole-flow-panel__map .annotation-note-title {
+  fill: var(--hh-ink);
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.hellhole-flow-panel__totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--surface-3);
+  border-top: 0;
+  background: var(--surface-3);
+}
+
+.hellhole-flow-panel__totals div {
+  min-width: 0;
+  padding: 11px;
+  background: var(--surface-1);
+}
+
+.hellhole-flow-panel__totals dt {
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hellhole-flow-panel__totals dd {
+  margin: 5px 0 0;
+  font-family: var(--font-code, monospace);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.hellhole-flow-panel > footer {
+  padding: 13px 4px 1px;
+}
+
+.hellhole-flow-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 22px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 13px 15px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hellhole-flow-scale strong {
+  margin-right: auto;
+}
+
+.hellhole-flow-scale span {
+  min-width: 92px;
+  display: inline-grid;
+  grid-template-columns: 46px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.hellhole-flow-scale i {
+  width: 46px;
+  min-height: 1px;
+  display: block;
+  background: var(--hh-ink);
+  border-radius: 999px;
+}
+
+.hellhole-flow-verdict {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+  gap: clamp(28px, 6vw, 72px);
+  align-items: center;
+  margin-top: 30px;
+  padding: clamp(24px, 4vw, 42px);
+  background: var(--hh-night);
+  color: #f6f0e4;
+}
+
+.hellhole-flow-verdict span {
+  color: var(--hh-sodium);
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(29px, 4vw, 48px);
+  letter-spacing: 0.015em;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.hellhole-flow-verdict p {
+  margin: 0;
+  color: #d6d2c8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.hellhole-flow-ledger {
+  margin-top: 30px;
+  overflow-x: auto;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+  scrollbar-color: var(--hh-suburb) var(--hh-paper-deep);
+}
+
+.hellhole-flow-ledger:focus-visible {
+  outline: 3px solid var(--hh-pool);
+  outline-offset: 3px;
+}
+
+.hellhole-flow-ledger table {
+  width: 100%;
+  min-width: 930px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.hellhole-flow-ledger caption {
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.hellhole-flow-ledger th,
+.hellhole-flow-ledger td {
+  padding: 11px 13px;
+  border-right: 1px solid var(--surface-3);
+  border-bottom: 1px solid var(--surface-3);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.hellhole-flow-ledger th:first-child {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+  min-width: 178px;
+  background: var(--surface-1);
+  text-align: left;
+}
+
+.hellhole-flow-ledger thead th,
+.hellhole-flow-ledger tfoot th,
+.hellhole-flow-ledger tfoot td {
+  background: var(--hh-paper-deep);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hellhole-flow-ledger th small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.hellhole-flow-caveat {
+  margin: 18px 0 0;
+  padding-left: 15px;
+  border-left: 4px solid var(--hh-suburb);
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.hellhole-flow-source-row {
+  margin-top: 24px;
+}
+
+.hellhole-chapter--fracture {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(28px, calc((100vw - 1180px) / 2 + 28px));
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px), #171b1c;
+  background-size: 28px 28px;
+  color: #eee9de;
+}
+
+.hellhole-chapter--fracture .hellhole-chapter-heading h2,
+.hellhole-chapter--fracture .hellhole-chapter-heading__subtitle,
+.hellhole-chapter--fracture .hellhole-chapter-heading > div:first-child small {
+  color: #eee9de;
+}
+
+.hellhole-chapter--fracture .hellhole-chapter-heading > div:first-child {
+  border-color: var(--hh-sodium);
+}
+
+.hellhole-metric-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(28px, 6vw, 76px);
+  align-items: center;
+}
+
+.hellhole-metric-controls .hellhole-control-group legend {
+  color: #aaa99f;
+}
+
+.hellhole-metric-controls > span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--hh-sodium);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hellhole-metric-controls > strong {
+  display: block;
+  color: #f1ead8;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(34px, 4.5vw, 58px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.hellhole-metric-controls .hellhole-control-group > div {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.hellhole-metric-controls .hellhole-control-group button {
+  min-height: 49px;
+  border-color: #596064;
+  background: #202527;
+  color: #d4d1c8;
+  text-align: left;
+}
+
+.hellhole-metric-controls .hellhole-control-group button[aria-pressed="true"] {
+  border-color: var(--hh-sodium);
+  background: var(--hh-sodium);
+  color: #171712;
+}
+
+.hellhole-metric-controls > p {
+  color: #aaa99f;
+}
+
+.hellhole-chart-shell--metric {
+  border-color: #565d60;
+  background: #202527;
+  box-shadow: 9px 9px 0 #3c4346;
+}
+
+.hellhole-metric-chart > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 17px 0;
+  color: #ece7db;
+}
+
+.hellhole-metric-chart > header span {
+  color: var(--hh-sodium);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hellhole-metric-chart > header strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 400;
+  text-align: right;
+}
+
+.hellhole-metric-chart > p {
+  margin: 0;
+  padding: 0 17px 17px;
+  color: #a9aaa3;
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.hellhole-missing-metric {
+  min-height: 340px;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: clamp(24px, 6vw, 62px);
+  color: #ece7db;
+}
+
+.hellhole-missing-metric span {
+  color: var(--hh-sodium);
+  font-family: var(--font-code, monospace);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hellhole-missing-metric strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 5vw, 50px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.hellhole-missing-metric p {
+  max-width: 58ch;
+  margin: 0;
+  color: #a9aaa3;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.hellhole-count-rate-reach {
+  margin-top: 68px;
+}
+
+.hellhole-count-rate-reach .hellhole-evidence-fact {
+  border-color: #585f61;
+  background: #202527;
+  color: #eee9de;
+}
+
+.hellhole-count-rate-reach .hellhole-source-pill {
+  color: var(--hh-pool) !important;
+}
+
+.hellhole-final-line {
+  max-width: 980px;
+  margin: clamp(72px, 10vw, 126px) auto 0;
+  color: #f1ecdf;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 4.6vw, 58px);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  text-align: center;
+}
+
+/* Evidence ledger and footer ------------------------------------------- */
+
+.hellhole-evidence-ledger {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.58fr) minmax(0, 1.42fr);
+  gap: clamp(42px, 8vw, 104px);
+  padding: clamp(88px, 12vw, 150px) 0;
+}
+
+.hellhole-evidence-ledger h2 {
+  max-width: 11ch;
+  margin: 0;
+  color: var(--hh-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 4.8vw, 58px);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.hellhole-evidence-ledger > div:first-child > p:last-child {
+  margin-top: 24px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.hellhole-evidence-ledger__sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hellhole-evidence-ledger__sources a {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+  text-decoration: none;
+}
+
+.hellhole-evidence-ledger__sources a:hover,
+.hellhole-evidence-ledger__sources a:focus-visible {
+  border-color: var(--hh-oxide);
+}
+
+.hellhole-evidence-ledger__sources span,
+.hellhole-evidence-ledger__sources small {
+  color: var(--text-secondary);
+  font-family: var(--font-code, monospace);
+  font-size: 7px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.hellhole-evidence-ledger__sources strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.hellhole-footer {
+  display: grid;
+  gap: 16px;
+  margin-inline: calc(50% - 50vw);
+  padding: clamp(72px, 10vw, 120px) max(28px, calc((100vw - 1180px) / 2 + 28px));
+  background: var(--hh-night);
+  color: #f1ecdf;
+}
+
+.hellhole-footer > span {
+  color: var(--hh-sodium);
+  font-family: var(--font-code, monospace);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.hellhole-footer > strong {
+  max-width: 18ch;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 5vw, 64px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.hellhole-footer > p {
+  max-width: 72ch;
+  margin: 10px 0 0;
+  color: #aeadab;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* Interaction states ---------------------------------------------------- */
+
+.hellhole-example button:hover,
+.hellhole-example select:hover {
+  border-color: var(--hh-oxide);
+}
+
+.hellhole-example button:focus-visible,
+.hellhole-example select:focus-visible,
+.hellhole-example input:focus-visible,
+.hellhole-example a:focus-visible,
+.hellhole-window-archive article:focus-visible {
+  outline: 3px solid var(--hh-pool);
+  outline-offset: 3px;
+}
+
+.hellhole-example.is-reduced-motion *,
+.hellhole-example.is-reduced-motion *::before,
+.hellhole-example.is-reduced-motion *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hellhole-example *,
+  .hellhole-example *::before,
+  .hellhole-example *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .hellhole-stamp {
+    left: 58%;
+  }
+}
+
+@media (max-width: 1040px) {
+  .hellhole-hero {
+    grid-template-columns: minmax(0, 0.78fr) minmax(420px, 1.22fr);
+    gap: 38px;
+  }
+
+  .hellhole-controls {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .hellhole-controls > *:nth-child(1) {
+    grid-column: span 6;
+  }
+  .hellhole-controls > *:nth-child(2),
+  .hellhole-controls > *:nth-child(3) {
+    grid-column: span 3;
+  }
+  .hellhole-controls > *:nth-child(4) {
+    grid-column: span 5;
+  }
+  .hellhole-controls > *:nth-child(5) {
+    grid-column: span 3;
+  }
+  .hellhole-controls > *:nth-child(6) {
+    grid-column: span 4;
+  }
+
+  .hellhole-window-archive > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .hellhole-hero {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    padding-block: 72px;
+  }
+
+  .hellhole-hero__copy {
+    max-width: 700px;
+  }
+
+  .hellhole-prologue-stage {
+    min-height: 470px;
+  }
+
+  .hellhole-correction,
+  .hellhole-prose-grid,
+  .hellhole-parallax-layout,
+  .hellhole-metric-layout,
+  .hellhole-evidence-ledger,
+  .hellhole-flow-comparison__heading,
+  .hellhole-flow-grid,
+  .hellhole-flow-verdict {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-correction h2,
+  .hellhole-evidence-ledger h2 {
+    max-width: 17ch;
+  }
+
+  .hellhole-crisis-ledger,
+  .hellhole-count-rate-reach {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-evidence-fact {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .hellhole-observer-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hellhole-method-card {
+    grid-column: 1 / -1;
+  }
+
+  .hellhole-evidence-ledger__sources {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .hellhole-hero {
+    margin-inline: -28px;
+    padding-inline: 28px;
+  }
+
+  .hellhole-hero h2 {
+    font-size: clamp(56px, 18vw, 88px);
+  }
+
+  .hellhole-prologue-stage {
+    min-height: 390px;
+    box-shadow: 10px 10px 0 rgba(189, 78, 46, 0.7);
+  }
+
+  .hellhole-prologue-panel {
+    padding: 15px;
+  }
+
+  .hellhole-prologue-panel > strong {
+    font-size: 24px;
+  }
+
+  .hellhole-prologue-panel > small {
+    font-size: 8px;
+  }
+
+  .hellhole-controller {
+    top: var(--examples-sticky-offset, 68px);
+    margin-inline: -28px;
+    max-height: calc(100vh - var(--examples-sticky-offset, 68px) - 6px);
+    padding-inline: 12px;
+  }
+
+  .hellhole-controller__heading {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .hellhole-controller__heading > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .hellhole-metropolitan-line > div > strong {
+    display: block;
+    font-size: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  .hellhole-metropolitan-line__rail {
+    right: 16px;
+    left: 16px;
+  }
+
+  .hellhole-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 8px;
+  }
+
+  .hellhole-controls > *:nth-child(n) {
+    grid-column: span 1;
+  }
+
+  .hellhole-controls > *:first-child,
+  .hellhole-controls > *:nth-child(4),
+  .hellhole-controls > *:nth-child(5),
+  .hellhole-controls > *:nth-child(6) {
+    grid-column: 1 / -1;
+  }
+
+  .hellhole-control-group > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hellhole-chapter {
+    padding-block: 84px;
+  }
+
+  .hellhole-chapter-heading {
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .hellhole-chapter-heading > div:first-child span {
+    font-size: 28px;
+  }
+
+  .hellhole-chapter-heading h2 {
+    font-size: clamp(34px, 10vw, 50px);
+  }
+
+  .hellhole-bargain-diagram {
+    grid-template-columns: 1fr;
+    padding-bottom: 60px;
+  }
+
+  .hellhole-bargain-diagram > i {
+    max-width: none;
+  }
+
+  .hellhole-evidence-fact {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .hellhole-evidence-fact .hellhole-source-pill {
+    grid-column: 2;
+  }
+
+  .hellhole-chapter--crisis blockquote {
+    padding: 24px;
+    font-size: 28px;
+  }
+
+  .hellhole-observer-cards,
+  .hellhole-survey-grid,
+  .hellhole-resident-reading,
+  .hellhole-flow-panel__totals {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-flow-comparison__heading h3 {
+    max-width: 18ch;
+  }
+
+  .hellhole-flow-panel {
+    box-shadow: 4px 4px 0 var(--hh-paper-deep);
+  }
+
+  .hellhole-flow-scale strong {
+    flex-basis: 100%;
+  }
+
+  .hellhole-method-card,
+  .hellhole-resident-reading .hellhole-source-row {
+    grid-column: auto;
+  }
+
+  .hellhole-window-archive > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hellhole-window-archive article {
+    min-height: 110px;
+  }
+
+  .hellhole-metric-controls .hellhole-control-group > div {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-evidence-ledger__sources {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hellhole-footer {
+    margin-inline: -28px;
+    padding-inline: 28px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hellhole-controller__drawer > summary small {
+    display: none;
+  }
+
+  .hellhole-prologue-stage {
+    min-height: 330px;
+  }
+
+  .hellhole-stamp {
+    top: 37%;
+    font-size: 44px;
+  }
+
+  .hellhole-city-skyline,
+  .hellhole-house-row {
+    bottom: 84px;
+  }
+
+  .hellhole-prologue-panel > strong {
+    font-size: 19px;
+  }
+
+  .hellhole-chapter-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-chapter-heading > div:first-child {
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+  }
+
+  .hellhole-evidence-ledger__sources,
+  .hellhole-window-archive > div {
+    grid-template-columns: 1fr;
+  }
+
+  .hellhole-final-line {
+    text-align: left;
+  }
+}
+
+@media (forced-colors: active) {
+  .hellhole-example {
+    --hh-ink: CanvasText;
+    --hh-paper: Canvas;
+    --hh-paper-deep: Canvas;
+    --hh-city: LinkText;
+    --hh-suburb: Highlight;
+    --hh-resident: VisitedText;
+  }
+
+  .hellhole-hero,
+  .hellhole-chapter--secret,
+  .hellhole-chapter--fracture,
+  .hellhole-footer,
+  .hellhole-controller,
+  .hellhole-metropolitan-line {
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .hellhole-controls,
+  .hellhole-chart-shell,
+  .hellhole-chart-shell__meta,
+  .hellhole-survey-card,
+  .hellhole-flow-panel,
+  .hellhole-flow-panel__map,
+  .hellhole-flow-panel__totals,
+  .hellhole-flow-panel__totals div,
+  .hellhole-flow-scale,
+  .hellhole-flow-ledger,
+  .hellhole-observer-card,
+  .hellhole-method-card,
+  .hellhole-evidence-fact,
+  .hellhole-window-archive article,
+  .hellhole-evidence-ledger__sources a,
+  .hellhole-missing-metric {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+
+  .hellhole-chart-shell__meta,
+  .hellhole-chart-shell figcaption,
+  .hellhole-survey-card footer,
+  .hellhole-flow-panel__map,
+  .hellhole-flow-panel__totals,
+  .hellhole-flow-ledger th,
+  .hellhole-flow-ledger td {
+    border-color: CanvasText;
+  }
+
+  .hellhole-chart-shell svg {
+    forced-color-adjust: auto;
+  }
+
+  .hellhole-hero h2,
+  .hellhole-hero__lede,
+  .hellhole-hero__thesis,
+  .hellhole-footer,
+  .hellhole-chapter--secret .hellhole-chapter-heading h2,
+  .hellhole-chapter--fracture .hellhole-chapter-heading h2 {
+    color: CanvasText;
+  }
+
+  .hellhole-flow-verdict {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+
+  .hellhole-flow-verdict span,
+  .hellhole-flow-verdict p,
+  .hellhole-flow-panel__map .annotation-note-label,
+  .hellhole-flow-panel__map .annotation-note-title {
+    color: CanvasText;
+    fill: CanvasText;
+  }
+
+  .hellhole-stamp,
+  .hellhole-metropolitan-line__hell,
+  .hellhole-metropolitan-line__fragments i {
+    border-color: Highlight;
+    color: Highlight;
+  }
+
+  .hellhole-source-pill,
+  .hellhole-evidence-ledger__sources a {
+    color: LinkText !important;
+  }
+
+  .hellhole-missing-metric {
+    border: 2px dashed CanvasText;
+  }
+
+  .hellhole-control-group button[aria-pressed="true"],
+  .hellhole-hero__action,
+  .hellhole-correction button {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .hellhole-example button:focus-visible,
+  .hellhole-example select:focus-visible,
+  .hellhole-example input:focus-visible,
+  .hellhole-example a:focus-visible {
+    outline-color: Highlight;
+  }
+}

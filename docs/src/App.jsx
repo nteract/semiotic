@@ -179,6 +179,12 @@ const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedger
 const TheLastScarcityExamplePage = lazy(
   () => import("./pages/examples/TheLastScarcityExamplePage"),
 )
+const HellholeChangedAddressesExamplePage = lazy(
+  () => import("./pages/examples/HellholeChangedAddressesExamplePage"),
+)
+const ParataxisMachineExamplePage = lazy(
+  () => import("./pages/examples/ParataxisMachineExamplePage"),
+)
 const UkraineWarHistoryExamplePage = lazy(
   () => import("./pages/examples/UkraineWarHistoryExamplePage"),
 )
@@ -317,6 +323,8 @@ const EqualPlacesAtlasExamplePage = lazy(
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "TheLastScarcityExamplePage.jsx": TheLastScarcityExamplePage,
+  "HellholeChangedAddressesExamplePage.jsx": HellholeChangedAddressesExamplePage,
+  "ParataxisMachineExamplePage.jsx": ParataxisMachineExamplePage,
   "UkraineWarHistoryExamplePage.jsx": UkraineWarHistoryExamplePage,
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
   "AnalystAdventureExamplePage.jsx": AnalystAdventureExamplePage,

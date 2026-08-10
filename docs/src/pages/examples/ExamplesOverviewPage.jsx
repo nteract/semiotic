@@ -6,6 +6,8 @@ import "./ExamplesOverviewPage.css"
 const PREVIEW_COMPONENTS = {
   "living-ledger": MiniLivingLedgerPreview,
   "last-scarcity": MiniLastScarcityPreview,
+  "hellhole-changed-addresses": MiniHellholeChangedAddressesPreview,
+  "parataxis-machine": MiniParataxisMachinePreview,
   "ukraine-war-history": MiniUkraineWarHistoryPreview,
   "insight-forge": MiniInsightForgePreview,
   "analyst-adventure": MiniAnalystAdventurePreview,
@@ -219,6 +221,186 @@ function MiniLivingLedgerPreview() {
       </text>
       <text x="15" y="24" fill="#75a79d" fontSize="5.5" letterSpacing="0.7">
         SERVICE WEATHER / EVIDENCE / THRESHOLDS
+      </text>
+    </svg>
+  )
+}
+
+function MiniHellholeChangedAddressesPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <defs>
+        <linearGradient id="hellhole-preview-sky" x1="0" x2="1">
+          <stop stopColor="#171b22" />
+          <stop offset="0.49" stopColor="#2d3031" />
+          <stop offset="0.51" stopColor="#ede2c9" />
+          <stop offset="1" stopColor="#bcd7cc" />
+        </linearGradient>
+        <marker
+          id="hellhole-preview-arrow"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0 0 6 3 0 6Z" fill="#ff624d" />
+        </marker>
+      </defs>
+
+      <rect width="242" height="96" rx="6" fill="url(#hellhole-preview-sky)" />
+      <path d="M121 0V58" stroke="rgba(255,255,255,0.35)" strokeDasharray="2 3" />
+
+      <g aria-hidden="true">
+        <rect x="8" y="25" width="22" height="31" fill="#090c11" />
+        <rect x="33" y="15" width="27" height="41" fill="#10151c" />
+        <rect x="63" y="30" width="18" height="26" fill="#0b0f15" />
+        <rect x="84" y="21" width="25" height="35" fill="#11161c" />
+        {[14, 22, 39, 48, 69, 90, 99].map((x, index) => (
+          <rect
+            key={x}
+            x={x}
+            y={index % 2 ? 29 : 36}
+            width="3"
+            height="5"
+            fill={index > 4 ? "#7f8587" : "#e69a52"}
+            opacity="0.8"
+          />
+        ))}
+        <path d="M0 56H121" stroke="#67625b" strokeWidth="2" />
+      </g>
+
+      <g aria-hidden="true">
+        <path d="M127 50 143 35 159 50V58H127Z" fill="#f7f0dd" stroke="#725f55" />
+        <path d="M164 48 182 29 201 48V58H164Z" fill="#f4e5d1" stroke="#725f55" />
+        <path d="M203 51 218 38 234 51V58H203Z" fill="#f0eedc" stroke="#725f55" />
+        <rect x="139" y="48" width="6" height="10" fill="#75a5a0" />
+        <rect x="177" y="46" width="7" height="12" fill="#8d6b63" />
+        <rect x="219" y="49" width="6" height="9" fill="#75a5a0" />
+        <path d="M121 58H242" stroke="#5d8967" strokeWidth="4" />
+      </g>
+
+      <text x="10" y="11" fill="#eee6d6" fontSize="6" fontWeight="800" letterSpacing="1">
+        CITY
+      </text>
+      <text
+        x="232"
+        y="11"
+        textAnchor="end"
+        fill="#344e48"
+        fontSize="6"
+        fontWeight="800"
+        letterSpacing="1"
+      >
+        SUBURB
+      </text>
+      <path
+        d="M45 18C85 6 140 7 194 19"
+        fill="none"
+        stroke="#ff624d"
+        strokeWidth="1.5"
+        strokeDasharray="4 2"
+        markerEnd="url(#hellhole-preview-arrow)"
+      />
+      <g transform="translate(98 11) rotate(2)">
+        <rect width="38" height="13" rx="1" fill="#ff624d" />
+        <text
+          x="19"
+          y="9.5"
+          textAnchor="middle"
+          fill="#fff7e9"
+          fontSize="8"
+          fontWeight="950"
+          letterSpacing="1.2"
+        >
+          HELL
+        </text>
+      </g>
+
+      <g transform="translate(0 60)">
+        <rect width="242" height="36" fill="#11171b" opacity="0.95" />
+        <path
+          d="M34 12H232M34 23H232M34 33H232"
+          stroke="#657078"
+          strokeWidth="0.45"
+          opacity="0.5"
+        />
+        <text x="7" y="11" fill="#f0c15b" fontSize="4.8" fontWeight="800">
+          CULTURE
+        </text>
+        <text x="7" y="22" fill="#a9c9c0" fontSize="4.8" fontWeight="800">
+          CONDITION
+        </text>
+        <text x="7" y="33" fill="#b8a2cf" fontSize="4.8" fontWeight="800">
+          RESIDENT
+        </text>
+        <path
+          d="M36 6C88 6 115 8 143 12S198 17 230 17"
+          fill="none"
+          stroke="#ff795f"
+          strokeWidth="1.3"
+        />
+        <path
+          d="M36 17C88 17 115 15 143 11S198 6 230 6"
+          fill="none"
+          stroke="#f0c15b"
+          strokeWidth="1.3"
+        />
+        <path d="M36 20C96 20 145 24 230 25" fill="none" stroke="#ff795f" strokeWidth="1.1" />
+        <path d="M36 29C101 29 152 27 230 26" fill="none" stroke="#7dc9bd" strokeWidth="1.1" />
+        <path d="M36 31C105 31 164 31 230 30" fill="none" stroke="#b8a2cf" strokeWidth="1.2" />
+        <circle cx="132" cy="11.5" r="2.1" fill="#11171b" stroke="#f8efe0" strokeWidth="0.8" />
+      </g>
+    </svg>
+  )
+}
+
+function MiniParataxisMachinePreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <defs>
+        <radialGradient id="parataxis-preview-glow">
+          <stop stopColor="#5cc8be" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#0a1013" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="242" height="96" rx="6" fill="#0a1013" />
+      <rect width="242" height="96" rx="6" fill="url(#parataxis-preview-glow)" />
+      <path
+        d="M0 16H242M0 32H242M0 48H242M0 64H242M0 80H242M20 0V96M40 0V96M60 0V96M80 0V96M100 0V96M120 0V96M140 0V96M160 0V96M180 0V96M200 0V96M220 0V96"
+        stroke="#9ab0ad"
+        strokeWidth="0.3"
+        opacity="0.12"
+      />
+      <text x="12" y="14" fill="#f2b84b" fontSize="5" fontWeight="800" letterSpacing="1.2">
+        PARATAXIS MACHINE
+      </text>
+      <g transform="translate(12 30)">
+        <rect width="70" height="34" fill="#151f23" stroke="#71847f" strokeWidth="0.6" />
+        <text x="35" y="20" textAnchor="middle" fill="#f1ead8" fontSize="7.4">
+          The rain stopped.
+        </text>
+      </g>
+      <g transform="translate(160 30)">
+        <rect width="70" height="34" fill="#151f23" stroke="#71847f" strokeWidth="0.6" />
+        <text x="35" y="20" textAnchor="middle" fill="#f1ead8" fontSize="7.4">
+          Nobody moved.
+        </text>
+      </g>
+      {[
+        [102, 32, 4, "#f2b84b"],
+        [120, 48, 6, "#ef6a5b"],
+        [139, 33, 3.5, "#5cc8be"],
+        [104, 65, 3, "#63a8ff"],
+        [137, 65, 4.5, "#a991d4"],
+      ].map(([x, y, r, color], index) => (
+        <g key={index}>
+          <path d={`M82 47L${x} ${y}L160 47`} fill="none" stroke={color} strokeDasharray="2 2" opacity="0.55" />
+          <circle cx={x} cy={y} r={r} fill="#0a1013" stroke={color} />
+        </g>
+      ))}
+      <text x="121" y="86" textAnchor="middle" fill="#a9b4af" fontSize="5.5" letterSpacing="1.1">
+        HOW IMPLIED CONNECTIONS WORK
       </text>
     </svg>
   )
