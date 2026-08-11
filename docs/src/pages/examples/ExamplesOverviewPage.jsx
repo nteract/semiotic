@@ -4,6 +4,7 @@ import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
+  "how-a-hit-travels": MiniHitTravelsPreview,
   "living-ledger": MiniLivingLedgerPreview,
   "last-scarcity": MiniLastScarcityPreview,
   "hellhole-changed-addresses": MiniHellholeChangedAddressesPreview,
@@ -95,6 +96,76 @@ function MissingExamplePreview({ preview }) {
   )
 }
 
+function MiniHitTravelsPreview() {
+  const nodes = [
+    [34, 61, 5, "#ffb866"],
+    [53, 42, 4, "#ffb866"],
+    [72, 68, 3.5, "#f08b6d"],
+    [93, 32, 5, "#76c8be"],
+    [111, 51, 4, "#76c8be"],
+    [132, 25, 3.5, "#76c8be"],
+    [151, 62, 5, "#ab9bdd"],
+    [171, 39, 4.5, "#ab9bdd"],
+    [193, 55, 3.5, "#de806f"],
+    [211, 29, 4, "#7ea9dc"],
+  ]
+  const edges = [
+    [34, 61, 53, 42],
+    [53, 42, 72, 68],
+    [53, 42, 93, 32],
+    [93, 32, 111, 51],
+    [93, 32, 132, 25],
+    [111, 51, 151, 62],
+    [132, 25, 171, 39],
+    [151, 62, 171, 39],
+    [171, 39, 193, 55],
+    [171, 39, 211, 29],
+  ]
+
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#101826" />
+      <path
+        d="M8 74C35 69 53 77 78 70S122 63 146 70 194 75 234 63"
+        fill="none"
+        stroke="#32435b"
+        strokeWidth="0.7"
+        strokeDasharray="2 3"
+      />
+      <g stroke="#60748e" strokeWidth="0.75" opacity="0.58">
+        {edges.map(([x1, y1, x2, y2]) => (
+          <line key={`${x1}-${y1}-${x2}-${y2}`} x1={x1} y1={y1} x2={x2} y2={y2} />
+        ))}
+      </g>
+      <g>
+        {nodes.map(([cx, cy, radius, fill], index) => (
+          <g key={`${cx}-${cy}`}>
+            {index === 3 || index === 7 ? (
+              <circle cx={cx} cy={cy} r={radius + 4} fill="none" stroke={fill} opacity="0.28" />
+            ) : null}
+            <circle cx={cx} cy={cy} r={radius} fill={fill} />
+          </g>
+        ))}
+      </g>
+      <path d="M20 82H222" stroke="#65758b" strokeWidth="0.7" />
+      {[20, 60, 100, 140, 180, 222].map((x, index) => (
+        <g key={x}>
+          <line x1={x} x2={x} y1="79" y2="85" stroke="#8190a3" strokeWidth="0.7" />
+          {index < 5 ? (
+            <circle cx={x + 9} cy="82" r="1.7" fill="#ffb866" opacity={1 - index * 0.14} />
+          ) : null}
+        </g>
+      ))}
+      <text x="12" y="14" fill="#f5f1e9" fontSize="7" fontWeight="800" letterSpacing="0.75">
+        HOW A HIT TRAVELS
+      </text>
+      <text x="230" y="91" textAnchor="end" fill="#8fa0b6" fontSize="5.2" letterSpacing="0.55">
+        SHARED RANKING PATTERNS
+      </text>
+    </svg>
+  )
+}
+
 function MiniEqualPlacesAtlasPreview() {
   const mask = [
     "............................##",
@@ -108,10 +179,8 @@ function MiniEqualPlacesAtlasPreview() {
   ]
   const dots = mask.flatMap((row, rowIndex) =>
     [...row].flatMap((cell, columnIndex) =>
-      cell === "#"
-        ? [[12 + columnIndex * 7.2, 13 + rowIndex * 8.1]]
-        : []
-    )
+      cell === "#" ? [[12 + columnIndex * 7.2, 13 + rowIndex * 8.1]] : [],
+    ),
   )
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -122,10 +191,7 @@ function MiniEqualPlacesAtlasPreview() {
         </linearGradient>
       </defs>
       <rect width="242" height="96" rx="6" fill="url(#equal-places-preview-bg)" />
-      <path
-        d="M8 18H234M8 34H234M8 50H234M8 66H234M8 82H234"
-        stroke="rgba(255,255,255,0.05)"
-      />
+      <path d="M8 18H234M8 34H234M8 50H234M8 66H234M8 82H234" stroke="rgba(255,255,255,0.05)" />
       {dots.map(([x, y], index) => (
         <circle
           key={index}
@@ -395,7 +461,13 @@ function MiniParataxisMachinePreview() {
         [137, 65, 4.5, "#a991d4"],
       ].map(([x, y, r, color], index) => (
         <g key={index}>
-          <path d={`M82 47L${x} ${y}L160 47`} fill="none" stroke={color} strokeDasharray="2 2" opacity="0.55" />
+          <path
+            d={`M82 47L${x} ${y}L160 47`}
+            fill="none"
+            stroke={color}
+            strokeDasharray="2 2"
+            opacity="0.55"
+          />
           <circle cx={x} cy={y} r={r} fill="#0a1013" stroke={color} />
         </g>
       ))}
@@ -425,8 +497,14 @@ function MiniLastScarcityPreview() {
       <path d="M11 84V13h220v71" fill="none" stroke="#d7c9a8" strokeWidth="0.45" />
 
       <g fill="none" stroke="#78927b" strokeLinecap="round">
-        <path d="M8 76c14-2 14-16 9-23-4-6-2-16 8-18 10-3 14 7 9 13-5 7-14 2-11-5" strokeWidth="1.05" />
-        <path d="M234 76c-14-2-14-16-9-23 4-6 2-16-8-18-10-3-14 7-9 13 5 7 14 2 11-5" strokeWidth="1.05" />
+        <path
+          d="M8 76c14-2 14-16 9-23-4-6-2-16 8-18 10-3 14 7 9 13-5 7-14 2-11-5"
+          strokeWidth="1.05"
+        />
+        <path
+          d="M234 76c-14-2-14-16-9-23 4-6 2-16-8-18-10-3-14 7-9 13 5 7 14 2 11-5"
+          strokeWidth="1.05"
+        />
         <path d="M17 55c8 1 12 5 13 12M225 55c-8 1-12 5-13 12" strokeWidth="0.7" />
       </g>
       <g fill="#a9bda8" stroke="#78927b" strokeWidth="0.45">
@@ -437,16 +515,36 @@ function MiniLastScarcityPreview() {
       </g>
 
       <g>
-        <text x="18" y="20" fill="#405e50" fontSize="5.2" fontWeight="800" letterSpacing="0.7">THE GOOD FUTURE</text>
+        <text x="18" y="20" fill="#405e50" fontSize="5.2" fontWeight="800" letterSpacing="0.7">
+          THE GOOD FUTURE
+        </text>
         <path d="M26 30H92V68H107" fill="none" stroke="#6e8775" strokeWidth="1.15" />
         <path d="M26 30V68M48 30V68M70 30V68M92 30V68" stroke="#c7d3c5" strokeWidth="0.55" />
         {[26, 48, 70, 92].map((x, index) => (
           <g key={x}>
-            <circle cx={x} cy={index % 2 ? 49 : 39} r="5.2" fill="#fffef9" stroke="#5d7968" strokeWidth="1" />
-            <circle cx={x} cy={index % 2 ? 49 : 39} r="1.45" fill={index === 3 ? "#a45e61" : "#78927b"} />
+            <circle
+              cx={x}
+              cy={index % 2 ? 49 : 39}
+              r="5.2"
+              fill="#fffef9"
+              stroke="#5d7968"
+              strokeWidth="1"
+            />
+            <circle
+              cx={x}
+              cy={index % 2 ? 49 : 39}
+              r="1.45"
+              fill={index === 3 ? "#a45e61" : "#78927b"}
+            />
           </g>
         ))}
-        <path d="M95 68c8 0 7-13 14-13" fill="none" stroke="#a45e61" strokeWidth="1.2" strokeDasharray="2 2" />
+        <path
+          d="M95 68c8 0 7-13 14-13"
+          fill="none"
+          stroke="#a45e61"
+          strokeWidth="1.2"
+          strokeDasharray="2 2"
+        />
         <circle cx="108" cy="55" r="2.7" fill="#a45e61" />
       </g>
 
@@ -465,16 +563,39 @@ function MiniLastScarcityPreview() {
             strokeWidth="0.65"
           />
         ))}
-        <path d="M134 29c18 1 22 19 43 25s20-14 31-23M140 54c15-18 32-22 57-20M153 75c13-10 27-11 48 0" fill="none" stroke="#9a5c69" strokeWidth="1" />
-        <path d="M134 29c19 17 39 22 76 26M143 76c16-25 38-36 66-46" fill="none" stroke="#aa8b4d" strokeWidth="0.8" strokeDasharray="3 2" />
+        <path
+          d="M134 29c18 1 22 19 43 25s20-14 31-23M140 54c15-18 32-22 57-20M153 75c13-10 27-11 48 0"
+          fill="none"
+          stroke="#9a5c69"
+          strokeWidth="1"
+        />
+        <path
+          d="M134 29c19 17 39 22 76 26M143 76c16-25 38-36 66-46"
+          fill="none"
+          stroke="#aa8b4d"
+          strokeWidth="0.8"
+          strokeDasharray="3 2"
+        />
         <circle cx="134" cy="29" r="2" fill="#55776a" />
         <circle cx="177" cy="54" r="2" fill="#9a5c69" />
         <circle cx="208" cy="30" r="2" fill="#aa8b4d" />
         <circle cx="202" cy="76" r="2" fill="#506c78" />
       </g>
 
-      <text x="18" y="88" fill="#2f473c" fontSize="7.2" fontWeight="900" letterSpacing="1">THE LAST SCARCITY</text>
-      <text x="229" y="92" textAnchor="end" fill="#8a7050" fontSize="4.7" fontWeight="700" letterSpacing="0.55">THE PALACE OF ABUNDANCE</text>
+      <text x="18" y="88" fill="#2f473c" fontSize="7.2" fontWeight="900" letterSpacing="1">
+        THE LAST SCARCITY
+      </text>
+      <text
+        x="229"
+        y="92"
+        textAnchor="end"
+        fill="#8a7050"
+        fontSize="4.7"
+        fontWeight="700"
+        letterSpacing="0.55"
+      >
+        THE PALACE OF ABUNDANCE
+      </text>
     </svg>
   )
 }
@@ -556,13 +677,47 @@ function MiniApolloThirdSeatPreview() {
       ))}
       <circle cx="19" cy="48" r="10" fill="#367f98" stroke="#8ecae6" />
       <circle cx="220" cy="39" r="7" fill="#8e8b86" stroke="#f4ead5" />
-      <path d="M28 48C74 48 77 25 116 25H150" fill="none" stroke="#8ecae6" strokeWidth="8" opacity="0.76" />
-      <path d="M116 25C142 25 139 56 170 56" fill="none" stroke="#e8875f" strokeWidth="5" opacity="0.88" />
-      <path d="M170 56C190 56 190 39 213 39" fill="none" stroke="#e8875f" strokeWidth="5" opacity="0.88" />
-      <path d="M116 25H177C194 25 196 39 213 39" fill="none" stroke="#8ecae6" strokeWidth="2.6" opacity="0.9" />
-      <path d="M28 48C72 48 78 73 118 73H155C181 73 190 44 213 39" fill="none" stroke="#ef476f" strokeWidth="4.8" opacity="0.9" />
-      <text x="12" y="13" fill="#f3c969" fontSize="6.5" fontWeight="800" letterSpacing="1.1">THE THIRD SEAT</text>
-      <text x="230" y="89" textAnchor="end" fill="#9bb0b8" fontSize="5.5" letterSpacing="0.7">27 CREW-SEATS / 9 FLIGHTS</text>
+      <path
+        d="M28 48C74 48 77 25 116 25H150"
+        fill="none"
+        stroke="#8ecae6"
+        strokeWidth="8"
+        opacity="0.76"
+      />
+      <path
+        d="M116 25C142 25 139 56 170 56"
+        fill="none"
+        stroke="#e8875f"
+        strokeWidth="5"
+        opacity="0.88"
+      />
+      <path
+        d="M170 56C190 56 190 39 213 39"
+        fill="none"
+        stroke="#e8875f"
+        strokeWidth="5"
+        opacity="0.88"
+      />
+      <path
+        d="M116 25H177C194 25 196 39 213 39"
+        fill="none"
+        stroke="#8ecae6"
+        strokeWidth="2.6"
+        opacity="0.9"
+      />
+      <path
+        d="M28 48C72 48 78 73 118 73H155C181 73 190 44 213 39"
+        fill="none"
+        stroke="#ef476f"
+        strokeWidth="4.8"
+        opacity="0.9"
+      />
+      <text x="12" y="13" fill="#f3c969" fontSize="6.5" fontWeight="800" letterSpacing="1.1">
+        THE THIRD SEAT
+      </text>
+      <text x="230" y="89" textAnchor="end" fill="#9bb0b8" fontSize="5.5" letterSpacing="0.7">
+        27 CREW-SEATS / 9 FLIGHTS
+      </text>
     </svg>
   )
 }
@@ -571,16 +726,36 @@ function MiniBallotTransferLedgerPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#102327" />
-      <path d="M0 24H242M0 48H242M0 72H242M24 0V96M48 0V96M72 0V96M96 0V96M120 0V96M144 0V96M168 0V96M192 0V96M216 0V96" stroke="#355054" strokeWidth="0.5" opacity="0.45" />
+      <path
+        d="M0 24H242M0 48H242M0 72H242M24 0V96M48 0V96M72 0V96M96 0V96M120 0V96M144 0V96M168 0V96M192 0V96M216 0V96"
+        stroke="#355054"
+        strokeWidth="0.5"
+        opacity="0.45"
+      />
       <path d="M18 26H59C76 26 78 18 94 18H124" fill="none" stroke="#f2b544" strokeWidth="9" />
       <path d="M18 47H59C75 47 78 34 94 34H124" fill="none" stroke="#36b7a6" strokeWidth="6" />
       <path d="M18 64H83C97 64 99 48 115 48H146" fill="none" stroke="#a778d5" strokeWidth="5" />
-      <path d="M124 18H162C177 18 178 28 194 28H226" fill="none" stroke="#f2b544" strokeWidth="10" />
+      <path
+        d="M124 18H162C177 18 178 28 194 28H226"
+        fill="none"
+        stroke="#f2b544"
+        strokeWidth="10"
+      />
       <path d="M124 34C148 34 151 43 169 43H226" fill="none" stroke="#36b7a6" strokeWidth="9" />
       <path d="M146 48C171 48 177 43 193 43H226" fill="none" stroke="#36b7a6" strokeWidth="7" />
-      <path d="M83 64C121 64 129 72 161 72H226" fill="none" stroke="#697386" strokeWidth="5" opacity="0.9" />
-      <text x="12" y="12" fill="#f3f0e8" fontSize="6.5" fontWeight="800" letterSpacing="1">THE 7,197-VOTE CORRIDOR</text>
-      <text x="230" y="89" textAnchor="end" fill="#8fa9a7" fontSize="5.5" letterSpacing="0.7">942,031 BALLOTS / 3 POOLS</text>
+      <path
+        d="M83 64C121 64 129 72 161 72H226"
+        fill="none"
+        stroke="#697386"
+        strokeWidth="5"
+        opacity="0.9"
+      />
+      <text x="12" y="12" fill="#f3f0e8" fontSize="6.5" fontWeight="800" letterSpacing="1">
+        THE 7,197-VOTE CORRIDOR
+      </text>
+      <text x="230" y="89" textAnchor="end" fill="#8fa9a7" fontSize="5.5" letterSpacing="0.7">
+        942,031 BALLOTS / 3 POOLS
+      </text>
     </svg>
   )
 }
@@ -589,14 +764,54 @@ function MiniGermanyStillBecomingPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#f2eddc" />
-      {[17, 36, 55, 74].map((y) => <line key={y} x1="13" x2="231" y1={y} y2={y} stroke="#9f9785" strokeWidth="0.5" strokeDasharray="2 3" />)}
-      <path d="M34 15C34 24 48 27 58 36S72 48 82 55S95 66 109 74S117 82 121 91" fill="none" stroke="#b66a50" strokeWidth="11" />
-      <path d="M74 15C74 25 62 27 58 36S75 47 82 55S101 67 109 74S118 83 121 91" fill="none" stroke="#4e79a7" strokeWidth="8" />
-      <path d="M112 15C112 25 102 29 96 36S91 46 82 55S99 67 109 74S118 83 121 91" fill="none" stroke="#a0cbe8" strokeWidth="7" />
-      <path d="M151 15C151 26 164 27 170 36S158 47 151 55S125 68 109 74S119 84 121 91" fill="none" stroke="#2f4b7c" strokeWidth="12" />
-      <path d="M204 15C204 26 189 28 186 36S191 46 197 55S146 69 109 74S119 84 121 91" fill="none" stroke="#edc948" strokeWidth="7" />
-      <text x="8" y="10" fill="#27322b" fontSize="6" fontWeight="800" letterSpacing="0.8">GERMANY, STILL BECOMING</text>
-      <text x="234" y="91" textAnchor="end" fill="#756e60" fontSize="5.2" letterSpacing="0.5">12 OPENINGS / 100% CONSERVED</text>
+      {[17, 36, 55, 74].map((y) => (
+        <line
+          key={y}
+          x1="13"
+          x2="231"
+          y1={y}
+          y2={y}
+          stroke="#9f9785"
+          strokeWidth="0.5"
+          strokeDasharray="2 3"
+        />
+      ))}
+      <path
+        d="M34 15C34 24 48 27 58 36S72 48 82 55S95 66 109 74S117 82 121 91"
+        fill="none"
+        stroke="#b66a50"
+        strokeWidth="11"
+      />
+      <path
+        d="M74 15C74 25 62 27 58 36S75 47 82 55S101 67 109 74S118 83 121 91"
+        fill="none"
+        stroke="#4e79a7"
+        strokeWidth="8"
+      />
+      <path
+        d="M112 15C112 25 102 29 96 36S91 46 82 55S99 67 109 74S118 83 121 91"
+        fill="none"
+        stroke="#a0cbe8"
+        strokeWidth="7"
+      />
+      <path
+        d="M151 15C151 26 164 27 170 36S158 47 151 55S125 68 109 74S119 84 121 91"
+        fill="none"
+        stroke="#2f4b7c"
+        strokeWidth="12"
+      />
+      <path
+        d="M204 15C204 26 189 28 186 36S191 46 197 55S146 69 109 74S119 84 121 91"
+        fill="none"
+        stroke="#edc948"
+        strokeWidth="7"
+      />
+      <text x="8" y="10" fill="#27322b" fontSize="6" fontWeight="800" letterSpacing="0.8">
+        GERMANY, STILL BECOMING
+      </text>
+      <text x="234" y="91" textAnchor="end" fill="#756e60" fontSize="5.2" letterSpacing="0.5">
+        12 OPENINGS / 100% CONSERVED
+      </text>
     </svg>
   )
 }
@@ -605,13 +820,52 @@ function MiniGoodEarthLyingFlatPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#f5f0e7" />
-      {[38, 75, 112, 149, 186, 223].map((x) => <line key={x} x1={x} x2={x} y1="13" y2="85" stroke="#bdb5a8" strokeWidth="0.5" strokeDasharray="2 3" />)}
-      <path d="M22 28C33 28 35 27 47 27S62 22 74 22S91 29 106 29S124 49 137 49S153 58 168 58S191 65 214 65" fill="none" stroke="#b65c4c" strokeWidth="10" opacity="0.75" />
-      <path d="M22 59C39 59 42 59 54 59S66 54 78 54S91 61 104 61S119 41 135 41S153 29 168 29S190 38 214 38" fill="none" stroke="#457b8d" strokeWidth="7" opacity="0.75" />
-      <path d="M104 61C119 61 124 67 138 67S152 76 168 76S192 79 214 79" fill="none" stroke="#55765d" strokeWidth="7" opacity="0.76" />
-      <path d="M137 49C148 49 154 46 168 46S192 45 214 45" fill="none" stroke="#875e82" strokeWidth="5" opacity="0.62" />
-      <text x="9" y="10" fill="#20283a" fontSize="6" fontWeight="800" letterSpacing="0.72">GOOD EARTH → LYING FLAT</text>
-      <text x="234" y="92" textAnchor="end" fill="#5e6470" fontSize="5.1" letterSpacing="0.45">6 STAGES / 35 CLAIMS</text>
+      {[38, 75, 112, 149, 186, 223].map((x) => (
+        <line
+          key={x}
+          x1={x}
+          x2={x}
+          y1="13"
+          y2="85"
+          stroke="#bdb5a8"
+          strokeWidth="0.5"
+          strokeDasharray="2 3"
+        />
+      ))}
+      <path
+        d="M22 28C33 28 35 27 47 27S62 22 74 22S91 29 106 29S124 49 137 49S153 58 168 58S191 65 214 65"
+        fill="none"
+        stroke="#b65c4c"
+        strokeWidth="10"
+        opacity="0.75"
+      />
+      <path
+        d="M22 59C39 59 42 59 54 59S66 54 78 54S91 61 104 61S119 41 135 41S153 29 168 29S190 38 214 38"
+        fill="none"
+        stroke="#457b8d"
+        strokeWidth="7"
+        opacity="0.75"
+      />
+      <path
+        d="M104 61C119 61 124 67 138 67S152 76 168 76S192 79 214 79"
+        fill="none"
+        stroke="#55765d"
+        strokeWidth="7"
+        opacity="0.76"
+      />
+      <path
+        d="M137 49C148 49 154 46 168 46S192 45 214 45"
+        fill="none"
+        stroke="#875e82"
+        strokeWidth="5"
+        opacity="0.62"
+      />
+      <text x="9" y="10" fill="#20283a" fontSize="6" fontWeight="800" letterSpacing="0.72">
+        GOOD EARTH → LYING FLAT
+      </text>
+      <text x="234" y="92" textAnchor="end" fill="#5e6470" fontSize="5.1" letterSpacing="0.45">
+        6 STAGES / 35 CLAIMS
+      </text>
     </svg>
   )
 }
@@ -620,7 +874,18 @@ function MiniUnitedStatesHistoryRiverPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#f3efe3" />
-      {[18, 36, 54, 72, 88].map((y) => <line key={y} x1="13" x2="231" y1={y} y2={y} stroke="#9d9789" strokeWidth="0.5" strokeDasharray="2 3" />)}
+      {[18, 36, 54, 72, 88].map((y) => (
+        <line
+          key={y}
+          x1="13"
+          x2="231"
+          y1={y}
+          y2={y}
+          stroke="#9d9789"
+          strokeWidth="0.5"
+          strokeDasharray="2 3"
+        />
+      ))}
       <path d="M28 13C35 18 45 20 58 23" fill="none" stroke="#8c6d31" strokeWidth="4" />
       <path d="M43 13C47 18 52 20 58 23" fill="none" stroke="#8c6d31" strokeWidth="4" />
       <path d="M58 13V88" fill="none" stroke="#173f6b" strokeWidth="13" />
@@ -634,8 +899,12 @@ function MiniUnitedStatesHistoryRiverPreview() {
       <path d="M229 64C220 64 215 64 206 65" fill="none" stroke="#d88743" strokeWidth="4" />
       <path d="M229 71C219 71 215 71 206 72" fill="none" stroke="#d88743" strokeWidth="3" />
       <path d="M206 81V88" fill="none" stroke="#9bc9e2" strokeWidth="8" opacity="0.38" />
-      <text x="8" y="9" fill="#22323d" fontSize="5.8" fontWeight="800" letterSpacing="0.65">THE UNITED STATES, DRAWN TOGETHER</text>
-      <text x="234" y="92" textAnchor="end" fill="#6f6a5f" fontSize="5.1" letterSpacing="0.45">3 INSTITUTIONS / 64 TRANSACTIONS</text>
+      <text x="8" y="9" fill="#22323d" fontSize="5.8" fontWeight="800" letterSpacing="0.65">
+        THE UNITED STATES, DRAWN TOGETHER
+      </text>
+      <text x="234" y="92" textAnchor="end" fill="#6f6a5f" fontSize="5.1" letterSpacing="0.45">
+        3 INSTITUTIONS / 64 TRANSACTIONS
+      </text>
     </svg>
   )
 }
@@ -785,11 +1054,19 @@ function MiniChainReactionPreview() {
   const lanes = [0, 1, 2, 3, 4]
   const tasks = [
     // [lane, depth, state]  state: done | blocked | stalled
-    [0, 0, "done"], [0, 1, "done"], [0, 2, "blocked"],
-    [1, 0, "done"], [1, 2, "stalled"], [1, 3, "stalled"],
-    [2, 0, "done"], [2, 1, "done"], [2, 3, "stalled"],
-    [3, 1, "done"], [3, 3, "stalled"],
-    [4, 2, "stalled"], [4, 4, "stalled"],
+    [0, 0, "done"],
+    [0, 1, "done"],
+    [0, 2, "blocked"],
+    [1, 0, "done"],
+    [1, 2, "stalled"],
+    [1, 3, "stalled"],
+    [2, 0, "done"],
+    [2, 1, "done"],
+    [2, 3, "stalled"],
+    [3, 1, "done"],
+    [3, 3, "stalled"],
+    [4, 2, "stalled"],
+    [4, 4, "stalled"],
   ]
   const laneX = (lane) => 20 + lane * 41
   const depthY = (depth) => 34 + depth * 13
@@ -813,7 +1090,11 @@ function MiniChainReactionPreview() {
         />
       ))}
       {/* Delivery balls: prerequisites that did arrive, above the blocker. */}
-      {[[0, 0], [1, 1], [2, 2]].map(([lane, depth]) => (
+      {[
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ].map(([lane, depth]) => (
         <circle
           key={`ball-${lane}`}
           cx={laneX(lane) + 7}
@@ -1931,7 +2212,12 @@ function MiniDataVizForDummiesFourPreview() {
         <circle key={`${x}-${y}`} cx={x} cy={y} r="5" fill={fill} stroke="#18211b" />
       ))}
       <path d="M158 85h72" stroke="#c7c4b9" />
-      <path d="M160 83c14-2 18-14 28-13s12 10 21 8 11-14 21-18" fill="none" stroke="#5b8def" strokeWidth="2" />
+      <path
+        d="M160 83c14-2 18-14 28-13s12 10 21 8 11-14 21-18"
+        fill="none"
+        stroke="#5b8def"
+        strokeWidth="2"
+      />
     </svg>
   )
 }
@@ -1960,17 +2246,29 @@ function MiniDataVizForDummiesFivePreview() {
         LOCATION EARNS INK
       </text>
       <g transform="translate(91 14)">
-        <path d="M0 0h41v27H0zM41 0h38v27H41zM0 27h41v33H0zM41 27h38v33H41z"
-          fill="#63d8ff" fillOpacity=".35" stroke="#18211b" />
-        <path d="M79 0h34v31H79zM79 31h34v29H79z"
-          fill="#a77bea" fillOpacity=".35" stroke="#18211b" />
+        <path
+          d="M0 0h41v27H0zM41 0h38v27H41zM0 27h41v33H0zM41 27h38v33H41z"
+          fill="#63d8ff"
+          fillOpacity=".35"
+          stroke="#18211b"
+        />
+        <path
+          d="M79 0h34v31H79zM79 31h34v29H79z"
+          fill="#a77bea"
+          fillOpacity=".35"
+          stroke="#18211b"
+        />
         <circle cx="55" cy="23" r="8" fill="#ffd166" stroke="#18211b" />
         <circle cx="95" cy="44" r="5" fill="#ff6f61" stroke="#18211b" />
         <circle cx="18" cy="45" r="4" fill="#5b8def" stroke="#18211b" />
       </g>
       <circle cx="211" cy="49" r="6" fill="#ffd166" stroke="#18211b" />
-      <path d="M151 25Q184 6 211 49M151 61Q184 84 211 49M171 81Q194 72 211 49"
-        fill="none" stroke="#5b8def" strokeWidth="2" />
+      <path
+        d="M151 25Q184 6 211 49M151 61Q184 84 211 49M171 81Q194 72 211 49"
+        fill="none"
+        stroke="#5b8def"
+        strokeWidth="2"
+      />
       <circle cx="151" cy="25" r="3" fill="#63d8ff" />
       <circle cx="151" cy="61" r="3" fill="#a77bea" />
       <circle cx="171" cy="81" r="3" fill="#ff6f61" />
@@ -1991,20 +2289,41 @@ function MiniDataVizForDummiesSixPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#f5f0df" />
-      <rect x="8" y="8" width="70" height="80" rx="5" fill="#c8f135" stroke="#18211b" strokeWidth="2" />
+      <rect
+        x="8"
+        y="8"
+        width="70"
+        height="80"
+        rx="5"
+        fill="#c8f135"
+        stroke="#18211b"
+        strokeWidth="2"
+      />
       <path d="M8 24h70M8 40h70M8 56h70M8 72h70" stroke="#18211b" opacity=".12" strokeWidth="8" />
       <text x="15" y="20" fill="#18211b" fontSize="5.5" fontWeight="900" letterSpacing=".7">
         THE LAB TECH
       </text>
-      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">06</text>
-      <text x="15" y="73" fill="#18211b" fontSize="6.5" fontWeight="900">MECHANISM = DATA</text>
+      <text x="14" y="61" fill="#18211b" fontSize="39" fontWeight="950">
+        06
+      </text>
+      <text x="15" y="73" fill="#18211b" fontSize="6.5" fontWeight="900">
+        MECHANISM = DATA
+      </text>
       <g stroke="#18211b" strokeWidth="1.5" fill="none">
         <path d="M93 18h136M93 18l20 67M229 18l-20 67M113 85h96" />
         <path d="M118 25l12 10-12 10 12 10-12 10 12 10" opacity=".45" />
         <path d="M204 25l-12 10 12 10-12 10 12 10-12 10" opacity=".45" />
       </g>
       {balls.map(([x, y, fill]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="6" fill={fill} stroke="#18211b" strokeWidth="1.2" />
+        <circle
+          key={`${x}-${y}`}
+          cx={x}
+          cy={y}
+          r="6"
+          fill={fill}
+          stroke="#18211b"
+          strokeWidth="1.2"
+        />
       ))}
       <path d="M92 10h139" stroke="#f05ca9" strokeWidth="4" strokeDasharray="12 5" />
     </svg>

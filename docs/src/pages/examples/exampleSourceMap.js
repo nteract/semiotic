@@ -3,13 +3,14 @@ import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
 // Vite replaces the direct glob call in browser/docs builds. The prerender
 // process also imports this module through plain Node, where `import.meta`
 // exists but has no Vite `glob` helper; source panels are client-only there.
-const RAW_EXAMPLE_SOURCE_MODULES = typeof import.meta.glob === "function"
-  ? import.meta.glob(["./**/*.{js,jsx,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
-    eager: false,
-    query: "?raw",
-    import: "default",
-  })
-  : {}
+const RAW_EXAMPLE_SOURCE_MODULES =
+  typeof import.meta.glob === "function"
+    ? import.meta.glob(["./**/*.{js,jsx,mjs,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
+        eager: false,
+        query: "?raw",
+        import: "default",
+      })
+    : {}
 
 function toRawSourceModuleKey(sourceFile) {
   sourceFile = typeof sourceFile === "string" ? sourceFile.trim() : ""
@@ -19,31 +20,26 @@ function toRawSourceModuleKey(sourceFile) {
 }
 
 function cleanExampleLoader(loader) {
-  return () =>
-    loader().then((module) =>
-      typeof module === "string" ? module : module.default,
-    )
+  return () => loader().then((module) => (typeof module === "string" ? module : module.default))
 }
 
 const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
-  EXAMPLE_DEFINITIONS
-    .map((definition) => {
-      const files = definition.sourceFiles?.length
-        ? definition.sourceFiles
-        : definition.sourceFile
-          ? [definition.sourceFile]
-          : []
-      const loaders = files
-        .map((file) => {
-          const key = toRawSourceModuleKey(file)
-          const loader = key == null ? undefined : RAW_EXAMPLE_SOURCE_MODULES[key]
-          return loader ? { file, loader: cleanExampleLoader(loader) } : undefined
-        })
-        .filter(Boolean)
-      if (!loaders.length) return undefined
-      return [definition.path, loaders]
-    })
-    .filter(Boolean)
+  EXAMPLE_DEFINITIONS.map((definition) => {
+    const files = definition.sourceFiles?.length
+      ? definition.sourceFiles
+      : definition.sourceFile
+        ? [definition.sourceFile]
+        : []
+    const loaders = files
+      .map((file) => {
+        const key = toRawSourceModuleKey(file)
+        const loader = key == null ? undefined : RAW_EXAMPLE_SOURCE_MODULES[key]
+        return loader ? { file, loader: cleanExampleLoader(loader) } : undefined
+      })
+      .filter(Boolean)
+    if (!loaders.length) return undefined
+    return [definition.path, loaders]
+  }).filter(Boolean),
 )
 
 export const SOURCE_LOADERS_BY_PATH = EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH
@@ -63,9 +59,7 @@ const AGGREGATE_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
     path,
     () =>
       Promise.all(entries.map(async ({ file, load }) => ({ file, source: await load() }))).then(
-        (files) => files
-          .map(({ file, source }) => `// --- ${file} ---\n${source}`)
-          .join("\n\n"),
+        (files) => files.map(({ file, source }) => `// --- ${file} ---\n${source}`).join("\n\n"),
       ),
   ]),
 )

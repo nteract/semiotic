@@ -44,8 +44,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 498130,
-      "gzipBytes": 159649,
+      "rawBytes": 498462,
+      "gzipBytes": 159719,
       "packedPackageInputFiles": 52
     },
     {
@@ -53,8 +53,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 498083,
-      "gzipBytes": 159821,
+      "rawBytes": 498415,
+      "gzipBytes": 159922,
       "packedPackageInputFiles": 32
     },
     {
@@ -62,8 +62,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 415614,
-      "gzipBytes": 127866,
+      "rawBytes": 415729,
+      "gzipBytes": 127907,
       "packedPackageInputFiles": 25
     },
     {
@@ -71,8 +71,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 464323,
-      "gzipBytes": 152177,
+      "rawBytes": 464639,
+      "gzipBytes": 152274,
       "packedPackageInputFiles": 26
     },
     {
@@ -80,8 +80,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 399497,
-      "gzipBytes": 129130,
+      "rawBytes": 399773,
+      "gzipBytes": 129217,
       "packedPackageInputFiles": 28
     },
     {
@@ -89,9 +89,9 @@
       "importPath": "semiotic/realtime/core",
       "symbol": "RingBuffer",
       "platform": "browser",
-      "rawBytes": 562029,
-      "gzipBytes": 178376,
-      "packedPackageInputFiles": 14
+      "rawBytes": 562314,
+      "gzipBytes": 178503,
+      "packedPackageInputFiles": 13
     },
     {
       "exportKey": "./realtime/react",
@@ -107,8 +107,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 417279,
-      "gzipBytes": 138933,
+      "rawBytes": 417410,
+      "gzipBytes": 138975,
       "packedPackageInputFiles": 17
     },
     {
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 929945,
-      "gzipBytes": 295737,
+      "rawBytes": 930282,
+      "gzipBytes": 295842,
       "packedPackageInputFiles": 4
     },
     {
@@ -143,17 +143,17 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 533824,
-      "gzipBytes": 171278,
-      "packedPackageInputFiles": 16
+      "rawBytes": 534099,
+      "gzipBytes": 171379,
+      "packedPackageInputFiles": 15
     },
     {
       "exportKey": "./server/node",
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 930908,
-      "gzipBytes": 296156,
+      "rawBytes": 931245,
+      "gzipBytes": 296285,
       "packedPackageInputFiles": 4
     },
     {
@@ -161,8 +161,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 722486,
-      "gzipBytes": 200708,
+      "rawBytes": 722818,
+      "gzipBytes": 200795,
       "packedPackageInputFiles": 52
     },
     {
@@ -188,8 +188,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 333339,
-      "gzipBytes": 112261,
+      "rawBytes": 333585,
+      "gzipBytes": 112353,
       "packedPackageInputFiles": 20
     },
     {
@@ -208,7 +208,7 @@
       "platform": "browser",
       "rawBytes": 12486,
       "gzipBytes": 3498,
-      "packedPackageInputFiles": 3
+      "packedPackageInputFiles": 2
     },
     {
       "exportKey": "./themes/core",
@@ -235,7 +235,7 @@
       "platform": "browser",
       "rawBytes": 115004,
       "gzipBytes": 8918,
-      "packedPackageInputFiles": 16
+      "packedPackageInputFiles": 15
     },
     {
       "exportKey": "./utils/core",
@@ -244,7 +244,7 @@
       "platform": "browser",
       "rawBytes": 2074,
       "gzipBytes": 872,
-      "packedPackageInputFiles": 15
+      "packedPackageInputFiles": 14
     },
     {
       "exportKey": "./utils/react",

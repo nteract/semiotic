@@ -128,6 +128,25 @@ describe("computeNetworkAriaLabel", () => {
 // ── public styling hooks ───────────────────────────────────────────────
 
 describe("AccessibleDataTable styling hooks", () => {
+  it("constrains the collapsed trigger to the visually hidden region", () => {
+    render(
+      <AccessibleDataTable
+        tableId="semiotic-table-hidden-trigger"
+        chartType="line chart"
+        scene={[{ type: "point", x: 1, y: 2 }]}
+      />
+    )
+
+    const trigger = screen.getByRole("button", { name: /view data summary/i })
+    expect(trigger).toHaveStyle({
+      boxSizing: "border-box",
+      maxWidth: "100%",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis"
+    })
+  })
+
   it("renders stable classes and CSS variable hooks on the visible panel", () => {
     render(
       <AccessibleDataTable

@@ -456,23 +456,23 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **155.9 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **156.1 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **156.0 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **156.2 KiB** |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **124.9 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **148.6 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **126.1 KiB** |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **174.2 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **148.7 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **126.2 KiB** |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **174.3 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **135.7 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **288.8 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **167.3 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **289.2 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **196.0 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **288.9 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **167.4 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **289.3 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **196.1 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **36.6 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.6 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.7 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.5 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **3.4 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **3.4 KiB** |

@@ -23,8 +23,8 @@ export {
   THEME_PRESETS,
   CARBON_CATEGORICAL_14,
   CARBON_ALERT,
-} from "./semiotic-themes"
-export type { ThemePresetName } from "./semiotic-themes"
+} from "./semiotic-themes-core"
+export type { ThemePresetName } from "./semiotic-themes-core"
 
 // ── Format utilities ─────────────────────────────────────────────────────
 export { adaptiveTimeTicks, smartTickFormat } from "./charts/shared/formatUtils"
