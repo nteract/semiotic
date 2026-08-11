@@ -85,7 +85,7 @@ test.describe("The Hellhole Changed Addresses", () => {
     await expect(
       page.getByRole("heading", {
         level: 2,
-        name: "One metropolis. Two designated hells. Three stories at war."
+        name: "Three stories at war."
       })
     ).toBeVisible()
 
