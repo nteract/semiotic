@@ -8,15 +8,21 @@ import {
   useSortedData,
   useChartSelection,
   useChartMode,
-  getCrosshairProps,
+  getCrosshairProps
 } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { useSelection } from "../../store/useSelection"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
-import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
+import {
+  setCrosshairPosition,
+  clearCrosshairPosition,
+  useCrosshairPosition,
+  unlockCrosshair
+} from "../../store/LinkedCrosshairStore"
 import type { Datum } from "./datumTypes"
 import { useStreamingLegend } from "./useStreamingLegend"
+import { useChartSetup } from "./useChartSetup"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -30,10 +36,10 @@ function createWrapper(options?: { categoryColors?: Record<string, string> }) {
       React.createElement(ObservationProvider, null, children)
     )
     if (options?.categoryColors) {
-      return React.createElement(
-        CategoryColorProvider,
-        { colors: options.categoryColors, children: inner }
-      )
+      return React.createElement(CategoryColorProvider, {
+        colors: options.categoryColors,
+        children: inner
+      })
     }
     return inner
   }
@@ -68,12 +74,12 @@ describe("useColorScale", () => {
   const data = [
     { cat: "A", val: 1 },
     { cat: "B", val: 2 },
-    { cat: "C", val: 3 },
+    { cat: "C", val: 3 }
   ]
 
   it("returns undefined when colorBy is absent", () => {
     const { result } = renderHook(() => useColorScale(data, undefined), {
-      wrapper: createWrapper(),
+      wrapper: createWrapper()
     })
     expect(result.current).toBeUndefined()
   })
@@ -109,7 +115,7 @@ describe("useColorScale", () => {
 
   it("returns a color scale function when colorBy is a string", () => {
     const { result } = renderHook(() => useColorScale(data, "cat"), {
-      wrapper: createWrapper(),
+      wrapper: createWrapper()
     })
     expect(typeof result.current).toBe("function")
     const colorA = result.current!("A")
@@ -121,25 +127,67 @@ describe("useColorScale", () => {
   it("uses CategoryColorProvider colors when available", () => {
     const categoryColors = { A: "#ff0000", B: "#00ff00", C: "#0000ff" }
     const { result } = renderHook(() => useColorScale(data, "cat"), {
-      wrapper: createWrapper({ categoryColors }),
+      wrapper: createWrapper({ categoryColors })
     })
     expect(result.current!("A")).toBe("#ff0000")
     expect(result.current!("B")).toBe("#00ff00")
+  })
+
+  it("does not resolve inherited provider keys as colors", () => {
+    const { result } = renderHook(
+      () => useColorScale([{ cat: "constructor" }], "cat"),
+      {
+        wrapper: createWrapper({
+          categoryColors: { mapped: "#ff0000" }
+        })
+      }
+    )
+    const color = result.current!("constructor")
+    expect(typeof color).toBe("string")
+    expect(color).not.toBe(Object.prototype.constructor)
   })
 })
 
 // ── useStreamingLegend ───────────────────────────────────────────────────
 
 describe("useStreamingLegend", () => {
-  it("uses CategoryColorProvider colors for push-mode legend swatches", () => {
-    const { result } = renderHook(
-      () => useStreamingLegend({
+  it("publishes an immutable category snapshot for each push-domain revision", () => {
+    const { result } = renderHook(() =>
+      useStreamingLegend({
         isPushMode: true,
         colorBy: "cat",
         colorScheme: undefined,
-        showLegend: true,
-      }),
-      { wrapper: createWrapper({ categoryColors: { A: "#ff0000", B: "#00ff00" } }) }
+        showLegend: true
+      })
+    )
+    act(() => result.current.wrapPush(() => {})({ cat: "A" }))
+    const firstCategories = result.current.categories
+    expect(firstCategories).toEqual(["A"])
+
+    act(() => result.current.wrapPush(() => {})({ cat: "B" }))
+    expect(result.current.categories).toEqual(["A", "B"])
+    expect(result.current.categories).not.toBe(firstCategories)
+    expect(
+      result.current.streamingLegend?.legendGroups[0].items.map(
+        (item) => item.label
+      )
+    ).toEqual(["A", "B"])
+  })
+
+  it("uses CategoryColorProvider colors for push-mode legend swatches", () => {
+    const { result } = renderHook(
+      () =>
+        useStreamingLegend({
+          isPushMode: true,
+          colorBy: "cat",
+          colorScheme: undefined,
+          showLegend: true
+        }),
+      {
+        wrapper: createWrapper({
+          categoryColors: { A: "#ff0000", B: "#00ff00" }
+        })
+      }
     )
 
     act(() => {
@@ -149,7 +197,69 @@ describe("useStreamingLegend", () => {
     })
 
     const items = result.current.streamingLegend?.legendGroups[0].items
-    expect(items?.map(item => item.color)).toEqual(["#ff0000", "#00ff00"])
+    expect(items?.map((item) => item.color)).toEqual(["#ff0000", "#00ff00"])
+  })
+
+  it("does not resolve inherited object-map keys as explicit colors", () => {
+    const { result } = renderHook(() =>
+      useStreamingLegend({
+        isPushMode: true,
+        colorBy: "cat",
+        colorScheme: { alpha: "#ff0000" },
+        showLegend: true
+      })
+    )
+    act(() => result.current.wrapPush(() => {})({ cat: "constructor" }))
+
+    const color = result.current.streamingLegend?.legendGroups[0].items[0].color
+    expect(typeof color).toBe("string")
+    expect(color).not.toBe(Object.prototype.constructor)
+  })
+})
+
+describe("useChartSetup", () => {
+  it("keeps prototype-like push categories on the fallback legend scale", () => {
+    const { result } = renderHook(
+      () =>
+        useChartSetup({
+          data: [],
+          rawData: undefined,
+          colorBy: "cat",
+          colorScheme: undefined,
+          legendInteraction: undefined,
+          selection: undefined,
+          linkedHover: undefined,
+          fallbackFields: ["cat"],
+          onObservation: undefined,
+          chartType: "TestChart",
+          chartId: undefined,
+          showLegend: true,
+          userMargin: undefined,
+          marginDefaults: { top: 10, right: 10, bottom: 10, left: 10 },
+          loading: false,
+          width: 400,
+          height: 300
+        }),
+      { wrapper: createWrapper({ categoryColors: {} }) }
+    )
+
+    act(() => {
+      const onCategoriesChange = result.current.legendBehaviorProps
+        .onCategoriesChange as ((categories: string[]) => void) | undefined
+      onCategoriesChange?.(["constructor"])
+    })
+
+    const legend = result.current.legend as
+      | {
+          legendGroups: Array<{
+            items: Array<{ label: string; color?: string }>
+          }>
+        }
+      | undefined
+    const item = legend?.legendGroups[0].items[0]
+    expect(item?.label).toBe("constructor")
+    expect(typeof item?.color).toBe("string")
+    expect(item?.color).not.toBe(Object.prototype.constructor)
   })
 })
 
@@ -159,7 +269,7 @@ describe("useSortedData", () => {
   const data = [
     { name: "C", value: 30 },
     { name: "A", value: 10 },
-    { name: "B", value: 20 },
+    { name: "B", value: 20 }
   ]
 
   it("returns data unchanged when sort is false", () => {
@@ -218,10 +328,9 @@ describe("useSortedData", () => {
 
 describe("useChartSelection", () => {
   it("returns null activeSelectionHook when no selection config is provided", () => {
-    const { result } = renderHook(
-      () => useChartSelection({}),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({}), {
+      wrapper: createWrapper()
+    })
     expect(result.current.activeSelectionHook).toBeNull()
   })
 
@@ -230,14 +339,16 @@ describe("useChartSelection", () => {
       () =>
         useChartSelection({
           selection: { name: "hl" },
-          fallbackFields: ["category"],
+          fallbackFields: ["category"]
         }),
       { wrapper: createWrapper() }
     )
     expect(result.current.activeSelectionHook).not.toBeNull()
     expect(result.current.activeSelectionHook!.isActive).toBe(false)
     // With no active selection, predicate returns true for everything
-    expect(result.current.activeSelectionHook!.predicate({ category: "A" })).toBe(true)
+    expect(
+      result.current.activeSelectionHook!.predicate({ category: "A" })
+    ).toBe(true)
   })
 
   it("calls onObservation with hover event when hovering with data", () => {
@@ -247,7 +358,7 @@ describe("useChartSelection", () => {
         useChartSelection({
           onObservation,
           chartType: "LineChart",
-          chartId: "chart1",
+          chartId: "chart1"
         }),
       { wrapper: createWrapper() }
     )
@@ -269,7 +380,12 @@ describe("useChartSelection", () => {
   it("adds a normalized focus observation for keyboard traversal", () => {
     const onObservation = vi.fn()
     const { result } = renderHook(
-      () => useChartSelection({ onObservation, chartType: "LineChart", chartId: "trend" }),
+      () =>
+        useChartSelection({
+          onObservation,
+          chartType: "LineChart",
+          chartId: "trend"
+        }),
       { wrapper: createWrapper() }
     )
 
@@ -300,10 +416,18 @@ describe("useChartSelection", () => {
     )
 
     act(() => {
-      result.current.customHoverBehavior({ x: 10, y: 20, xValue: 42.5, data: { val: 42 } })
+      result.current.customHoverBehavior({
+        x: 10,
+        y: 20,
+        xValue: 42.5,
+        data: { val: 42 }
+      })
     })
 
-    expect(onObservation.mock.calls[0][0].datum).toEqual({ val: 42, xValue: 42.5 })
+    expect(onObservation.mock.calls[0][0].datum).toEqual({
+      val: 42,
+      xValue: 42.5
+    })
   })
 
   it("calls onObservation with hover-end when hovering with null", () => {
@@ -327,7 +451,7 @@ describe("useChartSelection", () => {
       () =>
         useChartSelection({
           onObservation,
-          chartType: "Scatterplot",
+          chartType: "Scatterplot"
         }),
       { wrapper: createWrapper() }
     )
@@ -369,10 +493,9 @@ describe("useChartSelection", () => {
 
   it("does not call onObservation with click-end for desktop null clicks", () => {
     const onObservation = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onObservation }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onObservation }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
       result.current.customClickBehavior(null)
@@ -395,8 +518,8 @@ describe("useChartSelection", () => {
             targetSize: 44,
             snap: "nearestDatum",
             brushHandleSize: 44,
-            standardControls: false,
-          },
+            standardControls: false
+          }
         }),
       { wrapper: createWrapper() }
     )
@@ -411,13 +534,16 @@ describe("useChartSelection", () => {
 
   it("unwraps datum from .datum property", () => {
     const onObservation = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onObservation }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onObservation }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
-      result.current.customHoverBehavior({ x: 0, y: 0, datum: { name: "test2" } })
+      result.current.customHoverBehavior({
+        x: 0,
+        y: 0,
+        datum: { name: "test2" }
+      })
     })
 
     expect(onObservation.mock.calls[0][0].datum).toEqual({ name: "test2" })
@@ -425,35 +551,46 @@ describe("useChartSelection", () => {
 
   it("uses datum directly when no .data or .datum wrapper exists", () => {
     const onObservation = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onObservation }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onObservation }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
       result.current.customHoverBehavior({ x: 1, y: 2, name: "direct" })
     })
 
-    expect(onObservation.mock.calls[0][0].datum).toEqual({ x: 1, y: 2, name: "direct" })
+    expect(onObservation.mock.calls[0][0].datum).toEqual({
+      x: 1,
+      y: 2,
+      name: "direct"
+    })
   })
 
   it("accepts hoverHighlight='series' as a series-hover alias", () => {
     const { result } = renderHook(
-      () => useChartSelection({ hoverHighlight: "series", colorByField: "series" }),
+      () =>
+        useChartSelection({ hoverHighlight: "series", colorByField: "series" }),
       { wrapper: createWrapper() }
     )
 
     expect(result.current.hoverSelectionHook).toBeNull()
 
     act(() => {
-      result.current.customHoverBehavior({ x: 1, y: 2, data: { series: "alpha" } })
+      result.current.customHoverBehavior({
+        x: 1,
+        y: 2,
+        data: { series: "alpha" }
+      })
     })
 
     expect(result.current.hoverSelectionHook?.isActive).toBe(true)
-    expect(result.current.hoverSelectionHook?.predicate({ series: "alpha" })).toBe(true)
-    expect(result.current.hoverSelectionHook?.predicate({ series: "beta" })).toBe(false)
+    expect(
+      result.current.hoverSelectionHook?.predicate({ series: "alpha" })
+    ).toBe(true)
+    expect(
+      result.current.hoverSelectionHook?.predicate({ series: "beta" })
+    ).toBe(false)
   })
-
 })
 
 // ── useChartMode ──────────────────────────────────────────────────────────
@@ -487,7 +624,12 @@ describe("useChartMode", () => {
     expect(result.enableHover).toBe(false)
     expect(result.showLegend).toBe(false)
     expect(result.showLabels).toBe(false)
-    expect(result.marginDefaults).toEqual({ top: 2, bottom: 2, left: 0, right: 0 })
+    expect(result.marginDefaults).toEqual({
+      top: 2,
+      bottom: 2,
+      left: 0,
+      right: 0
+    })
   })
 
   it("user-provided width/height override mode defaults", () => {
@@ -505,7 +647,7 @@ describe("useChartMode", () => {
     const result = useChartMode("context", {
       title: "My Title",
       xLabel: "X",
-      yLabel: "Y",
+      yLabel: "Y"
     })
     expect(result.title).toBeUndefined()
     expect(result.xLabel).toBeUndefined()
@@ -516,7 +658,7 @@ describe("useChartMode", () => {
     const result = useChartMode("sparkline", {
       title: "Spark",
       categoryLabel: "Cat",
-      valueLabel: "Val",
+      valueLabel: "Val"
     })
     expect(result.title).toBeUndefined()
     expect(result.categoryLabel).toBeUndefined()
@@ -527,7 +669,7 @@ describe("useChartMode", () => {
     const result = useChartMode("primary", {
       title: "My Chart",
       xLabel: "Time",
-      yLabel: "Value",
+      yLabel: "Value"
     })
     expect(result.title).toBe("My Chart")
     expect(result.xLabel).toBe("Time")
@@ -536,7 +678,7 @@ describe("useChartMode", () => {
 
   it("forces enableHover true when linkedHover is truthy", () => {
     const result = useChartMode("context", {
-      linkedHover: { name: "hl", fields: ["cat"] },
+      linkedHover: { name: "hl", fields: ["cat"] }
     })
     // Context mode normally has enableHover false, but linkedHover overrides
     expect(result.enableHover).toBe(true)
@@ -565,17 +707,22 @@ describe("useChartMode", () => {
             showAxes: false,
             showLegend: false,
             mobileInteraction: { targetSize: 48 },
-            mobileSemantics: { minimumHitTarget: 48 },
-          },
-        },
-      ],
+            mobileSemantics: { minimumHitTarget: 48 }
+          }
+        }
+      ]
     })
     expect(result.width).toBe(390)
     expect(result.mode).toBe("mobile")
     expect(result.showAxes).toBe(false)
     expect(result.showLegend).toBe(false)
     expect(result.showLabels).toBe(true)
-    expect(result.marginDefaults).toEqual({ top: 28, bottom: 42, left: 44, right: 16 })
+    expect(result.marginDefaults).toEqual({
+      top: 28,
+      bottom: 42,
+      left: 44,
+      right: 16
+    })
     expect(result.mobileInteraction.targetSize).toBe(48)
     expect(result.mobileSemantics?.minimumHitTarget).toBe(48)
   })
@@ -600,7 +747,11 @@ describe("useChartSelection onClick", () => {
     )
 
     act(() => {
-      result.current.customClickBehavior({ x: 10, y: 20, data: { id: 1, name: "test" } })
+      result.current.customClickBehavior({
+        x: 10,
+        y: 20,
+        data: { id: 1, name: "test" }
+      })
     })
 
     expect(onClick).toHaveBeenCalledTimes(1)
@@ -612,10 +763,9 @@ describe("useChartSelection onClick", () => {
 
   it("unwraps .datum property for onClick", () => {
     const onClick = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onClick }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onClick }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
       result.current.customClickBehavior({ x: 5, y: 15, datum: { val: 42 } })
@@ -626,10 +776,9 @@ describe("useChartSelection onClick", () => {
 
   it("does not call onClick when d is null", () => {
     const onClick = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onClick }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onClick }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
       result.current.customClickBehavior(null)
@@ -640,10 +789,9 @@ describe("useChartSelection onClick", () => {
 
   it("defaults x/y to 0 when missing from frame event", () => {
     const onClick = vi.fn()
-    const { result } = renderHook(
-      () => useChartSelection({ onClick }),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => useChartSelection({ onClick }), {
+      wrapper: createWrapper()
+    })
 
     act(() => {
       result.current.customClickBehavior({ data: { a: 1 } })
@@ -662,7 +810,7 @@ describe("useChartSelection crosshair x-position mode", () => {
       () => {
         const selection = useChartSelection({
           linkedHover: { name: "testCH", mode: "x-position", xField: "time" },
-          chartType: "LineChart",
+          chartType: "LineChart"
         })
         const crosshair = useCrosshairPosition("testCH")
         return { selection, crosshair }
@@ -675,13 +823,19 @@ describe("useChartSelection crosshair x-position mode", () => {
 
     // Hover with valid xField value
     act(() => {
-      result.current.selection.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+      result.current.selection.customHoverBehavior({
+        x: 10,
+        y: 20,
+        data: { time: 42, value: 100 }
+      })
     })
 
     // Crosshair should be set with the xField value
     expect(result.current.crosshair).not.toBeNull()
     expect(result.current.crosshair!.xValue).toBe(42)
-    expect(result.current.crosshair!.sourceId).toBe(result.current.selection.crosshairSourceId)
+    expect(result.current.crosshair!.sourceId).toBe(
+      result.current.selection.crosshairSourceId
+    )
 
     // Hover-end clears the crosshair
     act(() => {
@@ -696,7 +850,7 @@ describe("useChartSelection crosshair x-position mode", () => {
       () => {
         const selection = useChartSelection({
           linkedHover: { name: "multiCH", mode: "x-position", xField: "time" },
-          chartType: "LineChart",
+          chartType: "LineChart"
         })
         const crosshair = useCrosshairPosition("multiCH")
         return { selection, crosshair }
@@ -709,7 +863,7 @@ describe("useChartSelection crosshair x-position mode", () => {
         x: 10,
         y: 20,
         xValue: 42.5,
-        data: { time: 40, value: 100 },
+        data: { time: 40, value: 100 }
       })
     })
 
@@ -720,7 +874,7 @@ describe("useChartSelection crosshair x-position mode", () => {
     const { result, unmount } = renderHook(
       () => {
         const selection = useChartSelection({
-          linkedHover: { name: "unmountCH", mode: "x-position", xField: "time" },
+          linkedHover: { name: "unmountCH", mode: "x-position", xField: "time" }
         })
         const crosshair = useCrosshairPosition("unmountCH")
         return { selection, crosshair }
@@ -730,7 +884,11 @@ describe("useChartSelection crosshair x-position mode", () => {
 
     // Set a crosshair position
     act(() => {
-      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { time: 99 } })
+      result.current.selection.customHoverBehavior({
+        x: 1,
+        y: 2,
+        data: { time: 99 }
+      })
     })
     expect(result.current.crosshair).not.toBeNull()
 
@@ -747,9 +905,10 @@ describe("useChartSelection crosshair x-position mode", () => {
 
   it("returns a stable crosshairSourceId", () => {
     const { result } = renderHook(
-      () => useChartSelection({
-        linkedHover: { name: "ch", mode: "x-position", xField: "x" },
-      }),
+      () =>
+        useChartSelection({
+          linkedHover: { name: "ch", mode: "x-position", xField: "x" }
+        }),
       { wrapper: createWrapper() }
     )
 
@@ -761,7 +920,7 @@ describe("useChartSelection crosshair x-position mode", () => {
     const { result } = renderHook(
       () => {
         const selection = useChartSelection({
-          linkedHover: { name: "fieldMode", fields: ["region"] },
+          linkedHover: { name: "fieldMode", fields: ["region"] }
         })
         const crosshair = useCrosshairPosition("fieldMode")
         return { selection, crosshair }
@@ -771,7 +930,11 @@ describe("useChartSelection crosshair x-position mode", () => {
 
     // Hover should not set crosshair in field-based mode
     act(() => {
-      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { region: "North" } })
+      result.current.selection.customHoverBehavior({
+        x: 1,
+        y: 2,
+        data: { region: "North" }
+      })
     })
     expect(result.current.crosshair).toBeNull()
 
@@ -792,12 +955,14 @@ describe("getCrosshairProps", () => {
     )
     expect(result).toEqual({
       linkedCrosshairName: "myChart",
-      linkedCrosshairSourceId: "source-123",
+      linkedCrosshairSourceId: "source-123"
     })
   })
 
   it("returns undefined for field-based mode", () => {
-    expect(getCrosshairProps({ name: "hl", fields: ["cat"] }, "s1")).toBeUndefined()
+    expect(
+      getCrosshairProps({ name: "hl", fields: ["cat"] }, "s1")
+    ).toBeUndefined()
   })
 
   it("returns undefined when linkedHover is undefined", () => {
@@ -812,7 +977,7 @@ describe("getCrosshairProps", () => {
     const result = getCrosshairProps({ mode: "x-position" }, "s1")
     expect(result).toEqual({
       linkedCrosshairName: "hover",
-      linkedCrosshairSourceId: "s1",
+      linkedCrosshairSourceId: "s1"
     })
   })
 })
@@ -834,7 +999,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
       () => {
         const selection = useChartSelection({
           linkedHover: { name: LOCK_NAME, mode: "x-position", xField: "time" },
-          chartType: "LineChart",
+          chartType: "LineChart"
         })
         const crosshair = useCrosshairPosition(LOCK_NAME)
         return { selection, crosshair }
@@ -844,21 +1009,33 @@ describe("useChartSelection click-to-lock crosshair", () => {
 
     // Hover to set crosshair
     act(() => {
-      result.current.selection.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+      result.current.selection.customHoverBehavior({
+        x: 10,
+        y: 20,
+        data: { time: 42, value: 100 }
+      })
     })
     expect(result.current.crosshair?.xValue).toBe(42)
     expect(result.current.crosshair?.locked).toBeFalsy()
 
     // Click to lock
     act(() => {
-      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+      result.current.selection.customClickBehavior({
+        x: 10,
+        y: 20,
+        data: { time: 42, value: 100 }
+      })
     })
     expect(result.current.crosshair?.xValue).toBe(42)
     expect(result.current.crosshair?.locked).toBe(true)
 
     // Hover should be ignored while locked
     act(() => {
-      result.current.selection.customHoverBehavior({ x: 30, y: 40, data: { time: 99, value: 200 } })
+      result.current.selection.customHoverBehavior({
+        x: 30,
+        y: 40,
+        data: { time: 99, value: 200 }
+      })
     })
     expect(result.current.crosshair?.xValue).toBe(42) // still locked at 42
 
@@ -870,7 +1047,11 @@ describe("useChartSelection click-to-lock crosshair", () => {
 
     // Click again to unlock
     act(() => {
-      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+      result.current.selection.customClickBehavior({
+        x: 10,
+        y: 20,
+        data: { time: 42, value: 100 }
+      })
     })
     expect(result.current.crosshair).toBeNull()
   })
@@ -880,7 +1061,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
       () => {
         const selection = useChartSelection({
           linkedHover: { name: LOCK_NAME, mode: "x-position", xField: "time" },
-          chartType: "LineChart",
+          chartType: "LineChart"
         })
         const crosshair = useCrosshairPosition(LOCK_NAME)
         return { selection, crosshair }
@@ -889,7 +1070,12 @@ describe("useChartSelection click-to-lock crosshair", () => {
     )
 
     act(() => {
-      result.current.selection.customClickBehavior({ x: 10, y: 20, xValue: 42, data: { value: 100 } })
+      result.current.selection.customClickBehavior({
+        x: 10,
+        y: 20,
+        xValue: 42,
+        data: { value: 100 }
+      })
     })
 
     expect(result.current.crosshair?.xValue).toBe(42)
@@ -901,7 +1087,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
       () => {
         const selection = useChartSelection({
           linkedHover: { name: "fieldLock", fields: ["region"] },
-          chartType: "BarChart",
+          chartType: "BarChart"
         })
         const crosshair = useCrosshairPosition("fieldLock")
         return { selection, crosshair }
@@ -910,7 +1096,11 @@ describe("useChartSelection click-to-lock crosshair", () => {
     )
 
     act(() => {
-      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { region: "North" } })
+      result.current.selection.customClickBehavior({
+        x: 10,
+        y: 20,
+        data: { region: "North" }
+      })
     })
     // No crosshair should be set in field-based mode
     expect(result.current.crosshair).toBeNull()
@@ -926,9 +1116,12 @@ describe("useChartSelection series mode", () => {
         const producer = useChartSelection({
           linkedHover: { name: "seriesSync", mode: "series" },
           colorByField: "region", // resolved series-identity field
-          chartType: "LineChart",
+          chartType: "LineChart"
         })
-        const consumer = useSelection({ name: "seriesSync", fields: ["region"] })
+        const consumer = useSelection({
+          name: "seriesSync",
+          fields: ["region"]
+        })
         return { producer, consumer }
       },
       { wrapper: createWrapper() }
@@ -939,7 +1132,11 @@ describe("useChartSelection series mode", () => {
 
     // Hovering a datum that carries the series field broadcasts {region: value}.
     act(() => {
-      result.current.producer.customHoverBehavior({ x: 1, y: 2, data: { region: "EU", value: 10 } })
+      result.current.producer.customHoverBehavior({
+        x: 1,
+        y: 2,
+        data: { region: "EU", value: 10 }
+      })
     })
     expect(result.current.consumer.isActive).toBe(true)
     expect(result.current.consumer.predicate({ region: "EU" })).toBe(true)
@@ -958,7 +1155,7 @@ describe("useChartSelection series mode", () => {
         const producer = useChartSelection({
           linkedHover: { name: "ovr", mode: "series", seriesField: "team" },
           colorByField: "region", // overridden by the explicit seriesField
-          chartType: "BarChart",
+          chartType: "BarChart"
         })
         const consumer = useSelection({ name: "ovr", fields: ["team"] })
         return { producer, consumer }
@@ -967,11 +1164,17 @@ describe("useChartSelection series mode", () => {
     )
 
     act(() => {
-      result.current.producer.customHoverBehavior({ x: 1, y: 2, data: { region: "EU", team: "Blue" } })
+      result.current.producer.customHoverBehavior({
+        x: 1,
+        y: 2,
+        data: { region: "EU", team: "Blue" }
+      })
     })
     // Keyed on team, not region.
     expect(result.current.consumer.predicate({ team: "Blue" })).toBe(true)
     expect(result.current.consumer.predicate({ team: "Red" })).toBe(false)
-    expect(result.current.consumer.predicate({ team: "Blue", region: "NA" })).toBe(true)
+    expect(
+      result.current.consumer.predicate({ team: "Blue", region: "NA" })
+    ).toBe(true)
   })
 })

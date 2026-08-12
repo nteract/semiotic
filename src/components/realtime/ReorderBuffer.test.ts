@@ -67,6 +67,26 @@ describe("ReorderBuffer", () => {
     expect(rb.heldCount).toBe(0)
   })
 
+  it("treats flush as an ordering boundary while accepting newer events", () => {
+    const rb = new ReorderBuffer<Pt>({ lateness: 10, getTime })
+    rb.push({ t: 8, v: 1 })
+    rb.push({ t: 5, v: 2 })
+
+    expect(rb.flush().map((p) => p.t)).toEqual([5, 8])
+
+    // The caller declared the prior tail complete. An event older than that
+    // committed frontier is now late even though it remains within the old
+    // watermark's grace interval.
+    const behindBoundary = rb.push({ t: 7, v: 3 })
+    expect(behindBoundary.released).toEqual([])
+    expect(behindBoundary.late.map((p) => p.t)).toEqual([7])
+
+    // The handle remains reusable for newer input; its next tail can be
+    // drained by another explicit end-of-stream flush.
+    expect(rb.push({ t: 12, v: 4 }).released).toEqual([])
+    expect(rb.flush().map((p) => p.t)).toEqual([12])
+  })
+
   it("clear resets watermark and counters", () => {
     const rb = new ReorderBuffer<Pt>({ lateness: 5, getTime })
     rb.push({ t: 100, v: 1 })

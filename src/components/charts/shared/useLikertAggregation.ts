@@ -73,18 +73,22 @@ export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: str
   if (n <= 0) return []
 
   // Path A: named diverging scheme from the theme.
-  if (themeDivergingSchemeName) {
+  if (
+    themeDivergingSchemeName &&
+    Object.prototype.hasOwnProperty.call(
+      DIVERGING_INTERPOLATORS,
+      themeDivergingSchemeName
+    )
+  ) {
     const interp = DIVERGING_INTERPOLATORS[themeDivergingSchemeName]
-    if (interp) {
-      if (n === 1) return [interp(0.5)]
-      const result: string[] = []
-      for (let i = 0; i < n; i++) {
-        result.push(interp(i / (n - 1)))
-      }
-      return result
+    if (n === 1) return [interp(0.5)]
+    const result: string[] = []
+    for (let i = 0; i < n; i++) {
+      result.push(interp(i / (n - 1)))
     }
-    // Unknown scheme name → fall through to hardcoded palette.
+    return result
   }
+  // Unknown scheme name → fall through to hardcoded palette.
 
   // Path B: Carbon-inspired hardcoded palette.
   const negColors = ["#da1e28", "#ff8389", "#ffb3b8"]

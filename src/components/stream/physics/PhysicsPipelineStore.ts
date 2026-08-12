@@ -5,11 +5,7 @@ import {
   type PhysicsKernelOptions,
   type PhysicsSpringSpec
 } from "./PhysicsKernel"
-import {
-  resolvePhysicsEngineAdapter,
-  type PhysicsEngineAdapter,
-  type PhysicsEngineAdapterInput
-} from "./PhysicsEngineAdapter"
+import { resolvePhysicsEngineAdapter, type PhysicsEngineAdapter, type PhysicsEngineAdapterInput } from "./PhysicsEngineAdapter"
 import {
   PhysicsSedimentAccumulator,
   sedimentHeightfield,
@@ -18,11 +14,7 @@ import {
   type PhysicsSedimentHeightfieldOptions,
   type PhysicsSedimentTotals
 } from "./PhysicsSediment"
-import {
-  evaluatePhysicsBodyBudget,
-  type PhysicsBodyBudgetDecision,
-  type PhysicsBodyBudgetOptions
-} from "./PhysicsBodyBudget"
+import { evaluatePhysicsBodyBudget, type PhysicsBodyBudgetDecision, type PhysicsBodyBudgetOptions } from "./PhysicsBodyBudget"
 import type {
   PhysicsObservationEvent,
   PhysicsObservationRecord,
@@ -48,11 +40,8 @@ import {
   type NormalizedObservationConfig,
   type PhysicsPipelineEvictionResult
 } from "./physicsPipelineHelpers"
-import {
-  type UpdateResult,
-  UpdateResultTracker
-} from "../pipelineUpdateContract"
-import { PhysicsBodySpatialIndex } from "./PhysicsBodySpatialIndex"
+import { type UpdateResult, UpdateResultTracker } from "../pipelineUpdateContract"
+import { PhysicsBodySpatialIndex, type PhysicsBodyHitTestOptions } from "./PhysicsBodySpatialIndex"
 import { createPhysicsPipelineControls } from "./physicsPipelineControls"
 import {
   classifyPhysicsConfigPatch,
@@ -71,12 +60,7 @@ import {
 } from "./physicsPipelineObservations"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
-import {
-  runPhysicsSettleSteps,
-  type PhysicsSettleHost,
-  type PhysicsSettleRun,
-  type PhysicsSettleSink
-} from "./physicsPipelineSettle"
+import { runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
 
 // Re-export public API for stable import paths
 export type {
@@ -525,14 +509,21 @@ export class PhysicsPipelineStore {
     return sedimentHeightfield(this.readSediment(), options)
   }
 
-  hitTest(x: number, y: number, radius = 0): PhysicsBodyState | null {
+  hitTest(
+    x: number,
+    y: number,
+    radius = 0,
+    /** @internal Styled/custom-renderer geometry for browser cursor parity. */
+    options?: PhysicsBodyHitTestOptions
+  ): PhysicsBodyState | null {
     return this.bodySpatialIndex.hitTest(
       this.world,
       this.revision,
       this.liveBodyOrder,
       x,
       y,
-      radius
+      radius,
+      options
     )
   }
 

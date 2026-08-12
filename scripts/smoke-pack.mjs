@@ -17,17 +17,35 @@
  * created archive instead of packing the checkout. Exits non-zero on any
  * import failure.
  */
-import { execSync } from "node:child_process"
-import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync, readdirSync, existsSync, readFileSync } from "node:fs"
+import { execFileSync, execSync } from "node:child_process"
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+  readdirSync,
+  existsSync,
+  readFileSync
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
-const packedConsumerFixture = join(__dirname, "fixtures", "packed-typescript-consumer")
-const packedExampleConsumerFixture = join(__dirname, "fixtures", "packed-example-consumer")
-const publicNpmRegistry = process.env.SEMIOTIC_PACK_REGISTRY || "https://registry.npmjs.org"
+const packedConsumerFixture = join(
+  __dirname,
+  "fixtures",
+  "packed-typescript-consumer"
+)
+const packedExampleConsumerFixture = join(
+  __dirname,
+  "fixtures",
+  "packed-example-consumer"
+)
+const publicNpmRegistry =
+  process.env.SEMIOTIC_PACK_REGISTRY || "https://registry.npmjs.org"
 // Release CI sets this to the single immutable tarball it will publish. The
 // default continues to pack the checkout for ordinary local/package checks.
 const cliArgs = process.argv.slice(2)
@@ -41,10 +59,14 @@ if (
   environmentTarball &&
   resolve(repoRoot, tarballOption) !== resolve(repoRoot, environmentTarball)
 ) {
-  throw new Error("Use either --tarball or SEMIOTIC_PACK_TARBALL, not two different tarballs")
+  throw new Error(
+    "Use either --tarball or SEMIOTIC_PACK_TARBALL, not two different tarballs"
+  )
 }
 const suppliedTarball = tarballOption || environmentTarball
-const sourcePackage = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
+const sourcePackage = JSON.parse(
+  readFileSync(join(repoRoot, "package.json"), "utf8")
+)
 const tmp = mkdtempSync(join(tmpdir(), "semiotic-smoke-"))
 const npmCache = join(tmp, "npm-cache")
 
@@ -52,7 +74,11 @@ function optionValue(args, option) {
   const index = args.indexOf(option)
   if (index === -1) return null
   const value = args[index + 1]
-  if (!value || value.startsWith("--") || args.indexOf(option, index + 1) !== -1) {
+  if (
+    !value ||
+    value.startsWith("--") ||
+    args.indexOf(option, index + 1) !== -1
+  ) {
     throw new Error(`Missing value for ${option}`)
   }
   return value
@@ -63,8 +89,66 @@ function run(cmd, { env, ...opts } = {}) {
     stdio: "pipe",
     encoding: "utf8",
     ...opts,
-    env: { ...process.env, npm_config_cache: npmCache, ...env },
+    env: { ...process.env, npm_config_cache: npmCache, ...env }
   })
+}
+
+// Multiline probes must bypass the shell: JSON-quoting a `node -e` string
+// leaves literal `\n` tokens after shell parsing, which Node then reads as
+// invalid source. Argument-vector execution also makes embedded regexes and
+// quotes unambiguous.
+function runNodeEval(
+  code,
+  { cwd, inputType = "module", conditions = [] } = {}
+) {
+  return execFileSync(
+    process.execPath,
+    [
+      ...conditions.map((condition) => `--conditions=${condition}`),
+      `--input-type=${inputType}`,
+      "-e",
+      code
+    ],
+    {
+      cwd,
+      stdio: "pipe",
+      encoding: "utf8",
+      env: { ...process.env, npm_config_cache: npmCache }
+    }
+  )
+}
+
+/**
+ * Core subpaths are intended for Server Component and headless consumers.
+ * Normal Node imports do not expose the reduced React `react-server` surface,
+ * so they miss eager createContext/hook dependencies hidden in shared chunks.
+ */
+function checkReactServerCoreImports(proj, failures) {
+  const entries = [
+    "semiotic/ai/core",
+    "semiotic/themes/core",
+    "semiotic/utils/core",
+    "semiotic/recipes/core"
+  ]
+  const code = `
+    const entries = ${JSON.stringify(entries)}
+    for (const entry of entries) {
+      const module = await import(entry)
+      if (!module || Object.keys(module).length === 0) {
+        throw new Error(entry + " returned no exports")
+      }
+    }
+    console.log(entries.length + " core entries")
+  `
+  try {
+    const out = runNodeEval(code, {
+      cwd: proj,
+      conditions: ["react-server"]
+    })
+    console.log(`  ✓ react-server imports: ${out.trim()}`)
+  } catch (err) {
+    failures.push(`react-server core imports: ${firstLine(err)}`)
+  }
 }
 
 // `execSync` errors carry `stderr`/`stdout` as Buffers when no encoding is
@@ -81,25 +165,39 @@ function firstLine(err) {
     .map((value) => String(value ?? "").trim())
     .filter(Boolean)
     .join("\n")
-  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean)
+  const lines = raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
   const meaningful = lines.find(
     (l) =>
-      /ERR_[A-Z_]+|Cannot find (?:package|module)|Error:|SyntaxError:|TypeError:/.test(l)
-      && !l.startsWith("node:internal/")
-      && !l.startsWith("at ")
+      /ERR_[A-Z_]+|Cannot find (?:package|module)|Error:|SyntaxError:|TypeError:/.test(
+        l
+      ) &&
+      !l.startsWith("node:internal/") &&
+      !l.startsWith("at ")
   )
-  return meaningful ?? lines.find((l) => !l.startsWith("node:internal/") && !l.startsWith("at ")) ?? lines[0] ?? ""
+  return (
+    meaningful ??
+    lines.find(
+      (l) => !l.startsWith("node:internal/") && !l.startsWith("at ")
+    ) ??
+    lines[0] ??
+    ""
+  )
 }
 
 function findTarball(dir) {
   const files = readdirSync(dir)
-  const tarball = files.find((f) => f.startsWith("semiotic-") && f.endsWith(".tgz"))
+  const tarball = files.find(
+    (f) => f.startsWith("semiotic-") && f.endsWith(".tgz")
+  )
   if (!tarball) {
     // Surface what's actually in the dir so CI logs aren't a dead end —
     // npm pack returning 0 without producing a tarball is rare enough
     // that the directory listing is the single most useful breadcrumb.
     throw new Error(
-      `no tarball produced in ${dir} (contents: ${files.length === 0 ? "<empty>" : files.join(", ")})`,
+      `no tarball produced in ${dir} (contents: ${files.length === 0 ? "<empty>" : files.join(", ")})`
     )
   }
   return join(dir, tarball)
@@ -110,7 +208,7 @@ function localModuleSpecifiers(text) {
   const patterns = [
     /\b(?:import|export)\s*[^"'()]*?\s*from\s*["'](\.\/[^"']+)["']/g,
     /\bimport\s*["'](\.\/[^"']+)["']/g,
-    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g,
+    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g
   ]
   for (const re of patterns) {
     let match
@@ -139,6 +237,285 @@ function assertLocalChunksExist(packageRoot, entryRel, failures) {
     }
   }
   visit(entryRel)
+}
+
+function collectFiles(directory) {
+  const files = []
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name)
+    if (entry.isDirectory()) files.push(...collectFiles(path))
+    else files.push(path)
+  }
+  return files
+}
+
+function checkPrivateDeclarations(packageRoot, failures) {
+  const distRoot = join(packageRoot, "dist")
+  const leaked = collectFiles(distRoot)
+    .filter((path) => path.endsWith(".d.ts"))
+    .map((path) => path.slice(packageRoot.length + 1).replaceAll("\\", "/"))
+    .filter((path) =>
+      /(?:^|\/)(?:__tests__|test-utils|internal)(?:\/|$)/.test(path)
+    )
+    .sort()
+
+  if (leaked.length > 0) {
+    failures.push(`private declarations published: ${leaked.join(", ")}`)
+    return
+  }
+  console.log("  ✓ test/internal declarations are absent from the package")
+}
+
+function checkClientBoundaryDirectives(packageRoot, exportsMap, failures) {
+  const clientEntries = [
+    "./realtime",
+    "./realtime/core",
+    "./realtime/react",
+    "./themes/react",
+    "./utils",
+    "./utils/react",
+    "./recipes",
+    "./recipes/react"
+  ]
+  const serverSafeEntries = [
+    "./utils/core",
+    "./recipes/core",
+    "./themes",
+    "./themes/core"
+  ]
+
+  for (const [expectedClient, entries] of [
+    [true, clientEntries],
+    [false, serverSafeEntries]
+  ]) {
+    for (const entry of entries) {
+      const exportEntry = exportsMap[entry]
+      if (!exportEntry || typeof exportEntry !== "object") {
+        failures.push(
+          `${entry}: missing conditional export for client-boundary check`
+        )
+        continue
+      }
+      for (const condition of ["import", "require"]) {
+        const target = exportEntry[condition]
+        if (typeof target !== "string") continue
+        const code = readFileSync(
+          join(packageRoot, target.replace(/^\.\//, "")),
+          "utf8"
+        )
+        const hasDirective = /^["']use client["'];/.test(code)
+        if (hasDirective !== expectedClient) {
+          failures.push(
+            `${entry} (${condition}) ${expectedClient ? "is missing" : "unexpectedly carries"} ` +
+              'the "use client" directive'
+          )
+        }
+      }
+    }
+  }
+
+  if (!failures.some((failure) => failure.includes('"use client" directive'))) {
+    console.log(
+      "  ✓ mixed React facades are client-tagged; core facades remain server-safe"
+    )
+  }
+}
+
+/**
+ * `semiotic/themes/core` is a data/serialization entry and must remain usable
+ * in RSC and edge code that does not install or initialize a React runtime.
+ * Inspect the packed artifact's complete local import graph rather than only
+ * its facade: shared chunks can otherwise hide a transitive React dependency.
+ */
+function checkThemeCoreReactFree(packageRoot, exportsMap, failures) {
+  const exportEntry = exportsMap["./themes/core"]
+  if (!exportEntry || typeof exportEntry !== "object") {
+    failures.push(
+      "./themes/core: missing conditional export for React-free graph check"
+    )
+    return
+  }
+
+  const visitGraph = (entryPath) => {
+    const seen = new Set()
+    const visit = (filePath) => {
+      const resolvedPath = resolve(filePath)
+      if (seen.has(resolvedPath) || !existsSync(resolvedPath)) return
+      seen.add(resolvedPath)
+      const code = readFileSync(resolvedPath, "utf8")
+      const localSpecifiers = [
+        ...Array.from(
+          code.matchAll(
+            /(?:from\s*|import\s*)["'](\.?\.?\/[^"']+\.js)["']/g
+          ),
+          (match) => match[1]
+        ),
+        ...Array.from(
+          code.matchAll(
+            /require\(\s*["'](\.?\.?\/[^"']+\.js)["']\s*\)/g
+          ),
+          (match) => match[1]
+        )
+      ]
+      for (const specifier of localSpecifiers) {
+        visit(resolve(dirname(resolvedPath), specifier))
+      }
+    }
+    visit(entryPath)
+    return seen
+  }
+
+  let failed = false
+  for (const condition of ["import", "require"]) {
+    const target = exportEntry[condition]
+    if (typeof target !== "string") continue
+    const entryPath = join(packageRoot, target.replace(/^\.\//, ""))
+    for (const filePath of visitGraph(entryPath)) {
+      const code = readFileSync(filePath, "utf8")
+      const importsReact =
+        /(?:from\s*|import\s*(?:\(\s*)?)["']react(?:\/[^"']+)?["']/.test(
+          code
+        ) ||
+        /require\(\s*["']react(?:\/[^"']+)?["']\s*\)/.test(code)
+      if (!importsReact) continue
+      failed = true
+      failures.push(
+        `./themes/core (${condition}) transitively imports React through ${filePath.slice(packageRoot.length + 1)}`
+      )
+    }
+  }
+
+  if (!failed) {
+    console.log("  ✓ themes/core packed import graph is React-free")
+  }
+}
+
+/**
+ * CommonJS subpaths must share one React-context runtime. A module resolving is
+ * insufficient: independent bundled copies let a provider render normally
+ * while a family chart silently reads the default context from another copy.
+ */
+function checkCjsClientContextIdentity(proj, failures) {
+  const code = `
+    const React = require("react")
+    const { renderToStaticMarkup } = require("react-dom/server")
+    const themes = require("semiotic/themes/react")
+    const utils = require("semiotic/utils")
+    const { LineChart } = require("semiotic/xy")
+    if (themes.ThemeProvider !== utils.ThemeProvider) {
+      throw new Error("mixed CommonJS facades expose different ThemeProvider instances")
+    }
+    const color = "#010203"
+    const data = [
+      { x: 0, y: 1, series: "a" },
+      { x: 1, y: 2, series: "a" },
+    ]
+    const html = renderToStaticMarkup(
+      React.createElement(
+        themes.ThemeProvider,
+        { theme: { mode: "dark", colors: { categorical: [color] } } },
+        React.createElement(LineChart, {
+          data,
+          xAccessor: "x",
+          yAccessor: "y",
+          lineBy: "series",
+          colorBy: "series",
+        }),
+      ),
+    )
+    if (!/<path[^>]*stroke="#010203"/.test(html)) {
+      throw new Error("themes/react provider did not reach the xy CommonJS chart")
+    }
+    console.log("shared provider identity and themed family render")
+  `
+  try {
+    const out = runNodeEval(code, { cwd: proj, inputType: "commonjs" })
+    console.log(`  ✓ CommonJS client runtime: ${out.trim()}`)
+  } catch (err) {
+    failures.push(`CommonJS client runtime: ${firstLine(err)}`)
+  }
+}
+
+/**
+ * The experimental ESM entry is assembled from canonical stable graphs plus a
+ * stateless auxiliary projection. Guard both its complete runtime surface and
+ * the constructor/component identities that must match `semiotic/physics`.
+ */
+function checkExperimentalFacadeParity(proj, failures) {
+  const code = `
+    import { createRequire } from "node:module"
+    import * as experimentalEsm from "semiotic/experimental"
+    import * as physicsEsm from "semiotic/physics"
+    const require = createRequire(import.meta.url)
+    const experimentalCjs = require("semiotic/experimental")
+    const physicsCjs = require("semiotic/physics")
+    const esmKeys = Object.keys(experimentalEsm).sort()
+    const cjsKeys = Object.keys(experimentalCjs).sort()
+    if (JSON.stringify(esmKeys) !== JSON.stringify(cjsKeys)) {
+      const missing = cjsKeys.filter((key) => !esmKeys.includes(key))
+      const unexpected = esmKeys.filter((key) => !cjsKeys.includes(key))
+      throw new Error(
+        "runtime export mismatch; missing=" + missing.join(",") +
+        "; unexpected=" + unexpected.join(",")
+      )
+    }
+    const identityPairs = [
+      ["BuiltInPhysicsEngineAdapter", "unstable_BuiltInPhysicsEngineAdapter"],
+      ["createDefaultPhysicsEngineAdapter", "unstable_createDefaultPhysicsEngineAdapter"],
+      ["PhysicsPipelineStore", "unstable_PhysicsPipelineStore"],
+      ["evaluatePhysicsBodyBudget", "unstable_evaluatePhysicsBodyBudget"],
+      ["PhysicsSedimentAccumulator", "unstable_PhysicsSedimentAccumulator"],
+      ["sedimentHeightfield", "unstable_sedimentHeightfield"],
+      ["StreamPhysicsFrame", "unstable_StreamPhysicsFrame"],
+      ["PhysicsCustomChart", "unstable_PhysicsCustomChart"],
+    ]
+    for (const [stableName, experimentalName] of identityPairs) {
+      if (physicsEsm[stableName] !== experimentalEsm[experimentalName]) {
+        throw new Error("ESM identity mismatch for " + experimentalName)
+      }
+      if (physicsCjs[stableName] !== experimentalCjs[experimentalName]) {
+        throw new Error("CJS identity mismatch for " + experimentalName)
+      }
+    }
+    console.log(esmKeys.length + " matching exports and canonical physics identities")
+  `
+  try {
+    const out = runNodeEval(code, { cwd: proj })
+    console.log(`  ✓ experimental facade: ${out.trim()}`)
+  } catch (err) {
+    failures.push(`experimental facade: ${firstLine(err)}`)
+  }
+}
+
+function checkExperimentalBridgeStoreAnchor(packageRoot, failures) {
+  const bridgePath = join(
+    packageRoot,
+    "dist/semiotic-experimental-react-shared.module.min.js"
+  )
+  if (!existsSync(bridgePath)) {
+    failures.push("experimental bridge: internal ESM entry is missing")
+    return
+  }
+
+  const code = readFileSync(bridgePath, "utf8")
+  const anchorImports = Array.from(
+    code.matchAll(
+      /import\{([^}]*)\}from["']\.\/semiotic-client-shared\.module\.min\.js["']/g
+    ),
+    (match) => match[1]
+  ).join(",")
+  const missingSelectors = [
+    "useObservationSelector",
+    "useSelectionSelector"
+  ].filter((name) => !anchorImports.includes(name))
+
+  if (missingSelectors.length > 0) {
+    failures.push(
+      `experimental bridge: canonical store anchor is missing ${missingSelectors.join(", ")}`
+    )
+    return
+  }
+  console.log("  ✓ experimental bridge imports canonical LinkedCharts stores")
 }
 
 /**
@@ -171,13 +548,20 @@ function splitExports(exportsMap, failures) {
     }
 
     if (!exportEntry || typeof exportEntry !== "object") {
-      failures.push(`${entry}: expected a conditional module export in package.json`)
+      failures.push(
+        `${entry}: expected a conditional module export in package.json`
+      )
       continue
     }
 
     const esmPath = exportEntry.import ?? exportEntry.default
-    if (typeof esmPath !== "string" && typeof exportEntry.require !== "string") {
-      failures.push(`${entry}: no import, default, or require condition in package.json`)
+    if (
+      typeof esmPath !== "string" &&
+      typeof exportEntry.require !== "string"
+    ) {
+      failures.push(
+        `${entry}: no import, default, or require condition in package.json`
+      )
       continue
     }
 
@@ -187,7 +571,12 @@ function splitExports(exportsMap, failures) {
   return { modules, packageJson, resources }
 }
 
-function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) {
+function checkPackageJsonExport(
+  packageRoot,
+  packageJsonExport,
+  proj,
+  failures
+) {
   if (typeof packageJsonExport !== "string") {
     failures.push("semiotic/package.json: missing metadata-only export")
     return
@@ -195,7 +584,9 @@ function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) 
 
   const metadataPath = join(packageRoot, packageJsonExport.replace(/^\.\//, ""))
   if (!existsSync(metadataPath)) {
-    failures.push(`semiotic/package.json: ${packageJsonExport} not found in installed package`)
+    failures.push(
+      `semiotic/package.json: ${packageJsonExport} not found in installed package`
+    )
     return
   }
 
@@ -207,10 +598,15 @@ function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) 
   }
 
   try {
-    const code = "const pkg = require('semiotic/package.json'); if (!pkg || typeof pkg !== 'object' || !pkg.name) { throw new Error('invalid package metadata') } console.log(pkg.name)"
-    const out = run(`node --input-type=commonjs -e ${JSON.stringify(code)}`, { cwd: proj })
+    const code =
+      "const pkg = require('semiotic/package.json'); if (!pkg || typeof pkg !== 'object' || !pkg.name) { throw new Error('invalid package metadata') } console.log(pkg.name)"
+    const out = run(`node --input-type=commonjs -e ${JSON.stringify(code)}`, {
+      cwd: proj
+    })
     if (out.trim() !== "semiotic") {
-      failures.push(`semiotic/package.json: resolved unexpected package name ${JSON.stringify(out.trim())}`)
+      failures.push(
+        `semiotic/package.json: resolved unexpected package name ${JSON.stringify(out.trim())}`
+      )
       return
     }
     console.log("  ✓ semiotic/package.json (metadata): resolves and parses")
@@ -222,25 +618,32 @@ function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) 
 function checkPortabilitySpec(packageRoot, resources, proj, failures) {
   const specExport = resources.find((resource) => resource.entry === "./spec/*")
   if (!specExport || specExport.target !== "./spec/*") {
-    failures.push('semiotic/spec/*: missing resource export for the published IDID schemas')
+    failures.push(
+      "semiotic/spec/*: missing resource export for the published IDID schemas"
+    )
     return
   }
 
   const schemaNames = [
     "chart-capability.schema.json",
     "audience-profile.schema.json",
-    "annotation-provenance.schema.json",
+    "annotation-provenance.schema.json"
   ]
   for (const name of schemaNames) {
     const path = join(packageRoot, "spec", "v0.1", name)
     if (!existsSync(path)) {
-      failures.push(`semiotic/spec/v0.1/${name}: missing from installed tarball`)
+      failures.push(
+        `semiotic/spec/v0.1/${name}: missing from installed tarball`
+      )
       continue
     }
     try {
       const schema = JSON.parse(readFileSync(path, "utf8"))
-      if (schema.$schema !== "https://json-schema.org/draft/2020-12/schema" ||
-        typeof schema.$id !== "string" || !schema.$id.includes(`/spec/v0.1/${name}`)) {
+      if (
+        schema.$schema !== "https://json-schema.org/draft/2020-12/schema" ||
+        typeof schema.$id !== "string" ||
+        !schema.$id.includes(`/spec/v0.1/${name}`)
+      ) {
         failures.push(`semiotic/spec/v0.1/${name}: invalid schema identity`)
         continue
       }
@@ -251,12 +654,19 @@ function checkPortabilitySpec(packageRoot, resources, proj, failures) {
   }
 
   try {
-    const code = "import * as m from 'semiotic/spec/bindings/vega-lite.mjs'; if (typeof m.attachIdid !== 'function') throw new Error('missing binding export'); console.log(m.IDID_SPEC_VERSION)"
-    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, { cwd: proj })
+    const code =
+      "import * as m from 'semiotic/spec/bindings/vega-lite.mjs'; if (typeof m.attachIdid !== 'function') throw new Error('missing binding export'); console.log(m.IDID_SPEC_VERSION)"
+    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, {
+      cwd: proj
+    })
     if (out.trim() !== "0.1") {
-      failures.push(`semiotic/spec/bindings/vega-lite.mjs: unexpected spec version ${JSON.stringify(out.trim())}`)
+      failures.push(
+        `semiotic/spec/bindings/vega-lite.mjs: unexpected spec version ${JSON.stringify(out.trim())}`
+      )
     } else {
-      console.log("  ✓ semiotic/spec/bindings/vega-lite.mjs: resolves from installed tarball")
+      console.log(
+        "  ✓ semiotic/spec/bindings/vega-lite.mjs: resolves from installed tarball"
+      )
     }
   } catch (err) {
     failures.push(`semiotic/spec/bindings/vega-lite.mjs: ${firstLine(err)}`)
@@ -281,7 +691,12 @@ function legacyAliasPaths(entryPoints) {
  * never in the tarball or exports map. Assert that they stay absent so a local
  * fixture cannot accidentally start depending on an unpublished deep path.
  */
-function checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures) {
+function checkUnpublishedLegacyAliases(
+  packageRoot,
+  entryPoints,
+  proj,
+  failures
+) {
   const aliases = legacyAliasPaths(entryPoints)
   for (const alias of aliases) {
     if (existsSync(join(packageRoot, alias))) {
@@ -290,12 +705,19 @@ function checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures)
   }
 
   try {
-    const code = "try { await import('semiotic/dist/semiotic.module.js'); throw new Error('legacy deep import unexpectedly resolved') } catch (error) { if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') throw error; console.log(error.code) }"
-    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, { cwd: proj })
+    const code =
+      "try { await import('semiotic/dist/semiotic.module.js'); throw new Error('legacy deep import unexpectedly resolved') } catch (error) { if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') throw error; console.log(error.code) }"
+    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, {
+      cwd: proj
+    })
     if (out.trim() !== "ERR_PACKAGE_PATH_NOT_EXPORTED") {
-      failures.push(`legacy deep import: unexpected result ${JSON.stringify(out.trim())}`)
+      failures.push(
+        `legacy deep import: unexpected result ${JSON.stringify(out.trim())}`
+      )
     } else {
-      console.log(`  ✓ ${aliases.length} legacy aliases absent; deep import remains blocked`)
+      console.log(
+        `  ✓ ${aliases.length} legacy aliases absent; deep import remains blocked`
+      )
     }
   } catch (err) {
     failures.push(`legacy deep import: ${firstLine(err)}`)
@@ -310,7 +732,7 @@ function runFixtureScript(fixtureDir, script, args = []) {
   const command = [
     quoted(process.execPath),
     quoted(join(fixtureDir, script)),
-    ...args.map(quoted),
+    ...args.map(quoted)
   ].join(" ")
   return run(command, { cwd: fixtureDir })
 }
@@ -328,7 +750,7 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
     proj,
     "node_modules",
     ".bin",
-    process.platform === "win32" ? "tsc.cmd" : "tsc",
+    process.platform === "win32" ? "tsc.cmd" : "tsc"
   )
   if (!existsSync(tsc)) {
     failures.push("TypeScript consumer: local tsc was not installed")
@@ -336,9 +758,12 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   }
 
   try {
-    run(`${quoted(tsc)} --project ${quoted(join(fixtureDir, "tsconfig.json"))} --pretty false`, {
-      cwd: fixtureDir,
-    })
+    run(
+      `${quoted(tsc)} --project ${quoted(join(fixtureDir, "tsconfig.json"))} --pretty false`,
+      {
+        cwd: fixtureDir
+      }
+    )
     console.log("  ✓ TypeScript consumer: NodeNext public imports compile")
   } catch (err) {
     failures.push(`TypeScript consumer: ${firstLine(err)}`)
@@ -349,7 +774,10 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   // execute each shipped worker module itself through a worker_threads bridge.
   // This catches a CJS import.meta transform that would otherwise silently
   // force the synchronous fallback despite all module-import checks passing.
-  for (const script of ["run-force-worker-client.mjs", "run-force-worker-client.cjs"]) {
+  for (const script of [
+    "run-force-worker-client.mjs",
+    "run-force-worker-client.cjs"
+  ]) {
     try {
       const out = runFixtureScript(fixtureDir, script)
       console.log(`  ✓ ${out.trim()}`)
@@ -358,7 +786,10 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
     }
   }
 
-  for (const [kind, asset] of [["force", "forceLayoutWorker.js"], ["physics", "physicsWorker.js"]]) {
+  for (const [kind, asset] of [
+    ["force", "forceLayoutWorker.js"],
+    ["physics", "physicsWorker.js"]
+  ]) {
     const workerPath = join(packageRoot, "dist", asset)
     if (!existsSync(workerPath)) {
       failures.push(`worker:${kind}: ${asset} not found in installed package`)
@@ -367,7 +798,7 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
     try {
       const out = runFixtureScript(fixtureDir, "run-worker-module.mjs", [
         kind,
-        pathToFileURL(workerPath).href,
+        pathToFileURL(workerPath).href
       ])
       console.log(`  ✓ ${out.trim()}`)
     } catch (err) {
@@ -404,8 +835,10 @@ try {
   let tarball
   if (suppliedTarball) {
     tarball = resolve(repoRoot, suppliedTarball)
-    if (!existsSync(tarball)) throw new Error(`Supplied tarball does not exist: ${tarball}`)
-    if (!tarball.endsWith(".tgz")) throw new Error(`Supplied tarball is not a .tgz file: ${tarball}`)
+    if (!existsSync(tarball))
+      throw new Error(`Supplied tarball does not exist: ${tarball}`)
+    if (!tarball.endsWith(".tgz"))
+      throw new Error(`Supplied tarball is not a .tgz file: ${tarball}`)
     console.log(`▶ using supplied tarball: ${tarball}`)
   } else {
     // Pack the working repo into a tarball inside the temp dir.
@@ -414,8 +847,17 @@ try {
     // pack exits 0 but produces nothing (rare, but seen on some runners
     // when --pack-destination is silently ignored).
     console.log("▶ npm pack")
-    const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, { cwd: repoRoot })
-    if (packOut?.trim()) console.log(packOut.trim().split("\n").map((l) => `  ${l}`).join("\n"))
+    const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, {
+      cwd: repoRoot
+    })
+    if (packOut?.trim())
+      console.log(
+        packOut
+          .trim()
+          .split("\n")
+          .map((l) => `  ${l}`)
+          .join("\n")
+      )
     tarball = findTarball(tmp)
     console.log(`  tarball: ${tarball}`)
   }
@@ -424,28 +866,35 @@ try {
   // than spawning a shell builtin so this runs on Windows too.
   const proj = join(tmp, "consumer")
   mkdirSync(proj, { recursive: true })
-  writeFileSync(join(proj, "package.json"), JSON.stringify({
-    name: "semiotic-smoke-consumer",
-    version: "0.0.0",
-    private: true,
-    type: "module",
-    // These are deliberately consumer-owned dependencies. Semiotic has React
-    // runtime peers, while its public declarations import React types; a clean
-    // TypeScript app needs both rather than borrowing this repository's tree.
-    dependencies: {
-      react: sourcePackage.devDependencies.react,
-      "react-dom": sourcePackage.devDependencies["react-dom"],
-      // The smoke suite imports every public entry point, including the
-      // explicitly opt-in semiotic/rough adapter. Model that consumer choice
-      // by installing its optional peer without making it a core dependency.
-      roughjs: sourcePackage.devDependencies.roughjs,
-    },
-    devDependencies: {
-      "@types/react": sourcePackage.devDependencies["@types/react"],
-      "@types/react-dom": sourcePackage.devDependencies["@types/react-dom"],
-      typescript: sourcePackage.devDependencies.typescript,
-    },
-  }, null, 2) + "\n")
+  writeFileSync(
+    join(proj, "package.json"),
+    JSON.stringify(
+      {
+        name: "semiotic-smoke-consumer",
+        version: "0.0.0",
+        private: true,
+        type: "module",
+        // These are deliberately consumer-owned dependencies. Semiotic has React
+        // runtime peers, while its public declarations import React types; a clean
+        // TypeScript app needs both rather than borrowing this repository's tree.
+        dependencies: {
+          react: sourcePackage.devDependencies.react,
+          "react-dom": sourcePackage.devDependencies["react-dom"],
+          // The smoke suite imports every public entry point, including the
+          // explicitly opt-in semiotic/rough adapter. Model that consumer choice
+          // by installing its optional peer without making it a core dependency.
+          roughjs: sourcePackage.devDependencies.roughjs
+        },
+        devDependencies: {
+          "@types/react": sourcePackage.devDependencies["@types/react"],
+          "@types/react-dom": sourcePackage.devDependencies["@types/react-dom"],
+          typescript: sourcePackage.devDependencies.typescript
+        }
+      },
+      null,
+      2
+    ) + "\n"
+  )
 
   console.log("▶ npm install <tarball>")
   // --no-save avoids dirtying the throwaway package.json with a tarball path.
@@ -461,27 +910,42 @@ try {
   // SEMIOTIC_PACK_REGISTRY can point at an approved CI mirror when needed.
   run(
     `npm install --no-save --include=dev --ignore-scripts --no-legacy-peer-deps --registry=${quoted(publicNpmRegistry)} ${quoted(tarball)}`,
-    { cwd: proj },
+    { cwd: proj }
   )
 
   // Verify each entry resolves under ESM and CJS, and that its `types`
   // file (per package.json `exports`) actually exists on disk.
-  const pkg = JSON.parse(run(`node -e "console.log(JSON.stringify(require('semiotic/package.json')))"`, { cwd: proj }))
-  if (pkg.name !== sourcePackage.name || pkg.version !== sourcePackage.version) {
+  const pkg = JSON.parse(
+    run(
+      `node -e "console.log(JSON.stringify(require('semiotic/package.json')))"`,
+      { cwd: proj }
+    )
+  )
+  if (
+    pkg.name !== sourcePackage.name ||
+    pkg.version !== sourcePackage.version
+  ) {
     failures.push(
-      `installed tarball identity ${pkg.name}@${pkg.version} does not match ${sourcePackage.name}@${sourcePackage.version}`,
+      `installed tarball identity ${pkg.name}@${pkg.version} does not match ${sourcePackage.name}@${sourcePackage.version}`
     )
   }
   const packageRoot = join(proj, "node_modules/semiotic")
   const {
     modules: entryPoints,
     packageJson: packageJsonExport,
-    resources,
+    resources
   } = splitExports(pkg.exports, failures)
-  console.log(`▶ checking ${entryPoints.length} importable entry points from package.json#exports (semiotic@${pkg.version})`)
+  console.log(
+    `▶ checking ${entryPoints.length} importable entry points from package.json#exports (semiotic@${pkg.version})`
+  )
   checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures)
   checkPortabilitySpec(packageRoot, resources, proj, failures)
   checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures)
+  checkPrivateDeclarations(packageRoot, failures)
+  checkClientBoundaryDirectives(packageRoot, pkg.exports, failures)
+  checkThemeCoreReactFree(packageRoot, pkg.exports, failures)
+  checkReactServerCoreImports(proj, failures)
+  checkExperimentalBridgeStoreAnchor(packageRoot, failures)
 
   for (const { entry, exportEntry, esmPath } of entryPoints) {
     const importPath = entry === "." ? "semiotic" : `semiotic${entry.slice(1)}`
@@ -493,7 +957,9 @@ try {
     // ESM import
     try {
       const code = `import * as m from "${importPath}"; if (!m || typeof m !== "object") { throw new Error("empty module") } console.log(Object.keys(m).length)`
-      const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, { cwd: proj })
+      const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, {
+        cwd: proj
+      })
       const exportCount = parseInt(out.trim(), 10)
       if (!Number.isFinite(exportCount) || exportCount === 0) {
         failures.push(`${importPath} (ESM): no exports`)
@@ -508,7 +974,10 @@ try {
     if (exportEntry.require) {
       try {
         const code = `const m = require("${importPath}"); if (!m || typeof m !== "object") { throw new Error("empty module") } console.log(Object.keys(m).length)`
-        const out = run(`node --input-type=commonjs -e ${JSON.stringify(code)}`, { cwd: proj })
+        const out = run(
+          `node --input-type=commonjs -e ${JSON.stringify(code)}`,
+          { cwd: proj }
+        )
         const exportCount = parseInt(out.trim(), 10)
         if (!Number.isFinite(exportCount) || exportCount === 0) {
           failures.push(`${importPath} (CJS): no exports`)
@@ -522,14 +991,23 @@ try {
 
     // Types path resolves to a real .d.ts file.
     if (exportEntry.types) {
-      const typesPath = join(proj, "node_modules/semiotic", exportEntry.types.replace(/^\.\//, ""))
+      const typesPath = join(
+        proj,
+        "node_modules/semiotic",
+        exportEntry.types.replace(/^\.\//, "")
+      )
       if (!existsSync(typesPath)) {
-        failures.push(`${importPath} (types): ${exportEntry.types} not found in installed package`)
+        failures.push(
+          `${importPath} (types): ${exportEntry.types} not found in installed package`
+        )
       } else {
         console.log(`  ✓ ${importPath} (types): ${exportEntry.types}`)
       }
     }
   }
+
+  checkCjsClientContextIdentity(proj, failures)
+  checkExperimentalFacadeParity(proj, failures)
 
   checkTypeScriptConsumer(proj, packageRoot, failures)
   checkPackedExampleConsumer(proj, failures)
@@ -538,7 +1016,11 @@ try {
   exitCode = 2
 } finally {
   // Clean up — best-effort.
-  try { rmSync(tmp, { recursive: true, force: true }) } catch { /* noop */ }
+  try {
+    rmSync(tmp, { recursive: true, force: true })
+  } catch {
+    /* noop */
+  }
 }
 
 if (failures.length > 0) {
@@ -547,5 +1029,6 @@ if (failures.length > 0) {
   exitCode = exitCode || 1
 }
 
-if (exitCode === 0) console.log("\n✅ pack smoke test passed (all package.json#exports entries)")
+if (exitCode === 0)
+  console.log("\n✅ pack smoke test passed (all package.json#exports entries)")
 process.exit(exitCode)

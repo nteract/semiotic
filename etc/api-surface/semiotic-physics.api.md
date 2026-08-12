@@ -7,39 +7,107 @@ _Edit dist/semiotic-physics.d.ts's sources, then re-run `npm run docs:api-surfac
 class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter
 class PhysicsPipelineStore
 class PhysicsSedimentAccumulator
+class-member BuiltInPhysicsEngineAdapter::construct::%24construct = required new (options?: PhysicsKernelOptions | undefined): BuiltInPhysicsEngineAdapter
+class-member BuiltInPhysicsEngineAdapter::method::activeSensorPairs = required activeSensorPairs(): PhysicsActiveSensorPair[]
+class-member BuiltInPhysicsEngineAdapter::method::allSleeping = required allSleeping(): boolean
+class-member BuiltInPhysicsEngineAdapter::method::applyImpulse = required applyImpulse(id: string, ix: number, iy: number): void
+class-member BuiltInPhysicsEngineAdapter::method::dispose = required dispose(): void
+class-member BuiltInPhysicsEngineAdapter::method::events = required events(): PhysicsKernelEvent[]
+class-member BuiltInPhysicsEngineAdapter::method::init = required init(options?: PhysicsKernelOptions | undefined): void
+class-member BuiltInPhysicsEngineAdapter::method::nextRandom = required nextRandom(): number
+class-member BuiltInPhysicsEngineAdapter::method::readState = required readState(out?: PhysicsBodyState[] | undefined): PhysicsBodyState[]
+class-member BuiltInPhysicsEngineAdapter::method::remove = required remove(ids: string[]): void
+class-member BuiltInPhysicsEngineAdapter::method::removeConstraint = required removeConstraint(id: string): void
+class-member BuiltInPhysicsEngineAdapter::method::restore = required restore(snapshot: PhysicsKernelSnapshot): void
+class-member BuiltInPhysicsEngineAdapter::method::setColliders = required setColliders(colliders: PhysicsColliderSpec[]): void
+class-member BuiltInPhysicsEngineAdapter::method::setConstraint = required setConstraint(spec: PhysicsSpringSpec): string
+class-member BuiltInPhysicsEngineAdapter::method::settle = required settle(maxSteps?: number | undefined, dtSeconds?: number | undefined): number
+class-member BuiltInPhysicsEngineAdapter::method::snapshot = required snapshot(): PhysicsKernelSnapshot
+class-member BuiltInPhysicsEngineAdapter::method::spawn = required spawn(spec: PhysicsBodySpec): void
+class-member BuiltInPhysicsEngineAdapter::method::step = required step(dtSeconds?: number | undefined): void
+class-member BuiltInPhysicsEngineAdapter::property::capabilities = required readonly capabilities: PhysicsEngineCapabilities
+class-member BuiltInPhysicsEngineAdapter::property::id = required readonly id: "builtin"
+class-member PhysicsPipelineStore::construct::%24construct = required new (config?: PhysicsPipelineConfig | undefined): PhysicsPipelineStore
+class-member PhysicsPipelineStore::method::allSleeping = required allSleeping(): boolean
+class-member PhysicsPipelineStore::method::applyImpulse = required applyImpulse(id: string, ix: number, iy: number): void
+class-member PhysicsPipelineStore::method::atRest = required atRest(): boolean
+class-member PhysicsPipelineStore::method::bodyBudgetStatus = required bodyBudgetStatus(): PhysicsBodyBudgetDecision
+class-member PhysicsPipelineStore::method::clear = required clear(): void
+class-member PhysicsPipelineStore::method::controls = required controls(): PhysicsPipelineControlSurface
+class-member PhysicsPipelineStore::method::elapsed = required elapsed(): number
+class-member PhysicsPipelineStore::method::enqueue = required enqueue(spawn: PhysicsQueuedSpawn | PhysicsQueuedSpawn[], pacing?: PhysicsSpawnPacingOptions | undefined): void
+class-member PhysicsPipelineStore::method::enqueueWithResult = required enqueueWithResult(spawn: PhysicsQueuedSpawn | PhysicsQueuedSpawn[], pacing?: PhysicsSpawnPacingOptions | undefined): UpdateResult
+class-member PhysicsPipelineStore::method::events = required events(): PhysicsKernelEvent[]
+class-member PhysicsPipelineStore::method::getLastUpdateResult = required getLastUpdateResult(): UpdateResult
+class-member PhysicsPipelineStore::method::getUpdateSnapshot = required getUpdateSnapshot(): UpdateResult
+class-member PhysicsPipelineStore::method::hasPendingWork = required hasPendingWork(): boolean
+class-member PhysicsPipelineStore::method::hitTest = required hitTest(x: number, y: number, radius?: number | undefined, options?: PhysicsBodyHitTestOptions | undefined): PhysicsBodyState | null
+class-member PhysicsPipelineStore::method::liveBodyCount = required liveBodyCount(): number
+class-member PhysicsPipelineStore::method::materializeDueSpawns = required materializeDueSpawns(): string[]
+class-member PhysicsPipelineStore::method::nextRandom = required nextRandom(): number
+class-member PhysicsPipelineStore::method::queueSize = required queueSize(): number
+class-member PhysicsPipelineStore::method::readBodies = required readBodies(out?: PhysicsBodyState[] | undefined): PhysicsBodyState[]
+class-member PhysicsPipelineStore::method::readSediment = required readSediment(): PhysicsSedimentBinSnapshot[]
+class-member PhysicsPipelineStore::method::recordObservation = required recordObservation(record: PhysicsObservationRecord): PhysicsObservationEvent
+class-member PhysicsPipelineStore::method::remove = required remove(ids: string[]): string[]
+class-member PhysicsPipelineStore::method::removeConstraint = required removeConstraint(id: string): void
+class-member PhysicsPipelineStore::method::restore = required restore(snapshot: PhysicsPipelineSnapshot): void
+class-member PhysicsPipelineStore::method::sedimentHeightfield = required sedimentHeightfield(options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
+class-member PhysicsPipelineStore::method::sedimentTotals = required sedimentTotals(): PhysicsSedimentTotals
+class-member PhysicsPipelineStore::method::setColliders = required setColliders(colliders: PhysicsColliderSpec[]): void
+class-member PhysicsPipelineStore::method::setConstraint = required setConstraint(spec: PhysicsSpringSpec): string
+class-member PhysicsPipelineStore::method::setPaused = required setPaused(paused: boolean): void
+class-member PhysicsPipelineStore::method::setVisible = required setVisible(visible: boolean): void
+class-member PhysicsPipelineStore::method::settle = required settle(maxSteps?: number | undefined): number
+class-member PhysicsPipelineStore::method::settleWithObservations = required settleWithObservations(maxSteps?: number | undefined): PhysicsPipelineTickResult
+class-member PhysicsPipelineStore::method::snapshot = required snapshot(): PhysicsPipelineSnapshot
+class-member PhysicsPipelineStore::method::spawnNow = required spawnNow(spawn: PhysicsQueuedSpawn): void
+class-member PhysicsPipelineStore::method::subscribeUpdateResult = required subscribeUpdateResult(listener: () => void): () => void
+class-member PhysicsPipelineStore::method::tick = required tick(deltaSeconds: number): PhysicsPipelineTickResult
+class-member PhysicsPipelineStore::method::updateConfig = required updateConfig(config: PhysicsPipelineConfig): void
+class-member PhysicsPipelineStore::method::updateConfigWithResult = required updateConfigWithResult(config: PhysicsPipelineConfig): UpdateResult
+class-member PhysicsPipelineStore::method::version = required version(): number
+class-member PhysicsSedimentAccumulator::construct::%24construct = required new (config?: PhysicsSedimentConfig | false | undefined): PhysicsSedimentAccumulator
+class-member PhysicsSedimentAccumulator::method::add = required add(body: PhysicsBodyState): PhysicsSedimentBinSnapshot | null
+class-member PhysicsSedimentAccumulator::method::clear = required clear(): void
+class-member PhysicsSedimentAccumulator::method::isEnabled = required isEnabled(): boolean
+class-member PhysicsSedimentAccumulator::method::restore = required restore(snapshot?: PhysicsSedimentBinSnapshot[] | undefined): void
+class-member PhysicsSedimentAccumulator::method::snapshot = required snapshot(): PhysicsSedimentBinSnapshot[]
+class-member PhysicsSedimentAccumulator::method::totals = required totals(): PhysicsSedimentTotals
+class-member PhysicsSedimentAccumulator::method::updateConfig = required updateConfig(config: PhysicsSedimentConfig | false | undefined): void
 const DEFAULT_CRUCIBLE_HEIGHT: 520
 const DEFAULT_CRUCIBLE_OUTLETS: readonly CrucibleOutlet[]
 const DEFAULT_CRUCIBLE_SIZE: [number, number]
 const DEFAULT_CRUCIBLE_WIDTH: 900
-function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function CollisionSwarmChart(: import("../../../dist/semiotic-physics").CollisionSwarmChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function EventDropChart(: import("../../../dist/semiotic-physics").EventDropChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function GaltonBoardChart(: import("../../../dist/semiotic-physics").GaltonBoardChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function GuantletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CollisionSwarmChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function EventDropChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function GaltonBoardChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GuantletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicsPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
+function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PhysicsPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): React.JSX.Element
-function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlowChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function StreamPhysicsFrame(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
+function ProcessFlowChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function StreamPhysicsFrame(: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function UnitPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function absorbRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
-function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
+function UnitPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function absorbRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
+function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "region" | "type">): RegionCountMap
 function applyCrucibleEvent<TDatum extends Datum>(state: CrucibleRunState<TDatum>, event: CrucibleEvent, context: CrucibleApplyContext): CrucibleApplyResult<TDatum>
-function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): { initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions; }
+function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): {initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions;}
 function bodiesToAnnotationAnchors(bodies: readonly PhysicsBodyState[]): PhysicsAnnotationAnchorNode[]
 function bodyGroupSpec<TDatum extends Datum = Datum>(options: BodyGroupSpecOptions<TDatum>): BodyGroupSpec<TDatum>
 function buildCollisionSwarmPhysics<TDatum extends Datum>(options: CollisionSwarmPhysicsOptions<TDatum>): PhysicsChartLayout
-function buildCrucibleEvidence<TDatum extends Datum>(state: CrucibleRunState<TDatum>, options?: { projection?: CrucibleProjectionSpec; conservation?: CrucibleConservationSpec; } | undefined): { history: CrucibleHistoryItem[]; projection: CrucibleProjectionRow[]; conservation: CrucibleConservationResult; }
+function buildCrucibleEvidence<TDatum extends Datum>(state: CrucibleRunState<TDatum>, options?: undefined | {projection?: CrucibleProjectionSpec; conservation?: CrucibleConservationSpec;}): {history: CrucibleHistoryItem[]; projection: CrucibleProjectionRow[]; conservation: CrucibleConservationResult;}
 function buildCrucibleInitialSpawns<TDatum extends Datum>(state: CrucibleRunState<TDatum>, layout: CrucibleLayout, options?: CrucibleSpawnOptions | undefined): PhysicsQueuedSpawn[]
 function buildCrucibleLayout(size?: [number, number] | undefined, outlets?: readonly CrucibleOutlet[] | undefined): CrucibleLayout
-function buildCruciblePhysicsConfig(seed: string | number | undefined, colliders: readonly PhysicsColliderSpec[]): PhysicsPipelineConfig
+function buildCruciblePhysicsConfig(seed: number | string | undefined, colliders: readonly PhysicsColliderSpec[]): PhysicsPipelineConfig
 function buildCrucibleProductEvents(options: BuildCrucibleProductEventsOptions): CrucibleEvent[]
 function buildCrucibleProjection<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
 function buildCrucibleStateSpawns<TDatum extends Datum>(state: CrucibleRunState<TDatum>, layout: CrucibleLayout, options?: CrucibleSpawnOptions | undefined): PhysicsQueuedSpawn[]
@@ -47,20 +115,20 @@ function buildCrucibleTerminalSpawns<TDatum extends Datum>(state: CrucibleRunSta
 function buildEventDropPhysics<TDatum extends Datum>(options: EventDropPhysicsOptions<TDatum>): PhysicsChartLayout
 function buildGaltonBoardPhysics<TDatum extends Datum>(options: GaltonBoardPhysicsOptions<TDatum>): PhysicsChartLayout
 function buildPhysicalFlowPhysics<TNode extends Datum, TLink extends Datum>(options: PhysicalFlowOptions<TNode, TLink>): PhysicsChartLayout
-function buildPhysicsAnnotationContext(options: { width: number; height: number; pointNodes?: PhysicsAnnotationAnchorNode[]; data?: Datum[]; }): AnnotationContext
+function buildPhysicsAnnotationContext(options: {width: number; height: number; pointNodes?: PhysicsAnnotationAnchorNode[]; data?: Datum[];}): AnnotationContext
 function buildPhysicsPile<TDatum extends Datum>(options: PhysicsPileOptions<TDatum>): PhysicsChartLayout
 function buildProcessFlowPhysics<TDatum extends Datum>(options: ProcessFlowPhysicsOptions<TDatum>): PhysicsChartLayout
 function calculateBlockerAmplification<TDatum extends Datum = Datum>(machine: DependencyMachine<TDatum>, blockerID: string, options?: BlockerAmplificationOptions<TDatum> | undefined): BlockerAmplification
-function capacitatedRegion(options: ProcessRegionBaseOptions & { capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
-function chargeGateRegion(options: ProcessRegionBaseOptions & { charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
+function capacitatedRegion(options: ProcessRegionBaseOptions & {capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
+function chargeGateRegion(options: ProcessRegionBaseOptions & {charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
 function cloneCrucibleState<TDatum extends Datum>(state: CrucibleRunState<TDatum>): CrucibleRunState<TDatum>
-function collidersFromScales<TBand = string | number>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
+function collidersFromScales<TBand = number | string>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
 function comparePhysicsTrace<TSample = PhysicsScalarTraceSample>(trace: readonly TSample[], envelope: PhysicsReferenceEnvelope, options?: PhysicsTraceComparisonOptions<TSample> | undefined): PhysicsTraceComparison
 function compileCruciblePlan<TDatum extends Datum>(options: CrucibleCompileOptions<TDatum>): CrucibleCompiledPlan<TDatum>
 function compileDependencyMachine<TDatum extends Datum = Datum>(options: CompileDependencyMachineOptions<TDatum>): DependencyMachine<TDatum>
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function compilePhysicsEncoding<TDatum extends Datum = Datum>(options: CompilePhysicsEncodingOptions<TDatum>): PhysicsEncodingCompilation<TDatum>
-function composePhysicsControllers(controllers: readonly PhysicsController[] | null | undefined): ComposedPhysicsControllers | null
+function composePhysicsControllers(controllers: null | readonly PhysicsController[] | undefined): ComposedPhysicsControllers | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDefaultPhysicsEngineAdapter(options?: PhysicsKernelOptions | undefined): PhysicsEngineAdapter
@@ -68,8 +136,8 @@ function createDependencyGateController(options: DependencyGateOptions): Depende
 function createInitialCrucibleState<TDatum extends Datum>(options: CrucibleCompileOptions<TDatum>): CrucibleInitialStateResult<TDatum>
 function createLogicalJoin(taskID: string, incomingEdgeIDs: readonly string[], mode?: "all" | undefined): LogicalJoin
 function createPhysicsEncodingLayout<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(options: CreatePhysicsEncodingLayoutOptions<TDatum, TConfig>): PhysicsCustomLayout<TDatum, TConfig>
-function createPortalController(options: { id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void; }): PhysicsController
-function createProcessJourneyLedger(options: { stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[]; }): ProcessJourneyLedger
+function createPortalController(options: {id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void;}): PhysicsController
+function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
 function createServiceResourcePoolController(options: ServiceResourcePoolOptions): ServiceResourcePoolController
 function crucibleBondId(productId: string, sourceId: string): string
@@ -78,24 +146,24 @@ function crucibleComponentBodyId(componentId: string): string
 function crucibleProductBodyId(productId: string): string
 function crucibleProjectionRows<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
 function crucibleSemanticKey(value: unknown): string
-function default(: import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameProps & React.RefAttributes<import("../../../dist/semiotic-experimental").UnstableStreamPhysicsFrameHandle>): React.ReactNode
+function default(: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
-function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: { charge?: string; apparatus?: string; destination?: string; } | undefined): string
+function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: undefined | {charge?: string; apparatus?: string; destination?: string;}): string
 function evaluateCrucibleConservation<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleConservationSpec | undefined): CrucibleConservationResult
 function evaluatePhysicsBodyBudget(input: PhysicsBodyBudgetInput): PhysicsBodyBudgetDecision
-function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
+function forceFieldRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number;}): StreamPhysicsRegionEffect
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
-function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: readonly string[] | ReadonlySet<string>): { id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[]; }[]
+function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: ReadonlySet<string> | readonly string[]): {id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[];}[]
 function hatchFillId(prefix: string, h: HatchFill): string
-function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function isHatchFill(fill: unknown): boolean
-function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeRuleValueResolver(accessor: ((d: Datum) => unknown) | string | undefined): (d: Datum) => number | undefined
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
-function membraneRegion(options: ProcessRegionBaseOptions & { cost: number; dampingScale?: number; energyScale?: number; color?: string; }): StreamPhysicsRegionEffect
+function membraneRegion(options: ProcessRegionBaseOptions & {cost: number; dampingScale?: number; energyScale?: number; color?: string;}): StreamPhysicsRegionEffect
 function normalizePhysicsAnnotations(annotations: Datum[] | undefined): Datum[] | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
-function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): { x: number; y: number; }
+function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): {x: number; y: number;}
 function physicsDestination(geography: PhysicsStageGeography, id: string): PhysicsDestinationZone | undefined
 function physicsProcessBoundaryColliders(shape: PhysicsColliderShape, options?: PhysicsProcessBoundaryOptions | undefined): PhysicsColliderSpec[]
 function physicsProcessGroupSemanticItems<TDatum extends Datum>(groups: readonly PhysicsProcessBodyGroup<TDatum>[]): PhysicsSemanticItem[]
@@ -105,47 +173,47 @@ function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: P
 function physicsStageColliders(geography: PhysicsStageGeography, options?: PhysicsStageColliderOptions | undefined): PhysicsColliderSpec[]
 function physicsStageGeography(options: PhysicsStageGeographyOptions): PhysicsStageGeography
 function planGauntletPropertyWork(options: GauntletPropertyWorkPlanOptions): GauntletPropertyWorkPlan
-function portalRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string; }): StreamPhysicsRegionEffect
-function pressureFieldRegion(options: ProcessRegionBaseOptions & { pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
-function processChrome(layout: ProcessChromeLayout, options?: ProcessChromeOptions | undefined): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function portalRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string;}): StreamPhysicsRegionEffect
+function pressureFieldRegion(options: ProcessRegionBaseOptions & {pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
+function processChrome(layout: ProcessChromeLayout, options?: ProcessChromeOptions | undefined): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function processJourneyRows(ledger: ProcessJourneyLedger): ProcessJourneyRow[]
-function processLaneWalls(options: { idPrefix?: string; left: number; right: number; top: number; bottom: number; friction?: number; restitution?: number; thickness?: number; openEnds?: boolean; }): PhysicsColliderSpec[]
+function processLaneWalls(options: {idPrefix?: string; left: number; right: number; top: number; bottom: number; friction?: number; restitution?: number; thickness?: number; openEnds?: boolean;}): PhysicsColliderSpec[]
 function processStageLayout(options: ProcessVolumeLayoutOptions): ProcessVolumeLayout
 function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStageRegionOptions | undefined): StreamPhysicsRegionEffect[]
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
-function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): { label: string; value: number; }[]
+function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
-function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "initialState" | "events" | "products" | "outlets" | "phases" | "duration">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
+function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "events" | "initialState" | "outlets" | "phases" | "products">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
 function replayStateTransitions(events: readonly DependencyReplayEvent[], clock: DependencyReplayClock): DependencyReplayState
 function resolveCrucibleSelector<TDatum extends Datum>(state: CrucibleRunState<TDatum>, selector: CrucibleSelector, path?: string | undefined): CrucibleSelectorResult
-function resolveCrucibleSnapshotAt<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, snapshotAt: number | { phaseId: string; progress?: number; } | undefined): number
-function resolveCrucibleTime<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "phases" | "duration">, elapsed: number): CrucibleResolvedTime
+function resolveCrucibleSnapshotAt<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "phases">, snapshotAt: number | undefined | {phaseId: string; progress?: number;}): number
+function resolveCrucibleTime<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "phases">, elapsed: number): CrucibleResolvedTime
 function resolveGauntletTerminalState<TDatum extends Datum = Datum>(project: GauntletProjectState<TDatum>, options: GauntletTerminalOptions<TDatum>): GauntletProjectState<TDatum>
 function resolveGauntletTerminalStates<TDatum extends Datum = Datum>(options: GauntletTerminalOptions<TDatum>): GauntletProjectState<TDatum>[]
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
-function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
+function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
 function routeDependencyTracks<TDatum extends Datum = Datum>(machine: DependencyMachine<TDatum>, dimensions: DependencyTrackDimensions, options?: DependencyTrackOptions | undefined): DependencyTrackLayout
-function routeSurfaceRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; }): StreamPhysicsRegionEffect
+function routeSurfaceRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number;}): StreamPhysicsRegionEffect
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBakeOptions | undefined): SedimentBakeResult
 function sedimentHeightfield(bins: PhysicsSedimentBinSnapshot[], options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
 function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options?: SpawnFromTokensOptions<D> | undefined): PhysicsQueuedSpawn[]
-function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: { random?: () => number; along?: number; jitterX?: number; padY?: number; } | undefined): { x: number; y: number; }
-function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region" | "datum" | "observation">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
+function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: undefined | {random?: () => number; along?: number; jitterX?: number; padY?: number;}): {x: number; y: number;}
+function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 interface ArrivalReplayOptions
 interface BlockerAmplification
 interface BlockerAmplificationOptions<TDatum extends Datum = Datum>
 interface BodyGroupSpec<TDatum extends Datum = Datum>
 interface BodyGroupSpecOptions<TDatum extends Datum = Datum>
 interface BuildCrucibleProductEventsOptions
-interface CapacityQueueAbandonedInfo
+interface CapacityQueueAbandonedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueAgeSummary
-interface CapacityQueueBlockedInfo
+interface CapacityQueueBlockedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueControllerOptions
-interface CapacityQueueProcessedInfo
+interface CapacityQueueProcessedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueSnapshot
 interface CapacityQueueVisitInfo
 interface CapacityQueueWindowSnapshot
@@ -153,10 +221,10 @@ interface CategoricalLegendConfig
 interface ChainReactionChartHandle
 interface ChainReactionChartProps<TDatum extends Datum = Datum>
 interface ChainReactionMachineState
-interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
+interface CollisionSwarmChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface CollisionSwarmPhysicsOptions<TDatum extends Datum = Datum>
 interface CollisionSwarmProjectionMetadata
-interface CompileDependencyMachineOptions<TDatum extends Datum = Datum>
+interface CompileDependencyMachineOptions<TDatum extends Datum = Datum> extends DependencyMachineAccessors<TDatum>
 interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface CompilePhysicsEncodingOptions<TDatum extends Datum = Datum>
 interface ComposedPhysicsControllers
@@ -166,11 +234,11 @@ interface CrucibleApplyContext
 interface CrucibleApplyResult<TDatum extends Datum = Datum>
 interface CrucibleBodyDatum<TDatum extends Datum = Datum>
 interface CrucibleChartHandle<TDatum extends Datum = Datum>
-interface CrucibleChartProps<TDatum extends Datum = Datum>
+interface CrucibleChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "onClick" | "selection">, PhysicsSharedChartProps
 interface CrucibleCombineEffect
-interface CrucibleCompileOptions<TDatum extends Datum = Datum>
-interface CrucibleCompiledEvent
-interface CrucibleCompiledPhase
+interface CrucibleCompileOptions<TDatum extends Datum = Datum> extends CrucibleAccessors<TDatum>
+interface CrucibleCompiledEvent extends CrucibleEvent
+interface CrucibleCompiledPhase extends CruciblePhase
 interface CrucibleCompiledPlan<TDatum extends Datum = Datum>
 interface CrucibleCompleteProductEffect
 interface CrucibleComponentState<TDatum extends Datum = Datum>
@@ -184,21 +252,21 @@ interface CrucibleEvent
 interface CrucibleHistoryItem
 interface CrucibleInitialStateResult<TDatum extends Datum = Datum>
 interface CrucibleLayout
-interface CrucibleLayoutOutlet
+interface CrucibleLayoutOutlet extends CrucibleOutlet
 interface CrucibleLoss
 interface CrucibleMaterialization
 interface CrucibleObservation
 interface CrucibleOutlet
 interface CruciblePhase
 interface CrucibleProductAllocation
-interface CrucibleProductCompletionStep
+interface CrucibleProductCompletionStep extends CrucibleEventStep
 interface CrucibleProductDefinition
-interface CrucibleProductSourceStep
+interface CrucibleProductSourceStep extends CrucibleEventStep
 interface CrucibleProductState
 interface CrucibleProjectionRow
 interface CrucibleProjectionSpec
 interface CrucibleRelationDefinition
-interface CrucibleRelationState
+interface CrucibleRelationState extends CrucibleRelationDefinition
 interface CrucibleReplayResult<TDatum extends Datum = Datum>
 interface CrucibleResolveRelationEffect
 interface CrucibleResolvedTime
@@ -211,7 +279,7 @@ interface CrucibleSetRelationEffect
 interface CrucibleSetStateEffect
 interface CrucibleSpawnOptions
 interface CrucibleSplitEffect
-interface DependencyGateController
+interface DependencyGateController extends PhysicsController
 interface DependencyGateOptions
 interface DependencyGateSnapshot
 interface DependencyMachine<TDatum extends Datum = Datum>
@@ -221,21 +289,21 @@ interface DependencyMachineEdge
 interface DependencyMachineNode<TDatum extends Datum = Datum>
 interface DependencyPoint
 interface DependencyReplayState
-interface DependencySocketPlacement
-interface DependencyTaskPlacement
+interface DependencySocketPlacement extends DependencyPoint
+interface DependencyTaskPlacement extends DependencyPoint
 interface DependencyTrackDimensions
 interface DependencyTrackLayout
 interface DependencyTrackOptions
 interface DependencyTrackRoute
-interface EventDropChartProps<TDatum extends Datum = Datum>
+interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface EventDropPhysicsOptions<TDatum extends Datum = Datum>
 interface EventDropWindowOptions
-interface GaltonBoardChartProps<TDatum extends Datum = Datum>
+interface GaltonBoardChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
 interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum>
 interface GaltonBoardProjectionMetadata
 interface GaltonBoardReferenceLine
 interface GaltonPegsOptions
-interface GauntletChartProps<TDatum extends Datum = Datum>
+interface GauntletChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface GauntletEffect
 interface GauntletEvent
 interface GauntletEventContext<TDatum extends Datum = Datum>
@@ -268,9 +336,9 @@ interface MotionPlacementEncoding<TDatum>
 interface MotionPoint
 interface MotionProcessEncoding<TDatum>
 interface MotionTimeEncoding<TDatum>
-interface MultiLineTooltipConfig
+interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
-interface PacketFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum>
+interface PacketFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface PhysicalFlowOptions<TNode extends Datum = Datum, TLink extends Datum = Datum>
 interface PhysicalFlowPoint
 interface PhysicalFlowProjectionMetadata
@@ -291,17 +359,17 @@ interface PhysicsColliderBodyFilterSpec
 interface PhysicsColliderSpec
 interface PhysicsController
 interface PhysicsControllerTickContext
-interface PhysicsCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface PhysicsCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface PhysicsCustomLayoutContext<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface PhysicsCustomLayoutResult
-interface PhysicsDestinationZone
+interface PhysicsDestinationZone extends PhysicsZone
 interface PhysicsDynamicsEncoding<TDatum>
 interface PhysicsEncoding<TDatum extends Datum = Datum>
 interface PhysicsEncodingCompilation<TDatum extends Datum = Datum>
 interface PhysicsEncodingDefaults
 interface PhysicsEngineAdapter
 interface PhysicsEngineCapabilities
-interface PhysicsFrameHandle
+interface PhysicsFrameHandle extends RealtimeFrameHandle
 interface PhysicsKernelOptions
 interface PhysicsPileOptions<TDatum extends Datum = Datum>
 interface PhysicsPipelineConfig
@@ -312,7 +380,7 @@ interface PhysicsPlotBounds
 interface PhysicsProcessBodyGroup<TDatum extends Datum = Datum>
 interface PhysicsProcessBoundaryOptions
 interface PhysicsProcessStage
-interface PhysicsQueuedSpawn
+interface PhysicsQueuedSpawn extends PhysicsBodySpec
 interface PhysicsReferenceEnvelope
 interface PhysicsReferenceEnvelopeOptions<TSample>
 interface PhysicsReferenceEnvelopePoint
@@ -330,7 +398,7 @@ interface PhysicsSpringSpec
 interface PhysicsStageColliderOptions
 interface PhysicsStageGeography
 interface PhysicsStageGeographyOptions
-interface PhysicsTimeEncoding<TDatum>
+interface PhysicsTimeEncoding<TDatum> extends MotionTimeEncoding<TDatum>
 interface PhysicsTraceComparison
 interface PhysicsTraceComparisonOptions<TSample>
 interface PhysicsTraceComparisonPoint
@@ -339,7 +407,7 @@ interface ProcessChromeGroup
 interface ProcessChromeLayout
 interface ProcessChromeOptions
 interface ProcessChromeStage
-interface ProcessFlowChartProps<TDatum extends Datum = Datum>
+interface ProcessFlowChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface ProcessFlowPhysicsOptions<TDatum extends Datum = Datum>
 interface ProcessFlowProjectionMetadata
 interface ProcessFlowStageDef
@@ -354,7 +422,7 @@ interface ProcessStageDef
 interface ProcessStageRegionOptions
 interface ProcessVolumeLayout
 interface ProcessVolumeLayoutOptions
-interface ProcessVolumeMembraneBand
+interface ProcessVolumeMembraneBand extends ProcessMembraneDef
 interface ProcessVolumePolygon
 interface ProcessVolumeStageBand
 interface RegionCountBucket
@@ -362,213 +430,2103 @@ interface ResolveMotionAgeOptions
 interface ResolvedMotionAge
 interface ResolvedMotionEncodingRow<TDatum extends Datum = Datum>
 interface ResolvedMotionVector
-interface ResolvedPhysicsEncodingRow<TDatum extends Datum = Datum>
+interface ResolvedPhysicsEncodingRow<TDatum extends Datum = Datum> extends Omit<ResolvedMotionEncodingRow<TDatum>, "placement" | "time">
 interface RunningStatsSnapshot
-interface SedimentBakeOptions
+interface SedimentBakeOptions extends PhysicsSedimentHeightfieldOptions
 interface SedimentBakeResult
 interface ServiceLevelCaseInfo
-interface ServiceLevelController
+interface ServiceLevelController extends PhysicsController
 interface ServiceLevelControllerOptions
 interface ServiceLevelSnapshot
 interface ServiceResourceAssignment
 interface ServiceResourceDefinition
-interface ServiceResourcePoolController
+interface ServiceResourcePoolController extends PhysicsController
 interface ServiceResourcePoolOptions
 interface ServiceResourcePoolSnapshot
 interface SpawnFromTokensOptions<D = unknown>
 interface StreamPhysicsBodyForceContext
 interface StreamPhysicsBodyRegionState
 interface StreamPhysicsExecutionState
-interface StreamPhysicsFrameHandle
+interface StreamPhysicsFrameHandle extends PhysicsPipelineControlSurface
 interface StreamPhysicsFrameProps
 interface StreamPhysicsPopOptions
 interface StreamPhysicsRegionEffect
 interface StreamPhysicsRegionEffectContext
 interface StreamPhysicsRegionEvent
 interface StreamPhysicsRegionVector
+interface Style
 interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface TooltipConfig
 interface TooltipField
-interface TooltipRootProps
-interface UnitPileChartProps<TDatum extends Datum = Datum>
-type BandScale<T = string | number> = ((value: T) => number | undefined) & {
-    bandwidth?: () => number;
-}
-type ChainReactionInsight = "none" | "blocker-amplification"
-type ChainReactionMode = "snapshot" | "replay" | "mechanical"
-type ChainReactionObservation<TDatum extends Datum = Datum> = {
-    type: "task-completed";
-    taskID: string;
-    datum: TDatum;
-} | {
-    type: "dependency-delivered";
-    sourceID: string;
-    targetID: string;
-} | {
-    type: "task-armed";
-    taskID: string;
-} | {
-    type: "machine-stalled";
-    blockerID: string;
-    downstreamTaskCount: number;
-    affectedLaneCount: number;
-} | {
-    type: "blocker-previewed";
-    blockerID: string;
-    downstreamTaskIDs: string[];
-} | {
-    type: "machine-settled";
-}
-type CrucibleColorBy<TDatum extends Datum = Datum> = "category" | "status" | "outlet" | "product" | ChartAccessor<TDatum, string>
-type CrucibleComponentStatus = "queued" | "active" | "transformed" | "consumed" | "retained" | "ejected" | "failed" | "recovered"
-type CrucibleEffect = CrucibleSetStateEffect | CrucibleSetRelationEffect | CrucibleResolveRelationEffect | CrucibleCombineEffect | CrucibleContributeEffect | CrucibleCompleteProductEffect | CrucibleSplitEffect | CrucibleEjectEffect | CrucibleSetMetricEffect | CrucibleSetOutcomeEffect
-type CrucibleEventAt = {
-    time: number;
-    phaseId?: never;
-    progress?: never;
-} | {
-    time?: never;
-    phaseId: string;
-    progress?: number;
-}
-type CrucibleEventStep = Pick<CrucibleEvent, "at" | "label" | "description" | "summary"> & {
-    /** Optional stable event id; a deterministic id is generated when omitted. */
-    id?: string;
-}
-type CrucibleMaterializationType = "activate-relation" | "resolve-relation" | "form-product" | "update-product" | "complete-product" | "split-source" | "retarget-component" | "retarget-product"
+interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface UnitPileChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
+interface-member ArrivalReplayOptions::property::rebase = optional rebase: boolean | undefined
+interface-member ArrivalReplayOptions::property::sort = optional sort: boolean | undefined
+interface-member ArrivalReplayOptions::property::startAt = optional startAt: number | undefined
+interface-member ArrivalReplayOptions::property::timeAccessor = optional timeAccessor: ((spawn: PhysicsQueuedSpawn, index: number) => unknown) | string | undefined
+interface-member ArrivalReplayOptions::property::timeScale = optional timeScale: number | undefined
+interface-member BlockerAmplification::property::affectedLaneCount = required affectedLaneCount: number
+interface-member BlockerAmplification::property::affectedLanes = required affectedLanes: string[]
+interface-member BlockerAmplification::property::blockerID = required blockerID: string
+interface-member BlockerAmplification::property::downstreamTaskCount = required downstreamTaskCount: number
+interface-member BlockerAmplification::property::downstreamTaskIDs = required downstreamTaskIDs: string[]
+interface-member BlockerAmplificationOptions::property::completedTaskIDs = optional completedTaskIDs: Iterable<string> | undefined
+interface-member BlockerAmplificationOptions::property::isComplete = optional isComplete: ((node: DependencyMachineNode<TDatum>) => boolean) | undefined
+interface-member BodyGroupSpec::property::anchor = optional anchor: undefined | {x: number; y: number;}
+interface-member BodyGroupSpec::property::bodyIds = optional bodyIds: readonly string[] | undefined
+interface-member BodyGroupSpec::property::completion = optional completion: undefined | {mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; targetZone?: string; threshold?: number; valueByBodyId?: Readonly<Record<string, number>>;}
+interface-member BodyGroupSpec::property::datum = optional datum: TDatum | undefined
+interface-member BodyGroupSpec::property::description = optional description: string | undefined
+interface-member BodyGroupSpec::property::group = optional group: string | undefined
+interface-member BodyGroupSpec::property::height = optional height: number | undefined
+interface-member BodyGroupSpec::property::id = required id: string
+interface-member BodyGroupSpec::property::label = optional label: string | undefined
+interface-member BodyGroupSpec::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member BodyGroupSpec::property::state = optional state: string | undefined
+interface-member BodyGroupSpec::property::tether = optional tether: undefined | {stiffness?: number; visible?: boolean; restLength?: number;}
+interface-member BodyGroupSpec::property::width = optional width: number | undefined
+interface-member BodyGroupSpec::property::x = optional x: number | undefined
+interface-member BodyGroupSpec::property::y = optional y: number | undefined
+interface-member BodyGroupSpecOptions::property::anchor = optional anchor: undefined | {x: number; y: number;}
+interface-member BodyGroupSpecOptions::property::bodyIds = optional bodyIds: readonly string[] | undefined
+interface-member BodyGroupSpecOptions::property::completion = optional completion: undefined | {mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; targetZone?: string; threshold?: number; valueByBodyId?: Readonly<Record<string, number>>;}
+interface-member BodyGroupSpecOptions::property::datum = optional datum: TDatum | undefined
+interface-member BodyGroupSpecOptions::property::description = optional description: string | undefined
+interface-member BodyGroupSpecOptions::property::group = optional group: string | undefined
+interface-member BodyGroupSpecOptions::property::height = optional height: number | undefined
+interface-member BodyGroupSpecOptions::property::id = required id: string
+interface-member BodyGroupSpecOptions::property::label = optional label: string | undefined
+interface-member BodyGroupSpecOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member BodyGroupSpecOptions::property::state = optional state: string | undefined
+interface-member BodyGroupSpecOptions::property::tether = optional tether: undefined | {stiffness?: number; visible?: boolean; restLength?: number;}
+interface-member BodyGroupSpecOptions::property::width = optional width: number | undefined
+interface-member BodyGroupSpecOptions::property::x = optional x: number | undefined
+interface-member BodyGroupSpecOptions::property::y = optional y: number | undefined
+interface-member BuildCrucibleProductEventsOptions::property::complete = required complete: CrucibleProductCompletionStep
+interface-member BuildCrucibleProductEventsOptions::property::contributions = optional contributions: readonly CrucibleProductSourceStep[] | undefined
+interface-member BuildCrucibleProductEventsOptions::property::form = required form: CrucibleProductSourceStep
+interface-member BuildCrucibleProductEventsOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member BuildCrucibleProductEventsOptions::property::productId = required productId: string
+interface-member CapacityQueueAbandonedInfo::property::abandonedAt = required abandonedAt: number
+interface-member CapacityQueueAbandonedInfo::property::queueSeconds = required queueSeconds: number
+interface-member CapacityQueueAbandonedInfo::property::remainingWork = required remainingWork: number
+interface-member CapacityQueueAgeSummary::property::count = required count: number
+interface-member CapacityQueueAgeSummary::property::meanSeconds = required meanSeconds: number
+interface-member CapacityQueueAgeSummary::property::oldestSeconds = required oldestSeconds: number
+interface-member CapacityQueueAgeSummary::property::p50Seconds = required p50Seconds: number
+interface-member CapacityQueueAgeSummary::property::p95Seconds = required p95Seconds: number
+interface-member CapacityQueueBlockedInfo::property::blockedAt = required blockedAt: number
+interface-member CapacityQueueControllerOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member CapacityQueueControllerOptions::property::continuous = optional continuous: boolean | undefined
+interface-member CapacityQueueControllerOptions::property::id = optional id: string | undefined
+interface-member CapacityQueueControllerOptions::property::jobKey = optional jobKey: ((body: PhysicsBodyState) => string | null | number | undefined) | string | undefined
+interface-member CapacityQueueControllerOptions::property::maxQueue = optional maxQueue: number | undefined
+interface-member CapacityQueueControllerOptions::property::metricWindowSeconds = optional metricWindowSeconds: number | undefined
+interface-member CapacityQueueControllerOptions::property::onAbandoned = optional onAbandoned: ((body: PhysicsBodyState, info: CapacityQueueAbandonedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onBlocked = optional onBlocked: ((body: PhysicsBodyState, info: CapacityQueueBlockedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onProcessed = optional onProcessed: ((body: PhysicsBodyState, info: CapacityQueueProcessedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onQueued = optional onQueued: ((body: PhysicsBodyState, info: CapacityQueueVisitInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::queueLayout = optional queueLayout: "lane" | "none" | undefined
+interface-member CapacityQueueControllerOptions::property::queueSlotSpacing = optional queueSlotSpacing: number | undefined
+interface-member CapacityQueueControllerOptions::property::queueStiffness = optional queueStiffness: number | undefined
+interface-member CapacityQueueControllerOptions::property::regionId = required regionId: string
+interface-member CapacityQueueControllerOptions::property::releaseImpulse = optional releaseImpulse: StreamPhysicsRegionVector | undefined
+interface-member CapacityQueueControllerOptions::property::snapshotIntervalSeconds = optional snapshotIntervalSeconds: number | undefined
+interface-member CapacityQueueControllerOptions::property::unitAccessor = optional unitAccessor: ((body: PhysicsBodyState) => number) | string | undefined
+interface-member CapacityQueueControllerOptions::property::unitsPerSecond = required unitsPerSecond: number
+interface-member CapacityQueueProcessedInfo::property::completedAt = required completedAt: number
+interface-member CapacityQueueProcessedInfo::property::queueSeconds = required queueSeconds: number
+interface-member CapacityQueueSnapshot::property::abandonedCount = required abandonedCount: number
+interface-member CapacityQueueSnapshot::property::abandonedWork = required abandonedWork: number
+interface-member CapacityQueueSnapshot::property::admittedCount = required admittedCount: number
+interface-member CapacityQueueSnapshot::property::admittedWork = required admittedWork: number
+interface-member CapacityQueueSnapshot::property::arrivalCount = required arrivalCount: number
+interface-member CapacityQueueSnapshot::property::blockedCount = required blockedCount: number
+interface-member CapacityQueueSnapshot::property::blockedDepth = required blockedDepth: number
+interface-member CapacityQueueSnapshot::property::blockedWork = required blockedWork: number
+interface-member CapacityQueueSnapshot::property::completedWork = required completedWork: number
+interface-member CapacityQueueSnapshot::property::meanCompletedQueueSeconds = required meanCompletedQueueSeconds: number
+interface-member CapacityQueueSnapshot::property::meanRemainingWork = required meanRemainingWork: number
+interface-member CapacityQueueSnapshot::property::metricRevision = required metricRevision: number
+interface-member CapacityQueueSnapshot::property::peakQueueDepth = required peakQueueDepth: number
+interface-member CapacityQueueSnapshot::property::peakRemainingWork = required peakRemainingWork: number
+interface-member CapacityQueueSnapshot::property::processedCount = required processedCount: number
+interface-member CapacityQueueSnapshot::property::processedWork = required processedWork: number
+interface-member CapacityQueueSnapshot::property::queueAge = required queueAge: CapacityQueueAgeSummary
+interface-member CapacityQueueSnapshot::property::queueDepth = required queueDepth: number
+interface-member CapacityQueueSnapshot::property::regionId = required regionId: string
+interface-member CapacityQueueSnapshot::property::remainingWork = required remainingWork: number
+interface-member CapacityQueueSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member CapacityQueueSnapshot::property::unitsPerSecond = required unitsPerSecond: number
+interface-member CapacityQueueSnapshot::property::waitingWork = required waitingWork: number
+interface-member CapacityQueueSnapshot::property::window = required window: CapacityQueueWindowSnapshot
+interface-member CapacityQueueVisitInfo::property::bodyId = required bodyId: string
+interface-member CapacityQueueVisitInfo::property::jobId = required jobId: string
+interface-member CapacityQueueVisitInfo::property::queuedAt = required queuedAt: number
+interface-member CapacityQueueVisitInfo::property::regionId = required regionId: string
+interface-member CapacityQueueVisitInfo::property::visit = required visit: number
+interface-member CapacityQueueVisitInfo::property::visitId = required visitId: string
+interface-member CapacityQueueVisitInfo::property::work = required work: number
+interface-member CapacityQueueWindowSnapshot::property::arrivalWork = required arrivalWork: number
+interface-member CapacityQueueWindowSnapshot::property::arrivals = required arrivals: number
+interface-member CapacityQueueWindowSnapshot::property::arrivalsPerSecond = required arrivalsPerSecond: number
+interface-member CapacityQueueWindowSnapshot::property::completedWork = required completedWork: number
+interface-member CapacityQueueWindowSnapshot::property::completions = required completions: number
+interface-member CapacityQueueWindowSnapshot::property::pressure = required pressure: number
+interface-member CapacityQueueWindowSnapshot::property::processedWork = required processedWork: number
+interface-member CapacityQueueWindowSnapshot::property::seconds = required seconds: number
+interface-member CapacityQueueWindowSnapshot::property::throughputPerSecond = required throughputPerSecond: number
+interface-member CapacityQueueWindowSnapshot::property::utilization = required utilization: number
+interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
+interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
+interface-member ChainReactionChartHandle::property::blockTask = required blockTask: (taskID: string, reason: string) => void
+interface-member ChainReactionChartHandle::property::clearPreview = required clearPreview: () => void
+interface-member ChainReactionChartHandle::property::completeTask = required completeTask: (taskID: string) => void
+interface-member ChainReactionChartHandle::property::getAmplification = required getAmplification: (taskID: string) => BlockerAmplification
+interface-member ChainReactionChartHandle::property::getMachineState = required getMachineState: () => ChainReactionMachineState
+interface-member ChainReactionChartHandle::property::pause = required pause: () => void
+interface-member ChainReactionChartHandle::property::play = required play: () => void
+interface-member ChainReactionChartHandle::property::previewResolve = required previewResolve: (taskID: string) => void
+interface-member ChainReactionChartHandle::property::reset = required reset: () => void
+interface-member ChainReactionChartHandle::property::settle = required settle: () => void
+interface-member ChainReactionChartHandle::property::step = required step: () => void
+interface-member ChainReactionChartHandle::property::unblockTask = required unblockTask: (taskID: string) => void
+interface-member ChainReactionChartProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member ChainReactionChartProps::property::blockerAccessor = optional blockerAccessor: DependencyAccessor<TDatum, string | undefined> | undefined
+interface-member ChainReactionChartProps::property::className = optional className: string | undefined
+interface-member ChainReactionChartProps::property::completionTimeAccessor = optional completionTimeAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member ChainReactionChartProps::property::controls = optional controls: boolean | readonly ChainReactionControl[] | undefined
+interface-member ChainReactionChartProps::property::currentTime = optional currentTime: Date | number | undefined
+interface-member ChainReactionChartProps::property::data = required data: readonly TDatum[]
+interface-member ChainReactionChartProps::property::dependencyAccessor = required dependencyAccessor: DependencyAccessor<TDatum, readonly (number | string)[]>
+interface-member ChainReactionChartProps::property::description = optional description: string | undefined
+interface-member ChainReactionChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ChainReactionChartProps::property::endAccessor = optional endAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member ChainReactionChartProps::property::height = optional height: number | undefined
+interface-member ChainReactionChartProps::property::insight = optional insight: ChainReactionInsight | undefined
+interface-member ChainReactionChartProps::property::labelAccessor = required labelAccessor: DependencyAccessor<TDatum, string>
+interface-member ChainReactionChartProps::property::laneAccessor = required laneAccessor: DependencyAccessor<TDatum, string>
+interface-member ChainReactionChartProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member ChainReactionChartProps::property::mechanism = optional mechanism: "domino-ball" | undefined
+interface-member ChainReactionChartProps::property::milestoneAccessor = optional milestoneAccessor: DependencyAccessor<TDatum, boolean | undefined> | undefined
+interface-member ChainReactionChartProps::property::mode = optional mode: ChainReactionMode | undefined
+interface-member ChainReactionChartProps::property::onObservation = optional onObservation: ((event: ChainReactionObservation<TDatum>) => void) | undefined
+interface-member ChainReactionChartProps::property::onSelectionChange = optional onSelectionChange: ((ids: string[]) => void) | undefined
+interface-member ChainReactionChartProps::property::orientation = optional orientation: "vertical" | undefined
+interface-member ChainReactionChartProps::property::progressAccessor = optional progressAccessor: DependencyAccessor<TDatum, number | undefined> | undefined
+interface-member ChainReactionChartProps::property::reducedMotion = optional reducedMotion: "settle" | undefined
+interface-member ChainReactionChartProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member ChainReactionChartProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member ChainReactionChartProps::property::seed = optional seed: number | undefined
+interface-member ChainReactionChartProps::property::selectedTaskIDs = optional selectedTaskIDs: readonly string[] | undefined
+interface-member ChainReactionChartProps::property::startAccessor = optional startAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member ChainReactionChartProps::property::statusAccessor = optional statusAccessor: DependencyAccessor<TDatum, DependencyTaskStatus | undefined> | undefined
+interface-member ChainReactionChartProps::property::taskIDAccessor = required taskIDAccessor: DependencyAccessor<TDatum, number | string>
+interface-member ChainReactionChartProps::property::title = optional title: string | undefined
+interface-member ChainReactionChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ChainReactionChartProps::property::width = optional width: number | undefined
+interface-member ChainReactionMachineState::property::currentTime = required currentTime: number
+interface-member ChainReactionMachineState::property::dependencies = required dependencies: ChainReactionDependencyState[]
+interface-member ChainReactionMachineState::property::playing = required playing: boolean
+interface-member ChainReactionMachineState::property::previewTaskID = required previewTaskID: null | string
+interface-member ChainReactionMachineState::property::selectedTaskIDs = required selectedTaskIDs: string[]
+interface-member ChainReactionMachineState::property::tasks = required tasks: ChainReactionTaskState[]
+interface-member CollisionSwarmChartProps::property::collisionIterations = optional collisionIterations: number | undefined
+interface-member CollisionSwarmChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member CollisionSwarmChartProps::property::data = optional data: TDatum[] | undefined
+interface-member CollisionSwarmChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member CollisionSwarmChartProps::property::groupAccessor = optional groupAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CollisionSwarmChartProps::property::paused = optional paused: boolean | undefined
+interface-member CollisionSwarmChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member CollisionSwarmChartProps::property::radiusAccessor = optional radiusAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CollisionSwarmChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member CollisionSwarmChartProps::property::seed = optional seed: number | undefined
+interface-member CollisionSwarmChartProps::property::settle = optional settle: boolean | undefined
+interface-member CollisionSwarmChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member CollisionSwarmChartProps::property::size = optional size: [number, number] | undefined
+interface-member CollisionSwarmChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member CollisionSwarmChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member CollisionSwarmChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CollisionSwarmChartProps::property::xExtent = optional xExtent: [number, number] | undefined
+interface-member CollisionSwarmPhysicsOptions::property::collisionIterations = optional collisionIterations: number | undefined
+interface-member CollisionSwarmPhysicsOptions::property::data = required data: readonly TDatum[]
+interface-member CollisionSwarmPhysicsOptions::property::groupAccessor = optional groupAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CollisionSwarmPhysicsOptions::property::pointRadius = required pointRadius: number
+interface-member CollisionSwarmPhysicsOptions::property::radiusAccessor = optional radiusAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CollisionSwarmPhysicsOptions::property::seed = required seed: number
+interface-member CollisionSwarmPhysicsOptions::property::settle = optional settle: boolean | undefined
+interface-member CollisionSwarmPhysicsOptions::property::size = required size: [number, number]
+interface-member CollisionSwarmPhysicsOptions::property::xAccessor = required xAccessor: ChartAccessor<TDatum, number>
+interface-member CollisionSwarmPhysicsOptions::property::xExtent = optional xExtent: [number, number] | undefined
+interface-member CollisionSwarmProjectionMetadata::property::groups = required groups: {label: string; y: number; count: number;}[]
+interface-member CollisionSwarmProjectionMetadata::property::kind = required kind: "collision-swarm"
+interface-member CollisionSwarmProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member CollisionSwarmProjectionMetadata::property::xExtent = required xExtent: [number, number]
+interface-member CollisionSwarmProjectionMetadata::property::xRange = required xRange: [number, number]
+interface-member CompileDependencyMachineOptions::property::data = required data: readonly TDatum[]
+interface-member CompileDependencyMachineOptions::property::laneOrder = optional laneOrder: readonly string[] | undefined
+interface-member CompileMotionEncodingOptions::property::data = required data: readonly TDatum[]
+interface-member CompileMotionEncodingOptions::property::encoding = required encoding: MotionEncoding<TDatum>
+interface-member CompilePhysicsEncodingOptions::property::data = required data: readonly TDatum[]
+interface-member CompilePhysicsEncodingOptions::property::defaults = optional defaults: PhysicsEncodingDefaults | undefined
+interface-member CompilePhysicsEncodingOptions::property::encoding = required encoding: PhysicsEncoding<TDatum>
+interface-member CompilePhysicsEncodingOptions::property::scales = optional scales: undefined | {x?: (value: number) => number; y?: (value: number) => number;}
+interface-member ComposedPhysicsControllers::property::bodyForce = required bodyForce: StreamPhysicsBodyForce
+interface-member ComposedPhysicsControllers::property::continuous = required continuous: boolean
+interface-member ComposedPhysicsControllers::property::controllers = required controllers: PhysicsController[]
+interface-member ComposedPhysicsControllers::property::onTick = required onTick: (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface, extras: {dt: number; elapsed: number; getRegionState: PhysicsControllerTickContext["getRegionState"];}) => void
+interface-member CreatePhysicsEncodingLayoutOptions::property::defaults = optional defaults: PhysicsEncodingDefaults | undefined
+interface-member CreatePhysicsEncodingLayoutOptions::property::encoding = required encoding: PhysicsEncoding<TDatum>
+interface-member CreatePhysicsEncodingLayoutOptions::property::extend = optional extend: ((context: PhysicsCustomLayoutContext<TDatum, TConfig>, compilation: PhysicsEncodingCompilation<TDatum>) => PhysicsEncodingLayoutExtension | undefined) | undefined
+interface-member CrucibleAccessors::property::amountAccessor = optional amountAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CrucibleAccessors::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleAccessors::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleAccessors::property::initialStateAccessor = optional initialStateAccessor: ChartAccessor<TDatum, CrucibleComponentStatus> | undefined
+interface-member CrucibleAccessors::property::labelAccessor = optional labelAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleAccessors::property::metricsAccessor = optional metricsAccessor: ChartAccessor<TDatum, CrucibleMetricMap> | undefined
+interface-member CrucibleApplyContext::property::appliedAt = required appliedAt: number
+interface-member CrucibleApplyContext::property::authoredAt = required authoredAt: number
+interface-member CrucibleApplyContext::property::outlets = required outlets: readonly CrucibleOutlet[]
+interface-member CrucibleApplyContext::property::phaseId = required phaseId: string
+interface-member CrucibleApplyContext::property::products = required products: readonly CrucibleProductDefinition[]
+interface-member CrucibleApplyResult::property::applied = required applied: boolean
+interface-member CrucibleApplyResult::property::diagnostics = required diagnostics: CrucibleDiagnostic[]
+interface-member CrucibleApplyResult::property::materializations = required materializations: CrucibleMaterialization[]
+interface-member CrucibleApplyResult::property::observations = required observations: CrucibleObservation[]
+interface-member CrucibleApplyResult::property::state = required state: CrucibleRunState<TDatum>
+interface-member CrucibleBodyDatum::property::__crucible = required __crucible: true
+interface-member CrucibleBodyDatum::property::kind = required kind: "component" | "product"
+interface-member CrucibleBodyDatum::property::product = optional product: CrucibleProductState | undefined
+interface-member CrucibleBodyDatum::property::semanticId = required semanticId: string
+interface-member CrucibleBodyDatum::property::sourceDatum = optional sourceDatum: TDatum | undefined
+interface-member CrucibleChartHandle::method::getCrucibleState = required getCrucibleState(): CrucibleRunState<TDatum>
+interface-member CrucibleChartHandle::method::pause = required pause(): void
+interface-member CrucibleChartHandle::method::play = required play(): void
+interface-member CrucibleChartHandle::method::replay = required replay(): void
+interface-member CrucibleChartHandle::method::reset = required reset(): void
+interface-member CrucibleChartHandle::method::settle = required settle(): void
+interface-member CrucibleChartHandle::method::stepPhase = required stepPhase(): void
+interface-member CrucibleChartProps::property::amountAccessor = optional amountAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CrucibleChartProps::property::amountLabel = optional amountLabel: string | undefined
+interface-member CrucibleChartProps::property::bodyRadius = optional bodyRadius: number | undefined
+interface-member CrucibleChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleChartProps::property::colorBy = optional colorBy: CrucibleColorBy<TDatum> | undefined
+interface-member CrucibleChartProps::property::conservation = optional conservation: CrucibleConservationSpec | boolean | undefined
+interface-member CrucibleChartProps::property::controls = optional controls: CrucibleControls | boolean | undefined
+interface-member CrucibleChartProps::property::data = required data: TDatum[]
+interface-member CrucibleChartProps::property::emptyContent = optional emptyContent: import("react").ReactNode
+interface-member CrucibleChartProps::property::events = optional events: readonly CrucibleEvent[] | undefined
+interface-member CrucibleChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "bodyForces" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member CrucibleChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member CrucibleChartProps::property::initialStateAccessor = optional initialStateAccessor: ChartAccessor<TDatum, CrucibleComponentStatus> | undefined
+interface-member CrucibleChartProps::property::labelAccessor = optional labelAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member CrucibleChartProps::property::loading = optional loading: boolean | undefined
+interface-member CrucibleChartProps::property::loadingContent = optional loadingContent: import("react").ReactNode
+interface-member CrucibleChartProps::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleChartProps::property::metricsAccessor = optional metricsAccessor: ChartAccessor<TDatum, CrucibleMetricMap> | undefined
+interface-member CrucibleChartProps::property::onClick = optional onClick: ((CrucibleRunState<TDatum>["products"][string] | item: CrucibleRunState<TDatum>["components"][string]) => void) | undefined
+interface-member CrucibleChartProps::property::onConservation = optional onConservation: ((result: CrucibleConservationResult) => void) | undefined
+interface-member CrucibleChartProps::property::onCrucibleObservation = optional onCrucibleObservation: ((observation: CrucibleObservation) => void) | undefined
+interface-member CrucibleChartProps::property::onDiagnostic = optional onDiagnostic: ((diagnostic: CrucibleDiagnostic) => void) | undefined
+interface-member CrucibleChartProps::property::onStateChange = optional onStateChange: ((state: CrucibleRunState<TDatum>) => void) | undefined
+interface-member CrucibleChartProps::property::outlets = optional outlets: readonly CrucibleOutlet[] | undefined
+interface-member CrucibleChartProps::property::paused = optional paused: boolean | undefined
+interface-member CrucibleChartProps::property::phases = required phases: readonly CruciblePhase[]
+interface-member CrucibleChartProps::property::playback = optional playback: "replay" | "snapshot" | undefined
+interface-member CrucibleChartProps::property::playbackRate = optional playbackRate: number | undefined
+interface-member CrucibleChartProps::property::products = optional products: readonly CrucibleProductDefinition[] | undefined
+interface-member CrucibleChartProps::property::projection = optional projection: CrucibleProjectionSpec | undefined
+interface-member CrucibleChartProps::property::radiusRange = optional radiusRange: [number, number] | undefined
+interface-member CrucibleChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member CrucibleChartProps::property::seed = optional seed: number | string | undefined
+interface-member CrucibleChartProps::property::showBonds = optional showBonds: boolean | undefined
+interface-member CrucibleChartProps::property::showChrome = optional showChrome: boolean | undefined
+interface-member CrucibleChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member CrucibleChartProps::property::size = optional size: [number, number] | undefined
+interface-member CrucibleChartProps::property::snapshotAt = optional snapshotAt: CrucibleSnapshotAt | undefined
+interface-member CrucibleChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member CrucibleCombineEffect::property::basisRelationIds = optional basisRelationIds: readonly string[] | undefined
+interface-member CrucibleCombineEffect::property::complete = optional complete: boolean | undefined
+interface-member CrucibleCombineEffect::property::loss = optional loss: CrucibleLoss | undefined
+interface-member CrucibleCombineEffect::property::productId = required productId: string
+interface-member CrucibleCombineEffect::property::sourceIds = required sourceIds: readonly string[]
+interface-member CrucibleCombineEffect::property::type = required type: "combine"
+interface-member CrucibleCompileOptions::property::bodyRadius = optional bodyRadius: number | undefined
+interface-member CrucibleCompileOptions::property::data = required data: readonly TDatum[]
+interface-member CrucibleCompileOptions::property::events = optional events: readonly CrucibleEvent[] | undefined
+interface-member CrucibleCompileOptions::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleCompileOptions::property::outlets = optional outlets: readonly CrucibleOutlet[] | undefined
+interface-member CrucibleCompileOptions::property::phases = required phases: readonly CruciblePhase[]
+interface-member CrucibleCompileOptions::property::products = optional products: readonly CrucibleProductDefinition[] | undefined
+interface-member CrucibleCompileOptions::property::radiusRange = optional radiusRange: [number, number] | undefined
+interface-member CrucibleCompileOptions::property::seed = optional seed: number | string | undefined
+interface-member CrucibleCompileOptions::property::size = optional size: [number, number] | undefined
+interface-member CrucibleCompiledEvent::property::authoredAt = required authoredAt: number
+interface-member CrucibleCompiledEvent::property::boundaryRank = required boundaryRank: 0 | 1
+interface-member CrucibleCompiledEvent::property::index = required index: number
+interface-member CrucibleCompiledEvent::property::phaseId = required phaseId: string
+interface-member CrucibleCompiledEvent::property::phaseIndex = required phaseIndex: number
+interface-member CrucibleCompiledPhase::property::end = required end: number
+interface-member CrucibleCompiledPhase::property::index = required index: number
+interface-member CrucibleCompiledPhase::property::start = required start: number
+interface-member CrucibleCompiledPlan::property::colliders = required colliders: PhysicsColliderSpec[]
+interface-member CrucibleCompiledPlan::property::config = required config: PhysicsPipelineConfig
+interface-member CrucibleCompiledPlan::property::diagnostics = required diagnostics: CrucibleDiagnostic[]
+interface-member CrucibleCompiledPlan::property::duration = required duration: number
+interface-member CrucibleCompiledPlan::property::events = required events: CrucibleCompiledEvent[]
+interface-member CrucibleCompiledPlan::property::initialSpawns = required initialSpawns: PhysicsQueuedSpawn[]
+interface-member CrucibleCompiledPlan::property::initialState = required initialState: CrucibleRunState<TDatum>
+interface-member CrucibleCompiledPlan::property::layout = required layout: CrucibleLayout
+interface-member CrucibleCompiledPlan::property::outlets = required outlets: CrucibleOutlet[]
+interface-member CrucibleCompiledPlan::property::phases = required phases: CrucibleCompiledPhase[]
+interface-member CrucibleCompiledPlan::property::products = required products: CrucibleProductDefinition[]
+interface-member CrucibleCompiledPlan::property::semanticKey = required semanticKey: string
+interface-member CrucibleCompiledPlan::property::terminalSpawns = required terminalSpawns: PhysicsQueuedSpawn[]
+interface-member CrucibleCompiledPlan::property::terminalState = required terminalState: CrucibleRunState<TDatum>
+interface-member CrucibleCompleteProductEffect::property::outletId = optional outletId: string | undefined
+interface-member CrucibleCompleteProductEffect::property::productId = required productId: string
+interface-member CrucibleCompleteProductEffect::property::reason = optional reason: string | undefined
+interface-member CrucibleCompleteProductEffect::property::type = required type: "complete-product"
+interface-member CrucibleComponentState::property::amount = required amount: number
+interface-member CrucibleComponentState::property::category = required category: string
+interface-member CrucibleComponentState::property::datum = required datum: TDatum
+interface-member CrucibleComponentState::property::history = required history: CrucibleHistoryItem[]
+interface-member CrucibleComponentState::property::id = required id: string
+interface-member CrucibleComponentState::property::initialAmount = required initialAmount: number
+interface-member CrucibleComponentState::property::initialMetrics = required initialMetrics: CrucibleMetricMap
+interface-member CrucibleComponentState::property::label = required label: string
+interface-member CrucibleComponentState::property::metrics = required metrics: CrucibleMetricMap
+interface-member CrucibleComponentState::property::outletId = optional outletId: string | undefined
+interface-member CrucibleComponentState::property::productIds = required productIds: string[]
+interface-member CrucibleComponentState::property::reason = optional reason: string | undefined
+interface-member CrucibleComponentState::property::status = required status: CrucibleComponentStatus
+interface-member CrucibleConservationResult::property::conserved = required conserved: boolean
+interface-member CrucibleConservationResult::property::delta = required delta: number
+interface-member CrucibleConservationResult::property::field = required field: string
+interface-member CrucibleConservationResult::property::input = required input: number
+interface-member CrucibleConservationResult::property::loss = required loss: number
+interface-member CrucibleConservationResult::property::output = required output: number
+interface-member CrucibleConservationResult::property::products = required products: number
+interface-member CrucibleConservationResult::property::unassigned = required unassigned: number
+interface-member CrucibleConservationSpec::property::field = optional field: string | undefined
+interface-member CrucibleConservationSpec::property::tolerance = optional tolerance: number | undefined
+interface-member CrucibleContributeEffect::property::basisRelationIds = optional basisRelationIds: readonly string[] | undefined
+interface-member CrucibleContributeEffect::property::loss = optional loss: CrucibleLoss | undefined
+interface-member CrucibleContributeEffect::property::productId = required productId: string
+interface-member CrucibleContributeEffect::property::sourceIds = required sourceIds: readonly string[]
+interface-member CrucibleContributeEffect::property::type = required type: "contribute"
+interface-member CrucibleControls::property::playPause = optional playPause: boolean | undefined
+interface-member CrucibleControls::property::reset = optional reset: boolean | undefined
+interface-member CrucibleControls::property::speed = optional speed: boolean | undefined
+interface-member CrucibleControls::property::stepPhase = optional stepPhase: boolean | undefined
+interface-member CrucibleControls::property::timeline = optional timeline: boolean | undefined
+interface-member CrucibleDiagnostic::property::code = required code: string
+interface-member CrucibleDiagnostic::property::ids = optional ids: string[] | undefined
+interface-member CrucibleDiagnostic::property::message = required message: string
+interface-member CrucibleDiagnostic::property::path = optional path: string | undefined
+interface-member CrucibleDiagnostic::property::severity = required severity: "error" | "warning"
+interface-member CrucibleEjectEffect::property::outletId = required outletId: string
+interface-member CrucibleEjectEffect::property::reason = optional reason: string | undefined
+interface-member CrucibleEjectEffect::property::select = required select: CrucibleSelector
+interface-member CrucibleEjectEffect::property::state = optional state: "ejected" | "failed" | "recovered" | "retained" | undefined
+interface-member CrucibleEjectEffect::property::type = required type: "eject"
+interface-member CrucibleEvent::property::at = required at: CrucibleEventAt
+interface-member CrucibleEvent::property::description = optional description: string | undefined
+interface-member CrucibleEvent::property::effects = required effects: readonly CrucibleEffect[]
+interface-member CrucibleEvent::property::id = required id: string
+interface-member CrucibleEvent::property::label = optional label: string | undefined
+interface-member CrucibleEvent::property::summary = optional summary: string | undefined
+interface-member CrucibleHistoryItem::property::appliedAt = required appliedAt: number
+interface-member CrucibleHistoryItem::property::authoredAt = required authoredAt: number
+interface-member CrucibleHistoryItem::property::effectType = required effectType: "combine" | "complete-product" | "contribute" | "eject" | "resolve-relation" | "set-metric" | "set-outcome" | "set-relation" | "set-state" | "split"
+interface-member CrucibleHistoryItem::property::eventId = required eventId: string
+interface-member CrucibleHistoryItem::property::label = optional label: string | undefined
+interface-member CrucibleHistoryItem::property::outletIds = optional outletIds: string[] | undefined
+interface-member CrucibleHistoryItem::property::phaseId = required phaseId: string
+interface-member CrucibleHistoryItem::property::productIds = optional productIds: string[] | undefined
+interface-member CrucibleHistoryItem::property::relationIds = optional relationIds: string[] | undefined
+interface-member CrucibleHistoryItem::property::sourceIds = optional sourceIds: string[] | undefined
+interface-member CrucibleHistoryItem::property::summary = optional summary: string | undefined
+interface-member CrucibleInitialStateResult::property::diagnostics = required diagnostics: CrucibleDiagnostic[]
+interface-member CrucibleInitialStateResult::property::state = required state: CrucibleRunState<TDatum>
+interface-member CrucibleLayout::property::chamber = required chamber: {x: number; y: number; width: number; height: number;}
+interface-member CrucibleLayout::property::height = required height: number
+interface-member CrucibleLayout::property::mouth = required mouth: {x: number; y: number; width: number; height: number;}
+interface-member CrucibleLayout::property::outlets = required outlets: CrucibleLayoutOutlet[]
+interface-member CrucibleLayout::property::phaseRail = required phaseRail: {x: number; y: number; width: number; height: number;}
+interface-member CrucibleLayout::property::projection = required projection: {x: number; y: number; width: number; height: number;}
+interface-member CrucibleLayout::property::width = required width: number
+interface-member CrucibleLayoutOutlet::property::height = required height: number
+interface-member CrucibleLayoutOutlet::property::width = required width: number
+interface-member CrucibleLayoutOutlet::property::x = required x: number
+interface-member CrucibleLayoutOutlet::property::y = required y: number
+interface-member CrucibleLoss::property::amount = optional amount: number | undefined
+interface-member CrucibleLoss::property::label = optional label: string | undefined
+interface-member CrucibleLoss::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleMaterialization::property::eventId = required eventId: string
+interface-member CrucibleMaterialization::property::outletIds = optional outletIds: string[] | undefined
+interface-member CrucibleMaterialization::property::productIds = optional productIds: string[] | undefined
+interface-member CrucibleMaterialization::property::relationIds = optional relationIds: string[] | undefined
+interface-member CrucibleMaterialization::property::sourceIds = optional sourceIds: string[] | undefined
+interface-member CrucibleMaterialization::property::type = required type: CrucibleMaterializationType
+interface-member CrucibleObservation::property::appliedAt = required appliedAt: number
+interface-member CrucibleObservation::property::authoredAt = required authoredAt: number
+interface-member CrucibleObservation::property::eventId = required eventId: string
+interface-member CrucibleObservation::property::outcome = optional outcome: string | undefined
+interface-member CrucibleObservation::property::outletIds = optional outletIds: string[] | undefined
+interface-member CrucibleObservation::property::phaseId = required phaseId: string
+interface-member CrucibleObservation::property::productIds = optional productIds: string[] | undefined
+interface-member CrucibleObservation::property::relationIds = optional relationIds: string[] | undefined
+interface-member CrucibleObservation::property::sourceIds = optional sourceIds: string[] | undefined
+interface-member CrucibleObservation::property::type = required type: "crucible-event" | "crucible-outcome" | CrucibleMaterializationType
+interface-member CrucibleOutlet::property::color = optional color: string | undefined
+interface-member CrucibleOutlet::property::description = optional description: string | undefined
+interface-member CrucibleOutlet::property::id = required id: string
+interface-member CrucibleOutlet::property::label = optional label: string | undefined
+interface-member CrucibleOutlet::property::order = optional order: number | undefined
+interface-member CrucibleOutlet::property::side = optional side: "bottom" | "left" | "right" | undefined
+interface-member CruciblePhase::property::color = optional color: string | undefined
+interface-member CruciblePhase::property::description = optional description: string | undefined
+interface-member CruciblePhase::property::duration = required duration: number
+interface-member CruciblePhase::property::id = required id: string
+interface-member CruciblePhase::property::intensity = optional intensity: number | undefined
+interface-member CruciblePhase::property::label = optional label: string | undefined
+interface-member CruciblePhase::property::metrics = optional metrics: Record<string, number | string> | undefined
+interface-member CruciblePhase::property::motion = optional motion: CrucibleMotion | undefined
+interface-member CrucibleProductAllocation::property::amount = optional amount: number | undefined
+interface-member CrucibleProductAllocation::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleProductAllocation::property::productId = required productId: string
+interface-member CrucibleProductCompletionStep::property::outletId = optional outletId: string | undefined
+interface-member CrucibleProductCompletionStep::property::reason = optional reason: string | undefined
+interface-member CrucibleProductDefinition::property::amount = optional amount: number | undefined
+interface-member CrucibleProductDefinition::property::category = optional category: string | undefined
+interface-member CrucibleProductDefinition::property::color = optional color: string | undefined
+interface-member CrucibleProductDefinition::property::description = optional description: string | undefined
+interface-member CrucibleProductDefinition::property::id = required id: string
+interface-member CrucibleProductDefinition::property::label = optional label: string | undefined
+interface-member CrucibleProductDefinition::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleProductDefinition::property::order = optional order: number | undefined
+interface-member CrucibleProductDefinition::property::outletId = optional outletId: string | undefined
+interface-member CrucibleProductSourceStep::property::basisRelationIds = optional basisRelationIds: readonly string[] | undefined
+interface-member CrucibleProductSourceStep::property::loss = optional loss: CrucibleLoss | undefined
+interface-member CrucibleProductSourceStep::property::sourceIds = required sourceIds: readonly string[]
+interface-member CrucibleProductState::property::amount = required amount: number
+interface-member CrucibleProductState::property::category = required category: string
+interface-member CrucibleProductState::property::color = optional color: string | undefined
+interface-member CrucibleProductState::property::completedAt = optional completedAt: number | undefined
+interface-member CrucibleProductState::property::completedByEventId = optional completedByEventId: string | undefined
+interface-member CrucibleProductState::property::createdAt = required createdAt: number
+interface-member CrucibleProductState::property::createdByEventId = required createdByEventId: string
+interface-member CrucibleProductState::property::declaredAmount = optional declaredAmount: number | undefined
+interface-member CrucibleProductState::property::description = optional description: string | undefined
+interface-member CrucibleProductState::property::history = required history: CrucibleHistoryItem[]
+interface-member CrucibleProductState::property::id = required id: string
+interface-member CrucibleProductState::property::label = required label: string
+interface-member CrucibleProductState::property::metrics = required metrics: CrucibleMetricMap
+interface-member CrucibleProductState::property::order = optional order: number | undefined
+interface-member CrucibleProductState::property::outletId = optional outletId: string | undefined
+interface-member CrucibleProductState::property::reason = optional reason: string | undefined
+interface-member CrucibleProductState::property::sourceIds = required sourceIds: string[]
+interface-member CrucibleProductState::property::status = required status: CrucibleProductStatus
+interface-member CrucibleProjectionRow::property::amount = required amount: number
+interface-member CrucibleProjectionRow::property::category = optional category: string | undefined
+interface-member CrucibleProjectionRow::property::count = required count: number
+interface-member CrucibleProjectionRow::property::key = required key: string
+interface-member CrucibleProjectionRow::property::label = required label: string
+interface-member CrucibleProjectionRow::property::metrics = required metrics: CrucibleMetricMap
+interface-member CrucibleProjectionRow::property::outletId = optional outletId: string | undefined
+interface-member CrucibleProjectionRow::property::productId = optional productId: string | undefined
+interface-member CrucibleProjectionRow::property::status = optional status: CrucibleComponentStatus | CrucibleProductStatus | undefined
+interface-member CrucibleProjectionSpec::property::groupBy = optional groupBy: CrucibleProjectionGroupBy | undefined
+interface-member CrucibleProjectionSpec::property::measure = optional measure: string | undefined
+interface-member CrucibleProjectionSpec::property::order = optional order: readonly string[] | undefined
+interface-member CrucibleProjectionSpec::property::showDelta = optional showDelta: boolean | undefined
+interface-member CrucibleProjectionSpec::property::showInputBaseline = optional showInputBaseline: boolean | undefined
+interface-member CrucibleRelationDefinition::property::category = optional category: string | undefined
+interface-member CrucibleRelationDefinition::property::id = required id: string
+interface-member CrucibleRelationDefinition::property::label = optional label: string | undefined
+interface-member CrucibleRelationDefinition::property::metrics = optional metrics: CrucibleMetricMap | undefined
+interface-member CrucibleRelationDefinition::property::sourceIds = required sourceIds: readonly string[]
+interface-member CrucibleRelationDefinition::property::strength = optional strength: number | undefined
+interface-member CrucibleRelationState::property::createdAt = required createdAt: number
+interface-member CrucibleRelationState::property::createdByEventId = required createdByEventId: string
+interface-member CrucibleRelationState::property::reason = optional reason: string | undefined
+interface-member CrucibleRelationState::property::resolution = optional resolution: CrucibleRelationResolution | undefined
+interface-member CrucibleRelationState::property::resolvedAt = optional resolvedAt: number | undefined
+interface-member CrucibleRelationState::property::resolvedByEventId = optional resolvedByEventId: string | undefined
+interface-member CrucibleRelationState::property::status = required status: "active" | "resolved"
+interface-member CrucibleReplayResult::property::diagnostics = required diagnostics: CrucibleDiagnostic[]
+interface-member CrucibleReplayResult::property::materializations = required materializations: CrucibleMaterialization[]
+interface-member CrucibleReplayResult::property::observations = required observations: CrucibleObservation[]
+interface-member CrucibleReplayResult::property::state = required state: CrucibleRunState<TDatum>
+interface-member CrucibleResolveRelationEffect::property::reason = optional reason: string | undefined
+interface-member CrucibleResolveRelationEffect::property::relationIds = required relationIds: readonly string[]
+interface-member CrucibleResolveRelationEffect::property::resolution = required resolution: CrucibleRelationResolution
+interface-member CrucibleResolveRelationEffect::property::type = required type: "resolve-relation"
+interface-member CrucibleResolvedTime::property::complete = required complete: boolean
+interface-member CrucibleResolvedTime::property::elapsed = required elapsed: number
+interface-member CrucibleResolvedTime::property::phaseElapsed = required phaseElapsed: number
+interface-member CrucibleResolvedTime::property::phaseId = required phaseId: string
+interface-member CrucibleResolvedTime::property::phaseIndex = required phaseIndex: number
+interface-member CrucibleRunState::property::complete = required complete: boolean
+interface-member CrucibleRunState::property::components = required components: Record<string, CrucibleComponentState<TDatum>>
+interface-member CrucibleRunState::property::elapsed = required elapsed: number
+interface-member CrucibleRunState::property::eventsApplied = required eventsApplied: string[]
+interface-member CrucibleRunState::property::history = required history: CrucibleHistoryItem[]
+interface-member CrucibleRunState::property::input = required input: {amount: number; metrics: CrucibleMetricMap;}
+interface-member CrucibleRunState::property::loss = required loss: {amount: number; metrics: CrucibleMetricMap;}
+interface-member CrucibleRunState::property::metrics = required metrics: CrucibleMetricMap
+interface-member CrucibleRunState::property::outcome = optional outcome: string | undefined
+interface-member CrucibleRunState::property::phaseElapsed = required phaseElapsed: number
+interface-member CrucibleRunState::property::phaseId = required phaseId: string
+interface-member CrucibleRunState::property::phaseIndex = required phaseIndex: number
+interface-member CrucibleRunState::property::playing = required playing: boolean
+interface-member CrucibleRunState::property::products = required products: Record<string, CrucibleProductState>
+interface-member CrucibleRunState::property::relations = required relations: Record<string, CrucibleRelationState>
+interface-member CrucibleRunState::property::summary = optional summary: string | undefined
+interface-member CrucibleSelector::property::categories = optional categories: readonly string[] | undefined
+interface-member CrucibleSelector::property::count = optional count: number | undefined
+interface-member CrucibleSelector::property::ids = optional ids: readonly string[] | undefined
+interface-member CrucibleSelector::property::outletIds = optional outletIds: readonly string[] | undefined
+interface-member CrucibleSelector::property::statuses = optional statuses: readonly CrucibleComponentStatus[] | undefined
+interface-member CrucibleSelectorResult::property::diagnostics = required diagnostics: CrucibleDiagnostic[]
+interface-member CrucibleSelectorResult::property::ids = required ids: string[]
+interface-member CrucibleSetMetricEffect::property::metricsDelta = required metricsDelta: CrucibleMetricMap
+interface-member CrucibleSetMetricEffect::property::target = required target: CrucibleMetricTarget
+interface-member CrucibleSetMetricEffect::property::type = required type: "set-metric"
+interface-member CrucibleSetOutcomeEffect::property::outcome = required outcome: string
+interface-member CrucibleSetOutcomeEffect::property::summary = optional summary: string | undefined
+interface-member CrucibleSetOutcomeEffect::property::type = required type: "set-outcome"
+interface-member CrucibleSetRelationEffect::property::relation = required relation: CrucibleRelationDefinition
+interface-member CrucibleSetRelationEffect::property::type = required type: "set-relation"
+interface-member CrucibleSetStateEffect::property::metricsDelta = optional metricsDelta: CrucibleMetricMap | undefined
+interface-member CrucibleSetStateEffect::property::outletId = optional outletId: string | undefined
+interface-member CrucibleSetStateEffect::property::reason = optional reason: string | undefined
+interface-member CrucibleSetStateEffect::property::select = required select: CrucibleSelector
+interface-member CrucibleSetStateEffect::property::state = required state: "active" | "ejected" | "failed" | "queued" | "recovered" | "retained" | "transformed"
+interface-member CrucibleSetStateEffect::property::type = required type: "set-state"
+interface-member CrucibleSpawnOptions::property::bodyRadius = optional bodyRadius: number | undefined
+interface-member CrucibleSpawnOptions::property::radiusRange = optional radiusRange: [number, number] | undefined
+interface-member CrucibleSpawnOptions::property::seed = optional seed: number | string | undefined
+interface-member CrucibleSplitEffect::property::loss = optional loss: CrucibleLoss | undefined
+interface-member CrucibleSplitEffect::property::products = required products: readonly CrucibleProductAllocation[]
+interface-member CrucibleSplitEffect::property::sourceId = required sourceId: string
+interface-member CrucibleSplitEffect::property::type = required type: "split"
+interface-member DependencyGateController::property::getSnapshot = required getSnapshot: () => DependencyGateSnapshot
+interface-member DependencyGateOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member DependencyGateOptions::property::holdForce = optional holdForce: number | undefined
+interface-member DependencyGateOptions::property::id = optional id: string | undefined
+interface-member DependencyGateOptions::property::isOpen = optional isOpen: ((simulatedAt: number) => boolean) | undefined
+interface-member DependencyGateOptions::property::onHeld = optional onHeld: ((body: PhysicsBodyState) => void) | undefined
+interface-member DependencyGateOptions::property::onReleased = optional onReleased: ((body: PhysicsBodyState) => void) | undefined
+interface-member DependencyGateOptions::property::opensAt = optional opensAt: number | undefined
+interface-member DependencyGateOptions::property::regionId = required regionId: string
+interface-member DependencyGateOptions::property::releaseImpulse = optional releaseImpulse: StreamPhysicsRegionVector | undefined
+interface-member DependencyGateSnapshot::property::blocked = required blocked: number
+interface-member DependencyGateSnapshot::property::isOpen = required isOpen: boolean
+interface-member DependencyGateSnapshot::property::metricRevision = required metricRevision: number
+interface-member DependencyGateSnapshot::property::regionId = required regionId: string
+interface-member DependencyGateSnapshot::property::released = required released: number
+interface-member DependencyGateSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member DependencyMachine::property::byID = required byID: Map<string, DependencyMachineNode<TDatum>>
+interface-member DependencyMachine::property::diagnostics = required diagnostics: DependencyMachineDiagnostic[]
+interface-member DependencyMachine::property::edges = required edges: DependencyMachineEdge[]
+interface-member DependencyMachine::property::incoming = required incoming: Map<string, DependencyMachineEdge[]>
+interface-member DependencyMachine::property::lanes = required lanes: string[]
+interface-member DependencyMachine::property::maxLevel = required maxLevel: number
+interface-member DependencyMachine::property::nodes = required nodes: DependencyMachineNode<TDatum>[]
+interface-member DependencyMachine::property::outgoing = required outgoing: Map<string, DependencyMachineEdge[]>
+interface-member DependencyMachine::property::valid = required valid: boolean
+interface-member DependencyMachineAccessors::property::blockerAccessor = optional blockerAccessor: DependencyAccessor<TDatum, string | undefined> | undefined
+interface-member DependencyMachineAccessors::property::completionTimeAccessor = optional completionTimeAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member DependencyMachineAccessors::property::dependencyAccessor = required dependencyAccessor: DependencyAccessor<TDatum, readonly (number | string)[]>
+interface-member DependencyMachineAccessors::property::endAccessor = optional endAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member DependencyMachineAccessors::property::labelAccessor = required labelAccessor: DependencyAccessor<TDatum, string>
+interface-member DependencyMachineAccessors::property::laneAccessor = required laneAccessor: DependencyAccessor<TDatum, string>
+interface-member DependencyMachineAccessors::property::milestoneAccessor = optional milestoneAccessor: DependencyAccessor<TDatum, boolean | undefined> | undefined
+interface-member DependencyMachineAccessors::property::progressAccessor = optional progressAccessor: DependencyAccessor<TDatum, number | undefined> | undefined
+interface-member DependencyMachineAccessors::property::startAccessor = optional startAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
+interface-member DependencyMachineAccessors::property::statusAccessor = optional statusAccessor: DependencyAccessor<TDatum, DependencyTaskStatus | undefined> | undefined
+interface-member DependencyMachineAccessors::property::taskIDAccessor = required taskIDAccessor: DependencyAccessor<TDatum, number | string>
+interface-member DependencyMachineDiagnostic::property::code = required code: DependencyMachineDiagnosticCode
+interface-member DependencyMachineDiagnostic::property::message = required message: string
+interface-member DependencyMachineDiagnostic::property::taskIDs = required taskIDs: string[]
+interface-member DependencyMachineEdge::property::id = required id: string
+interface-member DependencyMachineEdge::property::socketID = required socketID: string
+interface-member DependencyMachineEdge::property::socketIndex = required socketIndex: number
+interface-member DependencyMachineEdge::property::sourceID = required sourceID: string
+interface-member DependencyMachineEdge::property::sourceIndex = required sourceIndex: number
+interface-member DependencyMachineEdge::property::targetID = required targetID: string
+interface-member DependencyMachineEdge::property::targetIndex = required targetIndex: number
+interface-member DependencyMachineNode::property::blockerReason = optional blockerReason: string | undefined
+interface-member DependencyMachineNode::property::completionTime = optional completionTime: Date | number | undefined
+interface-member DependencyMachineNode::property::datum = required datum: TDatum
+interface-member DependencyMachineNode::property::dependencyIDs = required dependencyIDs: string[]
+interface-member DependencyMachineNode::property::end = optional end: Date | number | undefined
+interface-member DependencyMachineNode::property::id = required id: string
+interface-member DependencyMachineNode::property::incomingEdgeIDs = required incomingEdgeIDs: string[]
+interface-member DependencyMachineNode::property::index = required index: number
+interface-member DependencyMachineNode::property::label = required label: string
+interface-member DependencyMachineNode::property::lane = required lane: string
+interface-member DependencyMachineNode::property::laneIndex = required laneIndex: number
+interface-member DependencyMachineNode::property::level = required level: number
+interface-member DependencyMachineNode::property::milestone = required milestone: boolean
+interface-member DependencyMachineNode::property::outgoingEdgeIDs = required outgoingEdgeIDs: string[]
+interface-member DependencyMachineNode::property::progress = required progress: number
+interface-member DependencyMachineNode::property::socketIDs = required socketIDs: string[]
+interface-member DependencyMachineNode::property::start = optional start: Date | number | undefined
+interface-member DependencyMachineNode::property::status = required status: DependencyTaskStatus
+interface-member DependencyPoint::property::x = required x: number
+interface-member DependencyPoint::property::y = required y: number
+interface-member DependencyReplayState::property::appliedEvents = required appliedEvents: DependencyReplayEvent[]
+interface-member DependencyReplayState::property::armedTaskIDs = required armedTaskIDs: Set<string>
+interface-member DependencyReplayState::property::blockedByTaskID = required blockedByTaskID: Map<string, string>
+interface-member DependencyReplayState::property::completedTaskIDs = required completedTaskIDs: Set<string>
+interface-member DependencyReplayState::property::currentTime = required currentTime: number
+interface-member DependencyReplayState::property::deliveredEdgeIDs = required deliveredEdgeIDs: Set<string>
+interface-member DependencySocketPlacement::property::edgeID = required edgeID: string
+interface-member DependencySocketPlacement::property::id = required id: string
+interface-member DependencySocketPlacement::property::index = required index: number
+interface-member DependencySocketPlacement::property::radius = required radius: number
+interface-member DependencySocketPlacement::property::taskID = required taskID: string
+interface-member DependencyTaskPlacement::property::height = required height: number
+interface-member DependencyTaskPlacement::property::lane = required lane: string
+interface-member DependencyTaskPlacement::property::laneIndex = required laneIndex: number
+interface-member DependencyTaskPlacement::property::level = required level: number
+interface-member DependencyTaskPlacement::property::taskID = required taskID: string
+interface-member DependencyTaskPlacement::property::width = required width: number
+interface-member DependencyTrackDimensions::property::height = required height: number
+interface-member DependencyTrackDimensions::property::paddingBottom = optional paddingBottom: number | undefined
+interface-member DependencyTrackDimensions::property::paddingTop = optional paddingTop: number | undefined
+interface-member DependencyTrackDimensions::property::paddingX = optional paddingX: number | undefined
+interface-member DependencyTrackDimensions::property::width = required width: number
+interface-member DependencyTrackLayout::property::routeByEdgeID = required routeByEdgeID: Map<string, DependencyTrackRoute>
+interface-member DependencyTrackLayout::property::routes = required routes: DependencyTrackRoute[]
+interface-member DependencyTrackLayout::property::socketByID = required socketByID: Map<string, DependencySocketPlacement>
+interface-member DependencyTrackLayout::property::sockets = required sockets: DependencySocketPlacement[]
+interface-member DependencyTrackLayout::property::taskByID = required taskByID: Map<string, DependencyTaskPlacement>
+interface-member DependencyTrackLayout::property::tasks = required tasks: DependencyTaskPlacement[]
+interface-member DependencyTrackOptions::property::gutterCount = optional gutterCount: number | undefined
+interface-member DependencyTrackOptions::property::socketRadius = optional socketRadius: number | undefined
+interface-member DependencyTrackOptions::property::taskHeight = optional taskHeight: number | undefined
+interface-member DependencyTrackOptions::property::taskWidth = optional taskWidth: number | undefined
+interface-member DependencyTrackRoute::property::edgeID = required edgeID: string
+interface-member DependencyTrackRoute::property::points = required points: DependencyPoint[]
+interface-member DependencyTrackRoute::property::socketID = required socketID: string
+interface-member DependencyTrackRoute::property::sourceID = required sourceID: string
+interface-member DependencyTrackRoute::property::targetID = required targetID: string
+interface-member EventDropChartProps::property::arrivalAccessor = optional arrivalAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member EventDropChartProps::property::ballRadius = optional ballRadius: number | undefined
+interface-member EventDropChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member EventDropChartProps::property::data = optional data: TDatum[] | undefined
+interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member EventDropChartProps::property::paused = optional paused: boolean | undefined
+interface-member EventDropChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member EventDropChartProps::property::seed = optional seed: number | undefined
+interface-member EventDropChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member EventDropChartProps::property::size = optional size: [number, number] | undefined
+interface-member EventDropChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member EventDropChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member EventDropChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
+interface-member EventDropChartProps::property::timeScale = optional timeScale: number | undefined
+interface-member EventDropChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member EventDropChartProps::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropChartProps::property::windows = optional windows: EventDropWindowOptions | undefined
+interface-member EventDropPhysicsOptions::property::arrivalAccessor = required arrivalAccessor: ChartAccessor<TDatum, number>
+interface-member EventDropPhysicsOptions::property::ballRadius = required ballRadius: number
+interface-member EventDropPhysicsOptions::property::data = required data: readonly TDatum[]
+interface-member EventDropPhysicsOptions::property::seed = required seed: number
+interface-member EventDropPhysicsOptions::property::size = required size: [number, number]
+interface-member EventDropPhysicsOptions::property::timeAccessor = required timeAccessor: ChartAccessor<TDatum, number>
+interface-member EventDropPhysicsOptions::property::timeExtent = optional timeExtent: [number, number] | undefined
+interface-member EventDropPhysicsOptions::property::timeScale = optional timeScale: number | undefined
+interface-member EventDropPhysicsOptions::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropPhysicsOptions::property::windows = required windows: EventDropWindowOptions
+interface-member EventDropWindowOptions::property::gapPolicy = optional gapPolicy: "drop" | "keep" | undefined
+interface-member EventDropWindowOptions::property::size = required size: number
+interface-member GaltonBoardChartProps::property::ballRadius = optional ballRadius: number | undefined
+interface-member GaltonBoardChartProps::property::bins = optional bins: number | undefined
+interface-member GaltonBoardChartProps::property::branchProbability = optional branchProbability: number | undefined
+interface-member GaltonBoardChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member GaltonBoardChartProps::property::data = optional data: TDatum[] | undefined
+interface-member GaltonBoardChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member GaltonBoardChartProps::property::mechanicalCount = optional mechanicalCount: number | undefined
+interface-member GaltonBoardChartProps::property::mode = optional mode: ChartMode | PhysicsSimulationMode | undefined
+interface-member GaltonBoardChartProps::property::paused = optional paused: boolean | undefined
+interface-member GaltonBoardChartProps::property::pegRows = optional pegRows: number | undefined
+interface-member GaltonBoardChartProps::property::referenceLines = optional referenceLines: GaltonBoardReferenceLine | GaltonBoardReferenceLine[] | undefined
+interface-member GaltonBoardChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member GaltonBoardChartProps::property::seed = optional seed: number | undefined
+interface-member GaltonBoardChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member GaltonBoardChartProps::property::simulationMode = optional simulationMode: PhysicsSimulationMode | undefined
+interface-member GaltonBoardChartProps::property::size = optional size: [number, number] | undefined
+interface-member GaltonBoardChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member GaltonBoardChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member GaltonBoardChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member GaltonBoardChartProps::property::valueExtent = optional valueExtent: [number, number] | undefined
+interface-member GaltonBoardPhysicsOptions::property::ballRadius = required ballRadius: number
+interface-member GaltonBoardPhysicsOptions::property::bins = required bins: number
+interface-member GaltonBoardPhysicsOptions::property::data = required data: readonly TDatum[]
+interface-member GaltonBoardPhysicsOptions::property::seed = required seed: number
+interface-member GaltonBoardPhysicsOptions::property::size = required size: [number, number]
+interface-member GaltonBoardPhysicsOptions::property::valueAccessor = required valueAccessor: ChartAccessor<TDatum, number>
+interface-member GaltonBoardPhysicsOptions::property::valueExtent = optional valueExtent: [number, number] | undefined
+interface-member GaltonBoardProjectionMetadata::property::bins = required bins: number
+interface-member GaltonBoardProjectionMetadata::property::kind = required kind: "galton-board"
+interface-member GaltonBoardProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member GaltonBoardProjectionMetadata::property::valueExtent = required valueExtent: [number, number]
+interface-member GaltonBoardReferenceLine::property::className = optional className: string | undefined
+interface-member GaltonBoardReferenceLine::property::color = optional color: string | undefined
+interface-member GaltonBoardReferenceLine::property::label = optional label: React.ReactNode
+interface-member GaltonBoardReferenceLine::property::labelPosition = optional labelPosition: "bottom" | "top" | undefined
+interface-member GaltonBoardReferenceLine::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member GaltonBoardReferenceLine::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GaltonBoardReferenceLine::property::value = required value: number
+interface-member GaltonPegsOptions::property::columns = optional columns: number | undefined
+interface-member GaltonPegsOptions::property::friction = optional friction: number | undefined
+interface-member GaltonPegsOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member GaltonPegsOptions::property::pegRadius = optional pegRadius: number | undefined
+interface-member GaltonPegsOptions::property::plot = required plot: PhysicsPlotBounds
+interface-member GaltonPegsOptions::property::restitution = optional restitution: number | undefined
+interface-member GaltonPegsOptions::property::rows = required rows: number
+interface-member GaltonPegsOptions::property::stagger = optional stagger: boolean | undefined
+interface-member GaltonPegsOptions::property::yEnd = optional yEnd: number | undefined
+interface-member GaltonPegsOptions::property::yStart = optional yStart: number | undefined
+interface-member GauntletChartProps::property::bodyGroups = optional bodyGroups: ((projects: readonly GauntletProjectState<TDatum>[], layout: GauntletLayout) => readonly PhysicsProcessBodyGroup<TDatum>[]) | readonly PhysicsProcessBodyGroup<TDatum>[] | undefined
+interface-member GauntletChartProps::property::coreBody = optional coreBody: ((project: GauntletProjectState<TDatum>, index: number, layout: GauntletLayout, placement: Required<GauntletProjectPlacement>) => Partial<PhysicsQueuedSpawn>) | undefined
+interface-member GauntletChartProps::property::coreForceMode = optional coreForceMode: "net" | "route" | undefined
+interface-member GauntletChartProps::property::crashDetection = optional crashDetection: boolean | undefined
+interface-member GauntletChartProps::property::crashOffset = optional crashOffset: number | undefined
+interface-member GauntletChartProps::property::data = optional data: TDatum[] | undefined
+interface-member GauntletChartProps::property::emptyContent = optional emptyContent: import("react").ReactNode
+interface-member GauntletChartProps::property::events = optional events: ((project: GauntletProjectState<TDatum>, layout: GauntletLayout) => readonly GauntletEvent[]) | readonly GauntletEvent[] | undefined
+interface-member GauntletChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "bodyForces" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member GauntletChartProps::property::gates = optional gates: readonly GauntletGate[] | undefined
+interface-member GauntletChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member GauntletChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member GauntletChartProps::property::initialViability = optional initialViability: ChartAccessor<TDatum, number> | undefined
+interface-member GauntletChartProps::property::labelAccessor = optional labelAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member GauntletChartProps::property::loading = optional loading: boolean | undefined
+interface-member GauntletChartProps::property::loadingContent = optional loadingContent: import("react").ReactNode
+interface-member GauntletChartProps::property::metricsAccessor = optional metricsAccessor: ChartAccessor<TDatum, Record<string, number>> | undefined
+interface-member GauntletChartProps::property::negativeAccessor = optional negativeAccessor: ChartAccessor<TDatum, readonly string[]> | undefined
+interface-member GauntletChartProps::property::negativeProperties = required negativeProperties: readonly GauntletPropertyDefinition[]
+interface-member GauntletChartProps::property::onCapacityChange = optional onCapacityChange: ((snapshots: CapacityQueueSnapshot[]) => void) | undefined
+interface-member GauntletChartProps::property::onStateChange = optional onStateChange: ((states: GauntletProjectState<TDatum>[]) => void) | undefined
+interface-member GauntletChartProps::property::outcome = optional outcome: ((project: GauntletProjectState<TDatum>, context: {layout: GauntletLayout; negativeProperties: Map<string, GauntletPropertyDefinition>; positiveProperties: Map<string, GauntletPropertyDefinition>;}) => string) | undefined
+interface-member GauntletChartProps::property::paused = optional paused: boolean | undefined
+interface-member GauntletChartProps::property::positiveAccessor = optional positiveAccessor: ChartAccessor<TDatum, readonly string[]> | undefined
+interface-member GauntletChartProps::property::positiveProperties = optional positiveProperties: readonly GauntletPropertyDefinition[] | undefined
+interface-member GauntletChartProps::property::projectPlacement = optional projectPlacement: ((project: GauntletProjectState<TDatum>, index: number, layout: GauntletLayout) => Partial<GauntletProjectPlacement>) | undefined
+interface-member GauntletChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member GauntletChartProps::property::seed = optional seed: number | undefined
+interface-member GauntletChartProps::property::showChrome = optional showChrome: boolean | undefined
+interface-member GauntletChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member GauntletChartProps::property::showTethers = optional showTethers: boolean | undefined
+interface-member GauntletChartProps::property::size = optional size: [number, number] | undefined
+interface-member GauntletChartProps::property::startTimeAccessor = optional startTimeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member GauntletChartProps::property::terminalBehavior = optional terminalBehavior: "hold-last" | "outcome" | undefined
+interface-member GauntletChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member GauntletChartProps::property::viability = optional viability: ((project: GauntletProjectState<TDatum>, context: {negativeProperties: Map<string, GauntletPropertyDefinition>; positiveProperties: Map<string, GauntletPropertyDefinition>;}) => number) | undefined
+interface-member GauntletEffect::property::addNegative = optional addNegative: Record<string, number> | readonly string[] | undefined
+interface-member GauntletEffect::property::addPositive = optional addPositive: Record<string, number> | readonly string[] | undefined
+interface-member GauntletEffect::property::delayDelta = optional delayDelta: number | undefined
+interface-member GauntletEffect::property::metricsDelta = optional metricsDelta: Record<string, number> | undefined
+interface-member GauntletEffect::property::outcome = optional outcome: string | undefined
+interface-member GauntletEffect::property::popNegative = optional popNegative: GauntletPopSpec | undefined
+interface-member GauntletEffect::property::popPositive = optional popPositive: GauntletPopSpec | undefined
+interface-member GauntletEffect::property::stage = optional stage: string | undefined
+interface-member GauntletEffect::property::summary = optional summary: string | undefined
+interface-member GauntletEffect::property::viabilityDelta = optional viabilityDelta: number | undefined
+interface-member GauntletEffect::property::when = optional when: ((context: GauntletEventContext) => boolean) | undefined
+interface-member GauntletEvent::property::effects = optional effects: readonly GauntletEffect[] | undefined
+interface-member GauntletEvent::property::final = optional final: boolean | undefined
+interface-member GauntletEvent::property::gateId = optional gateId: string | undefined
+interface-member GauntletEvent::property::gateVisit = optional gateVisit: number | undefined
+interface-member GauntletEvent::property::id = required id: string
+interface-member GauntletEvent::property::label = optional label: string | undefined
+interface-member GauntletEvent::property::outcome = optional outcome: string | undefined
+interface-member GauntletEvent::property::routeX = optional routeX: number | undefined
+interface-member GauntletEvent::property::routeY = optional routeY: number | undefined
+interface-member GauntletEvent::property::summary = optional summary: string | undefined
+interface-member GauntletEvent::property::time = required time: number
+interface-member GauntletEventContext::property::event = required event: GauntletEvent
+interface-member GauntletEventContext::property::gate = optional gate: (GauntletGate & Required<Pick<GauntletGate, "id" | "width" | "x">>) | undefined
+interface-member GauntletEventContext::property::negativeProperties = required negativeProperties: Map<string, GauntletPropertyDefinition>
+interface-member GauntletEventContext::property::positiveProperties = required positiveProperties: Map<string, GauntletPropertyDefinition>
+interface-member GauntletEventContext::property::project = required project: GauntletProjectState<TDatum>
+interface-member GauntletEventLogItem::property::appliedAt = optional appliedAt: number | undefined
+interface-member GauntletEventLogItem::property::id = required id: string
+interface-member GauntletEventLogItem::property::label = required label: string
+interface-member GauntletEventLogItem::property::summary = optional summary: string | undefined
+interface-member GauntletEventLogItem::property::time = optional time: number | undefined
+interface-member GauntletGate::property::capacity = optional capacity: undefined | {unitsPerSecond: number; unitAccessor?: ((project: GauntletProjectState) => number) | string; maxQueue?: number; queueLayout?: "lane" | "none"; queueSlotSpacing?: number; queueStiffness?: number; sensorWidth?: number;}
+interface-member GauntletGate::property::color = optional color: string | undefined
+interface-member GauntletGate::property::description = optional description: string | undefined
+interface-member GauntletGate::property::enabled = optional enabled: boolean | undefined
+interface-member GauntletGate::property::id = required id: string
+interface-member GauntletGate::property::label = optional label: string | undefined
+interface-member GauntletGate::property::regionEffect = optional regionEffect: Partial<Omit<StreamPhysicsRegionEffect, "id" | "shape">> | undefined
+interface-member GauntletGate::property::time = optional time: number | undefined
+interface-member GauntletGate::property::width = optional width: number | undefined
+interface-member GauntletGate::property::x = optional x: number | undefined
+interface-member GauntletLayout::property::crashY = required crashY: number
+interface-member GauntletLayout::property::floorY = required floorY: number
+interface-member GauntletLayout::property::gates = required gates: (GauntletGate & Required<Pick<GauntletGate, "id" | "width" | "x">>)[]
+interface-member GauntletLayout::property::graveyardX = required graveyardX: number
+interface-member GauntletLayout::property::graveyardY = required graveyardY: number
+interface-member GauntletLayout::property::height = required height: number
+interface-member GauntletLayout::property::routeY = required routeY: number
+interface-member GauntletLayout::property::socketX = required socketX: number
+interface-member GauntletLayout::property::startX = required startX: number
+interface-member GauntletLayout::property::width = required width: number
+interface-member GauntletNegativeReplacementOptions::property::count = optional count: number | undefined
+interface-member GauntletNegativeReplacementOptions::property::from = required from: string
+interface-member GauntletNegativeReplacementOptions::property::to = required to: string
+interface-member GauntletProjectPlacement::property::graveyardX = optional graveyardX: number | undefined
+interface-member GauntletProjectPlacement::property::graveyardY = optional graveyardY: number | undefined
+interface-member GauntletProjectPlacement::property::routeY = optional routeY: number | undefined
+interface-member GauntletProjectPlacement::property::socketX = optional socketX: number | undefined
+interface-member GauntletProjectPlacement::property::socketY = optional socketY: number | undefined
+interface-member GauntletProjectPlacement::property::startX = optional startX: number | undefined
+interface-member GauntletProjectPlacement::property::startY = optional startY: number | undefined
+interface-member GauntletProjectState::property::activePositiveIds = required activePositiveIds: string[]
+interface-member GauntletProjectState::property::crashX = optional crashX: number | undefined
+interface-member GauntletProjectState::property::datum = required datum: TDatum
+interface-member GauntletProjectState::property::delay = required delay: number
+interface-member GauntletProjectState::property::eventHistory = optional eventHistory: GauntletEventLogItem[] | undefined
+interface-member GauntletProjectState::property::eventsApplied = required eventsApplied: string[]
+interface-member GauntletProjectState::property::id = required id: string
+interface-member GauntletProjectState::property::killed = required killed: boolean
+interface-member GauntletProjectState::property::lastEvent = optional lastEvent: GauntletEventLogItem | undefined
+interface-member GauntletProjectState::property::metrics = required metrics: Record<string, number>
+interface-member GauntletProjectState::property::missingPositiveIds = required missingPositiveIds: string[]
+interface-member GauntletProjectState::property::negativeIds = required negativeIds: string[]
+interface-member GauntletProjectState::property::outcome = required outcome: string
+interface-member GauntletProjectState::property::poppedNegativeIds = required poppedNegativeIds: string[]
+interface-member GauntletProjectState::property::poppedPositiveIds = required poppedPositiveIds: string[]
+interface-member GauntletProjectState::property::stage = required stage: string
+interface-member GauntletProjectState::property::startedAt = optional startedAt: number | undefined
+interface-member GauntletProjectState::property::viability = required viability: number
+interface-member GauntletPropertyDefinition::property::buoyancy = optional buoyancy: number | undefined
+interface-member GauntletPropertyDefinition::property::color = optional color: string | undefined
+interface-member GauntletPropertyDefinition::property::id = required id: string
+interface-member GauntletPropertyDefinition::property::label = optional label: string | undefined
+interface-member GauntletPropertyDefinition::property::load = optional load: number | undefined
+interface-member GauntletPropertyDefinition::property::mass = optional mass: number | undefined
+interface-member GauntletPropertyDefinition::property::popColor = optional popColor: string | undefined
+interface-member GauntletPropertyDefinition::property::priority = optional priority: number | undefined
+interface-member GauntletPropertyDefinition::property::pull = optional pull: undefined | {x?: number; y?: number;}
+interface-member GauntletPropertyDefinition::property::radius = optional radius: number | undefined
+interface-member GauntletPropertyDefinition::property::short = optional short: string | undefined
+interface-member GauntletPropertyDefinition::property::spring = optional spring: Partial<PhysicsSpawnSpringSpec> | false | undefined
+interface-member GauntletPropertyDefinition::property::target = optional target: ((context: GauntletPropertyForceContext) => {x: number; y: number;} | null | undefined) | undefined
+interface-member GauntletPropertyDefinition::property::value = optional value: number | undefined
+interface-member GauntletPropertyDefinition::property::work = optional work: number | undefined
+interface-member GauntletPropertyForceContext::property::bodies = required bodies: readonly PhysicsBodyState[]
+interface-member GauntletPropertyForceContext::property::body = required body: PhysicsBodyState
+interface-member GauntletPropertyForceContext::property::core = required core: PhysicsBodyState
+interface-member GauntletPropertyForceContext::property::index = required index: number
+interface-member GauntletPropertyForceContext::property::layout = required layout: GauntletLayout
+interface-member GauntletPropertyForceContext::property::placement = required placement: Required<GauntletProjectPlacement>
+interface-member GauntletPropertyForceContext::property::project = required project: GauntletProjectState<TDatum>
+interface-member GauntletPropertyWorkPlan::property::budget = required budget: number
+interface-member GauntletPropertyWorkPlan::property::ids = required ids: string[]
+interface-member GauntletPropertyWorkPlan::property::remaining = required remaining: number
+interface-member GauntletPropertyWorkPlan::property::skippedIds = required skippedIds: string[]
+interface-member GauntletPropertyWorkPlan::property::used = required used: number
+interface-member GauntletPropertyWorkPlanOptions::property::attachedIds = required attachedIds: readonly string[]
+interface-member GauntletPropertyWorkPlanOptions::property::budget = required budget: number
+interface-member GauntletPropertyWorkPlanOptions::property::candidates = optional candidates: readonly string[] | undefined
+interface-member GauntletPropertyWorkPlanOptions::property::properties = required properties: Map<string, GauntletPropertyDefinition> | readonly GauntletPropertyDefinition[]
+interface-member GauntletTerminalOptions::property::events = optional events: ((project: GauntletProjectState<TDatum>, layout: GauntletLayout) => readonly GauntletEvent[]) | readonly GauntletEvent[] | undefined
+interface-member GauntletTerminalOptions::property::layout = required layout: GauntletLayout
+interface-member GauntletTerminalOptions::property::negativeProperties = required negativeProperties: Map<string, GauntletPropertyDefinition>
+interface-member GauntletTerminalOptions::property::outcome = optional outcome: ((project: GauntletProjectState<TDatum>, context: {layout: GauntletLayout; negativeProperties: Map<string, GauntletPropertyDefinition>; positiveProperties: Map<string, GauntletPropertyDefinition>;}) => string) | undefined
+interface-member GauntletTerminalOptions::property::positiveProperties = required positiveProperties: Map<string, GauntletPropertyDefinition>
+interface-member GauntletTerminalOptions::property::projects = required projects: readonly GauntletProjectState<TDatum>[]
+interface-member GauntletTerminalOptions::property::viability = optional viability: GauntletViabilityFn<TDatum> | undefined
+interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
+interface-member GradientLegendConfig::property::domain = required domain: [number, number]
+interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
+interface-member GradientLegendConfig::property::label = optional label: string | undefined
+interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
+interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member HatchFill::property::angle = optional angle: number | undefined
+interface-member HatchFill::property::background = optional background: string | undefined
+interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member HatchFill::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchFill::property::spacing = optional spacing: number | undefined
+interface-member HatchFill::property::stroke = optional stroke: string | undefined
+interface-member HatchFill::property::type = required type: "hatch"
+interface-member LegendGroup::property::items = required items: LegendItem[]
+interface-member LegendGroup::property::label = required label: string
+interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
+interface-member LegendGroup::property::type = optional type: ItemType | undefined
+interface-member LegendItem::index::%24index = required (key: string): unknown
+interface-member LegendItem::property::color = optional color: string | undefined
+interface-member LegendItem::property::label = required label: string
+interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
+interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
+interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
+interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined
+interface-member LegendLayout::property::rowHeight = optional rowHeight: number | undefined
+interface-member LegendLayout::property::sideGutter = optional sideGutter: number | undefined
+interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
+interface-member LogicalJoin::property::deliver = required deliver: (edgeID: string) => boolean
+interface-member LogicalJoin::property::getSnapshot = required getSnapshot: () => LogicalJoinSnapshot
+interface-member LogicalJoin::property::incomingEdgeIDs = required incomingEdgeIDs: readonly string[]
+interface-member LogicalJoin::property::isSatisfied = required isSatisfied: () => boolean
+interface-member LogicalJoin::property::mode = required mode: "all"
+interface-member LogicalJoin::property::reset = required reset: (deliveredEdgeIDs?: Iterable<string>) => void
+interface-member LogicalJoin::property::taskID = required taskID: string
+interface-member LogicalJoinSnapshot::property::deliveredEdgeIDs = required deliveredEdgeIDs: string[]
+interface-member LogicalJoinSnapshot::property::incomingEdgeIDs = required incomingEdgeIDs: string[]
+interface-member LogicalJoinSnapshot::property::mode = required mode: "all"
+interface-member LogicalJoinSnapshot::property::satisfied = required satisfied: boolean
+interface-member LogicalJoinSnapshot::property::taskID = required taskID: string
+interface-member MotionAccessibleEncoding::property::description = optional description: MotionEncodingAccessor<TDatum, string> | undefined
+interface-member MotionAccessibleEncoding::property::group = optional group: MotionEncodingAccessor<TDatum, string> | undefined
+interface-member MotionAccessibleEncoding::property::label = optional label: MotionEncodingAccessor<TDatum, string> | undefined
+interface-member MotionAgeOpacityOptions::property::age = required age: number
+interface-member MotionAgeOpacityOptions::property::extent = required extent: number
+interface-member MotionAgeOpacityOptions::property::halfLife = optional halfLife: number | undefined
+interface-member MotionAgeOpacityOptions::property::minOpacity = optional minOpacity: number | undefined
+interface-member MotionAgeOpacityOptions::property::threshold = optional threshold: number | undefined
+interface-member MotionAgeOpacityOptions::property::type = required type: MotionAgeOpacityType
+interface-member MotionEncoding::property::accessible = optional accessible: MotionAccessibleEncoding<TDatum> | undefined
+interface-member MotionEncoding::property::evidence = optional evidence: Record<string, MotionEncodingAccessor<TDatum, unknown>> | undefined
+interface-member MotionEncoding::property::id = required id: MotionEncodingAccessor<TDatum, number | string>
+interface-member MotionEncoding::property::kinematics = optional kinematics: MotionKinematicsEncoding<TDatum> | undefined
+interface-member MotionEncoding::property::placement = optional placement: MotionPlacementEncoding<TDatum> | undefined
+interface-member MotionEncoding::property::process = optional process: MotionProcessEncoding<TDatum> | undefined
+interface-member MotionEncoding::property::time = optional time: MotionTimeEncoding<TDatum> | undefined
+interface-member MotionEncodingCompilation::property::byId = required byId: Map<string, ResolvedMotionEncodingRow<TDatum>>
+interface-member MotionEncodingCompilation::property::rows = required rows: ResolvedMotionEncodingRow<TDatum>[]
+interface-member MotionEncodingConstant::property::constant = required constant: TValue
+interface-member MotionKinematicsEncoding::property::space = optional space: MotionCoordinateSpace | undefined
+interface-member MotionKinematicsEncoding::property::velocityX = optional velocityX: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionKinematicsEncoding::property::velocityY = optional velocityY: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionPlacementEncoding::property::lane = optional lane: MotionEncodingAccessor<TDatum, number | string> | undefined
+interface-member MotionPlacementEncoding::property::space = optional space: MotionCoordinateSpace | undefined
+interface-member MotionPlacementEncoding::property::x = optional x: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionPlacementEncoding::property::y = optional y: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionPoint::property::x = required x: number
+interface-member MotionPoint::property::y = required y: number
+interface-member MotionProcessEncoding::property::group = optional group: MotionEncodingAccessor<TDatum, number | string> | undefined
+interface-member MotionProcessEncoding::property::stage = optional stage: MotionEncodingAccessor<TDatum, number | string> | undefined
+interface-member MotionProcessEncoding::property::target = optional target: MotionEncodingAccessor<TDatum, number | string> | undefined
+interface-member MotionProcessEncoding::property::work = optional work: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionTimeEncoding::property::arrival = optional arrival: MotionEncodingAccessor<TDatum, number> | undefined
+interface-member MotionTimeEncoding::property::basis = optional basis: MotionTimeBasis | undefined
+interface-member MotionTimeEncoding::property::unit = optional unit: MotionTimeUnit | undefined
+interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
+interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
+interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member PacketFlowChartProps::property::colorBy = optional colorBy: ChartAccessor<TLink, string> | undefined
+interface-member PacketFlowChartProps::property::coordinateMode = optional coordinateMode: PhysicalFlowCoordinateMode | undefined
+interface-member PacketFlowChartProps::property::data = optional data: TLink[] | undefined
+interface-member PacketFlowChartProps::property::edges = optional edges: TLink[] | undefined
+interface-member PacketFlowChartProps::property::flowSpeed = optional flowSpeed: number | undefined
+interface-member PacketFlowChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member PacketFlowChartProps::property::links = optional links: TLink[] | undefined
+interface-member PacketFlowChartProps::property::maxParticles = optional maxParticles: number | undefined
+interface-member PacketFlowChartProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member PacketFlowChartProps::property::nodeXAccessor = optional nodeXAccessor: ChartAccessor<TNode, number> | undefined
+interface-member PacketFlowChartProps::property::nodeYAccessor = optional nodeYAccessor: ChartAccessor<TNode, number> | undefined
+interface-member PacketFlowChartProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member PacketFlowChartProps::property::particleRadius = optional particleRadius: number | undefined
+interface-member PacketFlowChartProps::property::particleRate = optional particleRate: number | undefined
+interface-member PacketFlowChartProps::property::pathAccessor = optional pathAccessor: ChartAccessor<TLink, PhysicalFlowRawPath | undefined> | undefined
+interface-member PacketFlowChartProps::property::pathConstraint = optional pathConstraint: PhysicalFlowPathConstraint | undefined
+interface-member PacketFlowChartProps::property::paused = optional paused: boolean | undefined
+interface-member PacketFlowChartProps::property::reducedMotion = optional reducedMotion: boolean | undefined
+interface-member PacketFlowChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member PacketFlowChartProps::property::seed = optional seed: number | undefined
+interface-member PacketFlowChartProps::property::showNodeLabels = optional showNodeLabels: boolean | undefined
+interface-member PacketFlowChartProps::property::showSensors = optional showSensors: boolean | undefined
+interface-member PacketFlowChartProps::property::showStaticFlow = optional showStaticFlow: boolean | undefined
+interface-member PacketFlowChartProps::property::size = optional size: [number, number] | undefined
+interface-member PacketFlowChartProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TLink, string> | undefined
+interface-member PacketFlowChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member PacketFlowChartProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TLink, string> | undefined
+interface-member PacketFlowChartProps::property::throughputAccessor = optional throughputAccessor: ChartAccessor<TLink, number> | undefined
+interface-member PacketFlowChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member PhysicalFlowOptions::property::coordinateMode = optional coordinateMode: PhysicalFlowCoordinateMode | undefined
+interface-member PhysicalFlowOptions::property::flowSpeed = required flowSpeed: number
+interface-member PhysicalFlowOptions::property::links = required links: readonly TLink[]
+interface-member PhysicalFlowOptions::property::maxParticles = required maxParticles: number
+interface-member PhysicalFlowOptions::property::nodeIdAccessor = required nodeIdAccessor: ChartAccessor<TNode, string>
+interface-member PhysicalFlowOptions::property::nodeXAccessor = required nodeXAccessor: ChartAccessor<TNode, number>
+interface-member PhysicalFlowOptions::property::nodeYAccessor = required nodeYAccessor: ChartAccessor<TNode, number>
+interface-member PhysicalFlowOptions::property::nodes = required nodes: readonly TNode[]
+interface-member PhysicalFlowOptions::property::particleRadius = required particleRadius: number
+interface-member PhysicalFlowOptions::property::particleRate = required particleRate: number
+interface-member PhysicalFlowOptions::property::pathAccessor = optional pathAccessor: ChartAccessor<TLink, PhysicalFlowRawPath | undefined> | undefined
+interface-member PhysicalFlowOptions::property::pathConstraint = optional pathConstraint: PhysicalFlowPathConstraint | undefined
+interface-member PhysicalFlowOptions::property::reducedMotion = optional reducedMotion: boolean | undefined
+interface-member PhysicalFlowOptions::property::seed = required seed: number
+interface-member PhysicalFlowOptions::property::size = required size: [number, number]
+interface-member PhysicalFlowOptions::property::sourceAccessor = required sourceAccessor: ChartAccessor<TLink, string>
+interface-member PhysicalFlowOptions::property::targetAccessor = required targetAccessor: ChartAccessor<TLink, string>
+interface-member PhysicalFlowOptions::property::throughputAccessor = required throughputAccessor: ChartAccessor<TLink, number>
+interface-member PhysicalFlowPoint::property::x = required x: number
+interface-member PhysicalFlowPoint::property::y = required y: number
+interface-member PhysicalFlowProjectionMetadata::property::coordinateMode = required coordinateMode: "normalized" | "pixels"
+interface-member PhysicalFlowProjectionMetadata::property::kind = required kind: "physical-flow"
+interface-member PhysicalFlowProjectionMetadata::property::links = required links: {id: string; source: string; target: string; sourceLabel: string; targetLabel: string; throughput: number; packetCount: number; path: PhysicalFlowPoint[];}[]
+interface-member PhysicalFlowProjectionMetadata::property::nodes = required nodes: {id: string; label: string; x: number; y: number; sensorId: string; incoming: number; outgoing: number;}[]
+interface-member PhysicalFlowProjectionMetadata::property::particleCount = required particleCount: number
+interface-member PhysicalFlowProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member PhysicalFlowProjectionMetadata::property::totalThroughput = required totalThroughput: number
+interface-member PhysicsAccessibleEncoding::property::description = optional description: PhysicsEncodingAccessor<TDatum, string> | undefined
+interface-member PhysicsAccessibleEncoding::property::group = optional group: PhysicsEncodingAccessor<TDatum, string> | undefined
+interface-member PhysicsAccessibleEncoding::property::label = optional label: PhysicsEncodingAccessor<TDatum, string> | undefined
+interface-member PhysicsAppearanceEncoding::property::color = optional color: PhysicsEncodingAccessor<TDatum, string> | undefined
+interface-member PhysicsAppearanceEncoding::property::opacity = optional opacity: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsAppearanceEncoding::property::shape = optional shape: PhysicsEncodingAccessor<TDatum, PhysicsBodyShape> | undefined
+interface-member PhysicsAppearanceEncoding::property::size = optional size: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsAppearanceEncoding::property::stroke = optional stroke: PhysicsEncodingAccessor<TDatum, string> | undefined
+interface-member PhysicsAppearanceEncoding::property::strokeWidth = optional strokeWidth: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsBandColliderOptions::property::bandwidth = optional bandwidth: number | undefined
+interface-member PhysicsBandColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsBandColliderOptions::property::includeBoundaryWalls = optional includeBoundaryWalls: boolean | undefined
+interface-member PhysicsBandColliderOptions::property::includeInteriorWalls = optional includeInteriorWalls: boolean | undefined
+interface-member PhysicsBandColliderOptions::property::scale = required scale: BandScale<TBand>
+interface-member PhysicsBandColliderOptions::property::values = required values: readonly TBand[]
+interface-member PhysicsBandColliderOptions::property::wallThickness = optional wallThickness: number | undefined
+interface-member PhysicsBodyBudgetDecision::property::action = required action: PhysicsBodyBudgetAction
+interface-member PhysicsBodyBudgetDecision::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member PhysicsBodyBudgetDecision::property::engineMaxBodiesHint = optional engineMaxBodiesHint: number | undefined
+interface-member PhysicsBodyBudgetDecision::property::liveBodies = required liveBodies: number
+interface-member PhysicsBodyBudgetDecision::property::overflow = required overflow: number
+interface-member PhysicsBodyBudgetDecision::property::projectedBodies = required projectedBodies: number
+interface-member PhysicsBodyBudgetDecision::property::queuedBodies = required queuedBodies: number
+interface-member PhysicsBodyBudgetDecision::property::state = required state: PhysicsBodyBudgetState
+interface-member PhysicsBodyBudgetDecision::property::warnAt = optional warnAt: number | undefined
+interface-member PhysicsBodyBudgetInput::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member PhysicsBodyBudgetInput::property::engineMaxBodiesHint = optional engineMaxBodiesHint: number | undefined
+interface-member PhysicsBodyBudgetInput::property::evictionEnabled = optional evictionEnabled: boolean | undefined
+interface-member PhysicsBodyBudgetInput::property::liveBodies = required liveBodies: number
+interface-member PhysicsBodyBudgetInput::property::options = optional options: PhysicsBodyBudgetOptions | false | undefined
+interface-member PhysicsBodyBudgetInput::property::queuedBodies = optional queuedBodies: number | undefined
+interface-member PhysicsBodyBudgetInput::property::sedimentEnabled = optional sedimentEnabled: boolean | undefined
+interface-member PhysicsBodyBudgetOptions::property::warnAt = optional warnAt: number | undefined
+interface-member PhysicsBodySelection::property::isActive = optional isActive: boolean | undefined
+interface-member PhysicsBodySelection::property::predicate = optional predicate: ((body: PhysicsBodyState) => boolean) | undefined
+interface-member PhysicsBodySemanticItemContext::property::index = required index: number
+interface-member PhysicsBodySemanticItemContext::property::simulationState = required simulationState: PhysicsSimulationState
+interface-member PhysicsBodySpec::property::angle = optional angle: number | undefined
+interface-member PhysicsBodySpec::property::bodyCollisions = optional bodyCollisions: boolean | undefined
+interface-member PhysicsBodySpec::property::datum = optional datum: unknown
+interface-member PhysicsBodySpec::property::friction = optional friction: number | undefined
+interface-member PhysicsBodySpec::property::id = required id: string
+interface-member PhysicsBodySpec::property::mass = optional mass: number | undefined
+interface-member PhysicsBodySpec::property::restitution = optional restitution: number | undefined
+interface-member PhysicsBodySpec::property::shape = required shape: PhysicsBodyShape
+interface-member PhysicsBodySpec::property::vx = optional vx: number | undefined
+interface-member PhysicsBodySpec::property::vy = optional vy: number | undefined
+interface-member PhysicsBodySpec::property::x = required x: number
+interface-member PhysicsBodySpec::property::y = required y: number
+interface-member PhysicsBodyState::property::angle = required angle: number
+interface-member PhysicsBodyState::property::bodyCollisions = optional bodyCollisions: boolean | undefined
+interface-member PhysicsBodyState::property::datum = optional datum: unknown
+interface-member PhysicsBodyState::property::id = required id: string
+interface-member PhysicsBodyState::property::mass = required mass: number
+interface-member PhysicsBodyState::property::prevX = required prevX: number
+interface-member PhysicsBodyState::property::prevY = required prevY: number
+interface-member PhysicsBodyState::property::shape = required shape: PhysicsBodyShape
+interface-member PhysicsBodyState::property::sleeping = required sleeping: boolean
+interface-member PhysicsBodyState::property::vx = required vx: number
+interface-member PhysicsBodyState::property::vy = required vy: number
+interface-member PhysicsBodyState::property::x = required x: number
+interface-member PhysicsBodyState::property::y = required y: number
+interface-member PhysicsBodyStyleContext::property::regionState = optional regionState: StreamPhysicsBodyRegionState | undefined
+interface-member PhysicsBodyStyleContext::property::regions = optional regions: StreamPhysicsRegionEffect[] | undefined
+interface-member PhysicsBodyStyleContext::property::selected = required selected: boolean
+interface-member PhysicsBodyStyleContext::property::simulationState = required simulationState: PhysicsSimulationState
+interface-member PhysicsCanvasPaintContext::property::resolvePaint = required resolvePaint: (Style["stroke"] | null | paint: Style["fill"] | undefined, fallback: string) => string | CanvasPattern
+interface-member PhysicsCanvasPaintContext::property::theme = required theme: PhysicsCanvasTheme
+interface-member PhysicsCanvasPaintContext::property::withAlpha = required withAlpha: (color: string, opacity: number) => string
+interface-member PhysicsChartLayout::property::config = required config: PhysicsPipelineConfig
+interface-member PhysicsChartLayout::property::initialSpawnPacing = optional initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
+interface-member PhysicsChartLayout::property::initialSpawns = required initialSpawns: PhysicsQueuedSpawn[]
+interface-member PhysicsChartLayout::property::metadata = optional metadata: Record<string, unknown> | undefined
+interface-member PhysicsChartLayout::property::projectionRows = required projectionRows: {label: string; value: number; secondary?: number;}[]
+interface-member PhysicsColliderBodyFilterSpec::property::equals = optional equals: unknown
+interface-member PhysicsColliderBodyFilterSpec::property::notEquals = optional notEquals: unknown
+interface-member PhysicsColliderBodyFilterSpec::property::notOneOf = optional notOneOf: undefined | unknown[]
+interface-member PhysicsColliderBodyFilterSpec::property::oneOf = optional oneOf: undefined | unknown[]
+interface-member PhysicsColliderBodyFilterSpec::property::property = required property: string
+interface-member PhysicsColliderSpec::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member PhysicsColliderSpec::property::friction = optional friction: number | undefined
+interface-member PhysicsColliderSpec::property::id = required id: string
+interface-member PhysicsColliderSpec::property::restitution = optional restitution: number | undefined
+interface-member PhysicsColliderSpec::property::sensor = optional sensor: boolean | undefined
+interface-member PhysicsColliderSpec::property::shape = required shape: PhysicsColliderShape
+interface-member PhysicsController::property::bodyForce = optional bodyForce: ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined) | undefined
+interface-member PhysicsController::property::continuous = optional continuous: boolean | undefined
+interface-member PhysicsController::property::dispose = optional dispose: (() => void) | undefined
+interface-member PhysicsController::property::getSnapshot = optional getSnapshot: (() => unknown) | undefined
+interface-member PhysicsController::property::id = required id: string
+interface-member PhysicsController::property::tick = required tick: (context: PhysicsControllerTickContext) => void
+interface-member PhysicsControllerTickContext::property::controls = required controls: PhysicsPipelineControlSurface
+interface-member PhysicsControllerTickContext::property::dt = required dt: number
+interface-member PhysicsControllerTickContext::property::elapsed = required elapsed: number
+interface-member PhysicsControllerTickContext::property::getRegionState = required getRegionState: (bodyId: string) => StreamPhysicsBodyRegionState | undefined
+interface-member PhysicsControllerTickContext::property::result = required result: PhysicsPipelineTickResult
+interface-member PhysicsCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, number | string> | undefined
+interface-member PhysicsCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member PhysicsCustomChartProps::property::config = optional config: PhysicsPipelineConfig | undefined
+interface-member PhysicsCustomChartProps::property::controllers = optional controllers: PhysicsController[] | undefined
+interface-member PhysicsCustomChartProps::property::data = optional data: TDatum[] | undefined
+interface-member PhysicsCustomChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member PhysicsCustomChartProps::property::layout = required layout: PhysicsCustomLayout<TDatum, TConfig>
+interface-member PhysicsCustomChartProps::property::layoutConfig = optional layoutConfig: TConfig | undefined
+interface-member PhysicsCustomChartProps::property::paused = optional paused: boolean | undefined
+interface-member PhysicsCustomChartProps::property::size = optional size: [number, number] | undefined
+interface-member PhysicsCustomChartProps::property::spawnDatum = optional spawnDatum: ((datum: TDatum, index: number, ctx: PhysicsCustomLayoutContext<TDatum, TConfig>) => PhysicsCustomSpawnDatumResult) | undefined
+interface-member PhysicsCustomChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member PhysicsCustomChartProps::property::xExtent = optional xExtent: [number, number] | undefined
+interface-member PhysicsCustomChartProps::property::yExtent = optional yExtent: [number, number] | undefined
+interface-member PhysicsCustomLayoutContext::property::config = required config: TConfig
+interface-member PhysicsCustomLayoutContext::property::data = required data: TDatum[]
+interface-member PhysicsCustomLayoutContext::property::dimensions = required dimensions: PhysicsChartArea
+interface-member PhysicsCustomLayoutContext::property::resolveColor = required resolveColor: (key: string, datum?: TDatum) => string
+interface-member PhysicsCustomLayoutContext::property::scales = required scales: {x: ScaleLinear<number, number>; y: ScaleLinear<number, number>;}
+interface-member PhysicsCustomLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member PhysicsCustomLayoutContext::property::world = required world: PhysicsPipelineStore
+interface-member PhysicsCustomLayoutResult::property::backgroundOverlays = optional backgroundOverlays: React.ReactNode
+interface-member PhysicsCustomLayoutResult::property::bodies = optional bodies: PhysicsQueuedSpawn[] | undefined
+interface-member PhysicsCustomLayoutResult::property::bodyForces = optional bodyForces: StreamPhysicsBodyForce | undefined
+interface-member PhysicsCustomLayoutResult::property::bodyStyle = optional bodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-experimental").UnstablePhysicsBodyStyleContext) => import("../../semiotic-geo").Style) | import("../../semiotic-geo").Style | undefined
+interface-member PhysicsCustomLayoutResult::property::colliders = optional colliders: PhysicsColliderSpec[] | undefined
+interface-member PhysicsCustomLayoutResult::property::config = optional config: PhysicsPipelineConfig | undefined
+interface-member PhysicsCustomLayoutResult::property::constraints = optional constraints: PhysicsSpringSpec[] | undefined
+interface-member PhysicsCustomLayoutResult::property::controllers = optional controllers: PhysicsController[] | undefined
+interface-member PhysicsCustomLayoutResult::property::initialSpawnPacing = optional initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
+interface-member PhysicsCustomLayoutResult::property::initialSpawns = optional initialSpawns: PhysicsQueuedSpawn[] | undefined
+interface-member PhysicsCustomLayoutResult::property::overlays = optional overlays: React.ReactNode
+interface-member PhysicsCustomLayoutResult::property::regionEffects = optional regionEffects: StreamPhysicsRegionEffect[] | undefined
+interface-member PhysicsCustomLayoutResult::property::selectedBodyStyle = optional selectedBodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-experimental").UnstablePhysicsBodyStyleContext) => import("../../semiotic-geo").Style) | import("../../semiotic-geo").Style | undefined
+interface-member PhysicsCustomLayoutResult::property::semanticItems = optional semanticItems: PhysicsSemanticItem[] | undefined
+interface-member PhysicsCustomLayoutResult::property::sensors = optional sensors: PhysicsColliderSpec[] | undefined
+interface-member PhysicsDestinationZone::property::centerX = required centerX: number
+interface-member PhysicsDestinationZone::property::centerY = required centerY: number
+interface-member PhysicsDestinationZone::property::id = required id: string
+interface-member PhysicsDestinationZone::property::label = required label: string
+interface-member PhysicsDestinationZone::property::order = required order: number
+interface-member PhysicsDynamicsEncoding::property::bodyCollisions = optional bodyCollisions: PhysicsEncodingAccessor<TDatum, boolean> | undefined
+interface-member PhysicsDynamicsEncoding::property::friction = optional friction: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsDynamicsEncoding::property::mass = optional mass: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsDynamicsEncoding::property::restitution = optional restitution: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsEncoding::property::accessible = optional accessible: PhysicsAccessibleEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::appearance = optional appearance: PhysicsAppearanceEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::dynamics = optional dynamics: PhysicsDynamicsEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::evidence = optional evidence: Record<string, PhysicsEncodingAccessor<TDatum, unknown>> | undefined
+interface-member PhysicsEncoding::property::id = required id: PhysicsEncodingAccessor<TDatum, number | string>
+interface-member PhysicsEncoding::property::kinematics = optional kinematics: PhysicsKinematicsEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::placement = optional placement: PhysicsPlacementEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::process = optional process: PhysicsProcessEncoding<TDatum> | undefined
+interface-member PhysicsEncoding::property::time = optional time: PhysicsTimeEncoding<TDatum> | undefined
+interface-member PhysicsEncodingCompilation::property::bodyStyle = required bodyStyle: (body: PhysicsBodyState) => Style
+interface-member PhysicsEncodingCompilation::property::byId = required byId: Map<string, ResolvedPhysicsEncodingRow<TDatum>>
+interface-member PhysicsEncodingCompilation::property::rows = required rows: ResolvedPhysicsEncodingRow<TDatum>[]
+interface-member PhysicsEncodingCompilation::property::semanticItems = required semanticItems: PhysicsSemanticItem[]
+interface-member PhysicsEncodingCompilation::property::spawns = required spawns: PhysicsQueuedSpawn[]
+interface-member PhysicsEncodingDefaults::property::color = optional color: string | undefined
+interface-member PhysicsEncodingDefaults::property::mass = optional mass: number | undefined
+interface-member PhysicsEncodingDefaults::property::opacity = optional opacity: number | undefined
+interface-member PhysicsEncodingDefaults::property::shape = optional shape: PhysicsBodyShape | undefined
+interface-member PhysicsEncodingDefaults::property::size = optional size: number | undefined
+interface-member PhysicsEncodingDefaults::property::stroke = optional stroke: string | undefined
+interface-member PhysicsEncodingDefaults::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member PhysicsEncodingDefaults::property::x = optional x: number | undefined
+interface-member PhysicsEncodingDefaults::property::y = optional y: number | undefined
+interface-member PhysicsEngineAdapter::property::activeSensorPairs = required activeSensorPairs: () => PhysicsActiveSensorPair[]
+interface-member PhysicsEngineAdapter::property::allSleeping = required allSleeping: () => boolean
+interface-member PhysicsEngineAdapter::property::applyImpulse = required applyImpulse: (id: string, ix: number, iy: number) => void
+interface-member PhysicsEngineAdapter::property::capabilities = required readonly capabilities: PhysicsEngineCapabilities
+interface-member PhysicsEngineAdapter::property::dispose = required dispose: () => void
+interface-member PhysicsEngineAdapter::property::events = required events: () => PhysicsKernelEvent[]
+interface-member PhysicsEngineAdapter::property::id = required readonly id: string
+interface-member PhysicsEngineAdapter::property::init = required init: (options?: PhysicsKernelOptions) => void
+interface-member PhysicsEngineAdapter::property::nextRandom = required nextRandom: () => number
+interface-member PhysicsEngineAdapter::property::readState = required readState: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
+interface-member PhysicsEngineAdapter::property::remove = required remove: (ids: string[]) => void
+interface-member PhysicsEngineAdapter::property::removeConstraint = required removeConstraint: (id: string) => void
+interface-member PhysicsEngineAdapter::property::restore = required restore: (snapshot: PhysicsKernelSnapshot) => void
+interface-member PhysicsEngineAdapter::property::setColliders = required setColliders: (colliders: PhysicsColliderSpec[]) => void
+interface-member PhysicsEngineAdapter::property::setConstraint = required setConstraint: (spec: PhysicsSpringSpec) => string
+interface-member PhysicsEngineAdapter::property::settle = required settle: (maxSteps?: number, dtSeconds?: number) => number
+interface-member PhysicsEngineAdapter::property::snapshot = required snapshot: () => PhysicsKernelSnapshot
+interface-member PhysicsEngineAdapter::property::spawn = required spawn: (spec: PhysicsBodySpec) => void
+interface-member PhysicsEngineAdapter::property::step = required step: (dtSeconds?: number) => void
+interface-member PhysicsEngineCapabilities::property::ccd = required ccd: boolean
+interface-member PhysicsEngineCapabilities::property::determinism = required determinism: PhysicsEngineDeterminism
+interface-member PhysicsEngineCapabilities::property::engine = required engine: string
+interface-member PhysicsEngineCapabilities::property::joints = required joints: boolean
+interface-member PhysicsEngineCapabilities::property::maxBodiesHint = required maxBodiesHint: number
+interface-member PhysicsEngineCapabilities::property::sensors = required sensors: boolean
+interface-member PhysicsEngineCapabilities::property::worker = required worker: boolean
+interface-member PhysicsFrameHandle::method::popBodies = required popBodies(ids: string[], options?: StreamPhysicsPopOptions | undefined): string[]
+interface-member PhysicsKernelOptions::property::cellSize = optional cellSize: number | undefined
+interface-member PhysicsKernelOptions::property::collisionIterations = optional collisionIterations: number | undefined
+interface-member PhysicsKernelOptions::property::contactWakeSpeed = optional contactWakeSpeed: number | undefined
+interface-member PhysicsKernelOptions::property::fixedDt = optional fixedDt: number | undefined
+interface-member PhysicsKernelOptions::property::friction = optional friction: number | undefined
+interface-member PhysicsKernelOptions::property::gravity = optional gravity: undefined | {x: number; y: number;}
+interface-member PhysicsKernelOptions::property::maxVelocity = optional maxVelocity: number | undefined
+interface-member PhysicsKernelOptions::property::restitution = optional restitution: number | undefined
+interface-member PhysicsKernelOptions::property::seed = optional seed: number | undefined
+interface-member PhysicsKernelOptions::property::sleepAfter = optional sleepAfter: number | undefined
+interface-member PhysicsKernelOptions::property::sleepSpeed = optional sleepSpeed: number | undefined
+interface-member PhysicsKernelOptions::property::velocityDamping = optional velocityDamping: number | undefined
+interface-member PhysicsPileOptions::property::ballRadius = required ballRadius: number
+interface-member PhysicsPileOptions::property::categoryAccessor = required categoryAccessor: ChartAccessor<TDatum, string>
+interface-member PhysicsPileOptions::property::data = required data: readonly TDatum[]
+interface-member PhysicsPileOptions::property::seed = required seed: number
+interface-member PhysicsPileOptions::property::size = required size: [number, number]
+interface-member PhysicsPileOptions::property::unitValue = required unitValue: number
+interface-member PhysicsPileOptions::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member PhysicsPipelineConfig::property::bodyBudget = optional bodyBudget: PhysicsBodyBudgetOptions | false | undefined
+interface-member PhysicsPipelineConfig::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member PhysicsPipelineConfig::property::colliders = optional colliders: PhysicsColliderSpec[] | undefined
+interface-member PhysicsPipelineConfig::property::engine = optional engine: PhysicsEngineAdapterInput | undefined
+interface-member PhysicsPipelineConfig::property::eviction = optional eviction: "oldest" | "sleeping-first" | false | undefined
+interface-member PhysicsPipelineConfig::property::fixedDt = optional fixedDt: number | undefined
+interface-member PhysicsPipelineConfig::property::kernel = optional kernel: PhysicsKernelOptions | undefined
+interface-member PhysicsPipelineConfig::property::maxDeltaSeconds = optional maxDeltaSeconds: number | undefined
+interface-member PhysicsPipelineConfig::property::maxSubsteps = optional maxSubsteps: number | undefined
+interface-member PhysicsPipelineConfig::property::observation = optional observation: PhysicsPipelineObservationOptions | undefined
+interface-member PhysicsPipelineConfig::property::sediment = optional sediment: PhysicsSedimentConfig | false | undefined
+interface-member PhysicsPipelineConfig::property::settleStepLimit = optional settleStepLimit: number | undefined
+interface-member PhysicsPipelineConfig::property::timeScale = optional timeScale: number | undefined
+interface-member PhysicsPipelineControlSurface::property::applyImpulse = required applyImpulse: (id: string, ix: number, iy: number) => void
+interface-member PhysicsPipelineControlSurface::property::bodyBudgetStatus = required bodyBudgetStatus: () => PhysicsBodyBudgetDecision
+interface-member PhysicsPipelineControlSurface::property::clear = required clear: () => void
+interface-member PhysicsPipelineControlSurface::property::hitTest = required hitTest: (x: number, y: number, radius?: number) => PhysicsBodyState | null
+interface-member PhysicsPipelineControlSurface::property::pause = required pause: () => void
+interface-member PhysicsPipelineControlSurface::property::push = required push: (spawn: PhysicsQueuedSpawn, pacing?: PhysicsSpawnPacingOptions) => void
+interface-member PhysicsPipelineControlSurface::property::pushMany = required pushMany: (spawns: PhysicsQueuedSpawn[], pacing?: PhysicsSpawnPacingOptions) => void
+interface-member PhysicsPipelineControlSurface::property::readBodies = required readBodies: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
+interface-member PhysicsPipelineControlSurface::property::readSediment = required readSediment: () => PhysicsSedimentBinSnapshot[]
+interface-member PhysicsPipelineControlSurface::property::recordObservation = required recordObservation: (event: PhysicsObservationRecord) => PhysicsObservationEvent
+interface-member PhysicsPipelineControlSurface::property::remove = required remove: (ids: string[]) => string[]
+interface-member PhysicsPipelineControlSurface::property::restore = required restore: (snapshot: PhysicsPipelineSnapshot) => void
+interface-member PhysicsPipelineControlSurface::property::resume = required resume: () => void
+interface-member PhysicsPipelineControlSurface::property::sedimentHeightfield = required sedimentHeightfield: (options?: PhysicsSedimentHeightfieldOptions) => PhysicsSedimentColumn[]
+interface-member PhysicsPipelineControlSurface::property::sedimentTotals = required sedimentTotals: () => PhysicsSedimentTotals
+interface-member PhysicsPipelineControlSurface::property::settle = required settle: (maxSteps?: number) => number
+interface-member PhysicsPipelineControlSurface::property::settleWithObservations = required settleWithObservations: (maxSteps?: number) => PhysicsPipelineTickResult
+interface-member PhysicsPipelineControlSurface::property::snapshot = required snapshot: () => PhysicsPipelineSnapshot
+interface-member PhysicsPipelineControlSurface::property::step = required step: (deltaSeconds: number) => PhysicsPipelineTickResult
+interface-member PhysicsPipelineSnapshot::property::accumulator = required accumulator: number
+interface-member PhysicsPipelineSnapshot::property::activeSensorPairs = required activeSensorPairs: string[]
+interface-member PhysicsPipelineSnapshot::property::bodyBudget = required bodyBudget: PhysicsBodyBudgetOptions | false
+interface-member PhysicsPipelineSnapshot::property::config = required config: Required<Omit<PhysicsPipelineConfig, "bodyBudget" | "colliders" | "engine" | "kernel" | "observation" | "sediment">> & {kernel: Required<PhysicsKernelOptions>;}
+interface-member PhysicsPipelineSnapshot::property::elapsedSeconds = required elapsedSeconds: number
+interface-member PhysicsPipelineSnapshot::property::liveBodyOrder = required liveBodyOrder: string[]
+interface-member PhysicsPipelineSnapshot::property::paused = required paused: boolean
+interface-member PhysicsPipelineSnapshot::property::queue = required queue: PhysicsPipelineQueuedSpawnSnapshot[]
+interface-member PhysicsPipelineSnapshot::property::revision = required revision: number
+interface-member PhysicsPipelineSnapshot::property::sediment = required sediment: PhysicsSedimentBinSnapshot[]
+interface-member PhysicsPipelineSnapshot::property::simulationState = required simulationState: PhysicsSimulationState
+interface-member PhysicsPipelineSnapshot::property::visible = required visible: boolean
+interface-member PhysicsPipelineSnapshot::property::world = required world: PhysicsKernelSnapshot
+interface-member PhysicsPipelineTickResult::property::budget = required budget: PhysicsBodyBudgetDecision
+interface-member PhysicsPipelineTickResult::property::elapsedSeconds = required elapsedSeconds: number
+interface-member PhysicsPipelineTickResult::property::events = required events: PhysicsKernelEvent[]
+interface-member PhysicsPipelineTickResult::property::evicted = required evicted: string[]
+interface-member PhysicsPipelineTickResult::property::observations = required observations: PhysicsObservationEvent[]
+interface-member PhysicsPipelineTickResult::property::queueSize = required queueSize: number
+interface-member PhysicsPipelineTickResult::property::revision = required revision: number
+interface-member PhysicsPipelineTickResult::property::sedimented = required sedimented: string[]
+interface-member PhysicsPipelineTickResult::property::shouldContinue = required shouldContinue: boolean
+interface-member PhysicsPipelineTickResult::property::sleeping = required sleeping: boolean
+interface-member PhysicsPipelineTickResult::property::spawned = required spawned: string[]
+interface-member PhysicsPipelineTickResult::property::steps = required steps: number
+interface-member PhysicsPlotBounds::property::height = required height: number
+interface-member PhysicsPlotBounds::property::width = required width: number
+interface-member PhysicsPlotBounds::property::x = required x: number
+interface-member PhysicsPlotBounds::property::y = required y: number
+interface-member PhysicsProcessBodyGroup::property::bodyIds = optional bodyIds: readonly string[] | undefined
+interface-member PhysicsProcessBodyGroup::property::datum = optional datum: TDatum | undefined
+interface-member PhysicsProcessBodyGroup::property::description = optional description: string | undefined
+interface-member PhysicsProcessBodyGroup::property::group = optional group: string | undefined
+interface-member PhysicsProcessBodyGroup::property::height = optional height: number | undefined
+interface-member PhysicsProcessBodyGroup::property::id = required id: string
+interface-member PhysicsProcessBodyGroup::property::label = optional label: string | undefined
+interface-member PhysicsProcessBodyGroup::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member PhysicsProcessBodyGroup::property::state = optional state: string | undefined
+interface-member PhysicsProcessBodyGroup::property::width = optional width: number | undefined
+interface-member PhysicsProcessBodyGroup::property::x = optional x: number | undefined
+interface-member PhysicsProcessBodyGroup::property::y = optional y: number | undefined
+interface-member PhysicsProcessBoundaryOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member PhysicsProcessBoundaryOptions::property::friction = optional friction: number | undefined
+interface-member PhysicsProcessBoundaryOptions::property::id = optional id: string | undefined
+interface-member PhysicsProcessBoundaryOptions::property::restitution = optional restitution: number | undefined
+interface-member PhysicsProcessBoundaryOptions::property::thickness = optional thickness: number | undefined
+interface-member PhysicsProcessStage::property::description = optional description: string | undefined
+interface-member PhysicsProcessStage::property::height = optional height: number | undefined
+interface-member PhysicsProcessStage::property::id = required id: string
+interface-member PhysicsProcessStage::property::kind = optional kind: string | undefined
+interface-member PhysicsProcessStage::property::label = optional label: string | undefined
+interface-member PhysicsProcessStage::property::width = optional width: number | undefined
+interface-member PhysicsProcessStage::property::x = optional x: number | undefined
+interface-member PhysicsProcessStage::property::y = optional y: number | undefined
+interface-member PhysicsQueuedSpawn::property::spawnAt = optional spawnAt: number | undefined
+interface-member PhysicsQueuedSpawn::property::springs = optional springs: PhysicsSpawnSpringSpec[] | undefined
+interface-member PhysicsReferenceEnvelope::property::interpolation = required interpolation: PhysicsTraceInterpolation
+interface-member PhysicsReferenceEnvelope::property::outsideDomain = required outsideDomain: PhysicsTraceOutsideDomain
+interface-member PhysicsReferenceEnvelope::property::points = required points: PhysicsReferenceEnvelopePoint[]
+interface-member PhysicsReferenceEnvelope::property::quantiles = required quantiles: number[]
+interface-member PhysicsReferenceEnvelope::property::runCount = required runCount: number
+interface-member PhysicsReferenceEnvelopeOptions::property::interpolation = optional interpolation: PhysicsTraceInterpolation | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::outsideDomain = optional outsideDomain: PhysicsTraceOutsideDomain | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::quantiles = optional quantiles: readonly number[] | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::runs = required runs: readonly PhysicsReferenceTrace<TSample>[]
+interface-member PhysicsReferenceEnvelopeOptions::property::sampleAt = required sampleAt: PhysicsReferenceSampleGrid
+interface-member PhysicsReferenceEnvelopeOptions::property::timeAccessor = optional timeAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::valueAccessor = optional valueAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsReferenceEnvelopePoint::property::count = required count: number
+interface-member PhysicsReferenceEnvelopePoint::property::max = required max: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::median = required median: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::min = required min: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::quantiles = required quantiles: Partial<Record<number, null | number>>
+interface-member PhysicsReferenceEnvelopePoint::property::time = required time: number
+interface-member PhysicsReferenceTrace::property::id = required id: string
+interface-member PhysicsReferenceTrace::property::samples = required samples: readonly TSample[]
+interface-member PhysicsSVGOverlayProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member PhysicsSVGOverlayProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
+interface-member PhysicsSVGOverlayProps::property::chartId = optional chartId: string | undefined
+interface-member PhysicsSVGOverlayProps::property::chartType = optional chartType: string | undefined
+interface-member PhysicsSVGOverlayProps::property::children = optional children: React.ReactNode
+interface-member PhysicsSVGOverlayProps::property::height = required height: number
+interface-member PhysicsSVGOverlayProps::property::legend = optional legend: LegendValue
+interface-member PhysicsSVGOverlayProps::property::legendClickBehavior = optional legendClickBehavior: ((item: {label: string;}) => void) | undefined
+interface-member PhysicsSVGOverlayProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
+interface-member PhysicsSVGOverlayProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: {label: string;} | null) => void) | undefined
+interface-member PhysicsSVGOverlayProps::property::legendIsolatedCategories = optional legendIsolatedCategories: Set<string> | undefined
+interface-member PhysicsSVGOverlayProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
+interface-member PhysicsSVGOverlayProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member PhysicsSVGOverlayProps::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
+interface-member PhysicsSVGOverlayProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
+interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member PhysicsSVGOverlayProps::property::pointNodes = optional pointNodes: PhysicsAnnotationAnchorNode[] | undefined
+interface-member PhysicsSVGOverlayProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
+interface-member PhysicsSVGOverlayProps::property::title = optional title: React.ReactNode
+interface-member PhysicsSVGOverlayProps::property::totalHeight = required totalHeight: number
+interface-member PhysicsSVGOverlayProps::property::totalWidth = required totalWidth: number
+interface-member PhysicsSVGOverlayProps::property::width = required width: number
+interface-member PhysicsScalarTraceSample::property::time = required time: number
+interface-member PhysicsScalarTraceSample::property::value = required value: number
+interface-member PhysicsScaleColliderOptions::property::bounds = optional bounds: PhysicsBoundsColliderOptions | false | undefined
+interface-member PhysicsScaleColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsScaleColliderOptions::property::plot = required plot: PhysicsPlotBounds
+interface-member PhysicsScaleColliderOptions::property::xBands = optional xBands: PhysicsBandColliderOptions<TBand> | undefined
+interface-member PhysicsScaleColliderOptions::property::xBins = optional xBins: (Omit<PhysicsXBinColliderOptions, "idPrefix" | "yBottom" | "yTop"> & {idPrefix?: string; yTop?: number; yBottom?: number;}) | undefined
+interface-member PhysicsScaleColliderOptions::property::yBands = optional yBands: PhysicsBandColliderOptions<TBand> | undefined
+interface-member PhysicsSedimentBinSnapshot::property::bodyIds = required bodyIds: string[]
+interface-member PhysicsSedimentBinSnapshot::property::count = required count: number
+interface-member PhysicsSedimentBinSnapshot::property::id = required id: string
+interface-member PhysicsSedimentBinSnapshot::property::label = required label: string
+interface-member PhysicsSedimentBinSnapshot::property::lastBodyId = optional lastBodyId: string | undefined
+interface-member PhysicsSedimentBinSnapshot::property::lastDatum = optional lastDatum: unknown
+interface-member PhysicsSedimentBinSnapshot::property::total = required total: number
+interface-member PhysicsSedimentBinSnapshot::property::value = required value: RunningStatsSnapshot
+interface-member PhysicsSedimentBinSnapshot::property::x = required x: RunningStatsSnapshot
+interface-member PhysicsSedimentBinSnapshot::property::y = required y: RunningStatsSnapshot
+interface-member PhysicsSedimentColumn::property::binId = required binId: string
+interface-member PhysicsSedimentColumn::property::count = required count: number
+interface-member PhysicsSedimentColumn::property::height = required height: number
+interface-member PhysicsSedimentColumn::property::index = required index: number
+interface-member PhysicsSedimentColumn::property::label = required label: string
+interface-member PhysicsSedimentColumn::property::meanX = required meanX: number
+interface-member PhysicsSedimentColumn::property::meanY = required meanY: number
+interface-member PhysicsSedimentColumn::property::total = required total: number
+interface-member PhysicsSedimentColumn::property::width = required width: number
+interface-member PhysicsSedimentColumn::property::x = required x: number
+interface-member PhysicsSedimentColumn::property::y = required y: number
+interface-member PhysicsSedimentConfig::property::binAccessor = optional binAccessor: PhysicsSedimentAccessor | undefined
+interface-member PhysicsSedimentConfig::property::labelAccessor = optional labelAccessor: PhysicsSedimentAccessor | undefined
+interface-member PhysicsSedimentConfig::property::retainBodyIds = optional retainBodyIds: number | undefined
+interface-member PhysicsSedimentConfig::property::valueAccessor = optional valueAccessor: PhysicsSedimentValueAccessor | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::baselineY = optional baselineY: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::binWidth = optional binWidth: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::gap = optional gap: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::maxHeight = optional maxHeight: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::value = optional value: "count" | "total" | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::x = optional x: ((bin: PhysicsSedimentBinSnapshot, index: number) => number) | undefined
+interface-member PhysicsSedimentTotals::property::bins = required bins: number
+interface-member PhysicsSedimentTotals::property::count = required count: number
+interface-member PhysicsSedimentTotals::property::total = required total: number
+interface-member PhysicsSpawnPacingOptions::property::pacing = optional pacing: PhysicsSpawnPacing | undefined
+interface-member PhysicsSpawnPacingOptions::property::startAt = optional startAt: number | undefined
+interface-member PhysicsSpawnPacingOptions::property::timeAccessor = optional timeAccessor: PhysicsSpawnTimeAccessor | undefined
+interface-member PhysicsSpawnPacingOptions::property::timeScale = optional timeScale: number | undefined
+interface-member PhysicsSpringSpec::property::bodyId = required bodyId: string
+interface-member PhysicsSpringSpec::property::damping = optional damping: number | undefined
+interface-member PhysicsSpringSpec::property::id = optional id: string | undefined
+interface-member PhysicsSpringSpec::property::restLength = optional restLength: number | undefined
+interface-member PhysicsSpringSpec::property::stiffness = optional stiffness: number | undefined
+interface-member PhysicsSpringSpec::property::target = required target: {type: "body"; bodyId: string;} | {type: "point"; x: number; y: number;}
+interface-member PhysicsStageColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsStageColliderOptions::property::thickness = optional thickness: number | undefined
+interface-member PhysicsStageColliderOptions::property::walls = optional walls: boolean | undefined
+interface-member PhysicsStageGeography::property::apparatus = required apparatus: PhysicsZone
+interface-member PhysicsStageGeography::property::charge = required charge: PhysicsZone
+interface-member PhysicsStageGeography::property::destinations = required destinations: PhysicsDestinationZone[]
+interface-member PhysicsStageGeography::property::flow = required flow: "down" | "right"
+interface-member PhysicsStageGeography::property::height = required height: number
+interface-member PhysicsStageGeography::property::projection = required projection: PhysicsZone
+interface-member PhysicsStageGeography::property::width = required width: number
+interface-member PhysicsStageGeographyOptions::property::channelRatio = optional channelRatio: number | undefined
+interface-member PhysicsStageGeographyOptions::property::chargeExtent = optional chargeExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::destinationExtent = optional destinationExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::destinations = required destinations: number | readonly {id: string; label?: string;}[]
+interface-member PhysicsStageGeographyOptions::property::flow = optional flow: "down" | "right" | undefined
+interface-member PhysicsStageGeographyOptions::property::padding = optional padding: number | undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member PhysicsStageGeographyOptions::property::projectionExtent = optional projectionExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::size = required size: [number, number]
+interface-member PhysicsTimeEncoding::property::spawnAt = optional spawnAt: PhysicsEncodingAccessor<TDatum, number> | undefined
+interface-member PhysicsTraceComparison::property::aboveDuration = required aboveDuration: number
+interface-member PhysicsTraceComparison::property::aboveSamples = required aboveSamples: number
+interface-member PhysicsTraceComparison::property::belowDuration = required belowDuration: number
+interface-member PhysicsTraceComparison::property::belowSamples = required belowSamples: number
+interface-member PhysicsTraceComparison::property::insideDuration = required insideDuration: number
+interface-member PhysicsTraceComparison::property::insideSamples = required insideSamples: number
+interface-member PhysicsTraceComparison::property::observedDuration = required observedDuration: number
+interface-member PhysicsTraceComparison::property::observedSamples = required observedSamples: number
+interface-member PhysicsTraceComparison::property::peakDeficit = required peakDeficit: number
+interface-member PhysicsTraceComparison::property::peakDeficitAt = required peakDeficitAt: null | number
+interface-member PhysicsTraceComparison::property::peakExcess = required peakExcess: number
+interface-member PhysicsTraceComparison::property::peakExcessAt = required peakExcessAt: null | number
+interface-member PhysicsTraceComparison::property::points = required points: PhysicsTraceComparisonPoint[]
+interface-member PhysicsTraceComparison::property::sampleCount = required sampleCount: number
+interface-member PhysicsTraceComparison::property::totalDuration = required totalDuration: number
+interface-member PhysicsTraceComparison::property::unobservedDuration = required unobservedDuration: number
+interface-member PhysicsTraceComparisonOptions::property::interpolation = optional interpolation: PhysicsTraceInterpolation | undefined
+interface-member PhysicsTraceComparisonOptions::property::lower = optional lower: PhysicsReferenceBandSelector | undefined
+interface-member PhysicsTraceComparisonOptions::property::outsideDomain = optional outsideDomain: PhysicsTraceOutsideDomain | undefined
+interface-member PhysicsTraceComparisonOptions::property::timeAccessor = optional timeAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsTraceComparisonOptions::property::traceId = optional traceId: string | undefined
+interface-member PhysicsTraceComparisonOptions::property::upper = optional upper: PhysicsReferenceBandSelector | undefined
+interface-member PhysicsTraceComparisonOptions::property::valueAccessor = optional valueAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsTraceComparisonPoint::property::lower = required lower: null | number
+interface-member PhysicsTraceComparisonPoint::property::status = required status: PhysicsTraceComparisonStatus
+interface-member PhysicsTraceComparisonPoint::property::time = required time: number
+interface-member PhysicsTraceComparisonPoint::property::upper = required upper: null | number
+interface-member PhysicsTraceComparisonPoint::property::value = required value: null | number
+interface-member PhysicsZone::property::height = required height: number
+interface-member PhysicsZone::property::width = required width: number
+interface-member PhysicsZone::property::x = required x: number
+interface-member PhysicsZone::property::y = required y: number
+interface-member ProcessChromeGroup::property::absorbed = optional absorbed: number | undefined
+interface-member ProcessChromeGroup::property::complete = optional complete: boolean | undefined
+interface-member ProcessChromeGroup::property::id = required id: string
+interface-member ProcessChromeGroup::property::label = required label: string
+interface-member ProcessChromeGroup::property::total = optional total: number | undefined
+interface-member ProcessChromeGroup::property::x = required x: number
+interface-member ProcessChromeGroup::property::y = required y: number
+interface-member ProcessChromeLayout::property::bottomY = required bottomY: number
+interface-member ProcessChromeLayout::property::groups = optional groups: readonly ProcessChromeGroup[] | undefined
+interface-member ProcessChromeLayout::property::height = required height: number
+interface-member ProcessChromeLayout::property::left = required left: number
+interface-member ProcessChromeLayout::property::midY = required midY: number
+interface-member ProcessChromeLayout::property::right = required right: number
+interface-member ProcessChromeLayout::property::stages = required stages: readonly ProcessChromeStage[]
+interface-member ProcessChromeLayout::property::topY = required topY: number
+interface-member ProcessChromeLayout::property::width = required width: number
+interface-member ProcessChromeOptions::property::outlineStages = optional outlineStages: boolean | undefined
+interface-member ProcessChromeOptions::property::showCapacityBadges = optional showCapacityBadges: boolean | undefined
+interface-member ProcessChromeOptions::property::showFlowSpine = optional showFlowSpine: boolean | undefined
+interface-member ProcessChromeOptions::property::showGroupSockets = optional showGroupSockets: boolean | undefined
+interface-member ProcessChromeOptions::property::showStageCounts = optional showStageCounts: boolean | undefined
+interface-member ProcessChromeOptions::property::stageLabelMode = optional stageLabelMode: "auto" | "compact" | "full" | "none" | undefined
+interface-member ProcessChromeOptions::property::testId = optional testId: string | undefined
+interface-member ProcessChromeStage::property::absorb = optional absorb: boolean | undefined
+interface-member ProcessChromeStage::property::capacity = optional capacity: number | undefined
+interface-member ProcessChromeStage::property::capacityLabel = optional capacityLabel: string | undefined
+interface-member ProcessChromeStage::property::count = optional count: number | undefined
+interface-member ProcessChromeStage::property::id = required id: string
+interface-member ProcessChromeStage::property::label = required label: string
+interface-member ProcessChromeStage::property::portalTarget = optional portalTarget: string | undefined
+interface-member ProcessChromeStage::property::processed = optional processed: number | undefined
+interface-member ProcessChromeStage::property::queueDepth = optional queueDepth: number | undefined
+interface-member ProcessChromeStage::property::showBadge = optional showBadge: boolean | undefined
+interface-member ProcessChromeStage::property::width = required width: number
+interface-member ProcessChromeStage::property::x = required x: number
+interface-member ProcessChromeStage::property::x0 = required x0: number
+interface-member ProcessChromeStage::property::x1 = required x1: number
+interface-member ProcessFlowChartProps::property::ballRadius = optional ballRadius: number | undefined
+interface-member ProcessFlowChartProps::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member ProcessFlowChartProps::property::bodyMark = optional bodyMark: "circle" | "diamond" | "faceted" | "halo" | "pill" | "square" | undefined
+interface-member ProcessFlowChartProps::property::chromeOptions = optional chromeOptions: ProcessChromeOptions | undefined
+interface-member ProcessFlowChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowChartProps::property::data = optional data: TDatum[] | undefined
+interface-member ProcessFlowChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member ProcessFlowChartProps::property::gravityX = optional gravityX: number | undefined
+interface-member ProcessFlowChartProps::property::gravityY = optional gravityY: number | undefined
+interface-member ProcessFlowChartProps::property::groupAnchorAlong = optional groupAnchorAlong: number | undefined
+interface-member ProcessFlowChartProps::property::groupBy = optional groupBy: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowChartProps::property::groupCompletion = optional groupCompletion: "allAbsorbed" | "none" | undefined
+interface-member ProcessFlowChartProps::property::groupLabelAccessor = optional groupLabelAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member ProcessFlowChartProps::property::liveCapacity = optional liveCapacity: boolean | undefined
+interface-member ProcessFlowChartProps::property::onCapacityChange = optional onCapacityChange: ((stats: CapacityQueueSnapshot[]) => void) | undefined
+interface-member ProcessFlowChartProps::property::paused = optional paused: boolean | undefined
+interface-member ProcessFlowChartProps::property::radiusAccessor = optional radiusAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProcessFlowChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member ProcessFlowChartProps::property::route = optional route: "horizontal" | undefined
+interface-member ProcessFlowChartProps::property::seed = optional seed: number | undefined
+interface-member ProcessFlowChartProps::property::settle = optional settle: boolean | undefined
+interface-member ProcessFlowChartProps::property::showChrome = optional showChrome: boolean | undefined
+interface-member ProcessFlowChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member ProcessFlowChartProps::property::size = optional size: [number, number] | undefined
+interface-member ProcessFlowChartProps::property::springDamping = optional springDamping: number | undefined
+interface-member ProcessFlowChartProps::property::springStiffness = optional springStiffness: number | undefined
+interface-member ProcessFlowChartProps::property::stageAccessor = optional stageAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowChartProps::property::stages = required stages: readonly ProcessFlowStageDef[]
+interface-member ProcessFlowChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ProcessFlowChartProps::property::workAccessor = optional workAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProcessFlowPhysicsOptions::property::ballRadius = optional ballRadius: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::data = required data: readonly TDatum[]
+interface-member ProcessFlowPhysicsOptions::property::gravityX = optional gravityX: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::gravityY = optional gravityY: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::groupAnchorAlong = optional groupAnchorAlong: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::groupBy = optional groupBy: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowPhysicsOptions::property::groupCompletion = optional groupCompletion: "allAbsorbed" | "none" | undefined
+interface-member ProcessFlowPhysicsOptions::property::groupLabelAccessor = optional groupLabelAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowPhysicsOptions::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowPhysicsOptions::property::radiusAccessor = optional radiusAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProcessFlowPhysicsOptions::property::route = optional route: "horizontal" | undefined
+interface-member ProcessFlowPhysicsOptions::property::seed = optional seed: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::settle = optional settle: boolean | undefined
+interface-member ProcessFlowPhysicsOptions::property::size = required size: [number, number]
+interface-member ProcessFlowPhysicsOptions::property::springDamping = optional springDamping: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::springStiffness = optional springStiffness: number | undefined
+interface-member ProcessFlowPhysicsOptions::property::stageAccessor = optional stageAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ProcessFlowPhysicsOptions::property::stages = required stages: readonly ProcessFlowStageDef[]
+interface-member ProcessFlowPhysicsOptions::property::workAccessor = optional workAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProcessFlowProjectionMetadata::property::groupCompletion = required groupCompletion: {id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[];}[]
+interface-member ProcessFlowProjectionMetadata::property::groups = required groups: BodyGroupSpec<Datum>[]
+interface-member ProcessFlowProjectionMetadata::property::kind = required kind: "process-flow"
+interface-member ProcessFlowProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member ProcessFlowProjectionMetadata::property::regionEffects = required regionEffects: StreamPhysicsRegionEffect[]
+interface-member ProcessFlowProjectionMetadata::property::stages = required stages: {id: string; label: string; x: number; width: number; count: number; capacity?: number; absorb?: boolean; portalTarget?: string;}[]
+interface-member ProcessFlowProjectionMetadata::property::volume = required volume: ProcessVolumeLayout
+interface-member ProcessFlowStageDef::property::absorb = optional absorb: boolean | undefined
+interface-member ProcessFlowStageDef::property::capacity = optional capacity: undefined | {unitsPerSecond: number; unitAccessor?: string;}
+interface-member ProcessFlowStageDef::property::damping = optional damping: number | undefined
+interface-member ProcessFlowStageDef::property::description = optional description: string | undefined
+interface-member ProcessFlowStageDef::property::force = optional force: number | undefined | {x?: number; y?: number;}
+interface-member ProcessFlowStageDef::property::id = required id: string
+interface-member ProcessFlowStageDef::property::kind = optional kind: import("../../semiotic-physics").StreamPhysicsRegionKind | undefined
+interface-member ProcessFlowStageDef::property::label = optional label: string | undefined
+interface-member ProcessFlowStageDef::property::portal = optional portal: undefined | {targetStageId: string; force?: {x?: number; y?: number;};}
+interface-member ProcessFlowStageDef::property::pressure = optional pressure: boolean | undefined | {pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number;}
+interface-member ProcessFlowStageDef::property::share = optional share: number | undefined
+interface-member ProcessJourneyEntityState::property::currentStageId = optional currentStageId: string | undefined
+interface-member ProcessJourneyEntityState::property::firstEnteredAt = required firstEnteredAt: Record<string, number>
+interface-member ProcessJourneyEntityState::property::furthestStageId = optional furthestStageId: string | undefined
+interface-member ProcessJourneyEntityState::property::furthestStageIndex = required furthestStageIndex: number
+interface-member ProcessJourneyEntityState::property::id = required id: string
+interface-member ProcessJourneyEntityState::property::lastEnteredAt = required lastEnteredAt: Record<string, number>
+interface-member ProcessJourneyEntityState::property::regressionCount = required regressionCount: number
+interface-member ProcessJourneyEntityState::property::visitedStageIds = required visitedStageIds: string[]
+interface-member ProcessJourneyEntityState::property::visitsByStage = required visitsByStage: Record<string, number>
+interface-member ProcessJourneyLedger::property::bodyIds = required bodyIds: string[]
+interface-member ProcessJourneyLedger::property::entities = required entities: Record<string, ProcessJourneyEntityState>
+interface-member ProcessJourneyLedger::property::stages = required stages: ProcessJourneyStage[]
+interface-member ProcessJourneyRow::property::conversion = required conversion: number
+interface-member ProcessJourneyRow::property::dropoff = required dropoff: number
+interface-member ProcessJourneyRow::property::entered = required entered: number
+interface-member ProcessJourneyRow::property::fromPrevious = required fromPrevious: number
+interface-member ProcessJourneyRow::property::id = required id: string
+interface-member ProcessJourneyRow::property::label = required label: string
+interface-member ProcessJourneyRow::property::reached = required reached: number
+interface-member ProcessJourneyRow::property::repeatVisits = required repeatVisits: number
+interface-member ProcessJourneyRow::property::total = required total: number
+interface-member ProcessJourneyRow::property::visits = required visits: number
+interface-member ProcessJourneyStage::property::id = required id: string
+interface-member ProcessJourneyStage::property::label = optional label: string | undefined
+interface-member ProcessJourneyUpdateOptions::property::entityId = optional entityId: ((event: ProcessJourneyRegionEvent) => string) | undefined
+interface-member ProcessJourneyUpdateOptions::property::stageId = optional stageId: ((event: ProcessJourneyRegionEvent) => string | undefined) | undefined
+interface-member ProcessMembraneDef::property::bodyStyle = optional bodyStyle: Style | undefined
+interface-member ProcessMembraneDef::property::color = optional color: string | undefined
+interface-member ProcessMembraneDef::property::cost = required cost: number
+interface-member ProcessMembraneDef::property::dampingScale = optional dampingScale: number | undefined
+interface-member ProcessMembraneDef::property::description = optional description: string | undefined
+interface-member ProcessMembraneDef::property::id = required id: string
+interface-member ProcessMembraneDef::property::label = optional label: string | undefined
+interface-member ProcessMembraneDef::property::metadata = optional metadata: unknown
+interface-member ProcessMembraneDef::property::offset = required offset: number
+interface-member ProcessMembraneDef::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessMembraneDef::property::width = optional width: number | undefined
+interface-member ProcessMembraneDef::property::wobble = optional wobble: number | undefined
+interface-member ProcessRegionBaseOptions::property::attributes = optional attributes: ((context: import("../semiotic-physics").StreamPhysicsRegionEffectContext) => Record<string, unknown>) | Record<string, unknown> | undefined
+interface-member ProcessRegionBaseOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ProcessRegionBaseOptions::property::bodyStyle = optional bodyStyle: Style | undefined
+interface-member ProcessRegionBaseOptions::property::collider = optional collider: "boundary" | "solid" | boolean | undefined
+interface-member ProcessRegionBaseOptions::property::colliderThickness = optional colliderThickness: number | undefined
+interface-member ProcessRegionBaseOptions::property::description = optional description: string | undefined
+interface-member ProcessRegionBaseOptions::property::friction = optional friction: number | undefined
+interface-member ProcessRegionBaseOptions::property::height = required height: number
+interface-member ProcessRegionBaseOptions::property::id = required id: string
+interface-member ProcessRegionBaseOptions::property::kind = optional kind: StreamPhysicsRegionKind | undefined
+interface-member ProcessRegionBaseOptions::property::label = optional label: string | undefined
+interface-member ProcessRegionBaseOptions::property::metadata = optional metadata: unknown
+interface-member ProcessRegionBaseOptions::property::onEnter = optional onEnter: ((event: import("../semiotic-physics").StreamPhysicsRegionEvent) => void) | undefined
+interface-member ProcessRegionBaseOptions::property::onExit = optional onExit: ((event: import("../semiotic-physics").StreamPhysicsRegionEvent) => void) | undefined
+interface-member ProcessRegionBaseOptions::property::restitution = optional restitution: number | undefined
+interface-member ProcessRegionBaseOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessRegionBaseOptions::property::width = required width: number
+interface-member ProcessRegionBaseOptions::property::x = required x: number
+interface-member ProcessRegionBaseOptions::property::y = required y: number
+interface-member ProcessStageDef::property::description = optional description: string | undefined
+interface-member ProcessStageDef::property::id = required id: string
+interface-member ProcessStageDef::property::kind = optional kind: string | undefined
+interface-member ProcessStageDef::property::label = optional label: string | undefined
+interface-member ProcessStageDef::property::share = optional share: number | undefined
+interface-member ProcessStageRegionOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ProcessStageRegionOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member ProcessStageRegionOptions::property::insetX = optional insetX: number | undefined
+interface-member ProcessStageRegionOptions::property::insetY = optional insetY: number | undefined
+interface-member ProcessStageRegionOptions::property::metadata = optional metadata: ((stage: ProcessVolumeStageBand) => Record<string, unknown>) | Record<string, unknown> | undefined
+interface-member ProcessStageRegionOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessVolumeLayout::property::bottomY = required bottomY: number
+interface-member ProcessVolumeLayout::property::boundaryY = required boundaryY: (x: number, "bottom" | side: "top") => number
+interface-member ProcessVolumeLayout::property::centerLeft = required centerLeft: number
+interface-member ProcessVolumeLayout::property::centerRight = required centerRight: number
+interface-member ProcessVolumeLayout::property::colliders = required colliders: PhysicsColliderSpec[]
+interface-member ProcessVolumeLayout::property::height = required height: number
+interface-member ProcessVolumeLayout::property::left = required left: number
+interface-member ProcessVolumeLayout::property::membranes = required membranes: ProcessVolumeMembraneBand[]
+interface-member ProcessVolumeLayout::property::midY = required midY: number
+interface-member ProcessVolumeLayout::property::padX = required padX: number
+interface-member ProcessVolumeLayout::property::padY = required padY: number
+interface-member ProcessVolumeLayout::property::pinchBottom = required pinchBottom: number
+interface-member ProcessVolumeLayout::property::pinchHeight = required pinchHeight: number
+interface-member ProcessVolumeLayout::property::pinchTop = required pinchTop: number
+interface-member ProcessVolumeLayout::property::regionEffects = required regionEffects: StreamPhysicsRegionEffect[]
+interface-member ProcessVolumeLayout::property::right = required right: number
+interface-member ProcessVolumeLayout::property::shape = required shape: ProcessVolumeShape
+interface-member ProcessVolumeLayout::property::stages = required stages: ProcessVolumeStageBand[]
+interface-member ProcessVolumeLayout::property::topY = required topY: number
+interface-member ProcessVolumeLayout::property::width = required width: number
+interface-member ProcessVolumeLayoutOptions::property::centerStageIndex = optional centerStageIndex: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::friction = optional friction: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::height = required height: number
+interface-member ProcessVolumeLayoutOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member ProcessVolumeLayoutOptions::property::includeMembraneRegions = optional includeMembraneRegions: boolean | undefined
+interface-member ProcessVolumeLayoutOptions::property::membraneDampingScale = optional membraneDampingScale: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::membranes = optional membranes: readonly ProcessMembraneDef[] | undefined
+interface-member ProcessVolumeLayoutOptions::property::padX = optional padX: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::padY = optional padY: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::pinchHeightOffset = optional pinchHeightOffset: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::pinchRatio = optional pinchRatio: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::restitution = optional restitution: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::shape = optional shape: ProcessVolumeShape | undefined
+interface-member ProcessVolumeLayoutOptions::property::stages = required stages: readonly ProcessStageDef[]
+interface-member ProcessVolumeLayoutOptions::property::wallThickness = optional wallThickness: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::width = required width: number
+interface-member ProcessVolumeMembraneBand::property::height = required height: number
+interface-member ProcessVolumeMembraneBand::property::width = required width: number
+interface-member ProcessVolumeMembraneBand::property::x = required x: number
+interface-member ProcessVolumeMembraneBand::property::y = required y: number
+interface-member ProcessVolumePolygon::property::id = required id: ProcessVolumePolygonRole
+interface-member ProcessVolumePolygon::property::points = required points: ProcessVolumePoint[]
+interface-member ProcessVolumePolygon::property::role = required role: ProcessVolumePolygonRole
+interface-member ProcessVolumeStageBand::property::description = optional description: string | undefined
+interface-member ProcessVolumeStageBand::property::height = required height: number
+interface-member ProcessVolumeStageBand::property::id = required id: string
+interface-member ProcessVolumeStageBand::property::index = required index: number
+interface-member ProcessVolumeStageBand::property::kind = optional kind: string | undefined
+interface-member ProcessVolumeStageBand::property::label = optional label: string | undefined
+interface-member ProcessVolumeStageBand::property::width = required width: number
+interface-member ProcessVolumeStageBand::property::x = required x: number
+interface-member ProcessVolumeStageBand::property::x0 = required x0: number
+interface-member ProcessVolumeStageBand::property::x1 = required x1: number
+interface-member ProcessVolumeStageBand::property::y = required y: number
+interface-member RegionCountBucket::property::bodyIds = required bodyIds: string[]
+interface-member RegionCountBucket::property::count = required count: number
+interface-member RegionCountBucket::property::id = required id: string
+interface-member RegionCountBucket::property::label = optional label: string | undefined
+interface-member ResolveMotionAgeOptions::property::arrival = required arrival: number
+interface-member ResolveMotionAgeOptions::property::now = required now: number
+interface-member ResolveMotionAgeOptions::property::thresholds = optional thresholds: LifecycleBandThresholds | undefined
+interface-member ResolveMotionAgeOptions::property::ttl = required ttl: number
+interface-member ResolvedMotionAge::property::age = required age: number
+interface-member ResolvedMotionAge::property::lifecycle = required lifecycle: LifecycleBand
+interface-member ResolvedMotionAge::property::progress = required progress: number
+interface-member ResolvedMotionEncodingRow::property::accessible = required accessible: {description?: string; group?: string; label: string;}
+interface-member ResolvedMotionEncodingRow::property::datum = required datum: TDatum
+interface-member ResolvedMotionEncodingRow::property::evidence = required evidence: Record<string, unknown>
+interface-member ResolvedMotionEncodingRow::property::id = required id: string
+interface-member ResolvedMotionEncodingRow::property::kinematics = required kinematics: {velocityX?: number; velocityY?: number; space?: MotionCoordinateSpace;}
+interface-member ResolvedMotionEncodingRow::property::placement = required placement: {x?: number; y?: number; lane?: number | string; space?: MotionCoordinateSpace;}
+interface-member ResolvedMotionEncodingRow::property::process = required process: {group?: number | string; stage?: number | string; target?: number | string; work?: number;}
+interface-member ResolvedMotionEncodingRow::property::time = required time: {arrival?: number; basis?: MotionTimeBasis; unit?: MotionTimeUnit;}
+interface-member ResolvedMotionVector::property::direction = required direction: number
+interface-member ResolvedMotionVector::property::speed = required speed: number
+interface-member ResolvedMotionVector::property::velocityX = required velocityX: number
+interface-member ResolvedMotionVector::property::velocityY = required velocityY: number
+interface-member ResolvedPhysicsEncodingRow::property::appearance = required appearance: {color?: string; opacity?: number; shape: PhysicsBodyShape; size: number; stroke?: string; strokeWidth?: number;}
+interface-member ResolvedPhysicsEncodingRow::property::dynamics = required dynamics: {bodyCollisions?: boolean; friction?: number; mass: number; restitution?: number;}
+interface-member ResolvedPhysicsEncodingRow::property::placement = required placement: {x: number; y: number; lane?: number | string; space?: MotionCoordinateSpace;}
+interface-member ResolvedPhysicsEncodingRow::property::spawn = required spawn: PhysicsQueuedSpawn
+interface-member ResolvedPhysicsEncodingRow::property::time = required time: {arrival?: number; spawnAt?: number; basis?: MotionTimeBasis; unit?: MotionTimeUnit;}
+interface-member RunningStatsSnapshot::property::count = required count: number
+interface-member RunningStatsSnapshot::property::max = required max: number
+interface-member RunningStatsSnapshot::property::mean = required mean: number
+interface-member RunningStatsSnapshot::property::min = required min: number
+interface-member RunningStatsSnapshot::property::total = required total: number
+interface-member RunningStatsSnapshot::property::variance = required variance: number
+interface-member SedimentBakeOptions::property::collider = optional collider: boolean | undefined
+interface-member SedimentBakeOptions::property::colliderThickness = optional colliderThickness: number | undefined
+interface-member SedimentBakeOptions::property::friction = optional friction: number | undefined
+interface-member SedimentBakeOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member SedimentBakeOptions::property::restitution = optional restitution: number | undefined
+interface-member SedimentBakeResult::property::colliders = required colliders: PhysicsColliderSpec[]
+interface-member SedimentBakeResult::property::columns = required columns: PhysicsSedimentColumn[]
+interface-member ServiceLevelCaseInfo::property::bodyId = required bodyId: string
+interface-member ServiceLevelCaseInfo::property::completedAt = optional completedAt: number | undefined
+interface-member ServiceLevelCaseInfo::property::deadlineAt = required deadlineAt: number
+interface-member ServiceLevelCaseInfo::property::openedAt = required openedAt: number
+interface-member ServiceLevelCaseInfo::property::protectedAt = optional protectedAt: number | undefined
+interface-member ServiceLevelCaseInfo::property::state = required state: ServiceLevelCaseState
+interface-member ServiceLevelController::property::complete = required complete: (bodyId: string) => boolean
+interface-member ServiceLevelController::property::getCase = required getCase: (bodyId: string) => ServiceLevelCaseInfo | undefined
+interface-member ServiceLevelController::property::getSnapshot = required getSnapshot: () => ServiceLevelSnapshot
+interface-member ServiceLevelController::property::protect = required protect: (bodyId: string) => boolean
+interface-member ServiceLevelControllerOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ServiceLevelControllerOptions::property::completionRegionId = optional completionRegionId: string | undefined
+interface-member ServiceLevelControllerOptions::property::deadlineAccessor = required deadlineAccessor: ((body: PhysicsBodyState) => number | null | undefined) | string
+interface-member ServiceLevelControllerOptions::property::id = optional id: string | undefined
+interface-member ServiceLevelControllerOptions::property::onStateChange = optional onStateChange: ((caseInfo: ServiceLevelCaseInfo) => void) | undefined
+interface-member ServiceLevelSnapshot::property::metricRevision = required metricRevision: number
+interface-member ServiceLevelSnapshot::property::protected = required protected: number
+interface-member ServiceLevelSnapshot::property::resolved = required resolved: number
+interface-member ServiceLevelSnapshot::property::resolvedUnhappy = required resolvedUnhappy: number
+interface-member ServiceLevelSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member ServiceLevelSnapshot::property::total = required total: number
+interface-member ServiceLevelSnapshot::property::unhappy = required unhappy: number
+interface-member ServiceLevelSnapshot::property::waiting = required waiting: number
+interface-member ServiceResourceAssignment::property::assignedAt = required assignedAt: number
+interface-member ServiceResourceAssignment::property::caseBodyId = required caseBodyId: string
+interface-member ServiceResourceAssignment::property::resourceBodyId = required resourceBodyId: string
+interface-member ServiceResourceAssignment::property::resourceId = required resourceId: string
+interface-member ServiceResourceDefinition::property::bodyId = optional bodyId: string | undefined
+interface-member ServiceResourceDefinition::property::home = required home: {x: number; y: number;}
+interface-member ServiceResourceDefinition::property::id = required id: string
+interface-member ServiceResourcePoolController::property::assign = required assign: (caseBodyId: string) => ServiceResourceAssignment | null
+interface-member ServiceResourcePoolController::property::getAssignment = required getAssignment: (caseBodyId: string) => ServiceResourceAssignment | undefined
+interface-member ServiceResourcePoolController::property::getSnapshot = required getSnapshot: () => ServiceResourcePoolSnapshot
+interface-member ServiceResourcePoolController::property::release = required release: (caseBodyId: string) => boolean
+interface-member ServiceResourcePoolOptions::property::assignmentForce = optional assignmentForce: number | undefined
+interface-member ServiceResourcePoolOptions::property::assignmentOffset = optional assignmentOffset: StreamPhysicsRegionVector | undefined
+interface-member ServiceResourcePoolOptions::property::caseAttraction = optional caseAttraction: number | undefined
+interface-member ServiceResourcePoolOptions::property::id = optional id: string | undefined
+interface-member ServiceResourcePoolOptions::property::resources = required resources: readonly ServiceResourceDefinition[]
+interface-member ServiceResourcePoolOptions::property::returnForce = optional returnForce: number | undefined
+interface-member ServiceResourcePoolSnapshot::property::assigned = required assigned: number
+interface-member ServiceResourcePoolSnapshot::property::assignments = required assignments: ServiceResourceAssignment[]
+interface-member ServiceResourcePoolSnapshot::property::available = required available: number
+interface-member ServiceResourcePoolSnapshot::property::metricRevision = required metricRevision: number
+interface-member ServiceResourcePoolSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member ServiceResourcePoolSnapshot::property::total = required total: number
+interface-member SpawnFromTokensOptions::property::datum = optional datum: ((token: VisualToken<D>, index: number) => unknown) | undefined
+interface-member SpawnFromTokensOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member SpawnFromTokensOptions::property::jitter = optional jitter: number | undefined | {x?: number; y?: number;}
+interface-member SpawnFromTokensOptions::property::mass = optional mass: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::radius = optional radius: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::seed = optional seed: number | undefined
+interface-member SpawnFromTokensOptions::property::shape = optional shape: ((token: VisualToken<D>, index: number) => PhysicsBodyShape) | PhysicsBodyShape | undefined
+interface-member SpawnFromTokensOptions::property::spawnAt = optional spawnAt: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::vx = optional vx: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::vy = optional vy: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::x = optional x: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::y = optional y: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member StreamPhysicsBodyForceContext::property::bodies = required bodies: readonly PhysicsBodyState[]
+interface-member StreamPhysicsBodyForceContext::property::body = required body: PhysicsBodyState
+interface-member StreamPhysicsBodyForceContext::property::index = required index: number
+interface-member StreamPhysicsBodyForceContext::property::regionState = optional regionState: StreamPhysicsBodyRegionState | undefined
+interface-member StreamPhysicsBodyForceContext::property::regions = optional regions: StreamPhysicsRegionEffect[] | undefined
+interface-member StreamPhysicsBodyForceContext::property::simulationState = required simulationState: PhysicsSimulationState
+interface-member StreamPhysicsBodyRegionState::property::activeRegionIds = required activeRegionIds: string[]
+interface-member StreamPhysicsBodyRegionState::property::attributes = required attributes: Record<string, unknown>
+interface-member StreamPhysicsBodyRegionState::property::charges = required charges: Record<string, unknown>
+interface-member StreamPhysicsBodyRegionState::property::energy = required energy: number
+interface-member StreamPhysicsBodyRegionState::property::regionIds = required regionIds: string[]
+interface-member StreamPhysicsExecutionState::property::execution = required execution: "sync" | "worker"
+interface-member StreamPhysicsExecutionState::property::liveBodies = required liveBodies: number
+interface-member StreamPhysicsExecutionState::property::queuedBodies = required queuedBodies: number
+interface-member StreamPhysicsExecutionState::property::reason = optional reason: string | undefined
+interface-member StreamPhysicsExecutionState::property::requested = required requested: PhysicsExecution
+interface-member StreamPhysicsFrameHandle::property::clearRegionState = required clearRegionState: (bodyId?: string) => void
+interface-member StreamPhysicsFrameHandle::property::getData = required getData: () => PhysicsBodyState[]
+interface-member StreamPhysicsFrameHandle::property::getRegionState = required getRegionState: (bodyId?: string) => StreamPhysicsBodyRegionState | Record<string, StreamPhysicsBodyRegionState> | undefined
+interface-member StreamPhysicsFrameHandle::property::getStore = required getStore: () => PhysicsPipelineStore
+interface-member StreamPhysicsFrameHandle::property::popBodies = required popBodies: (ids: string[], options?: StreamPhysicsPopOptions) => string[]
+interface-member StreamPhysicsFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::afterPaint = optional afterPaint: ((ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[], paint: PhysicsCanvasPaintContext) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member StreamPhysicsFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
+interface-member StreamPhysicsFrameProps::property::background = optional background: string | undefined
+interface-member StreamPhysicsFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp
+interface-member StreamPhysicsFrameProps::property::backgroundGraphicsBackdrop = optional backgroundGraphicsBackdrop: string | undefined
+interface-member StreamPhysicsFrameProps::property::beforePaint = optional beforePaint: ((ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[], paint: PhysicsCanvasPaintContext) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::bodyForces = optional bodyForces: StreamPhysicsBodyForce | undefined
+interface-member StreamPhysicsFrameProps::property::bodySemanticItemLimit = optional bodySemanticItemLimit: number | undefined
+interface-member StreamPhysicsFrameProps::property::bodySemanticItems = optional bodySemanticItems: PhysicsBodySemanticItemAccessor | boolean | undefined
+interface-member StreamPhysicsFrameProps::property::bodySemanticUpdateMs = optional bodySemanticUpdateMs: number | undefined
+interface-member StreamPhysicsFrameProps::property::bodyStyle = optional bodyStyle: ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style) | Style | undefined
+interface-member StreamPhysicsFrameProps::property::chartId = optional chartId: string | undefined
+interface-member StreamPhysicsFrameProps::property::chartMode = optional chartMode: "context" | "mobile" | "primary" | "sparkline" | undefined
+interface-member StreamPhysicsFrameProps::property::className = optional className: string | undefined
+interface-member StreamPhysicsFrameProps::property::clock = optional clock: (() => number) | undefined
+interface-member StreamPhysicsFrameProps::property::color = optional color: string | undefined
+interface-member StreamPhysicsFrameProps::property::config = optional config: PhysicsPipelineConfig | undefined
+interface-member StreamPhysicsFrameProps::property::continuous = optional continuous: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::controllers = optional controllers: readonly PhysicsController[] | undefined
+interface-member StreamPhysicsFrameProps::property::description = optional description: string | undefined
+interface-member StreamPhysicsFrameProps::property::emphasis = optional emphasis: "primary" | "secondary" | undefined
+interface-member StreamPhysicsFrameProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::foregroundGraphics = optional foregroundGraphics: FrameGraphicsProp
+interface-member StreamPhysicsFrameProps::property::frameScheduler = optional frameScheduler: FrameScheduler | undefined
+interface-member StreamPhysicsFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamPhysicsFrameProps::property::initialSpawnPacing = optional initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
+interface-member StreamPhysicsFrameProps::property::initialSpawns = optional initialSpawns: PhysicsQueuedSpawn[] | undefined
+interface-member StreamPhysicsFrameProps::property::legend = optional legend: LegendValue
+interface-member StreamPhysicsFrameProps::property::legendClickBehavior = optional legendClickBehavior: ((item: {label: string;}) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
+interface-member StreamPhysicsFrameProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: {label: string;} | null) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::legendIsolatedCategories = optional legendIsolatedCategories: Set<string> | undefined
+interface-member StreamPhysicsFrameProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
+interface-member StreamPhysicsFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member StreamPhysicsFrameProps::property::margin = optional margin: Partial<FrameMargin> | undefined
+interface-member StreamPhysicsFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamPhysicsFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: import("../../semiotic-ai").OnAnnotationActivateCallback | undefined
+interface-member StreamPhysicsFrameProps::property::onBodyHover = optional onBodyHover: ((body: PhysicsBodyState | null, hover: PhysicsHoverData | null) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onBodyPointerDown = optional onBodyPointerDown: ((body: PhysicsBodyState | null, event: React.PointerEvent<HTMLCanvasElement>) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onClick = optional onClick: ((datum: Datum | null, event: {x: number; y: number; body: PhysicsBodyState | null;}) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamPhysicsFrameProps::property::onRegionEvent = optional onRegionEvent: ((event: StreamPhysicsRegionEvent) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onSemanticItemActivate = optional onSemanticItemActivate: ((item: PhysicsSemanticItem) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onSemanticItemFocus = optional onSemanticItemFocus: ((item: PhysicsSemanticItem | null) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onSimulationExecutionChange = optional onSimulationExecutionChange: ((state: StreamPhysicsExecutionState) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onTick = optional onTick: ((result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::opacity = optional opacity: number | undefined
+interface-member StreamPhysicsFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::random = optional random: (() => number) | undefined
+interface-member StreamPhysicsFrameProps::property::regionEffects = optional regionEffects: StreamPhysicsRegionEffect[] | undefined
+interface-member StreamPhysicsFrameProps::property::renderBody = optional renderBody: ((ctx: CanvasRenderingContext2D, body: PhysicsBodyState, style: Style, paint: PhysicsCanvasPaintContext) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::seed = optional seed: number | undefined
+interface-member StreamPhysicsFrameProps::property::selectedBodyStyle = optional selectedBodyStyle: ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style) | Style | undefined
+interface-member StreamPhysicsFrameProps::property::selection = optional selection: PhysicsBodySelection | null | undefined
+interface-member StreamPhysicsFrameProps::property::semanticItems = optional semanticItems: PhysicsSemanticItem[] | undefined
+interface-member StreamPhysicsFrameProps::property::simulationExecution = optional simulationExecution: PhysicsExecution | undefined
+interface-member StreamPhysicsFrameProps::property::size = optional size: [number, number] | undefined
+interface-member StreamPhysicsFrameProps::property::stroke = optional stroke: string | undefined
+interface-member StreamPhysicsFrameProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StreamPhysicsFrameProps::property::summary = optional summary: string | undefined
+interface-member StreamPhysicsFrameProps::property::suspendWhenHidden = optional suspendWhenHidden: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => React.ReactNode) | undefined
+interface-member StreamPhysicsFrameProps::property::title = optional title: React.ReactNode
+interface-member StreamPhysicsFrameProps::property::tooltipContent = optional tooltipContent: ((hover: PhysicsHoverData) => React.ReactNode) | undefined
+interface-member StreamPhysicsFrameProps::property::workerBodyThreshold = optional workerBodyThreshold: number | undefined
+interface-member StreamPhysicsPopOptions::property::color = optional color: string | undefined
+interface-member StreamPhysicsPopOptions::property::durationMs = optional durationMs: number | undefined
+interface-member StreamPhysicsPopOptions::property::radius = optional radius: number | undefined
+interface-member StreamPhysicsPopOptions::property::scale = optional scale: number | undefined
+interface-member StreamPhysicsRegionEffect::property::attributes = optional attributes: ((context: StreamPhysicsRegionEffectContext) => Record<string, unknown>) | Record<string, unknown> | undefined
+interface-member StreamPhysicsRegionEffect::property::binId = optional binId: string | undefined
+interface-member StreamPhysicsRegionEffect::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member StreamPhysicsRegionEffect::property::bodyStyle = optional bodyStyle: ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style) | Style | undefined
+interface-member StreamPhysicsRegionEffect::property::charge = optional charge: ((context: StreamPhysicsRegionEffectContext) => unknown) | boolean | number | string | undefined
+interface-member StreamPhysicsRegionEffect::property::collider = optional collider: "boundary" | "solid" | boolean | undefined
+interface-member StreamPhysicsRegionEffect::property::colliderThickness = optional colliderThickness: number | undefined
+interface-member StreamPhysicsRegionEffect::property::damping = optional damping: number | undefined
+interface-member StreamPhysicsRegionEffect::property::description = optional description: string | undefined
+interface-member StreamPhysicsRegionEffect::property::energyDelta = optional energyDelta: number | undefined
+interface-member StreamPhysicsRegionEffect::property::force = optional force: ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined) | StreamPhysicsRegionVector | undefined
+interface-member StreamPhysicsRegionEffect::property::friction = optional friction: number | undefined
+interface-member StreamPhysicsRegionEffect::property::id = required id: string
+interface-member StreamPhysicsRegionEffect::property::impulseOnEnter = optional impulseOnEnter: ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined) | StreamPhysicsRegionVector | undefined
+interface-member StreamPhysicsRegionEffect::property::impulseOnExit = optional impulseOnExit: ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined) | StreamPhysicsRegionVector | undefined
+interface-member StreamPhysicsRegionEffect::property::kind = optional kind: StreamPhysicsRegionKind | undefined
+interface-member StreamPhysicsRegionEffect::property::label = optional label: string | undefined
+interface-member StreamPhysicsRegionEffect::property::metadata = optional metadata: unknown
+interface-member StreamPhysicsRegionEffect::property::onEnter = optional onEnter: ((event: StreamPhysicsRegionEvent) => void) | undefined
+interface-member StreamPhysicsRegionEffect::property::onExit = optional onExit: ((event: StreamPhysicsRegionEvent) => void) | undefined
+interface-member StreamPhysicsRegionEffect::property::restitution = optional restitution: number | undefined
+interface-member StreamPhysicsRegionEffect::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member StreamPhysicsRegionEffect::property::sensorId = optional sensorId: string | undefined
+interface-member StreamPhysicsRegionEffect::property::shape = required shape: PhysicsColliderShape
+interface-member StreamPhysicsRegionEffectContext::property::body = required body: PhysicsBodyState
+interface-member StreamPhysicsRegionEffectContext::property::region = required region: StreamPhysicsRegionEffect
+interface-member StreamPhysicsRegionEffectContext::property::regionState = required regionState: StreamPhysicsBodyRegionState
+interface-member StreamPhysicsRegionEvent::property::bodyId = required bodyId: string
+interface-member StreamPhysicsRegionEvent::property::datum = optional datum: unknown
+interface-member StreamPhysicsRegionEvent::property::observation = required observation: PhysicsObservationEvent
+interface-member StreamPhysicsRegionEvent::property::region = required region: StreamPhysicsRegionEffect
+interface-member StreamPhysicsRegionEvent::property::regionState = required regionState: StreamPhysicsBodyRegionState
+interface-member StreamPhysicsRegionEvent::property::type = required type: "region-enter" | "region-exit"
+interface-member StreamPhysicsRegionVector::property::x = optional x: number | undefined
+interface-member StreamPhysicsRegionVector::property::y = optional y: number | undefined
+interface-member Style::property::_edgeFade = optional _edgeFade: boolean | undefined
+interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
+interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
+interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::opacity = optional opacity: number | undefined
+interface-member Style::property::r = optional r: number | undefined
+interface-member Style::property::stroke = optional stroke: string | undefined
+interface-member Style::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member Style::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member Style::property::strokeOpacity = optional strokeOpacity: number | undefined
+interface-member Style::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRule::property::id = optional id: string | undefined
+interface-member StyleRule::property::label = optional label: string | undefined
+interface-member StyleRule::property::style = required style: ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle) | StyleRuleStyle
+interface-member StyleRule::property::when = optional when: StyleRulePredicate | StyleRuleThreshold | boolean | undefined
+interface-member StyleRuleContext::property::category = optional category: string | undefined
+interface-member StyleRuleContext::property::index = optional index: number | undefined
+interface-member StyleRuleContext::property::size = optional size: number | undefined
+interface-member StyleRuleContext::property::value = required value: number | undefined
+interface-member StyleRuleContext::property::x = optional x: number | undefined
+interface-member StyleRuleContext::property::y = optional y: number | undefined
+interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
+interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
+interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
+interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member StyleRuleStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRuleThreshold::property::axis = optional axis: "value" | "x" | "y" | undefined
+interface-member StyleRuleThreshold::property::eq = optional eq: number | string | undefined
+interface-member StyleRuleThreshold::property::field = optional field: string | undefined
+interface-member StyleRuleThreshold::property::gt = optional gt: number | undefined
+interface-member StyleRuleThreshold::property::gte = optional gte: number | undefined
+interface-member StyleRuleThreshold::property::in = optional in: (number | string)[] | undefined
+interface-member StyleRuleThreshold::property::lt = optional lt: number | undefined
+interface-member StyleRuleThreshold::property::lte = optional lte: number | undefined
+interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
+interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
+interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::className = optional className: string | undefined
+interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
+interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipConfig::property::style = optional style: React.CSSProperties | undefined
+interface-member TooltipConfig::property::title = optional title: Accessor<string> | undefined
+interface-member TooltipField::property::accessor = optional accessor: Accessor | undefined
+interface-member TooltipField::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipField::property::key = optional key: Accessor | undefined
+interface-member TooltipField::property::label = optional label: string | undefined
+interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member UnitPileChartProps::property::ballRadius = optional ballRadius: number | undefined
+interface-member UnitPileChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member UnitPileChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member UnitPileChartProps::property::data = optional data: TDatum[] | undefined
+interface-member UnitPileChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member UnitPileChartProps::property::mechanicalCategories = optional mechanicalCategories: readonly string[] | undefined
+interface-member UnitPileChartProps::property::mechanicalCount = optional mechanicalCount: number | undefined
+interface-member UnitPileChartProps::property::mode = optional mode: ChartMode | PhysicsSimulationMode | undefined
+interface-member UnitPileChartProps::property::paused = optional paused: boolean | undefined
+interface-member UnitPileChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
+interface-member UnitPileChartProps::property::sediment = optional sediment: boolean | undefined
+interface-member UnitPileChartProps::property::seed = optional seed: number | undefined
+interface-member UnitPileChartProps::property::showProjection = optional showProjection: boolean | undefined
+interface-member UnitPileChartProps::property::simulationMode = optional simulationMode: PhysicsSimulationMode | undefined
+interface-member UnitPileChartProps::property::size = optional size: [number, number] | undefined
+interface-member UnitPileChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member UnitPileChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member UnitPileChartProps::property::unitValue = optional unitValue: number | undefined
+interface-member UnitPileChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+type BandScale<T = string | number> = ((value: T) => number | undefined) & {bandwidth?: () => number;}
+type ChainReactionInsight = "blocker-amplification" | "none"
+type ChainReactionMode = "mechanical" | "replay" | "snapshot"
+type ChainReactionObservation<TDatum extends Datum = Datum> = {type: "blocker-previewed"; blockerID: string; downstreamTaskIDs: string[];} | {type: "dependency-delivered"; sourceID: string; targetID: string;} | {type: "machine-settled";} | {type: "machine-stalled"; blockerID: string; downstreamTaskCount: number; affectedLaneCount: number;} | {type: "task-armed"; taskID: string;} | {type: "task-completed"; taskID: string; datum: TDatum;}
+type CrucibleColorBy<TDatum extends Datum = Datum> = "category" | "outlet" | "product" | "status" | ChartAccessor<TDatum, string>
+type CrucibleComponentStatus = "active" | "consumed" | "ejected" | "failed" | "queued" | "recovered" | "retained" | "transformed"
+type CrucibleEffect = CrucibleCombineEffect | CrucibleCompleteProductEffect | CrucibleContributeEffect | CrucibleEjectEffect | CrucibleResolveRelationEffect | CrucibleSetMetricEffect | CrucibleSetOutcomeEffect | CrucibleSetRelationEffect | CrucibleSetStateEffect | CrucibleSplitEffect
+type CrucibleEventAt = {time: number; phaseId?: never; progress?: never;} | {time?: never; phaseId: string; progress?: number;}
+type CrucibleEventStep = Pick<CrucibleEvent, "at" | "description" | "label" | "summary"> & {/** Optional stable event id; a deterministic id is generated when omitted. */ id?: string;}
+type CrucibleMaterializationType = "activate-relation" | "complete-product" | "form-product" | "resolve-relation" | "retarget-component" | "retarget-product" | "split-source" | "update-product"
 type CrucibleMetricMap = Record<string, number>
-type CrucibleMetricTarget = "run" | {
-    components: CrucibleSelector;
-} | {
-    productIds: readonly string[];
-}
-type CrucibleMotion = "charge" | "mix" | "hold" | "press" | "bind" | "separate" | "pour" | "quench"
-type CrucibleProductStatus = "forming" | "complete"
-type CrucibleProjectionGroupBy = "status" | "outlet" | "category" | "product"
-type CrucibleRelationResolution = "combined" | "rejected" | "expired"
-type CrucibleSnapshotAt = number | {
-    phaseId: string;
-    progress?: number;
-}
-type DependencyAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, index: number) => TValue)
-type DependencyMachineDiagnosticCode = "duplicate-task-id" | "missing-dependency" | "cycle"
-type DependencyReplayClock = number | Date | {
-    currentTime: number | Date;
-}
-type DependencyReplayEvent = {
-    type: "task-completed";
-    taskID: string;
-    at: number | Date;
-} | {
-    type: "task-blocked";
-    taskID: string;
-    reason: string;
-    at: number | Date;
-} | {
-    type: "task-unblocked";
-    taskID: string;
-    at: number | Date;
-} | {
-    type: "dependency-delivered";
-    edgeID: string;
-    at: number | Date;
-} | {
-    type: "task-armed";
-    taskID: string;
-    at: number | Date;
-}
-type DependencyTaskStatus = "done" | "in-progress" | "blocked" | "waiting"
-type GauntletPopSpec = readonly string[] | {
-    candidates?: readonly string[];
-    count?: number;
-    ids?: readonly string[];
-}
-type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
-type MotionAgeOpacityType = "linear" | "exponential" | "step"
-type MotionCoordinateSpace = "data" | "world" | "screen"
-type MotionEncodingAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, index: number) => TValue) | MotionEncodingConstant<TValue>
-type MotionTimeBasis = "event" | "ingest" | "simulation" | "presentation" | "buffer-index"
-type MotionTimeUnit = "milliseconds" | "seconds" | "frames" | "index"
+type CrucibleMetricTarget = "run" | {components: CrucibleSelector;} | {productIds: readonly string[];}
+type CrucibleMotion = "bind" | "charge" | "hold" | "mix" | "pour" | "press" | "quench" | "separate"
+type CrucibleProductStatus = "complete" | "forming"
+type CrucibleProjectionGroupBy = "category" | "outlet" | "product" | "status"
+type CrucibleRelationResolution = "combined" | "expired" | "rejected"
+type CrucibleSnapshotAt = number | {phaseId: string; progress?: number;}
+type DependencyAccessor<TDatum, TValue> = ((datum: TDatum, index: number) => TValue) | keyof TDatum
+type DependencyMachineDiagnosticCode = "cycle" | "duplicate-task-id" | "missing-dependency"
+type DependencyReplayClock = Date | number | {currentTime: Date | number;}
+type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: Date | number;} | {type: "task-armed"; taskID: string; at: Date | number;} | {type: "task-blocked"; taskID: string; reason: string; at: Date | number;} | {type: "task-completed"; taskID: string; at: Date | number;} | {type: "task-unblocked"; taskID: string; at: Date | number;}
+type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
+type GauntletPopSpec = readonly string[] | {candidates?: readonly string[]; count?: number; ids?: readonly string[];}
+type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type MotionAgeOpacityType = "exponential" | "linear" | "step"
+type MotionCoordinateSpace = "data" | "screen" | "world"
+type MotionEncodingAccessor<TDatum, TValue> = ((datum: TDatum, index: number) => TValue) | MotionEncodingConstant<TValue> | keyof TDatum
+type MotionTimeBasis = "buffer-index" | "event" | "ingest" | "presentation" | "simulation"
+type MotionTimeUnit = "frames" | "index" | "milliseconds" | "seconds"
 type NumericScale = (value: number) => number
 type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> = PacketFlowChartProps<TNode, TLink>
 type PhysicalFlowCoordinateMode = "auto" | "normalized" | "pixels"
-type PhysicalFlowPathConstraint = "path" | "none"
+type PhysicalFlowPathConstraint = "none" | "path"
 type PhysicalFlowRawPath = ReadonlyArray<PhysicalFlowPoint | readonly [number, number]>
-type PhysicsAnnotationAnchorNode = {
-    pointId?: string;
-    x: number;
-    y: number;
-    r: number;
-}
+type PhysicsAnnotationAnchorNode = {pointId?: string; x: number; y: number; r: number;}
 type PhysicsBodyBudgetAction = "continue" | "evict" | "retain" | "sediment"
-type PhysicsBodyBudgetState = "ok" | "warning" | "overflow"
-type PhysicsBodyMark = "circle" | "halo" | "faceted" | "pill" | "diamond" | "square"
-type PhysicsBodySemanticItemAccessor = (body: PhysicsBodyState, context: PhysicsBodySemanticItemContext) => false | null | undefined | Partial<PhysicsSemanticItem>
-type PhysicsBodyShape = {
-    type: "circle";
-    radius: number;
-} | {
-    type: "aabb";
-    width: number;
-    height: number;
-}
-type PhysicsColliderBodyFilter = PhysicsColliderBodyFilterSpec | ((body: PhysicsBodyState) => boolean)
-type PhysicsColliderShape = {
-    type: "aabb";
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-} | {
-    type: "segment";
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-    thickness?: number;
-}
+type PhysicsBodyBudgetState = "ok" | "overflow" | "warning"
+type PhysicsBodyMark = "circle" | "diamond" | "faceted" | "halo" | "pill" | "square"
+type PhysicsBodySemanticItemAccessor = (body: PhysicsBodyState, context: PhysicsBodySemanticItemContext) => false | Partial<PhysicsSemanticItem> | null | undefined
+type PhysicsBodyShape = {type: "aabb"; width: number; height: number;} | {type: "circle"; radius: number;}
+type PhysicsColliderBodyFilter = ((body: PhysicsBodyState) => boolean) | PhysicsColliderBodyFilterSpec
+type PhysicsColliderShape = {type: "aabb"; x: number; y: number; width: number; height: number;} | {type: "segment"; x1: number; y1: number; x2: number; y2: number; thickness?: number;}
 type PhysicsCustomLayout<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (ctx: PhysicsCustomLayoutContext<TDatum, TConfig>) => PhysicsCustomLayoutResult
 type PhysicsCustomSpawnDatumResult = PhysicsDatumSpawnResult | PhysicsQueuedSpawn | PhysicsQueuedSpawn[]
 type PhysicsEncodingAccessor<TDatum, TValue> = MotionEncodingAccessor<TDatum, TValue>
 type PhysicsEncodingConstant<TValue> = MotionEncodingConstant<TValue>
-type PhysicsEncodingLayoutExtension = Omit<PhysicsCustomLayoutResult, "bodies" | "initialSpawns" | "bodyStyle" | "semanticItems"> & {
-    semanticItems?: PhysicsSemanticItem[];
-}
+type PhysicsEncodingLayoutExtension = Omit<PhysicsCustomLayoutResult, "bodies" | "bodyStyle" | "initialSpawns" | "semanticItems"> & {semanticItems?: PhysicsSemanticItem[];}
 type PhysicsEngineAdapterFactory = (options?: PhysicsKernelOptions) => PhysicsEngineAdapter
 type PhysicsEngineAdapterInput = PhysicsEngineAdapter | PhysicsEngineAdapterFactory
-type PhysicsEngineDeterminism = "strict" | "tolerance" | "none"
-type PhysicsExecution = "auto" | "worker" | "sync"
+type PhysicsEngineDeterminism = "none" | "strict" | "tolerance"
+type PhysicsExecution = "auto" | "sync" | "worker"
 type PhysicsKinematicsEncoding<TDatum> = MotionKinematicsEncoding<TDatum>
 type PhysicsPileChartProps<TDatum extends Datum = Datum> = UnitPileChartProps<TDatum>
 type PhysicsPlacementEncoding<TDatum> = MotionPlacementEncoding<TDatum>
 type PhysicsProcessEncoding<TDatum> = MotionProcessEncoding<TDatum>
-type PhysicsReferenceBandSelector = "min" | "median" | "max" | number
-type PhysicsReferenceSampleGrid = readonly number[] | {
-    start: number;
-    end: number;
-    step: number;
-}
-type PhysicsSedimentAccessor = string | ((body: PhysicsBodyState, index: number) => unknown)
-type PhysicsSedimentValueAccessor = number | string | ((body: PhysicsBodyState, index: number) => unknown)
-type PhysicsSpawnPacing = "immediate" | "arrival" | {
-    ratePerSec: number;
-}
-type PhysicsSpawnTimeAccessor = string | ((spawn: PhysicsQueuedSpawn, index: number) => unknown)
-type PhysicsTraceAccessor<TSample> = string | ((sample: TSample, index: number, traceId: string) => unknown)
-type PhysicsTraceComparisonStatus = "below" | "inside" | "above" | "unobserved"
-type PhysicsTraceInterpolation = "step" | "linear"
-type PhysicsTraceOutsideDomain = "omit" | "clamp"
+type PhysicsReferenceBandSelector = "max" | "median" | "min" | number
+type PhysicsReferenceSampleGrid = readonly number[] | {start: number; end: number; step: number;}
+type PhysicsSedimentAccessor = ((body: PhysicsBodyState, index: number) => unknown) | string
+type PhysicsSedimentValueAccessor = ((body: PhysicsBodyState, index: number) => unknown) | number | string
+type PhysicsSpawnPacing = "arrival" | "immediate" | {ratePerSec: number;}
+type PhysicsSpawnTimeAccessor = ((spawn: PhysicsQueuedSpawn, index: number) => unknown) | string
+type PhysicsTraceAccessor<TSample> = ((sample: TSample, index: number, traceId: string) => unknown) | string
+type PhysicsTraceComparisonStatus = "above" | "below" | "inside" | "unobserved"
+type PhysicsTraceInterpolation = "linear" | "step"
+type PhysicsTraceOutsideDomain = "clamp" | "omit"
 type ProcessVolumePoint = [x: number, y: number]
-type ProcessVolumePolygonRole = "volume" | "incoming" | "center" | "outgoing"
-type ProcessVolumeShape = "lane" | "bowtie" | "funnel"
+type ProcessVolumePolygonRole = "center" | "incoming" | "outgoing" | "volume"
+type ProcessVolumeShape = "bowtie" | "funnel" | "lane"
 type RegionCountMap = Record<string, RegionCountBucket>
-type ServiceLevelCaseState = "waiting" | "protected" | "unhappy" | "resolved" | "resolved-unhappy"
-type StreamPhysicsBodyForce = StreamPhysicsRegionVector | ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined)
-type StreamPhysicsRegionKind = "region" | "membrane" | "charge-gate" | "force-field" | "sink" | "source"
+type ServiceLevelCaseState = "protected" | "resolved" | "resolved-unhappy" | "unhappy" | "waiting"
+type StreamPhysicsBodyForce = ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined) | StreamPhysicsRegionVector
+type StreamPhysicsRegionKind = "charge-gate" | "force-field" | "membrane" | "region" | "sink" | "source"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "default" | "css"
-type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type TooltipChromeMode = "css" | "default"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

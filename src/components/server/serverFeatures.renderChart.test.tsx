@@ -240,6 +240,25 @@ describe("renderChart", () => {
     expect(svg).toContain(`fill="${viridis(1)}"`)
   })
 
+  it.each(["__proto__", "constructor", "toString"])(
+    "falls back safely for prototype-like Heatmap scheme %s in SSR",
+    (scheme) => {
+      const svg = renderChart("Heatmap", {
+        data: [
+          { x: "a", y: "1", value: 2 },
+          { x: "b", y: "1", value: 7 },
+        ],
+        colorScheme: scheme,
+        width: 400,
+        height: 300,
+      })
+
+      const blues = getSequentialInterpolator(undefined)
+      expect(svg).toContain(`fill="${blues(0)}"`)
+      expect(svg).toContain(`fill="${blues(1)}"`)
+    }
+  )
+
   it("lets Heatmap frameProps.areaStyle override individual cell fills", () => {
     const svg = renderChart("Heatmap", {
       data: [

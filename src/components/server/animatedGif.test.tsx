@@ -97,6 +97,32 @@ describe("generateFrameSVGs", () => {
       frames.forEach(f => expect(f).toContain("<rect"))
     })
 
+    it("renders grouped ordinal connector fills in generated frames", () => {
+      const frames = generateFrameSVGs("bar", [
+        { category: "A", value: 10, flow: "shared" },
+        { category: "B", value: 20, flow: "shared" },
+        { category: "C", value: 15, flow: "shared" },
+      ], {
+        oAccessor: "category",
+        rAccessor: "value",
+        connectorAccessor: "flow",
+        connectorStyle: {
+          fill: "#c44",
+          stroke: "#822",
+          cursor: "pointer",
+        },
+        width: 400,
+        height: 300,
+      }, { stepSize: 3, transitionFrames: 0 })
+
+      expect(frames).toHaveLength(1)
+      expect(frames[0]).toContain("<polygon")
+      expect(frames[0]).toContain('fill="#c44"')
+      expect(frames[0]).toContain('data-semiotic-connector-fill="shared"')
+      expect(frames[0]).toContain('cursor:pointer')
+      expect((frames[0].match(/<line /g) || [])).toHaveLength(2)
+    })
+
     it("returns empty array for empty data", () => {
       const frames = generateFrameSVGs("line", [], {
         xAccessor: "x", yAccessor: "y",

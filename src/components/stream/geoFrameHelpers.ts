@@ -4,10 +4,20 @@
  */
 
 import type * as React from "react"
+import type { Quadtree } from "d3-quadtree"
 import type { Selection } from "d3-selection"
 import type { ZoomTransform } from "d3-zoom"
 import type { Datum } from "../charts/shared/datumTypes"
-import type { ProjectionName, ProjectionProp } from "./geoTypes"
+import type { HoverData } from "../realtime/types"
+import { findNearestGeoNode } from "./GeoCanvasHitTester"
+import type {
+  GeoAreaSceneNode,
+  GeoSceneNode,
+  ProjectionName,
+  ProjectionProp
+} from "./geoTypes"
+import { getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
+import type { PointSceneNode } from "./types"
 
 export const DEFAULT_GEO_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
 export const DEFAULT_GEO_HOVER_RADIUS = 30
@@ -84,4 +94,83 @@ export function resolveProjectionName(projection: ProjectionProp): ProjectionNam
 export function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | null {
   if (!canvas) return null
   return canvas.getContext("2d")
+}
+
+export type GeoPointerResolution =
+  | { kind: "outside" | "unavailable" | "miss" }
+  | { kind: "hit"; node: GeoSceneNode; hover: HoverData }
+
+/** Resolve Geo pointer geometry and its flattened public hover datum. */
+export function resolveGeoPointerHit(options: {
+  pointer: HoverPointerCoords
+  canvasRect: Pick<DOMRect, "left" | "top">
+  margin: { left: number; top: number }
+  width: number
+  height: number
+  scene: GeoSceneNode[]
+  pointQuadtree: Quadtree<PointSceneNode> | null
+  maxPointRadius: number
+  hitCanvasRef: { current: HitCanvas | null }
+}): GeoPointerResolution {
+  const chartX = options.pointer.clientX - options.canvasRect.left - options.margin.left
+  const chartY = options.pointer.clientY - options.canvasRect.top - options.margin.top
+  if (
+    chartX < 0 ||
+    chartX > options.width ||
+    chartY < 0 ||
+    chartY > options.height
+  ) {
+    return { kind: "outside" }
+  }
+
+  if (!options.hitCanvasRef.current) {
+    options.hitCanvasRef.current = typeof OffscreenCanvas !== "undefined"
+      ? new OffscreenCanvas(1, 1)
+      : document.createElement("canvas")
+  }
+  const hitContext = ensureHitCanvasContext(options.hitCanvasRef.current)
+  if (!hitContext) return { kind: "unavailable" }
+
+  const hit = findNearestGeoNode(
+    options.scene,
+    chartX,
+    chartY,
+    getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, options.pointer.pointerType),
+    hitContext,
+    options.pointQuadtree,
+    options.maxPointRadius,
+    getPointerHitRadius(6, options.pointer.pointerType)
+  )
+  if (!hit) return { kind: "miss" }
+
+  const { node } = hit
+  const datum = node.datum
+  const rawData = Array.isArray(datum)
+    ? null
+    : datum?.properties
+      ? datum
+      : datum?.data || datum
+  const x = node.type === "point"
+    ? node.x
+    : node.type === "geoarea"
+      ? (node as GeoAreaSceneNode).centroid[0]
+      : chartX
+  const y = node.type === "point"
+    ? node.y
+    : node.type === "geoarea"
+      ? (node as GeoAreaSceneNode).centroid[1]
+      : chartY
+  return {
+    kind: "hit",
+    node,
+    hover: {
+      ...rawData,
+      ...(rawData?.properties || {}),
+      data: rawData,
+      properties: rawData?.properties,
+      __semioticHoverData: true,
+      x,
+      y
+    }
+  }
 }

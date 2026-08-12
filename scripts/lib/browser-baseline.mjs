@@ -8,7 +8,7 @@
  * deployed cold-start measurement.
  */
 import { spawn, spawnSync } from "node:child_process"
-import { existsSync, lstatSync, readFileSync } from "node:fs"
+import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs"
 import { createServer as createNetServer } from "node:net"
 import { dirname, join, relative, resolve } from "node:path"
 import { chromium } from "playwright"
@@ -86,13 +86,19 @@ function assertFreshMappedOutput(repoRoot, outputPath) {
   let outputMtime = lstatSync(outputPath).mtimeMs
   if (existsSync(sourceMapPath)) {
     const sources = sourceMapSources(sourceMapPath)
-    if (sources.length === 0) {
-      throw new Error("Source map for " + relative(repoRoot, outputPath) + " has no input sources")
-    }
     outputMtime = Math.max(outputMtime, lstatSync(sourceMapPath).mtimeMs)
-    mappedInputs = sources
-      .map((source) => resolve(dirname(sourceMapPath), source))
-      .filter(existsSync)
+    if (sources.length > 0) {
+      mappedInputs = sources
+        .map((source) => resolve(dirname(sourceMapPath), source))
+        .filter(existsSync)
+    } else {
+      // Shared ESM family facades can have a valid source map with no
+      // `sources` entries: the facade only re-exports generated chunks, so
+      // there is no single source module for the map to name. Treat this the
+      // same as a production bundle without map evidence and conservatively
+      // inspect the component tree below rather than rejecting a fresh build.
+      mappedInputs = sourceFilesUnder(join(repoRoot, "src/components"))
+    }
   } else {
     // Worker bundles intentionally omit source maps to avoid publishing a
     // second large artifact. The non-minified local dist build preserves tsup
@@ -103,10 +109,13 @@ function assertFreshMappedOutput(repoRoot, outputPath) {
       .map((match) => resolve(repoRoot, match[1]))
       .filter(existsSync)
     if (mappedInputs.length === 0) {
-      throw new Error(
-        "Could not discover source inputs for " + relative(repoRoot, outputPath) + ". " +
-        "Run npm run dist (the non-minified local build records module banners) before recording or checking this baseline.",
-      )
+      // Production bundles intentionally omit both source maps and module
+      // banners. Fall back to the complete component source tree so a
+      // production artifact can still prove freshness. This is conservative
+      // (an unrelated component edit may require a rebuild) but never accepts
+      // a stale measured bundle merely because minification removed its input
+      // evidence.
+      mappedInputs = sourceFilesUnder(join(repoRoot, "src/components"))
     }
   }
 
@@ -126,6 +135,21 @@ function assertFreshMappedOutput(repoRoot, outputPath) {
       "Run npm run dist before recording or checking this baseline.",
     )
   }
+}
+
+function sourceFilesUnder(root) {
+  const files = []
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name)
+      if (entry.isDirectory()) visit(path)
+      else if (/\.[cm]?[jt]sx?$/.test(entry.name) && !/\.(?:test|spec)\.[cm]?[jt]sx?$/.test(entry.name)) {
+        files.push(path)
+      }
+    }
+  }
+  visit(root)
+  return files
 }
 
 function sourceMapSources(sourceMapPath) {
@@ -517,55 +541,71 @@ export function validateBrowserBaseline(manifest) {
   return errors
 }
 
-export function compareBrowserBaselines(baseline, current) {
+export function compareBrowserBaselines(baseline, current, options = {}) {
+  const enforceStatic = options.enforceStatic !== false
   const baselineErrors = validateBrowserBaseline(baseline)
   const currentErrors = validateBrowserBaseline(current)
-  const structuralDifferences = [
+  const validationDifferences = [
     ...baselineErrors.map((error) => "baseline: " + error),
     ...currentErrors.map((error) => "current: " + error),
   ]
+  const snapshotDifferences = []
   if (baselineErrors.length === 0 && currentErrors.length === 0) {
-    findDifferences(staticProjection(baseline), staticProjection(current), "baseline", structuralDifferences)
+    findDifferences(staticProjection(baseline), staticProjection(current), "baseline", snapshotDifferences)
   }
 
   const timingEnvironment = browserTimingEnvironmentMatch(baseline, current)
   const timingRegressions = []
   const timingWarnings = []
-  if (timingEnvironment.compatible && baselineErrors.length === 0 && currentErrors.length === 0) {
+  const contractDifferences = []
+  if (baselineErrors.length === 0 && currentErrors.length === 0) {
     const baselineRows = new Map(browserTimingRows(baseline.metrics).map((row) => [row.id, row.timing]))
     const currentRows = new Map(browserTimingRows(current.metrics).map((row) => [row.id, row.timing]))
     const membership = findDifferences([...baselineRows.keys()].sort(), [...currentRows.keys()].sort(), "timing rows")
-    structuralDifferences.push(...membership)
-    const maximum = baseline.variancePolicy.timing.maxRegression || DEFAULT_BROWSER_VARIANCE_POLICY.timing.maxRegression
-    const absoluteMs = Number(maximum.absoluteMs)
-    const relativePercent = Number(maximum.relativePercent)
-    for (const [id, baselineTiming] of baselineRows) {
-      const currentTiming = currentRows.get(id)
-      if (!currentTiming) continue
-      const allowance = Math.max(absoluteMs, baselineTiming.p50Ms * (relativePercent / 100))
-      const limit = baselineTiming.p50Ms + allowance
-      if (currentTiming.p50Ms > limit) {
-        timingRegressions.push({
-          id,
-          baselineP50Ms: baselineTiming.p50Ms,
-          currentP50Ms: currentTiming.p50Ms,
-          limitMs: rounded(limit),
-        })
-      }
-      if (currentTiming.p95Ms > baselineTiming.p95Ms + allowance) {
-        timingWarnings.push({
-          id,
-          baselineP95Ms: baselineTiming.p95Ms,
-          currentP95Ms: currentTiming.p95Ms,
-        })
+    contractDifferences.push(...membership)
+    if (timingEnvironment.compatible) {
+      const maximum = baseline.variancePolicy.timing.maxRegression || DEFAULT_BROWSER_VARIANCE_POLICY.timing.maxRegression
+      const absoluteMs = Number(maximum.absoluteMs)
+      const relativePercent = Number(maximum.relativePercent)
+      for (const [id, baselineTiming] of baselineRows) {
+        const currentTiming = currentRows.get(id)
+        if (!currentTiming) continue
+        const allowance = Math.max(absoluteMs, baselineTiming.p50Ms * (relativePercent / 100))
+        const limit = baselineTiming.p50Ms + allowance
+        if (currentTiming.p50Ms > limit) {
+          timingRegressions.push({
+            id,
+            baselineP50Ms: baselineTiming.p50Ms,
+            currentP50Ms: currentTiming.p50Ms,
+            limitMs: rounded(limit),
+          })
+        }
+        if (currentTiming.p95Ms > baselineTiming.p95Ms + allowance) {
+          timingWarnings.push({
+            id,
+            baselineP95Ms: baselineTiming.p95Ms,
+            currentP95Ms: currentTiming.p95Ms,
+          })
+        }
       }
     }
   }
+  const structuralDifferences = [
+    ...validationDifferences,
+    ...contractDifferences,
+    ...snapshotDifferences,
+  ]
   return {
     structuralDifferences,
+    snapshotDifferences,
+    blockingStructuralDifferences: [...validationDifferences, ...contractDifferences],
     timingEnvironment,
     timingRegressions,
     timingWarnings,
-    ok: structuralDifferences.length === 0 && timingRegressions.length === 0,
+    ok:
+      validationDifferences.length === 0 &&
+      contractDifferences.length === 0 &&
+      (!enforceStatic || snapshotDifferences.length === 0) &&
+      timingRegressions.length === 0,
   }
 }

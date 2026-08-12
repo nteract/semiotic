@@ -65,12 +65,19 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: 
     const rectH = Math.abs(yBaseline - yTop)
 
     const fill = delta >= 0 ? positiveColor : negativeColor
-    const rectStyle: Style = { fill, stroke: barStroke, strokeWidth: barStrokeWidth }
-    if (barOpacity != null) rectStyle.opacity = barOpacity
+    const datum = { ...d, baseline, cumEnd, delta, _connectorStroke: ws?.connectorStroke, _connectorWidth: ws?.connectorWidth }
+    const rectStyle: Style = {
+      fill,
+      stroke: barStroke,
+      strokeWidth: barStrokeWidth,
+      opacity: barOpacity,
+      cursor: ws?.cursor,
+      ...ctx.config.areaStyle?.(datum),
+    }
     nodes.push(buildRectNode(
       x0, rectY, barWidth, rectH,
       rectStyle,
-      { ...d, baseline, cumEnd, delta, _connectorStroke: ws?.connectorStroke, _connectorWidth: ws?.connectorWidth }
+      datum
     ))
 
     baseline = cumEnd

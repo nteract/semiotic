@@ -21,83 +21,19 @@ import type {
   CrucibleRunState,
   CrucibleSelector
 } from "./crucibleTypes"
+import { createCrucibleRecord, mergeCrucibleRecords } from "./crucibleRecord"
+import {
+  cloneCrucibleHistory as cloneHistory,
+  cloneCrucibleMetrics as cloneMetrics,
+  cloneCrucibleState
+} from "./crucibleClone"
+
+export { cloneCrucibleState } from "./crucibleClone"
 
 const EPSILON = 1e-9
 
 function compareIds(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0
-}
-
-function cloneMetrics(metrics: CrucibleMetricMap): CrucibleMetricMap {
-  return { ...metrics }
-}
-
-function cloneHistory(
-  history: readonly CrucibleHistoryItem[]
-): CrucibleHistoryItem[] {
-  return history.map((item) => ({
-    ...item,
-    sourceIds: item.sourceIds ? [...item.sourceIds] : undefined,
-    productIds: item.productIds ? [...item.productIds] : undefined,
-    relationIds: item.relationIds ? [...item.relationIds] : undefined,
-    outletIds: item.outletIds ? [...item.outletIds] : undefined
-  }))
-}
-
-/** Clone mutable run structures while intentionally retaining source datum references. */
-export function cloneCrucibleState<TDatum extends Datum>(
-  state: CrucibleRunState<TDatum>
-): CrucibleRunState<TDatum> {
-  const components = Object.fromEntries(
-    Object.entries(state.components).map(([id, component]) => [
-      id,
-      {
-        ...component,
-        initialMetrics: cloneMetrics(component.initialMetrics),
-        metrics: cloneMetrics(component.metrics),
-        productIds: [...component.productIds],
-        history: cloneHistory(component.history)
-      }
-    ])
-  ) as Record<string, CrucibleComponentState<TDatum>>
-  const products = Object.fromEntries(
-    Object.entries(state.products).map(([id, product]) => [
-      id,
-      {
-        ...product,
-        metrics: cloneMetrics(product.metrics),
-        sourceIds: [...product.sourceIds],
-        history: cloneHistory(product.history)
-      }
-    ])
-  ) as Record<string, CrucibleProductState>
-  const relations = Object.fromEntries(
-    Object.entries(state.relations).map(([id, relation]) => [
-      id,
-      {
-        ...relation,
-        sourceIds: [...relation.sourceIds],
-        metrics: relation.metrics ? cloneMetrics(relation.metrics) : undefined
-      }
-    ])
-  ) as Record<string, CrucibleRelationState>
-  return {
-    ...state,
-    eventsApplied: [...state.eventsApplied],
-    components,
-    products,
-    relations,
-    input: {
-      amount: state.input.amount,
-      metrics: cloneMetrics(state.input.metrics)
-    },
-    metrics: cloneMetrics(state.metrics),
-    loss: {
-      amount: state.loss.amount,
-      metrics: cloneMetrics(state.loss.metrics)
-    },
-    history: cloneHistory(state.history)
-  }
 }
 
 function diagnostic(
@@ -154,7 +90,7 @@ function addMetrics(target: CrucibleMetricMap, delta: CrucibleMetricMap): void {
 function sumComponentMetrics<TDatum extends Datum>(
   components: readonly CrucibleComponentState<TDatum>[]
 ): CrucibleMetricMap {
-  const result: CrucibleMetricMap = {}
+  const result = createCrucibleRecord<number>()
   for (const component of components) addMetrics(result, component.metrics)
   return result
 }
@@ -574,8 +510,8 @@ function productFromDefinition(
     amount: resolvedAmount,
     metrics:
       complete && definition.metrics
-        ? { ...metrics, ...definition.metrics }
-        : metrics,
+        ? mergeCrucibleRecords(metrics, definition.metrics)
+        : cloneMetrics(metrics),
     status: complete ? "complete" : "forming",
     sourceIds: [...sourceIds],
     outletId: complete
@@ -647,7 +583,10 @@ function completeProduct<TDatum extends Datum>(
     )
     if (definition.amount !== undefined) product.amount = definition.amount
     if (definition.metrics)
-      product.metrics = { ...product.metrics, ...definition.metrics }
+      product.metrics = mergeCrucibleRecords(
+        product.metrics,
+        definition.metrics
+      )
   }
   product.status = "complete"
   product.outletId = outletId
@@ -777,7 +716,7 @@ function applyEffect<TDatum extends Datum>(
     state.relations[relation.id] = {
       ...relation,
       sourceIds: [...relation.sourceIds],
-      metrics: relation.metrics ? { ...relation.metrics } : undefined,
+      metrics: relation.metrics ? cloneMetrics(relation.metrics) : undefined,
       status: "active",
       createdByEventId: transaction.event.id,
       createdAt: transaction.context.appliedAt
@@ -1142,7 +1081,7 @@ function applyEffect<TDatum extends Datum>(
       )
       return
     }
-    const availableMetrics = { ...source.metrics }
+    const availableMetrics = cloneMetrics(source.metrics)
     for (const [key, value] of Object.entries(effect.loss?.metrics ?? {}))
       availableMetrics[key] = Number(availableMetrics[key] ?? 0) - value
     const item = historyItem(transaction as EventTransaction<Datum>, effect, {
@@ -1155,7 +1094,7 @@ function applyEffect<TDatum extends Datum>(
         availableAmount > EPSILON
           ? amounts[index] / availableAmount
           : 1 / effect.products.length
-      const sharedMetrics = Object.fromEntries(
+      const sharedMetrics = createCrucibleRecord(
         Object.entries(availableMetrics).map(([key, value]) => [
           key,
           value * share
@@ -1166,7 +1105,7 @@ function applyEffect<TDatum extends Datum>(
         { ...definition, amount: amounts[index], metrics },
         [source.id],
         amounts[index],
-        { ...metrics },
+        cloneMetrics(metrics),
         transaction as EventTransaction<Datum>,
         true,
         item
@@ -1461,7 +1400,7 @@ export function buildCrucibleProjection<TDatum extends Datum>(
         groupBy === "product" && item.kind === "product" ? item.label : key,
       count: 1,
       amount: item.amount,
-      metrics: { ...item.metrics },
+      metrics: cloneMetrics(item.metrics),
       status: groupBy === "status" ? item.status : undefined,
       outletId: groupBy === "outlet" ? item.outletId : undefined,
       category: groupBy === "category" ? item.category : undefined,

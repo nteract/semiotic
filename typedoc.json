@@ -22,6 +22,24 @@
   "excludeProtected": true,
   "excludeInternal": true,
   "skipErrorChecking": true,
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "invalidPath": true,
+    "rewrittenLink": true,
+    "notDocumented": false,
+    "unusedMergeModuleWith": true
+  },
+  "externalSymbolLinkMappings": {
+    "@types/react": {
+      "React.Component.render": "https://react.dev/reference/react/Component#render",
+      "React.Component.setState": "https://react.dev/reference/react/Component#setstate",
+      "React.NewLifecycle.getSnapshotBeforeUpdate": "https://react.dev/reference/react/Component#getsnapshotbeforeupdate",
+      "React.StaticLifecycle.getDerivedStateFromProps": "https://react.dev/reference/react/Component#static-getderivedstatefromprops",
+      "React.ComponentLifecycle.componentDidMount": "https://react.dev/reference/react/Component#componentdidmount"
+    }
+  },
   "readme": "none",
   "name": "Semiotic API Reference",
   "navigationLinks": {

@@ -100,7 +100,7 @@ describe("force layout worker client", () => {
     expect(worker.terminated).toBe(false)
   })
 
-  it("rejects with AbortError when cancelled without terminating the session", async () => {
+  it("rejects with AbortError and terminates CPU work when cancelled", async () => {
     Object.defineProperty(globalThis, "Worker", {
       configurable: true,
       value: MockWorker
@@ -119,6 +119,61 @@ describe("force layout worker client", () => {
     controller.abort()
 
     await expect(promise).rejects.toMatchObject({ name: "AbortError" })
+    expect(worker.terminated).toBe(true)
+
+    const next = runForceLayoutWorker({
+      kind: "normalized",
+      nodes: [{ id: "b" }],
+      edges: [],
+      options: {}
+    })
+    const replacement = MockWorker.instances[1]
+    expect(replacement).toBeDefined()
+    const nextMessage = replacement.messages[0] as { requestId: number }
+    replacement.onmessage?.({
+      data: { requestId: nextMessage.requestId, positions: { b: { x: 0, y: 0 } } }
+    } as MessageEvent)
+    await expect(next).resolves.toEqual({ positions: { b: { x: 0, y: 0 } } })
+  })
+
+  it("does not terminate unrelated concurrent force-layout requests", async () => {
+    Object.defineProperty(globalThis, "Worker", {
+      configurable: true,
+      value: MockWorker
+    })
+    const controller = new AbortController()
+    const first = runForceLayoutWorker(
+      {
+        kind: "normalized",
+        nodes: [{ id: "a" }],
+        edges: [],
+        options: {}
+      },
+      controller.signal
+    )
+    const second = runForceLayoutWorker({
+      kind: "normalized",
+      nodes: [{ id: "b" }],
+      edges: [],
+      options: {}
+    })
+    const worker = MockWorker.instances[0]
+    const firstMessage = worker.messages[0] as { requestId: number }
+    const secondMessage = worker.messages[1] as { requestId: number }
+
+    controller.abort()
+    await expect(first).rejects.toMatchObject({ name: "AbortError" })
+    expect(worker.terminated).toBe(false)
+
+    // A late response for the cancelled request is ignored, while the other
+    // chart's queued request retains its normal request-id resolution.
+    worker.onmessage?.({
+      data: { requestId: firstMessage.requestId, positions: { a: { x: 1, y: 1 } } }
+    } as MessageEvent)
+    worker.onmessage?.({
+      data: { requestId: secondMessage.requestId, positions: { b: { x: 2, y: 3 } } }
+    } as MessageEvent)
+    await expect(second).resolves.toEqual({ positions: { b: { x: 2, y: 3 } } })
     expect(worker.terminated).toBe(false)
   })
 

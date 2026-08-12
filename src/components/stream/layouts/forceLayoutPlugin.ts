@@ -389,7 +389,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // Halo stroke against neighbor overlaps: user > theme surface (contrasts with chart bg) > #fff.
         stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
         strokeWidth: userStyle.strokeWidth ?? 2,
-        opacity: userStyle.opacity
+        opacity: userStyle.opacity,
+        cursor: userStyle.cursor
       }
 
       sceneNodes.push({
@@ -423,7 +424,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // Edge stroke: user > theme border (chart chrome) > theme secondary > #999.
         stroke: userStyle.stroke || config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
         strokeWidth: userStyle.strokeWidth ?? 1,
-        opacity: userStyle.opacity ?? 0.6
+        opacity: userStyle.opacity ?? 0.6,
+        cursor: userStyle.cursor
       }
 
       sceneEdges.push({

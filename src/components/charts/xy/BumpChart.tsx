@@ -126,9 +126,14 @@ export function resolveBumpColorScheme(options: {
   const categoryIndexMap = new Map<string, number>()
   const resolved: Record<string, string> = {}
   for (const series of seriesOrder) {
-    resolved[series] = color ?? (highlighted.has(series)
-      ? resolveDefaultFill(undefined, themeCategorical, colorScheme, series, categoryIndexMap)
-      : neutralColor ?? themeNeutral ?? "#b8bec8")
+    Object.defineProperty(resolved, series, {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: color ?? (highlighted.has(series)
+        ? resolveDefaultFill(undefined, themeCategorical, colorScheme, series, categoryIndexMap)
+        : neutralColor ?? themeNeutral ?? "#b8bec8"),
+    })
   }
   return resolved
 }
@@ -762,6 +767,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
       height={props.height}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
       responsiveRules={props.responsiveRules}
       mobileInteraction={props.mobileInteraction}
       mobileSemantics={props.mobileSemantics}

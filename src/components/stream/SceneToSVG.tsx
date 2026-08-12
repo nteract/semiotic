@@ -39,6 +39,7 @@ import {
   colorStopElements,
   symbolSceneNodeToSVG
 } from "./sceneToSVGShared"
+import { sceneMarkCursor, withSceneMarkCursor } from "./sceneCursor"
 
 export { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG } from "./SceneToSVGNetwork"
 export { geoSceneNodeToSVG } from "./SceneToSVGGeo"
@@ -110,7 +111,29 @@ function buildStrokeSVGGradient(
 
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
 
-export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string): React.ReactNode {
+export function xySceneNodeToSVG(
+  node: SceneNode,
+  i: number,
+  idPrefix?: string,
+  cursorHitRadius = 30
+): React.ReactNode {
+  const element = xySceneNodeToSVGMark(node, i, idPrefix, cursorHitRadius)
+  // Built-in areas interact through their top path, not their filled polygon.
+  // The area serializer already added the matching cursor target.
+  if (node.type === "area") return element
+  return withSceneMarkCursor(
+    element,
+    node,
+    `xy-cursor-${i}`
+  )
+}
+
+function xySceneNodeToSVGMark(
+  node: SceneNode,
+  i: number,
+  idPrefix?: string,
+  cursorHitRadius = 30
+): React.ReactNode {
   switch (node.type) {
     case "line": {
       const n = node as LineSceneNode
@@ -139,7 +162,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             d={d}
             fill="none"
             stroke={strokeGradient ? `url(#${gradientId})` : n.style.stroke || "#4e79a7"}
-            strokeWidth={n.style.strokeWidth || 2}
+            strokeWidth={n.style.strokeWidth ?? 2}
             strokeDasharray={n.style.strokeDasharray}
             opacity={n.style.opacity}
           />
@@ -186,6 +209,26 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             .y(([, y]) => y)
             .curve(curveFactory)(n.topPath) ?? ""
         : "M" + n.topPath.map(([x, y]) => `${x},${y}`).join("L")
+      const areaCursor = sceneMarkCursor(n)
+      // Canvas hover/click/cursor semantics for areas are deliberately tied to
+      // the top path rather than the filled polygon. Mirror that target in
+      // SVG/SSR with an invisible stroke; using the configured hit radius
+      // keeps a hydrated canvas and its server fallback perceptually aligned.
+      const cursorTarget = areaCursor && cursorHitRadius >= 0 ? (
+        <path
+          key={`area-${i}-cursor-target`}
+          d={topStrokePath}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={Math.max(1, cursorHitRadius * 2)}
+          strokeLinecap="round"
+          pointerEvents="stroke"
+          style={{ cursor: areaCursor }}
+          data-semiotic-mark-cursor={areaCursor}
+          data-semiotic-cursor-hit-target="area-top-path"
+          aria-hidden="true"
+        />
+      ) : null
       const strokeGradientId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}area-${i}-stroke-gradient`)
       const hasThresholds = Boolean(
         n.colorThresholds?.length
@@ -201,7 +244,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             strokeGradientId,
             n.style.stroke || "#4e79a7",
           )
-      const strokeWidth = n.style.strokeWidth || 2
+      const strokeWidth = n.style.strokeWidth ?? 2
       // Loop rather than Math.min(...spread): a large area's topPath can exceed
       // the JS argument-count limit, and the canvas renderer folds the same way.
       let minTopX = Infinity
@@ -296,6 +339,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
                 stroke="none"
               />
               {topStroke}
+              {cursorTarget}
             </g>
           </g>
         )
@@ -313,6 +357,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
             stroke="none"
           />
           {topStroke}
+          {cursorTarget}
         </React.Fragment>
       )
     }

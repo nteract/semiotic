@@ -1,7 +1,7 @@
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { LegendLayout, LegendValue } from "../types/legendTypes"
+import type { LegendItem, LegendLayout, LegendValue } from "../types/legendTypes"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -151,6 +151,14 @@ export interface Style {
   fill?: string | HatchFill | CanvasPattern
   fillOpacity?: number
   opacity?: number
+  /**
+   * CSS cursor shown for this rendered mark.
+   *
+   * Presentation only: this does not create click, keyboard, or observation
+   * behavior. Pair it with the frame/chart interaction API when the mark is
+   * actionable.
+   */
+  cursor?: CSSProperties["cursor"]
   /** For icon/isotype bars: an image to stamp instead of filling */
   icon?: HTMLImageElement | HTMLCanvasElement
   /** Padding between stamped icons */
@@ -461,7 +469,7 @@ export interface HeatcellSceneNode {
   accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional style object (used for decay/transition opacity on heatmap cells) */
   style?: Style
-  /** Numeric cell value (for canvas text rendering when showValues is enabled) */
+  /** Resolved numeric cell value used for domain emission and optional labels */
   value?: number
   /** Whether to render the value as text inside the cell */
   showValues?: boolean
@@ -510,7 +518,7 @@ export interface CandlestickSceneNode {
   _pulseGlowRadius?: number
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
-  /** Decay opacity for candlestick nodes (no style object, stored separately) */
+  /** Decay opacity for candlestick paint, stored separately from presentation style. */
   _decayOpacity?: number
   /** Stable identity key for transition tracking */
   _transitionKey?: string
@@ -533,6 +541,8 @@ export interface CandlestickStyle {
   wickWidth?: number
   /** Single color for range/dumbbell mode (replaces up/down when no open/close provided) */
   rangeColor?: string
+  /** Presentation-only cursor for each candlestick/range mark. */
+  cursor?: CSSProperties["cursor"]
 }
 
 // ── Changeset ──────────────────────────────────────────────────────────
@@ -843,7 +853,7 @@ export interface StreamXYFrameProps<T = Datum>
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   enableHover?: boolean
-  /** Max pixel distance for hover/click hit testing. Default 30. */
+  /** Requested minimum hit radius; visible mark size and the 12px floor may increase it. Default 30. */
   hoverRadius?: number
   /** Tooltip mode: "single" (default) shows one datum, "multi" shows all series at the hovered X. */
   tooltipMode?: "single" | "multi"
@@ -879,8 +889,8 @@ export interface StreamXYFrameProps<T = Datum>
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
   legend?: LegendValue
-  legendHoverBehavior?: (item: { label: string } | null) => void
-  legendClickBehavior?: (item: { label: string }) => void
+  legendHoverBehavior?: (item: LegendItem | null) => void
+  legendClickBehavior?: (item: LegendItem) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
@@ -955,6 +965,8 @@ export interface StreamXYFrameProps<T = Datum>
   heatmapValueFormat?: (v: number) => string
   /** Explicit value-to-color function for heatmap cells. */
   heatmapColorScale?: (value: number) => string
+  /** Reports the current heatcell value domain after scene recomputation. */
+  onColorDomainChange?: (domain: [number, number] | null) => void
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */

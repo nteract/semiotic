@@ -59,6 +59,17 @@ describe("lineCanvasRenderer", () => {
     expect(ctx.lineWidth).toBe(2)
   })
 
+  it("does not stroke a line when strokeWidth is zero", () => {
+    const ctx = createMockCanvasContext()
+    const node = makeLineNode({
+      style: { stroke: "#e41a1c", strokeWidth: 0 },
+    })
+
+    lineCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.stroke).not.toHaveBeenCalled()
+  })
+
   it("skips lines with fewer than 2 points", () => {
     const ctx = createMockCanvasContext()
     const node = makeLineNode({ path: [[10, 20]] })

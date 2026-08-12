@@ -98,7 +98,7 @@ describe("machine baseline helpers", () => {
     )
   })
 
-  it("fails exact artifact drift even when timing comparison is skipped", () => {
+  it("reports cross-host artifact drift without failing the local check", () => {
     const baseline = validBaseline()
     const current = clone(baseline)
     current.referenceEnvironment = referenceEnvironment("different cpu")
@@ -109,7 +109,38 @@ describe("machine baseline helpers", () => {
     assert.equal(comparison.timingEnvironment.compatible, false)
     assert.equal(comparison.timingRegressions.length, 0)
     assert.equal(comparison.structuralDifferences.some((error) => error.includes("size")), true)
+    assert.equal(comparison.ok, true)
+  })
+
+  it("fails exact artifact drift on the recorded reference environment", () => {
+    const baseline = validBaseline()
+    const current = clone(baseline)
+    current.metrics.tarball.files[0].size = 11
+
+    const comparison = compareMachineBaselines(baseline, current)
+    assert.equal(comparison.timingEnvironment.compatible, true)
+    assert.equal(comparison.structuralDifferences.some((error) => error.includes("size")), true)
     assert.equal(comparison.ok, false)
+  })
+
+  it("reports candidate snapshot drift without masking validation or timing regressions", () => {
+    const baseline = validBaseline()
+    const changedArtifact = clone(baseline)
+    changedArtifact.referenceEnvironment = referenceEnvironment("different cpu")
+    changedArtifact.metrics.tarball.files[0].size = 11
+
+    const candidate = compareMachineBaselines(baseline, changedArtifact, { enforceStatic: false })
+    assert.equal(candidate.snapshotDifferences.length > 0, true)
+    assert.deepEqual(candidate.blockingStructuralDifferences, [])
+    assert.equal(candidate.ok, true)
+
+    const invalid = clone(changedArtifact)
+    delete invalid.metrics.mcp.toolsList
+    assert.equal(compareMachineBaselines(baseline, invalid, { enforceStatic: false }).ok, false)
+
+    const slow = clone(baseline)
+    slow.metrics.evaluation[0].timing.p50Ms = 100
+    assert.equal(compareMachineBaselines(baseline, slow, { enforceStatic: false }).ok, false)
   })
 
   it("enforces p50 variance only on the recorded reference environment", () => {

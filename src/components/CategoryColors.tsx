@@ -53,7 +53,7 @@ export function CategoryColorProvider({
   colors,
   categories,
   colorScheme = "category10",
-  children,
+  children
 }: CategoryColorProviderProps) {
   const colorMap = useMemo(() => {
     if (colors) return colors
@@ -62,26 +62,31 @@ export function CategoryColorProvider({
       // Object-map `colorScheme` → look each category up directly for exact
       // per-category colors; categories absent from the map fall back to the
       // default palette so every category still gets a distinct color.
-      if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
+      if (
+        colorScheme &&
+        typeof colorScheme === "object" &&
+        !Array.isArray(colorScheme)
+      ) {
         const explicit = colorScheme as Record<string, unknown>
-        const map: CategoryColorMap = {}
         let fallbackIdx = 0
-        for (const category of categories) {
-          map[category] =
+        return Object.fromEntries(
+          categories.map((category) => [
+            category,
             resolveExplicitColor(explicit, category) ??
-            DEFAULT_COLORS[fallbackIdx++ % DEFAULT_COLORS.length]
-        }
-        return map
+              DEFAULT_COLORS[fallbackIdx++ % DEFAULT_COLORS.length]
+          ])
+        )
       }
 
       const palette = Array.isArray(colorScheme)
         ? colorScheme
         : resolveCategoricalPalette(colorScheme, undefined)
-      const map: CategoryColorMap = {}
-      for (let i = 0; i < categories.length; i++) {
-        map[categories[i]] = palette[i % palette.length]
-      }
-      return map
+      return Object.fromEntries(
+        categories.map((category, index) => [
+          category,
+          palette[index % palette.length]
+        ])
+      )
     }
 
     return {}

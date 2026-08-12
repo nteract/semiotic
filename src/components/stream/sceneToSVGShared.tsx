@@ -32,9 +32,9 @@ export const ARC_NOOP: DefaultArcObject = {
 // ── Fill helper (CanvasPattern → fallback for SVG) ─────────────────────
 
 export function svgFill(fill: string | HatchFill | CanvasPattern | undefined, fallback = "#4e79a7"): string {
-  // A HatchFill descriptor is only rendered as an SVG <pattern> by the rect
-  // serializer (bars). Any other node degrades it to a solid color — the
-  // descriptor's background if present, else the fallback.
+  // Callers that emit SVG pattern definitions handle HatchFill before this
+  // scalar fallback. Other marks degrade it to the descriptor background,
+  // when present, so a non-string canvas paint never leaks into SVG markup.
   if (isHatchFill(fill)) return fill.background && fill.background !== "transparent" ? fill.background : fallback
   if (!fill || typeof fill !== "string") return fallback
   return fill

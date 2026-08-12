@@ -2,6 +2,7 @@ import type { ChartSpec } from "./chartSpecCore"
 import {
   ORIENTATION_ENUM
 } from "./chartSpecCore"
+import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
   ForceDirectedGraph: {
@@ -13,7 +14,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["nodeIdAccessor", "sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
+      styleRules: STYLE_RULES_PROP_SPEC,
       nodes: { type: "array", description: "Array of node objects" },
       edges: { type: "array", description: "Array of edge objects with source and target" },
       nodeIdAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
@@ -55,7 +56,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
+      styleRules: STYLE_RULES_PROP_SPEC,
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects (auto-derived from edges if omitted)" },
       sourceAccessor: { type: ["string", "function"], default: "source" },
@@ -118,6 +119,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       laneOrder: { type: "string", enum: ["insertion", "crossing-min", "inside-out", "crossing-min+inside-out"] as const, default: "crossing-min" },
       maxValueScale: { type: "number", description: "Optional pixels-per-value cap that prevents sparse bands from inflating to fill the plot." },
       lanePlacement: { type: "string", enum: ["stack", "hug"] as const, default: "stack", description: "Use capped-scale slack to pull connected lanes together while preserving order and clearance. When hug (or a binding maxValueScale) is active, a bounded post-scale geometry refine re-scores adjacent lane order under rendered pixel/transit cost without raising crossings or exclusive-handoff span." },
+      nodeSizing: { type: "string", enum: ["temporal", "max"] as const, default: "temporal", description: "Size explicit node lifetimes from temporal mass or the maximum mass over the full lifetime." },
       // Booleans are covered by type; enum lists the string mode only (BumpChart pattern).
       showLabels: { type: ["boolean", "string"], enum: ["auto"] as const, default: true, description: "Node labels: true, false, or density-budgeted auto. With auto, shed labels reappear under selection." },
       labelPriorityAccessor: { type: "string", description: "Field (or React fn) for auto-label priority — higher values survive density shedding first." },
@@ -130,10 +132,10 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       showLaneRails: { type: "boolean", default: false },
       showQualityReadout: { type: "boolean", default: false },
       edgeOpacity: { type: "number", default: 0.35 },
-      styleRules: { type: "array", description: "Declarative StyleRule[] applied to node bands (raw node datum; fill may be a solid color or HatchFill — canvas pattern + SSR SVG pattern)." },
+      styleRules: STYLE_RULES_PROP_SPEC,
       layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] as const, default: "auto", description: "Layout execution: auto (cost threshold), worker, or sync. SSR always sync." },
       layoutWorkerThreshold: { type: "number", description: "Override auto worker cost threshold for ProcessSankey packing/ordering." },
-      layoutLoadingContent: { type: ["boolean", "object"], description: "Content while worker layout is pending. false suppresses." },
+      layoutLoadingContent: { type: ["boolean", "string", "number", "object"], omitFromSchema: true, description: "React content while worker layout is pending; false suppresses it." },
       onLayoutStateChange: { type: "function", omitFromSchema: true },
       timeFormat: { type: "function", omitFromSchema: true },
       valueFormat: { type: "function", omitFromSchema: true },
@@ -158,7 +160,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["sourceAccessor", "targetAccessor"],
     propBags: ["common"],
     ownProps: {
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
+      styleRules: STYLE_RULES_PROP_SPEC,
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects" },
       sourceAccessor: { type: ["string", "function"], default: "source" },
@@ -228,6 +230,9 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       nodeIdAccessor: { type: ["string", "function"], default: "name" },
       colorByDepth: { type: "boolean", default: false },
       showLabels: { type: "boolean", default: true },
+      labelMode: { type: "string", enum: ["leaf", "parent", "all"] as const, default: "leaf" },
+      padding: { type: "number" },
+      paddingTop: { type: "number" },
       nodeLabel: { type: ["string", "function"] },
       nodeStyle: { type: "function", omitFromSchema: true, description: "Per-node style overlay merged on top of Treemap's built-in color encoding" },
     },
@@ -257,6 +262,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       showLabels: { type: "boolean", default: true },
       nodeLabel: { type: ["string", "function"] },
       circleOpacity: { type: "number", default: 0.7 },
+      padding: { type: "number" },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -290,6 +296,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       animated: { type: "boolean", default: true, description: "Enable animation" },
       // `revolution` is a per-node phase override — runtime-only.
       revolution: { type: "function", omitFromSchema: true },
+      revolutionStyle: { type: "string", enum: ["locked", "decay", "alternate"] as const, default: "locked" },
       // `foregroundGraphics` is a render-on-top escape hatch (StreamFrame
       // pass-through), runtime-only.
       foregroundGraphics: { type: "object", omitFromSchema: true },
@@ -297,9 +304,9 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
-      supportsPush: false, supportsSSR: false,
+      supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["hierarchy", "animated", "hoc-ssr-only"],
+      specialFeatures: ["hierarchy", "animated"],
     },
   },
 

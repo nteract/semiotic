@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react"
-import { RealtimeLineChart } from "semiotic"
+import { RealtimeLineChart } from "semiotic/realtime"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -245,11 +245,11 @@ function ThresholdDemo() {
 // ---------------------------------------------------------------------------
 
 const realtimeLineChartProps = [
-  { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor." },
+  { name: "data", type: "array", required: false, default: null, description: "Controlled data array. Omit this prop to use the ref push API; data={[]} is controlled empty data, not push mode." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value from each data point." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access the numeric value from each data point." },
   { name: "size", type: "[number, number]", required: false, default: "[500, 300]", description: "Chart dimensions as [width, height]." },
-  { name: "margin", type: "object", required: false, default: null, description: "Chart margins: { top, right, bottom, left }." },
+  { name: "margin", type: "number | object", required: false, default: null, description: "Uniform numeric margin or per-side margins: { top, right, bottom, left }." },
   { name: "arrowOfTime", type: '"left" | "right"', required: false, default: '"right"', description: "Direction that time flows across the chart." },
   { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: 'Data retention strategy. "sliding" discards old points beyond windowSize; "growing" keeps all.' },
   { name: "windowSize", type: "number", required: false, default: "200", description: "Ring buffer capacity when using sliding window mode." },
@@ -259,6 +259,10 @@ const realtimeLineChartProps = [
   { name: "stroke", type: "string", required: false, default: '"#007bff"', description: "Line color." },
   { name: "strokeWidth", type: "number", required: false, default: "2", description: "Line width in pixels." },
   { name: "strokeDasharray", type: "string", required: false, default: null, description: 'SVG dash pattern string, e.g. "4,2".' },
+  { name: "opacity", type: "number", required: false, default: "1", description: "Uniform line opacity from 0 to 1." },
+  { name: "cursor", type: "CSS cursor", required: false, default: null, description: 'Presentation-only cursor for the line, such as "pointer". It does not add click or keyboard behavior.' },
+  { name: "aggregate", type: "object", required: false, default: null, description: "Reduce pushed events into tumbling, hopping, or session windows before rendering." },
+  { name: "eventTime", type: "object", required: false, default: null, description: "Reorder pushed events inside a bounded lateness window. Call flush() at an asserted stream or batch boundary." },
   { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show canvas-drawn axes." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on the chart." },
@@ -290,7 +294,7 @@ export default function RealtimeLineChartPage() {
     >
       <ComponentMeta
         componentName="RealtimeLineChart"
-        importStatement='import { RealtimeLineChart } from "semiotic"'
+        importStatement='import { RealtimeLineChart } from "semiotic/realtime"'
         tier="charts"
         wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
@@ -307,7 +311,7 @@ export default function RealtimeLineChartPage() {
         RealtimeLineChart renders a continuously updating line from streaming
         data. It wraps{" "}
         <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
-        <code>chartType="line"</code> and promotes stroke styling to top-level
+        <code>chartType=&quot;line&quot;</code> and promotes stroke styling to top-level
         props. Create a ref and call <code>ref.current.push(point)</code> in a{" "}
         <code>setInterval</code> to stream data in.
       </p>
@@ -326,7 +330,7 @@ export default function RealtimeLineChartPage() {
       <BasicLineDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`import { RealtimeLineChart } from "semiotic"
+          code={`import { RealtimeLineChart } from "semiotic/realtime"
 import { useRef, useEffect } from "react"
 
 function StreamingLine() {
@@ -356,6 +360,45 @@ function StreamingLine() {
           language="jsx"
         />
       </div>
+
+      <h2 id="event-time">Event-Time Ordering and Aggregation</h2>
+
+      <p>
+        Set <code>eventTime</code> when events can arrive out of order.
+        RealtimeLineChart holds a bounded grace window, then releases points in
+        event-time order. This delays display by <code>lateness</code>. Call the
+        chart-specific <code>RealtimeLineChartHandle.flush()</code> only when
+        the source reaches a real end-of-stream or batch boundary; there is no
+        need to push a fake future point to release the tail.
+      </p>
+
+      <p>
+        The optional <code>aggregate</code> transform reduces raw events into
+        tumbling, hopping, or session windows before rendering. Changing the
+        window structure or either accessor rebuilds the accumulator:
+        controlled <code>data</code> is replayed, while a push-only stream
+        begins a new epoch because raw history is not retained.
+      </p>
+
+      <CodeBlock
+        code={`const chartRef = useRef()
+
+<RealtimeLineChart
+  ref={chartRef}
+  eventTime={{ lateness: "2s", latePolicy: "drop" }}
+  aggregate={{
+    window: "tumbling",
+    size: "10s",
+    stat: "mean",
+    band: "stddev",
+    retain: 120
+  }}
+/>
+
+// At a confirmed stream or batch boundary:
+chartRef.current?.flush()`}
+        language="jsx"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
@@ -488,7 +531,7 @@ function StreamingLine() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-charts)" }}>Chart (simple)</h4>
           <CodeBlock
-            code={`import { RealtimeLineChart } from "semiotic"
+            code={`import { RealtimeLineChart } from "semiotic/realtime"
 
 <RealtimeLineChart
   ref={chartRef}
@@ -503,7 +546,7 @@ function StreamingLine() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { StreamXYFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic/realtime"
 
 <StreamXYFrame
   ref={frameRef}

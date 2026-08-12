@@ -9,6 +9,18 @@ export const DEFAULT_SIDE_LEGEND_WIDTH = 100
 export const DEFAULT_LEGEND_DISTANCE = 10
 
 /**
+ * Labeled gradient legends use one shared, non-negative vertical layout in
+ * both the browser and static SVG renderers. Legend placement treats its
+ * transform as the top of the content box, so drawing the label at a negative
+ * y (the old geometry) could clip side/top legends at the SVG edge and let a
+ * bottom label intrude into the plot gap.
+ */
+export const GRADIENT_LEGEND_LABEL_BASELINE = 12
+export const GRADIENT_LEGEND_LABELED_BAR_Y = 18
+export const GRADIENT_LEGEND_HORIZONTAL_HEIGHT = 46
+export const GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED = 26
+
+/**
  * SVG text has no useful intrinsic width until after it is mounted. Keep the
  * estimate shared by margin calculation and rendering so side legends never
  * reserve one width and draw into another.
@@ -148,7 +160,11 @@ export function resolveHorizontalLegendHeight(
   availableWidth: number,
   layout?: LegendLayout,
 ): number {
-  if (isGradientLegendConfig(legend)) return legend.gradient.label ? 34 : 26
+  if (isGradientLegendConfig(legend)) {
+    return legend.gradient.label
+      ? GRADIENT_LEGEND_HORIZONTAL_HEIGHT
+      : GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED
+  }
   if (!isLegendConfig(legend)) return 20
 
   const metrics = resolveLegendMetrics(layout)

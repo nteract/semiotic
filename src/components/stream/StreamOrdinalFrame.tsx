@@ -20,40 +20,28 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import {
-  useRef,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useImperativeHandle,
-  forwardRef,
-  memo
-} from "react"
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import type {
-  StreamOrdinalFrameProps,
-  StreamOrdinalFrameHandle,
-  OrdinalScales,
-  OrdinalPipelineConfig,
+  HoverData,
   OrdinalLayout,
-  HoverData
+  OrdinalPipelineConfig,
+  OrdinalScales,
+  StreamOrdinalFrameHandle,
+  StreamOrdinalFrameProps
 } from "./ordinalTypes"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
-import {
-  SceneRevisionDiagnosticsObserver,
-  useSceneRevisionDiagnostics
-} from "./sceneRevisionDiagnostics"
+import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
+import { ordinalHitToHover, resolveOrdinalPointerHit } from "./ordinalFrameInteraction"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
-import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
@@ -62,17 +50,21 @@ import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { sceneMarkCursor, setCanvasMarkCursor, syncCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
+import { shouldHandleFramePointer } from "./frameCursorInteraction"
+import { rehitOrdinalFrameCursor } from "./ordinalFrameCursorInteraction"
 
 // Canvas setup / hover
 import { getDevicePixelRatio } from "./canvasSetup"
-import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
+import type { HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { resolveFrameGraphics } from "./frameGraphics"
 
 import { ORDINAL_CANVAS_RENDERERS as RENDERERS } from "./ordinalCanvasRenderers"
-import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
+import { paintSceneWithBackend } from "./renderBackend"
+import { renderOrdinalSceneListWithBackend } from "./ordinalSceneSVG"
 import { DefaultOrdinalTooltip } from "./ordinalDefaultTooltip"
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
@@ -148,6 +140,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       tickLabelEdgeAlign,
       axisExtent,
       enableHover = true,
+      hoverRadius = 30,
       hoverAnnotation,
       tooltipContent,
       customHoverBehavior: customHoverBehaviorProp,
@@ -272,6 +265,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const hoverRef = useRef<HoverData | null>(null)
+    const sceneHasAuthoredCursorRef = useRef(false)
     // ── State ────────────────────────────────────────────────────────────
 
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
@@ -285,8 +279,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     // puts them on top of bars and other marks. SVG resolves both literal
     // colors and CSS custom properties, so this preserves the former canvas
     // fill behavior while keeping the layer order: background → grid → marks.
-    // As before, user-provided backgroundGraphics owns the entire background
-    // layer, and `background="transparent"` opts out of any frame fill.
+    // With backgroundGraphics, the ordinary theme fallback remains opt-out so
+    // custom graphics can be transparent by default. An explicitly requested
+    // solid background is composed immediately before those graphics.
     const resolvedCanvasBackground =
       !backgroundGraphics && background !== "transparent" ? (
         <rect
@@ -297,6 +292,18 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           width={size[0]}
           height={size[1]}
           fill={background || "var(--semiotic-bg, transparent)"}
+        />
+      ) : null
+    const resolvedCombinedBackground =
+      backgroundGraphics && background && background !== "transparent" ? (
+        <rect
+          className="semiotic-canvas-background semiotic-canvas-background--combined"
+          data-semiotic-layer="canvas-background"
+          x={-margin.left}
+          y={-margin.top}
+          width={size[0]}
+          height={size[1]}
+          fill={background}
         />
       ) : null
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -537,39 +544,40 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
-    const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
+    const {
+      hoverHandlerRef,
+      hoverLeaveRef,
+      onPointerMove,
+      onPointerLeave,
+      pointerStateRef
+    } = frame
 
     hoverHandlerRef.current = (e: HoverPointerCoords) => {
-      if (!effectiveHoverAnnotation) return
-
       const canvas = canvasRef.current
       if (!canvas) return
-      const rect = canvas.getBoundingClientRect()
-
-      const chartX = e.clientX - rect.left - margin.left
-      const chartY = e.clientY - rect.top - margin.top
-
-      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
-        if (hoverRef.current) {
-          hoverRef.current = null
-          setHoverPoint(null)
-          if (customHoverBehavior) customHoverBehavior(null)
-          scheduleRender()
-        }
-        return
-      }
-
       const store = storeRef.current
-      if (!store || store.scene.length === 0) return
-
-      // For radial projection, convert to center-relative coordinates
-      // since scene nodes use (0,0) as center
-      const isRadialMode = projection === "radial"
-      const hitX = isRadialMode ? chartX - adjustedWidth / 2 : chartX
-      const hitY = isRadialMode ? chartY - adjustedHeight / 2 : chartY
-
-      const hit = findNearestOrdinalNode(store.scene, hitX, hitY, 30, store.pointQuadtree, store.maxPointRadius)
-      if (!hit) {
+      if (!store) {
+        setCanvasMarkCursor(canvas)
+        return
+      }
+      const result = resolveOrdinalPointerHit({
+        pointer: e,
+        canvasRect: canvas.getBoundingClientRect(),
+        margin: { left: margin.left, top: margin.top },
+        width: adjustedWidth,
+        height: adjustedHeight,
+        projection,
+        hoverRadius,
+        scene: store.scene,
+        pointQuadtree: store.pointQuadtree,
+        maxPointRadius: store.maxPointRadius
+      })
+      setCanvasMarkCursor(
+        canvas,
+        result.kind === "hit" ? sceneMarkCursor(result.hit.node) : undefined
+      )
+      if (!effectiveHoverAnnotation) return
+      if (result.kind !== "hit") {
         if (hoverRef.current) {
           hoverRef.current = null
           setHoverPoint(null)
@@ -579,13 +587,10 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         return
       }
 
-      const rawDatum = hit.datum || {}
-      const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
-        ...(hit.stats && { stats: hit.stats }),
-        ...(hit.category && { category: hit.category }),
-        __oAccessor: typeof effectiveOAccessor === "string" ? effectiveOAccessor : undefined,
-        __rAccessor: typeof effectiveRAccessor === "string" ? effectiveRAccessor : undefined,
-        __chartType: chartType
+      const hover = ordinalHitToHover(result.hit, {
+        oAccessor: effectiveOAccessor,
+        rAccessor: effectiveRAccessor,
+        chartType
       })
 
       hoverRef.current = hover
@@ -600,6 +605,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     }
 
     hoverLeaveRef.current = () => {
+      setCanvasMarkCursor(canvasRef.current)
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverPoint(null)
@@ -607,6 +613,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         scheduleRender()
       }
     }
+
+    useCanvasMarkCursorCleanup(canvasRef)
 
     const onClick = useCallback((e: React.MouseEvent) => {
       if (isAnnotationActivationTarget(e.target)) return
@@ -618,39 +626,34 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         scheduleRender()
         return
       }
-      const rect = canvas.getBoundingClientRect()
-      const chartX = e.clientX - rect.left - margin.left
-      const chartY = e.clientY - rect.top - margin.top
-      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
-        customClickBehavior(null)
-        scheduleRender()
-        return
-      }
-
       const store = storeRef.current
-      if (!store || store.scene.length === 0) {
+      if (!store) {
+        customClickBehavior(null)
+        scheduleRender()
+        return
+      }
+      const result = resolveOrdinalPointerHit({
+        pointer: e,
+        canvasRect: canvas.getBoundingClientRect(),
+        margin: { left: margin.left, top: margin.top },
+        width: adjustedWidth,
+        height: adjustedHeight,
+        projection,
+        hoverRadius,
+        scene: store.scene,
+        pointQuadtree: store.pointQuadtree,
+        maxPointRadius: store.maxPointRadius
+      })
+      if (result.kind !== "hit") {
         customClickBehavior(null)
         scheduleRender()
         return
       }
 
-      const isRadialMode = projection === "radial"
-      const hitX = isRadialMode ? chartX - adjustedWidth / 2 : chartX
-      const hitY = isRadialMode ? chartY - adjustedHeight / 2 : chartY
-      const hit = findNearestOrdinalNode(store.scene, hitX, hitY, 30, store.pointQuadtree, store.maxPointRadius)
-      if (!hit) {
-        customClickBehavior(null)
-        scheduleRender()
-        return
-      }
-
-      const rawDatum = hit.datum || {}
-      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y, {
-        ...(hit.stats && { stats: hit.stats }),
-        ...(hit.category && { category: hit.category }),
-        __oAccessor: typeof effectiveOAccessor === "string" ? effectiveOAccessor : undefined,
-        __rAccessor: typeof effectiveRAccessor === "string" ? effectiveRAccessor : undefined,
-        __chartType: chartType
+      customClickBehavior(ordinalHitToHover(result.hit, {
+        oAccessor: effectiveOAccessor,
+        rAccessor: effectiveRAccessor,
+        chartType
       }), {
         type: "activate",
         inputType: observationInputType(
@@ -661,11 +664,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // React state → pieceStyle → useConfigSync (same as hover). Dirtying here
       // restarted transitions under animate/intro.
       scheduleRender()
-    }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender])
+    }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, hoverRadius, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender])
 
-    // pointermove coalescing (rAF-bounded hit testing) + onMouseLeave
-    // come from useFrame above. Frame still owns the hoverHandlerRef
-    // and hoverLeaveRef closure bodies (assigned earlier in this file).
+    // useFrame coalesces pointer moves; this frame owns the hit-test closures.
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
@@ -683,10 +684,14 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       })
 
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      if (!shouldHandleFramePointer(
+        pointerStateRef, e, Boolean(effectiveHoverAnnotation),
+        sceneHasAuthoredCursorRef.current, canvasRef.current, "mouse"
+      )) return
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
-    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
+    }, [canvasRef, effectiveHoverAnnotation, focusedNavPointRef, kbFocusIndexRef, onPointerMove, pointerStateRef])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -701,18 +706,19 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
       const store = storeRef.current
       if (!store) return
-
       const now = frameRuntime.now()
 
       // Advance transition animation
       // Fast-forward transitions when reduced motion is active so target positions
       // are applied immediately and transition state is cleared properly
+      const transitionWasActive = store.activeTransition != null
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       const dimsChanged =
         lastSceneDimsRef.current.w !== adjustedWidth || lastSceneDimsRef.current.h !== adjustedHeight
       const wasDirty = dirtyRef.current
+      const stylePaintPending = store.consumeStylePaintPending()
       let computedSceneThisFrame = false
       const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
         store.getLastUpdateResult(),
@@ -726,6 +732,16 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()
+      }
+      if (computedSceneThisFrame || stylePaintPending)
+        sceneHasAuthoredCursorRef.current = syncCanvasMarkCursor(canvas, store.scene)
+      if (sceneHasAuthoredCursorRef.current && (transitionWasActive || computedSceneThisFrame || stylePaintPending)) {
+        rehitOrdinalFrameCursor({
+          canvas, pointer: pointerStateRef.current, store,
+          margin: { left: margin.left, top: margin.top },
+          width: adjustedWidth, height: adjustedHeight, projection, hoverRadius,
+          geometryMoved: transitionWasActive || computedSceneThisFrame
+        })
       }
       sceneRevisionDiagnosticsRef.current.afterCompute(
         sceneRevisionCheck,
@@ -839,7 +855,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     }
 
     // Staleness check timer
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
@@ -943,21 +959,16 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {ssrBackground && (
-              <g transform={`translate(${margin.left},${margin.top})`}>
-                {ssrBackground}
-              </g>
-            )}
-            <g transform={`translate(${translateX},${translateY})`}>
+            <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
-              {scene.map((node, i) => renderSceneWithBackend({
-                node,
-                index: i,
-                renderMode,
-                fallback: () => ordinalSceneNodeToSVG(node, i, tableId)
-              })).filter(Boolean)}
+              {ssrBackground}
+            </g>
+            <g transform={`translate(${translateX},${translateY})`}>
+              {renderOrdinalSceneListWithBackend({
+                nodes: scene, renderMode, idPrefix: tableId
+              }).map(entry => entry.element)}
             </g>
           </svg>
           <OrdinalSVGOverlay
@@ -1053,11 +1064,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onMouseMove={onMouseMoveWrapped}
+          onMouseLeave={onPointerLeave}
           onClick={hasClickBehavior ? onClick : undefined}
         >
         <CanvasFrameBackground size={size} margin={margin}>
+          {resolvedCombinedBackground}
           {resolvedCanvasBackground}
           {resolvedBackground}
         </CanvasFrameBackground>

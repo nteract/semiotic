@@ -8,18 +8,18 @@ function generateFrameSVGs(chartType: string, data: Datum[], props: Datum, optio
 function generateFrameSequence(component: string, snapshots: Datum[], baseProps?: Datum | undefined): string[]
 function generatePhysicsFrameSVGs(props: PhysicsGifFrameProps, options?: PhysicsGifOptions | undefined): string[]
 function renderChart(component: ChartName, props: Datum, options?: RenderChartOptions | undefined): string
-function renderChartWithEvidence(component: ChartName, props: Datum, options?: RenderChartOptions | undefined): { svg: string; evidence: RenderEvidence; }
+function renderChartWithEvidence(component: ChartName, props: Datum, options?: RenderChartOptions | undefined): {svg: string; evidence: RenderEvidence;}
 function renderDashboard(charts: DashboardChart[], options?: RenderDashboardOptions | undefined): string
 function renderGeoToStaticSVG(props: StreamGeoFrameProps<Datum> & ThemeAwareProps): string
 function renderNetworkToStaticSVG(props: StreamNetworkFrameProps<Datum> & ThemeAwareProps): string
 function renderOrdinalToStaticSVG(props: StreamOrdinalFrameProps<Datum> & ThemeAwareProps): string
 function renderPhysicsToAnimatedGif(props: PhysicsGifFrameProps, options?: PhysicsGifOptions | undefined): Promise<Buffer>
 function renderToAnimatedGif(chartType: string, data: Datum[], props: Datum, options?: AnimatedGifOptions | undefined): Promise<Buffer>
-function renderToImage(frameTypeOrComponent: FrameType | ChartName, props: Datum, options?: RenderToImageOptions | undefined): Promise<Buffer>
+function renderToImage(frameTypeOrComponent: ChartName | FrameType, props: Datum, options?: RenderToImageOptions | undefined): Promise<Buffer>
 function renderToStaticSVG(frameType: FrameType, props: StaticFrameProps): string
 function renderXYToStaticSVG(props: StreamXYFrameProps<Datum> & ThemeAwareProps): string
 function resolveTheme(theme: ThemeInput): SemioticTheme
-function themeStyles(theme: SemioticTheme): { background: string; text: string; textSecondary: string; grid: string; border: string; primary: string; fontFamily: string; titleSize: number; labelSize: number; tickSize: number; categorical: string[]; annotation: string; legendSize: number; titleFontSize: number; tickFontFamily: string; }
+function themeStyles(theme: SemioticTheme): {background: string; text: string; textSecondary: string; grid: string; border: string; primary: string; fontFamily: string; titleSize: number; labelSize: number; tickSize: number; categorical: string[]; annotation: string; legendSize: number; titleFontSize: number; tickFontFamily: string;}
 interface AnimatedGifOptions
 interface CategoricalLegendConfig
 interface DashboardChart
@@ -29,11 +29,98 @@ interface GradientLegendValue
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
-interface PhysicsGifFrameProps
-interface PhysicsGifOptions
+interface PhysicsGifFrameProps extends Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel">
+interface PhysicsGifOptions extends Pick<AnimatedGifOptions, "background" | "fps" | "frameCount" | "loop" | "scale">
 interface RenderDashboardOptions
 interface RenderEvidence
 interface RenderToImageOptions
-type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
-type ThemeInput = string | PartialThemeObject | undefined
+interface-member AnimatedGifOptions::property::background = optional background: string | undefined
+interface-member AnimatedGifOptions::property::decay = optional decay: undefined | {type: "exponential" | "linear" | "step"; minOpacity?: number; halfLife?: number;}
+interface-member AnimatedGifOptions::property::easing = optional easing: "ease-out" | "linear" | undefined
+interface-member AnimatedGifOptions::property::fps = optional fps: number | undefined
+interface-member AnimatedGifOptions::property::frameCount = optional frameCount: number | undefined
+interface-member AnimatedGifOptions::property::loop = optional loop: boolean | undefined
+interface-member AnimatedGifOptions::property::scale = optional scale: number | undefined
+interface-member AnimatedGifOptions::property::stepSize = optional stepSize: number | undefined
+interface-member AnimatedGifOptions::property::transitionFrames = optional transitionFrames: number | undefined
+interface-member AnimatedGifOptions::property::windowSize = optional windowSize: number | undefined
+interface-member AnimatedGifOptions::property::xExtent = optional xExtent: [number, number] | undefined
+interface-member AnimatedGifOptions::property::yExtent = optional yExtent: [number, number] | undefined
+interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
+interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
+interface-member DashboardChart::property::colSpan = optional colSpan: number | undefined
+interface-member DashboardChart::property::component = optional component: ChartName | undefined
+interface-member DashboardChart::property::frameType = optional frameType: FrameType | undefined
+interface-member DashboardChart::property::props = required props: Datum
+interface-member DashboardLayout::property::columns = optional columns: number | undefined
+interface-member DashboardLayout::property::gap = optional gap: number | undefined
+interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
+interface-member GradientLegendConfig::property::domain = required domain: [number, number]
+interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
+interface-member GradientLegendConfig::property::label = optional label: string | undefined
+interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
+interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member LegendGroup::property::items = required items: LegendItem[]
+interface-member LegendGroup::property::label = required label: string
+interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
+interface-member LegendGroup::property::type = optional type: ItemType | undefined
+interface-member LegendItem::index::%24index = required (key: string): unknown
+interface-member LegendItem::property::color = optional color: string | undefined
+interface-member LegendItem::property::label = required label: string
+interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
+interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
+interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
+interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined
+interface-member LegendLayout::property::rowHeight = optional rowHeight: number | undefined
+interface-member LegendLayout::property::sideGutter = optional sideGutter: number | undefined
+interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
+interface-member PhysicsGifFrameProps::property::background = optional background: string | undefined
+interface-member PhysicsGifFrameProps::property::className = optional className: string | undefined
+interface-member PhysicsGifFrameProps::property::config = optional config: PhysicsPipelineConfig | undefined
+interface-member PhysicsGifFrameProps::property::description = optional description: string | undefined
+interface-member PhysicsGifFrameProps::property::height = optional height: number | undefined
+interface-member PhysicsGifFrameProps::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsGifFrameProps::property::initialSpawnPacing = optional initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
+interface-member PhysicsGifFrameProps::property::initialSpawns = optional initialSpawns: PhysicsQueuedSpawn[] | undefined
+interface-member PhysicsGifFrameProps::property::size = optional size: [number, number] | undefined
+interface-member PhysicsGifFrameProps::property::theme = optional theme: SemioticTheme | string | undefined
+interface-member PhysicsGifFrameProps::property::title = optional title: string | undefined
+interface-member PhysicsGifFrameProps::property::width = optional width: number | undefined
+interface-member PhysicsGifOptions::property::durationSeconds = optional durationSeconds: number | undefined
+interface-member PhysicsGifOptions::property::includeInitialFrame = optional includeInitialFrame: boolean | undefined
+interface-member PhysicsGifOptions::property::stepDt = optional stepDt: number | undefined
+interface-member PhysicsGifOptions::property::stepsPerFrame = optional stepsPerFrame: number | undefined
+interface-member RenderDashboardOptions::property::background = optional background: string | undefined
+interface-member RenderDashboardOptions::property::format = optional format: "svg" | undefined
+interface-member RenderDashboardOptions::property::height = optional height: number | undefined
+interface-member RenderDashboardOptions::property::layout = optional layout: DashboardLayout | undefined
+interface-member RenderDashboardOptions::property::subtitle = optional subtitle: string | undefined
+interface-member RenderDashboardOptions::property::theme = optional theme: ThemeInput
+interface-member RenderDashboardOptions::property::title = optional title: string | undefined
+interface-member RenderDashboardOptions::property::width = optional width: number | undefined
+interface-member RenderEvidence::property::annotationCount = required annotationCount: number
+interface-member RenderEvidence::property::ariaLabel = required ariaLabel: string
+interface-member RenderEvidence::property::categories = optional categories: string[] | undefined
+interface-member RenderEvidence::property::component = required component: string
+interface-member RenderEvidence::property::edgeCount = optional edgeCount: number | undefined
+interface-member RenderEvidence::property::empty = required empty: boolean
+interface-member RenderEvidence::property::frameType = required frameType: "geo" | "network" | "ordinal" | "physics" | "value" | "xy"
+interface-member RenderEvidence::property::height = required height: number
+interface-member RenderEvidence::property::legendItems = optional legendItems: number | undefined
+interface-member RenderEvidence::property::margin = optional margin: undefined | {top: number; right: number; bottom: number; left: number;}
+interface-member RenderEvidence::property::markCount = required markCount: number
+interface-member RenderEvidence::property::markCountByType = required markCountByType: Record<string, number>
+interface-member RenderEvidence::property::nodeCount = optional nodeCount: number | undefined
+interface-member RenderEvidence::property::plot = optional plot: undefined | {x: number; y: number; width: number; height: number;}
+interface-member RenderEvidence::property::status = required status: "empty" | "ok"
+interface-member RenderEvidence::property::warnings = required warnings: string[]
+interface-member RenderEvidence::property::width = required width: number
+interface-member RenderEvidence::property::xDomain = optional xDomain: [number, number] | undefined
+interface-member RenderEvidence::property::yDomain = optional yDomain: [number, number] | undefined
+interface-member RenderToImageOptions::property::background = optional background: string | undefined
+interface-member RenderToImageOptions::property::format = optional format: "jpeg" | "png" | undefined
+interface-member RenderToImageOptions::property::scale = optional scale: number | undefined
+type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type ThemeInput = PartialThemeObject | string | undefined
 ```

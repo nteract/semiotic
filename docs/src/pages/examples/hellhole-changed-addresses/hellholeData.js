@@ -31,11 +31,10 @@ export const PERIODS = Object.freeze([
 
 export const SOURCE_REGISTRY = Object.freeze([
   {
-    id: "hellhole-design-doc-v2",
-    title: "The Hellhole Changed Addresses — v2 generational parallax design document",
-    organization: "Semiotic",
-    href: "https://github.com/nteract/semiotic/blob/main/docs/strategy/the_hellhole_changed_addresses_design_doc_v2_generational_parallax.md",
-    sourceType: "editorial-design-brief",
+    id: "editorial-cultural-stations",
+    title: "Illustrative cultural works used in this example",
+    organization: "Semiotic documentation example",
+    sourceType: "editorial-selection",
     grade: "D",
     supports: ["Illustrative seed-work title, release year, medium, and editorial grouping"],
     limitations: [
@@ -425,9 +424,8 @@ export function migrationTotals(period) {
 }
 
 /**
- * Illustrative stations copied from the design brief's seed lists. The role is
- * the section in which the brief places the work; it is not a scored annotation.
- * Start year is used for a series, exactly as the implementation baseline states.
+ * Illustrative editorial stations. Their role is a narrative grouping, not a
+ * scored annotation. Start year is used for a series.
  */
 export const CULTURAL_WORKS = Object.freeze([
   {
@@ -438,7 +436,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "suburb",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "man-gray-flannel-suit",
@@ -447,7 +445,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "leave-it-to-beaver",
@@ -457,7 +455,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "suburb",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "naked-city",
@@ -467,7 +465,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "core",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "breakfast-at-tiffanys",
@@ -476,7 +474,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "graduate",
@@ -485,7 +483,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "brady-bunch",
@@ -495,7 +493,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "suburb",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "mary-tyler-moore-show",
@@ -505,7 +503,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "core",
     role: "positive-or-ordinary",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "death-wish",
@@ -514,7 +512,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "urban-crisis",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "stepford-wives",
@@ -523,7 +521,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "taxi-driver",
@@ -532,7 +530,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "urban-crisis",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "halloween",
@@ -541,7 +539,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "warriors",
@@ -550,7 +548,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "urban-crisis",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "escape-from-new-york",
@@ -559,7 +557,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "urban-crisis",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "poltergeist",
@@ -568,7 +566,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "blue-velvet",
@@ -577,7 +575,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "the-burbs",
@@ -586,7 +584,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "early-critique",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "new-jack-city",
@@ -595,7 +593,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "core",
     role: "urban-crisis",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "safe",
@@ -604,7 +602,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "ice-storm",
@@ -613,7 +611,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "truman-show",
@@ -622,7 +620,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "pleasantville",
@@ -631,7 +629,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "american-beauty",
@@ -640,7 +638,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "virgin-suicides",
@@ -649,7 +647,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "donnie-darko",
@@ -658,7 +656,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "desperate-housewives",
@@ -668,7 +666,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "television",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "little-children",
@@ -677,7 +675,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
   {
     id: "revolutionary-road",
@@ -686,7 +684,7 @@ export const CULTURAL_WORKS = Object.freeze([
     medium: "film",
     placeFamily: "suburb",
     role: "late-1990s-cluster",
-    sourceIds: ["hellhole-design-doc-v2"],
+    sourceIds: ["editorial-cultural-stations"],
   },
 ])
 

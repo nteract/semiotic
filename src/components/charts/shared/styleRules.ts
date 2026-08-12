@@ -22,6 +22,7 @@
  */
 import type { Datum } from "./datumTypes"
 import type { HatchFill } from "./hatchFill"
+import type { CSSProperties } from "react"
 
 /** The style a rule applies. `fill` may be a solid color or a {@link HatchFill}. */
 export interface StyleRuleStyle {
@@ -32,6 +33,11 @@ export interface StyleRuleStyle {
   strokeWidth?: number
   strokeDasharray?: string
   opacity?: number
+  /**
+   * CSS cursor shown for matching marks. Presentation only; pair with the
+   * chart/frame interaction API to provide click and keyboard behavior.
+   */
+  cursor?: CSSProperties["cursor"]
 }
 
 /**
@@ -308,8 +314,9 @@ export function composeStyleRules<A = string>(
  * rules read — `value` for bars, `{ value, x, y }` for XY, node value/group
  * for network, etc. — so all families share one rule-resolution core.
  *
- * @param arg the second style-fn argument (ordinal category / stack key). It is
- *   passed through to `buildContext` and the user style fn unchanged.
+ * The returned style function's second argument is the ordinal category or
+ * stack key. It is passed through to `buildContext` and the user style
+ * function unchanged.
  */
 export function makeStyleRuleStyleFn(
   rules: ReadonlyArray<StyleRule> | undefined,

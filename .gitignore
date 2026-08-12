@@ -18,6 +18,8 @@ test-results
 bundle-analysis.html
 test-imports.mjs
 lbe.md
+/semiotic-*.tgz
+/ssr-gallery.html
 docs/public/api/
 .claude/
 /docs/strategy

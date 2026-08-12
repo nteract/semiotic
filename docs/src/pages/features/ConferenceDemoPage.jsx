@@ -186,6 +186,13 @@ export default function ConferenceDemoPage() {
     return () => unregister()
   }, [])
 
+  // Start the local custom-chart chunk while the conference arc is being
+  // rehearsed. It remains code-split, but is ready before the offline beat
+  // reaches the custom escape hatch under a throttled connection.
+  useEffect(() => {
+    void import("../../examples/recipes/Kstreams")
+  }, [])
+
   const variantProposal = useMemo(() => {
     if (!proposerReady) return null
     const capability = getCapability("BoxPlot")

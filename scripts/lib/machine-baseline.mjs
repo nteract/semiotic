@@ -826,55 +826,77 @@ export function validateMachineBaseline(manifest) {
   return errors
 }
 
-export function compareMachineBaselines(baseline, current) {
+export function compareMachineBaselines(baseline, current, options = {}) {
+  const enforceStatic = options.enforceStatic !== false
   const baselineErrors = validateMachineBaseline(baseline)
   const currentErrors = validateMachineBaseline(current)
-  const structuralDifferences = [
+  const validationDifferences = [
     ...baselineErrors.map((error) => "baseline: " + error),
     ...currentErrors.map((error) => "current: " + error),
   ]
+  const snapshotDifferences = []
   if (baselineErrors.length === 0 && currentErrors.length === 0) {
-    findDifferences(staticProjection(baseline), staticProjection(current), "baseline", structuralDifferences)
+    findDifferences(staticProjection(baseline), staticProjection(current), "baseline", snapshotDifferences)
   }
 
   const environment = timingEnvironmentMatch(baseline.referenceEnvironment, current.referenceEnvironment)
+  // Packed archive hashes and aggregate docs payloads are host-produced
+  // artifacts. Keep exact static enforcement for the recorded environment,
+  // while allowing other hosts to report their measurements without turning
+  // a Darwin-vs-Linux comparison into a false release failure.
+  const enforceStaticForEnvironment = enforceStatic && environment.compatible
   const timingRegressions = []
   const timingWarnings = []
-  if (environment.compatible && baselineErrors.length === 0 && currentErrors.length === 0) {
+  const contractDifferences = []
+  if (baselineErrors.length === 0 && currentErrors.length === 0) {
     const baselineRows = new Map(timingRows(baseline.metrics).map((row) => [row.id, row.timing]))
     const currentRows = new Map(timingRows(current.metrics).map((row) => [row.id, row.timing]))
     const membership = findDifferences([...baselineRows.keys()].sort(), [...currentRows.keys()].sort(), "timing rows")
-    structuralDifferences.push(...membership)
-    const maximum = baseline.variancePolicy.timing.maxRegression || DEFAULT_VARIANCE_POLICY.timing.maxRegression
-    const absoluteMs = Number(maximum.absoluteMs)
-    const relativePercent = Number(maximum.relativePercent)
-    for (const [id, baselineTiming] of baselineRows) {
-      const currentTiming = currentRows.get(id)
-      if (!currentTiming) continue
-      const allowance = Math.max(absoluteMs, baselineTiming.p50Ms * (relativePercent / 100))
-      const limit = baselineTiming.p50Ms + allowance
-      if (currentTiming.p50Ms > limit) {
-        timingRegressions.push({
-          id,
-          baselineP50Ms: baselineTiming.p50Ms,
-          currentP50Ms: currentTiming.p50Ms,
-          limitMs: roundMilliseconds(limit),
-        })
-      }
-      if (currentTiming.p95Ms > baselineTiming.p95Ms + allowance) {
-        timingWarnings.push({
-          id,
-          baselineP95Ms: baselineTiming.p95Ms,
-          currentP95Ms: currentTiming.p95Ms,
-        })
+    contractDifferences.push(...membership)
+    if (environment.compatible) {
+      const maximum = baseline.variancePolicy.timing.maxRegression || DEFAULT_VARIANCE_POLICY.timing.maxRegression
+      const absoluteMs = Number(maximum.absoluteMs)
+      const relativePercent = Number(maximum.relativePercent)
+      for (const [id, baselineTiming] of baselineRows) {
+        const currentTiming = currentRows.get(id)
+        if (!currentTiming) continue
+        const allowance = Math.max(absoluteMs, baselineTiming.p50Ms * (relativePercent / 100))
+        const limit = baselineTiming.p50Ms + allowance
+        if (currentTiming.p50Ms > limit) {
+          timingRegressions.push({
+            id,
+            baselineP50Ms: baselineTiming.p50Ms,
+            currentP50Ms: currentTiming.p50Ms,
+            limitMs: roundMilliseconds(limit),
+          })
+        }
+        if (currentTiming.p95Ms > baselineTiming.p95Ms + allowance) {
+          timingWarnings.push({
+            id,
+            baselineP95Ms: baselineTiming.p95Ms,
+            currentP95Ms: currentTiming.p95Ms,
+          })
+        }
       }
     }
   }
+  const structuralDifferences = [
+    ...validationDifferences,
+    ...contractDifferences,
+    ...snapshotDifferences,
+  ]
   return {
     structuralDifferences,
+    snapshotDifferences,
+    staticComparisonEnforced: enforceStaticForEnvironment,
+    blockingStructuralDifferences: [...validationDifferences, ...contractDifferences],
     timingEnvironment: environment,
     timingRegressions,
     timingWarnings,
-    ok: structuralDifferences.length === 0 && timingRegressions.length === 0,
+    ok:
+      validationDifferences.length === 0 &&
+      contractDifferences.length === 0 &&
+      (!enforceStaticForEnvironment || snapshotDifferences.length === 0) &&
+      timingRegressions.length === 0,
   }
 }

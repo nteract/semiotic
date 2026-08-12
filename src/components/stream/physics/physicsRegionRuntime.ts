@@ -149,7 +149,14 @@ export function cloneRegionStateSnapshot(
   const snapshot: Record<string, StreamPhysicsBodyRegionState> = {}
   state.forEach((value, key) => {
     const publicState = publicRegionState(value)
-    if (publicState) snapshot[key] = publicState
+    if (publicState) {
+      Object.defineProperty(snapshot, key, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: publicState,
+      })
+    }
   })
   return snapshot
 }

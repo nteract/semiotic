@@ -9,10 +9,11 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Dependencies: BinAccumulator (computeBins), SceneGraph (buildRectNode)
  * Consumed by: PipelineStore.buildSceneNodes (chartType "bar")
  */
-import type { RectSceneNode } from "../types"
+import type { RectSceneNode, Style } from "../types"
 import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
+import { resolveExplicitColor } from "../../charts/shared/colorUtils"
 
 export interface BarSceneResult {
   nodes: RectSceneNode[]
@@ -20,10 +21,19 @@ export interface BarSceneResult {
   binBoundaries: number[]
 }
 
-export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResult {
+export function buildBarScene(
+  ctx: XYSceneContext,
+  data: Datum[]
+): BarSceneResult {
   if (!ctx.config.binSize) return { nodes: [], binBoundaries: [] }
 
-  const bins = computeBins(data, ctx.getX, ctx.getY, ctx.config.binSize, ctx.getCategory)
+  const bins = computeBins(
+    data,
+    ctx.getX,
+    ctx.getY,
+    ctx.config.binSize,
+    ctx.getCategory
+  )
   if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 
   // Establish stable category order (instance-scoped cache on ctx)
@@ -35,11 +45,15 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
         allCategories.add(cat)
       }
     }
-    const colorKeys = ctx.config.barColors ? Object.keys(ctx.config.barColors) : []
+    const colorKeys = ctx.config.barColors
+      ? Object.keys(ctx.config.barColors)
+      : []
     const listed = new Set(colorKeys)
-    const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
-    const activeKeys = colorKeys.filter(k => allCategories.has(k))
-    const cacheKey = activeKeys.join('\0') + '\x01' + unlisted.join('\0')
+    const unlisted = Array.from(allCategories)
+      .filter((c) => !listed.has(c))
+      .sort()
+    const activeKeys = colorKeys.filter((k) => allCategories.has(k))
+    const cacheKey = activeKeys.join("\0") + "\x01" + unlisted.join("\0")
     if (ctx.barCategoryCache && ctx.barCategoryCache.key === cacheKey) {
       categoryOrder = ctx.barCategoryCache.order
     } else {
@@ -53,7 +67,8 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
   const [domainMin, domainMax] = scales.x.domain() as [number, number]
 
   // ── Resolve style inputs once per scene build ────────────────────────
-  // Precedence for stacked fill:   barColors[cat] > barStyle.fill > themeSemantic.primary > #4e79a7
+  // Precedence for stacked fill: barColors[cat] > barStyle.fill >
+  // themeSemantic.primary > #4e79a7. areaStyle is applied last below.
   //   (barStyle.fill is the user's "default fill for categories not in the
   //    colors map" — matches the intent when a user passes both colors={} and
   //    a fill/stroke object on the same chart)
@@ -63,10 +78,18 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
   const themePrimary = ctx.config.themeSemantic?.primary
   const userGap = barStyle?.gap
   const gap = typeof userGap === "number" && userGap >= 0 ? userGap : 1
-  const strokeStyle: { stroke?: string; strokeWidth?: number; opacity?: number } = {}
+  const strokeStyle: {
+    stroke?: string
+    strokeWidth?: number
+    opacity?: number
+    cursor?: Style["cursor"]
+  } = {}
   if (barStyle?.stroke) strokeStyle.stroke = barStyle.stroke
-  if (typeof barStyle?.strokeWidth === "number") strokeStyle.strokeWidth = barStyle.strokeWidth
-  if (typeof barStyle?.opacity === "number") strokeStyle.opacity = barStyle.opacity
+  if (typeof barStyle?.strokeWidth === "number")
+    strokeStyle.strokeWidth = barStyle.strokeWidth
+  if (typeof barStyle?.opacity === "number")
+    strokeStyle.opacity = barStyle.opacity
+  if (barStyle?.cursor) strokeStyle.cursor = barStyle.cursor
 
   for (const bin of bins.values()) {
     const clampedStart = Math.max(bin.start, domainMin)
@@ -91,13 +114,32 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
         const rectY = Math.min(yBottom, yTop)
         const rectH = Math.abs(yBottom - yTop)
 
-        const fill = ctx.config.barColors?.[cat] || barStyle?.fill || themePrimary || "#4e79a7"
-        nodes.push(buildRectNode(
-          x0, rectY, barWidth, rectH,
-          { fill, ...strokeStyle },
-          { binStart: bin.start, binEnd: bin.end, total: bin.total, category: cat, categoryValue: catVal },
-          cat
-        ))
+        const fill =
+          (ctx.config.barColors
+            ? resolveExplicitColor(ctx.config.barColors, cat)
+            : undefined) ??
+          barStyle?.fill ??
+          themePrimary ??
+          "#4e79a7"
+        const datum = {
+          binStart: bin.start,
+          binEnd: bin.end,
+          total: bin.total,
+          category: cat,
+          categoryValue: catVal
+        }
+        const datumStyle = ctx.config.areaStyle?.(datum) ?? {}
+        nodes.push(
+          buildRectNode(
+            x0,
+            rectY,
+            barWidth,
+            rectH,
+            { fill, ...strokeStyle, ...datumStyle },
+            datum,
+            cat
+          )
+        )
         cumulativeBase += catVal
       }
     } else {
@@ -107,11 +149,18 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
       const rectH = Math.abs(yZero - yTop)
 
       const fill = barStyle?.fill || themePrimary || "#007bff"
-      nodes.push(buildRectNode(
-        x0, rectY, barWidth, rectH,
-        { fill, ...strokeStyle },
-        { binStart: bin.start, binEnd: bin.end, total: bin.total }
-      ))
+      const datum = { binStart: bin.start, binEnd: bin.end, total: bin.total }
+      const datumStyle = ctx.config.areaStyle?.(datum) ?? {}
+      nodes.push(
+        buildRectNode(
+          x0,
+          rectY,
+          barWidth,
+          rectH,
+          { fill, ...strokeStyle, ...datumStyle },
+          datum
+        )
+      )
     }
   }
 

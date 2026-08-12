@@ -40,7 +40,11 @@ export type { GeoAreaHitTargetProps, HitTargetPointProps } from "./stream/hitTar
 // glyph — projected composite pictograms standing on the map.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
-export type { GlyphSceneNode, SceneAccessibilityMetadata } from "./stream/types"
+export type {
+  GlyphSceneNode,
+  SceneAccessibilityMetadata,
+  Style
+} from "./stream/types"
 export type {
   CategoricalLegendConfig,
   GradientLegendConfig,

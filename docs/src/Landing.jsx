@@ -550,7 +550,9 @@ function GalleryRealtimeBars({ width, height }) {
 }
 
 function HeroGallery() {
-  const [index, setIndex] = useState(() => Math.floor(Math.random() * galleryItems.length))
+  // Keep the server render and first client render identical. Visitors can
+  // still cycle through every example with the gallery controls.
+  const [index, setIndex] = useState(0)
   const containerRef = useRef(null)
   const [width, setWidth] = useState(null)
 

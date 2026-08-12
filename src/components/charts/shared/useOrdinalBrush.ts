@@ -19,11 +19,11 @@ import { useBrushSelection } from "../../store/useSelection"
 import type { ChartAccessor } from "./types"
 import type { Datum } from "./datumTypes"
 
-export interface OrdinalBrushInput {
+export interface OrdinalBrushInput<TDatum extends Datum = Datum> {
   brushProp: boolean | undefined
   onBrushProp: ((extent: { r: [number, number] } | null) => void) | undefined
   linkedBrush: string | { name: string; rField?: string } | undefined
-  valueAccessor: ChartAccessor<Datum, number>
+  valueAccessor: ChartAccessor<TDatum, number>
 }
 
 export interface OrdinalBrushResult {
@@ -33,12 +33,12 @@ export interface OrdinalBrushResult {
   brushStreamProps: { brush: { dimension: "r" }; onBrush: (extent: { r: [number, number] } | null) => void } | Record<string, never>
 }
 
-export function useOrdinalBrush({
+export function useOrdinalBrush<TDatum extends Datum = Datum>({
   brushProp,
   onBrushProp,
   linkedBrush,
   valueAccessor,
-}: OrdinalBrushInput): OrdinalBrushResult {
+}: OrdinalBrushInput<TDatum>): OrdinalBrushResult {
   // Normalize rField → xField for the selection store. Memoized so
   // `handleBrush`'s useCallback below (keyed on `brushConfig`) gets a stable
   // identity across renders instead of a fresh object every time.

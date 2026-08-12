@@ -1,18 +1,24 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import type { LegendLayout } from "../types/legendTypes"
-import type { LegendValue } from "../types/legendTypes"
-import { composeLegendConfigs, isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
-import type { StreamXYFrameProps, StreamScales, StreamLayout } from "../stream/types"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
+import {
+  composeLegendConfigs,
+  isGradientLegendConfig,
+  isLegendConfig
+} from "../types/legendTypes"
+import type {
+  StreamXYFrameProps,
+  StreamScales,
+  StreamLayout
+} from "../stream/types"
 import type { XYFrameAxisConfig } from "../stream/xyFrameAxisTypes"
 import type {
   StreamNetworkFrameProps,
-  RealtimeEdge,
+  RealtimeEdge
 } from "../stream/networkTypes"
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"
 import type { StreamGeoFrameProps } from "../stream/geoTypes"
-import type { PhysicsSettledSVGOptions } from "../stream/physics/PhysicsSettledSVG"
-import type { PhysicsPipelineStore, PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineStore"
 import type { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
+import type { StaticPhysicsFrameProps } from "./staticPhysics"
 import {
   renderStaticLegend,
   renderStaticLegendGroups,
@@ -20,10 +26,10 @@ import {
   buildStaticCategoricalLegendConfig,
   measureStaticLegend,
   measureStaticLegendGroups,
-  measureStaticGradientLegend,
+  measureStaticGradientLegend
 } from "./staticLegend"
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { resolveGridDash } from "../stream/svgOverlayUtils"
@@ -33,24 +39,21 @@ import {
   resolveLegendDistance,
   resolveLegendSideGutter,
   resolveSideLegendMargin,
-  type AxisChromeInput,
+  type AxisChromeInput
 } from "../legendLayout"
 
 export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
-
-export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
-  config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
-  initialSpawns?: PhysicsQueuedSpawn[]
-  projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
-  size?: [number, number]
-  _idPrefix?: string
-}
-
-export type StaticFrameProps =
-  (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps | StaticPhysicsFrameProps) &
+export type StaticFrameProps = (
+  | StreamXYFrameProps
+  | StreamNetworkFrameProps
+  | StreamOrdinalFrameProps
+  | StreamGeoFrameProps
+  | StaticPhysicsFrameProps
+) &
   ThemeAwareProps
 export type CategoricalAccessor = string | ((d: Datum) => string)
-type EdgeEndpoint = RealtimeEdge["source"] | RealtimeEdge["target"] | null | undefined
+type EdgeEndpoint =
+  RealtimeEdge["source"] | RealtimeEdge["target"] | null | undefined
 
 export function edgeEndpointId(endpoint: EdgeEndpoint): string | null {
   if (typeof endpoint === "string") return endpoint
@@ -93,6 +96,8 @@ export interface ThemeAwareProps {
   _idPrefix?: string
   /** Internal HOC-level legend/margin contract metadata. */
   __explicitMargin?: unknown
+  /** Internal HOC mode signal used by axis-free static chart chrome. */
+  __compactMode?: boolean
   __autoLegendMargin?: boolean
   /**
    * The supplied legend already contains the chart HOC's inferred groups.
@@ -118,19 +123,23 @@ type StaticLegendHostProps = ThemeAwareProps & {
 function effectiveFrameLegend(
   props: StaticLegendHostProps,
   categories: string[],
-  theme: ReturnType<typeof resolveTheme>,
+  theme: ReturnType<typeof resolveTheme>
 ): LegendValue | undefined {
-  const automatic = props.showLegend && !props.__legendIncludesAutomatic
-    ? buildStaticCategoricalLegendConfig(categories, props.colorScheme, theme)
-    : undefined
-  return composeLegendConfigs(automatic, props.legend as LegendValue | undefined)
+  const automatic =
+    props.showLegend && !props.__legendIncludesAutomatic
+      ? buildStaticCategoricalLegendConfig(categories, props.colorScheme, theme)
+      : undefined
+  return composeLegendConfigs(
+    automatic,
+    props.legend as LegendValue | undefined
+  )
 }
 
 const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
   right: 110,
   left: 110,
   top: 50,
-  bottom: 80,
+  bottom: 80
 }
 
 /**
@@ -141,7 +150,7 @@ const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
  */
 export function hocLegendMarginMinimum(
   props: ThemeAwareProps,
-  position: LegendPosition,
+  position: LegendPosition
 ): number | undefined {
   if (!props.__autoLegendMargin) return undefined
   if (hasExplicitLegendMargin(props, position)) return undefined
@@ -151,11 +160,17 @@ export function hocLegendMarginMinimum(
 /** Whether the caller, rather than the HOC default, owns a legend side. */
 export function hasExplicitLegendMargin(
   props: ThemeAwareProps,
-  position: LegendPosition,
+  position: LegendPosition
 ): boolean {
   const explicit = props.__explicitMargin
-  return typeof explicit === "number" ||
-    Boolean(explicit && typeof explicit === "object" && typeof (explicit as Record<string, unknown>)[position] === "number")
+  return (
+    typeof explicit === "number" ||
+    Boolean(
+      explicit &&
+      typeof explicit === "object" &&
+      typeof (explicit as Record<string, unknown>)[position] === "number"
+    )
+  )
 }
 
 export function reserveStaticLegendMargin(
@@ -185,19 +200,32 @@ export function reserveStaticLegendMargin(
     totalHeight: options.size[1],
     margin,
     hasTitle: options.hasTitle,
-    legendLayout: options.legendLayout,
+    legendLayout: options.legendLayout
   })
-  const categoricalLegend = buildStaticCategoricalLegendConfig(options.categories, options.colorScheme, options.theme)
+  const categoricalLegend = buildStaticCategoricalLegendConfig(
+    options.categories,
+    options.colorScheme,
+    options.theme
+  )
   const legendDistance = resolveLegendDistance(categoricalLegend)
   const horizontalRequirement = Math.max(
     options.minimumMargin ?? 0,
-    resolveSideLegendMargin(categoricalLegend, options.legendLayout),
+    resolveSideLegendMargin(categoricalLegend, options.legendLayout)
   )
   // Include the axis gutter: the legend now sits below the tick labels, so
   // the reserved band has to cover chrome + gap + legend.
-  const axisGutter = resolveAxisChromeGutter(options.axisChrome, options.legendLayout)
-  const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
-  const bottomRequirement = Math.max(options.minimumMargin ?? 0, axisGutter + legendDistance + metrics.height)
+  const axisGutter = resolveAxisChromeGutter(
+    options.axisChrome,
+    options.legendLayout
+  )
+  const topRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    legendDistance + metrics.height + (options.hasTitle ? 24 : 0)
+  )
+  const bottomRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    axisGutter + legendDistance + metrics.height
+  )
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -233,24 +261,39 @@ export function reserveLegendConfigMargin(
     totalHeight: options.size[1],
     margin,
     hasTitle: options.hasTitle,
-    legendLayout: options.legendLayout,
+    legendLayout: options.legendLayout
   }
   const metrics = isLegendConfig(options.legend)
-    ? measureStaticLegendGroups({ ...base, legendGroups: options.legend.legendGroups })
+    ? measureStaticLegendGroups({
+        ...base,
+        legendGroups: options.legend.legendGroups
+      })
     : isGradientLegendConfig(options.legend)
-      ? measureStaticGradientLegend({ ...base, gradient: options.legend.gradient })
+      ? measureStaticGradientLegend({
+          ...base,
+          gradient: options.legend.gradient
+        })
       : null
   if (!metrics) return
   const legendDistance = resolveLegendDistance(options.legend as LegendValue)
   const horizontalRequirement = Math.max(
     options.minimumMargin ?? 0,
-    resolveSideLegendMargin(options.legend as LegendValue, options.legendLayout),
+    resolveSideLegendMargin(options.legend as LegendValue, options.legendLayout)
   )
   // Include the axis gutter: the legend now sits below the tick labels, so
   // the reserved band has to cover chrome + gap + legend.
-  const axisGutter = resolveAxisChromeGutter(options.axisChrome, options.legendLayout)
-  const topRequirement = Math.max(options.minimumMargin ?? 0, legendDistance + metrics.height + (options.hasTitle ? 24 : 0))
-  const bottomRequirement = Math.max(options.minimumMargin ?? 0, axisGutter + legendDistance + metrics.height)
+  const axisGutter = resolveAxisChromeGutter(
+    options.axisChrome,
+    options.legendLayout
+  )
+  const topRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    legendDistance + metrics.height + (options.hasTitle ? 24 : 0)
+  )
+  const bottomRequirement = Math.max(
+    options.minimumMargin ?? 0,
+    axisGutter + legendDistance + metrics.height
+  )
 
   if (position === "right") {
     margin.right = Math.max(margin.right, horizontalRequirement)
@@ -288,12 +331,16 @@ export function renderLegendConfig(
     idPrefix: options.idPrefix,
     reservedWidth: options.reservedWidth,
     axisChrome: options.axisChrome,
-    legendDistance: (isLegendConfig(legend) || isGradientLegendConfig(legend))
-      ? legend.legendDistance
-      : undefined,
+    legendDistance:
+      isLegendConfig(legend) || isGradientLegendConfig(legend)
+        ? legend.legendDistance
+        : undefined
   }
   if (isLegendConfig(legend)) {
-    return renderStaticLegendGroups({ ...base, legendGroups: legend.legendGroups })
+    return renderStaticLegendGroups({
+      ...base,
+      legendGroups: legend.legendGroups
+    })
   }
   if (isGradientLegendConfig(legend)) {
     return renderStaticGradientLegend({ ...base, gradient: legend.gradient })
@@ -310,7 +357,7 @@ export function reserveFrameLegendMargin(
     theme: ReturnType<typeof resolveTheme>
     size: [number, number]
     hasTitle?: boolean
-  },
+  }
 ): LegendPosition {
   const { props, categories, theme, size, hasTitle } = options
   const position = props.legendPosition || "right"
@@ -322,7 +369,7 @@ export function reserveFrameLegendMargin(
     legendLayout: props.legendLayout,
     axisChrome: props.axisChrome,
     minimumMargin: hocLegendMarginMinimum(props, position),
-    preserveExplicitMargin: hasExplicitLegendMargin(props, position),
+    preserveExplicitMargin: hasExplicitLegendMargin(props, position)
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
@@ -333,7 +380,7 @@ export function reserveFrameLegendMargin(
     reserveStaticLegendMargin(margin, {
       ...shared,
       categories,
-      colorScheme: props.colorScheme,
+      colorScheme: props.colorScheme
     })
   }
   return position
@@ -358,7 +405,7 @@ export function renderFrameLegend(options: {
     hasTitle,
     legendLayout: props.legendLayout,
     axisChrome: props.axisChrome,
-    idPrefix: props._idPrefix,
+    idPrefix: props._idPrefix
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
@@ -380,7 +427,7 @@ export function renderFrameLegend(options: {
     hasTitle,
     legendLayout: props.legendLayout,
     axisChrome: props.axisChrome,
-    idPrefix: props._idPrefix,
+    idPrefix: props._idPrefix
   })
 }
 
@@ -399,10 +446,10 @@ export function renderGridSVG(
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
-  const bottomAxis = axes?.find(axis => axis.orient === "bottom")
-  const topAxis = axes?.find(axis => axis.orient === "top")
-  const leftAxis = axes?.find(axis => axis.orient === "left")
-  const rightAxis = axes?.find(axis => axis.orient === "right")
+  const bottomAxis = axes?.find((axis) => axis.orient === "bottom")
+  const topAxis = axes?.find((axis) => axis.orient === "top")
+  const leftAxis = axes?.find((axis) => axis.orient === "left")
+  const rightAxis = axes?.find((axis) => axis.orient === "right")
   const xAxis = bottomAxis ?? topAxis
   const yAxis = leftAxis ?? rightAxis
   const xExtentMode = xAxis?.extent ?? axisExtent
@@ -410,14 +457,20 @@ export function renderGridSVG(
   // Grid lines share the axis tick positions (ticksForMode) so they align
   // under axisExtent:"exact" — matching the client SVGOverlay, which draws
   // grid from the same tick arrays as the axis.
-  const xTickCount = xExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = yExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const xTicks = xAxis?.tickValues ?? ticksForMode(scales.x, xAxis?.ticks ?? xTickCount, xExtentMode)
-  const yTicks = yAxis?.tickValues ?? ticksForMode(scales.y, yAxis?.ticks ?? yTickCount, yExtentMode)
+  const xTickCount =
+    xExtentMode === "exact"
+      ? 5
+      : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
+  const yTickCount =
+    yExtentMode === "exact"
+      ? 5
+      : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
+  const xTicks =
+    xAxis?.tickValues ??
+    ticksForMode(scales.x, xAxis?.ticks ?? xTickCount, xExtentMode)
+  const yTicks =
+    yAxis?.tickValues ??
+    ticksForMode(scales.y, yAxis?.ticks ?? yTickCount, yExtentMode)
   const showXGrid = xAxis?.grid !== false
   const showYGrid = yAxis?.grid !== false
   const xGridDash = resolveGridDash(xAxis?.gridStyle)
@@ -425,20 +478,38 @@ export function renderGridSVG(
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
-      {showXGrid && xTicks.map((v, i) => {
-        const px = scales.x(v)
-        return (
-          <line key={`gx-${i}`} x1={px} y1={0} x2={px} y2={layout.height}
-            stroke={grid} strokeWidth={0.5} strokeDasharray={xGridDash} />
-        )
-      })}
-      {showYGrid && yTicks.map((v, i) => {
-        const py = scales.y(v)
-        return (
-          <line key={`gy-${i}`} x1={0} y1={py} x2={layout.width} y2={py}
-            stroke={grid} strokeWidth={0.5} strokeDasharray={yGridDash} />
-        )
-      })}
+      {showXGrid &&
+        xTicks.map((v, i) => {
+          const px = scales.x(v)
+          return (
+            <line
+              key={`gx-${i}`}
+              x1={px}
+              y1={0}
+              x2={px}
+              y2={layout.height}
+              stroke={grid}
+              strokeWidth={0.5}
+              strokeDasharray={xGridDash}
+            />
+          )
+        })}
+      {showYGrid &&
+        yTicks.map((v, i) => {
+          const py = scales.y(v)
+          return (
+            <line
+              key={`gy-${i}`}
+              x1={0}
+              y1={py}
+              x2={layout.width}
+              y2={py}
+              stroke={grid}
+              strokeWidth={0.5}
+              strokeDasharray={yGridDash}
+            />
+          )
+        })}
     </g>
   )
 }
@@ -467,8 +538,15 @@ export function renderOrdinalGridSVG(
         {rTicks.map((v: number, i: number) => {
           const py = scales.r(v)
           return (
-            <line key={`gr-${i}`} x1={0} y1={py} x2={layout.width} y2={py}
-              stroke={grid} strokeWidth={0.5} />
+            <line
+              key={`gr-${i}`}
+              x1={0}
+              y1={py}
+              x2={layout.width}
+              y2={py}
+              stroke={grid}
+              strokeWidth={0.5}
+            />
           )
         })}
       </g>
@@ -479,8 +557,15 @@ export function renderOrdinalGridSVG(
         {rTicks.map((v: number, i: number) => {
           const px = scales.r(v)
           return (
-            <line key={`gr-${i}`} x1={px} y1={0} x2={px} y2={layout.height}
-              stroke={grid} strokeWidth={0.5} />
+            <line
+              key={`gr-${i}`}
+              x1={px}
+              y1={0}
+              x2={px}
+              y2={layout.height}
+              stroke={grid}
+              strokeWidth={0.5}
+            />
           )
         })}
       </g>
@@ -531,7 +616,13 @@ export function wrapSVG(
       {opts.description && <desc id={descId}>{opts.description}</desc>}
       {opts.defs && <defs>{opts.defs}</defs>}
       {background && background !== "transparent" && (
-        <rect x={0} y={0} width={opts.width} height={opts.height} fill={background} />
+        <rect
+          x={0}
+          y={0}
+          width={opts.width}
+          height={opts.height}
+          fill={background}
+        />
       )}
       <g id={`${pfx}data-area`} transform={opts.innerTransform}>
         {content}
@@ -539,7 +630,8 @@ export function wrapSVG(
       {titleText && (
         <text
           id={`${pfx}chart-title`}
-          x={opts.width / 2} y={TITLE_BASELINE}
+          x={opts.width / 2}
+          y={TITLE_BASELINE}
           textAnchor="middle"
           fontSize={s.titleSize}
           fontWeight="bold"
@@ -567,9 +659,7 @@ export function generateAxesSVG(
   const s = themeStyles(theme)
   const sideLegendGutter = resolveLegendSideGutter(props.legendLayout)
   const leftAxisLabelMargin =
-    props.legend &&
-    props.legendPosition === "left" &&
-    sideLegendGutter > 0
+    props.legend && props.legendPosition === "left" && sideLegendGutter > 0
       ? sideLegendGutter
       : (props.margin?.left ?? 40)
   // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
@@ -578,33 +668,45 @@ export function generateAxesSVG(
   // Match SVGOverlay's responsive tick budget. d3's `ticks(5)` can emit
   // seven "nice" values on a short plot while the browser deliberately
   // requests fewer labels to keep the axis legible.
-  const bottomAxis = props.axes?.find(axis => axis.orient === "bottom")
-  const topAxis = props.axes?.find(axis => axis.orient === "top")
-  const leftAxis = props.axes?.find(axis => axis.orient === "left")
-  const rightAxis = props.axes?.find(axis => axis.orient === "right")
+  const bottomAxis = props.axes?.find((axis) => axis.orient === "bottom")
+  const topAxis = props.axes?.find((axis) => axis.orient === "top")
+  const leftAxis = props.axes?.find((axis) => axis.orient === "left")
+  const rightAxis = props.axes?.find((axis) => axis.orient === "right")
   const xAxis = bottomAxis ?? topAxis
   const yAxis = leftAxis ?? rightAxis
   const xExtentMode = xAxis?.extent ?? props.axisExtent
   const yExtentMode = yAxis?.extent ?? props.axisExtent
-  const resolvedXTickCount = xExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const resolvedYTickCount = yExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const rawXTicks = xAxis?.tickValues
-    ?? ticksForMode(scales.x, xAxis?.ticks ?? resolvedXTickCount, xExtentMode)
-  const rawXValues = rawXTicks.map(value => value.valueOf())
-  const xFormatter = xAxis?.tickFormat || props.xFormat || props.tickFormatTime || defaultTickFormat
+  const resolvedXTickCount =
+    xExtentMode === "exact"
+      ? 5
+      : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
+  const resolvedYTickCount =
+    yExtentMode === "exact"
+      ? 5
+      : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
+  const rawXTicks =
+    xAxis?.tickValues ??
+    ticksForMode(scales.x, xAxis?.ticks ?? resolvedXTickCount, xExtentMode)
+  const rawXValues = rawXTicks.map((value) => value.valueOf())
+  const xFormatter =
+    xAxis?.tickFormat ||
+    props.xFormat ||
+    props.tickFormatTime ||
+    defaultTickFormat
   const xTicks = rawXTicks.map((v, index) => ({
     pixel: scales.x(v),
     label: xFormatter(v, index, rawXValues)
   }))
 
-  const rawYTicks = yAxis?.tickValues
-    ?? ticksForMode(scales.y, yAxis?.ticks ?? resolvedYTickCount, yExtentMode)
-  const yFormatter = yAxis?.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
-  const yTicks = rawYTicks.map(v => ({
+  const rawYTicks =
+    yAxis?.tickValues ??
+    ticksForMode(scales.y, yAxis?.ticks ?? resolvedYTickCount, yExtentMode)
+  const yFormatter =
+    yAxis?.tickFormat ||
+    props.yFormat ||
+    props.tickFormatValue ||
+    defaultTickFormat
+  const yTicks = rawYTicks.map((v) => ({
     pixel: scales.y(v),
     label: yFormatter(v)
   }))
@@ -614,27 +716,66 @@ export function generateAxesSVG(
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
       {xAxis?.baseline !== false && (
-        <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
+        <line
+          x1={0}
+          y1={layout.height}
+          x2={layout.width}
+          y2={layout.height}
+          stroke={s.border}
+          strokeWidth={1}
+        />
       )}
       {xTicks.map((tick, i) => (
-        <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
+        <g
+          key={`xtick-${i}`}
+          transform={`translate(${tick.pixel},${layout.height})`}
+        >
           <line y2={5} stroke={s.border} strokeWidth={1} />
-          <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+          <text
+            y={18}
+            textAnchor="middle"
+            fontSize={s.tickSize}
+            fill={s.textSecondary}
+            fontFamily={s.fontFamily}
+          >
+            {tick.label}
+          </text>
         </g>
       ))}
       {xLabel && (
-        <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}>
+        <text
+          x={layout.width / 2}
+          y={layout.height + 40}
+          textAnchor="middle"
+          fontSize={s.labelSize}
+          fill={s.text}
+          fontFamily={s.fontFamily}
+        >
           {xLabel}
         </text>
       )}
 
       {yAxis?.baseline !== false && (
-        <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
+        <line
+          x1={0}
+          y1={0}
+          x2={0}
+          y2={layout.height}
+          stroke={s.border}
+          strokeWidth={1}
+        />
       )}
       {yTicks.map((tick, i) => (
         <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
           <line x2={-5} stroke={s.border} strokeWidth={1} />
-          <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>
+          <text
+            x={-8}
+            textAnchor="end"
+            dominantBaseline="middle"
+            fontSize={s.tickSize}
+            fill={s.textSecondary}
+            fontFamily={s.fontFamily}
+          >
             {tick.label}
           </text>
         </g>

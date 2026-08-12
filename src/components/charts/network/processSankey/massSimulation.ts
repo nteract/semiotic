@@ -2,7 +2,11 @@
 // same-slot handoffs, and attachment-tie resolution. Pure (no React/DOM).
 
 import { getMin } from "../../shared/minMax"
-import { compareProcessSankeyIds, type SlotByNode } from "./layoutGeometry"
+import {
+  compareProcessSankeyIds,
+  createProcessSankeyRecord,
+  type SlotByNode
+} from "./layoutGeometry"
 import { attachmentYRange } from "./bandPaths"
 import type {
   AttachmentKind,
@@ -14,15 +18,15 @@ import type {
   ProcessSankeyNodeData,
   ProcessSankeyNodeSizing,
   ProcessSankeySample,
-  ProcessSankeySideRecord,
+  ProcessSankeySideRecord
 } from "./processSankeyTypes"
 
 export function buildEdgeIndex(
   nodes: ProcessSankeyNode[],
-  edges: ProcessSankeyEdge[],
+  edges: ProcessSankeyEdge[]
 ): ProcessSankeyEdgeIndex {
-  const incoming: Record<string, ProcessSankeyEdge[]> = {}
-  const outgoing: Record<string, ProcessSankeyEdge[]> = {}
+  const incoming = createProcessSankeyRecord<ProcessSankeyEdge[]>()
+  const outgoing = createProcessSankeyRecord<ProcessSankeyEdge[]>()
   for (const n of nodes) {
     incoming[n.id] = []
     outgoing[n.id] = []
@@ -47,27 +51,39 @@ export function assignSides(
   edges: ProcessSankeyEdge[],
   edgeIndex: ProcessSankeyEdgeIndex,
   /** Matches the public HOC default (`"temporal"`). */
-  pairing: "value" | "temporal" = "temporal",
+  pairing: "value" | "temporal" = "temporal"
 ): Map<string, ProcessSankeySideRecord> {
-  const sortIn = pairing === "temporal"
-    ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => a.endTime - b.endTime || compareProcessSankeyIds(a.id, b.id)
-    : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => b.value - a.value || compareProcessSankeyIds(a.id, b.id)
-  const sortOut = pairing === "temporal"
-    ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => a.startTime - b.startTime || compareProcessSankeyIds(a.id, b.id)
-    : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => b.value - a.value || compareProcessSankeyIds(a.id, b.id)
+  const sortIn =
+    pairing === "temporal"
+      ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
+          a.endTime - b.endTime || compareProcessSankeyIds(a.id, b.id)
+      : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
+          b.value - a.value || compareProcessSankeyIds(a.id, b.id)
+  const sortOut =
+    pairing === "temporal"
+      ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
+          a.startTime - b.startTime || compareProcessSankeyIds(a.id, b.id)
+      : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
+          b.value - a.value || compareProcessSankeyIds(a.id, b.id)
   const sides = new Map<string, ProcessSankeySideRecord>()
   for (const e of edges) sides.set(e.id, {})
 
   // Group edges by partner-node id. Multi-edge parallel ribbons between
   // the same pair land side-by-side rather than crossing.
-  const groupBy = (edgeList: ProcessSankeyEdge[], partnerKey: "source" | "target"): EdgeGroup[] => {
+  const groupBy = (
+    edgeList: ProcessSankeyEdge[],
+    partnerKey: "source" | "target"
+  ): EdgeGroup[] => {
     const groups = new Map<string, EdgeGroup>()
     for (const e of edgeList) {
       const partner = e[partnerKey]
       if (!groups.has(partner)) {
         groups.set(partner, {
-          partner, edges: [], total: 0,
-          earliestStart: Infinity, latestEnd: -Infinity,
+          partner,
+          edges: [],
+          total: 0,
+          earliestStart: Infinity,
+          latestEnd: -Infinity
         })
       }
       const g = groups.get(partner)!
@@ -78,11 +94,18 @@ export function assignSides(
     }
     const list = [...groups.values()]
     if (pairing === "temporal") {
-      list.sort((a, b) => partnerKey === "target"
-        ? a.earliestStart - b.earliestStart || compareProcessSankeyIds(a.partner, b.partner)
-        : a.latestEnd - b.latestEnd || compareProcessSankeyIds(a.partner, b.partner))
+      list.sort((a, b) =>
+        partnerKey === "target"
+          ? a.earliestStart - b.earliestStart ||
+            compareProcessSankeyIds(a.partner, b.partner)
+          : a.latestEnd - b.latestEnd ||
+            compareProcessSankeyIds(a.partner, b.partner)
+      )
     } else {
-      list.sort((a, b) => b.total - a.total || compareProcessSankeyIds(a.partner, b.partner))
+      list.sort(
+        (a, b) =>
+          b.total - a.total || compareProcessSankeyIds(a.partner, b.partner)
+      )
     }
     for (const g of list) {
       g.edges.sort(partnerKey === "target" ? sortOut : sortIn)
@@ -111,8 +134,10 @@ export function assignSides(
       const pairs = Math.max(inGroups.length, outGroups.length)
       for (let i = 0; i < pairs; i++) {
         const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
-        if (inGroups[i]) for (const e of inGroups[i].edges) sides.get(e.id)!.targetSide = side
-        if (outGroups[i]) for (const e of outGroups[i].edges) sides.get(e.id)!.sourceSide = side
+        if (inGroups[i])
+          for (const e of inGroups[i].edges) sides.get(e.id)!.targetSide = side
+        if (outGroups[i])
+          for (const e of outGroups[i].edges) sides.get(e.id)!.sourceSide = side
       }
     }
   }
@@ -143,55 +168,98 @@ export function computeNode(
   edgeIndex: ProcessSankeyEdgeIndex,
   sides: Map<string, ProcessSankeySideRecord>,
   endpointPositions?: ReadonlyMap<string, ProcessSankeyEndpointPositions>,
-  nodeSizing: ProcessSankeyNodeSizing = "temporal",
+  nodeSizing: ProcessSankeyNodeSizing = "temporal"
 ): ProcessSankeyNodeData {
   const incoming = edgeIndex.incoming[node.id]
   const outgoing = edgeIndex.outgoing[node.id]
   const events: NodeEvent[] = []
   for (const e of incoming) {
-    events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
+    events.push({
+      time: e.endTime,
+      delta: +e.value,
+      edge: e,
+      kind: "in",
+      side: sides.get(e.id)!.targetSide!
+    })
   }
   for (const e of outgoing) {
-    events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
+    events.push({
+      time: e.startTime,
+      delta: -e.value,
+      edge: e,
+      kind: "out",
+      side: sides.get(e.id)!.sourceSide!
+    })
   }
 
-  const kindOrder: Record<EventKind, number> = { create: 0, in: 1, "transfer-out": 2, "transfer-in": 3, out: 4 }
+  const kindOrder: Record<EventKind, number> = {
+    create: 0,
+    in: 1,
+    "transfer-out": 2,
+    "transfer-in": 3,
+    out: 4
+  }
   const compareOppositeEndpoint = (a: NodeEvent, b: NodeEvent): number => {
-    if (!endpointPositions || !a.edge || !b.edge || a.kind !== b.kind || a.side !== b.side) return 0
+    if (
+      !endpointPositions ||
+      !a.edge ||
+      !b.edge ||
+      a.kind !== b.kind ||
+      a.side !== b.side
+    )
+      return 0
     if (a.kind === "out") {
       // If both ends are tied at the same node there is no stable far-end
       // order to copy. Keeping the id order avoids a symmetric flip-flop.
-      if (a.edge.target === b.edge.target && a.edge.endTime === b.edge.endTime) return 0
+      if (a.edge.target === b.edge.target && a.edge.endTime === b.edge.endTime)
+        return 0
       const aY = endpointPositions.get(a.edge.id)?.target
       const bY = endpointPositions.get(b.edge.id)?.target
-      if (typeof aY !== "number" || !Number.isFinite(aY) ||
-          typeof bY !== "number" || !Number.isFinite(bY) || aY === bY) return 0
+      if (
+        typeof aY !== "number" ||
+        !Number.isFinite(aY) ||
+        typeof bY !== "number" ||
+        !Number.isFinite(bY) ||
+        aY === bY
+      )
+        return 0
       // OUT slots are allocated outside-in: top grows upward, bottom grows
       // downward. Sort in the corresponding screen-space direction so the
       // departure order copies the already-resolved target order.
       return a.side === "top" ? aY - bY : bY - aY
     }
     if (a.kind === "in") {
-      if (a.edge.source === b.edge.source && a.edge.startTime === b.edge.startTime) return 0
+      if (
+        a.edge.source === b.edge.source &&
+        a.edge.startTime === b.edge.startTime
+      )
+        return 0
       const aY = endpointPositions.get(a.edge.id)?.source
       const bY = endpointPositions.get(b.edge.id)?.source
-      if (typeof aY !== "number" || !Number.isFinite(aY) ||
-          typeof bY !== "number" || !Number.isFinite(bY) || aY === bY) return 0
+      if (
+        typeof aY !== "number" ||
+        !Number.isFinite(aY) ||
+        typeof bY !== "number" ||
+        !Number.isFinite(bY) ||
+        aY === bY
+      )
+        return 0
       // IN slots are allocated inside-out, the inverse of OUT slots.
       return a.side === "top" ? bY - aY : aY - bY
     }
     return 0
   }
   const sortEvents = () => {
-    events.sort((a, b) =>
-      a.time - b.time ||
-      (a.phase ?? 0) - (b.phase ?? 0) ||
-      (a.sequence ?? 0) - (b.sequence ?? 0) ||
-      (kindOrder[a.kind] ?? 99) - (kindOrder[b.kind] ?? 99) ||
-      compareOppositeEndpoint(a, b) ||
-      compareProcessSankeyIds(a.edge?.id ?? "", b.edge?.id ?? "") ||
-      compareProcessSankeyIds(a.side, b.side) ||
-      a.delta - b.delta,
+    events.sort(
+      (a, b) =>
+        a.time - b.time ||
+        (a.phase ?? 0) - (b.phase ?? 0) ||
+        (a.sequence ?? 0) - (b.sequence ?? 0) ||
+        (kindOrder[a.kind] ?? 99) - (kindOrder[b.kind] ?? 99) ||
+        compareOppositeEndpoint(a, b) ||
+        compareProcessSankeyIds(a.edge?.id ?? "", b.edge?.id ?? "") ||
+        compareProcessSankeyIds(a.side, b.side) ||
+        a.delta - b.delta
     )
   }
 
@@ -199,13 +267,19 @@ export function computeNode(
   // other side if available; if a deficit remains, batch a `create`
   // event at `xExtent[0] - 1` (or `firstEventTime - 1`) so the band
   // reads as one continuous mass through the whole lifetime.
-  const firstEventTime: number | null = events.length ? getMin(events.map((e) => e.time)) : null
-  const xStart: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
-    ? node.xExtent[0]
+  const firstEventTime: number | null = events.length
+    ? getMin(events.map((e) => e.time))
     : null
-  const batchTime: number | null = xStart != null
-    ? xStart - 1
-    : (firstEventTime != null && Number.isFinite(firstEventTime) ? firstEventTime - 1 : null)
+  const xStart: number | null =
+    Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
+      ? node.xExtent[0]
+      : null
+  const batchTime: number | null =
+    xStart != null
+      ? xStart - 1
+      : firstEventTime != null && Number.isFinite(firstEventTime)
+        ? firstEventTime - 1
+        : null
   sortEvents()
 
   // Give real events at the same time a stable execution order before adding
@@ -223,7 +297,9 @@ export function computeNode(
     event.sequence = sequenceAtTime++
   }
 
-  const transferPlacementFor = (event: NodeEvent): {
+  const transferPlacementFor = (
+    event: NodeEvent
+  ): {
     time: number
     phase: 0 | 1
     sequence: number
@@ -234,11 +310,12 @@ export function computeNode(
     // untouched and perform the bookkeeping at the departure boundary.
     time: event.time,
     phase: 0,
-    sequence: event.sequence ?? 0,
+    sequence: event.sequence ?? 0
   })
 
   const synthesized: NodeEvent[] = []
-  let simTop = 0, simBot = 0
+  let simTop = 0,
+    simBot = 0
   for (const e of events) {
     if (e.kind === "out") {
       const value = Math.abs(e.delta)
@@ -252,11 +329,15 @@ export function computeNode(
           const placement = transferPlacementFor(e)
           synthesized.push({
             ...placement,
-            delta: -transfer, kind: "transfer-out", side: otherSide,
+            delta: -transfer,
+            kind: "transfer-out",
+            side: otherSide
           })
           synthesized.push({
             ...placement,
-            delta: +transfer, kind: "transfer-in", side: e.side,
+            delta: +transfer,
+            kind: "transfer-in",
+            side: e.side
           })
           if (otherSide === "top") simTop -= transfer
           else simBot -= transfer
@@ -265,7 +346,12 @@ export function computeNode(
           deficit -= transfer
         }
         if (deficit > 0 && batchTime !== null) {
-          synthesized.push({ time: batchTime, delta: +deficit, kind: "create", side: e.side })
+          synthesized.push({
+            time: batchTime,
+            delta: +deficit,
+            kind: "create",
+            side: e.side
+          })
           if (e.side === "top") simTop += deficit
           else simBot += deficit
         }
@@ -282,8 +368,12 @@ export function computeNode(
   events.push(...synthesized)
   sortEvents()
 
-  let topMass = 0, botMass = 0, boundaryOffset = 0
-  let peak = 0, topPeak = 0, botPeak = 0
+  let topMass = 0,
+    botMass = 0,
+    boundaryOffset = 0
+  let peak = 0,
+    topPeak = 0,
+    botPeak = 0
   const samples: ProcessSankeySample[] = []
   const localAttachments = new Map<string, ProcessSankeyAttachment>()
   const pushSample = (time: number) => {
@@ -291,7 +381,7 @@ export function computeNode(
       t: time,
       topMass,
       botMass,
-      ...(Math.abs(boundaryOffset) > 1e-12 && { boundaryOffset }),
+      ...(Math.abs(boundaryOffset) > 1e-12 && { boundaryOffset })
     })
   }
   const updatePeaks = () => {
@@ -305,15 +395,19 @@ export function computeNode(
     // A transfer-out/in pair is invisible bookkeeping. Treat it as one
     // geometric operation: exposing the intermediate, temporarily depleted
     // state creates a zero-width spike at the departure coordinate.
-    if (e.kind !== "transfer-out" && e.kind !== "transfer-in") pushSample(e.time)
+    if (e.kind !== "transfer-out" && e.kind !== "transfer-in")
+      pushSample(e.time)
     if ((e.kind === "in" || e.kind === "out") && e.edge) {
       const sideBefore = e.side === "top" ? topMass : botMass
       const sideAfter = sideBefore + e.delta
       localAttachments.set(e.edge.id, {
-        side: e.side, time: e.time,
-        sideMassBefore: sideBefore, sideMassAfter: sideAfter,
-        kind: e.kind, value: Math.abs(e.delta),
-        ...(Math.abs(boundaryOffset) > 1e-12 && { boundaryOffset }),
+        side: e.side,
+        time: e.time,
+        sideMassBefore: sideBefore,
+        sideMassAfter: sideAfter,
+        kind: e.kind,
+        value: Math.abs(e.delta),
+        ...(Math.abs(boundaryOffset) > 1e-12 && { boundaryOffset })
       })
     }
     if (e.side === "top") topMass += e.delta
@@ -342,9 +436,11 @@ export function computeNode(
     collapsed.push(samples[i])
     for (let k = i + 1; k <= j; k++) {
       const last = collapsed[collapsed.length - 1]
-      if (samples[k].topMass !== last.topMass ||
-          samples[k].botMass !== last.botMass ||
-          (samples[k].boundaryOffset ?? 0) !== (last.boundaryOffset ?? 0)) {
+      if (
+        samples[k].topMass !== last.topMass ||
+        samples[k].botMass !== last.botMass ||
+        (samples[k].boundaryOffset ?? 0) !== (last.boundaryOffset ?? 0)
+      ) {
         collapsed.push(samples[k])
       }
     }
@@ -367,50 +463,78 @@ export function computeNode(
   // inventory lifetime so per-edge gradient stubs have a surface to render
   // onto. Event states inside the authored transfer window stay unchanged;
   // the appropriate outer non-zero state is replayed to the lifecycle bound.
-  const xEnd: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
-    ? node.xExtent[1]
-    : null
+  const xEnd: number | null =
+    Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
+      ? node.xExtent[1]
+      : null
   let earliestSystemIn: number | null = null
   for (const e of outgoing) {
-    if (e.systemInTime != null && Number.isFinite(e.systemInTime) && e.systemInTime < e.startTime) {
-      if (earliestSystemIn === null || e.systemInTime < earliestSystemIn) earliestSystemIn = e.systemInTime
+    if (
+      e.systemInTime != null &&
+      Number.isFinite(e.systemInTime) &&
+      e.systemInTime < e.startTime
+    ) {
+      if (earliestSystemIn === null || e.systemInTime < earliestSystemIn)
+        earliestSystemIn = e.systemInTime
     }
   }
   let latestSystemOut: number | null = null
   for (const e of incoming) {
-    if (e.systemOutTime != null && Number.isFinite(e.systemOutTime) && e.systemOutTime > e.endTime) {
-      if (latestSystemOut === null || e.systemOutTime > latestSystemOut) latestSystemOut = e.systemOutTime
+    if (
+      e.systemOutTime != null &&
+      Number.isFinite(e.systemOutTime) &&
+      e.systemOutTime > e.endTime
+    ) {
+      if (latestSystemOut === null || e.systemOutTime > latestSystemOut)
+        latestSystemOut = e.systemOutTime
     }
   }
   if (collapsed.length > 0) {
     const last = collapsed[collapsed.length - 1]
     const rightEnd = Math.max(
       xEnd != null ? xEnd : -Infinity,
-      latestSystemOut != null ? latestSystemOut : -Infinity,
+      latestSystemOut != null ? latestSystemOut : -Infinity
     )
-    if (Number.isFinite(rightEnd) && rightEnd > last.t && last.topMass + last.botMass > 0) {
+    if (
+      Number.isFinite(rightEnd) &&
+      rightEnd > last.t &&
+      last.topMass + last.botMass > 0
+    ) {
       collapsed.push({
         t: rightEnd,
         topMass: last.topMass,
         botMass: last.botMass,
-        ...(last.boundaryOffset != null && { boundaryOffset: last.boundaryOffset }),
+        ...(last.boundaryOffset != null && {
+          boundaryOffset: last.boundaryOffset
+        })
       })
     }
     const first = collapsed[0]
-    const firstNonZero = collapsed.find((sample) => sample.topMass + sample.botMass > 0)
+    const firstNonZero = collapsed.find(
+      (sample) => sample.topMass + sample.botMass > 0
+    )
     let leftStart = Infinity
     let leftSample: ProcessSankeySample | undefined
     // Preserve xExtent's lifetime-only behavior when the first state is empty:
     // it opens the rail but does not invent stock before a real arrival.
-    if (xStart != null && Number.isFinite(xStart) &&
-        xStart < first.t && first.topMass + first.botMass > 0) {
+    if (
+      xStart != null &&
+      Number.isFinite(xStart) &&
+      xStart < first.t &&
+      first.topMass + first.botMass > 0
+    ) {
       leftStart = xStart
       leftSample = first
     }
     // systemInTime is different: it explicitly says the outgoing stock was
     // already present, so extend the first non-zero state to that timestamp.
-    if (firstNonZero && earliestSystemIn != null && Number.isFinite(earliestSystemIn) &&
-        earliestSystemIn < firstNonZero.t && earliestSystemIn < leftStart) {
+    if (
+      firstNonZero &&
+      earliestSystemIn != null &&
+      Number.isFinite(earliestSystemIn) &&
+      earliestSystemIn < firstNonZero.t &&
+      earliestSystemIn < leftStart
+    ) {
       leftStart = earliestSystemIn
       leftSample = firstNonZero
     }
@@ -419,7 +543,9 @@ export function computeNode(
         t: leftStart,
         topMass: leftSample.topMass,
         botMass: leftSample.botMass,
-        ...(leftSample.boundaryOffset != null && { boundaryOffset: leftSample.boundaryOffset }),
+        ...(leftSample.boundaryOffset != null && {
+          boundaryOffset: leftSample.boundaryOffset
+        })
       })
     }
   }
@@ -446,13 +572,15 @@ export function computeNode(
       const peakState = {
         topMass: peakSample.topMass,
         botMass: peakSample.botMass,
-        ...(peakSample.boundaryOffset != null && { boundaryOffset: peakSample.boundaryOffset }),
+        ...(peakSample.boundaryOffset != null && {
+          boundaryOffset: peakSample.boundaryOffset
+        })
       }
       renderedSamples = [
         ...collapsed.filter((sample) => sample.t < xStart),
         { t: xStart, ...peakState },
         { t: xEnd, ...peakState },
-        ...collapsed.filter((sample) => sample.t > xEnd),
+        ...collapsed.filter((sample) => sample.t > xEnd)
       ]
     }
   }
@@ -464,21 +592,38 @@ export function collectEndpointPositions(
   edges: readonly ProcessSankeyEdge[],
   nodeData: Readonly<Record<string, ProcessSankeyNodeData>>,
   centerlines: Readonly<Record<string, number>>,
-  valueScale: number,
+  valueScale: number
 ): Map<string, ProcessSankeyEndpointPositions> {
   const positions = new Map<string, ProcessSankeyEndpointPositions>()
   for (const edge of edges) {
-    const sourceAttachment = nodeData[edge.source]?.localAttachments.get(edge.id)
-    const targetAttachment = nodeData[edge.target]?.localAttachments.get(edge.id)
+    const sourceAttachment = nodeData[edge.source]?.localAttachments.get(
+      edge.id
+    )
+    const targetAttachment = nodeData[edge.target]?.localAttachments.get(
+      edge.id
+    )
     const sourceCenter = centerlines[edge.source]
     const targetCenter = centerlines[edge.target]
-    if (!sourceAttachment || !targetAttachment ||
-        !Number.isFinite(sourceCenter) || !Number.isFinite(targetCenter)) continue
-    const sourceRange = attachmentYRange(sourceAttachment, sourceCenter, valueScale)
-    const targetRange = attachmentYRange(targetAttachment, targetCenter, valueScale)
+    if (
+      !sourceAttachment ||
+      !targetAttachment ||
+      !Number.isFinite(sourceCenter) ||
+      !Number.isFinite(targetCenter)
+    )
+      continue
+    const sourceRange = attachmentYRange(
+      sourceAttachment,
+      sourceCenter,
+      valueScale
+    )
+    const targetRange = attachmentYRange(
+      targetAttachment,
+      targetCenter,
+      valueScale
+    )
     positions.set(edge.id, {
       source: (sourceRange[0] + sourceRange[1]) / 2,
-      target: (targetRange[0] + targetRange[1]) / 2,
+      target: (targetRange[0] + targetRange[1]) / 2
     })
   }
   return positions
@@ -486,21 +631,25 @@ export function collectEndpointPositions(
 
 export function hasResolvableAttachmentTies(
   edgeIndex: ProcessSankeyEdgeIndex,
-  sides: ReadonlyMap<string, ProcessSankeySideRecord>,
+  sides: ReadonlyMap<string, ProcessSankeySideRecord>
 ): boolean {
   const containsTie = (
     edgeLists: readonly ProcessSankeyEdge[][],
-    kind: "in" | "out",
+    kind: "in" | "out"
   ): boolean => {
     for (const edgeList of edgeLists) {
       const seen = new Map<string, string>()
       for (const edge of edgeList) {
-        const side = kind === "out" ? sides.get(edge.id)?.sourceSide : sides.get(edge.id)?.targetSide
+        const side =
+          kind === "out"
+            ? sides.get(edge.id)?.sourceSide
+            : sides.get(edge.id)?.targetSide
         const localTime = kind === "out" ? edge.startTime : edge.endTime
         const localKey = `${side ?? ""}\u0000${localTime}`
-        const farKey = kind === "out"
-          ? `${edge.target}\u0000${edge.endTime}`
-          : `${edge.source}\u0000${edge.startTime}`
+        const farKey =
+          kind === "out"
+            ? `${edge.target}\u0000${edge.endTime}`
+            : `${edge.source}\u0000${edge.startTime}`
         const previous = seen.get(localKey)
         if (previous != null && previous !== farKey) return true
         seen.set(localKey, farKey)
@@ -508,28 +657,35 @@ export function hasResolvableAttachmentTies(
     }
     return false
   }
-  return containsTie(Object.values(edgeIndex.outgoing), "out") ||
+  return (
+    containsTie(Object.values(edgeIndex.outgoing), "out") ||
     containsTie(Object.values(edgeIndex.incoming), "in")
+  )
 }
 
 export function assignSameSlotHandoffSides(
   edges: readonly ProcessSankeyEdge[],
   sides: Map<string, ProcessSankeySideRecord>,
-  slotByNode: Readonly<SlotByNode>,
+  slotByNode: Readonly<SlotByNode>
 ): void {
   type Balance = { top: number; bot: number }
-  type BalanceEvent = { time: number; kind: AttachmentKind; edge: ProcessSankeyEdge }
+  type BalanceEvent = {
+    time: number
+    kind: AttachmentKind
+    edge: ProcessSankeyEdge
+  }
   const balance = new Map<string, Balance>()
   const events: BalanceEvent[] = []
   for (const edge of edges) {
     events.push({ time: edge.startTime, kind: "out", edge })
     events.push({ time: edge.endTime, kind: "in", edge })
   }
-  events.sort((a, b) =>
-    a.time - b.time ||
-    (a.kind === b.kind ? 0 : a.kind === "in" ? -1 : 1) ||
-    (a.kind === "out" ? b.edge.value - a.edge.value : 0) ||
-    compareProcessSankeyIds(a.edge.id, b.edge.id),
+  events.sort(
+    (a, b) =>
+      a.time - b.time ||
+      (a.kind === b.kind ? 0 : a.kind === "in" ? -1 : 1) ||
+      (a.kind === "out" ? b.edge.value - a.edge.value : 0) ||
+      compareProcessSankeyIds(a.edge.id, b.edge.id)
   )
 
   const stateFor = (id: string): Balance => {
@@ -540,7 +696,11 @@ export function assignSameSlotHandoffSides(
     }
     return state
   }
-  const consume = (state: Balance, side: AttachmentSide, value: number): void => {
+  const consume = (
+    state: Balance,
+    side: AttachmentSide,
+    value: number
+  ): void => {
     const other: AttachmentSide = side === "top" ? "bot" : "top"
     const local = Math.min(value, state[side])
     state[side] -= local
@@ -575,14 +735,12 @@ export function assignSameSlotHandoffSides(
   }
 }
 
-
-
 /** Per-node side rebalance to keep multi-edge bundles within available per-side mass. */
 export function rebalanceOutgoingSides(
   nodes: readonly ProcessSankeyNode[],
   edgeIndex: ProcessSankeyEdgeIndex,
   sides: Map<string, ProcessSankeySideRecord>,
-  sameSlotEdgeIds: ReadonlySet<string>,
+  sameSlotEdgeIds: ReadonlySet<string>
 ): void {
   for (const node of nodes) {
     const inn = edgeIndex.incoming[node.id]
@@ -602,15 +760,26 @@ export function rebalanceOutgoingSides(
       }
       return r
     }
-    const tryMove = (fromSide: AttachmentSide, toSide: AttachmentSide): boolean => {
+    const tryMove = (
+      fromSide: AttachmentSide,
+      toSide: AttachmentSide
+    ): boolean => {
       const t = tally()
-      const surplusFrom = (fromSide === "top" ? t.outTop - t.inTop : t.outBot - t.inBot)
-      const slackTo = (toSide === "top" ? t.inTop - t.outTop : t.inBot - t.outBot)
+      const surplusFrom =
+        fromSide === "top" ? t.outTop - t.inTop : t.outBot - t.inBot
+      const slackTo = toSide === "top" ? t.inTop - t.outTop : t.inBot - t.outBot
       if (surplusFrom <= 0 || slackTo <= 0) return false
       const move = Math.min(surplusFrom, slackTo)
       const candidates = out
-        .filter((e) => !sameSlotEdgeIds.has(e.id) && sides.get(e.id)!.sourceSide === fromSide && e.value <= move)
-        .sort((a, b) => b.value - a.value || compareProcessSankeyIds(a.id, b.id))
+        .filter(
+          (e) =>
+            !sameSlotEdgeIds.has(e.id) &&
+            sides.get(e.id)!.sourceSide === fromSide &&
+            e.value <= move
+        )
+        .sort(
+          (a, b) => b.value - a.value || compareProcessSankeyIds(a.id, b.id)
+        )
       if (candidates.length === 0) return false
       sides.get(candidates[0].id)!.sourceSide = toSide
       return true

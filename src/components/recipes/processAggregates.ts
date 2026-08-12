@@ -12,6 +12,25 @@ export interface RegionCountBucket {
 
 export type RegionCountMap = Record<string, RegionCountBucket>
 
+function ownValue<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(record, key)
+    ? record[key]
+    : undefined
+}
+
+function isRegionCountBucket(value: unknown): value is RegionCountBucket {
+  if (!value || typeof value !== "object") return false
+  const bucket = value as Partial<RegionCountBucket>
+  return (
+    typeof bucket.id === "string" &&
+    (bucket.label == null || typeof bucket.label === "string") &&
+    typeof bucket.count === "number" &&
+    Number.isFinite(bucket.count) &&
+    Array.isArray(bucket.bodyIds) &&
+    bucket.bodyIds.every((id) => typeof id === "string")
+  )
+}
+
 /** Reduce region-enter events into per-region unique body counts. */
 export function aggregateRegionCounts(
   previous: RegionCountMap,
@@ -19,7 +38,8 @@ export function aggregateRegionCounts(
 ): RegionCountMap {
   if (event.type !== "region-enter") return previous
   const regionId = event.region.id
-  const current = previous[regionId] ?? {
+  const existing = ownValue(previous, regionId)
+  const current = isRegionCountBucket(existing) ? existing : {
     id: regionId,
     label: event.region.label ?? regionId,
     count: 0,
@@ -43,8 +63,8 @@ export function regionCountsToProjectionRows(
 ): Array<{ label: string; value: number }> {
   const ids = order ?? Object.keys(counts)
   return ids
-    .map((id) => counts[id])
-    .filter((bucket): bucket is RegionCountBucket => bucket != null)
+    .map((id) => ownValue(counts, id))
+    .filter(isRegionCountBucket)
     .map((bucket) => ({
       label: bucket.label ?? bucket.id,
       value: bucket.count
@@ -81,9 +101,11 @@ export function groupCompletionRows(
     const mode = group.completion?.mode ?? "allMembersAbsorbed"
     const valueByBodyId = group.completion?.valueByBodyId
     const memberValue = (bodyId: string): number => {
-      const configured = valueByBodyId?.[bodyId]
-      return Number.isFinite(configured) && Number(configured) >= 0
-        ? Number(configured)
+      const configured = valueByBodyId
+        ? ownValue(valueByBodyId, bodyId)
+        : undefined
+      return typeof configured === "number" && Number.isFinite(configured) && configured >= 0
+        ? configured
         : 1
     }
     const totalValue = members.reduce(

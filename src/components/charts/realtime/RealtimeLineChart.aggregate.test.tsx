@@ -133,6 +133,85 @@ describe("RealtimeLineChart — aggregate mode", () => {
     expect(rows[0][AGG_VALUE]).toBe(20)
   })
 
+  it("reseeds controlled data when either accessor changes by identity", async () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const controlledData = [
+      { firstTime: 1, nextTime: 21, firstValue: 10, nextValue: 100 },
+      { firstTime: 5, nextTime: 25, firstValue: 30, nextValue: 300 }
+    ]
+    const aggregate = { size: 10, stat: "mean" as const }
+    const chart = (
+      timeAccessor: "firstTime" | "nextTime",
+      valueAccessor: "firstValue" | "nextValue"
+    ) => (
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          data={controlledData}
+          timeAccessor={timeAccessor}
+          valueAccessor={valueAccessor}
+          aggregate={aggregate}
+        />
+      </TooltipProvider>
+    )
+    const { rerender } = render(chart("firstTime", "firstValue"))
+
+    expect(ref.current!.getData()).toMatchObject([
+      { __aggStart: 0, [AGG_VALUE]: 20 }
+    ])
+
+    // Keep the exact same controlled array and aggregate object. Changing the
+    // time accessor alone must rebuild instead of leaving the old window seed.
+    rerender(chart("nextTime", "firstValue"))
+    await waitFor(() => {
+      expect(ref.current!.getData()).toMatchObject([
+        { __aggStart: 20, [AGG_VALUE]: 20 }
+      ])
+    })
+
+    // The value accessor is independently structural for a controlled seed.
+    rerender(chart("nextTime", "nextValue"))
+    await waitFor(() => {
+      expect(ref.current!.getData()).toMatchObject([
+        { __aggStart: 20, [AGG_VALUE]: 200 }
+      ])
+    })
+  })
+
+  it("starts a new push-only epoch after a structural aggregate change", async () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const chart = (size: number) => (
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          aggregate={{ size, stat: "sum" }}
+        />
+      </TooltipProvider>
+    )
+    const { rerender } = render(chart(10))
+    act(() => {
+      ref.current!.pushMany([
+        { t: 1, v: 10 },
+        { t: 5, v: 20 }
+      ])
+    })
+    expect(ref.current!.getData()).toMatchObject([
+      { __aggStart: 0, [AGG_VALUE]: 30 }
+    ])
+
+    // Aggregate mode stores sufficient statistics, not the unbounded raw
+    // stream, so a new window definition intentionally starts empty.
+    rerender(chart(20))
+    await waitFor(() => expect(ref.current!.getData()).toEqual([]))
+
+    act(() => ref.current!.push({ t: 25, v: 7 }))
+    expect(ref.current!.getData()).toMatchObject([
+      { __aggStart: 20, [AGG_VALUE]: 7 }
+    ])
+  })
+
   it("renders aggregated rows into the canvas scene", async () => {
     const ref = React.createRef<RealtimeFrameHandle>()
     const { container } = render(

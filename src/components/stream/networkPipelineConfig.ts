@@ -2,8 +2,8 @@
  * Build NetworkPipelineConfig from StreamNetworkFrame props + theme.
  * Keeps the large useMemo payload out of the React component file.
  */
-import type { SemioticTheme } from "../store/ThemeStore"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import type { NetworkPipelineConfig } from "./networkTypes"
 import type { StreamNetworkFrameProps } from "./networkTypes"
 

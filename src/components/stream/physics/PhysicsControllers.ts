@@ -165,26 +165,3 @@ export function createPortalController(options: {
 }
 
 export type PhysicsControllerFactory = typeof createCapacityQueueController
-
-export {
-  createDependencyGateController,
-  createServiceLevelController,
-  createServiceResourcePoolController
-} from "./ServiceOperationsControllers"
-export type {
-  DependencyGateController,
-  ServiceLevelController,
-  ServiceResourcePoolController
-} from "./ServiceOperationsControllers"
-export type {
-  DependencyGateOptions,
-  DependencyGateSnapshot,
-  ServiceLevelCaseInfo,
-  ServiceLevelCaseState,
-  ServiceLevelControllerOptions,
-  ServiceLevelSnapshot,
-  ServiceResourceAssignment,
-  ServiceResourceDefinition,
-  ServiceResourcePoolOptions,
-  ServiceResourcePoolSnapshot
-} from "./ServiceOperationsTypes"

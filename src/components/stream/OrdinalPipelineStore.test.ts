@@ -150,6 +150,27 @@ describe("OrdinalPipelineStore", () => {
       }
     })
 
+    it("preserves prototype-named categories in columns and scene marks", () => {
+      const categories = ["__proto__", "constructor", "toString"]
+      const store = new OrdinalPipelineStore(
+        makeConfig({ runtimeMode: "streaming" })
+      )
+      store.ingest({
+        inserts: makeData(categories, [10, 20, 30]),
+        bounded: false
+      })
+      store.computeScene({ width: 300, height: 200 })
+
+      expect(Object.keys(store.columns)).toEqual(categories)
+      for (const category of categories) {
+        expect(Object.prototype.hasOwnProperty.call(store.columns, category)).toBe(true)
+        expect(store.columns[category].name).toBe(category)
+      }
+      expect(
+        store.scene.map((node) => String(node.datum?.category))
+      ).toEqual(categories)
+    })
+
     it("computes pct and pctStart for radial projection", () => {
       const store = new OrdinalPipelineStore(makeConfig({ projection: "radial", chartType: "pie" }))
       store.ingest({

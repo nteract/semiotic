@@ -56,4 +56,39 @@ describe("pipelineDecay", () => {
     // newest point (index 1 of 2) should be near full opacity
     expect((nodes[0] as { style?: { opacity?: number } }).style?.opacity).toBeCloseTo(1, 5)
   })
+
+  it("preserves authored heatcell presentation while applying decay", () => {
+    const oldest = { x: "A", y: "row", value: 1 }
+    const newest = { x: "B", y: "row", value: 2 }
+    const nodes: SceneNode[] = [
+      {
+        type: "heatcell",
+        x: 0,
+        y: 0,
+        w: 20,
+        h: 20,
+        fill: "#2563eb",
+        style: {
+          cursor: "pointer",
+          stroke: "#111827",
+          strokeWidth: 2,
+          opacity: 0.5
+        },
+        datum: oldest
+      } as SceneNode
+    ]
+
+    applyDecay(
+      { type: "linear", minOpacity: 0.2 },
+      nodes,
+      [oldest, newest]
+    )
+
+    expect(nodes[0].style).toMatchObject({
+      cursor: "pointer",
+      stroke: "#111827",
+      strokeWidth: 2,
+      opacity: 0.1
+    })
+  })
 })

@@ -32,6 +32,31 @@ export type CanvasBackgroundOptions = Pick<
 >
 
 /**
+ * Resolve the full-frame surface that sits below a canvas and any custom
+ * background graphics.
+ *
+ * Unlike the canvas painter, this surface keeps an explicit `background`
+ * when `backgroundGraphics` are present so the requested solid is composed
+ * beneath the custom SVG. The implicit theme surface remains suppressed in
+ * that mode, preserving transparent custom-background composition.
+ */
+export function resolveFrameSurfaceBackground(
+  options: CanvasBackgroundOptions
+): string | null {
+  const {
+    background,
+    hasBackgroundGraphics = false,
+    themeBackground = ""
+  } = options
+
+  if (background === "transparent") return null
+  if (hasBackgroundGraphics) return background || null
+  const theme =
+    themeBackground && themeBackground !== "transparent" ? themeBackground : ""
+  return background || theme || null
+}
+
+/**
  * Select the background token a canvas will attempt to paint. This is kept
  * separate from the drawing operation so SVG layer composition can use the
  * exact same visibility decision as the canvas renderer.
@@ -77,7 +102,7 @@ export function paintCanvasBackground(
   if (!effective) return false
 
   const resolved = resolveCSSColor(ctx, effective)
-  if (!resolved) return false
+  if (!resolved || resolved.trim().toLowerCase() === "transparent") return false
 
   ctx.fillStyle = resolved
   ctx.fillRect(x, y, width, height)

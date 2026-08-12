@@ -4,6 +4,7 @@ import {
   createColorScale,
   getSize,
   DEFAULT_COLORS,
+  resolveCategoricalPalette,
   resolveExplicitColor,
   } from "./colorUtils"
 import type { Datum } from "./datumTypes"
@@ -206,9 +207,18 @@ describe("createColorScale", () => {
   })
 })
 
-// ── resolveExplicitColor ──────────────────────────────────────────────────
+// resolveCategoricalPalette
+
+describe("resolveCategoricalPalette", () => {
+  it("does not resolve inherited object properties as named palettes", () => {
+    const theme = ["#123456"]
+    expect(resolveCategoricalPalette("constructor", theme)).toBe(theme)
+    expect(resolveCategoricalPalette("toString", theme)).toBe(theme)
+  })
+})
 
 describe("resolveExplicitColor", () => {
+  // Explicit maps must only resolve valid own string values.
   it("returns the mapped color for an own key", () => {
     expect(resolveExplicitColor({ North: "#f00" }, "North")).toBe("#f00")
   })

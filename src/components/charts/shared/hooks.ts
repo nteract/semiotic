@@ -1,20 +1,33 @@
 import { useMemo, useCallback, useState, useId, useEffect, useRef } from "react"
 import { useCategoryColors } from "../../CategoryColors"
-import { createColorScale, COLOR_SCHEMES, DEFAULT_COLOR, resolveExplicitColor } from "./colorUtils"
+import {
+  createColorScale,
+  COLOR_SCHEMES,
+  DEFAULT_COLOR,
+  resolveExplicitColor
+} from "./colorUtils"
 export { DEFAULT_COLOR } from "./colorUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
-import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } from "../../store/LinkedCrosshairStore"
+import {
+  setCrosshairPosition,
+  clearCrosshairPosition,
+  toggleCrosshairLock,
+  unlockCrosshair
+} from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
-import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
+import type {
+  OnObservationCallback,
+  ChartObservation
+} from "../../store/ObservationStore"
 import type {
   Accessor,
   SelectionConfig,
   LinkedHoverProp,
   ChartMode,
   HoverHighlightMode,
-  ResolvedMobileInteractionConfig,
+  ResolvedMobileInteractionConfig
 } from "./types"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
@@ -28,7 +41,7 @@ export {
   MOBILE_INTERACTION_TARGET_SIZE,
   isChartMode,
   resolveChartMode,
-  resolveMobileInteraction,
+  resolveMobileInteraction
 } from "./chartMode"
 export type { ChartModeInput, ChartModeResult } from "./chartMode"
 import type {
@@ -93,8 +106,15 @@ export function resolveDefaultFill(
   if (color) return color
 
   // An explicit { category: color } map wins for a mapped category.
-  if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
-    const mapped = resolveExplicitColor(colorScheme as Record<string, unknown>, category)
+  if (
+    colorScheme &&
+    typeof colorScheme === "object" &&
+    !Array.isArray(colorScheme)
+  ) {
+    const mapped = resolveExplicitColor(
+      colorScheme as Record<string, unknown>,
+      category
+    )
     if (mapped) return mapped
   }
 
@@ -128,12 +148,10 @@ export function resolveDefaultFill(
  * Resolve an accessor (string key or function) into a function.
  * Used across chart components to normalize `valueAccessor`, `categoryAccessor`, etc.
  */
-export function resolveAccessor<T = string | number | boolean | Date | Datum | null | undefined>(
-  accessor: string | ((d: Datum, i?: number) => T)
-): (d: Datum) => T {
-  return typeof accessor === "function"
-    ? accessor
-    : (d: Datum) => d[accessor]
+export function resolveAccessor<
+  T = string | number | boolean | Date | Datum | null | undefined
+>(accessor: string | ((d: Datum, i?: number) => T)): (d: Datum) => T {
+  return typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
 }
 
 /**
@@ -152,9 +170,12 @@ export function useColorScale(
     if (!colorBy) return undefined
     const providerColors = categoryColors ?? undefined
     // Resolve effective scheme: explicit prop > theme categorical > "category10"
-    const effectiveScheme: string | string[] | Record<string, string> = colorScheme
-      ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
-      ?? "category10"
+    const effectiveScheme: string | string[] | Record<string, string> =
+      colorScheme ??
+      (themeCategorical && themeCategorical.length > 0
+        ? themeCategorical
+        : undefined) ??
+      "category10"
     // When data is empty (push API mode), return undefined so the pipeline's
     // STREAMING_PALETTE fallback handles coloring. Building a scale from empty
     // data creates an ordinal scale with an implicit domain that can intercept
@@ -163,28 +184,45 @@ export function useColorScale(
       // Still use CategoryColorProvider if available — it has stable colors
       if (providerColors && hasOwnEnumerableKey(providerColors)) {
         // Use effectiveScheme as fallback for categories not in the provider
-        const fallbackScale = createColorScale([{ _: "a" }], "_", effectiveScheme)
-        return (v: string) => providerColors[v] || fallbackScale(v)
+        const fallbackScale = createColorScale(
+          [{ _: "a" }],
+          "_",
+          effectiveScheme
+        )
+        return (v: string) =>
+          resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
       }
       return undefined
     }
     // When colorBy is a function, derive categories from data and build an ordinal scale
     if (typeof colorBy === "function") {
-      const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
+      const categories = Array.from(
+        new Set(data.map((d) => String(colorBy(d))))
+      )
       if (providerColors && hasOwnEnumerableKey(providerColors)) {
         // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
-        const syntheticData = categories.map(c => ({ _cat: c }))
-        const fallbackScale = createColorScale(syntheticData, "_cat", effectiveScheme)
-        return (v: string) => providerColors[v] || fallbackScale(v)
+        const syntheticData = categories.map((c) => ({ _cat: c }))
+        const fallbackScale = createColorScale(
+          syntheticData,
+          "_cat",
+          effectiveScheme
+        )
+        return (v: string) =>
+          resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
       }
       // Build a synthetic data array so createColorScale can derive unique values
-      const syntheticData = categories.map(c => ({ _cat: c }))
+      const syntheticData = categories.map((c) => ({ _cat: c }))
       return createColorScale(syntheticData, "_cat", effectiveScheme)
     }
     // If a CategoryColorProvider is present, use its color map as the scale
     if (providerColors && hasOwnEnumerableKey(providerColors)) {
-      const fallbackScale = createColorScale(data, colorBy as string, effectiveScheme)
-      return (v: string) => providerColors[v] || fallbackScale(v)
+      const fallbackScale = createColorScale(
+        data,
+        colorBy as string,
+        effectiveScheme
+      )
+      return (v: string) =>
+        resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
     }
     return createColorScale(data, colorBy as string, effectiveScheme)
   }, [data, colorBy, colorScheme, categoryColors, themeCategorical])
@@ -237,7 +275,7 @@ export function useChartSelection({
   onClick,
   hoverHighlight,
   colorByField,
-  mobileInteraction,
+  mobileInteraction
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -317,7 +355,8 @@ export function useChartSelection({
     return {
       isActive: true,
       predicate: (d: Datum) => {
-        const val = typeof d[field] === "string" ? d[field] : String(d[field] ?? "")
+        const val =
+          typeof d[field] === "string" ? d[field] : String(d[field] ?? "")
         return val === key
       }
     }
@@ -341,7 +380,11 @@ export function useChartSelection({
           if (hoverConfig?.mode === "x-position" && hoverConfig.xField) {
             const xVal = resolveHoverXPosition(d, datum, hoverConfig.xField)
             if (xVal != null) {
-              setCrosshairPosition(hoverConfig.name || "hover", xVal, crosshairSourceId)
+              setCrosshairPosition(
+                hoverConfig.name || "hover",
+                xVal,
+                crosshairSourceId
+              )
             }
           }
 
@@ -352,7 +395,10 @@ export function useChartSelection({
         } else {
           // Clear on hover-end
           if (hoverConfig?.mode === "x-position" && !preserveMobileLock) {
-            clearCrosshairPosition(hoverConfig.name || "hover", crosshairSourceId)
+            clearCrosshairPosition(
+              hoverConfig.name || "hover",
+              crosshairSourceId
+            )
           }
           if (hoverConfig?.mode !== "x-position" && !preserveMobileLock) {
             linkedHoverHook.onHover(null)
@@ -385,7 +431,20 @@ export function useChartSelection({
         })
       }
     },
-    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, publishObservation, hoverHighlight, seriesField, mobileInteraction]
+    [
+      linkedHover,
+      linkedHoverHook,
+      hoverConfig,
+      crosshairSourceId,
+      onObservation,
+      chartType,
+      chartId,
+      pushObservation,
+      publishObservation,
+      hoverHighlight,
+      seriesField,
+      mobileInteraction
+    ]
   )
 
   const clearMobileLock = useCallback(
@@ -413,7 +472,7 @@ export function useChartSelection({
       mobileInteraction,
       selectionHook,
       hoverHighlight,
-      crosshairSourceId,
+      crosshairSourceId
     ]
   )
 
@@ -432,7 +491,11 @@ export function useChartSelection({
         if (Array.isArray(datum)) datum = datum[0]
         const xVal = resolveHoverXPosition(d, datum, hoverConfig.xField)
         if (xVal != null) {
-          toggleCrosshairLock(hoverConfig.name || "hover", xVal, crosshairSourceId)
+          toggleCrosshairLock(
+            hoverConfig.name || "hover",
+            xVal,
+            crosshairSourceId
+          )
         }
       }
 
@@ -445,7 +508,11 @@ export function useChartSelection({
             linkedHoverHook.onHover(datum)
           }
 
-          if (selection && mobileInteraction?.tapToSelect && linkFields.length > 0) {
+          if (
+            selection &&
+            mobileInteraction?.tapToSelect &&
+            linkFields.length > 0
+          ) {
             const fieldValues: Record<string, unknown[]> = {}
             for (const field of linkFields) {
               const value = datum[field]
@@ -502,7 +569,7 @@ export function useChartSelection({
       linkFields,
       hoverHighlight,
       seriesField,
-      clearMobileLock,
+      clearMobileLock
     ]
   )
 
@@ -536,7 +603,13 @@ export function useChartSelection({
     }
   }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])
 
-  return { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
+  return {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior,
+    customClickBehavior,
+    crosshairSourceId
+  }
 }
 
 /**
@@ -546,14 +619,16 @@ export function useChartSelection({
 export function getCrosshairProps(
   linkedHover: unknown,
   crosshairSourceId: string
-): { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined {
-  const config = (typeof linkedHover === "object" && linkedHover !== null)
-    ? linkedHover as { name?: string; mode?: string }
-    : undefined
+):
+  { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined {
+  const config =
+    typeof linkedHover === "object" && linkedHover !== null
+      ? (linkedHover as { name?: string; mode?: string })
+      : undefined
   if (config?.mode !== "x-position") return undefined
   return {
     linkedCrosshairName: config.name || "hover",
-    linkedCrosshairSourceId: crosshairSourceId,
+    linkedCrosshairSourceId: crosshairSourceId
   }
 }
 
@@ -562,13 +637,14 @@ export function getCrosshairProps(
 // ceiling); re-exported here so existing `from "./hooks"` imports keep working.
 export {
   useChartLegendAndMargin,
+  useGradientLegendInteraction,
   useLegendInteraction,
-  distinctCategories,
+  distinctCategories
 } from "./useChartLegend"
 export type {
   LegendPosition,
   LegendInteractionMode,
-  LegendInteractionState,
+  LegendInteractionState
 } from "./useChartLegend"
 
 /**
@@ -591,7 +667,8 @@ export function useChartMode(
  * Returns undefined when animate is falsy (no transition).
  */
 export function resolveAnimateConfig(
-  animate: boolean | { duration?: number; easing?: "linear" | "ease-out" } | undefined
+  animate:
+    boolean | { duration?: number; easing?: "linear" | "ease-out" } | undefined
 ): TransitionConfig | undefined {
   if (!animate) return undefined
   if (animate === true) return { duration: 300 }

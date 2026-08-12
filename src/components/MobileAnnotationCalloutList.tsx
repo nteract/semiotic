@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import type { MobileAnnotationCalloutItem } from "./recipes/mobileAnnotationStrategy"
+import type { MobileAnnotationCalloutItem } from "./recipes/mobileAnnotationBehavior"
 
 export interface MobileAnnotationCalloutListProps {
   items: readonly MobileAnnotationCalloutItem[]

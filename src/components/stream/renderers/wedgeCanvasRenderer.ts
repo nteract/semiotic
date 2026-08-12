@@ -41,11 +41,12 @@ function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode)
   // stroke isn't itself clipped (half the stroke width sits outside the
   // clipped region). Same behavior contract as the non-gradient wedge
   // branches — user-set `stroke`/`strokeWidth` should always paint.
-  if (node.style.stroke && node.style.stroke !== "none") {
+  const strokeWidth = node.style.strokeWidth ?? 1
+  if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
     ctx.save()
     ctx.translate(node.cx, node.cy)
     ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-    ctx.lineWidth = node.style.strokeWidth || 1
+    ctx.lineWidth = strokeWidth
     ctx.stroke(outline)
     ctx.restore()
   }
@@ -83,7 +84,9 @@ function drawWedgeRounded(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): 
   ctx.translate(node.cx, node.cy)
   const path = new Path2D(pathStr)
   ctx.fill(path)
-  if (node.style.stroke && node.style.stroke !== "none") {
+  const strokeWidth = node.style.strokeWidth ?? 1
+  if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
+    ctx.lineWidth = strokeWidth
     ctx.stroke(path)
   }
   ctx.restore()
@@ -102,6 +105,11 @@ export const wedgeCanvasRenderer = (
     // even when fillOpacity is set (e.g., 0.6 × 0.5 during enter transition)
     const fillOpacity = node.style.fillOpacity ?? 1
     const transitionOpacity = node.style.opacity ?? 1
+    const strokeWidth = node.style.strokeWidth ?? 1
+    const strokeColor = node.style.stroke
+    const shouldStroke = Boolean(
+      strokeColor && strokeColor !== "none" && strokeWidth > 0
+    )
     ctx.globalAlpha = fillOpacity * transitionOpacity
 
     if (node._gradientBand && node._gradientBand.colors.length > 0) {
@@ -137,9 +145,9 @@ export const wedgeCanvasRenderer = (
       // false; the manual path builder short-circuits to a square
       // sector. Without this, those wedges would inherit d3-arc's
       // uniform all-corner rounding via the fallback branch below.
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
+      if (shouldStroke) {
+        ctx.strokeStyle = resolveCSSColor(ctx, strokeColor) || strokeColor!
+        ctx.lineWidth = strokeWidth
       }
       const d = annularSectorPath({
         innerRadius: node.innerRadius,
@@ -154,15 +162,15 @@ export const wedgeCanvasRenderer = (
       ctx.translate(node.cx, node.cy)
       const path = new Path2D(d)
       ctx.fill(path)
-      if (node.style.stroke && node.style.stroke !== "none") ctx.stroke(path)
+      if (shouldStroke) ctx.stroke(path)
       ctx.restore()
     } else if (node.cornerRadius) {
       // Uniform all-corner rounding (regular donut chart). `roundedEnds`
       // is unset, so the d3-arc fast path applies cornerRadius to all
       // four corners — the existing pie/donut contract.
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
+      if (shouldStroke) {
+        ctx.strokeStyle = resolveCSSColor(ctx, strokeColor) || strokeColor!
+        ctx.lineWidth = strokeWidth
       }
       drawWedgeRounded(ctx, node)
     } else {
@@ -170,9 +178,9 @@ export const wedgeCanvasRenderer = (
       drawWedgeManual(ctx, node)
       ctx.fill()
 
-      if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 1
+      if (shouldStroke) {
+        ctx.strokeStyle = resolveCSSColor(ctx, strokeColor) || strokeColor!
+        ctx.lineWidth = strokeWidth
         ctx.stroke()
       }
     }

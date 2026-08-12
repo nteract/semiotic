@@ -6,7 +6,7 @@ import {
 } from "./annotationTypes"
 import type { Datum } from "./datumTypes"
 import type { Diagnosis } from "./diagnoseTypes"
-import { annotationStableId } from "./annotationActivation"
+import { annotationStableId } from "./annotationIdentity"
 
 /** Interactive widgets need durable identity for replay and normalized events. */
 export function checkInteractiveAnnotationIds(

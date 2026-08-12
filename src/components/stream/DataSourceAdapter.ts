@@ -24,12 +24,22 @@ const CHUNK_THRESHOLD = 5000
 /** Number of items per progressive chunk */
 const CHUNK_SIZE = 5000
 
+function normalizeChunkThreshold(value: number | undefined): number {
+  if (value === Infinity) return Infinity
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value!)) : CHUNK_THRESHOLD
+}
+
+function normalizeChunkSize(value: number | undefined): number {
+  if (value === Infinity) return Infinity
+  return Number.isFinite(value) ? Math.max(1, Math.floor(value!)) : CHUNK_SIZE
+}
+
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
 
 export class DataSourceAdapter<T extends object = Datum> {
   private callback: ChangesetCallback<T>
   private lastBoundedData: T[] | null = null
-  private chunkTimer: number = 0
+  private chunkTimer: number | null = null
   private chunkThreshold: number
   private chunkSize: number
 
@@ -40,14 +50,16 @@ export class DataSourceAdapter<T extends object = Datum> {
 
   constructor(callback: ChangesetCallback<T>, options?: { chunkThreshold?: number; chunkSize?: number }) {
     this.callback = callback
-    this.chunkThreshold = options?.chunkThreshold ?? CHUNK_THRESHOLD
-    this.chunkSize = options?.chunkSize ?? CHUNK_SIZE
+    this.chunkThreshold = normalizeChunkThreshold(options?.chunkThreshold)
+    this.chunkSize = normalizeChunkSize(options?.chunkSize)
   }
 
   /** Update chunking options without recreating the adapter. */
   updateChunkOptions(options: { chunkThreshold?: number; chunkSize?: number }): void {
-    if (options.chunkThreshold != null) this.chunkThreshold = options.chunkThreshold
-    if (options.chunkSize != null) this.chunkSize = options.chunkSize
+    // Undefined means the corresponding prop was removed: restore the public
+    // default instead of retaining a stale value from a previous render.
+    this.chunkThreshold = normalizeChunkThreshold(options.chunkThreshold)
+    this.chunkSize = normalizeChunkSize(options.chunkSize)
   }
 
   /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
@@ -56,9 +68,9 @@ export class DataSourceAdapter<T extends object = Datum> {
     this.lastBoundedData = null
     this.pushBuffer = []
     this.flushScheduled = false
-    if (this.chunkTimer) {
+    if (this.chunkTimer !== null) {
       cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = 0
+      this.chunkTimer = null
     }
   }
 
@@ -86,9 +98,9 @@ export class DataSourceAdapter<T extends object = Datum> {
     this.lastBoundedData = data
 
     // Cancel any in-flight progressive ingestion
-    if (this.chunkTimer) {
+    if (this.chunkTimer !== null) {
       cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = 0
+      this.chunkTimer = null
     }
 
     if (data.length <= this.chunkThreshold) {
@@ -104,15 +116,15 @@ export class DataSourceAdapter<T extends object = Datum> {
 
     let offset = this.chunkSize
     const scheduleNext = () => {
-      // Clear on every exit path so `chunkTimer === 0 iff no rAF
+      // Clear on every exit path so `chunkTimer === null iff no rAF
       // scheduled` holds. See matching note in `setReplacementData`.
       if (offset >= data.length) {
-        this.chunkTimer = 0
+        this.chunkTimer = null
         return
       }
       // Check that this is still the active dataset
       if (data !== this.lastBoundedData) {
-        this.chunkTimer = 0
+        this.chunkTimer = null
         return
       }
 
@@ -123,11 +135,15 @@ export class DataSourceAdapter<T extends object = Datum> {
       if (offset < data.length) {
         this.chunkTimer = requestAnimationFrame(scheduleNext)
       } else {
-        this.chunkTimer = 0
+        this.chunkTimer = null
       }
     }
 
-    this.chunkTimer = requestAnimationFrame(scheduleNext)
+    if (offset < data.length) {
+      this.chunkTimer = requestAnimationFrame(scheduleNext)
+    } else {
+      this.chunkTimer = null
+    }
   }
 
   /**
@@ -156,9 +172,9 @@ export class DataSourceAdapter<T extends object = Datum> {
     // path when the input is already clean.
     data = filterSparseArray(data) as T[]
     this.lastBoundedData = data
-    if (this.chunkTimer) {
+    if (this.chunkTimer !== null) {
       cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = 0
+      this.chunkTimer = null
     }
     // Drop any pending push microtask state so replacement is atomic —
     // otherwise a buffered push()/pushMany() from just before this call
@@ -182,17 +198,17 @@ export class DataSourceAdapter<T extends object = Datum> {
     let offset = this.chunkSize
     const scheduleNext = () => {
       // Clear the timer on ANY exit path — the adapter-state invariant
-      // is "chunkTimer is 0 iff no rAF is scheduled". Without these
+      // is "chunkTimer is null iff no rAF is scheduled". Without these
       // explicit resets, an already-complete chunk sequence (or a
-      // superseded dataset) could leave chunkTimer non-zero and
+      // superseded dataset) could leave chunkTimer non-null and
       // `setBoundedData` / `clearLastData` would needlessly call
       // `cancelAnimationFrame` on a stale token.
       if (offset >= data.length) {
-        this.chunkTimer = 0
+        this.chunkTimer = null
         return
       }
       if (data !== this.lastBoundedData) {
-        this.chunkTimer = 0
+        this.chunkTimer = null
         return
       }
       const end = Math.min(offset + this.chunkSize, data.length)
@@ -201,10 +217,14 @@ export class DataSourceAdapter<T extends object = Datum> {
       if (offset < data.length) {
         this.chunkTimer = requestAnimationFrame(scheduleNext)
       } else {
-        this.chunkTimer = 0
+        this.chunkTimer = null
       }
     }
-    this.chunkTimer = requestAnimationFrame(scheduleNext)
+    if (offset < data.length) {
+      this.chunkTimer = requestAnimationFrame(scheduleNext)
+    } else {
+      this.chunkTimer = null
+    }
   }
 
   /**
@@ -277,9 +297,9 @@ export class DataSourceAdapter<T extends object = Datum> {
    * Reset the adapter state.
    */
   clear(): void {
-    if (this.chunkTimer) {
+    if (this.chunkTimer !== null) {
       cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = 0
+      this.chunkTimer = null
     }
     this.lastBoundedData = null
     this.pushBuffer = []

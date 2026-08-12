@@ -1,5 +1,13 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback, useState, useEffect } from "react"
+import {
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+  useCallback,
+  useState,
+  useEffect,
+  useMemo
+} from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -15,13 +23,25 @@ import type {
   TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { ReactNode } from "react"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  useChartLegendAndMargin,
+  useChartSelection,
+  useLegendInteraction
+} from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
+import type {
+  ChartMode,
+  ChartAccessor,
+  SelectionConfig,
+  MobileInteractionProp
+} from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import {
+  renderLoadingState,
+  renderEmptyState
+} from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
@@ -37,31 +57,61 @@ import {
   AGG_TIME,
   AGG_VALUE,
   AGG_LOWER,
-  AGG_UPPER,
+  AGG_UPPER
 } from "./aggregate"
 import { type EventTimeConfig, createReorderBuffer } from "./eventTime"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
   MultiPointTooltip,
-  resolveMultiCapableTooltip,
-  type TooltipProp,
+  resolveMultiCapableTooltip
 } from "../../Tooltip/Tooltip"
+import type {
+  RealtimeAccessibilityProps,
+  RealtimeData,
+  RealtimePointIdAccessor,
+  RealtimeTooltipProp
+} from "./realtimeChartTypes"
+import type { LegendValue } from "../../types/legendTypes"
+import type { PartialMargin } from "../../types/marginType"
+import {
+  buildRealtimeFrameChromeProps,
+  useRealtimeChartMode
+} from "./realtimeChartRuntime"
 
 /** Read a numeric time/value off a datum via accessor, with a field-name fallback. */
 function readNum<TDatum extends Datum>(
-  datum: TDatum,
+  datum: Datum,
   accessor: ChartAccessor<TDatum, number> | undefined,
   fallback: string
 ): number | null {
   const raw: unknown =
-    typeof accessor === "function" ? accessor(datum) : datum[(accessor ?? fallback) as keyof TDatum]
+    typeof accessor === "function"
+      ? accessor(datum)
+      : datum[String(accessor ?? fallback)]
   if (raw == null) return null
   if (raw instanceof Date) return raw.getTime()
   const n = Number(raw)
   return Number.isFinite(n) ? n : null
 }
 
-export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
+/**
+ * Imperative handle for RealtimeLineChart. It extends the shared realtime
+ * handle without changing that cross-chart contract: only this chart exposes
+ * event-time tail flushing.
+ */
+export interface RealtimeLineChartHandle extends RealtimeFrameHandle {
+  /**
+   * Release every event still held by `eventTime`, in event-time order.
+   * Call this when an input source reaches an asserted end-of-stream or batch
+   * boundary. Later newer events remain supported; events older than the
+   * flushed frontier follow `latePolicy`.
+   */
+  flush(): void
+}
+
+export interface RealtimeLineChartProps<
+  TDatum extends Datum = Datum
+> extends RealtimeAccessibilityProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -79,7 +129,7 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   /** Chart margins */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  margin?: PartialMargin
   /** CSS class name */
   className?: string
   onObservation?: OnObservationCallback
@@ -91,7 +141,7 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Datum[]
+  data?: RealtimeData<TDatum>
   /** Time value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
@@ -110,6 +160,8 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   strokeDasharray?: string
   /** Uniform line opacity (0–1). Pairs with `stroke` / `strokeWidth` for the designer-facing primitive vocabulary. */
   opacity?: number
+  /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
+  cursor?: CSSProperties["cursor"]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -125,13 +177,17 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   /** Opt into automatic placement for note-like annotations without manual offsets. */
   autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Standard tooltip config or raw-datum renderer. Pass `"multi"` for hover-anywhere line values. Use `tooltipContent` when the full HoverData wrapper is required. */
-  tooltip?: TooltipProp
+  /** Declarative tooltip config or the legacy full-HoverData callback. Pass `"multi"` for hover-anywhere line values. */
+  tooltip?: RealtimeTooltipProp
   /** Configurable opacity decay for older data */
   decay?: DecayConfig
   /** Flash effect on newly inserted data */
@@ -159,14 +215,17 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: Datum) => string)
+  pointIdAccessor?: RealtimePointIdAccessor<TDatum>
   /**
    * Opt-in windowed aggregation over event-time. When set, pushed
    * events are reduced into tumbling/hopping/session windows and the
    * chart draws one mark per window (mean/sum/min/max/count) plus an
    * optional ±σ or min–max band — render cost scales with the number of
    * visible windows, not the arrival rate. This is the **aggregation
-   * window**, distinct from `windowMode`'s RingBuffer eviction.
+   * window**, distinct from `windowMode`'s RingBuffer eviction. Changing a
+   * structural window field or either accessor rebuilds the accumulator:
+   * controlled `data` is reseeded, while push-only input begins a new epoch
+   * because raw events are deliberately not retained.
    */
   aggregate?: AggregateConfig
   /**
@@ -176,7 +235,9 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
    * monotonically instead of zigzagging. Late events (older than
    * `watermark − lateness`) are dropped or kept per policy and surfaced
    * via `onObservation` as `"late-data"`. Default-off; when unset the
-   * push path is byte-for-byte unchanged.
+   * push path is byte-for-byte unchanged. Call `ref.current.flush()` at an
+   * asserted end-of-stream boundary so the final grace-window events are
+   * released in order.
    */
   eventTime?: EventTimeConfig
 }
@@ -221,210 +282,274 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
  * />
  * ```
  */
-export const RealtimeLineChart = forwardRef(
-  function RealtimeLineChart<TDatum extends Datum = Datum>(props: RealtimeLineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    const resolved = useChartMode(props.mode, {
-      width: props.size?.[0] ?? props.width,
-      height: props.size?.[1] ?? props.height,
-      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-          mobileInteraction: props.mobileInteraction,
-      mobileSemantics: props.mobileSemantics,
-      responsiveRules: props.responsiveRules,
-})
+export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
+  TDatum extends Datum = Datum
+>(props: RealtimeLineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  const resolved = useRealtimeChartMode(props)
 
-    const {
-      size,
-      margin: userMargin,
-      className,
-      arrowOfTime = "right",
-      windowMode = "sliding",
-      windowSize: windowSizeProp,
-      data,
-      timeAccessor,
-      valueAccessor,
-      timeExtent,
-      valueExtent,
-      extentPadding,
-      stroke = "#007bff",
-      strokeWidth = 2,
-      strokeDasharray,
-      opacity,
-      background,
-      tooltipContent,
-      tooltip,
-      onHover,
-      annotations,
-      autoPlaceAnnotations,
-      svgAnnotationRules,
-      tickFormatTime,
-      tickFormatValue,
-      decay,
-      pulse,
-      staleness,
-      transition,
-      linkedHover,
-      selection,
-      onObservation,
-      chartId,
-      loading,
-      loadingContent,
-      emptyContent,
-      emphasis,
-      legendPosition: legendPositionProp,
-      aggregate,
-      eventTime,
-    } = props
+  const {
+    size,
+    margin: userMargin,
+    className,
+    arrowOfTime = "right",
+    windowMode = "sliding",
+    windowSize: windowSizeProp,
+    data,
+    timeAccessor,
+    valueAccessor,
+    timeExtent,
+    valueExtent,
+    extentPadding,
+    stroke = "#007bff",
+    strokeWidth = 2,
+    strokeDasharray,
+    opacity,
+    cursor,
+    background,
+    tooltipContent,
+    tooltip,
+    onHover,
+    annotations,
+    autoPlaceAnnotations,
+    svgAnnotationRules,
+    tickFormatTime,
+    tickFormatValue,
+    decay,
+    pulse,
+    staleness,
+    transition,
+    linkedHover,
+    selection,
+    onObservation,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
+    emphasis,
+    legendPosition: legendPositionProp,
+    aggregate,
+    eventTime
+  } = props
 
-    const showAxes = resolved.showAxes
-    const enableHover = resolved.enableHover
-    const margin = userMargin ?? resolved.marginDefaults
-    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    // Accessor-aware default tooltip — reads data-space `time` /
-    // `value` fields off `hover.data` so the user sees real values
-    // out of the box. See `buildDefaultRealtimeTooltip` for shape.
-    const defaultTooltipContent = buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
-    const multiPointTooltip = MultiPointTooltip()
-    const tooltipProps = resolveMultiCapableTooltip({
-      tooltip,
-      defaultTooltipContent,
-      // RealtimeLineChart currently has one value channel. Give its otherwise
-      // unnamed line a useful label while retaining the shared multi renderer.
-      multiDefaultContent: (hover: Datum) => multiPointTooltip({
+  const showAxes = resolved.showAxes
+  const enableHover = resolved.enableHover
+  const resolvedSize: [number, number] = size ?? [
+    resolved.width,
+    resolved.height
+  ]
+  const seriesLabel =
+    typeof valueAccessor === "string" ? valueAccessor : "Value"
+  const lineLegend = useMemo<LegendValue | undefined>(() => {
+    if (!resolved.showLegend) return undefined
+    return {
+      legendGroups: [
+        {
+          label: "Series",
+          type: "line",
+          items: [{ label: seriesLabel, color: stroke }],
+          styleFn: (item) => ({
+            stroke: item.color || "var(--semiotic-primary, #007bff)",
+            strokeWidth: strokeWidth ?? 2
+          })
+        }
+      ]
+    }
+  }, [resolved.showLegend, seriesLabel, stroke, strokeWidth])
+  const legendState = useLegendInteraction(
+    props.legendInteraction,
+    () => seriesLabel,
+    [seriesLabel]
+  )
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+    data: [],
+    colorBy: undefined,
+    colorScale: undefined,
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    userMargin,
+    defaults: resolved.marginDefaults,
+    additionalLegend: lineLegend,
+    chartWidth: resolvedSize[0],
+    axisChrome: { hasAxis: resolved.showAxes !== false }
+  })
+  // Accessor-aware default tooltip — reads data-space `time` /
+  // `value` fields off `hover.data` so the user sees real values
+  // out of the box. See `buildDefaultRealtimeTooltip` for shape.
+  const defaultTooltipContent = buildDefaultRealtimeTooltip({
+    timeAccessor,
+    valueAccessor
+  })
+  const multiPointTooltip = MultiPointTooltip()
+  const tooltipProps = resolveMultiCapableTooltip({
+    tooltip,
+    defaultTooltipContent,
+    customFunctionContext: "hover",
+    // RealtimeLineChart currently has one value channel. Give its otherwise
+    // unnamed line a useful label while retaining the shared multi renderer.
+    multiDefaultContent: (hover: Datum) =>
+      multiPointTooltip({
         ...hover,
         allSeries: Array.isArray(hover.allSeries)
           ? hover.allSeries.map((hit: Record<string, unknown>) => ({
               ...hit,
-              group: hit.group || (typeof valueAccessor === "string" ? valueAccessor : "value"),
+              group:
+                hit.group ||
+                (typeof valueAccessor === "string" ? valueAccessor : "value")
             }))
-          : hover.allSeries,
-      }),
+          : hover.allSeries
+      })
+  })
+  const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
+
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  // ── Linked hover via shared hook ──
+  const { customHoverBehavior: linkedHoverBehavior, customClickBehavior } =
+    useChartSelection({
+      selection,
+      linkedHover,
+      unwrapData: true,
+      onObservation,
+      chartType: "RealtimeLineChart",
+      chartId,
+      mobileInteraction: resolved.mobileInteraction
     })
-    const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
 
-    const frameRef = useRef<StreamXYFrameHandle>(null)
+  const combinedHoverBehavior = useCallback(
+    (d: HoverData | null) => {
+      if (onHover) onHover(d)
+      linkedHoverBehavior(d)
+    },
+    [onHover, linkedHoverBehavior]
+  )
 
-    // ── Linked hover via shared hook ──
-    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeLineChart", chartId
-    })
+  // ── Windowed aggregation (opt-in) ──────────────────────────────────────
+  // When `aggregate` is set the HOC owns a WindowAccumulator and feeds the
+  // frame a controlled, bounded array of per-window rows instead of the raw
+  // stream. Refs keep the imperative handle referentially stable while still
+  // reaching live config/accessors.
+  const aggEnabled = aggregate != null
+  const [aggRows, setAggRows] = useState<Datum[]>([])
+  const accRef = useRef<WindowAccumulator | null>(null)
+  const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
+  aggConfigRef.current = aggregate
+  const aggEnabledRef = useRef(aggEnabled)
+  aggEnabledRef.current = aggEnabled
+  const aggRowsRef = useRef<Datum[]>(aggRows)
+  aggRowsRef.current = aggRows
+  const accessorsRef = useRef({ timeAccessor, valueAccessor })
+  accessorsRef.current = { timeAccessor, valueAccessor }
 
-    const combinedHoverBehavior = useCallback(
-      (d: HoverData | null) => {
-        if (onHover) onHover(d)
-        linkedHoverBehavior(d)
-      },
-      [onHover, linkedHoverBehavior]
-    )
+  // Identity key for the structural config — rebuilding the accumulator is
+  // only required when the windowing itself changes (not stat/band/sigma,
+  // which are re-derived on emit).
+  const aggKey = aggEnabled
+    ? [
+        aggregate!.window ?? "tumbling",
+        aggregate!.size,
+        aggregate!.hop ?? "",
+        aggregate!.gap ?? "",
+        aggregate!.retain ?? ""
+      ].join("|")
+    : ""
 
-    // ── Windowed aggregation (opt-in) ──────────────────────────────────────
-    // When `aggregate` is set the HOC owns a WindowAccumulator and feeds the
-    // frame a controlled, bounded array of per-window rows instead of the raw
-    // stream. Refs keep the imperative handle referentially stable while still
-    // reaching live config/accessors.
-    const aggEnabled = aggregate != null
-    const [aggRows, setAggRows] = useState<Datum[]>([])
-    const accRef = useRef<WindowAccumulator | null>(null)
-    const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
-    aggConfigRef.current = aggregate
-    const aggEnabledRef = useRef(aggEnabled)
-    aggEnabledRef.current = aggEnabled
-    const aggRowsRef = useRef<Datum[]>(aggRows)
-    aggRowsRef.current = aggRows
-    const accessorsRef = useRef({ timeAccessor, valueAccessor })
-    accessorsRef.current = { timeAccessor, valueAccessor }
-
-    // Identity key for the structural config — rebuilding the accumulator is
-    // only required when the windowing itself changes (not stat/band/sigma,
-    // which are re-derived on emit).
-    const aggKey = aggEnabled
-      ? [aggregate!.window ?? "tumbling", aggregate!.size, aggregate!.hop ?? "",
-         aggregate!.gap ?? "", aggregate!.retain ?? ""].join("|")
-      : ""
-
-    // (Re)build the accumulator and seed it from any initial `data` array.
-    useEffect(() => {
-      if (!aggEnabled) {
-        accRef.current = null
-        return
-      }
-      const cfg = aggConfigRef.current!
-      // `retain` is the sole retention control for aggregate mode — leaving it
-      // unset means unbounded windows, matching AggregateConfig's documented
-      // default. (Deliberately not coupled to `windowSize`, which is the
-      // ring-buffer eviction policy and does not apply to aggregated output.)
-      const acc = createAccumulator(cfg)
-      accRef.current = acc
-      if (acc && data) {
-        const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
-        for (const d of data) {
-          const t = readNum(d, ta, "time")
-          const v = readNum(d, va, "value")
-          if (t != null && v != null) acc.push(t, v)
-        }
-      }
-      setAggRows(acc ? aggregatedRows(acc, cfg) : [])
-    }, [aggKey, aggEnabled, data])
-
-    // Re-emit (without rebuilding) when only the readout config changes.
-    useEffect(() => {
-      if (aggEnabled && accRef.current) {
-        setAggRows(aggregatedRows(accRef.current, aggConfigRef.current!))
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [aggregate?.stat, aggregate?.band, aggregate?.sigma])
-
-    const ingestAgg = useCallback((points: Datum[]) => {
-      const acc = accRef.current
-      const cfg = aggConfigRef.current
-      if (!acc || !cfg) return
+  // (Re)build the accumulator and seed it from any initial `data` array.
+  useEffect(() => {
+    if (!aggEnabled) {
+      accRef.current = null
+      return
+    }
+    const cfg = aggConfigRef.current!
+    // `retain` is the sole retention control for aggregate mode — leaving it
+    // unset means unbounded windows, matching AggregateConfig's documented
+    // default. (Deliberately not coupled to `windowSize`, which is the
+    // ring-buffer eviction policy and does not apply to aggregated output.)
+    const acc = createAccumulator(cfg)
+    accRef.current = acc
+    if (acc && data) {
       const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
-      for (const p of points) {
-        const t = readNum(p, ta, "time")
-        const v = readNum(p, va, "value")
+      for (const d of data) {
+        const t = readNum(d, ta, "time")
+        const v = readNum(d, va, "value")
         if (t != null && v != null) acc.push(t, v)
       }
-      setAggRows(aggregatedRows(acc, cfg))
-    }, [])
+    }
+    setAggRows(acc ? aggregatedRows(acc, cfg) : [])
+  }, [aggKey, aggEnabled, data, timeAccessor, valueAccessor])
 
-    // ── Event-time ingestion (opt-in) ──────────────────────────────────────
-    const eventTimeEnabled = eventTime != null
-    const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
-    const eventTimeRef = useRef<EventTimeConfig | undefined>(eventTime)
-    eventTimeRef.current = eventTime
-    const eventTimeEnabledRef = useRef(eventTimeEnabled)
-    eventTimeEnabledRef.current = eventTimeEnabled
-    const onObservationRef = useRef(onObservation)
-    onObservationRef.current = onObservation
-    const chartIdRef = useRef(chartId)
-    chartIdRef.current = chartId
+  // Re-emit (without rebuilding) when only the readout config changes.
+  useEffect(() => {
+    if (aggEnabled && accRef.current) {
+      setAggRows(aggregatedRows(accRef.current, aggConfigRef.current!))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aggregate?.stat, aggregate?.band, aggregate?.sigma])
 
-    const etKey = eventTimeEnabled
-      ? `${eventTime!.lateness}|${eventTime!.latePolicy ?? "drop"}`
-      : ""
-    useEffect(() => {
-      if (!eventTimeEnabled) {
-        reorderRef.current = null
-        return
-      }
-      // Read the accessor live so a post-mount `timeAccessor` change is
-      // honored without rebuilding the buffer.
-      reorderRef.current = createReorderBuffer(
-        eventTimeRef.current!,
-        (d) => readNum(d, accessorsRef.current.timeAccessor, "time") ?? NaN
-      )
-    }, [etKey, eventTimeEnabled])
+  const ingestAgg = useCallback((points: Datum[]) => {
+    const acc = accRef.current
+    const cfg = aggConfigRef.current
+    if (!acc || !cfg) return
+    const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
+    for (const p of points) {
+      const t = readNum(p, ta, "time")
+      const v = readNum(p, va, "value")
+      if (t != null && v != null) acc.push(t, v)
+    }
+    setAggRows(aggregatedRows(acc, cfg))
+  }, [])
 
-    // Route released (in-order) events to the aggregator or the frame.
-    const routeReleased = useCallback((points: Datum[]) => {
+  // ── Event-time ingestion (opt-in) ──────────────────────────────────────
+  const eventTimeEnabled = eventTime != null
+  const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
+  const eventTimeRef = useRef<EventTimeConfig | undefined>(eventTime)
+  eventTimeRef.current = eventTime
+  const eventTimeEnabledRef = useRef(eventTimeEnabled)
+  eventTimeEnabledRef.current = eventTimeEnabled
+  const onObservationRef = useRef(onObservation)
+  onObservationRef.current = onObservation
+  const chartIdRef = useRef(chartId)
+  chartIdRef.current = chartId
+
+  const etKey = eventTimeEnabled
+    ? `${eventTime!.lateness}|${eventTime!.latePolicy ?? "drop"}`
+    : ""
+
+  // Route released (in-order) events to the aggregator or the frame.
+  const routeReleased = useCallback(
+    (points: Datum[]) => {
       if (points.length === 0) return
       if (aggEnabledRef.current) ingestAgg(points)
       else frameRef.current?.pushMany(points)
-    }, [ingestAgg])
+    },
+    [ingestAgg]
+  )
 
-    // Unified ingest: reorder through the grace window (if enabled), emit
-    // late-data observations, then route the released events.
-    const ingestPoints = useCallback((points: Datum[]) => {
+  useEffect(() => {
+    // A live config/accessor transition is an asserted ordering boundary:
+    // release the old grace-window tail before installing the new policy.
+    // This runs only in the effect body, not cleanup, so unmount never queues
+    // a frame push or aggregate state update.
+    const previous = reorderRef.current
+    if (previous) routeReleased(previous.flush())
+
+    if (!eventTimeEnabled) {
+      reorderRef.current = null
+      return
+    }
+    // Capture the accessor used for this buffer. If it changes, the effect
+    // above flushes held rows using their original event-time interpretation
+    // before the replacement starts accepting rows under the new accessor.
+    const eventAccessor = timeAccessor
+    reorderRef.current = createReorderBuffer(
+      eventTimeRef.current!,
+      (d) => readNum(d, eventAccessor, "time") ?? NaN
+    )
+  }, [etKey, eventTimeEnabled, routeReleased, timeAccessor])
+
+  // Unified ingest: reorder through the grace window (if enabled), emit
+  // late-data observations, then route the released events.
+  const ingestPoints = useCallback(
+    (points: Datum[]) => {
       const rb = reorderRef.current
       if (!eventTimeEnabledRef.current || !rb) {
         routeReleased(points)
@@ -449,22 +574,36 @@ export const RealtimeLineChart = forwardRef(
                 lateCount: rb.lateCount,
                 timestamp: Date.now(),
                 chartType: "RealtimeLineChart",
-                chartId: chartIdRef.current,
+                chartId: chartIdRef.current
               })
             }
           }
         }
       }
       routeReleased(released)
-    }, [routeReleased])
+    },
+    [routeReleased]
+  )
 
-    // `[ingestPoints]` so the handle tracks the stable ingest path.
-    useImperativeHandle(ref, () => ({
+  const flushEventTime = useCallback(() => {
+    const rb = reorderRef.current
+    if (!eventTimeEnabledRef.current || !rb) return
+    routeReleased(rb.flush())
+  }, [routeReleased])
+
+  // Keep the public handle stable while tracking both live ingest paths.
+  useImperativeHandle<RealtimeFrameHandle, RealtimeLineChartHandle>(
+    ref,
+    () => ({
       push: (point) => ingestPoints([point]),
       pushMany: (points) => ingestPoints(points),
-      remove: (id) => (aggEnabledRef.current ? [] : frameRef.current?.remove(id) ?? []),
+      flush: flushEventTime,
+      remove: (id) =>
+        aggEnabledRef.current ? [] : (frameRef.current?.remove(id) ?? []),
       update: (id, updater) =>
-        aggEnabledRef.current ? [] : frameRef.current?.update(id, updater) ?? [],
+        aggEnabledRef.current
+          ? []
+          : (frameRef.current?.update(id, updater) ?? []),
       clear: () => {
         reorderRef.current?.clear()
         if (aggEnabledRef.current) {
@@ -474,95 +613,126 @@ export const RealtimeLineChart = forwardRef(
           frameRef.current?.clear()
         }
       },
-      getData: () => (aggEnabledRef.current ? aggRowsRef.current : frameRef.current?.getData() ?? []),
+      getData: () =>
+        aggEnabledRef.current
+          ? aggRowsRef.current
+          : (frameRef.current?.getData() ?? []),
       getScales: () => frameRef.current?.getScales() ?? null
-    }), [ingestPoints])
+    }),
+    [flushEventTime, ingestPoints]
+  )
 
-    // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
-    // In aggregate mode the chart is push-driven (data arrives via ref), so
-    // skip the static empty state just as a plain streaming chart does.
-    const emptyEl = !loadingEl
-      ? renderEmptyState(aggEnabled ? undefined : data, resolvedSize[0], resolvedSize[1], emptyContent)
-      : null
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  const loadingEl = renderLoadingState(
+    loading,
+    resolvedSize[0],
+    resolvedSize[1],
+    loadingContent
+  )
+  // In aggregate mode the chart is push-driven (data arrives via ref), so
+  // skip the static empty state just as a plain streaming chart does.
+  const emptyEl = !loadingEl
+    ? renderEmptyState(
+        aggEnabled ? undefined : data,
+        resolvedSize[0],
+        resolvedSize[1],
+        emptyContent
+      )
+    : null
 
-    const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
-    if (opacity != null) lineStyle.opacity = opacity
+  const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
+  if (opacity != null) lineStyle.opacity = opacity
+  if (cursor != null) lineStyle.cursor = cursor
 
-    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
 
-    const resolvedClassName = emphasis
-      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
-      : className
+  const resolvedClassName = emphasis
+    ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+    : className
 
-    // ── Resolve frame inputs: aggregated rows replace the raw stream ────────
-    const frameData = aggEnabled ? aggRows : data
-    const frameTimeAccessor = aggEnabled ? AGG_TIME : timeAccessor
-    const frameValueAccessor = aggEnabled ? AGG_VALUE : valueAccessor
-    // Controlled aggregated data is re-passed whole each render — no eviction.
-    const frameWindowMode = aggEnabled ? "growing" : windowMode
-    // Display capacity for the controlled aggregated rows — large enough to
-    // hold every retained window (or the current row count when unbounded).
-    const aggCapacity = aggregate?.retain ?? Math.max(aggRows.length, 600)
-    const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
-    const frameBand =
-      aggEnabled && aggregate && hasBand(aggregate)
-        ? { y0Accessor: AGG_LOWER, y1Accessor: AGG_UPPER, perSeries: false }
-        : undefined
+  // ── Resolve frame inputs: aggregated rows replace the raw stream ────────
+  const frameData = aggEnabled ? aggRows : data
+  const frameTimeAccessor = aggEnabled ? AGG_TIME : timeAccessor
+  const frameValueAccessor = aggEnabled ? AGG_VALUE : valueAccessor
+  // Controlled aggregated data is re-passed whole each render — no eviction.
+  const frameWindowMode = aggEnabled ? "growing" : windowMode
+  // Display capacity for the controlled aggregated rows — large enough to
+  // hold every retained window (or the current row count when unbounded).
+  const aggCapacity = aggregate?.retain ?? Math.max(aggRows.length, 600)
+  const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
+  const frameBand =
+    aggEnabled && aggregate && hasBand(aggregate)
+      ? { y0Accessor: AGG_LOWER, y1Accessor: AGG_UPPER, perSeries: false }
+      : undefined
 
-    // ── Loading / empty guards (deferred to after all hooks) ───────────────
-    if (loadingEl) return loadingEl
-    if (emptyEl) return emptyEl
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
-    return (
-      <StreamXYFrame
-        ref={frameRef}
-        chartType="line"
-        runtimeMode="streaming"
-        size={resolvedSize}
-        maxDevicePixelRatio={props.maxDevicePixelRatio}
-        margin={margin}
-        className={resolvedClassName}
-        arrowOfTime={arrowOfTime}
-        windowMode={frameWindowMode}
-        windowSize={frameWindowSize}
-        data={frameData}
-        timeAccessor={frameTimeAccessor}
-        valueAccessor={frameValueAccessor}
-        xExtent={timeExtent}
-        yExtent={valueExtent}
-        extentPadding={extentPadding}
-        band={frameBand}
-        lineStyle={lineStyle}
-        showAxes={showAxes}
-        background={background}
-        hoverAnnotation={enableHover}
-        tooltipContent={resolvedTooltip}
-        tooltipMode={tooltipProps.tooltipMode}
-        {...buildCustomBehaviorProps({
-          linkedHover,
-          selection,
-          onObservation,
-          forceHoverBehavior: true,
-          mobileInteraction: resolved.mobileInteraction,
-          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
-        })}
-        annotations={annotations}
-        autoPlaceAnnotations={autoPlaceAnnotations}
-        svgAnnotationRules={svgAnnotationRules}
-        tickFormatTime={tickFormatTime}
-        tickFormatValue={tickFormatValue}
-        decay={decay}
-        pulse={pulse}
-        staleness={staleness}
-        transition={transition}
-        pointIdAccessor={props.pointIdAccessor}
-        legendPosition={legendPositionProp}
-      />
-    )
-  }
-) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  return (
+    <StreamXYFrame
+      ref={frameRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={resolvedSize}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
+      margin={margin}
+      className={resolvedClassName}
+      {...buildRealtimeFrameChromeProps(
+        resolved,
+        legendState,
+        props.legendInteraction
+      )}
+      arrowOfTime={arrowOfTime}
+      windowMode={frameWindowMode}
+      windowSize={frameWindowSize}
+      data={frameData}
+      timeAccessor={frameTimeAccessor}
+      valueAccessor={frameValueAccessor}
+      xExtent={timeExtent}
+      yExtent={valueExtent}
+      extentPadding={extentPadding}
+      band={frameBand}
+      lineStyle={lineStyle}
+      showAxes={showAxes}
+      background={background}
+      hoverAnnotation={enableHover}
+      tooltipContent={resolvedTooltip}
+      tooltipMode={tooltipProps.tooltipMode}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        forceHoverBehavior: true,
+        mobileInteraction: resolved.mobileInteraction,
+        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customClickBehavior
+      })}
+      annotations={annotations}
+      legend={legend}
+      legendPosition={legendPosition}
+      autoPlaceAnnotations={autoPlaceAnnotations}
+      svgAnnotationRules={svgAnnotationRules}
+      tickFormatTime={tickFormatTime}
+      tickFormatValue={tickFormatValue}
+      decay={decay}
+      pulse={pulse}
+      staleness={staleness}
+      transition={transition}
+      pointIdAccessor={props.pointIdAccessor}
+    />
+  )
+}) as unknown as {
+  /** Compatibility overload for refs authored against the shared 3.x handle. */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeLineChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
+  /** Specific overload keeps ElementRef/ComponentRef aware of flush(). */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeLineChartProps<TDatum> &
+      React.RefAttributes<RealtimeLineChartHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 RealtimeLineChart.displayName = "RealtimeLineChart"

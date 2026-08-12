@@ -8,7 +8,10 @@ import type {
   PhysicsQueuedSpawn,
   PhysicsSpawnPacingOptions
 } from "../../stream/physics/PhysicsPipelineStore"
-import type { PhysicsSemanticItem } from "../../stream/physics/StreamPhysicsTypes"
+import type {
+  PhysicsSemanticItem,
+  StreamPhysicsFrameProps
+} from "../../stream/physics/StreamPhysicsTypes"
 
 export interface PhysicsChartLayout {
   config: PhysicsPipelineConfig
@@ -64,6 +67,23 @@ export interface PhysicsStyleRuleOptions {
   styleRules?: ReadonlyArray<StyleRule>
   /** Numeric field/accessor a threshold rule compares against (defaults to `value`). */
   valueAccessor?: string | ((d: Datum) => unknown)
+}
+
+/** Merge generated HOC defaults with the public frame escape hatch. */
+export function composePhysicsBodyStyle(
+  generatedStyle: NonNullable<StreamPhysicsFrameProps["bodyStyle"]>,
+  frameStyle: StreamPhysicsFrameProps["bodyStyle"]
+): NonNullable<StreamPhysicsFrameProps["bodyStyle"]> {
+  if (!frameStyle) return generatedStyle
+  return (body, context) => {
+    const generated = typeof generatedStyle === "function"
+      ? generatedStyle(body, context)
+      : generatedStyle
+    const authored = typeof frameStyle === "function"
+      ? frameStyle(body, context)
+      : frameStyle
+    return { ...generated, ...authored }
+  }
 }
 
 /**

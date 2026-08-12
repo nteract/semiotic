@@ -37,9 +37,13 @@ function windowContainerId(body: PhysicsBodyState): string | undefined {
   return datum?.windowIndex == null ? undefined : `window-${datum.windowIndex}`
 }
 
-function svgMarkup(nodes: ReturnType<typeof physicsBodiesToXYSceneNodes>): string {
+function svgMarkup(
+  nodes: ReturnType<typeof physicsBodiesToXYSceneNodes>
+): string {
   return renderToStaticMarkup(
-    <svg>{nodes.map((node, index) => xySceneNodeToSVG(node, index, "physics"))}</svg>
+    <svg>
+      {nodes.map((node, index) => xySceneNodeToSVG(node, index, "physics"))}
+    </svg>
   )
 }
 
@@ -60,18 +64,27 @@ describe("physics settled scene helpers", () => {
     const projectionRows = buildPhysicsSettledProjection(
       [
         { id: "window-0", label: "0-12s" },
-        { id: "window-1", label: "12-24s", secondary: 1, secondaryLabel: "late" }
+        {
+          id: "window-1",
+          label: "12-24s",
+          secondary: 1,
+          secondaryLabel: "late"
+        }
       ],
       {
         bodies: store.readBodies(),
         getContainerId: windowContainerId
       }
     )
+    const styleContexts: Array<{ index: number; simulationState: string }> = []
     const result = buildPhysicsSettledScene(store, {
       projectionRows,
-      bodyStyle: (body) => ({
-        fill: body.shape.type === "circle" ? "#0ea5e9" : "#22c55e"
-      }),
+      bodyStyle: (body, context) => {
+        styleContexts.push(context)
+        return {
+          fill: body.shape.type === "circle" ? "#0ea5e9" : "#22c55e"
+        }
+      },
       getBodyLabel: (body) => `Settled ${body.id}`
     })
 
@@ -82,7 +95,14 @@ describe("physics settled scene helpers", () => {
       settled: true,
       seed: 31
     })
-    expect(result.sceneNodes.map((node) => node.type)).toEqual(["point", "rect"])
+    expect(result.sceneNodes.map((node) => node.type)).toEqual([
+      "point",
+      "rect"
+    ])
+    expect(styleContexts).toEqual([
+      { index: 0, simulationState: "settled" },
+      { index: 1, simulationState: "settled" }
+    ])
     expect(result.sceneNodes[0]).toMatchObject({
       type: "point",
       pointId: "circle-a",

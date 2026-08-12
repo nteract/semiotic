@@ -246,6 +246,28 @@ describe("renderStaticGradientLegend", () => {
     expect(svg).toContain('id="chart-2-semiotic-static-gradient-legend"')
     expect(svg).toContain('fill="url(#chart-2-semiotic-static-gradient-legend)"')
   })
+
+  it.each(["right", "left", "top", "bottom"] as const)(
+    "keeps labeled %s legend geometry non-negative within its layout group",
+    (position) => {
+      const node = renderStaticGradientLegend({
+        theme: LIGHT_THEME,
+        position,
+        totalWidth: 600,
+        totalHeight: 400,
+        margin: { top: 70, right: 130, bottom: 80, left: 130 },
+        gradient: {
+          domain: [0, 1],
+          colorFn: () => "#08519c",
+          label: "Probability",
+        },
+      })
+      const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+
+      expect(svg).not.toMatch(/<text[^>]* y="-/)
+      expect(svg).not.toMatch(/<rect[^>]* y="-/)
+    }
+  )
 })
 
 describe("extractCategories", () => {

@@ -15,6 +15,10 @@ import type { Datum } from "../shared/datumTypes"
  * Opt-in event-time ingestion for realtime XY charts. Reorders pushed
  * events within a bounded grace window so out-of-order arrivals render
  * in event-time order, at the cost of delaying display by `lateness`.
+ * RealtimeLineChart's chart-specific handle exposes `flush()` to release
+ * the final grace-window tail at an asserted end-of-stream boundary. A live
+ * config or time-accessor change drains the prior tail before the new policy
+ * begins, rather than abandoning buffered events.
  */
 export interface EventTimeConfig {
   /**

@@ -6,7 +6,7 @@ _Edit dist/semiotic-themes.d.ts's sources, then re-run `npm run docs:api-surface
 ```
 const BI_TOOL_DARK: SemioticTheme
 const BI_TOOL_LIGHT: SemioticTheme
-const CARBON_ALERT: { readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce"; }
+const CARBON_ALERT: {readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce";}
 const CARBON_CATEGORICAL_14: string[]
 const CARBON_DARK: SemioticTheme
 const CARBON_LIGHT: SemioticTheme
@@ -22,7 +22,7 @@ const PASTELS_DARK: SemioticTheme
 const PASTELS_LIGHT: SemioticTheme
 const PLAYFUL_DARK: SemioticTheme
 const PLAYFUL_LIGHT: SemioticTheme
-const THEME_PRESETS: { light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme; }
+const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
 const TUFTE_DARK: SemioticTheme
 const TUFTE_LIGHT: SemioticTheme
 function designTokensToTheme(tokens: Datum, options?: DesignTokensToThemeOptions | undefined): SemioticTheme
@@ -32,5 +32,14 @@ function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}
 function themeToTokens(theme: SemioticTheme): Datum
 interface DesignTokensToThemeOptions
 interface SemioticTheme
-type ThemePresetName = keyof typeof THEME_PRESETS
+interface-member DesignTokensToThemeOptions::property::base = optional base: SemioticTheme | undefined
+interface-member DesignTokensToThemeOptions::property::mapping = optional mapping: Partial<Record<"categorical" | "fontFamily" | ColorRole, string>> | undefined
+interface-member SemioticTheme::property::accessibility = optional accessibility: undefined | {colorBlindSafe?: boolean; highContrast?: boolean;}
+interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
+interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
+interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
+interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
+interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; tickFontFamily?: string; titleFontSize?: number;}
+type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
+type ThemePresetName = (string & {}) | KnownThemePresetName
 ```

@@ -16,6 +16,8 @@ import type { Quadtree } from "d3-quadtree"
 import type { SceneDatum } from "./types"
 
 export interface NetworkHitResult {
+  /** Scene node/edge that supplied this hit (used for presentation metadata). */
+  mark?: NetworkSceneNode | NetworkSceneEdge
   type: "node" | "edge"
   datum: SceneDatum
   x: number
@@ -35,12 +37,13 @@ export function findNearestNetworkNode(
   py: number,
   maxDistance = 30,
   nodeQuadtree?: Quadtree<NetworkCircleNode> | null,
-  maxNodeRadius = 0
+  maxNodeRadius = 0,
+  includeEdges = true
 ): NetworkHitResult | null {
   // Check nodes — for nested rects (treemap) we want the smallest
   // containing rect, so we track rect hits by area separately.
   let bestNode: NetworkHitResult | null = null
-  let bestDist = maxDistance
+  let bestDist = Infinity
   let bestRectArea = Infinity
 
   // Fast path: when a circle-node quadtree is available (large force/orbit
@@ -54,7 +57,7 @@ export function findNearestNetworkNode(
       (n) => n.cx, (n) => n.cy, (n) => n.r
     )
     if (hit) {
-      bestNode = { type: "node", datum: hit.node.datum, x: hit.node.cx, y: hit.node.cy, distance: hit.distance }
+      bestNode = { mark: hit.node, type: "node", datum: hit.node.datum, x: hit.node.cx, y: hit.node.cy, distance: hit.distance }
       bestDist = hit.distance
     }
   }
@@ -64,6 +67,7 @@ export function findNearestNetworkNode(
     if (nodeQuadtree && node.type === "circle") continue
     const result = hitTestNode(node, px, py, maxDistance)
     if (!result) continue
+    result.mark = node
 
     if (node.type === "rect") {
       // For rects: prefer the smallest area (deepest cell)
@@ -79,6 +83,7 @@ export function findNearestNetworkNode(
   }
 
   if (bestNode) return bestNode
+  if (!includeEdges) return null
 
   // Check edges if no node hit. Decorative edges (e.g. ProcessSankey's
   // gradient stubs) carry `interactive: false` to opt out — they paint
@@ -86,6 +91,7 @@ export function findNearestNetworkNode(
   for (const edge of sceneEdges) {
     if ((edge as { interactive?: boolean }).interactive === false) continue
     const result = hitTestEdge(edge, px, py)
+    if (result) result.mark = edge
     if (result && result.distance < bestDist) {
       bestNode = result
       bestDist = result.distance

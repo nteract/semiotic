@@ -141,26 +141,134 @@ export function generateValidationMap(chartSpecs, composeProps) {
 /**
  * Serialize the runtime map as a deterministic TypeScript module.
  *
- * The generated file intentionally uses a plain object literal rather than a
- * compact lookup codec: Brotli already compresses the repeated prop shapes,
- * and the literal preserves VALIDATION_MAP's existing public/runtime shape
- * without adding decode work during module initialization. One chart is
- * written per line to keep the generated repository artifact compact while
- * still producing localized diffs when a chart changes.
+ * The generated file interns repeated prop types/enums and emits shared prop
+ * bags once. Its small decoder clones every public type/enum array, preserving
+ * VALIDATION_MAP's existing mutable object shape without making the rich chart
+ * registry part of the browser graph. One chart remains on each generated line
+ * so chart-specific changes still produce localized diffs.
  */
-export function generateValidationMapModule(validationMap) {
-  const chartLines = Object.entries(validationMap).map(
-    ([name, entry]) => `  ${JSON.stringify(name)}: ${JSON.stringify(entry)}`,
+export function generateValidationMapModule(
+  validationMap,
+  chartSpecs,
+  propBags,
+) {
+  const propTypes = []
+  const propTypeIndexes = new Map()
+  const propEnums = []
+  const propEnumIndexes = new Map()
+
+  const intern = (values, indexes, value) => {
+    const key = JSON.stringify(value)
+    const existing = indexes.get(key)
+    if (existing !== undefined) return existing
+    const index = values.length
+    values.push(value)
+    indexes.set(key, index)
+    return index
+  }
+
+  const encodeProps = (props) => {
+    const encodedProps = {}
+    for (const [propName, propSpec] of Object.entries(props)) {
+      const typeIndex = intern(
+        propTypes,
+        propTypeIndexes,
+        propSpec.type,
+      )
+      encodedProps[propName] = propSpec.enum
+        ? [
+            typeIndex,
+            intern(propEnums, propEnumIndexes, propSpec.enum),
+          ]
+        : typeIndex
+    }
+    return encodedProps
+  }
+
+  const encodedPropBags = Object.fromEntries(
+    Object.entries(propBags).map(([name, props]) => [
+      name,
+      encodeProps(props),
+    ]),
   )
+
+  const chartLines = Object.entries(validationMap).map(([name, entry]) => {
+    const spec = chartSpecs[name]
+    if (!spec) {
+      throw new Error(`Missing ChartSpec for validation entry ${name}`)
+    }
+    const encodedEntry = [
+      entry.required,
+      entry.dataShape,
+      entry.dataAccessors,
+      spec.propBags,
+      encodeProps(spec.ownProps),
+    ]
+    return `  ${JSON.stringify(name)}: ${JSON.stringify(encodedEntry)}`
+  })
   return `/**
  * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
  * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
  */
-import type { ComponentSpec } from "./validateProps"
+import type { ComponentSpec, PropDef } from "./validateProps"
+import type { DataShape, PropType } from "./chartSpecCore"
 
-export const VALIDATION_MAP: Record<string, ComponentSpec> = {
+type EncodedProp = number | readonly [number, number]
+type EncodedComponent = readonly [
+  readonly string[],
+  DataShape,
+  readonly string[],
+  readonly string[],
+  Readonly<Record<string, EncodedProp>>
+]
+
+const PROP_TYPES = ${JSON.stringify(propTypes)} as const
+const PROP_ENUMS = ${JSON.stringify(propEnums)} as const
+const ENCODED_PROP_BAGS = ${JSON.stringify(encodedPropBags)} as const
+
+const ENCODED_VALIDATION_MAP = {
 ${chartLines.join(",\n")}
+} as const
+
+function decodeProp(encoded: EncodedProp): PropDef {
+  const [typeIndex, enumIndex] = Array.isArray(encoded)
+    ? encoded
+    : [encoded, undefined]
+  const encodedType = PROP_TYPES[typeIndex] as PropType | readonly PropType[]
+  const type: PropType | PropType[] = Array.isArray(encodedType)
+    ? [...encodedType]
+    : (encodedType as PropType)
+  return enumIndex === undefined
+    ? { type }
+    : { type, enum: [...PROP_ENUMS[enumIndex]] }
 }
+
+export const VALIDATION_MAP: Record<string, ComponentSpec> = Object.fromEntries(
+  Object.entries(
+    ENCODED_VALIDATION_MAP as Record<string, EncodedComponent>
+  ).map(([name, [required, dataShape, dataAccessors, propBags, ownProps]]) => [
+    name,
+    {
+      required: [...required],
+      dataShape,
+      dataAccessors: [...dataAccessors],
+      props: Object.fromEntries(
+        Object.entries(
+          Object.assign(
+            {},
+            ...propBags.map(
+              (propBag) =>
+                ENCODED_PROP_BAGS[
+                  propBag as keyof typeof ENCODED_PROP_BAGS
+                ]
+            ),
+            ownProps
+          ) as Record<string, EncodedProp>
+        ).map(([propName, encoded]) => [propName, decodeProp(encoded)])
+      )
+    }
+  ])
+)
 `
 }
 

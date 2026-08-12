@@ -17,7 +17,11 @@ import { readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { CHART_SPECS, composeProps } from "../src/components/charts/shared/chartSpecs"
+import {
+  CHART_SPECS,
+  PROP_BAGS,
+  composeProps,
+} from "../src/components/charts/shared/chartSpecs"
 import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDefinitionPilot"
 // .mjs file imported from .ts works under tsx
 // @ts-expect-error — generators emit `any`-typed schema fragments
@@ -101,7 +105,7 @@ writeFileSync(schemaPath, JSON.stringify(next, null, 2) + "\n", "utf8")
 const validationMap = generateValidationMap(CHART_SPECS, composeProps)
 writeFileSync(
   validationMapPath,
-  generateValidationMapModule(validationMap),
+  generateValidationMapModule(validationMap, CHART_SPECS, PROP_BAGS),
   "utf8",
 )
 writeFileSync(

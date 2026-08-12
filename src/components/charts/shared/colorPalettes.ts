@@ -194,7 +194,9 @@ export const SEQUENTIAL_INTERPOLATORS: Record<string, (t: number) => string> = {
 }
 
 export function getSequentialInterpolator(scheme: string | undefined): (t: number) => string {
-  return scheme ? (SEQUENTIAL_INTERPOLATORS[scheme] || interpolateBlues) : interpolateBlues
+  return scheme && Object.prototype.hasOwnProperty.call(SEQUENTIAL_INTERPOLATORS, scheme)
+    ? SEQUENTIAL_INTERPOLATORS[scheme]
+    : interpolateBlues
 }
 
 // ── Diverging (ColorBrewer 11-stop) ───────────────────────────────────

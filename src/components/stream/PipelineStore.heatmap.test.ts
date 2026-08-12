@@ -173,7 +173,7 @@ describe("PipelineStore — Streaming Heatmap", () => {
     }
   })
 
-  it("heatcell nodes omit showValues fields when showValues not set", () => {
+  it("keeps heatcell labels disabled while retaining the resolved value", () => {
     const store = new PipelineStore(makeConfig({
       heatmapAggregation: "count",
       heatmapXBins: 5,
@@ -196,7 +196,7 @@ describe("PipelineStore — Streaming Heatmap", () => {
     for (const cell of heatcells) {
       if (cell.type !== "heatcell") continue
       expect(cell.showValues).toBeUndefined()
-      expect(cell.value).toBeUndefined()
+      expect(cell.value).toBeTypeOf("number")
     }
   })
 

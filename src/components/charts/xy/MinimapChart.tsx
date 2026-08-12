@@ -422,6 +422,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(props.accessibleTable !== undefined && { accessibleTable: props.accessibleTable }),
+    ...(props.animate !== undefined && { animate: props.animate }),
+    ...(props.hoverRadius !== undefined && { hoverRadius: props.hoverRadius }),
     ...resolveMultiCapableTooltip({ tooltip, defaultTooltipContent }),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
@@ -445,6 +448,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     showAxes: minimapConfig.showAxes ?? false,
     background: minimapConfig.background,
     enableHover: false,
+    accessibleTable: false,
+    description: `${description || title || "Chart"} overview minimap`,
+    animate: false,
     // Mirror the main chart's y domain on the overview so a click-to-jump
     // brushed region maps back to the same vertical scale the user sees.
     ...(yExtent && { yExtent }),
@@ -482,7 +488,11 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   return (
     <SafeRender componentName="MinimapChart" width={width} height={height}>
-      <div className={`minimap-chart${className ? ` ${className}` : ""}`}>
+      <div
+        className={`minimap-chart${className ? ` ${className}` : ""}`}
+        role="group"
+        aria-label={description || title || "Chart with overview minimap"}
+      >
         {renderBefore ? overviewChart : mainChart}
         {renderBefore ? mainChart : overviewChart}
       </div>

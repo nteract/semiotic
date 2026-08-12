@@ -5,13 +5,19 @@ _Edit dist/semiotic-recipes.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 class LayoutCache<V>
+class-member LayoutCache::construct::%24construct = required new <V>(maxSize?: number | undefined): LayoutCache<V>
+class-member LayoutCache::get::size = get size: number
+class-member LayoutCache::method::clear = required clear(): void
+class-member LayoutCache::method::get = required get(key: string): V | undefined
+class-member LayoutCache::method::getOrCompute = required getOrCompute(key: string, compute: () => V): V
+class-member LayoutCache::method::set = required set(key: string, value: V): void
 const DEFAULT_AREA_PER_ANNOTATION: 20000
 const DEFAULT_GLYPH_ANCHOR: [number, number]
 const DEFAULT_GLYPH_VIEWBOX: [number, number]
 const DEFAULT_HIT_RADIUS: 8
-const DEFAULT_ISOMETRIC_SPRITE_SIZES: { readonly resource: 32; readonly city: 64; }
+const DEFAULT_ISOMETRIC_SPRITE_SIZES: {readonly resource: 32; readonly city: 64;}
 const GRID_FUEL_KEYS: readonly ["naturalGas", "coal", "nuclear", "hydro", "wind", "solar", "other"]
-const GRID_FUEL_LABELS: Record<"naturalGas" | "coal" | "nuclear" | "hydro" | "wind" | "solar" | "other", string>
+const GRID_FUEL_LABELS: Record<"coal" | "hydro" | "naturalGas" | "nuclear" | "other" | "solar" | "wind", string>
 const SYMBOL_SEQUENCE: NetworkSymbolName[]
 const TAU: number
 const isotypeBoltGlyph: GlyphDef
@@ -19,54 +25,54 @@ const isotypeBusGlyph: GlyphDef
 const isotypeChipGlyph: GlyphDef
 const isotypeGhost: "#cbd5e1"
 const isotypeInk: "#334155"
-const isotypeNetworkGlyphs: { readonly server: GlyphDef; readonly chip: GlyphDef; readonly bolt: GlyphDef; readonly bus: GlyphDef; readonly person: GlyphDef; }
+const isotypeNetworkGlyphs: {readonly server: GlyphDef; readonly chip: GlyphDef; readonly bolt: GlyphDef; readonly bus: GlyphDef; readonly person: GlyphDef;}
 const isotypePaper: "#f8fafc"
 const isotypePersonGlyph: GlyphDef
 const isotypePersonPath: "M 9.12,3.34 C 8.28,3.29 7.44,3.40 6.64,3.69 4.17,3.63 1.97,5.37 0.91,7.51 -1.32,11.80 2.55,17.76 8.19,16.55 11.62,16.13 15.55,14.04 16.17,10.33 16.38,6.53 12.77,3.52 9.12,3.34 Z M 9.35,19.86 C 8.89,19.84 8.41,19.92 7.92,20.11 5.12,21.55 3.72,24.68 2.79,27.54 2.32,29.86 0.87,32.04 1.36,34.49 1.63,37.60 8.04,38.95 8.04,38.95 8.04,38.95 14.67,39.65 16.50,36.33 17.16,31.95 16.34,27.23 14.01,23.42 13.07,21.69 11.36,19.92 9.35,19.86 Z"
 const isotypeServerGlyph: GlyphDef
-function Glyph({ def, size, color, accent, fraction, fractionStart, fractionDirection, ghostColor, x, y, opacity, className, }: GlyphProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function absorbRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
+function Glyph({ def, size, color, accent, fraction, fractionStart, fractionDirection, ghostColor, x, y, opacity, className, }: GlyphProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function absorbRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
 function activeCountOverDomain<T = Datum>(items: readonly T[], options: ActiveCountOptions<T>): ActiveCount[]
 function addPoints(a: Point, b: Point): Point
 function adjacencyMatrix(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: AdjacencyMatrixOptions | undefined): AdjacencyMatrix
-function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">): RegionCountMap
-function allocateCells<T extends CellWeight>(weights: readonly T[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCells<T>[]
-function analyzeNetEnsemble(nodes: readonly { id: string; }[], edges: readonly { source: string; target: string; }[], options?: { fingerprintRounds?: number; } | undefined): NetEnsembleAnalysis
+function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "region" | "type">): RegionCountMap
+function allocateCells<T extends CellWeight>(weights: readonly T[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCellsFor<T>[]
+function analyzeNetEnsemble(nodes: readonly {id: string;}[], edges: readonly {source: string; target: string;}[], options?: undefined | {fingerprintRounds?: number;}): NetEnsembleAnalysis
 function angleScale(domain: readonly [number, number], opts?: AngleScaleOptions | undefined): (value: number) => number
 function annotationBudget(width: number, height: number, config?: AnnotationDensityConfig | undefined): number
 function annotationDensity(options: AnnotationDensityOptions): AnnotationDensityResult
 function annotationLayout(options: AnnotationLayoutOptions): Datum[]
 function arcLayout(ids: readonly string[], options?: ArcLayoutOptions | undefined): Record<string, Point>
 function arcPath(a: Point, b: Point, heightRatio?: number | undefined): string
-function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): { initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions; }
+function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): {initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions;}
 function axisFixedForceLayout(s):: NetworkLayoutContext<import("../semiotic-recipes-core").AxisFixedForceConfig>): import("../semiotic-network").NetworkLayoutResult
 function axisFixedForcePositions(nodes: readonly Datum[], edges: readonly Datum[], plot: PlotRect, config: AxisFixedForceConfig): AxisFixedForceResult
 function balanceSnapshotsToFlows<TBefore, TAfter = TBefore>(before: readonly TBefore[], after: readonly TAfter[], options: BalanceSnapshotsToFlowsOptions<TBefore, TAfter>): BalancedSnapshotsResult
-function bandLabel(p: BandLabelProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | null
+function bandLabel(p: BandLabelProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string> | null
 function betweenness(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function bfsDistances(adjacency: Map<string, Set<string>>, start: string): Record<string, number>
 function bobaLayout(r);: OrdinalLayoutContext<import("../semiotic-recipes-core").BobaConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function bodyGroupSpec<TDatum extends Datum = Datum>(options: BodyGroupSpecOptions<TDatum>): BodyGroupSpec<TDatum>
-function boundsOf(points: readonly { x: number; y: number; r?: number; }[], pad?: number | undefined): { x: number; y: number; width: number; height: number; } | null
-function boxEdgeAnchors(source: CenteredBox, target: CenteredBox, opts?: BoxEdgeAnchorOptions | undefined): { from: Point; to: Point; }
+function boundsOf(points: readonly {x: number; y: number; r?: number;}[], pad?: number | undefined): null | {x: number; y: number; width: number; height: number;}
+function boxEdgeAnchors(source: CenteredBox, target: CenteredBox, opts?: BoxEdgeAnchorOptions | undefined): {from: Point; to: Point;}
 function buildAdjacency(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Map<string, Set<string>>
 function buildTooltipEntries(payload: unknown, options?: CustomTooltipEntryOptions | undefined): CustomTooltipEntry[]
 function bulletLayout(y. : OrdinalLayoutContext<import("../semiotic-recipes-core").BulletConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function calendarLayout(: LayoutContext<import("../semiotic-recipes-core").CalendarConfig>): import("../semiotic-recipes-core").LayoutResult
-function capacitatedRegion(options: ProcessRegionBaseOptions & { capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"]; }): StreamPhysicsRegionEffect
-function chargeGateRegion(options: ProcessRegionBaseOptions & { charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
+function capacitatedRegion(options: ProcessRegionBaseOptions & {capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
+function chargeGateRegion(options: ProcessRegionBaseOptions & {charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
 function circularLayout(ids: readonly string[], options?: CircularLayoutOptions | undefined): Record<string, Point>
 function clamp(value: number, min: number, max: number): number
 function closeness(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function clustering(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
-function collidersFromScales<TBand = string | number>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
+function collidersFromScales<TBand = number | string>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
 function comparePhysicsTrace<TSample = PhysicsScalarTraceSample>(trace: readonly TSample[], envelope: PhysicsReferenceEnvelope, options?: PhysicsTraceComparisonOptions<TSample> | undefined): PhysicsTraceComparison
-function composePhysicsControllers(controllers: readonly PhysicsController[] | null | undefined): ComposedPhysicsControllers | null
+function composePhysicsControllers(controllers: null | readonly PhysicsController[] | undefined): ComposedPhysicsControllers | null
 function countPairwiseCrossings<T>(items: readonly T[], endpoints: (item: T) => readonly [number, number], comparePair?: ((a: T, b: T) => boolean) | undefined): number
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
-function createPortalController(options: { id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void; }): PhysicsController
-function createProcessJourneyLedger(options: { stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[]; }): ProcessJourneyLedger
+function createPortalController(options: {id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void;}): PhysicsController
+function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
 function createServiceResourcePoolController(options: ServiceResourcePoolOptions): ServiceResourcePoolController
 function cubicPath(curve: CubicCurve): string
@@ -77,7 +83,7 @@ function cyclicRangeContains(value: number, start: number, end: number): boolean
 function dagreLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").DagreConfig>): import("../semiotic-network").NetworkLayoutResult
 function degree(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function demandForecastRows(hours: readonly GridHour[]): DemandForecastRow[]
-function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: { charge?: string; apparatus?: string; destination?: string; } | undefined): string
+function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: undefined | {charge?: string; apparatus?: string; destination?: string;}): string
 function diagnoseTokenEncoding(encoding: Partial<TokenEncoding>, context?: TokenDiagnosticsContext | undefined): TokenDiagnostic[]
 function dimFor(datum: Datum, opts?: DimOptions | undefined): number
 function egoNetwork(nodes: readonly GraphNode[], edges: readonly GraphEdge[], id: string, depth?: number | undefined): Set<string>
@@ -85,26 +91,26 @@ function estimateLabelWidth(text: unknown, minimum?: number | undefined, charWid
 function extractTooltipDatum(payload: unknown): Record<string, unknown> | null
 function fanOutBend(index: number, opts?: FanOutBendOptions | undefined): number
 function flextreeLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").FlextreeConfig>): import("../semiotic-network").NetworkLayoutResult
-function forceFieldRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number; }): StreamPhysicsRegionEffect
+function forceFieldRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number;}): StreamPhysicsRegionEffect
 function forceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutOptions | undefined): Record<string, Point>
 function forceLayoutAsync(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutAsyncOptions | undefined): Promise<Record<string, Point>>
 function formatMw(value: number, digits?: number | undefined): string
 function formatReservePct(value: number, digits?: number | undefined): string
 function formatTooltipValue(value: unknown): string
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
-function generateTokens<D = unknown>(input: number | readonly number[] | TokenGeneratorInput<D>, encoding: TokenEncoding): TokenSet<D>
+function generateTokens<D = unknown>(input: TokenGeneratorInput<D> | number | readonly number[], encoding: TokenEncoding): TokenSet<D>
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
 function geographicDotGridLayout(ce: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function geographicGridLayout(d a: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function glyphExtent(def: GlyphDef, size: number): number
-function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "vertical" | "horizontal" | undefined): { x: number; y: number; width: number; height: number; } | null
+function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "horizontal" | "vertical" | undefined): null | {x: number; y: number; width: number; height: number;}
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
-function gridEventAnnotations(events: readonly GridEventWindow[], options?: { now?: number; author?: string; source?: string; } | undefined): Record<string, unknown>[]
+function gridEventAnnotations(events: readonly GridEventWindow[], options?: undefined | {now?: number; author?: string; source?: string;}): Record<string, unknown>[]
 function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]
 function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]>
-function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: readonly string[] | ReadonlySet<string>): { id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[]; }[]
-function hatchFill(opts: HatchFillOptions): { def: ReactElement; fill: string; }
+function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: ReadonlySet<string> | readonly string[]): {id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[];}[]
+function hatchFill(opts: HatchFillOptions): {def: ReactElement; fill: string;}
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
 function hullFromBoxes(boxes: readonly HullBox[], padding?: HullPadding | undefined): HullBox | null
@@ -114,19 +120,19 @@ function layoutChipStrip(items: readonly ChipStripItem[], options: LayoutChipStr
 function layoutSequence(items: readonly SequenceItem[], options: LayoutSequenceOptions): Map<string, SequencePosition>
 function layoutTokenGrid<D = unknown>(tokenSetOrTokens: TokenSet<D> | readonly VisualToken<D>[], options?: TokenGridOptions | undefined): PositionedToken<D>[]
 function legendGroupsFrom(input: LegendGroupsInput): LegendGroup[]
-function legendSwatches(p: LegendSwatchesProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
+function legendSwatches(p: LegendSwatchesProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
 function lineageDagLayout(man: NetworkLayoutContext<import("../semiotic-recipes-core").LineageDagConfig>): import("../semiotic-network").NetworkLayoutResult
-function linearAxis(p: LinearAxisProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
+function linearAxis(p: LinearAxisProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
 function makeShade(baseColor: string, strength?: number | undefined): (t: number) => string
 function marimekkoLayout(han: OrdinalLayoutContext<import("../semiotic-recipes-core").MarimekkoConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
-function markCallout(p: MarkCalloutProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
+function markCallout(p: MarkCalloutProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
 function matchesHighlight(datum: Datum, highlight: HighlightMatch | null | undefined): boolean
 function mean(values: readonly number[]): number
-function membraneRegion(options: ProcessRegionBaseOptions & { cost: number; dampingScale?: number; energyScale?: number; color?: string; }): StreamPhysicsRegionEffect
+function membraneRegion(options: ProcessRegionBaseOptions & {cost: number; dampingScale?: number; energyScale?: number; color?: string;}): StreamPhysicsRegionEffect
 function mermaidDagLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").MermaidDagConfig>): import("../semiotic-network").NetworkLayoutResult
 function mobileAnnotationStrategy(annotations: readonly Datum[] | undefined, config?: MobileAnnotationStrategyConfig | undefined): MobileAnnotationStrategyResult
 function mobileAreaChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
-function mobileBrushAlternatives(options?: MobileBrushAlternativeOptions | undefined): { mobileInteraction: { enabled: boolean; targetSize: number; tapToSelect: boolean; tapToLockTooltip: boolean; standardControls: "brush"; }; mobileSemantics: { interaction: { primary: "filter"; alternatives: ("clear" | "range-inputs" | "chip-filter" | "stepper")[]; summary: string; }; }; controls: ("clear" | "range-inputs" | "chip-filter" | "stepper")[]; }
+function mobileBrushAlternatives(options?: MobileBrushAlternativeOptions | undefined): {mobileInteraction: {enabled: boolean; targetSize: number; tapToSelect: boolean; tapToLockTooltip: boolean; standardControls: "brush";}; mobileSemantics: {interaction: {primary: "filter"; alternatives: ("chip-filter" | "clear" | "range-inputs" | "stepper")[]; summary: string;};}; controls: ("chip-filter" | "clear" | "range-inputs" | "stepper")[];}
 function mobileChartFamilyRecipe(family: MobileChartFamily, options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileGeoChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileLineChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
@@ -137,7 +143,7 @@ function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | un
 function mulberry32(seed: number): () => number
 function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
-function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
+function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkCurvedEdge | NetworkRibbonEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function nonNegativeFinite(value: number | undefined): number
@@ -145,16 +151,16 @@ function normalizePoint(a: Point): Point
 function normalizeScores(scores: Record<string, number>): Record<string, number>
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
 function orderByBarycenter<T>(input: readonly T[], relations: readonly WeightedOrderRelation<T>[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
-function orderByGroupDegree<N extends GraphNode>(nodes: readonly N[], edges: readonly GraphEdge[], groupAccessor?: keyof N | ((n: N) => number | string) | undefined): string[]
-function orderExactSmall<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: (Pick<GuardedOrderOptions<T>, "maxEvaluations"> & { maxItems?: number; }) | undefined): T[]
-function orthogonalEdgePath(from: Point, to: Point, opts?: { orientation?: EdgeOrientation; } | undefined): string
+function orderByGroupDegree<N extends GraphNode>(nodes: readonly N[], edges: readonly GraphEdge[], groupAccessor?: ((n: N) => number | string) | keyof N | undefined): string[]
+function orderExactSmall<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: (Pick<GuardedOrderOptions<T>, "maxEvaluations"> & {maxItems?: number;}) | undefined): T[]
+function orthogonalEdgePath(from: Point, to: Point, opts?: undefined | {orientation?: EdgeOrientation;}): string
 function packBandsBySilhouette(bands: readonly (readonly SilhouetteSample[])[], gap?: number | undefined): PackedBands
 function packIntervals<T = Datum>(items: readonly T[], options?: PackIntervalsOptions<T> | undefined): PackIntervalsResult<T>
 function packSpanLevels<T extends SpanInterval>(spans: readonly T[]): PackSpanLevelsResult<T>
 function packedClusterMatrix(do: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
 function parallelCoordinatesLayout(*: OrdinalLayoutContext<import("../semiotic-recipes-core").ParallelCoordinatesConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
-function partitionSharedEdges<T>(edgeSets: readonly (readonly T[])[], keyOf?: EdgeKeyFn<T> | undefined): { shared: T[]; exclusive: T[][]; }
-function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): { x: number; y: number; }
+function partitionSharedEdges<T>(edgeSets: readonly (readonly T[])[], keyOf?: EdgeKeyFn<T> | undefined): {shared: T[]; exclusive: T[][];}
+function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): {x: number; y: number;}
 function physicsDestination(geography: PhysicsStageGeography, id: string): PhysicsDestinationZone | undefined
 function physicsReferenceEnvelope<TSample = PhysicsScalarTraceSample>(options: PhysicsReferenceEnvelopeOptions<TSample>): PhysicsReferenceEnvelope
 function physicsStageColliders(geography: PhysicsStageGeography, options?: PhysicsStageColliderOptions | undefined): PhysicsColliderSpec[]
@@ -162,11 +168,11 @@ function physicsStageGeography(options: PhysicsStageGeographyOptions): PhysicsSt
 function placeWithMinGap(options: MinGapPlacementOptions): number[]
 function pointMagnitude(a: Point): number
 function polarToXY(angle: number, radius: number, opts?: PolarOptions | undefined): Point
-function portalRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string; }): StreamPhysicsRegionEffect
-function pressureFieldRegion(options: ProcessRegionBaseOptions & { pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector; }): StreamPhysicsRegionEffect
-function processChrome(layout: ProcessChromeLayout, options?: ProcessChromeOptions | undefined): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function portalRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string;}): StreamPhysicsRegionEffect
+function pressureFieldRegion(options: ProcessRegionBaseOptions & {pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
+function processChrome(layout: ProcessChromeLayout, options?: ProcessChromeOptions | undefined): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function processJourneyRows(ledger: ProcessJourneyLedger): ProcessJourneyRow[]
-function processLaneWalls(options: { idPrefix?: string; left: number; right: number; top: number; bottom: number; friction?: number; restitution?: number; thickness?: number; openEnds?: boolean; }): PhysicsColliderSpec[]
+function processLaneWalls(options: {idPrefix?: string; left: number; right: number; top: number; bottom: number; friction?: number; restitution?: number; thickness?: number; openEnds?: boolean;}): PhysicsColliderSpec[]
 function processStageLayout(options: ProcessVolumeLayoutOptions): ProcessVolumeLayout
 function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStageRegionOptions | undefined): StreamPhysicsRegionEffect[]
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
@@ -175,16 +181,16 @@ function radiusScale(domain: readonly [number, number], range: readonly [number,
 function readField(d: unknown, key: string, fallback: unknown): unknown
 function rectCollide(boxes: readonly CollisionBox[], opts?: RectCollideOptions | undefined): Map<string, number>
 function refineByAdjacentSwaps<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
-function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): { label: string; value: number; }[]
-function reserveAnnotationBands(levels?: ReserveLevels | undefined): { type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary"; }[]
-function reserveMarginPct(input: { demand: number; capacityOrNetGen: number; interchange?: number; }): number
+function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
+function reserveAnnotationBands(levels?: ReserveLevels | undefined): {type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary";}[]
+function reserveMarginPct(input: {demand: number; capacityOrNetGen: number; interchange?: number;}): number
 function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[]
 function ringArcPath(startAngle: number, endAngle: number, innerRadius: number, outerRadius: number, opts?: PolarOptions | undefined): string
-function roundedEnclosure(p: RoundedEnclosureProps): ReactElement<unknown, string | import("react").JSXElementConstructor<any>>
-function routeSurfaceRegion(options: ProcessRegionBaseOptions & { force?: StreamPhysicsRegionVector | number; damping?: number; }): StreamPhysicsRegionEffect
+function roundedEnclosure(p: RoundedEnclosureProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
+function routeSurfaceRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number;}): StreamPhysicsRegionEffect
 function runLengthEncode<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
 function runs<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
-function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: { width: number; height: number; }, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
+function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: {width: number; height: number;}, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
 function scaleArcBand(options: ScaleArcBandOptions): ScaleArcBandResult
 function scalePoint(a: Point, k: number): Point
 function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBakeOptions | undefined): SedimentBakeResult
@@ -193,32 +199,32 @@ function selectIsometricLandmarks(points: Datum[], config: IsometricLandmarkConf
 function shade(baseColor: string, t: number, strength?: number | undefined): string
 function shortestArcDelta(from: number, to: number, period: number): number
 function shortestPath(nodes: readonly GraphNode[], edges: readonly GraphEdge[], source: string, target: string): string[]
-function signatureKey(parts: readonly (string | number | boolean | null | undefined)[]): string
+function signatureKey(parts: readonly (boolean | null | number | string | undefined)[]): string
 function spanArcPath(x0: number, x1: number, baselineY: number, peakY: number, options?: SpanArcPathOptions | undefined): string
 function spanArcPeakY(baselineY: number, level: number, metrics: ScaleArcBandResult): number
 function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options?: SpawnFromTokensOptions<D> | undefined): PhysicsQueuedSpawn[]
-function stackFuelSeries(hours: readonly GridHour[], options?: { fuels?: readonly GridFuelKey[]; includeZero?: boolean; } | undefined): FuelStackRow[]
-function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: { random?: () => number; along?: number; jitterX?: number; padY?: number; } | undefined): { x: number; y: number; }
+function stackFuelSeries(hours: readonly GridHour[], options?: undefined | {fuels?: readonly GridFuelKey[]; includeZero?: boolean;}): FuelStackRow[]
+function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: undefined | {random?: () => number; along?: number; jitterX?: number; padY?: number;}): {x: number; y: number;}
 function subtractPoints(a: Point, b: Point): Point
 function suggestTokenEncoding(input: SuggestTokenEncodingInput): TokenEncodingSuggestion
 function summarizeOperatingPoint(hours: readonly GridHour[], now?: number | undefined): OperatingPointSummary | null
 function symbolExtent(symbolType: string | undefined, size: number, customPath?: string | undefined): number
 function symbolPathString(symbolType: string | undefined, size: number, customPath?: string | undefined): string
 function symbolRadius(size: number): number
-function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: { field?: string; tightHatch?: HatchFill; tightFill?: string; watchFill?: string; comfortableFill?: string; } | undefined): StyleRule[]
+function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: undefined | {field?: string; tightHatch?: HatchFill; tightFill?: string; watchFill?: string; comfortableFill?: string;}): StyleRule[]
 function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
 function unitize(value: number, options: UnitizeOptions): UnitizeResult
 function unitizeRange(value: number, rangeValue: number, options: UnitizeOptions): UnitizeRangeResult
 function unwrapDatum<T = Datum>(value: unknown): T | null
-function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region" | "datum" | "observation">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
+function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 function useCustomLayoutSelection(): CustomLayoutSelection
 function waffleLayout( : LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
 function wordTrailsLayout(ve
 : OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
-function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "wordOpacity" | "weightOpacity">
+function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "weightOpacity" | "wordOpacity">
 function wrapValue(value: number, period: number, min?: number | undefined): number
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number
 interface ActiveCount
@@ -226,13 +232,14 @@ interface ActiveCountOptions<T>
 interface AdjacencyMatrix
 interface AdjacencyMatrixOptions
 interface AllocateCellsOptions
+interface AllocatedCells extends CellWeight
 interface AngleScaleOptions
 interface AnnotationAudience
 interface AnnotationDensityConfig
-interface AnnotationDensityOptions
+interface AnnotationDensityOptions extends AnnotationDensityConfig
 interface AnnotationDensityResult
 interface AnnotationLayoutConfig
-interface AnnotationLayoutOptions
+interface AnnotationLayoutOptions extends AnnotationLayoutConfig
 interface AnnotationMobileConfig
 interface ArcLayoutOptions
 interface ArrivalReplayOptions
@@ -248,18 +255,18 @@ interface BodyGroupSpecOptions<TDatum extends Datum = Datum>
 interface BoxEdgeAnchorOptions
 interface BulletConfig
 interface CalendarConfig
-interface CapacityQueueAbandonedInfo
+interface CapacityQueueAbandonedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueAgeSummary
-interface CapacityQueueBlockedInfo
+interface CapacityQueueBlockedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueControllerOptions
-interface CapacityQueueProcessedInfo
+interface CapacityQueueProcessedInfo extends CapacityQueueVisitInfo
 interface CapacityQueueSnapshot
 interface CapacityQueueVisitInfo
 interface CapacityQueueWindowSnapshot
 interface CellWeight
 interface CenteredBox
-interface ChipStripItem
-interface ChipStripPosition
+interface ChipStripItem extends SequenceItem
+interface ChipStripPosition extends SequencePosition
 interface CircularLayoutOptions
 interface CollisionBox
 interface ComposedPhysicsControllers
@@ -270,18 +277,18 @@ interface CustomLayoutSelection
 interface CustomTooltipEntry
 interface CustomTooltipEntryOptions
 interface DagreConfig
-interface DependencyGateController
+interface DependencyGateController extends PhysicsController
 interface DependencyGateOptions
 interface DependencyGateSnapshot
 interface DimOptions
 interface FanOutBendOptions
 interface FlextreeConfig
-interface ForceLayoutAsyncOptions
+interface ForceLayoutAsyncOptions extends ForceLayoutOptions
 interface ForceLayoutOptions
 interface GaltonPegsOptions
 interface GeoAreaHitTargetProps
-interface GeographicDotGridConfig
-interface GeographicDotGridDatum
+interface GeographicDotGridConfig extends GeographicDotGridSampleOptions
+interface GeographicDotGridDatum extends Datum
 interface GeographicDotGridSampleOptions
 interface GeographicGridConfig
 interface GeographicGridInput<T = Datum>
@@ -291,7 +298,7 @@ interface GlyphPlacement
 interface GlyphProps
 interface GraphEdge
 interface GraphNode
-interface GridifiedGeographicPoint<T = Datum>
+interface GridifiedGeographicPoint<T = Datum> extends GeographicGridInput<T>
 interface GridifyGeographicPointsOptions
 interface GuardedOrderOptions<T>
 interface HatchFillOptions
@@ -302,7 +309,7 @@ interface IntervalLanesConfig<T = Datum>
 interface IsometricLandmarkConfig
 interface IsometricLandmarkTile
 interface IsometricTerrainCell
-interface LayoutChipStripOptions
+interface LayoutChipStripOptions extends LayoutSequenceOptions
 interface LayoutContext<C extends object = Record<string, unknown>>
 interface LayoutResult
 interface LayoutSequenceOptions
@@ -333,8 +340,8 @@ interface NetworkHitTargetRectProps
 interface NetworkHtmlMark
 interface NetworkLayoutContext<C extends object = Record<string, unknown>>
 interface NetworkLayoutResult
-interface NetworkLineEdgeHitTargetProps
-interface NetworkPathEdgeHitTargetProps
+interface NetworkLineEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
+interface NetworkPathEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
 interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
 interface PackIntervalsOptions<T>
@@ -349,9 +356,9 @@ interface PhysicsBandColliderOptions<TBand = string | number>
 interface PhysicsColliderSpec
 interface PhysicsController
 interface PhysicsControllerTickContext
-interface PhysicsDestinationZone
+interface PhysicsDestinationZone extends PhysicsZone
 interface PhysicsPlotBounds
-interface PhysicsQueuedSpawn
+interface PhysicsQueuedSpawn extends PhysicsBodySpec
 interface PhysicsReferenceEnvelope
 interface PhysicsReferenceEnvelopeOptions<TSample>
 interface PhysicsReferenceEnvelopePoint
@@ -372,7 +379,7 @@ interface PhysicsZone
 interface Point
 interface PolarOptions
 interface PositionedNode
-interface PositionedToken<D = unknown>
+interface PositionedToken<D = unknown> extends VisualToken<D>
 interface ProcessChromeGroup
 interface ProcessChromeLayout
 interface ProcessChromeOptions
@@ -388,12 +395,12 @@ interface ProcessStageDef
 interface ProcessStageRegionOptions
 interface ProcessVolumeLayout
 interface ProcessVolumeLayoutOptions
-interface ProcessVolumeMembraneBand
+interface ProcessVolumeMembraneBand extends ProcessMembraneDef
 interface ProcessVolumePolygon
 interface ProcessVolumeStageBand
 interface ProximityProblemOptions
 interface ProximityProblemResult
-interface RangeUnitSign
+interface RangeUnitSign extends UnitSign
 interface RectCollideOptions
 interface RegionCountBucket
 interface RoundedEnclosureProps
@@ -401,17 +408,17 @@ interface Run<V>
 interface RunOptions<T, V>
 interface ScaleArcBandOptions
 interface ScaleArcBandResult
-interface SedimentBakeOptions
+interface SedimentBakeOptions extends PhysicsSedimentHeightfieldOptions
 interface SedimentBakeResult
 interface SequenceItem
 interface SequencePosition
 interface ServiceLevelCaseInfo
-interface ServiceLevelController
+interface ServiceLevelController extends PhysicsController
 interface ServiceLevelControllerOptions
 interface ServiceLevelSnapshot
 interface ServiceResourceAssignment
 interface ServiceResourceDefinition
-interface ServiceResourcePoolController
+interface ServiceResourcePoolController extends PhysicsController
 interface ServiceResourcePoolOptions
 interface ServiceResourcePoolSnapshot
 interface SilhouetteSample
@@ -427,13 +434,13 @@ interface TokenEncodingSuggestion
 interface TokenGeneratorInput<D = unknown>
 interface TokenGridOptions
 interface TokenLayerConfig<D = unknown>
-interface TokenLayerOptions<D = unknown>
+interface TokenLayerOptions<D = unknown> extends TokenGridOptions
 interface TokenLayerResult<D = unknown>
 interface TokenPosition
 interface TokenSet<D = unknown>
 interface UnitSign
 interface UnitizeOptions
-interface UnitizeRangeResult
+interface UnitizeRangeResult extends UnitizeResult
 interface UnitizeResult
 interface VisualToken<D = unknown>
 interface WaffleConfig
@@ -441,148 +448,1564 @@ interface WeightedOrderRelation<T>
 interface WordTrailsConfig
 interface WordTrailsProgressiveRevealOptions
 interface WordTrailsWordInfo
-type AllocatedCells<T extends CellWeight = CellWeight> = T & {
-    /** The category's exact (fractional) share of `totalCells`. */
-    exact: number;
-    /** The integer cells assigned to this category. */
-    cells: number;
-    /** Fractional leftover (`exact - floor(exact)`), the largest-remainder key. */
-    remainder: number;
-}
+interface-member ActiveCount::property::count = required count: number
+interface-member ActiveCount::property::value = required value: number
+interface-member ActiveCountOptions::property::bounds = optional bounds: "closed" | "half-open" | undefined
+interface-member ActiveCountOptions::property::domain = required domain: [number, number]
+interface-member ActiveCountOptions::property::end = optional end: Accessor<T> | undefined
+interface-member ActiveCountOptions::property::start = optional start: Accessor<T> | undefined
+interface-member ActiveCountOptions::property::step = optional step: number | undefined
+interface-member AdjacencyMatrix::property::cells = required cells: MatrixCell[]
+interface-member AdjacencyMatrix::property::maxValue = required maxValue: number
+interface-member AdjacencyMatrix::property::order = required order: string[]
+interface-member AdjacencyMatrix::property::size = required size: number
+interface-member AdjacencyMatrixOptions::property::groupAccessor = optional groupAccessor: "id" | ((n: GraphNode) => number | string) | undefined
+interface-member AdjacencyMatrixOptions::property::order = optional order: readonly string[] | undefined
+interface-member AllocateCellsOptions::property::minPerCategory = optional minPerCategory: number | undefined
+interface-member AllocatedCells::property::cells = required cells: number
+interface-member AllocatedCells::property::exact = required exact: number
+interface-member AllocatedCells::property::remainder = required remainder: number
+interface-member AngleScaleOptions::property::endAngle = optional endAngle: number | undefined
+interface-member AngleScaleOptions::property::startAngle = optional startAngle: number | undefined
+interface-member AnnotationAudience::property::familiarity = optional familiarity: Partial<Record<string, number>> | undefined
+interface-member AnnotationAudience::property::name = optional name: string | undefined
+interface-member AnnotationDensityConfig::property::areaPerAnnotation = optional areaPerAnnotation: number | undefined
+interface-member AnnotationDensityConfig::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member AnnotationDensityConfig::property::minVisible = optional minVisible: number | undefined
+interface-member AnnotationDensityOptions::property::annotations = required annotations: readonly Datum[]
+interface-member AnnotationDensityOptions::property::height = required height: number
+interface-member AnnotationDensityOptions::property::width = required width: number
+interface-member AnnotationDensityResult::property::budget = required budget: number
+interface-member AnnotationDensityResult::property::deferred = required deferred: Datum[]
+interface-member AnnotationDensityResult::property::visible = required visible: Datum[]
+interface-member AnnotationLayoutConfig::property::audience = optional audience: AnnotationAudience | undefined
+interface-member AnnotationLayoutConfig::property::cohesion = optional cohesion: AnnotationCohesion | undefined
+interface-member AnnotationLayoutConfig::property::connectorThreshold = optional connectorThreshold: number | undefined
+interface-member AnnotationLayoutConfig::property::defaultOffset = optional defaultOffset: number | undefined
+interface-member AnnotationLayoutConfig::property::density = optional density: AnnotationDensityConfig | boolean | undefined
+interface-member AnnotationLayoutConfig::property::edgePadding = optional edgePadding: number | undefined
+interface-member AnnotationLayoutConfig::property::markPadding = optional markPadding: number | undefined
+interface-member AnnotationLayoutConfig::property::mobile = optional mobile: AnnotationMobileConfig | boolean | undefined
+interface-member AnnotationLayoutConfig::property::notePadding = optional notePadding: number | undefined
+interface-member AnnotationLayoutConfig::property::preserveManualOffsets = optional preserveManualOffsets: boolean | undefined
+interface-member AnnotationLayoutConfig::property::progressiveDisclosure = optional progressiveDisclosure: boolean | undefined
+interface-member AnnotationLayoutConfig::property::redundantCues = optional redundantCues: boolean | undefined
+interface-member AnnotationLayoutConfig::property::responsive = optional responsive: boolean | undefined | {minWidth?: number;}
+interface-member AnnotationLayoutConfig::property::routeLongConnectors = optional routeLongConnectors: boolean | undefined
+interface-member AnnotationLayoutOptions::property::annotations = required annotations: readonly Datum[]
+interface-member AnnotationLayoutOptions::property::context = required context: AnnotationContext
+interface-member AnnotationMobileConfig::property::breakpoint = optional breakpoint: number | undefined
+interface-member AnnotationMobileConfig::property::cohesion = optional cohesion: AnnotationCohesion | undefined
+interface-member AnnotationMobileConfig::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member AnnotationMobileConfig::property::maxCalloutItems = optional maxCalloutItems: number | undefined
+interface-member AnnotationMobileConfig::property::minVisible = optional minVisible: number | undefined
+interface-member AnnotationMobileConfig::property::preferShortText = optional preferShortText: boolean | undefined
+interface-member AnnotationMobileConfig::property::progressiveDisclosure = optional progressiveDisclosure: boolean | undefined
+interface-member AnnotationMobileConfig::property::responsive = optional responsive: boolean | undefined | {minWidth?: number;}
+interface-member AnnotationMobileConfig::property::strategy = optional strategy: "callout-list" | "hybrid" | "plot" | undefined
+interface-member ArcLayoutOptions::property::baseline = optional baseline: number | undefined
+interface-member ArcLayoutOptions::property::inset = optional inset: number | undefined
+interface-member ArrivalReplayOptions::property::rebase = optional rebase: boolean | undefined
+interface-member ArrivalReplayOptions::property::sort = optional sort: boolean | undefined
+interface-member ArrivalReplayOptions::property::startAt = optional startAt: number | undefined
+interface-member ArrivalReplayOptions::property::timeAccessor = optional timeAccessor: ((spawn: PhysicsQueuedSpawn, index: number) => unknown) | string | undefined
+interface-member ArrivalReplayOptions::property::timeScale = optional timeScale: number | undefined
+interface-member AxisFixedForceConfig::property::anchorStrength = optional anchorStrength: number | undefined
+interface-member AxisFixedForceConfig::property::attraction = optional attraction: number | undefined
+interface-member AxisFixedForceConfig::property::collisionPadding = optional collisionPadding: number | undefined
+interface-member AxisFixedForceConfig::property::collisionStrength = optional collisionStrength: number | undefined
+interface-member AxisFixedForceConfig::property::damping = optional damping: number | undefined
+interface-member AxisFixedForceConfig::property::edgePadding = optional edgePadding: number | undefined
+interface-member AxisFixedForceConfig::property::fixedAccessor = required fixedAccessor: ((d: Datum) => number) | string
+interface-member AxisFixedForceConfig::property::fixedAxis = optional fixedAxis: "x" | "y" | undefined
+interface-member AxisFixedForceConfig::property::fixedDomain = required fixedDomain: [number, number]
+interface-member AxisFixedForceConfig::property::fixedPadding = optional fixedPadding: number | undefined
+interface-member AxisFixedForceConfig::property::idAccessor = optional idAccessor: ((d: Datum) => string) | string | undefined
+interface-member AxisFixedForceConfig::property::iterations = optional iterations: number | undefined
+interface-member AxisFixedForceConfig::property::size = optional size: ((d: Datum) => {width: number; height: number;}) | undefined
+interface-member AxisFixedForceConfig::property::sourceAccessor = optional sourceAccessor: ((e: Datum) => string) | string | undefined
+interface-member AxisFixedForceConfig::property::spread = optional spread: number | undefined
+interface-member AxisFixedForceConfig::property::targetAccessor = optional targetAccessor: ((e: Datum) => string) | string | undefined
+interface-member AxisFixedForceResult::property::byId = required byId: Map<string, PositionedNode>
+interface-member AxisFixedForceResult::property::positioned = required positioned: PositionedNode[]
+interface-member BalanceSnapshotsToFlowsOptions::property::afterId = optional afterId: ((datum: TAfter, index: number) => string | number) | undefined
+interface-member BalanceSnapshotsToFlowsOptions::property::afterValue = optional afterValue: ((datum: TAfter, index: number) => number) | undefined
+interface-member BalanceSnapshotsToFlowsOptions::property::allowImbalance = optional allowImbalance: boolean | undefined
+interface-member BalanceSnapshotsToFlowsOptions::property::beforeId = required beforeId: (datum: TBefore, index: number) => string | number
+interface-member BalanceSnapshotsToFlowsOptions::property::beforeValue = required beforeValue: (datum: TBefore, index: number) => number
+interface-member BalanceSnapshotsToFlowsOptions::property::epsilon = optional epsilon: number | undefined
+interface-member BalancedSnapshotFlow::property::kind = required kind: "move" | "stay"
+interface-member BalancedSnapshotFlow::property::sourceId = required sourceId: string
+interface-member BalancedSnapshotFlow::property::targetId = required targetId: string
+interface-member BalancedSnapshotFlow::property::value = required value: number
+interface-member BalancedSnapshotsResult::property::afterTotal = required afterTotal: number
+interface-member BalancedSnapshotsResult::property::balanced = required balanced: boolean
+interface-member BalancedSnapshotsResult::property::beforeTotal = required beforeTotal: number
+interface-member BalancedSnapshotsResult::property::flows = required flows: BalancedSnapshotFlow[]
+interface-member BalancedSnapshotsResult::property::unmatchedAfter = required unmatchedAfter: SnapshotResidual[]
+interface-member BalancedSnapshotsResult::property::unmatchedBefore = required unmatchedBefore: SnapshotResidual[]
+interface-member BandLabelProps::property::anchor = optional anchor: "end" | "middle" | "start" | undefined
+interface-member BandLabelProps::property::baseline = optional baseline: "auto" | "hanging" | "middle" | undefined
+interface-member BandLabelProps::property::className = optional className: string | undefined
+interface-member BandLabelProps::property::color = optional color: string | undefined
+interface-member BandLabelProps::property::fontSize = optional fontSize: number | undefined
+interface-member BandLabelProps::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member BandLabelProps::property::keyId = optional keyId: number | string | undefined
+interface-member BandLabelProps::property::maxWidth = optional maxWidth: number | undefined
+interface-member BandLabelProps::property::text = required text: string
+interface-member BandLabelProps::property::x = required x: number
+interface-member BandLabelProps::property::y = required y: number
+interface-member BobaConfig::property::bobaRadiusAccessor = optional bobaRadiusAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::bobaVolumeAccessor = optional bobaVolumeAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::categoryAccessor = optional categoryAccessor: ((d: Datum) => string) | string | undefined
+interface-member BobaConfig::property::cupBottomRadiusAccessor = optional cupBottomRadiusAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::cupHeightAccessor = optional cupHeightAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::cupTopRadiusAccessor = optional cupTopRadiusAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::cupWidthRatio = optional cupWidthRatio: number | undefined
+interface-member BobaConfig::property::iceVolumeAccessor = optional iceVolumeAccessor: ((d: Datum) => number) | string | undefined
+interface-member BobaConfig::property::teaVolumeAccessor = optional teaVolumeAccessor: ((d: Datum) => number) | string | undefined
+interface-member BodyGroupSpec::property::anchor = optional anchor: undefined | {x: number; y: number;}
+interface-member BodyGroupSpec::property::bodyIds = optional bodyIds: readonly string[] | undefined
+interface-member BodyGroupSpec::property::completion = optional completion: undefined | {mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; targetZone?: string; threshold?: number; valueByBodyId?: Readonly<Record<string, number>>;}
+interface-member BodyGroupSpec::property::datum = optional datum: TDatum | undefined
+interface-member BodyGroupSpec::property::description = optional description: string | undefined
+interface-member BodyGroupSpec::property::group = optional group: string | undefined
+interface-member BodyGroupSpec::property::height = optional height: number | undefined
+interface-member BodyGroupSpec::property::id = required id: string
+interface-member BodyGroupSpec::property::label = optional label: string | undefined
+interface-member BodyGroupSpec::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member BodyGroupSpec::property::state = optional state: string | undefined
+interface-member BodyGroupSpec::property::tether = optional tether: undefined | {stiffness?: number; visible?: boolean; restLength?: number;}
+interface-member BodyGroupSpec::property::width = optional width: number | undefined
+interface-member BodyGroupSpec::property::x = optional x: number | undefined
+interface-member BodyGroupSpec::property::y = optional y: number | undefined
+interface-member BodyGroupSpecOptions::property::anchor = optional anchor: undefined | {x: number; y: number;}
+interface-member BodyGroupSpecOptions::property::bodyIds = optional bodyIds: readonly string[] | undefined
+interface-member BodyGroupSpecOptions::property::completion = optional completion: undefined | {mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; targetZone?: string; threshold?: number; valueByBodyId?: Readonly<Record<string, number>>;}
+interface-member BodyGroupSpecOptions::property::datum = optional datum: TDatum | undefined
+interface-member BodyGroupSpecOptions::property::description = optional description: string | undefined
+interface-member BodyGroupSpecOptions::property::group = optional group: string | undefined
+interface-member BodyGroupSpecOptions::property::height = optional height: number | undefined
+interface-member BodyGroupSpecOptions::property::id = required id: string
+interface-member BodyGroupSpecOptions::property::label = optional label: string | undefined
+interface-member BodyGroupSpecOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member BodyGroupSpecOptions::property::state = optional state: string | undefined
+interface-member BodyGroupSpecOptions::property::tether = optional tether: undefined | {stiffness?: number; visible?: boolean; restLength?: number;}
+interface-member BodyGroupSpecOptions::property::width = optional width: number | undefined
+interface-member BodyGroupSpecOptions::property::x = optional x: number | undefined
+interface-member BodyGroupSpecOptions::property::y = optional y: number | undefined
+interface-member BoxEdgeAnchorOptions::property::orientation = optional orientation: EdgeOrientation | undefined
+interface-member BulletConfig::property::actualColor = optional actualColor: string | undefined
+interface-member BulletConfig::property::categoryAccessor = required categoryAccessor: ((d: Datum) => string) | string
+interface-member BulletConfig::property::labelWidth = optional labelWidth: number | undefined
+interface-member BulletConfig::property::rangesAccessor = required rangesAccessor: ((d: Datum) => number[]) | string
+interface-member BulletConfig::property::rowGap = optional rowGap: number | undefined
+interface-member BulletConfig::property::rowHeight = optional rowHeight: number | undefined
+interface-member BulletConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member BulletConfig::property::showTicks = optional showTicks: boolean | undefined
+interface-member BulletConfig::property::targetAccessor = required targetAccessor: ((d: Datum) => number) | string
+interface-member BulletConfig::property::targetColor = optional targetColor: string | undefined
+interface-member BulletConfig::property::tickFormat = optional tickFormat: ((v: number) => string) | undefined
+interface-member BulletConfig::property::valueAccessor = required valueAccessor: ((d: Datum) => number) | string
+interface-member CalendarConfig::property::colorRamp = optional colorRamp: [string, string] | undefined
+interface-member CalendarConfig::property::dateAccessor = required dateAccessor: ((d: Datum) => Date | number) | string
+interface-member CalendarConfig::property::gutter = optional gutter: number | undefined
+interface-member CalendarConfig::property::labelInset = optional labelInset: number | undefined
+interface-member CalendarConfig::property::valueAccessor = required valueAccessor: ((d: Datum) => number) | string
+interface-member CalendarConfig::property::year = optional year: number | undefined
+interface-member CapacityQueueAbandonedInfo::property::abandonedAt = required abandonedAt: number
+interface-member CapacityQueueAbandonedInfo::property::queueSeconds = required queueSeconds: number
+interface-member CapacityQueueAbandonedInfo::property::remainingWork = required remainingWork: number
+interface-member CapacityQueueAgeSummary::property::count = required count: number
+interface-member CapacityQueueAgeSummary::property::meanSeconds = required meanSeconds: number
+interface-member CapacityQueueAgeSummary::property::oldestSeconds = required oldestSeconds: number
+interface-member CapacityQueueAgeSummary::property::p50Seconds = required p50Seconds: number
+interface-member CapacityQueueAgeSummary::property::p95Seconds = required p95Seconds: number
+interface-member CapacityQueueBlockedInfo::property::blockedAt = required blockedAt: number
+interface-member CapacityQueueControllerOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member CapacityQueueControllerOptions::property::continuous = optional continuous: boolean | undefined
+interface-member CapacityQueueControllerOptions::property::id = optional id: string | undefined
+interface-member CapacityQueueControllerOptions::property::jobKey = optional jobKey: ((body: PhysicsBodyState) => string | null | number | undefined) | string | undefined
+interface-member CapacityQueueControllerOptions::property::maxQueue = optional maxQueue: number | undefined
+interface-member CapacityQueueControllerOptions::property::metricWindowSeconds = optional metricWindowSeconds: number | undefined
+interface-member CapacityQueueControllerOptions::property::onAbandoned = optional onAbandoned: ((body: PhysicsBodyState, info: CapacityQueueAbandonedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onBlocked = optional onBlocked: ((body: PhysicsBodyState, info: CapacityQueueBlockedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onProcessed = optional onProcessed: ((body: PhysicsBodyState, info: CapacityQueueProcessedInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::onQueued = optional onQueued: ((body: PhysicsBodyState, info: CapacityQueueVisitInfo) => void) | undefined
+interface-member CapacityQueueControllerOptions::property::queueLayout = optional queueLayout: "lane" | "none" | undefined
+interface-member CapacityQueueControllerOptions::property::queueSlotSpacing = optional queueSlotSpacing: number | undefined
+interface-member CapacityQueueControllerOptions::property::queueStiffness = optional queueStiffness: number | undefined
+interface-member CapacityQueueControllerOptions::property::regionId = required regionId: string
+interface-member CapacityQueueControllerOptions::property::releaseImpulse = optional releaseImpulse: StreamPhysicsRegionVector | undefined
+interface-member CapacityQueueControllerOptions::property::snapshotIntervalSeconds = optional snapshotIntervalSeconds: number | undefined
+interface-member CapacityQueueControllerOptions::property::unitAccessor = optional unitAccessor: ((body: PhysicsBodyState) => number) | string | undefined
+interface-member CapacityQueueControllerOptions::property::unitsPerSecond = required unitsPerSecond: number
+interface-member CapacityQueueProcessedInfo::property::completedAt = required completedAt: number
+interface-member CapacityQueueProcessedInfo::property::queueSeconds = required queueSeconds: number
+interface-member CapacityQueueSnapshot::property::abandonedCount = required abandonedCount: number
+interface-member CapacityQueueSnapshot::property::abandonedWork = required abandonedWork: number
+interface-member CapacityQueueSnapshot::property::admittedCount = required admittedCount: number
+interface-member CapacityQueueSnapshot::property::admittedWork = required admittedWork: number
+interface-member CapacityQueueSnapshot::property::arrivalCount = required arrivalCount: number
+interface-member CapacityQueueSnapshot::property::blockedCount = required blockedCount: number
+interface-member CapacityQueueSnapshot::property::blockedDepth = required blockedDepth: number
+interface-member CapacityQueueSnapshot::property::blockedWork = required blockedWork: number
+interface-member CapacityQueueSnapshot::property::completedWork = required completedWork: number
+interface-member CapacityQueueSnapshot::property::meanCompletedQueueSeconds = required meanCompletedQueueSeconds: number
+interface-member CapacityQueueSnapshot::property::meanRemainingWork = required meanRemainingWork: number
+interface-member CapacityQueueSnapshot::property::metricRevision = required metricRevision: number
+interface-member CapacityQueueSnapshot::property::peakQueueDepth = required peakQueueDepth: number
+interface-member CapacityQueueSnapshot::property::peakRemainingWork = required peakRemainingWork: number
+interface-member CapacityQueueSnapshot::property::processedCount = required processedCount: number
+interface-member CapacityQueueSnapshot::property::processedWork = required processedWork: number
+interface-member CapacityQueueSnapshot::property::queueAge = required queueAge: CapacityQueueAgeSummary
+interface-member CapacityQueueSnapshot::property::queueDepth = required queueDepth: number
+interface-member CapacityQueueSnapshot::property::regionId = required regionId: string
+interface-member CapacityQueueSnapshot::property::remainingWork = required remainingWork: number
+interface-member CapacityQueueSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member CapacityQueueSnapshot::property::unitsPerSecond = required unitsPerSecond: number
+interface-member CapacityQueueSnapshot::property::waitingWork = required waitingWork: number
+interface-member CapacityQueueSnapshot::property::window = required window: CapacityQueueWindowSnapshot
+interface-member CapacityQueueVisitInfo::property::bodyId = required bodyId: string
+interface-member CapacityQueueVisitInfo::property::jobId = required jobId: string
+interface-member CapacityQueueVisitInfo::property::queuedAt = required queuedAt: number
+interface-member CapacityQueueVisitInfo::property::regionId = required regionId: string
+interface-member CapacityQueueVisitInfo::property::visit = required visit: number
+interface-member CapacityQueueVisitInfo::property::visitId = required visitId: string
+interface-member CapacityQueueVisitInfo::property::work = required work: number
+interface-member CapacityQueueWindowSnapshot::property::arrivalWork = required arrivalWork: number
+interface-member CapacityQueueWindowSnapshot::property::arrivals = required arrivals: number
+interface-member CapacityQueueWindowSnapshot::property::arrivalsPerSecond = required arrivalsPerSecond: number
+interface-member CapacityQueueWindowSnapshot::property::completedWork = required completedWork: number
+interface-member CapacityQueueWindowSnapshot::property::completions = required completions: number
+interface-member CapacityQueueWindowSnapshot::property::pressure = required pressure: number
+interface-member CapacityQueueWindowSnapshot::property::processedWork = required processedWork: number
+interface-member CapacityQueueWindowSnapshot::property::seconds = required seconds: number
+interface-member CapacityQueueWindowSnapshot::property::throughputPerSecond = required throughputPerSecond: number
+interface-member CapacityQueueWindowSnapshot::property::utilization = required utilization: number
+interface-member CellWeight::property::key = required key: string
+interface-member CellWeight::property::weight = required weight: number
+interface-member CenteredBox::property::cx = required cx: number
+interface-member CenteredBox::property::cy = required cy: number
+interface-member CenteredBox::property::height = required height: number
+interface-member CenteredBox::property::width = required width: number
+interface-member ChipStripItem::property::label = optional label: string | undefined
+interface-member ChipStripPosition::property::width = required width: number
+interface-member CircularLayoutOptions::property::center = optional center: Point | undefined
+interface-member CircularLayoutOptions::property::radius = optional radius: number | undefined
+interface-member CircularLayoutOptions::property::startAngle = optional startAngle: number | undefined
+interface-member CollisionBox::property::height = required height: number
+interface-member CollisionBox::property::id = required id: string
+interface-member CollisionBox::property::width = required width: number
+interface-member CollisionBox::property::x = required x: number
+interface-member CollisionBox::property::y = required y: number
+interface-member ComposedPhysicsControllers::property::bodyForce = required bodyForce: StreamPhysicsBodyForce
+interface-member ComposedPhysicsControllers::property::continuous = required continuous: boolean
+interface-member ComposedPhysicsControllers::property::controllers = required controllers: PhysicsController[]
+interface-member ComposedPhysicsControllers::property::onTick = required onTick: (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface, extras: {dt: number; elapsed: number; getRegionState: PhysicsControllerTickContext["getRegionState"];}) => void
+interface-member CubicCurve::property::p0 = required p0: Point
+interface-member CubicCurve::property::p1 = required p1: Point
+interface-member CubicCurve::property::p2 = required p2: Point
+interface-member CubicCurve::property::p3 = required p3: Point
+interface-member CurvedEdgeOptions::property::bend = optional bend: number | undefined
+interface-member CurvedEdgeOptions::property::minAlong = optional minAlong: number | undefined
+interface-member CurvedEdgeOptions::property::orientation = optional orientation: EdgeOrientation | undefined
+interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
+interface-member CustomLayoutFailureDiagnostic::property::code = required code: "CUSTOM_LAYOUT_ERROR"
+interface-member CustomLayoutFailureDiagnostic::property::component = required component: CustomLayoutFamily
+interface-member CustomLayoutFailureDiagnostic::property::error = required error: {name: string; message: string;}
+interface-member CustomLayoutFailureDiagnostic::property::message = required message: string
+interface-member CustomLayoutFailureDiagnostic::property::phase = required phase: "layout"
+interface-member CustomLayoutFailureDiagnostic::property::preservedLastGoodScene = required preservedLastGoodScene: boolean
+interface-member CustomLayoutFailureDiagnostic::property::recovery = required recovery: CustomLayoutFailureRecovery
+interface-member CustomLayoutFailureDiagnostic::property::severity = required severity: "error"
+interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
+interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
+interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member CustomTooltipEntry::property::formatted = required formatted: string
+interface-member CustomTooltipEntry::property::key = required key: string
+interface-member CustomTooltipEntry::property::label = required label: string
+interface-member CustomTooltipEntry::property::value = required value: unknown
+interface-member CustomTooltipEntryOptions::property::excludeKeys = optional excludeKeys: Set<string> | readonly string[] | undefined
+interface-member CustomTooltipEntryOptions::property::includeEmpty = optional includeEmpty: boolean | undefined
+interface-member CustomTooltipEntryOptions::property::includeInternal = optional includeInternal: boolean | undefined
+interface-member CustomTooltipEntryOptions::property::labels = optional labels: ((key: string) => string) | Record<string, string> | undefined
+interface-member CustomTooltipEntryOptions::property::maxEntries = optional maxEntries: number | undefined
+interface-member CustomTooltipEntryOptions::property::valueFormat = optional valueFormat: ((value: unknown, key: string, datum: Record<string, unknown>) => string) | undefined
+interface-member DagreConfig::property::edgeStroke = optional edgeStroke: string | undefined
+interface-member DagreConfig::property::edgeStyle = optional edgeStyle: "polyline" | "smooth" | undefined
+interface-member DagreConfig::property::labelAccessor = optional labelAccessor: ((d: Datum) => string) | string | undefined
+interface-member DagreConfig::property::nodeFill = optional nodeFill: string | undefined
+interface-member DagreConfig::property::nodeHeight = optional nodeHeight: number | undefined
+interface-member DagreConfig::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member DagreConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member DependencyGateController::property::getSnapshot = required getSnapshot: () => DependencyGateSnapshot
+interface-member DependencyGateOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member DependencyGateOptions::property::holdForce = optional holdForce: number | undefined
+interface-member DependencyGateOptions::property::id = optional id: string | undefined
+interface-member DependencyGateOptions::property::isOpen = optional isOpen: ((simulatedAt: number) => boolean) | undefined
+interface-member DependencyGateOptions::property::onHeld = optional onHeld: ((body: PhysicsBodyState) => void) | undefined
+interface-member DependencyGateOptions::property::onReleased = optional onReleased: ((body: PhysicsBodyState) => void) | undefined
+interface-member DependencyGateOptions::property::opensAt = optional opensAt: number | undefined
+interface-member DependencyGateOptions::property::regionId = required regionId: string
+interface-member DependencyGateOptions::property::releaseImpulse = optional releaseImpulse: StreamPhysicsRegionVector | undefined
+interface-member DependencyGateSnapshot::property::blocked = required blocked: number
+interface-member DependencyGateSnapshot::property::isOpen = required isOpen: boolean
+interface-member DependencyGateSnapshot::property::metricRevision = required metricRevision: number
+interface-member DependencyGateSnapshot::property::regionId = required regionId: string
+interface-member DependencyGateSnapshot::property::released = required released: number
+interface-member DependencyGateSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member DimOptions::property::baseOpacity = optional baseOpacity: number | undefined
+interface-member DimOptions::property::brighten = optional brighten: number | undefined
+interface-member DimOptions::property::dimOpacity = optional dimOpacity: number | undefined
+interface-member DimOptions::property::highlight = optional highlight: HighlightMatch | null | undefined
+interface-member DimOptions::property::predicate = optional predicate: ((d: Datum) => boolean) | null | undefined
+interface-member FanOutBendOptions::property::count = optional count: number | undefined
+interface-member FanOutBendOptions::property::modulo = optional modulo: number | undefined
+interface-member FanOutBendOptions::property::spread = optional spread: number | undefined
+interface-member FlextreeConfig::property::edgeCurve = optional edgeCurve: "curved" | "line" | undefined
+interface-member FlextreeConfig::property::labelAccessor = optional labelAccessor: ((d: Datum) => string) | string | undefined
+interface-member FlextreeConfig::property::nodeFill = optional nodeFill: string | undefined
+interface-member FlextreeConfig::property::nodeHeight = optional nodeHeight: number | undefined
+interface-member FlextreeConfig::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member FlextreeConfig::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member FlextreeConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member ForceLayoutAsyncOptions::property::execution = optional execution: ForceLayoutExecution | undefined
+interface-member ForceLayoutAsyncOptions::property::signal = optional signal: AbortSignal | undefined
+interface-member ForceLayoutAsyncOptions::property::workerThreshold = optional workerThreshold: number | undefined
+interface-member ForceLayoutOptions::property::centerStrength = optional centerStrength: number | undefined
+interface-member ForceLayoutOptions::property::damping = optional damping: number | undefined
+interface-member ForceLayoutOptions::property::inset = optional inset: number | undefined
+interface-member ForceLayoutOptions::property::iterations = optional iterations: number | undefined
+interface-member ForceLayoutOptions::property::linkDistance = optional linkDistance: number | undefined
+interface-member ForceLayoutOptions::property::linkStrength = optional linkStrength: number | undefined
+interface-member ForceLayoutOptions::property::nodePadding = optional nodePadding: number | undefined
+interface-member ForceLayoutOptions::property::nodeRadius = optional nodeRadius: ((node: GraphNode) => number) | number | undefined
+interface-member ForceLayoutOptions::property::repulsion = optional repulsion: number | undefined
+interface-member ForceLayoutOptions::property::seed = optional seed: number | undefined
+interface-member GaltonPegsOptions::property::columns = optional columns: number | undefined
+interface-member GaltonPegsOptions::property::friction = optional friction: number | undefined
+interface-member GaltonPegsOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member GaltonPegsOptions::property::pegRadius = optional pegRadius: number | undefined
+interface-member GaltonPegsOptions::property::plot = required plot: PhysicsPlotBounds
+interface-member GaltonPegsOptions::property::restitution = optional restitution: number | undefined
+interface-member GaltonPegsOptions::property::rows = required rows: number
+interface-member GaltonPegsOptions::property::stagger = optional stagger: boolean | undefined
+interface-member GaltonPegsOptions::property::yEnd = optional yEnd: number | undefined
+interface-member GaltonPegsOptions::property::yStart = optional yStart: number | undefined
+interface-member GeoAreaHitTargetProps::property::bounds = required bounds: [[number, number], [number, number]]
+interface-member GeoAreaHitTargetProps::property::centroid = required centroid: [number, number]
+interface-member GeoAreaHitTargetProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member GeoAreaHitTargetProps::property::datum = required datum: SceneDatum
+interface-member GeoAreaHitTargetProps::property::group = optional group: string | undefined
+interface-member GeoAreaHitTargetProps::property::pathData = required pathData: string
+interface-member GeoAreaHitTargetProps::property::screenArea = optional screenArea: number | undefined
+interface-member GeographicDotGridConfig::property::categoryAccessor = optional categoryAccessor: GeographicDotGridAccessor | undefined
+interface-member GeographicDotGridConfig::property::dotRadius = optional dotRadius: number | undefined
+interface-member GeographicDotGridConfig::property::fillAccessor = optional fillAccessor: GeographicDotGridAccessor | undefined
+interface-member GeographicDotGridConfig::property::markStyle = optional markStyle: ((datum: GeographicDotGridDatum, index: number) => Style) | Style | undefined
+interface-member GeographicDotGridConfig::property::outlineStyle = optional outlineStyle: Style | undefined
+interface-member GeographicDotGridConfig::property::radiusRatio = optional radiusRatio: number | undefined
+interface-member GeographicDotGridConfig::property::shape = optional shape: GeographicDotGridShape | undefined
+interface-member GeographicDotGridConfig::property::showOutline = optional showOutline: boolean | undefined
+interface-member GeographicDotGridDatum::property::dotIndex = required dotIndex: number
+interface-member GeographicDotGridDatum::property::featureId = required featureId: string
+interface-member GeographicDotGridDatum::property::featureIndex = required featureIndex: number
+interface-member GeographicDotGridDatum::property::gridColumn = required gridColumn: number
+interface-member GeographicDotGridDatum::property::gridRow = required gridRow: number
+interface-member GeographicDotGridDatum::property::latitude = required latitude: number
+interface-member GeographicDotGridDatum::property::longitude = required longitude: number
+interface-member GeographicDotGridSampleOptions::property::cellSize = optional cellSize: number | undefined
+interface-member GeographicDotGridSampleOptions::property::columns = optional columns: number | undefined
+interface-member GeographicDotGridSampleOptions::property::dotFilter = optional dotFilter: ((datum: GeographicDotGridDatum, index: number) => boolean) | undefined
+interface-member GeographicDotGridSampleOptions::property::featureFilter = optional featureFilter: ((feature: GeoJSON.Feature, index: number) => boolean) | undefined
+interface-member GeographicDotGridSampleOptions::property::gridOrigin = optional gridOrigin: [number, number] | undefined
+interface-member GeographicDotGridSampleOptions::property::layoutPadding = optional layoutPadding: number | undefined
+interface-member GeographicDotGridSampleOptions::property::maxSamples = optional maxSamples: number | undefined
+interface-member GeographicGridConfig::property::categoryAccessor = optional categoryAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::cellPadding = optional cellPadding: number | undefined
+interface-member GeographicGridConfig::property::columnAccessor = optional columnAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::columns = optional columns: number | undefined
+interface-member GeographicGridConfig::property::fillAccessor = optional fillAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::filter = optional filter: ((datum: Datum, index: number) => boolean) | undefined
+interface-member GeographicGridConfig::property::idAccessor = optional idAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::labelAccessor = optional labelAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::labelColor = optional labelColor: string | undefined
+interface-member GeographicGridConfig::property::labelFontFamily = optional labelFontFamily: string | undefined
+interface-member GeographicGridConfig::property::labelFontSize = optional labelFontSize: number | undefined
+interface-member GeographicGridConfig::property::labelFontWeight = optional labelFontWeight: number | string | undefined
+interface-member GeographicGridConfig::property::latitudeAccessor = optional latitudeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::layoutPadding = optional layoutPadding: number | undefined
+interface-member GeographicGridConfig::property::longitudeAccessor = optional longitudeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::markStyle = optional markStyle: ((datum: Datum, index: number) => Style) | Style | undefined
+interface-member GeographicGridConfig::property::maxLabelLength = optional maxLabelLength: number | undefined
+interface-member GeographicGridConfig::property::occupancy = optional occupancy: number | undefined
+interface-member GeographicGridConfig::property::rowAccessor = optional rowAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::rows = optional rows: number | undefined
+interface-member GeographicGridConfig::property::shape = optional shape: GeographicGridShape | undefined
+interface-member GeographicGridConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member GeographicGridConfig::property::sizeAccessor = optional sizeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::sizeDomain = optional sizeDomain: [number, number] | undefined
+interface-member GeographicGridConfig::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member GeographicGridConfig::property::source = optional source: GeographicGridSource | undefined
+interface-member GeographicGridInput::property::datum = required datum: T
+interface-member GeographicGridInput::property::x = required x: number
+interface-member GeographicGridInput::property::y = required y: number
+interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
+interface-member GlyphDef::property::parts = required parts: GlyphPart[]
+interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
+interface-member GlyphPart::property::d = required d: string
+interface-member GlyphPart::property::fill = optional fill: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::opacity = optional opacity: number | undefined
+interface-member GlyphPart::property::stroke = optional stroke: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member GlyphPart::property::strokeLinejoin = optional strokeLinejoin: "bevel" | "miter" | "round" | undefined
+interface-member GlyphPart::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GlyphPlacement::property::height = required height: number
+interface-member GlyphPlacement::property::offsetX = required offsetX: number
+interface-member GlyphPlacement::property::offsetY = required offsetY: number
+interface-member GlyphPlacement::property::scale = required scale: number
+interface-member GlyphPlacement::property::width = required width: number
+interface-member GlyphProps::property::accent = optional accent: string | undefined
+interface-member GlyphProps::property::className = optional className: string | undefined
+interface-member GlyphProps::property::color = optional color: string | undefined
+interface-member GlyphProps::property::def = required def: GlyphDef
+interface-member GlyphProps::property::fraction = optional fraction: number | undefined
+interface-member GlyphProps::property::fractionDirection = optional fractionDirection: "horizontal" | "vertical" | undefined
+interface-member GlyphProps::property::fractionStart = optional fractionStart: number | undefined
+interface-member GlyphProps::property::ghostColor = optional ghostColor: string | undefined
+interface-member GlyphProps::property::opacity = optional opacity: number | undefined
+interface-member GlyphProps::property::size = optional size: number | undefined
+interface-member GlyphProps::property::x = optional x: number | undefined
+interface-member GlyphProps::property::y = optional y: number | undefined
+interface-member GraphEdge::property::source = required source: string
+interface-member GraphEdge::property::target = required target: string
+interface-member GraphEdge::property::value = optional value: number | undefined
+interface-member GraphNode::property::id = required id: string
+interface-member GridifiedGeographicPoint::property::column = required column: number
+interface-member GridifiedGeographicPoint::property::row = required row: number
+interface-member GridifyGeographicPointsOptions::property::aspectRatio = optional aspectRatio: number | undefined
+interface-member GridifyGeographicPointsOptions::property::columns = optional columns: number | undefined
+interface-member GridifyGeographicPointsOptions::property::occupancy = optional occupancy: number | undefined
+interface-member GridifyGeographicPointsOptions::property::rows = optional rows: number | undefined
+interface-member GuardedOrderOptions::property::compare = optional compare: ((a: T, b: T) => number) | undefined
+interface-member GuardedOrderOptions::property::maxEvaluations = optional maxEvaluations: number | undefined
+interface-member GuardedOrderOptions::property::passes = optional passes: number | undefined
+interface-member HatchFillOptions::property::angle = optional angle: number | undefined
+interface-member HatchFillOptions::property::color = optional color: string | undefined
+interface-member HatchFillOptions::property::id = required id: string
+interface-member HatchFillOptions::property::opacity = optional opacity: number | undefined
+interface-member HatchFillOptions::property::spacing = optional spacing: number | undefined
+interface-member HatchFillOptions::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member HitTargetPointProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member HitTargetPointProps::property::datum = required datum: SceneDatum
+interface-member HitTargetPointProps::property::id = optional id: number | string | undefined
+interface-member HitTargetPointProps::property::r = optional r: number | undefined
+interface-member HitTargetPointProps::property::x = required x: number
+interface-member HitTargetPointProps::property::y = required y: number
+interface-member HitTargetRectProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member HitTargetRectProps::property::datum = required datum: SceneDatum
+interface-member HitTargetRectProps::property::group = optional group: string | undefined
+interface-member HitTargetRectProps::property::height = required height: number
+interface-member HitTargetRectProps::property::id = optional id: number | string | undefined
+interface-member HitTargetRectProps::property::width = required width: number
+interface-member HitTargetRectProps::property::x = required x: number
+interface-member HitTargetRectProps::property::y = required y: number
+interface-member HullBox::property::height = required height: number
+interface-member HullBox::property::width = required width: number
+interface-member HullBox::property::x = required x: number
+interface-member HullBox::property::y = required y: number
+interface-member IntervalLanesConfig::property::axisTicks = optional axisTicks: number[] | undefined
+interface-member IntervalLanesConfig::property::barGap = optional barGap: number | undefined
+interface-member IntervalLanesConfig::property::bottomInset = optional bottomInset: number | undefined
+interface-member IntervalLanesConfig::property::color = optional color: ((d: T, lane: string) => string) | undefined
+interface-member IntervalLanesConfig::property::cornerRadius = optional cornerRadius: number | undefined
+interface-member IntervalLanesConfig::property::domain = required domain: [number, number]
+interface-member IntervalLanesConfig::property::endAccessor = required endAccessor: ((d: T) => number) | string
+interface-member IntervalLanesConfig::property::idAccessor = optional idAccessor: ((d: T) => string) | string | undefined
+interface-member IntervalLanesConfig::property::laneAccessor = required laneAccessor: ((d: T) => string) | string
+interface-member IntervalLanesConfig::property::laneLabelGap = optional laneLabelGap: number | undefined
+interface-member IntervalLanesConfig::property::lanePadding = optional lanePadding: number | undefined
+interface-member IntervalLanesConfig::property::lanes = optional lanes: string[] | undefined
+interface-member IntervalLanesConfig::property::maxBarHeight = optional maxBarHeight: number | undefined
+interface-member IntervalLanesConfig::property::minBarHeight = optional minBarHeight: number | undefined
+interface-member IntervalLanesConfig::property::minBarWidth = optional minBarWidth: number | undefined
+interface-member IntervalLanesConfig::property::periods = optional periods: undefined | {start: number; end: number; name?: string;}[]
+interface-member IntervalLanesConfig::property::showAxis = optional showAxis: boolean | undefined
+interface-member IntervalLanesConfig::property::showLaneLabels = optional showLaneLabels: boolean | undefined
+interface-member IntervalLanesConfig::property::startAccessor = required startAccessor: ((d: T) => number) | string
+interface-member IntervalLanesConfig::property::tickFormat = optional tickFormat: ((v: number) => string) | undefined
+interface-member IntervalLanesConfig::property::unit = optional unit: number | undefined
+interface-member IsometricLandmarkConfig::property::candidatePriorityAccessor = optional candidatePriorityAccessor: ((d: Datum) => number) | string | undefined
+interface-member IsometricLandmarkConfig::property::center = required center: {lon: number; lat: number;}
+interface-member IsometricLandmarkConfig::property::centerId = optional centerId: string | undefined
+interface-member IsometricLandmarkConfig::property::citySpriteSize = optional citySpriteSize: number | undefined
+interface-member IsometricLandmarkConfig::property::gridRadiusKm = optional gridRadiusKm: number | undefined
+interface-member IsometricLandmarkConfig::property::gridSize = optional gridSize: number | undefined
+interface-member IsometricLandmarkConfig::property::idAccessor = optional idAccessor: ((d: Datum) => string) | string | undefined
+interface-member IsometricLandmarkConfig::property::kindAccessor = optional kindAccessor: ((d: Datum) => LandmarkKind) | string | undefined
+interface-member IsometricLandmarkConfig::property::latitudeAccessor = optional latitudeAccessor: ((d: Datum) => number) | string | undefined
+interface-member IsometricLandmarkConfig::property::longitudeAccessor = optional longitudeAccessor: ((d: Datum) => number) | string | undefined
+interface-member IsometricLandmarkConfig::property::nameAccessor = optional nameAccessor: ((d: Datum) => string) | string | undefined
+interface-member IsometricLandmarkConfig::property::resourceSpriteSize = optional resourceSpriteSize: number | undefined
+interface-member IsometricLandmarkConfig::property::showCityLabel = optional showCityLabel: boolean | undefined
+interface-member IsometricLandmarkConfig::property::sprites = optional sprites: Partial<Record<LandmarkKind, string>> | undefined
+interface-member IsometricLandmarkConfig::property::terrainByCell = optional terrainByCell: Record<string, IsometricTerrainCell | IsometricTerrainKind> | undefined
+interface-member IsometricLandmarkConfig::property::terrainColors = optional terrainColors: string[] | undefined
+interface-member IsometricLandmarkConfig::property::terrainPalette = optional terrainPalette: Partial<Record<IsometricTerrainKind, string>> | undefined
+interface-member IsometricLandmarkConfig::property::tileHeight = optional tileHeight: number | undefined
+interface-member IsometricLandmarkConfig::property::tileStroke = optional tileStroke: string | undefined
+interface-member IsometricLandmarkConfig::property::tileWidth = optional tileWidth: number | undefined
+interface-member IsometricLandmarkTile::property::centerXKm = required centerXKm: number
+interface-member IsometricLandmarkTile::property::centerYKm = required centerYKm: number
+interface-member IsometricLandmarkTile::property::column = required column: number
+interface-member IsometricLandmarkTile::property::id = required id: string
+interface-member IsometricLandmarkTile::property::landmark = required landmark: (Datum & {id: string; name: string; kind: LandmarkKind; lon: number; lat: number; distanceKm: number;}) | null
+interface-member IsometricLandmarkTile::property::landmarks = required landmarks: (Datum & {id: string; name: string; kind: LandmarkKind; lon: number; lat: number; distanceKm: number;})[]
+interface-member IsometricLandmarkTile::property::row = required row: number
+interface-member IsometricLandmarkTile::property::terrainIndex = required terrainIndex: number
+interface-member IsometricTerrainCell::property::coverage = optional coverage: number | undefined
+interface-member IsometricTerrainCell::property::fill = optional fill: string | undefined
+interface-member IsometricTerrainCell::property::kind = required kind: IsometricTerrainKind
+interface-member LayoutChipStripOptions::property::distribute = optional distribute: boolean | undefined
+interface-member LayoutChipStripOptions::property::estimateWidth = optional estimateWidth: ((item: ChipStripItem, index: number) => number) | undefined
+interface-member LayoutChipStripOptions::property::gap = optional gap: number | undefined
+interface-member LayoutContext::property::config = required config: C
+interface-member LayoutContext::property::data = required data: Datum[]
+interface-member LayoutContext::property::dimensions = required dimensions: {width: number; height: number; margin: MarginType; plot: {x: number; y: number; width: number; height: number;};}
+interface-member LayoutContext::property::resolveColor = required resolveColor: (group: string, datum?: Datum) => string
+interface-member LayoutContext::property::scales = required scales: StreamScales
+interface-member LayoutContext::property::selection = optional selection: CustomLayoutSelection | null | undefined
+interface-member LayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member LayoutResult::property::nodes = optional nodes: SceneNode[] | undefined
+interface-member LayoutResult::property::overlays = optional overlays: ReactNode
+interface-member LayoutResult::property::restyle = optional restyle: ((node: SceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member LayoutSequenceOptions::property::paddingLeft = optional paddingLeft: number | undefined
+interface-member LayoutSequenceOptions::property::paddingRight = optional paddingRight: number | undefined
+interface-member LayoutSequenceOptions::property::width = required width: number
+interface-member LayoutSequenceOptions::property::y = required y: number
+interface-member LegendGroupsInput::property::color = optional color: ((key: string) => string) | undefined
+interface-member LegendGroupsInput::property::colorLabel = optional colorLabel: string | undefined
+interface-member LegendGroupsInput::property::colorMap = optional colorMap: Record<string, string> | undefined
+interface-member LegendGroupsInput::property::colorType = optional colorType: "fill" | "line" | undefined
+interface-member LegendGroupsInput::property::keys = optional keys: string[] | undefined
+interface-member LegendGroupsInput::property::sizeColor = optional sizeColor: string | undefined
+interface-member LegendGroupsInput::property::sizeFormat = optional sizeFormat: ((v: number) => string) | undefined
+interface-member LegendGroupsInput::property::sizeLabel = optional sizeLabel: string | undefined
+interface-member LegendGroupsInput::property::sizeRadius = optional sizeRadius: ((v: number) => number) | undefined
+interface-member LegendGroupsInput::property::sizeStops = optional sizeStops: number[] | undefined
+interface-member LegendGroupsInput::property::symbolColor = optional symbolColor: string | undefined
+interface-member LegendGroupsInput::property::symbolLabel = optional symbolLabel: string | undefined
+interface-member LegendGroupsInput::property::symbolMap = optional symbolMap: Record<string, NetworkSymbolName> | undefined
+interface-member LegendSwatch::property::color = optional color: string | undefined
+interface-member LegendSwatch::property::hatch = optional hatch: boolean | undefined
+interface-member LegendSwatch::property::label = required label: string
+interface-member LegendSwatch::property::line = optional line: string | undefined
+interface-member LegendSwatch::property::shape = optional shape: NetworkSymbolName | undefined
+interface-member LegendSwatchesProps::property::className = optional className: string | undefined
+interface-member LegendSwatchesProps::property::color = optional color: string | undefined
+interface-member LegendSwatchesProps::property::entries = required entries: LegendSwatch[]
+interface-member LegendSwatchesProps::property::fontSize = optional fontSize: number | undefined
+interface-member LegendSwatchesProps::property::gap = optional gap: number | undefined
+interface-member LegendSwatchesProps::property::keyId = optional keyId: number | string | undefined
+interface-member LegendSwatchesProps::property::labelGap = optional labelGap: number | undefined
+interface-member LegendSwatchesProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member LegendSwatchesProps::property::swatchSize = optional swatchSize: number | undefined
+interface-member LegendSwatchesProps::property::x = required x: number
+interface-member LegendSwatchesProps::property::y = required y: number
+interface-member LineageDagConfig::property::accentColor = optional accentColor: string | undefined
+interface-member LineageDagConfig::property::backEdgeAccessor = optional backEdgeAccessor: string | undefined
+interface-member LineageDagConfig::property::backEdgeWidth = optional backEdgeWidth: number | undefined
+interface-member LineageDagConfig::property::borderColor = optional borderColor: string | undefined
+interface-member LineageDagConfig::property::dimOpacity = optional dimOpacity: number | undefined
+interface-member LineageDagConfig::property::edgeColors = optional edgeColors: Partial<Record<string, string>> | undefined
+interface-member LineageDagConfig::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member LineageDagConfig::property::edgeTypeAccessor = optional edgeTypeAccessor: string | undefined
+interface-member LineageDagConfig::property::edgeWidth = optional edgeWidth: number | undefined
+interface-member LineageDagConfig::property::labelAccessor = optional labelAccessor: string | undefined
+interface-member LineageDagConfig::property::layerAccessor = optional layerAccessor: string | undefined
+interface-member LineageDagConfig::property::layerCount = optional layerCount: number | undefined
+interface-member LineageDagConfig::property::lod = optional lod: "auto" | LineageLod | undefined
+interface-member LineageDagConfig::property::maxLayerSize = optional maxLayerSize: number | undefined
+interface-member LineageDagConfig::property::minGapX = optional minGapX: number | undefined
+interface-member LineageDagConfig::property::minGapY = optional minGapY: number | undefined
+interface-member LineageDagConfig::property::nodeHeight = optional nodeHeight: number | undefined
+interface-member LineageDagConfig::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member LineageDagConfig::property::partitionAccessor = optional partitionAccessor: string | undefined
+interface-member LineageDagConfig::property::partitionColors = optional partitionColors: Partial<Record<string, string>> | undefined
+interface-member LineageDagConfig::property::reachableIds = optional reachableIds: Iterable<string> | null | undefined
+interface-member LineageDagConfig::property::renderIcon = optional renderIcon: ((info: {semantic: string; partition: string; size: number; color: string; node: Datum;}) => ReactNode) | undefined
+interface-member LineageDagConfig::property::rowAccessor = optional rowAccessor: string | undefined
+interface-member LineageDagConfig::property::selectedId = optional selectedId: null | string | undefined
+interface-member LineageDagConfig::property::semanticAccessor = optional semanticAccessor: string | undefined
+interface-member LineageDagConfig::property::showStoreChips = optional showStoreChips: boolean | undefined
+interface-member LineageDagConfig::property::storeChipColor = optional storeChipColor: string | undefined
+interface-member LineageDagConfig::property::storesAccessor = optional storesAccessor: string | undefined
+interface-member LineageDagConfig::property::typeLabel = optional typeLabel: ((info: {semantic: string; partition: string; node: Datum;}) => string) | undefined
+interface-member LineageStoreSlot::property::slotIndex = required slotIndex: number
+interface-member LineageStoreSlot::property::storeName = required storeName: string
+interface-member LinearAxisProps::property::className = optional className: string | undefined
+interface-member LinearAxisProps::property::color = optional color: string | undefined
+interface-member LinearAxisProps::property::edgeAnchor = optional edgeAnchor: boolean | undefined
+interface-member LinearAxisProps::property::fontSize = optional fontSize: number | undefined
+interface-member LinearAxisProps::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member LinearAxisProps::property::format = optional format: ((v: number) => string) | undefined
+interface-member LinearAxisProps::property::gridColor = optional gridColor: string | undefined
+interface-member LinearAxisProps::property::gridDasharray = optional gridDasharray: string | undefined
+interface-member LinearAxisProps::property::gridLength = optional gridLength: number | undefined
+interface-member LinearAxisProps::property::keyId = optional keyId: number | string | undefined
+interface-member LinearAxisProps::property::labelAnchor = optional labelAnchor: "end" | "middle" | "start" | undefined
+interface-member LinearAxisProps::property::labelGap = optional labelGap: number | undefined
+interface-member LinearAxisProps::property::offset = optional offset: number | undefined
+interface-member LinearAxisProps::property::orient = optional orient: AxisOrient | undefined
+interface-member LinearAxisProps::property::scale = required scale: (value: number) => number
+interface-member LinearAxisProps::property::tickLength = optional tickLength: number | undefined
+interface-member LinearAxisProps::property::ticks = required ticks: number[]
+interface-member MarimekkoConfig::property::categoryAccessor = required categoryAccessor: ((d: Datum) => string) | string
+interface-member MarimekkoConfig::property::categoryOrder = optional categoryOrder: string[] | undefined
+interface-member MarimekkoConfig::property::gutter = optional gutter: number | undefined
+interface-member MarimekkoConfig::property::labelPadding = optional labelPadding: number | undefined
+interface-member MarimekkoConfig::property::showCategoryLabels = optional showCategoryLabels: boolean | undefined
+interface-member MarimekkoConfig::property::stackBy = required stackBy: ((d: Datum) => string) | string
+interface-member MarimekkoConfig::property::stackOrder = optional stackOrder: string[] | undefined
+interface-member MarimekkoConfig::property::valueAccessor = required valueAccessor: ((d: Datum) => number) | string
+interface-member MarkCalloutProps::property::className = optional className: string | undefined
+interface-member MarkCalloutProps::property::color = optional color: string | undefined
+interface-member MarkCalloutProps::property::connector = optional connector: CalloutConnector | undefined
+interface-member MarkCalloutProps::property::fontSize = optional fontSize: number | undefined
+interface-member MarkCalloutProps::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member MarkCalloutProps::property::keyId = optional keyId: number | string | undefined
+interface-member MarkCalloutProps::property::label = required label: ReactNode
+interface-member MarkCalloutProps::property::labelAnchor = optional labelAnchor: "end" | "middle" | "start" | undefined
+interface-member MarkCalloutProps::property::labelBaseline = optional labelBaseline: "auto" | "hanging" | "middle" | undefined
+interface-member MarkCalloutProps::property::labelX = required labelX: number
+interface-member MarkCalloutProps::property::labelY = required labelY: number
+interface-member MarkCalloutProps::property::markRadius = optional markRadius: number | undefined
+interface-member MarkCalloutProps::property::markX = required markX: number
+interface-member MarkCalloutProps::property::markY = required markY: number
+interface-member MarkCalloutProps::property::stroke = optional stroke: string | undefined
+interface-member MarkCalloutProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member MatrixCell::property::col = required col: number
+interface-member MatrixCell::property::row = required row: number
+interface-member MatrixCell::property::source = required source: string
+interface-member MatrixCell::property::target = required target: string
+interface-member MatrixCell::property::value = required value: number
+interface-member MermaidDagConfig::property::accentColor = optional accentColor: string | undefined
+interface-member MermaidDagConfig::property::direction = optional direction: MermaidDirection | undefined
+interface-member MermaidDagConfig::property::edgeColor = optional edgeColor: string | undefined
+interface-member MermaidDagConfig::property::edgeLabelAccessor = optional edgeLabelAccessor: string | undefined
+interface-member MermaidDagConfig::property::labelAccessor = optional labelAccessor: string | undefined
+interface-member MermaidDagConfig::property::layerAccessor = optional layerAccessor: string | undefined
+interface-member MermaidDagConfig::property::nodeFill = optional nodeFill: string | undefined
+interface-member MermaidDagConfig::property::nodeHeight = optional nodeHeight: number | undefined
+interface-member MermaidDagConfig::property::nodeStroke = optional nodeStroke: string | undefined
+interface-member MermaidDagConfig::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member MermaidDagConfig::property::rowAccessor = optional rowAccessor: string | undefined
+interface-member MermaidDagConfig::property::shapeAccessor = optional shapeAccessor: string | undefined
+interface-member MermaidDagConfig::property::textColor = optional textColor: string | undefined
+interface-member MinGapPlacementOptions::property::desired = required desired: readonly number[]
+interface-member MinGapPlacementOptions::property::max = optional max: number | undefined
+interface-member MinGapPlacementOptions::property::min = optional min: number | undefined
+interface-member MinGapPlacementOptions::property::minGaps = required minGaps: readonly number[]
+interface-member MinGapPlacementOptions::property::weights = optional weights: readonly number[] | undefined
+interface-member MobileAnnotationCalloutItem::property::annotation = required annotation: Datum
+interface-member MobileAnnotationCalloutItem::property::emphasis = optional emphasis: string | undefined
+interface-member MobileAnnotationCalloutItem::property::id = required id: string
+interface-member MobileAnnotationCalloutItem::property::label = required label: string
+interface-member MobileAnnotationCalloutItem::property::pointId = optional pointId: number | string | undefined
+interface-member MobileAnnotationCalloutItem::property::priority = required priority: number
+interface-member MobileAnnotationCalloutItem::property::shortLabel = optional shortLabel: string | undefined
+interface-member MobileAnnotationCalloutItem::property::source = optional source: string | undefined
+interface-member MobileAnnotationStrategyConfig::property::active = optional active: boolean | undefined
+interface-member MobileAnnotationStrategyConfig::property::breakpoint = optional breakpoint: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::calloutFilter = optional calloutFilter: ((annotation: Datum, index: number) => boolean) | undefined
+interface-member MobileAnnotationStrategyConfig::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::maxCalloutItems = optional maxCalloutItems: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::maxPlotAnnotations = optional maxPlotAnnotations: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::minPlotAnnotations = optional minPlotAnnotations: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::minVisible = optional minVisible: number | undefined
+interface-member MobileAnnotationStrategyConfig::property::preferShortText = optional preferShortText: boolean | undefined
+interface-member MobileAnnotationStrategyConfig::property::preservePrimary = optional preservePrimary: boolean | undefined
+interface-member MobileAnnotationStrategyConfig::property::priorityAccessor = optional priorityAccessor: ((annotation: Datum, index: number) => number | undefined) | string | undefined
+interface-member MobileAnnotationStrategyConfig::property::strategy = optional strategy: MobileAnnotationStrategyMode | undefined
+interface-member MobileAnnotationStrategyConfig::property::width = optional width: number | undefined
+interface-member MobileAnnotationStrategyResult::property::active = required active: boolean
+interface-member MobileAnnotationStrategyResult::property::budget = required budget: number
+interface-member MobileAnnotationStrategyResult::property::calloutList = required calloutList: MobileAnnotationCalloutItem[]
+interface-member MobileAnnotationStrategyResult::property::deferred = required deferred: Datum[]
+interface-member MobileAnnotationStrategyResult::property::hidden = required hidden: Datum[]
+interface-member MobileAnnotationStrategyResult::property::strategy = required strategy: MobileAnnotationStrategyMode
+interface-member MobileAnnotationStrategyResult::property::visible = required visible: Datum[]
+interface-member MobileBrushAlternativeOptions::property::controls = optional controls: ("chip-filter" | "clear" | "range-inputs" | "stepper")[] | undefined
+interface-member MobileBrushAlternativeOptions::property::summary = optional summary: string | undefined
+interface-member MobileBrushAlternativeOptions::property::targetSize = optional targetSize: number | undefined
+interface-member MobileChartFamilyRecipe::property::family = required family: MobileChartFamily
+interface-member MobileChartFamilyRecipe::property::mobileInteraction = required mobileInteraction: MobileInteractionConfig
+interface-member MobileChartFamilyRecipe::property::mobileSemantics = required mobileSemantics: MobileVisualizationContract
+interface-member MobileChartFamilyRecipe::property::props = required props: Record<string, unknown>
+interface-member MobileChartFamilyRecipe::property::responsiveRules = required responsiveRules: ResponsiveRule<Record<string, unknown>>[]
+interface-member MobileChartFamilyRecipeOptions::property::breakpoint = optional breakpoint: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::chartHeight = optional chartHeight: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::density = optional density: "comfortable" | "compact" | "dense" | undefined
+interface-member MobileChartFamilyRecipeOptions::property::directLabel = optional directLabel: boolean | undefined
+interface-member MobileChartFamilyRecipeOptions::property::keepAxes = optional keepAxes: boolean | undefined
+interface-member MobileChartFamilyRecipeOptions::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::maxCalloutItems = optional maxCalloutItems: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::mobileColumns = optional mobileColumns: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::mode = optional mode: "mobile" | false | undefined
+interface-member MobileChartFamilyRecipeOptions::property::showLegend = optional showLegend: boolean | undefined
+interface-member MobileChartFamilyRecipeOptions::property::snap = optional snap: MobileSnapBehavior | undefined
+interface-member MobileChartFamilyRecipeOptions::property::standardControls = optional standardControls: MobileStandardControlsMode | undefined
+interface-member MobileChartFamilyRecipeOptions::property::summary = optional summary: string | undefined
+interface-member MobileChartFamilyRecipeOptions::property::tabletColumns = optional tabletColumns: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::targetSize = optional targetSize: number | undefined
+interface-member MobileChartFamilyRecipeOptions::property::transformProfile = optional transformProfile: "compare" | "inspect" | "overview" | undefined
+interface-member NetEnsembleAnalysis::property::branchingCount = required branchingCount: number
+interface-member NetEnsembleAnalysis::property::components = required components: NetEnsembleComponent[]
+interface-member NetEnsembleAnalysis::property::directedCount = required directedCount: number
+interface-member NetEnsembleAnalysis::property::motifs = required motifs: NetEnsembleMotif[]
+interface-member NetEnsembleComponent::property::descriptor = required descriptor: string
+interface-member NetEnsembleComponent::property::directed = required directed: boolean
+interface-member NetEnsembleComponent::property::edgeCount = required edgeCount: number
+interface-member NetEnsembleComponent::property::ids = required ids: string[]
+interface-member NetEnsembleComponent::property::motif = required motif: string
+interface-member NetEnsembleComponent::property::nodeCount = required nodeCount: number
+interface-member NetEnsembleComponent::property::sinkCount = required sinkCount: number
+interface-member NetEnsembleComponent::property::sourceCount = required sourceCount: number
+interface-member NetEnsembleConfig::property::bandGap = optional bandGap: number | undefined
+interface-member NetEnsembleConfig::property::branchColor = optional branchColor: string | undefined
+interface-member NetEnsembleConfig::property::categoryAccessor = optional categoryAccessor: string | undefined
+interface-member NetEnsembleConfig::property::cellGap = optional cellGap: number | undefined
+interface-member NetEnsembleConfig::property::colorMode = optional colorMode: "category" | "directedness" | "motif" | undefined
+interface-member NetEnsembleConfig::property::convergeColor = optional convergeColor: string | undefined
+interface-member NetEnsembleConfig::property::edgeColor = optional edgeColor: string | undefined
+interface-member NetEnsembleConfig::property::fingerprintRounds = optional fingerprintRounds: number | undefined
+interface-member NetEnsembleConfig::property::groupByMotif = optional groupByMotif: boolean | undefined
+interface-member NetEnsembleConfig::property::headerHeight = optional headerHeight: number | undefined
+interface-member NetEnsembleConfig::property::highlight = optional highlight: HighlightMatch | null | undefined
+interface-member NetEnsembleConfig::property::labelAccessor = optional labelAccessor: string | undefined
+interface-member NetEnsembleConfig::property::maxCellSize = optional maxCellSize: number | undefined
+interface-member NetEnsembleConfig::property::minCellForFull = optional minCellForFull: number | undefined
+interface-member NetEnsembleConfig::property::minCellSize = optional minCellSize: number | undefined
+interface-member NetEnsembleConfig::property::nodeRadius = optional nodeRadius: number | undefined
+interface-member NetEnsembleConfig::property::showBandLabels = optional showBandLabels: boolean | undefined
+interface-member NetEnsembleConfig::property::showExemplars = optional showExemplars: boolean | undefined
+interface-member NetEnsembleConfig::property::showLegend = optional showLegend: boolean | undefined
+interface-member NetEnsembleConfig::property::sort = optional sort: "directedness" | "frequency" | "size" | undefined
+interface-member NetEnsembleConfig::property::sourceAccessor = optional sourceAccessor: string | undefined
+interface-member NetEnsembleConfig::property::targetAccessor = optional targetAccessor: string | undefined
+interface-member NetEnsembleMotif::property::count = required count: number
+interface-member NetEnsembleMotif::property::descriptor = required descriptor: string
+interface-member NetEnsembleMotif::property::directed = required directed: boolean
+interface-member NetEnsembleMotif::property::motif = required motif: string
+interface-member NetworkEdgeHitTargetBaseProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkEdgeHitTargetBaseProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::datum = required datum: SceneDatum
+interface-member NetworkEdgeHitTargetBaseProps::property::id = optional id: number | string | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::interactive = optional interactive: boolean | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::label = optional label: string | undefined
+interface-member NetworkHitTargetCircleProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkHitTargetCircleProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkHitTargetCircleProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkHitTargetCircleProps::property::datum = required datum: SceneDatum
+interface-member NetworkHitTargetCircleProps::property::id = optional id: number | string | undefined
+interface-member NetworkHitTargetCircleProps::property::label = optional label: string | undefined
+interface-member NetworkHitTargetCircleProps::property::r = optional r: number | undefined
+interface-member NetworkHitTargetCircleProps::property::x = required x: number
+interface-member NetworkHitTargetCircleProps::property::y = required y: number
+interface-member NetworkHitTargetRectProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkHitTargetRectProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkHitTargetRectProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkHitTargetRectProps::property::datum = required datum: SceneDatum
+interface-member NetworkHitTargetRectProps::property::height = required height: number
+interface-member NetworkHitTargetRectProps::property::id = optional id: number | string | undefined
+interface-member NetworkHitTargetRectProps::property::label = optional label: string | undefined
+interface-member NetworkHitTargetRectProps::property::width = required width: number
+interface-member NetworkHitTargetRectProps::property::x = required x: number
+interface-member NetworkHitTargetRectProps::property::y = required y: number
+interface-member NetworkHtmlMark::property::content = required content: ReactNode
+interface-member NetworkHtmlMark::property::height = required height: number
+interface-member NetworkHtmlMark::property::id = required id: string
+interface-member NetworkHtmlMark::property::width = required width: number
+interface-member NetworkHtmlMark::property::x = required x: number
+interface-member NetworkHtmlMark::property::y = required y: number
+interface-member NetworkLayoutContext::property::config = required config: C
+interface-member NetworkLayoutContext::property::dimensions = required dimensions: {width: number; height: number; plot: {x: number; y: number; width: number; height: number;};}
+interface-member NetworkLayoutContext::property::edges = required edges: RealtimeEdge[]
+interface-member NetworkLayoutContext::property::nodes = required nodes: RealtimeNode[]
+interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
+interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
+interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
+interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
+interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode
+interface-member NetworkLayoutResult::property::restyle = optional restyle: ((node: NetworkSceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member NetworkLayoutResult::property::restyleEdge = optional restyleEdge: ((edge: NetworkSceneEdge, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member NetworkLayoutResult::property::sceneEdges = optional sceneEdges: NetworkSceneEdge[] | undefined
+interface-member NetworkLayoutResult::property::sceneNodes = optional sceneNodes: NetworkSceneNode[] | undefined
+interface-member NetworkLineEdgeHitTargetProps::property::type = optional type: "line" | undefined
+interface-member NetworkLineEdgeHitTargetProps::property::x1 = required x1: number
+interface-member NetworkLineEdgeHitTargetProps::property::x2 = required x2: number
+interface-member NetworkLineEdgeHitTargetProps::property::y1 = required y1: number
+interface-member NetworkLineEdgeHitTargetProps::property::y2 = required y2: number
+interface-member NetworkPathEdgeHitTargetProps::property::pathD = required pathD: string
+interface-member NetworkPathEdgeHitTargetProps::property::type = optional type: "bezier" | "curved" | "ribbon" | undefined
+interface-member OrdinalLayoutContext::property::config = required config: C
+interface-member OrdinalLayoutContext::property::data = required data: Datum[]
+interface-member OrdinalLayoutContext::property::dimensions = required dimensions: {width: number; height: number; margin: MarginType; plot: {x: number; y: number; width: number; height: number;};}
+interface-member OrdinalLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
+interface-member OrdinalLayoutContext::property::scales = required scales: {o: ScaleBand<string>; r: ScaleLinear<number, number>; projection: OrdinalScales["projection"];}
+interface-member OrdinalLayoutContext::property::selection = optional selection: CustomLayoutSelection | null | undefined
+interface-member OrdinalLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member OrdinalLayoutResult::property::nodes = optional nodes: OrdinalSceneNode[] | undefined
+interface-member OrdinalLayoutResult::property::overlays = optional overlays: ReactNode
+interface-member OrdinalLayoutResult::property::restyle = optional restyle: ((node: OrdinalSceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member PackIntervalsOptions::property::end = optional end: Accessor<T> | undefined
+interface-member PackIntervalsOptions::property::sort = optional sort: boolean | undefined
+interface-member PackIntervalsOptions::property::start = optional start: Accessor<T> | undefined
+interface-member PackIntervalsResult::property::packed = required packed: PackedInterval<T>[]
+interface-member PackIntervalsResult::property::trackCount = required trackCount: number
+interface-member PackSpanLevelsResult::property::levelCount = required levelCount: number
+interface-member PackSpanLevelsResult::property::maxLevel = required maxLevel: number
+interface-member PackSpanLevelsResult::property::packed = required packed: PackedSpanLevel<T>[]
+interface-member PackedBands::property::adjacentClearance = required adjacentClearance: number[]
+interface-member PackedBands::property::positions = required positions: number[]
+interface-member PackedClusterMatrixConfig::property::calloutColor = optional calloutColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::callouts = optional callouts: undefined | {field: string; value: string; label: string; at?: number | {x: number; y: number;}; connector?: "curve" | "elbow" | "straight";}[]
+interface-member PackedClusterMatrixConfig::property::cellSizing = optional cellSizing: "proportional" | "uniform" | undefined
+interface-member PackedClusterMatrixConfig::property::colorAccessor = optional colorAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::colorMap = optional colorMap: Record<string, string> | undefined
+interface-member PackedClusterMatrixConfig::property::columnAccessor = optional columnAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::columnGap = optional columnGap: number | undefined
+interface-member PackedClusterMatrixConfig::property::columnLabel = optional columnLabel: ((col: string) => string) | undefined
+interface-member PackedClusterMatrixConfig::property::columnOrder = optional columnOrder: string[] | undefined
+interface-member PackedClusterMatrixConfig::property::defaultSymbol = optional defaultSymbol: NetworkSymbolName | undefined
+interface-member PackedClusterMatrixConfig::property::dimOpacity = optional dimOpacity: number | undefined
+interface-member PackedClusterMatrixConfig::property::enclosureColor = optional enclosureColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::enclosureOpacity = optional enclosureOpacity: number | undefined
+interface-member PackedClusterMatrixConfig::property::enclosureRadius = optional enclosureRadius: number | undefined
+interface-member PackedClusterMatrixConfig::property::enclosureWidth = optional enclosureWidth: number | undefined
+interface-member PackedClusterMatrixConfig::property::footerHeight = optional footerHeight: number | undefined
+interface-member PackedClusterMatrixConfig::property::headerColor = optional headerColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::headerFontSize = optional headerFontSize: number | undefined
+interface-member PackedClusterMatrixConfig::property::headerHeight = optional headerHeight: number | undefined
+interface-member PackedClusterMatrixConfig::property::highlight = optional highlight: null | undefined | {field: string; value: string;} | {field: string; value: string;}[]
+interface-member PackedClusterMatrixConfig::property::iconAccessor = optional iconAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::iconColor = optional iconColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::iconMap = optional iconMap: Record<string, NetworkSymbolName> | undefined
+interface-member PackedClusterMatrixConfig::property::iconScale = optional iconScale: number | undefined
+interface-member PackedClusterMatrixConfig::property::iconStrokeWidth = optional iconStrokeWidth: number | undefined
+interface-member PackedClusterMatrixConfig::property::iterations = optional iterations: number | undefined
+interface-member PackedClusterMatrixConfig::property::labelColor = optional labelColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::labelFontSize = optional labelFontSize: number | undefined
+interface-member PackedClusterMatrixConfig::property::labelWidth = optional labelWidth: number | undefined
+interface-member PackedClusterMatrixConfig::property::markStroke = optional markStroke: string | undefined
+interface-member PackedClusterMatrixConfig::property::markStrokeWidth = optional markStrokeWidth: number | undefined
+interface-member PackedClusterMatrixConfig::property::markerAccessor = optional markerAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::markerColor = optional markerColor: string | undefined
+interface-member PackedClusterMatrixConfig::property::maxAreaFraction = optional maxAreaFraction: number | undefined
+interface-member PackedClusterMatrixConfig::property::packPadding = optional packPadding: number | undefined
+interface-member PackedClusterMatrixConfig::property::proportionExponent = optional proportionExponent: number | undefined
+interface-member PackedClusterMatrixConfig::property::rowAccessor = optional rowAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::rowGap = optional rowGap: number | undefined
+interface-member PackedClusterMatrixConfig::property::rowLabel = optional rowLabel: ((row: string) => string) | undefined
+interface-member PackedClusterMatrixConfig::property::rowMode = optional rowMode: "banded" | "stacked" | undefined
+interface-member PackedClusterMatrixConfig::property::rowOrder = optional rowOrder: string[] | undefined
+interface-member PackedClusterMatrixConfig::property::shadeAccessor = optional shadeAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::shadeDomain = optional shadeDomain: [number, number] | undefined
+interface-member PackedClusterMatrixConfig::property::shadeReverse = optional shadeReverse: boolean | undefined
+interface-member PackedClusterMatrixConfig::property::shadeStrength = optional shadeStrength: number | undefined
+interface-member PackedClusterMatrixConfig::property::showColumnHeaders = optional showColumnHeaders: boolean | undefined
+interface-member PackedClusterMatrixConfig::property::showEnclosures = optional showEnclosures: boolean | undefined
+interface-member PackedClusterMatrixConfig::property::showRowLabels = optional showRowLabels: boolean | undefined
+interface-member PackedClusterMatrixConfig::property::sizeAccessor = optional sizeAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::sizeDomain = optional sizeDomain: [number, number] | undefined
+interface-member PackedClusterMatrixConfig::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member PackedClusterMatrixConfig::property::symbolAccessor = optional symbolAccessor: string | undefined
+interface-member PackedClusterMatrixConfig::property::symbolMap = optional symbolMap: Record<string, NetworkSymbolName> | undefined
+interface-member PackedInterval::property::item = required item: T
+interface-member PackedInterval::property::track = required track: number
+interface-member PackedSpanLevel::property::level = required level: number
+interface-member PackedSpanLevel::property::span = required span: T
+interface-member ParallelCoordinatesConfig::property::axisLabelPadding = optional axisLabelPadding: number | undefined
+interface-member ParallelCoordinatesConfig::property::colorBy = optional colorBy: ((d: Datum) => string) | string | undefined
+interface-member ParallelCoordinatesConfig::property::dimmedOpacity = optional dimmedOpacity: number | undefined
+interface-member ParallelCoordinatesConfig::property::domains = optional domains: Record<string, [number, number]> | undefined
+interface-member ParallelCoordinatesConfig::property::fields = required fields: string[]
+interface-member ParallelCoordinatesConfig::property::highlightFn = optional highlightFn: ((d: Datum) => boolean) | undefined
+interface-member ParallelCoordinatesConfig::property::opacity = optional opacity: number | undefined
+interface-member ParallelCoordinatesConfig::property::showAxes = optional showAxes: boolean | undefined
+interface-member ParallelCoordinatesConfig::property::showPoints = optional showPoints: boolean | undefined
+interface-member ParallelCoordinatesConfig::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member ParallelCoordinatesConfig::property::tickFormat = optional tickFormat: Record<string, (v: number) => string> | undefined
+interface-member PhysicsBandColliderOptions::property::bandwidth = optional bandwidth: number | undefined
+interface-member PhysicsBandColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsBandColliderOptions::property::includeBoundaryWalls = optional includeBoundaryWalls: boolean | undefined
+interface-member PhysicsBandColliderOptions::property::includeInteriorWalls = optional includeInteriorWalls: boolean | undefined
+interface-member PhysicsBandColliderOptions::property::scale = required scale: BandScale<TBand>
+interface-member PhysicsBandColliderOptions::property::values = required values: readonly TBand[]
+interface-member PhysicsBandColliderOptions::property::wallThickness = optional wallThickness: number | undefined
+interface-member PhysicsColliderSpec::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member PhysicsColliderSpec::property::friction = optional friction: number | undefined
+interface-member PhysicsColliderSpec::property::id = required id: string
+interface-member PhysicsColliderSpec::property::restitution = optional restitution: number | undefined
+interface-member PhysicsColliderSpec::property::sensor = optional sensor: boolean | undefined
+interface-member PhysicsColliderSpec::property::shape = required shape: PhysicsColliderShape
+interface-member PhysicsController::property::bodyForce = optional bodyForce: ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined) | undefined
+interface-member PhysicsController::property::continuous = optional continuous: boolean | undefined
+interface-member PhysicsController::property::dispose = optional dispose: (() => void) | undefined
+interface-member PhysicsController::property::getSnapshot = optional getSnapshot: (() => unknown) | undefined
+interface-member PhysicsController::property::id = required id: string
+interface-member PhysicsController::property::tick = required tick: (context: PhysicsControllerTickContext) => void
+interface-member PhysicsControllerTickContext::property::controls = required controls: PhysicsPipelineControlSurface
+interface-member PhysicsControllerTickContext::property::dt = required dt: number
+interface-member PhysicsControllerTickContext::property::elapsed = required elapsed: number
+interface-member PhysicsControllerTickContext::property::getRegionState = required getRegionState: (bodyId: string) => StreamPhysicsBodyRegionState | undefined
+interface-member PhysicsControllerTickContext::property::result = required result: PhysicsPipelineTickResult
+interface-member PhysicsDestinationZone::property::centerX = required centerX: number
+interface-member PhysicsDestinationZone::property::centerY = required centerY: number
+interface-member PhysicsDestinationZone::property::id = required id: string
+interface-member PhysicsDestinationZone::property::label = required label: string
+interface-member PhysicsDestinationZone::property::order = required order: number
+interface-member PhysicsPlotBounds::property::height = required height: number
+interface-member PhysicsPlotBounds::property::width = required width: number
+interface-member PhysicsPlotBounds::property::x = required x: number
+interface-member PhysicsPlotBounds::property::y = required y: number
+interface-member PhysicsQueuedSpawn::property::spawnAt = optional spawnAt: number | undefined
+interface-member PhysicsQueuedSpawn::property::springs = optional springs: PhysicsSpawnSpringSpec[] | undefined
+interface-member PhysicsReferenceEnvelope::property::interpolation = required interpolation: PhysicsTraceInterpolation
+interface-member PhysicsReferenceEnvelope::property::outsideDomain = required outsideDomain: PhysicsTraceOutsideDomain
+interface-member PhysicsReferenceEnvelope::property::points = required points: PhysicsReferenceEnvelopePoint[]
+interface-member PhysicsReferenceEnvelope::property::quantiles = required quantiles: number[]
+interface-member PhysicsReferenceEnvelope::property::runCount = required runCount: number
+interface-member PhysicsReferenceEnvelopeOptions::property::interpolation = optional interpolation: PhysicsTraceInterpolation | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::outsideDomain = optional outsideDomain: PhysicsTraceOutsideDomain | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::quantiles = optional quantiles: readonly number[] | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::runs = required runs: readonly PhysicsReferenceTrace<TSample>[]
+interface-member PhysicsReferenceEnvelopeOptions::property::sampleAt = required sampleAt: PhysicsReferenceSampleGrid
+interface-member PhysicsReferenceEnvelopeOptions::property::timeAccessor = optional timeAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsReferenceEnvelopeOptions::property::valueAccessor = optional valueAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsReferenceEnvelopePoint::property::count = required count: number
+interface-member PhysicsReferenceEnvelopePoint::property::max = required max: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::median = required median: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::min = required min: null | number
+interface-member PhysicsReferenceEnvelopePoint::property::quantiles = required quantiles: Partial<Record<number, null | number>>
+interface-member PhysicsReferenceEnvelopePoint::property::time = required time: number
+interface-member PhysicsReferenceTrace::property::id = required id: string
+interface-member PhysicsReferenceTrace::property::samples = required samples: readonly TSample[]
+interface-member PhysicsScalarTraceSample::property::time = required time: number
+interface-member PhysicsScalarTraceSample::property::value = required value: number
+interface-member PhysicsScaleColliderOptions::property::bounds = optional bounds: PhysicsBoundsColliderOptions | false | undefined
+interface-member PhysicsScaleColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsScaleColliderOptions::property::plot = required plot: PhysicsPlotBounds
+interface-member PhysicsScaleColliderOptions::property::xBands = optional xBands: PhysicsBandColliderOptions<TBand> | undefined
+interface-member PhysicsScaleColliderOptions::property::xBins = optional xBins: (Omit<PhysicsXBinColliderOptions, "idPrefix" | "yBottom" | "yTop"> & {idPrefix?: string; yTop?: number; yBottom?: number;}) | undefined
+interface-member PhysicsScaleColliderOptions::property::yBands = optional yBands: PhysicsBandColliderOptions<TBand> | undefined
+interface-member PhysicsSedimentBinSnapshot::property::bodyIds = required bodyIds: string[]
+interface-member PhysicsSedimentBinSnapshot::property::count = required count: number
+interface-member PhysicsSedimentBinSnapshot::property::id = required id: string
+interface-member PhysicsSedimentBinSnapshot::property::label = required label: string
+interface-member PhysicsSedimentBinSnapshot::property::lastBodyId = optional lastBodyId: string | undefined
+interface-member PhysicsSedimentBinSnapshot::property::lastDatum = optional lastDatum: unknown
+interface-member PhysicsSedimentBinSnapshot::property::total = required total: number
+interface-member PhysicsSedimentBinSnapshot::property::value = required value: RunningStatsSnapshot
+interface-member PhysicsSedimentBinSnapshot::property::x = required x: RunningStatsSnapshot
+interface-member PhysicsSedimentBinSnapshot::property::y = required y: RunningStatsSnapshot
+interface-member PhysicsSedimentColumn::property::binId = required binId: string
+interface-member PhysicsSedimentColumn::property::count = required count: number
+interface-member PhysicsSedimentColumn::property::height = required height: number
+interface-member PhysicsSedimentColumn::property::index = required index: number
+interface-member PhysicsSedimentColumn::property::label = required label: string
+interface-member PhysicsSedimentColumn::property::meanX = required meanX: number
+interface-member PhysicsSedimentColumn::property::meanY = required meanY: number
+interface-member PhysicsSedimentColumn::property::total = required total: number
+interface-member PhysicsSedimentColumn::property::width = required width: number
+interface-member PhysicsSedimentColumn::property::x = required x: number
+interface-member PhysicsSedimentColumn::property::y = required y: number
+interface-member PhysicsSedimentHeightfieldOptions::property::baselineY = optional baselineY: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::binWidth = optional binWidth: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::gap = optional gap: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::maxHeight = optional maxHeight: number | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::value = optional value: "count" | "total" | undefined
+interface-member PhysicsSedimentHeightfieldOptions::property::x = optional x: ((bin: PhysicsSedimentBinSnapshot, index: number) => number) | undefined
+interface-member PhysicsSpawnPacingOptions::property::pacing = optional pacing: PhysicsSpawnPacing | undefined
+interface-member PhysicsSpawnPacingOptions::property::startAt = optional startAt: number | undefined
+interface-member PhysicsSpawnPacingOptions::property::timeAccessor = optional timeAccessor: PhysicsSpawnTimeAccessor | undefined
+interface-member PhysicsSpawnPacingOptions::property::timeScale = optional timeScale: number | undefined
+interface-member PhysicsStageColliderOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member PhysicsStageColliderOptions::property::thickness = optional thickness: number | undefined
+interface-member PhysicsStageColliderOptions::property::walls = optional walls: boolean | undefined
+interface-member PhysicsStageGeography::property::apparatus = required apparatus: PhysicsZone
+interface-member PhysicsStageGeography::property::charge = required charge: PhysicsZone
+interface-member PhysicsStageGeography::property::destinations = required destinations: PhysicsDestinationZone[]
+interface-member PhysicsStageGeography::property::flow = required flow: "down" | "right"
+interface-member PhysicsStageGeography::property::height = required height: number
+interface-member PhysicsStageGeography::property::projection = required projection: PhysicsZone
+interface-member PhysicsStageGeography::property::width = required width: number
+interface-member PhysicsStageGeographyOptions::property::channelRatio = optional channelRatio: number | undefined
+interface-member PhysicsStageGeographyOptions::property::chargeExtent = optional chargeExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::destinationExtent = optional destinationExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::destinations = required destinations: number | readonly {id: string; label?: string;}[]
+interface-member PhysicsStageGeographyOptions::property::flow = optional flow: "down" | "right" | undefined
+interface-member PhysicsStageGeographyOptions::property::padding = optional padding: number | undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member PhysicsStageGeographyOptions::property::projectionExtent = optional projectionExtent: number | undefined
+interface-member PhysicsStageGeographyOptions::property::size = required size: [number, number]
+interface-member PhysicsTraceComparison::property::aboveDuration = required aboveDuration: number
+interface-member PhysicsTraceComparison::property::aboveSamples = required aboveSamples: number
+interface-member PhysicsTraceComparison::property::belowDuration = required belowDuration: number
+interface-member PhysicsTraceComparison::property::belowSamples = required belowSamples: number
+interface-member PhysicsTraceComparison::property::insideDuration = required insideDuration: number
+interface-member PhysicsTraceComparison::property::insideSamples = required insideSamples: number
+interface-member PhysicsTraceComparison::property::observedDuration = required observedDuration: number
+interface-member PhysicsTraceComparison::property::observedSamples = required observedSamples: number
+interface-member PhysicsTraceComparison::property::peakDeficit = required peakDeficit: number
+interface-member PhysicsTraceComparison::property::peakDeficitAt = required peakDeficitAt: null | number
+interface-member PhysicsTraceComparison::property::peakExcess = required peakExcess: number
+interface-member PhysicsTraceComparison::property::peakExcessAt = required peakExcessAt: null | number
+interface-member PhysicsTraceComparison::property::points = required points: PhysicsTraceComparisonPoint[]
+interface-member PhysicsTraceComparison::property::sampleCount = required sampleCount: number
+interface-member PhysicsTraceComparison::property::totalDuration = required totalDuration: number
+interface-member PhysicsTraceComparison::property::unobservedDuration = required unobservedDuration: number
+interface-member PhysicsTraceComparisonOptions::property::interpolation = optional interpolation: PhysicsTraceInterpolation | undefined
+interface-member PhysicsTraceComparisonOptions::property::lower = optional lower: PhysicsReferenceBandSelector | undefined
+interface-member PhysicsTraceComparisonOptions::property::outsideDomain = optional outsideDomain: PhysicsTraceOutsideDomain | undefined
+interface-member PhysicsTraceComparisonOptions::property::timeAccessor = optional timeAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsTraceComparisonOptions::property::traceId = optional traceId: string | undefined
+interface-member PhysicsTraceComparisonOptions::property::upper = optional upper: PhysicsReferenceBandSelector | undefined
+interface-member PhysicsTraceComparisonOptions::property::valueAccessor = optional valueAccessor: PhysicsTraceAccessor<TSample> | undefined
+interface-member PhysicsTraceComparisonPoint::property::lower = required lower: null | number
+interface-member PhysicsTraceComparisonPoint::property::status = required status: PhysicsTraceComparisonStatus
+interface-member PhysicsTraceComparisonPoint::property::time = required time: number
+interface-member PhysicsTraceComparisonPoint::property::upper = required upper: null | number
+interface-member PhysicsTraceComparisonPoint::property::value = required value: null | number
+interface-member PhysicsZone::property::height = required height: number
+interface-member PhysicsZone::property::width = required width: number
+interface-member PhysicsZone::property::x = required x: number
+interface-member PhysicsZone::property::y = required y: number
+interface-member Point::property::x = required x: number
+interface-member Point::property::y = required y: number
+interface-member PolarOptions::property::center = optional center: Point | undefined
+interface-member PositionedNode::property::data = required data: Datum
+interface-member PositionedNode::property::fixedValue = required fixedValue: number
+interface-member PositionedNode::property::height = required height: number
+interface-member PositionedNode::property::id = required id: string
+interface-member PositionedNode::property::width = required width: number
+interface-member PositionedNode::property::x = required x: number
+interface-member PositionedNode::property::y = required y: number
+interface-member PositionedToken::property::column = required column: number
+interface-member PositionedToken::property::row = required row: number
+interface-member PositionedToken::property::x = required x: number
+interface-member PositionedToken::property::y = required y: number
+interface-member ProcessChromeGroup::property::absorbed = optional absorbed: number | undefined
+interface-member ProcessChromeGroup::property::complete = optional complete: boolean | undefined
+interface-member ProcessChromeGroup::property::id = required id: string
+interface-member ProcessChromeGroup::property::label = required label: string
+interface-member ProcessChromeGroup::property::total = optional total: number | undefined
+interface-member ProcessChromeGroup::property::x = required x: number
+interface-member ProcessChromeGroup::property::y = required y: number
+interface-member ProcessChromeLayout::property::bottomY = required bottomY: number
+interface-member ProcessChromeLayout::property::groups = optional groups: readonly ProcessChromeGroup[] | undefined
+interface-member ProcessChromeLayout::property::height = required height: number
+interface-member ProcessChromeLayout::property::left = required left: number
+interface-member ProcessChromeLayout::property::midY = required midY: number
+interface-member ProcessChromeLayout::property::right = required right: number
+interface-member ProcessChromeLayout::property::stages = required stages: readonly ProcessChromeStage[]
+interface-member ProcessChromeLayout::property::topY = required topY: number
+interface-member ProcessChromeLayout::property::width = required width: number
+interface-member ProcessChromeOptions::property::outlineStages = optional outlineStages: boolean | undefined
+interface-member ProcessChromeOptions::property::showCapacityBadges = optional showCapacityBadges: boolean | undefined
+interface-member ProcessChromeOptions::property::showFlowSpine = optional showFlowSpine: boolean | undefined
+interface-member ProcessChromeOptions::property::showGroupSockets = optional showGroupSockets: boolean | undefined
+interface-member ProcessChromeOptions::property::showStageCounts = optional showStageCounts: boolean | undefined
+interface-member ProcessChromeOptions::property::stageLabelMode = optional stageLabelMode: "auto" | "compact" | "full" | "none" | undefined
+interface-member ProcessChromeOptions::property::testId = optional testId: string | undefined
+interface-member ProcessChromeStage::property::absorb = optional absorb: boolean | undefined
+interface-member ProcessChromeStage::property::capacity = optional capacity: number | undefined
+interface-member ProcessChromeStage::property::capacityLabel = optional capacityLabel: string | undefined
+interface-member ProcessChromeStage::property::count = optional count: number | undefined
+interface-member ProcessChromeStage::property::id = required id: string
+interface-member ProcessChromeStage::property::label = required label: string
+interface-member ProcessChromeStage::property::portalTarget = optional portalTarget: string | undefined
+interface-member ProcessChromeStage::property::processed = optional processed: number | undefined
+interface-member ProcessChromeStage::property::queueDepth = optional queueDepth: number | undefined
+interface-member ProcessChromeStage::property::showBadge = optional showBadge: boolean | undefined
+interface-member ProcessChromeStage::property::width = required width: number
+interface-member ProcessChromeStage::property::x = required x: number
+interface-member ProcessChromeStage::property::x0 = required x0: number
+interface-member ProcessChromeStage::property::x1 = required x1: number
+interface-member ProcessJourneyEntityState::property::currentStageId = optional currentStageId: string | undefined
+interface-member ProcessJourneyEntityState::property::firstEnteredAt = required firstEnteredAt: Record<string, number>
+interface-member ProcessJourneyEntityState::property::furthestStageId = optional furthestStageId: string | undefined
+interface-member ProcessJourneyEntityState::property::furthestStageIndex = required furthestStageIndex: number
+interface-member ProcessJourneyEntityState::property::id = required id: string
+interface-member ProcessJourneyEntityState::property::lastEnteredAt = required lastEnteredAt: Record<string, number>
+interface-member ProcessJourneyEntityState::property::regressionCount = required regressionCount: number
+interface-member ProcessJourneyEntityState::property::visitedStageIds = required visitedStageIds: string[]
+interface-member ProcessJourneyEntityState::property::visitsByStage = required visitsByStage: Record<string, number>
+interface-member ProcessJourneyLedger::property::bodyIds = required bodyIds: string[]
+interface-member ProcessJourneyLedger::property::entities = required entities: Record<string, ProcessJourneyEntityState>
+interface-member ProcessJourneyLedger::property::stages = required stages: ProcessJourneyStage[]
+interface-member ProcessJourneyRow::property::conversion = required conversion: number
+interface-member ProcessJourneyRow::property::dropoff = required dropoff: number
+interface-member ProcessJourneyRow::property::entered = required entered: number
+interface-member ProcessJourneyRow::property::fromPrevious = required fromPrevious: number
+interface-member ProcessJourneyRow::property::id = required id: string
+interface-member ProcessJourneyRow::property::label = required label: string
+interface-member ProcessJourneyRow::property::reached = required reached: number
+interface-member ProcessJourneyRow::property::repeatVisits = required repeatVisits: number
+interface-member ProcessJourneyRow::property::total = required total: number
+interface-member ProcessJourneyRow::property::visits = required visits: number
+interface-member ProcessJourneyStage::property::id = required id: string
+interface-member ProcessJourneyStage::property::label = optional label: string | undefined
+interface-member ProcessJourneyUpdateOptions::property::entityId = optional entityId: ((event: ProcessJourneyRegionEvent) => string) | undefined
+interface-member ProcessJourneyUpdateOptions::property::stageId = optional stageId: ((event: ProcessJourneyRegionEvent) => string | undefined) | undefined
+interface-member ProcessMembraneDef::property::bodyStyle = optional bodyStyle: Style | undefined
+interface-member ProcessMembraneDef::property::color = optional color: string | undefined
+interface-member ProcessMembraneDef::property::cost = required cost: number
+interface-member ProcessMembraneDef::property::dampingScale = optional dampingScale: number | undefined
+interface-member ProcessMembraneDef::property::description = optional description: string | undefined
+interface-member ProcessMembraneDef::property::id = required id: string
+interface-member ProcessMembraneDef::property::label = optional label: string | undefined
+interface-member ProcessMembraneDef::property::metadata = optional metadata: unknown
+interface-member ProcessMembraneDef::property::offset = required offset: number
+interface-member ProcessMembraneDef::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessMembraneDef::property::width = optional width: number | undefined
+interface-member ProcessMembraneDef::property::wobble = optional wobble: number | undefined
+interface-member ProcessRegionBaseOptions::property::attributes = optional attributes: ((context: import("../semiotic-physics").StreamPhysicsRegionEffectContext) => Record<string, unknown>) | Record<string, unknown> | undefined
+interface-member ProcessRegionBaseOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ProcessRegionBaseOptions::property::bodyStyle = optional bodyStyle: Style | undefined
+interface-member ProcessRegionBaseOptions::property::collider = optional collider: "boundary" | "solid" | boolean | undefined
+interface-member ProcessRegionBaseOptions::property::colliderThickness = optional colliderThickness: number | undefined
+interface-member ProcessRegionBaseOptions::property::description = optional description: string | undefined
+interface-member ProcessRegionBaseOptions::property::friction = optional friction: number | undefined
+interface-member ProcessRegionBaseOptions::property::height = required height: number
+interface-member ProcessRegionBaseOptions::property::id = required id: string
+interface-member ProcessRegionBaseOptions::property::kind = optional kind: StreamPhysicsRegionKind | undefined
+interface-member ProcessRegionBaseOptions::property::label = optional label: string | undefined
+interface-member ProcessRegionBaseOptions::property::metadata = optional metadata: unknown
+interface-member ProcessRegionBaseOptions::property::onEnter = optional onEnter: ((event: import("../semiotic-physics").StreamPhysicsRegionEvent) => void) | undefined
+interface-member ProcessRegionBaseOptions::property::onExit = optional onExit: ((event: import("../semiotic-physics").StreamPhysicsRegionEvent) => void) | undefined
+interface-member ProcessRegionBaseOptions::property::restitution = optional restitution: number | undefined
+interface-member ProcessRegionBaseOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessRegionBaseOptions::property::width = required width: number
+interface-member ProcessRegionBaseOptions::property::x = required x: number
+interface-member ProcessRegionBaseOptions::property::y = required y: number
+interface-member ProcessStageDef::property::description = optional description: string | undefined
+interface-member ProcessStageDef::property::id = required id: string
+interface-member ProcessStageDef::property::kind = optional kind: string | undefined
+interface-member ProcessStageDef::property::label = optional label: string | undefined
+interface-member ProcessStageDef::property::share = optional share: number | undefined
+interface-member ProcessStageRegionOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ProcessStageRegionOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member ProcessStageRegionOptions::property::insetX = optional insetX: number | undefined
+interface-member ProcessStageRegionOptions::property::insetY = optional insetY: number | undefined
+interface-member ProcessStageRegionOptions::property::metadata = optional metadata: ((stage: ProcessVolumeStageBand) => Record<string, unknown>) | Record<string, unknown> | undefined
+interface-member ProcessStageRegionOptions::property::semanticItem = optional semanticItem: Partial<PhysicsSemanticItem> | false | undefined
+interface-member ProcessVolumeLayout::property::bottomY = required bottomY: number
+interface-member ProcessVolumeLayout::property::boundaryY = required boundaryY: (x: number, "bottom" | side: "top") => number
+interface-member ProcessVolumeLayout::property::centerLeft = required centerLeft: number
+interface-member ProcessVolumeLayout::property::centerRight = required centerRight: number
+interface-member ProcessVolumeLayout::property::colliders = required colliders: PhysicsColliderSpec[]
+interface-member ProcessVolumeLayout::property::height = required height: number
+interface-member ProcessVolumeLayout::property::left = required left: number
+interface-member ProcessVolumeLayout::property::membranes = required membranes: ProcessVolumeMembraneBand[]
+interface-member ProcessVolumeLayout::property::midY = required midY: number
+interface-member ProcessVolumeLayout::property::padX = required padX: number
+interface-member ProcessVolumeLayout::property::padY = required padY: number
+interface-member ProcessVolumeLayout::property::pinchBottom = required pinchBottom: number
+interface-member ProcessVolumeLayout::property::pinchHeight = required pinchHeight: number
+interface-member ProcessVolumeLayout::property::pinchTop = required pinchTop: number
+interface-member ProcessVolumeLayout::property::regionEffects = required regionEffects: StreamPhysicsRegionEffect[]
+interface-member ProcessVolumeLayout::property::right = required right: number
+interface-member ProcessVolumeLayout::property::shape = required shape: ProcessVolumeShape
+interface-member ProcessVolumeLayout::property::stages = required stages: ProcessVolumeStageBand[]
+interface-member ProcessVolumeLayout::property::topY = required topY: number
+interface-member ProcessVolumeLayout::property::width = required width: number
+interface-member ProcessVolumeLayoutOptions::property::centerStageIndex = optional centerStageIndex: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::friction = optional friction: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::height = required height: number
+interface-member ProcessVolumeLayoutOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member ProcessVolumeLayoutOptions::property::includeMembraneRegions = optional includeMembraneRegions: boolean | undefined
+interface-member ProcessVolumeLayoutOptions::property::membraneDampingScale = optional membraneDampingScale: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::membranes = optional membranes: readonly ProcessMembraneDef[] | undefined
+interface-member ProcessVolumeLayoutOptions::property::padX = optional padX: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::padY = optional padY: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::pinchHeightOffset = optional pinchHeightOffset: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::pinchRatio = optional pinchRatio: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::restitution = optional restitution: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::shape = optional shape: ProcessVolumeShape | undefined
+interface-member ProcessVolumeLayoutOptions::property::stages = required stages: readonly ProcessStageDef[]
+interface-member ProcessVolumeLayoutOptions::property::wallThickness = optional wallThickness: number | undefined
+interface-member ProcessVolumeLayoutOptions::property::width = required width: number
+interface-member ProcessVolumeMembraneBand::property::height = required height: number
+interface-member ProcessVolumeMembraneBand::property::width = required width: number
+interface-member ProcessVolumeMembraneBand::property::x = required x: number
+interface-member ProcessVolumeMembraneBand::property::y = required y: number
+interface-member ProcessVolumePolygon::property::id = required id: ProcessVolumePolygonRole
+interface-member ProcessVolumePolygon::property::points = required points: ProcessVolumePoint[]
+interface-member ProcessVolumePolygon::property::role = required role: ProcessVolumePolygonRole
+interface-member ProcessVolumeStageBand::property::description = optional description: string | undefined
+interface-member ProcessVolumeStageBand::property::height = required height: number
+interface-member ProcessVolumeStageBand::property::id = required id: string
+interface-member ProcessVolumeStageBand::property::index = required index: number
+interface-member ProcessVolumeStageBand::property::kind = optional kind: string | undefined
+interface-member ProcessVolumeStageBand::property::label = optional label: string | undefined
+interface-member ProcessVolumeStageBand::property::width = required width: number
+interface-member ProcessVolumeStageBand::property::x = required x: number
+interface-member ProcessVolumeStageBand::property::x0 = required x0: number
+interface-member ProcessVolumeStageBand::property::x1 = required x1: number
+interface-member ProcessVolumeStageBand::property::y = required y: number
+interface-member ProximityProblemOptions::property::maxThreshold = optional maxThreshold: number | undefined
+interface-member ProximityProblemOptions::property::minHops = optional minHops: number | undefined
+interface-member ProximityProblemOptions::property::startThreshold = optional startThreshold: number | undefined
+interface-member ProximityProblemResult::property::minHops = required minHops: number
+interface-member ProximityProblemResult::property::problemIds = required problemIds: Set<string>
+interface-member ProximityProblemResult::property::threshold = required threshold: number
+interface-member RangeUnitSign::property::startFraction = required startFraction: number
+interface-member RectCollideOptions::property::axis = optional axis: "x" | "y" | undefined
+interface-member RectCollideOptions::property::padding = optional padding: number | undefined
+interface-member RectCollideOptions::property::strength = optional strength: number | undefined
+interface-member RegionCountBucket::property::bodyIds = required bodyIds: string[]
+interface-member RegionCountBucket::property::count = required count: number
+interface-member RegionCountBucket::property::id = required id: string
+interface-member RegionCountBucket::property::label = optional label: string | undefined
+interface-member RoundedEnclosureProps::property::className = optional className: string | undefined
+interface-member RoundedEnclosureProps::property::fill = optional fill: string | undefined
+interface-member RoundedEnclosureProps::property::height = required height: number
+interface-member RoundedEnclosureProps::property::keyId = optional keyId: number | string | undefined
+interface-member RoundedEnclosureProps::property::opacity = optional opacity: number | undefined
+interface-member RoundedEnclosureProps::property::radius = optional radius: number | undefined
+interface-member RoundedEnclosureProps::property::stroke = optional stroke: string | undefined
+interface-member RoundedEnclosureProps::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member RoundedEnclosureProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RoundedEnclosureProps::property::width = required width: number
+interface-member RoundedEnclosureProps::property::x = required x: number
+interface-member RoundedEnclosureProps::property::y = required y: number
+interface-member Run::property::count = required count: number
+interface-member Run::property::end = required end: number
+interface-member Run::property::endIndex = required endIndex: number
+interface-member Run::property::start = required start: number
+interface-member Run::property::startIndex = required startIndex: number
+interface-member Run::property::value = required value: V
+interface-member RunOptions::property::coord = optional coord: ((item: T, index: number) => number) | undefined
+interface-member RunOptions::property::equals = optional equals: ((a: V, b: V) => boolean) | undefined
+interface-member RunOptions::property::step = optional step: number | undefined
+interface-member RunOptions::property::truthyOnly = optional truthyOnly: boolean | undefined
+interface-member ScaleArcBandOptions::property::baselineY = required baselineY: number
+interface-member ScaleArcBandOptions::property::ceilingY = required ceilingY: number
+interface-member ScaleArcBandOptions::property::labelRoom = optional labelRoom: number | undefined
+interface-member ScaleArcBandOptions::property::levelCount = required levelCount: number
+interface-member ScaleArcBandResult::property::arcLift = required arcLift: number
+interface-member ScaleArcBandResult::property::levelStep = required levelStep: number
+interface-member SedimentBakeOptions::property::collider = optional collider: boolean | undefined
+interface-member SedimentBakeOptions::property::colliderThickness = optional colliderThickness: number | undefined
+interface-member SedimentBakeOptions::property::friction = optional friction: number | undefined
+interface-member SedimentBakeOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member SedimentBakeOptions::property::restitution = optional restitution: number | undefined
+interface-member SedimentBakeResult::property::colliders = required colliders: PhysicsColliderSpec[]
+interface-member SedimentBakeResult::property::columns = required columns: PhysicsSedimentColumn[]
+interface-member SequenceItem::property::id = required id: string
+interface-member SequencePosition::property::id = required id: string
+interface-member SequencePosition::property::index = required index: number
+interface-member SequencePosition::property::x = required x: number
+interface-member SequencePosition::property::y = required y: number
+interface-member ServiceLevelCaseInfo::property::bodyId = required bodyId: string
+interface-member ServiceLevelCaseInfo::property::completedAt = optional completedAt: number | undefined
+interface-member ServiceLevelCaseInfo::property::deadlineAt = required deadlineAt: number
+interface-member ServiceLevelCaseInfo::property::openedAt = required openedAt: number
+interface-member ServiceLevelCaseInfo::property::protectedAt = optional protectedAt: number | undefined
+interface-member ServiceLevelCaseInfo::property::state = required state: ServiceLevelCaseState
+interface-member ServiceLevelController::property::complete = required complete: (bodyId: string) => boolean
+interface-member ServiceLevelController::property::getCase = required getCase: (bodyId: string) => ServiceLevelCaseInfo | undefined
+interface-member ServiceLevelController::property::getSnapshot = required getSnapshot: () => ServiceLevelSnapshot
+interface-member ServiceLevelController::property::protect = required protect: (bodyId: string) => boolean
+interface-member ServiceLevelControllerOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
+interface-member ServiceLevelControllerOptions::property::completionRegionId = optional completionRegionId: string | undefined
+interface-member ServiceLevelControllerOptions::property::deadlineAccessor = required deadlineAccessor: ((body: PhysicsBodyState) => number | null | undefined) | string
+interface-member ServiceLevelControllerOptions::property::id = optional id: string | undefined
+interface-member ServiceLevelControllerOptions::property::onStateChange = optional onStateChange: ((caseInfo: ServiceLevelCaseInfo) => void) | undefined
+interface-member ServiceLevelSnapshot::property::metricRevision = required metricRevision: number
+interface-member ServiceLevelSnapshot::property::protected = required protected: number
+interface-member ServiceLevelSnapshot::property::resolved = required resolved: number
+interface-member ServiceLevelSnapshot::property::resolvedUnhappy = required resolvedUnhappy: number
+interface-member ServiceLevelSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member ServiceLevelSnapshot::property::total = required total: number
+interface-member ServiceLevelSnapshot::property::unhappy = required unhappy: number
+interface-member ServiceLevelSnapshot::property::waiting = required waiting: number
+interface-member ServiceResourceAssignment::property::assignedAt = required assignedAt: number
+interface-member ServiceResourceAssignment::property::caseBodyId = required caseBodyId: string
+interface-member ServiceResourceAssignment::property::resourceBodyId = required resourceBodyId: string
+interface-member ServiceResourceAssignment::property::resourceId = required resourceId: string
+interface-member ServiceResourceDefinition::property::bodyId = optional bodyId: string | undefined
+interface-member ServiceResourceDefinition::property::home = required home: {x: number; y: number;}
+interface-member ServiceResourceDefinition::property::id = required id: string
+interface-member ServiceResourcePoolController::property::assign = required assign: (caseBodyId: string) => ServiceResourceAssignment | null
+interface-member ServiceResourcePoolController::property::getAssignment = required getAssignment: (caseBodyId: string) => ServiceResourceAssignment | undefined
+interface-member ServiceResourcePoolController::property::getSnapshot = required getSnapshot: () => ServiceResourcePoolSnapshot
+interface-member ServiceResourcePoolController::property::release = required release: (caseBodyId: string) => boolean
+interface-member ServiceResourcePoolOptions::property::assignmentForce = optional assignmentForce: number | undefined
+interface-member ServiceResourcePoolOptions::property::assignmentOffset = optional assignmentOffset: StreamPhysicsRegionVector | undefined
+interface-member ServiceResourcePoolOptions::property::caseAttraction = optional caseAttraction: number | undefined
+interface-member ServiceResourcePoolOptions::property::id = optional id: string | undefined
+interface-member ServiceResourcePoolOptions::property::resources = required resources: readonly ServiceResourceDefinition[]
+interface-member ServiceResourcePoolOptions::property::returnForce = optional returnForce: number | undefined
+interface-member ServiceResourcePoolSnapshot::property::assigned = required assigned: number
+interface-member ServiceResourcePoolSnapshot::property::assignments = required assignments: ServiceResourceAssignment[]
+interface-member ServiceResourcePoolSnapshot::property::available = required available: number
+interface-member ServiceResourcePoolSnapshot::property::metricRevision = required metricRevision: number
+interface-member ServiceResourcePoolSnapshot::property::simulatedAt = required simulatedAt: number
+interface-member ServiceResourcePoolSnapshot::property::total = required total: number
+interface-member SilhouetteSample::property::after = required after: number
+interface-member SilhouetteSample::property::at = required at: number
+interface-member SilhouetteSample::property::before = required before: number
+interface-member SnapshotResidual::property::id = required id: string
+interface-member SnapshotResidual::property::value = required value: number
+interface-member SpanArcPathOptions::property::footLift = optional footLift: number | undefined
+interface-member SpanInterval::property::a = required a: number
+interface-member SpanInterval::property::b = required b: number
+interface-member SpanInterval::property::id = required id: string
+interface-member SpawnFromTokensOptions::property::datum = optional datum: ((token: VisualToken<D>, index: number) => unknown) | undefined
+interface-member SpawnFromTokensOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member SpawnFromTokensOptions::property::jitter = optional jitter: number | undefined | {x?: number; y?: number;}
+interface-member SpawnFromTokensOptions::property::mass = optional mass: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::radius = optional radius: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::seed = optional seed: number | undefined
+interface-member SpawnFromTokensOptions::property::shape = optional shape: ((token: VisualToken<D>, index: number) => PhysicsBodyShape) | PhysicsBodyShape | undefined
+interface-member SpawnFromTokensOptions::property::spawnAt = optional spawnAt: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::vx = optional vx: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::vy = optional vy: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::x = optional x: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SpawnFromTokensOptions::property::y = optional y: ((token: VisualToken<D>, index: number) => number) | number | undefined
+interface-member SuggestTokenEncodingInput::property::audience = optional audience: "expert" | "general-public" | "internal" | undefined
+interface-member SuggestTokenEncodingInput::property::availableSpace = optional availableSpace: "large" | "medium" | "small" | undefined
+interface-member SuggestTokenEncodingInput::property::concreteEntity = optional concreteEntity: string | undefined
+interface-member SuggestTokenEncodingInput::property::dataType = optional dataType: "category" | "count" | "distribution" | "measure" | "probability" | "risk" | undefined
+interface-member SuggestTokenEncodingInput::property::precisionNeed = optional precisionNeed: "high" | "low" | "medium" | undefined
+interface-member SuggestTokenEncodingInput::property::taskIntent = required taskIntent: TokenTaskIntent
+interface-member TokenDiagnostic::property::code = required code: TokenDiagnosticCode
+interface-member TokenDiagnostic::property::message = required message: string
+interface-member TokenDiagnostic::property::severity = required severity: "info" | "warning"
+interface-member TokenDiagnosticsContext::property::maxRecommendedTokens = optional maxRecommendedTokens: number | undefined
+interface-member TokenDiagnosticsContext::property::visibleTokens = optional visibleTokens: number | undefined
+interface-member TokenEncoding::property::countStrategy = required countStrategy: TokenCountStrategy
+interface-member TokenEncoding::property::denominator = optional denominator: number | undefined
+interface-member TokenEncoding::property::icon = optional icon: string | undefined
+interface-member TokenEncoding::property::labelPolicy = optional labelPolicy: TokenLabelPolicy | undefined
+interface-member TokenEncoding::property::layout = optional layout: TokenLayout | undefined
+interface-member TokenEncoding::property::maxTokens = optional maxTokens: number | undefined
+interface-member TokenEncoding::property::minFraction = optional minFraction: number | undefined
+interface-member TokenEncoding::property::numerator = optional numerator: number | undefined
+interface-member TokenEncoding::property::seed = optional seed: number | undefined
+interface-member TokenEncoding::property::token = optional token: string | undefined
+interface-member TokenEncoding::property::tokenCount = optional tokenCount: number | undefined
+interface-member TokenEncoding::property::tokenSemantics = required tokenSemantics: TokenSemantics
+interface-member TokenEncoding::property::tokenType = required tokenType: TokenType
+interface-member TokenEncoding::property::unit = optional unit: number | undefined
+interface-member TokenEncoding::property::unitMeaning = optional unitMeaning: string | undefined
+interface-member TokenEncoding::property::unitValue = optional unitValue: number | undefined
+interface-member TokenEncodingSuggestion::property::alternatives = required alternatives: string[]
+interface-member TokenEncodingSuggestion::property::rationale = required rationale: string
+interface-member TokenEncodingSuggestion::property::recommendedEncoding = required recommendedEncoding: string
+interface-member TokenEncodingSuggestion::property::tokenEncoding = optional tokenEncoding: TokenEncoding | undefined
+interface-member TokenEncodingSuggestion::property::warnings = required warnings: TokenDiagnostic[]
+interface-member TokenGeneratorInput::property::data = optional data: readonly D[] | undefined
+interface-member TokenGeneratorInput::property::denominator = optional denominator: number | undefined
+interface-member TokenGeneratorInput::property::numerator = optional numerator: number | undefined
+interface-member TokenGeneratorInput::property::rangeValue = optional rangeValue: number | undefined
+interface-member TokenGeneratorInput::property::samples = optional samples: readonly number[] | undefined
+interface-member TokenGeneratorInput::property::value = optional value: number | undefined
+interface-member TokenGeneratorInput::property::valueAccessor = optional valueAccessor: ((d: D) => number) | keyof D | undefined
+interface-member TokenGridOptions::property::anchor = optional anchor: [number, number] | undefined
+interface-member TokenGridOptions::property::cellHeight = optional cellHeight: number | undefined
+interface-member TokenGridOptions::property::cellWidth = optional cellWidth: number | undefined
+interface-member TokenGridOptions::property::columnDirection = optional columnDirection: "left" | "right" | undefined
+interface-member TokenGridOptions::property::columns = optional columns: number | undefined
+interface-member TokenGridOptions::property::flow = optional flow: "column" | "row" | undefined
+interface-member TokenGridOptions::property::gutter = optional gutter: number | undefined
+interface-member TokenGridOptions::property::rowDirection = optional rowDirection: "down" | "up" | undefined
+interface-member TokenGridOptions::property::rows = optional rows: number | undefined
+interface-member TokenGridOptions::property::x = optional x: number | undefined
+interface-member TokenGridOptions::property::y = optional y: number | undefined
+interface-member TokenLayerConfig::property::encoding = optional encoding: TokenEncoding | undefined
+interface-member TokenLayerConfig::property::input = required input: TokenLayerInput<D>
+interface-member TokenLayerConfig::property::options = optional options: TokenLayerOptions<D> | undefined
+interface-member TokenLayerOptions::property::accent = optional accent: TokenLayerValue<string, D> | undefined
+interface-member TokenLayerOptions::property::accessibility = optional accessibility: TokenLayerValue<undefined | {label?: string; tableFields?: SceneDatum | import("../stream/networkColorAccessors").Datum[];}, D>
+interface-member TokenLayerOptions::property::accessibleDatum = optional accessibleDatum: TokenLayerValue<SceneDatum | import("../stream/networkColorAccessors").Datum[] | undefined, D>
+interface-member TokenLayerOptions::property::color = optional color: TokenLayerValue<string, D> | undefined
+interface-member TokenLayerOptions::property::datum = optional datum: TokenLayerValue<SceneDatum, D> | undefined
+interface-member TokenLayerOptions::property::fractionDirection = optional fractionDirection: TokenLayerValue<"horizontal" | "vertical", D> | undefined
+interface-member TokenLayerOptions::property::ghostColor = optional ghostColor: TokenLayerValue<string | undefined, D>
+interface-member TokenLayerOptions::property::glyph = optional glyph: TokenLayerValue<GlyphDef | undefined, D>
+interface-member TokenLayerOptions::property::height = optional height: number | undefined
+interface-member TokenLayerOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member TokenLayerOptions::property::inactiveColor = optional inactiveColor: TokenLayerValue<string, D> | undefined
+interface-member TokenLayerOptions::property::include = optional include: ((token: PositionedToken<D>) => boolean) | undefined
+interface-member TokenLayerOptions::property::includeRange = optional includeRange: boolean | undefined
+interface-member TokenLayerOptions::property::layout = optional layout: TokenLayout | undefined
+interface-member TokenLayerOptions::property::pointId = optional pointId: TokenLayerValue<string | undefined, D>
+interface-member TokenLayerOptions::property::positionToken = optional positionToken: ((token: VisualToken<D>, index: number, tokens: readonly VisualToken<D>[]) => TokenPosition) | undefined
+interface-member TokenLayerOptions::property::radius = optional radius: TokenLayerValue<number, D> | undefined
+interface-member TokenLayerOptions::property::rangeColor = optional rangeColor: TokenLayerValue<string, D> | undefined
+interface-member TokenLayerOptions::property::rotation = optional rotation: TokenLayerValue<number | undefined, D>
+interface-member TokenLayerOptions::property::style = optional style: TokenLayerValue<Style | undefined, D>
+interface-member TokenLayerOptions::property::symbolPath = optional symbolPath: TokenLayerValue<string | undefined, D>
+interface-member TokenLayerOptions::property::symbolType = optional symbolType: TokenLayerValue<import("../semiotic-recipes-core").NetworkSymbolName, D> | undefined
+interface-member TokenLayerOptions::property::tokenSize = optional tokenSize: TokenLayerValue<number, D> | undefined
+interface-member TokenLayerOptions::property::valueToX = optional valueToX: ((value: number, token: VisualToken<D>) => number) | undefined
+interface-member TokenLayerOptions::property::valueToY = optional valueToY: ((value: number, token: VisualToken<D>) => number) | undefined
+interface-member TokenLayerOptions::property::width = optional width: number | undefined
+interface-member TokenLayerResult::property::nodes = required nodes: SceneNode[]
+interface-member TokenLayerResult::property::positionedTokens = required positionedTokens: PositionedToken<D>[]
+interface-member TokenLayerResult::property::tokenSet = required tokenSet: TokenSet<D>
+interface-member TokenPosition::property::column = optional column: number | undefined
+interface-member TokenPosition::property::row = optional row: number | undefined
+interface-member TokenPosition::property::x = required x: number
+interface-member TokenPosition::property::y = required y: number
+interface-member TokenSet::property::denominator = optional denominator: number | undefined
+interface-member TokenSet::property::diagnostics = required diagnostics: TokenDiagnostic[]
+interface-member TokenSet::property::encoding = required encoding: TokenEncoding
+interface-member TokenSet::property::numerator = optional numerator: number | undefined
+interface-member TokenSet::property::overflow = required overflow: boolean
+interface-member TokenSet::property::rangeTokens = optional rangeTokens: VisualToken<D>[] | undefined
+interface-member TokenSet::property::rangeTotal = optional rangeTotal: number | undefined
+interface-member TokenSet::property::shown = required shown: number
+interface-member TokenSet::property::tokens = required tokens: VisualToken<D>[]
+interface-member TokenSet::property::total = required total: number
+interface-member TokenSet::property::unitValue = optional unitValue: number | undefined
+interface-member UnitSign::property::end = required end: number
+interface-member UnitSign::property::fraction = required fraction: number
+interface-member UnitSign::property::index = required index: number
+interface-member UnitSign::property::start = required start: number
+interface-member UnitSign::property::value = required value: number
+interface-member UnitizeOptions::property::maxUnits = optional maxUnits: number | undefined
+interface-member UnitizeOptions::property::minFraction = optional minFraction: number | undefined
+interface-member UnitizeOptions::property::unit = required unit: number
+interface-member UnitizeRangeResult::property::rangeTotal = required rangeTotal: number
+interface-member UnitizeRangeResult::property::rangeUnits = required rangeUnits: RangeUnitSign[]
+interface-member UnitizeResult::property::overflow = required overflow: boolean
+interface-member UnitizeResult::property::shown = required shown: number
+interface-member UnitizeResult::property::total = required total: number
+interface-member UnitizeResult::property::unit = required unit: number
+interface-member UnitizeResult::property::units = required units: UnitSign[]
+interface-member VisualToken::property::countStrategy = required countStrategy: TokenCountStrategy
+interface-member VisualToken::property::datum = optional datum: D | undefined
+interface-member VisualToken::property::end = required end: number
+interface-member VisualToken::property::fraction = required fraction: number
+interface-member VisualToken::property::highlighted = optional highlighted: boolean | undefined
+interface-member VisualToken::property::index = required index: number
+interface-member VisualToken::property::quantile = optional quantile: number | undefined
+interface-member VisualToken::property::range = optional range: "scenario" | undefined
+interface-member VisualToken::property::sample = optional sample: number | undefined
+interface-member VisualToken::property::start = required start: number
+interface-member VisualToken::property::startFraction = required startFraction: number
+interface-member VisualToken::property::tokenSemantics = required tokenSemantics: TokenSemantics
+interface-member VisualToken::property::tokenType = required tokenType: TokenType
+interface-member VisualToken::property::unitMeaning = optional unitMeaning: string | undefined
+interface-member VisualToken::property::unitValue = optional unitValue: number | undefined
+interface-member VisualToken::property::value = required value: number
+interface-member WaffleConfig::property::categoryAccessor = optional categoryAccessor: ((d: Datum) => string) | string | undefined
+interface-member WaffleConfig::property::categoryOrder = optional categoryOrder: string[] | undefined
+interface-member WaffleConfig::property::columns = optional columns: number | undefined
+interface-member WaffleConfig::property::gutter = optional gutter: number | undefined
+interface-member WaffleConfig::property::rows = optional rows: number | undefined
+interface-member WaffleConfig::property::valueAccessor = optional valueAccessor: ((d: Datum) => number) | string | undefined
+interface-member WeightedOrderRelation::property::source = required source: T
+interface-member WeightedOrderRelation::property::target = required target: T
+interface-member WeightedOrderRelation::property::weight = optional weight: number | undefined
+interface-member WordTrailsConfig::property::collisionPadding = optional collisionPadding: number | undefined
+interface-member WordTrailsConfig::property::columnAccessor = required columnAccessor: ((d: Datum) => string) | string
+interface-member WordTrailsConfig::property::columnColor = optional columnColor: ((column: string) => string | null | undefined) | undefined
+interface-member WordTrailsConfig::property::columnGutter = optional columnGutter: number | undefined
+interface-member WordTrailsConfig::property::columnOrder = optional columnOrder: string[] | undefined
+interface-member WordTrailsConfig::property::maxFontSize = optional maxFontSize: number | undefined
+interface-member WordTrailsConfig::property::minFontSize = optional minFontSize: number | undefined
+interface-member WordTrailsConfig::property::packingDensity = optional packingDensity: number | undefined
+interface-member WordTrailsConfig::property::repeatWords = optional repeatWords: boolean | undefined
+interface-member WordTrailsConfig::property::rotate = optional rotate: number | undefined
+interface-member WordTrailsConfig::property::scaleToFit = optional scaleToFit: boolean | undefined
+interface-member WordTrailsConfig::property::segmentAccessor = required segmentAccessor: ((d: Datum) => number) | string
+interface-member WordTrailsConfig::property::segmentAxisLabel = optional segmentAxisLabel: string | undefined
+interface-member WordTrailsConfig::property::segmentDomain = optional segmentDomain: [number, number] | undefined
+interface-member WordTrailsConfig::property::segmentTickCount = optional segmentTickCount: number | undefined
+interface-member WordTrailsConfig::property::segmentTickFormat = optional segmentTickFormat: ((v: number) => string) | undefined
+interface-member WordTrailsConfig::property::showColumnLabels = optional showColumnLabels: boolean | undefined
+interface-member WordTrailsConfig::property::showSegmentAxis = optional showSegmentAxis: boolean | undefined
+interface-member WordTrailsConfig::property::textAccessor = required textAccessor: ((d: Datum) => string) | string
+interface-member WordTrailsConfig::property::weightAccessor = required weightAccessor: ((d: Datum) => number) | string
+interface-member WordTrailsConfig::property::weightOpacity = optional weightOpacity: boolean | undefined
+interface-member WordTrailsConfig::property::wordColor = optional wordColor: ((info: WordTrailsWordInfo) => string | null | undefined) | undefined
+interface-member WordTrailsConfig::property::wordOpacity = optional wordOpacity: ((info: WordTrailsWordInfo) => number) | undefined
+interface-member WordTrailsProgressiveRevealOptions::property::combineWeightOpacity = optional combineWeightOpacity: boolean | undefined
+interface-member WordTrailsProgressiveRevealOptions::property::currentOpacity = optional currentOpacity: number | undefined
+interface-member WordTrailsProgressiveRevealOptions::property::currentSegment = required currentSegment: number
+interface-member WordTrailsProgressiveRevealOptions::property::futureOpacity = optional futureOpacity: number | undefined
+interface-member WordTrailsProgressiveRevealOptions::property::oldestOpacity = optional oldestOpacity: number | undefined
+interface-member WordTrailsProgressiveRevealOptions::property::segmentDomain = required segmentDomain: readonly [number, number]
+interface-member WordTrailsWordInfo::property::column = required column: string
+interface-member WordTrailsWordInfo::property::columnIndex = required columnIndex: number
+interface-member WordTrailsWordInfo::property::dataIndex = required dataIndex: number
+interface-member WordTrailsWordInfo::property::datum = required datum: Datum
+interface-member WordTrailsWordInfo::property::resolvedColumnColor = required resolvedColumnColor: string
+interface-member WordTrailsWordInfo::property::segment = required segment: number
+interface-member WordTrailsWordInfo::property::weight = required weight: number
+interface-member WordTrailsWordInfo::property::word = required word: string
+type AllocatedCellsFor<T extends CellWeight = CellWeight> = AllocatedCells & T
 type AnnotationCohesion = "blended" | "layer"
-type AutoPlaceAnnotations = boolean | AutoPlaceAnnotationsConfig
+type AutoPlaceAnnotations = AutoPlaceAnnotationsConfig | boolean
 type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
-type AxisOrient = "bottom" | "top" | "left" | "right"
-type BandScale<T = string | number> = ((value: T) => number | undefined) & {
-    bandwidth?: () => number;
-}
-type CalloutConnector = "straight" | "elbow" | "curve"
+type AxisOrient = "bottom" | "left" | "right" | "top"
+type BandScale<T = string | number> = ((value: T) => number | undefined) & {bandwidth?: () => number;}
+type CalloutConnector = "curve" | "elbow" | "straight"
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
-type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
-type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
-type DemandForecastRow = {
-    t: number;
-    a: number;
-    b: number;
-    demandMw: number;
-    forecastMw: number;
-    errorMw: number;
-    ba: string;
-}
+type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
+type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type DemandForecastRow = {t: number; a: number; b: number; demandMw: number; forecastMw: number; errorMw: number; ba: string;}
 type EdgeKeyFn<T> = (edge: T) => string
-type EdgeOrientation = "vertical" | "horizontal"
-type FuelStackRow = {
-    t: number;
-    fuel: GridFuelKey;
-    fuelLabel: string;
-    mw: number;
-    ba: string;
-}
-type GeographicDotGridAccessor = string | ((datum: GeographicDotGridDatum, index: number) => unknown)
-type GeographicDotGridShape = "circle" | "square" | "hexagon"
-type GeographicGridShape = "circle" | "square" | "hexagon"
-type GeographicGridSource = "auto" | "areas" | "points"
-type GridEventWindow = {
-    id: string;
-    /** Inclusive start epoch ms. */
-    start: number;
-    /** Inclusive end epoch ms. */
-    end: number;
-    label: string;
-    /** Optional longer note for callouts. */
-    note?: string;
-    /** "heat-wave" | "outage" | "demand-spike" | open string. */
-    kind?: string;
-    /** ISO 8601 duration or ms; default "P7D". */
-    ttlHint?: string | number;
-    y?: number;
-    /** Data y for y-threshold style notes. */
-    value?: number;
-}
+type EdgeOrientation = "horizontal" | "vertical"
+type FuelStackRow = {t: number; fuel: GridFuelKey; fuelLabel: string; mw: number; ba: string;}
+type GeographicDotGridAccessor = ((datum: GeographicDotGridDatum, index: number) => unknown) | string
+type GeographicDotGridShape = "circle" | "hexagon" | "square"
+type GeographicGridShape = "circle" | "hexagon" | "square"
+type GeographicGridSource = "areas" | "auto" | "points"
+type GridEventWindow = {id: string; /** Inclusive start epoch ms. */ start: number; /** Inclusive end epoch ms. */ end: number; label: string; /** Optional longer note for callouts. */ note?: string; /** "heat-wave" | "outage" | "demand-spike" | open string. */ kind?: string; /** ISO 8601 duration or ms; default "P7D". */ ttlHint?: number | string; y?: number; /** Data y for y-threshold style notes. */ value?: number;}
 type GridFuelKey = (typeof GRID_FUEL_KEYS)[number]
-type GridHour = {
-    t: number;
-    ba: string;
-    demandMw: number;
-    forecastMw?: number;
-    netGenMw: number;
-    interchangeMw?: number;
-    fuels: Partial<Record<GridFuelKey, number>>;
-}
-type HighlightMatch = {
-    field: string;
-    value: unknown;
-} | ReadonlyArray<{
-    field: string;
-    value: unknown;
-}>
-type HullPadding = number | {
-    x?: number;
-    y?: number;
-}
-type IsometricTerrainKind = "land" | "ocean" | "forest" | "grassland" | "cropland" | "wetland" | "urban" | "scrub" | "bare" | "snow"
-type LandmarkKind = "city" | "culture" | "monument" | "faith" | "nature" | "knowledge" | "defense" | "arena" | "transport"
-type LineageLod = "full" | "compact" | "icon" | "dot"
-type MobileAnnotationStrategyMode = "plot" | "callout-list" | "hybrid"
-type MobileChartFamily = "line" | "area" | "ordinal" | "scatter" | "network" | "geo" | "small-multiple"
+type GridHour = {t: number; ba: string; demandMw: number; forecastMw?: number; netGenMw: number; interchangeMw?: number; fuels: Partial<Record<GridFuelKey, number>>;}
+type HighlightMatch = ReadonlyArray<{field: string; value: unknown;}> | {field: string; value: unknown;}
+type HullPadding = number | {x?: number; y?: number;}
+type IsometricTerrainKind = "bare" | "cropland" | "forest" | "grassland" | "land" | "ocean" | "scrub" | "snow" | "urban" | "wetland"
+type LandmarkKind = "arena" | "city" | "culture" | "defense" | "faith" | "knowledge" | "monument" | "nature" | "transport"
+type LineageLod = "compact" | "dot" | "full" | "icon"
+type MobileAnnotationStrategyMode = "callout-list" | "hybrid" | "plot"
+type MobileChartFamily = "area" | "geo" | "line" | "network" | "ordinal" | "scatter" | "small-multiple"
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
-type NetworkSymbolName = "circle" | "square" | "triangle" | "diamond" | "star" | "cross" | "wye" | "chevron"
+type NetworkSymbolName = "chevron" | "circle" | "cross" | "diamond" | "square" | "star" | "triangle" | "wye"
 type NumericScale = (value: number) => number
-type OperatingPointSummary = {
-    t: number;
-    ba: string;
-    demandMw: number;
-    forecastMw: number | null;
-    forecastErrorMw: number | null;
-    netGenMw: number;
-    reserveMarginPct: number;
-    topFuel: GridFuelKey | null;
-    topFuelShare: number;
-    topFuelMw: number;
-    fuelShares: Partial<Record<GridFuelKey, number>>;
-}
+type OperatingPointSummary = {t: number; ba: string; demandMw: number; forecastMw: null | number; forecastErrorMw: null | number; netGenMw: number; reserveMarginPct: number; topFuel: GridFuelKey | null; topFuelShare: number; topFuelMw: number; fuelShares: Partial<Record<GridFuelKey, number>>;}
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult
-type PhysicsReferenceBandSelector = "min" | "median" | "max" | number
-type PhysicsReferenceSampleGrid = readonly number[] | {
-    start: number;
-    end: number;
-    step: number;
-}
-type PhysicsTraceAccessor<TSample> = string | ((sample: TSample, index: number, traceId: string) => unknown)
-type PhysicsTraceComparisonStatus = "below" | "inside" | "above" | "unobserved"
-type PhysicsTraceInterpolation = "step" | "linear"
-type PhysicsTraceOutsideDomain = "omit" | "clamp"
+type PhysicsReferenceBandSelector = "max" | "median" | "min" | number
+type PhysicsReferenceSampleGrid = readonly number[] | {start: number; end: number; step: number;}
+type PhysicsTraceAccessor<TSample> = ((sample: TSample, index: number, traceId: string) => unknown) | string
+type PhysicsTraceComparisonStatus = "above" | "below" | "inside" | "unobserved"
+type PhysicsTraceInterpolation = "linear" | "step"
+type PhysicsTraceOutsideDomain = "clamp" | "omit"
 type ProcessVolumePoint = [x: number, y: number]
-type ProcessVolumePolygonRole = "volume" | "incoming" | "center" | "outgoing"
-type ProcessVolumeShape = "lane" | "bowtie" | "funnel"
+type ProcessVolumePolygonRole = "center" | "incoming" | "outgoing" | "volume"
+type ProcessVolumeShape = "bowtie" | "funnel" | "lane"
 type RegionCountMap = Record<string, RegionCountBucket>
-type ReserveLevels = {
-    /** Margin below this % is "tight" / danger. Default 5. */
-    tight?: number;
-    /** Margin below this % is "watch" / warning. Default 12. */
-    watch?: number;
-    /** Margin at or above this % is comfortable / success. Default 20. */
-    comfortable?: number;
-}
-type ReserveSnapshot = {
-    t: number;
-    ba: string;
-    /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */
-    reserveMarginPct: number;
-    netLoadMw: number;
-    demandMw: number;
-    netGenMw: number;
-}
+type ReserveLevels = {/** Margin below this % is "tight" / danger. Default 5. */ tight?: number; /** Margin below this % is "watch" / warning. Default 12. */ watch?: number; /** Margin at or above this % is comfortable / success. Default 20. */ comfortable?: number;}
+type ReserveSnapshot = {t: number; ba: string; /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */ reserveMarginPct: number; netLoadMw: number; demandMw: number; netGenMw: number;}
 type RingArcOptions = PolarOptions
-type ServiceLevelCaseState = "waiting" | "protected" | "unhappy" | "resolved" | "resolved-unhappy"
-type TokenCapabilityIntent = "compare-categories" | "distribution" | "part-to-whole" | "rank" | "outlier-detection"
-type TokenCountStrategy = "actual" | "unitized" | "fixed-denominator" | "quantile" | "sample" | "posterior-sample" | "random-sample"
-type TokenDiagnosticCode = "TOKEN_SEMANTICS_UNCLEAR" | "MISSING_COUNT_STRATEGY" | "ICON_ONLY_LABELS" | "TOO_MANY_VISIBLE_TOKENS" | "DECORATIVE_PICTOGRAPHS" | "TOKEN_STRATEGY_MISMATCH" | "MISSING_UNIT_VALUE" | "MISSING_UNIT_MEANING"
-type TokenLabelPolicy = "text-plus-token" | "text-plus-icon" | "text-only" | "token-only" | "icon-only" | "none"
-type TokenLayerInput<D> = number | readonly number[] | TokenGeneratorInput<D> | TokenSet<D>
-type TokenLayerValue<T, D> = T | ((token: PositionedToken<D>) => T | undefined)
-type TokenLayout = "row" | "column" | "grid" | "stack" | "bar-segment" | "waffle" | "beeswarm" | "dotplot" | "quantile-strip" | "small-multiple"
-type TokenSemantics = "observed-unit" | "unitized-measure" | "possible-outcome" | "posterior-sample" | "hypothetical-case" | "risk-case" | "topic-anchor" | "decorative"
-type TokenTaskIntent = "precise-comparison" | "frequency-reasoning" | "probability-estimation" | "risk-communication" | "memory" | "editorial-engagement" | "public-explanation" | "support-decision" | "measure" | "estimate probability" | "understand risk" | "remember" | "decide"
-type TokenType = "dot" | "icon" | "glyph"
+type ServiceLevelCaseState = "protected" | "resolved" | "resolved-unhappy" | "unhappy" | "waiting"
+type TokenCapabilityIntent = "compare-categories" | "distribution" | "outlier-detection" | "part-to-whole" | "rank"
+type TokenCountStrategy = "actual" | "fixed-denominator" | "posterior-sample" | "quantile" | "random-sample" | "sample" | "unitized"
+type TokenDiagnosticCode = "DECORATIVE_PICTOGRAPHS" | "ICON_ONLY_LABELS" | "MISSING_COUNT_STRATEGY" | "MISSING_UNIT_MEANING" | "MISSING_UNIT_VALUE" | "TOKEN_SEMANTICS_UNCLEAR" | "TOKEN_STRATEGY_MISMATCH" | "TOO_MANY_VISIBLE_TOKENS"
+type TokenLabelPolicy = "icon-only" | "none" | "text-only" | "text-plus-icon" | "text-plus-token" | "token-only"
+type TokenLayerInput<D> = TokenGeneratorInput<D> | TokenSet<D> | number | readonly number[]
+type TokenLayerValue<T, D> = ((token: PositionedToken<D>) => T | undefined) | T
+type TokenLayout = "bar-segment" | "beeswarm" | "column" | "dotplot" | "grid" | "quantile-strip" | "row" | "small-multiple" | "stack" | "waffle"
+type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "possible-outcome" | "posterior-sample" | "risk-case" | "topic-anchor" | "unitized-measure"
+type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
+type TokenType = "dot" | "glyph" | "icon"
 ```

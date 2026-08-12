@@ -5,10 +5,10 @@ _Edit dist/semiotic-controls.d.ts's sources, then re-run `npm run docs:api-surfa
 
 ```
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
-function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
-function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
-function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, }: SentenceFilterProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
@@ -29,26 +29,213 @@ interface MobileStandardLegendControls
 interface MobileStandardZoomControls
 interface SentenceFilterBaseDefinition<T = SentenceFilterValue>
 interface SentenceFilterChangeMeta
-interface SentenceFilterMultiSelectDefinition
-interface SentenceFilterNumberDefinition
+interface SentenceFilterMultiSelectDefinition extends SentenceFilterBaseDefinition
+interface SentenceFilterNumberDefinition extends SentenceFilterBaseDefinition<number>
 interface SentenceFilterOption<T = SentenceFilterPrimitive>
 interface SentenceFilterProps
-interface SentenceFilterRangeDefinition
+interface SentenceFilterRangeDefinition extends SentenceFilterBaseDefinition<[number, number]>
 interface SentenceFilterRenderContext
-interface SentenceFilterSelectDefinition
-interface SentenceFilterTextDefinition
-interface SentenceFilterToggleDefinition
+interface SentenceFilterSelectDefinition extends SentenceFilterBaseDefinition
+interface SentenceFilterTextDefinition extends SentenceFilterBaseDefinition<string>
+interface SentenceFilterToggleDefinition extends SentenceFilterBaseDefinition<boolean>
 interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
 interface VisualizationControlDefinition
-type ControlAuditStatus = "pass" | "warn" | "fail"
-type ControlInputSource = "pointer" | "keyboard" | "programmatic"
+interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
+interface-member CircularBrushProps::property::arcFill = optional arcFill: string | undefined
+interface-member CircularBrushProps::property::className = optional className: string | undefined
+interface-member CircularBrushProps::property::formatValue = optional formatValue: ((value: number) => string) | undefined
+interface-member CircularBrushProps::property::height = optional height: number | undefined
+interface-member CircularBrushProps::property::innerRadius = optional innerRadius: number | undefined
+interface-member CircularBrushProps::property::label = optional label: string | undefined
+interface-member CircularBrushProps::property::largeStep = optional largeStep: number | undefined
+interface-member CircularBrushProps::property::onChange = required onChange: (((current: CircularBrushValue) => CircularBrushValue) | next: CircularBrushValue) => void
+interface-member CircularBrushProps::property::period = optional period: number | undefined
+interface-member CircularBrushProps::property::radius = optional radius: number | undefined
+interface-member CircularBrushProps::property::step = optional step: number | undefined
+interface-member CircularBrushProps::property::stroke = optional stroke: string | undefined
+interface-member CircularBrushProps::property::style = optional style: React.CSSProperties | undefined
+interface-member CircularBrushProps::property::value = required value: CircularBrushValue
+interface-member CircularBrushProps::property::width = optional width: number | undefined
+interface-member CircularBrushValue::property::end = required end: number
+interface-member CircularBrushValue::property::start = required start: number
+interface-member ControlAuditFinding::property::controlId = optional controlId: string | undefined
+interface-member ControlAuditFinding::property::id = required id: string
+interface-member ControlAuditFinding::property::message = required message: string
+interface-member ControlAuditFinding::property::remediation = optional remediation: string | undefined
+interface-member ControlAuditFinding::property::status = required status: ControlAuditStatus
+interface-member ControlAuditResult::property::findings = required findings: ControlAuditFinding[]
+interface-member ControlAuditResult::property::ok = required ok: boolean
+interface-member ControlObservation::property::chartId = optional chartId: string | undefined
+interface-member ControlObservation::property::chartType = required chartType: string
+interface-member ControlObservation::property::controlId = optional controlId: string | undefined
+interface-member ControlObservation::property::controlType = required controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
+interface-member ControlObservation::property::source = optional source: ControlInputSource | undefined
+interface-member ControlObservation::property::timestamp = required timestamp: number
+interface-member ControlObservation::property::type = required type: ControlObservationPhase
+interface-member ControlObservation::property::value = required value: VisualizationControlValue
+interface-member ControlObservationAdapterOptions::property::chartId = optional chartId: string | undefined
+interface-member ControlObservationAdapterOptions::property::chartType = optional chartType: string | undefined
+interface-member ControlObservationAdapterOptions::property::controlId = optional controlId: string | undefined
+interface-member ControlObservationAdapterOptions::property::controlType = required controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
+interface-member ControlObservationAdapterOptions::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member DirectManipulationControlProps::property::chartId = optional chartId: string | undefined
+interface-member DirectManipulationControlProps::property::chartType = optional chartType: string | undefined
+interface-member DirectManipulationControlProps::property::className = optional className: string | undefined
+interface-member DirectManipulationControlProps::property::controlId = optional controlId: string | undefined
+interface-member DirectManipulationControlProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
+interface-member DirectManipulationControlProps::property::disabled = optional disabled: boolean | undefined
+interface-member DirectManipulationControlProps::property::fill = optional fill: string | undefined
+interface-member DirectManipulationControlProps::property::label = required label: string
+interface-member DirectManipulationControlProps::property::labelClassName = optional labelClassName: string | undefined
+interface-member DirectManipulationControlProps::property::labelDx = optional labelDx: number | undefined
+interface-member DirectManipulationControlProps::property::labelDy = optional labelDy: number | undefined
+interface-member DirectManipulationControlProps::property::labelText = optional labelText: React.ReactNode
+interface-member DirectManipulationControlProps::property::largeStep = optional largeStep: number | undefined
+interface-member DirectManipulationControlProps::property::max = required max: number
+interface-member DirectManipulationControlProps::property::min = required min: number
+interface-member DirectManipulationControlProps::property::onChange = required onChange: (value: number) => void
+interface-member DirectManipulationControlProps::property::onChangeEnd = optional onChangeEnd: ((value: number) => void) | undefined
+interface-member DirectManipulationControlProps::property::onChangeStart = optional onChangeStart: ((value: number) => void) | undefined
+interface-member DirectManipulationControlProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member DirectManipulationControlProps::property::pointerToValue = required pointerToValue: (event: React.PointerEvent<SVGGElement>) => number | null | undefined
+interface-member DirectManipulationControlProps::property::radius = optional radius: number | undefined
+interface-member DirectManipulationControlProps::property::step = optional step: number | undefined
+interface-member DirectManipulationControlProps::property::stroke = optional stroke: string | undefined
+interface-member DirectManipulationControlProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member DirectManipulationControlProps::property::value = required value: number
+interface-member DirectManipulationControlProps::property::valueText = optional valueText: string | undefined
+interface-member DirectManipulationControlProps::property::x = required x: number
+interface-member DirectManipulationControlProps::property::y = required y: number
+interface-member MobileStandardBrushControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardBrushControls::property::domain = optional domain: [number, number] | undefined
+interface-member MobileStandardBrushControls::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
+interface-member MobileStandardBrushControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardBrushControls::property::onChange = optional onChange: ((value: [number, number]) => void) | undefined
+interface-member MobileStandardBrushControls::property::onClear = optional onClear: (() => void) | undefined
+interface-member MobileStandardBrushControls::property::step = optional step: number | undefined
+interface-member MobileStandardBrushControls::property::value = optional value: [number, number] | undefined
+interface-member MobileStandardControlLegendItem::property::active = optional active: boolean | undefined
+interface-member MobileStandardControlLegendItem::property::color = optional color: string | undefined
+interface-member MobileStandardControlLegendItem::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardControlLegendItem::property::id = required id: string
+interface-member MobileStandardControlLegendItem::property::label = optional label: React.ReactNode
+interface-member MobileStandardControlsProps::property::ariaLabel = optional ariaLabel: string | undefined
+interface-member MobileStandardControlsProps::property::brush = optional brush: MobileStandardBrushControls | undefined
+interface-member MobileStandardControlsProps::property::className = optional className: string | undefined
+interface-member MobileStandardControlsProps::property::compact = optional compact: boolean | undefined
+interface-member MobileStandardControlsProps::property::controls = optional controls: MobileStandardControlsMode | undefined
+interface-member MobileStandardControlsProps::property::legend = optional legend: MobileStandardLegendControls | undefined
+interface-member MobileStandardControlsProps::property::style = optional style: React.CSSProperties | undefined
+interface-member MobileStandardControlsProps::property::targetSize = optional targetSize: number | undefined
+interface-member MobileStandardControlsProps::property::zoom = optional zoom: MobileStandardZoomControls | undefined
+interface-member MobileStandardLegendControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardLegendControls::property::items = optional items: MobileStandardControlLegendItem[] | undefined
+interface-member MobileStandardLegendControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardLegendControls::property::onHideAll = optional onHideAll: (() => void) | undefined
+interface-member MobileStandardLegendControls::property::onShowAll = optional onShowAll: (() => void) | undefined
+interface-member MobileStandardLegendControls::property::onToggle = optional onToggle: ((id: string, active: boolean) => void) | undefined
+interface-member MobileStandardZoomControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardZoomControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardZoomControls::property::onReset = optional onReset: (() => void) | undefined
+interface-member MobileStandardZoomControls::property::onZoomIn = optional onZoomIn: (() => void) | undefined
+interface-member MobileStandardZoomControls::property::onZoomOut = optional onZoomOut: (() => void) | undefined
+interface-member SentenceFilterBaseDefinition::property::accent = optional accent: string | undefined
+interface-member SentenceFilterBaseDefinition::property::allowClear = optional allowClear: boolean | undefined
+interface-member SentenceFilterBaseDefinition::property::description = optional description: string | undefined
+interface-member SentenceFilterBaseDefinition::property::disabled = optional disabled: boolean | undefined
+interface-member SentenceFilterBaseDefinition::property::emptyLabel = optional emptyLabel: React.ReactNode
+interface-member SentenceFilterBaseDefinition::property::formatValue = optional formatValue: ((value: T, filters: Record<string, SentenceFilterValue>) => React.ReactNode) | undefined
+interface-member SentenceFilterBaseDefinition::property::getAccessibleValue = optional getAccessibleValue: ((value: T, filters: Record<string, SentenceFilterValue>) => string) | undefined
+interface-member SentenceFilterBaseDefinition::property::label = required label: string
+interface-member SentenceFilterChangeMeta::property::key = required key: string
+interface-member SentenceFilterChangeMeta::property::previousValue = required previousValue: SentenceFilterValue
+interface-member SentenceFilterChangeMeta::property::source = required source: "clear" | "input" | "keyboard" | "pointer" | "programmatic"
+interface-member SentenceFilterChangeMeta::property::value = required value: SentenceFilterValue
+interface-member SentenceFilterMultiSelectDefinition::property::conjunction = optional conjunction: "and" | "or" | undefined
+interface-member SentenceFilterMultiSelectDefinition::property::options = required options: SentenceFilterOption<SentenceFilterPrimitive>[]
+interface-member SentenceFilterMultiSelectDefinition::property::searchable = optional searchable: boolean | undefined
+interface-member SentenceFilterMultiSelectDefinition::property::type = required type: "multiselect"
+interface-member SentenceFilterNumberDefinition::property::inputMode = optional inputMode: "both" | "input" | "slider" | undefined
+interface-member SentenceFilterNumberDefinition::property::max = optional max: number | undefined
+interface-member SentenceFilterNumberDefinition::property::min = optional min: number | undefined
+interface-member SentenceFilterNumberDefinition::property::step = optional step: number | undefined
+interface-member SentenceFilterNumberDefinition::property::type = required type: "number"
+interface-member SentenceFilterOption::property::count = optional count: number | undefined
+interface-member SentenceFilterOption::property::description = optional description: React.ReactNode
+interface-member SentenceFilterOption::property::disabled = optional disabled: boolean | undefined
+interface-member SentenceFilterOption::property::keywords = optional keywords: string[] | undefined
+interface-member SentenceFilterOption::property::label = required label: React.ReactNode
+interface-member SentenceFilterOption::property::value = required value: T
+interface-member SentenceFilterProps::property::align = optional align: "center" | "end" | "start" | undefined
+interface-member SentenceFilterProps::property::ariaLabel = optional ariaLabel: string | undefined
+interface-member SentenceFilterProps::property::as = optional as: React.ElementType<any, keyof React.JSX.IntrinsicElements> | undefined
+interface-member SentenceFilterProps::property::className = optional className: string | undefined
+interface-member SentenceFilterProps::property::defaultFilters = optional defaultFilters: Record<string, SentenceFilterValue> | undefined
+interface-member SentenceFilterProps::property::definitions = required definitions: Record<string, SentenceFilterDefinition>
+interface-member SentenceFilterProps::property::disabled = optional disabled: boolean | undefined
+interface-member SentenceFilterProps::property::filters = optional filters: Record<string, SentenceFilterValue> | undefined
+interface-member SentenceFilterProps::property::id = optional id: string | undefined
+interface-member SentenceFilterProps::property::onChange = optional onChange: ((filters: Record<string, SentenceFilterValue>, meta: SentenceFilterChangeMeta) => void) | undefined
+interface-member SentenceFilterProps::property::onOpenChange = optional onOpenChange: ((key: string | null) => void) | undefined
+interface-member SentenceFilterProps::property::readOnly = optional readOnly: boolean | undefined
+interface-member SentenceFilterProps::property::renderControl = optional renderControl: ((context: SentenceFilterRenderContext) => React.ReactNode) | undefined
+interface-member SentenceFilterProps::property::sentence = required sentence: string
+interface-member SentenceFilterProps::property::size = optional size: "inherit" | "large" | "medium" | "small" | undefined
+interface-member SentenceFilterProps::property::style = optional style: React.CSSProperties | undefined
+interface-member SentenceFilterProps::property::wrap = optional wrap: boolean | undefined
+interface-member SentenceFilterRangeDefinition::property::max = required max: number
+interface-member SentenceFilterRangeDefinition::property::min = required min: number
+interface-member SentenceFilterRangeDefinition::property::step = optional step: number | undefined
+interface-member SentenceFilterRangeDefinition::property::type = required type: "range"
+interface-member SentenceFilterRenderContext::property::close = required close: () => void
+interface-member SentenceFilterRenderContext::property::definition = required definition: SentenceFilterDefinition
+interface-member SentenceFilterRenderContext::property::filters = required filters: Record<string, SentenceFilterValue>
+interface-member SentenceFilterRenderContext::property::key = required key: string
+interface-member SentenceFilterRenderContext::property::setValue = required setValue: (value: SentenceFilterValue, source?: SentenceFilterChangeMeta["source"]) => void
+interface-member SentenceFilterRenderContext::property::value = required value: SentenceFilterValue
+interface-member SentenceFilterSelectDefinition::property::options = required options: SentenceFilterOption<SentenceFilterPrimitive>[]
+interface-member SentenceFilterSelectDefinition::property::searchable = optional searchable: boolean | undefined
+interface-member SentenceFilterSelectDefinition::property::type = required type: "select"
+interface-member SentenceFilterTextDefinition::property::placeholder = optional placeholder: string | undefined
+interface-member SentenceFilterTextDefinition::property::suggestions = optional suggestions: SentenceFilterOption<string>[] | undefined
+interface-member SentenceFilterTextDefinition::property::type = required type: "text"
+interface-member SentenceFilterToggleDefinition::property::falseLabel = optional falseLabel: React.ReactNode
+interface-member SentenceFilterToggleDefinition::property::trueLabel = optional trueLabel: React.ReactNode
+interface-member SentenceFilterToggleDefinition::property::type = required type: "toggle"
+interface-member UseMobileRangeControlsOptions::property::domain = required domain: [number, number]
+interface-member UseMobileRangeControlsOptions::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
+interface-member UseMobileRangeControlsOptions::property::initialValue = optional initialValue: [number, number] | undefined
+interface-member UseMobileRangeControlsOptions::property::label = optional label: React.ReactNode
+interface-member UseMobileRangeControlsOptions::property::minSpan = optional minSpan: number | undefined
+interface-member UseMobileRangeControlsOptions::property::onChange = optional onChange: ((value: [number, number]) => void) | undefined
+interface-member UseMobileRangeControlsOptions::property::step = optional step: number | undefined
+interface-member UseMobileRangeControlsResult::property::brush = required brush: MobileStandardBrushControls
+interface-member UseMobileRangeControlsResult::property::setValue = required setValue: (value: [number, number]) => void
+interface-member UseMobileRangeControlsResult::property::value = required value: [number, number]
+interface-member UseMobileRangeControlsResult::property::xExtent = required xExtent: [number, number]
+interface-member UseMobileRangeControlsResult::property::zoom = required zoom: MobileStandardZoomControls
+interface-member VisualizationControlDefinition::property::alternatives = optional alternatives: readonly string[] | undefined
+interface-member VisualizationControlDefinition::property::annotation = optional annotation: undefined | {target?: string; valueText?: string;}
+interface-member VisualizationControlDefinition::property::domain = required domain: readonly [number, number]
+interface-member VisualizationControlDefinition::property::id = required id: string
+interface-member VisualizationControlDefinition::property::keyboard = optional keyboard: "buttons" | "native-range" | "slider" | undefined
+interface-member VisualizationControlDefinition::property::label = required label: string
+interface-member VisualizationControlDefinition::property::minimumTargetSize = optional minimumTargetSize: number | undefined
+interface-member VisualizationControlDefinition::property::observations = optional observations: readonly ControlObservationPhase[] | undefined
+interface-member VisualizationControlDefinition::property::step = optional step: number | undefined
+interface-member VisualizationControlDefinition::property::target = required target: string
+interface-member VisualizationControlDefinition::property::type = required type: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
+interface-member VisualizationControlDefinition::property::valueText = required valueText: string
+type ControlAuditStatus = "fail" | "pass" | "warn"
+type ControlInputSource = "keyboard" | "pointer" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
-type ControlObservationPhase = "control-start" | "control-change" | "control-end"
+type ControlObservationPhase = "control-change" | "control-end" | "control-start"
 type MobileStandardControlRequest = MobileStandardControlsMode
-type SentenceFilterDefinition = SentenceFilterSelectDefinition | SentenceFilterMultiSelectDefinition | SentenceFilterNumberDefinition | SentenceFilterRangeDefinition | SentenceFilterToggleDefinition | SentenceFilterTextDefinition
-type SentenceFilterPrimitive = string | number | boolean | null
-type SentenceFilterValue = SentenceFilterPrimitive | string[] | number[] | [number, number]
+type SentenceFilterDefinition = SentenceFilterMultiSelectDefinition | SentenceFilterNumberDefinition | SentenceFilterRangeDefinition | SentenceFilterSelectDefinition | SentenceFilterTextDefinition | SentenceFilterToggleDefinition
+type SentenceFilterPrimitive = boolean | null | number | string
+type SentenceFilterValue = SentenceFilterPrimitive | [number, number] | number[] | string[]
 type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
-type VisualizationControlValue = number | [number, number]
+type VisualizationControlValue = [number, number] | number
 ```

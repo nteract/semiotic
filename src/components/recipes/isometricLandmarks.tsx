@@ -144,6 +144,74 @@ const VALID_KINDS = new Set<LandmarkKind>([
   "arena",
   "transport",
 ])
+const VALID_TERRAIN_KINDS = new Set<IsometricTerrainKind>([
+  "land",
+  "ocean",
+  "forest",
+  "grassland",
+  "cropland",
+  "wetland",
+  "urban",
+  "scrub",
+  "bare",
+  "snow",
+])
+
+function ownValue(record: unknown, key: string): unknown {
+  if (record == null || typeof record !== "object") return undefined
+  if (!Object.prototype.hasOwnProperty.call(record, key)) return undefined
+  return (record as Record<string, unknown>)[key]
+}
+
+function ownNonEmptyString(record: unknown, key: string): string | undefined {
+  const value = ownValue(record, key)
+  return typeof value === "string" && value.length > 0 ? value : undefined
+}
+
+function normalizeTerrainKind(value: unknown): IsometricTerrainKind | undefined {
+  return VALID_TERRAIN_KINDS.has(value as IsometricTerrainKind)
+    ? (value as IsometricTerrainKind)
+    : undefined
+}
+
+function resolveTerrainCell(
+  terrainByCell: unknown,
+  cellId: string
+): IsometricTerrainCell | undefined {
+  const value = ownValue(terrainByCell, cellId)
+  const kind = normalizeTerrainKind(
+    typeof value === "string" ? value : ownValue(value, "kind")
+  )
+  if (!kind) return undefined
+  if (typeof value === "string") return { kind }
+
+  const rawCoverage = ownValue(value, "coverage")
+  const coverage =
+    typeof rawCoverage === "number" && Number.isFinite(rawCoverage)
+      ? Math.max(0, Math.min(1, rawCoverage))
+      : undefined
+  const fill = ownNonEmptyString(value, "fill")
+  return { kind, ...(coverage == null ? {} : { coverage }), ...(fill ? { fill } : {}) }
+}
+
+function defaultTerrainFill(kind: IsometricTerrainKind): string {
+  return (
+    ownNonEmptyString(DEFAULT_CLASSIFIED_TERRAIN, kind) ??
+    DEFAULT_CLASSIFIED_TERRAIN.land
+  )
+}
+
+function terrainLabel(kind: IsometricTerrainKind): string {
+  return ownNonEmptyString(TERRAIN_LABELS, kind) ?? TERRAIN_LABELS.land
+}
+
+function spriteHref(
+  sprites: unknown,
+  kind: unknown
+): string | undefined {
+  if (!VALID_KINDS.has(kind as LandmarkKind)) return undefined
+  return ownNonEmptyString(sprites, kind as LandmarkKind)
+}
 
 function accessor<T>(
   value: string | ((d: Datum) => T) | undefined,
@@ -355,18 +423,18 @@ export const isometricLandmarkLayout: GeoCustomLayout<IsometricLandmarkConfig> =
   }))
 
   const nodes: GeoAreaSceneNode[] = positioned.map((tile) => {
-    const terrainCell = ctx.config.terrainByCell?.[tile.id]
-    const resolvedTerrain = typeof terrainCell === "string"
-      ? { kind: terrainCell }
-      : terrainCell
+    const resolvedTerrain = resolveTerrainCell(
+      ctx.config.terrainByCell,
+      tile.id
+    )
     // Keep the major-city platform visually legible even when a coarse coastal
     // cell is water-dominant (for example central San Francisco).
     const terrainKind: IsometricTerrainKind = tile.landmark?.kind === "city"
       ? "urban"
       : resolvedTerrain?.kind ?? "land"
     const classifiedFill = resolvedTerrain?.fill
-      ?? ctx.config.terrainPalette?.[terrainKind]
-      ?? DEFAULT_CLASSIFIED_TERRAIN[terrainKind]
+      ?? ownNonEmptyString(ctx.config.terrainPalette, terrainKind)
+      ?? defaultTerrainFill(terrainKind)
     const datum = tile.landmark
       ? {
           ...tile.landmark,
@@ -380,7 +448,7 @@ export const isometricLandmarkLayout: GeoCustomLayout<IsometricLandmarkConfig> =
         }
       : {
           id: tile.id,
-          name: TERRAIN_LABELS[terrainKind],
+          name: terrainLabel(terrainKind),
           kind: "terrain",
           terrainKind,
           terrainCoverage: resolvedTerrain?.coverage,
@@ -482,7 +550,7 @@ function IsometricLandmarkOverlay({
             />
             <PixelSprite
               kind={landmark.kind}
-              href={sprites?.[landmark.kind]}
+              href={spriteHref(sprites, landmark.kind)}
               x={tile.x - size / 2}
               y={bottom - size}
               size={size}

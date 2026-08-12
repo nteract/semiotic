@@ -285,7 +285,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     // The selected node is the focus — never dim it out, even when a reach
     // preview would otherwise exclude it.
     const opacity = dimmed && !selected ? dimOpacity : 1
-    const fill = partColors[partition] ?? partColors.unknown
+    const fill = Object.prototype.hasOwnProperty.call(partColors, partition)
+      ? partColors[partition] : partColors.unknown
 
     if (lod === "dot") {
       const dot: NetworkCircleNode = {
@@ -339,7 +340,10 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const edgeType = String(readField(edge, edgeTypeAcc, "internal"))
     const dimmed = dimById.get(sId) || dimById.get(tId)
     const opacity = dimmed ? Math.min(edgeOpacity, dimOpacity * 1.4) : edgeOpacity
-    const stroke = isBack ? edgeColors.back : edgeColors[edgeType] ?? edgeColors.internal
+    const stroke = isBack
+      ? edgeColors.back
+      : Object.prototype.hasOwnProperty.call(edgeColors, edgeType)
+        ? edgeColors[edgeType] : edgeColors.internal
 
     let pathD: string
     if (isBack) {
@@ -430,7 +434,8 @@ function renderGlyph(
   // In icon LOD the glyph IS the node — let the icon fill the rect (a small
   // category-color-filled square). Otherwise reserve room for the label.
   const iconSize = lod === "icon" ? Math.min(w, h) : Math.min(h - 14, 26)
-  const iconColor = c.partColors[g.partition] ?? c.partColors.unknown ?? "#5a5a6a"
+  const iconColor = (Object.prototype.hasOwnProperty.call(c.partColors, g.partition)
+    ? c.partColors[g.partition] : c.partColors.unknown) ?? "#5a5a6a"
   const padX = 8
   const textX = lod === "icon" ? 0 : padX + iconSize + 8
   const textColor = "var(--semiotic-text, #f4f4f8)"

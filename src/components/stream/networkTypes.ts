@@ -2,17 +2,18 @@ import type { ReactNode } from "react"
 import type { HoverData } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 
-type NetworkDatumComparator = {
-  bivarianceHack(a: Datum, b: Datum): number
-}["bivarianceHack"]
+type NetworkDatumComparator = { bivarianceHack(a: Datum, b: Datum): number }["bivarianceHack"]
 type NetworkGroupComparator = (a: number, b: number) => number
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode, FrameGraphicsProp } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
+
+/** Style-callback result, including `cursor` on legacy datum-shaped returns. */
+export type NetworkMarkStyle = Style | (Datum & Pick<Style, "cursor">)
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -61,27 +62,13 @@ export interface RealtimeNode {
   _pulseIntensity?: number
   _pulseColor?: string
   _pulseGlowRadius?: number
-  /**
-   * @internal Hierarchy-layout-only extension fields. Set by
-   * `hierarchyLayoutPlugin` / `orbitLayoutPlugin` during layout and
-   * read by `hierarchySceneBuilders`. Typed `unknown` because the d3
-   * `HierarchyNode` shape is layout-specific (rectangular, circular,
-   * point) — consumers narrow with the structural fields they need.
-   */
+  /** @internal Hierarchy-layout metadata; consumers narrow to the plugin-specific shape. */
   __hierarchyNode?: unknown
   /** @internal Circle-pack layout radius. Set by `hierarchyLayoutPlugin`. */
   __radius?: number
   /** @internal Pre-resolved force-layout radius used by worker snapshots. */
   __forceRadius?: number
-  /**
-   * @internal Chord-layout extension. Carries the start/end angles
-   * for the arc segment representing this node, computed by
-   * `chordLayoutPlugin` and read by its `buildScene`. Concretely
-   * typed (unlike `__hierarchyNode`) because chord is the only
-   * layout that writes this field, so the shape is fixed — no
-   * narrowing-at-read needed. `__` prefix matches the convention
-   * used by `__hierarchyNode` / `__radius` on this same interface.
-   */
+  /** @internal Chord-layout arc segment angles. */
   __arcData?: { startAngle: number; endAngle: number }
 }
 
@@ -605,8 +592,8 @@ export interface NetworkPipelineConfig {
   particleStyle?: ParticleStyle
 
   // ── Style functions ──────────────────────────────
-  nodeStyle?: (d: Datum) => Datum
-  edgeStyle?: (d: Datum) => Datum
+  nodeStyle?: (d: Datum) => NetworkMarkStyle
+  edgeStyle?: (d: Datum) => NetworkMarkStyle
   nodeLabel?: string | ((d: Datum) => string)
   showLabels?: boolean
   labelMode?: "leaf" | "parent" | "all"
@@ -746,8 +733,8 @@ export interface StreamNetworkFrameProps<T = Datum>
   particleStyle?: ParticleStyle
 
   // ── Style ────────────────────────────────────────
-  nodeStyle?: (d: Datum) => Datum
-  edgeStyle?: (d: Datum) => Datum
+  nodeStyle?: (d: Datum) => NetworkMarkStyle
+  edgeStyle?: (d: Datum) => NetworkMarkStyle
   colorBy?: string | ((d: Datum) => string | number)
   colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
@@ -780,8 +767,10 @@ export interface StreamNetworkFrameProps<T = Datum>
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   title?: string | ReactNode
-  foregroundGraphics?: ReactNode
-  backgroundGraphics?: ReactNode
+  /** SVG above the canvas. Network layouts have no shared scale object, so callback `scales` is null. */
+  foregroundGraphics?: FrameGraphicsProp<null>
+  /** SVG behind the canvas. Network layouts have no shared scale object, so callback `scales` is null. */
+  backgroundGraphics?: FrameGraphicsProp<null>
 
   // ── Realtime encoding ─────────────────────────────
   decay?: DecayConfig

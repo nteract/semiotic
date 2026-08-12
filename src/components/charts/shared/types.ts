@@ -210,7 +210,7 @@ export interface BaseChartProps {
   /** Dim non-hovered series when hovering a data mark. Requires `colorBy`. */
   hoverHighlight?: HoverHighlightMode
 
-  /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
+  /** Requested minimum hit radius in pixels. The effective radius also honors the visible mark radius plus tolerance and a 12px floor. Default 30. */
   hoverRadius?: number
 
   /** ID accessor for remove()/update() on XY charts. Extracts a unique identifier from each datum. */
@@ -277,14 +277,21 @@ export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
 
 /**
  * Generic accessor type that provides autocomplete when TDatum is specified.
- * Uses Datum in the function param so HOC charts can pass
- * accessors to Stream Frames without contravariance errors under strict mode.
+ * Function accessors receive the caller's datum type, preserving inference and
+ * catching misspelled fields. The bivariant callback form keeps the accessor
+ * assignable at the internal Stream Frame boundary, where datum types are
+ * intentionally erased to the shared `Datum` shape.
  */
+type DatumBoundaryAccessor<T> = {
+  bivarianceHack(d: Datum, i?: number): T
+}["bivarianceHack"]
+
+type ChartAccessorFunction<TDatum, T> =
+  ((d: TDatum, i?: number) => T) & DatumBoundaryAccessor<T>
+
 export type ChartAccessor<TDatum, T> =
   | (keyof TDatum & string)
-  // Function form takes the shared Datum base so HOC accessors stay
-  // assignable to frame props (which erase TDatum at the Stream boundary).
-  | ((d: Datum, i?: number) => T)
+  | ChartAccessorFunction<TDatum, T>
 
 /**
  * Color configuration

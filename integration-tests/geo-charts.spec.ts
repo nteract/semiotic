@@ -50,6 +50,46 @@ test.describe("Geo Charts - ChoroplethMap", () => {
     const testCase = page.locator('[data-testid="geo-choropleth-legend"]')
     await expect(testCase).toHaveScreenshot("geo-choropleth-legend.png", { maxDiffPixels: 200 })
   })
+
+  test("labeled gradient legends stay inside their SVG at every position", async ({ page }) => {
+    for (const position of ["right", "left", "top", "bottom"] as const) {
+      const testId = `geo-gradient-legend-${position}`
+      await waitForChartReady(page, testId)
+      const geometry = await page.locator(`[data-testid="${testId}"]`).evaluate((testCase) => {
+        const legend = testCase.querySelector<SVGGElement>(
+          ".stream-geo-frame [aria-label='value']"
+        )
+        const label = Array.from(legend?.querySelectorAll("text") ?? []).find(
+          (text) => text.textContent === "value"
+        )
+        const bar = legend?.querySelector<SVGRectElement>(
+          "rect:not(.semiotic-gradient-legend-bin)"
+        )
+        const svg = legend?.ownerSVGElement
+        if (!legend || !label || !bar || !svg) return null
+
+        const labelRect = label.getBoundingClientRect()
+        const barRect = bar.getBoundingClientRect()
+        const legendRect = legend.getBoundingClientRect()
+        const svgRect = svg.getBoundingClientRect()
+        return {
+          labelTop: labelRect.top,
+          labelBottom: labelRect.bottom,
+          barTop: barRect.top,
+          legendTop: legendRect.top,
+          legendBottom: legendRect.bottom,
+          svgTop: svgRect.top,
+          svgBottom: svgRect.bottom,
+        }
+      })
+
+      expect(geometry).not.toBeNull()
+      expect(geometry!.labelTop).toBeGreaterThanOrEqual(geometry!.svgTop - 0.5)
+      expect(geometry!.legendTop).toBeGreaterThanOrEqual(geometry!.svgTop - 0.5)
+      expect(geometry!.legendBottom).toBeLessThanOrEqual(geometry!.svgBottom + 0.5)
+      expect(geometry!.labelBottom).toBeLessThanOrEqual(geometry!.barTop)
+    }
+  })
 })
 
 test.describe("Geo Charts - ProportionalSymbolMap", () => {

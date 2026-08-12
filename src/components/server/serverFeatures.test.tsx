@@ -699,6 +699,7 @@ describe("Legend rendering", () => {
       ],
       categoryAccessor: "kind",
       colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+      cursor: "pointer",
       width: 420,
       height: 240,
     })
@@ -708,6 +709,7 @@ describe("Legend rendering", () => {
     expect(svg).toContain("#f59e0b")
     expect(svg).toContain(">Errors<")
     expect(svg).toContain(">Warnings<")
+    expect(svg).toContain('data-semiotic-mark-cursor="pointer"')
     expect(svg).toMatch(/<rect[^>]*fill="#d62728"[^>]*><\/rect><text[^>]*>Errors<\/text>/)
     expect(svg).toMatch(/<rect[^>]*fill="#f59e0b"[^>]*><\/rect><text[^>]*>Warnings<\/text>/)
   })

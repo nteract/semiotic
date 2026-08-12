@@ -8,7 +8,16 @@ import type { AreaGradientConfig } from "./areaGradient"
  * Scene builders are pure functions that receive this context instead of
  * accessing PipelineStore instance fields directly.
  */
-import type { StreamScales, Style, CurveType, BarStyle, ThemeSemanticColors } from "../types"
+import type {
+  StreamScales,
+  Style,
+  CurveType,
+  BarStyle,
+  CandlestickStyle,
+  SwarmStyle,
+  ThemeSemanticColors,
+  WaterfallStyle,
+} from "../types"
 import type { SymbolName } from "../symbolPath"
 import type { ResolvedRibbon } from "./ribbonScene"
 import type { GradientConfig } from "../../charts/shared/gradient"
@@ -98,13 +107,13 @@ export interface XYSceneConfig {
   themeDiverging?: string
 
   // Swarm
-  swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
+  swarmStyle?: SwarmStyle
 
   // Waterfall
-  waterfallStyle?: { positiveColor?: string; negativeColor?: string; gap?: number; stroke?: string; strokeWidth?: number; opacity?: number; connectorStroke?: string; connectorWidth?: number }
+  waterfallStyle?: WaterfallStyle
 
   // Candlestick
-  candlestickStyle?: { upColor?: string; downColor?: string; wickColor?: string; wickWidth?: number; bodyWidth?: number; rangeColor?: string }
+  candlestickStyle?: CandlestickStyle
   /** True when candlestick is in range/dumbbell mode (no open/close accessors provided) */
   candlestickRangeMode?: boolean
 

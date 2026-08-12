@@ -428,6 +428,25 @@ describe("GradientLegend", () => {
     expect(textContents).toContain("Intensity")
   })
 
+  it.each(["vertical", "horizontal"] as const)(
+    "keeps labeled %s content in a non-negative layout box",
+    (orientation) => {
+      const { container } = renderInSvg(
+        <GradientLegend config={config} orientation={orientation} width={200} />
+      )
+      const root = container.querySelector<SVGGElement>("[aria-label='Intensity']")
+      const label = Array.from(root!.querySelectorAll("text")).find(
+        (text) => text.textContent === "Intensity"
+      )
+      const bar = root!.querySelector<SVGRectElement>("rect:not(.semiotic-gradient-legend-bin)")
+
+      expect(Number(label!.getAttribute("y"))).toBeGreaterThanOrEqual(0)
+      expect(Number(bar!.getAttribute("y"))).toBeGreaterThan(
+        Number(label!.getAttribute("y"))
+      )
+    }
+  )
+
   it("renders horizontal gradient with x1=0% x2=100%", () => {
     const { container } = renderInSvg(
       <GradientLegend config={config} orientation="horizontal" width={200} />
@@ -475,5 +494,57 @@ describe("GradientLegend", () => {
     const textContents = Array.from(texts).map((t) => t.textContent)
     expect(textContents).toContain("0 units")
     expect(textContents).toContain("255 units")
+  })
+
+  it("uses a visible roving focus ring and vertical arrow navigation", () => {
+    const onClick = vi.fn()
+    const { container } = renderInSvg(
+      <GradientLegend
+        config={config}
+        orientation="vertical"
+        customClickBehavior={onClick}
+      />
+    )
+    const options = container.querySelectorAll<SVGRectElement>(".semiotic-gradient-legend-bin")
+    expect(options).toHaveLength(5)
+    expect(options[0].getAttribute("tabindex")).toBe("0")
+    expect(options[1].getAttribute("tabindex")).toBe("-1")
+
+    fireEvent.focus(options[0])
+    expect(options[0].getAttribute("stroke-width")).toBe("3")
+
+    const focusSpy = vi.spyOn(options[1], "focus")
+    fireEvent.keyDown(options[0], { key: "ArrowDown" })
+    expect(focusSpy).toHaveBeenCalled()
+    expect(options[1].getAttribute("tabindex")).toBe("0")
+
+    fireEvent.keyDown(options[1], { key: "Enter" })
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(onClick.mock.calls[0][0]).toMatchObject({
+      valueRange: [153, 204],
+    })
+  })
+
+  it("uses Left/Right navigation for a horizontal gradient", () => {
+    const onHover = vi.fn()
+    const { container } = renderInSvg(
+      <GradientLegend
+        config={config}
+        orientation="horizontal"
+        customHoverBehavior={onHover}
+      />
+    )
+    const options = container.querySelectorAll<SVGRectElement>(".semiotic-gradient-legend-bin")
+    const focusSpy = vi.spyOn(options[1], "focus")
+    fireEvent.keyDown(options[0], { key: "ArrowRight" })
+    expect(focusSpy).toHaveBeenCalled()
+    expect(container.querySelector("[role='listbox']")?.getAttribute("aria-orientation")).toBe("horizontal")
+  })
+
+  it("does not add hit-test overlays to a non-interactive gradient", () => {
+    const { container } = renderInSvg(<GradientLegend config={config} />)
+
+    expect(container.querySelectorAll(".semiotic-gradient-legend-bin")).toHaveLength(0)
+    expect(container.querySelector("[role='listbox']")).toBeNull()
   })
 })

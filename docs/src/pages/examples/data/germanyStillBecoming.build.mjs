@@ -1,9 +1,16 @@
 import { dirname, resolve } from "node:path"
+import { argv, cwd } from "node:process"
 import { fileURLToPath } from "node:url"
-import { pick, stripHeavy, writeCompactStrategyModule } from "./compactStrategyJson.mjs"
+import { pick, stripHeavy, writeCompactStrategyModule } from "./compactProjectionJson.mjs"
 
 const dataDirectory = dirname(fileURLToPath(import.meta.url))
-const sourcePath = resolve(dataDirectory, "../../../../strategy/germany_history_river_dataset.json")
+const sourceArgument = argv[2]
+if (!sourceArgument) {
+  throw new Error(
+    "Usage: node docs/src/pages/examples/data/germanyStillBecoming.build.mjs <source-json-path>",
+  )
+}
+const sourcePath = resolve(cwd(), sourceArgument)
 const outputPath = resolve(dataDirectory, "germanyStillBecoming.source.generated.js")
 
 /** Research-only fields dropped from the browser projection. */
@@ -28,7 +35,6 @@ writeCompactStrategyModule({
   exportName: "germanyStillBecomingSource",
   builderName: "germanyStillBecoming.build.mjs",
   buildCompact: (source) => ({
-    generated_from: "docs/strategy/germany_history_river_dataset.json",
     metadata: source.metadata,
     metric_definitions: source.metric_definitions,
     stages: source.stages.map((stage) => pick(stage, [

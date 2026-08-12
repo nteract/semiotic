@@ -1,10 +1,12 @@
 import * as React from "react"
+import { renderToString } from "react-dom/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { act, fireEvent, render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
+import { DARK_THEME, ThemeProvider } from "../ThemeProvider"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
@@ -20,6 +22,34 @@ describe("StreamNetworkFrame", () => {
   afterEach(() => {
     restoreCanvas?.()
     restoreCanvas = null
+  })
+
+  it("composes the ThemeProvider surface beneath network canvas and SSR output", () => {
+    const chart = (
+      <ThemeProvider theme="dark">
+        <StreamNetworkFrame
+          chartType="sankey"
+          nodes={[{ id: "a" }, { id: "b" }]}
+          edges={[{ source: "a", target: "b", value: 1 }]}
+          size={[240, 140]}
+          accessibleTable={false}
+        />
+      </ThemeProvider>
+    )
+    const expectedFill = `var(--semiotic-bg, ${DARK_THEME.colors.background})`
+
+    const { container } = render(chart)
+    const surface = container.querySelector(
+      ".stream-network-frame .stream-frame-background__backdrop"
+    )
+    expect(surface).toHaveAttribute("fill", expectedFill)
+    expect(surface).toHaveAttribute("width", "240")
+    expect(surface).toHaveAttribute("height", "140")
+
+    const html = renderToString(chart)
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain('class="stream-frame-background__backdrop"')
+    expect(html).toContain(`fill="${expectedFill}"`)
   })
 
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────
@@ -202,6 +232,216 @@ describe("StreamNetworkFrame", () => {
     )
 
     expect(label()?.getAttribute("x")).toBe("80")
+  })
+
+  it("applies a hit-tested mark cursor with hover disabled and clears it on invalidation, leave, and unmount", async () => {
+    const scheduler = createFrameScheduler(0)
+    const customLayout = (context: { nodes: Array<{ id: string }>; config: { cursor?: "pointer" } }) => ({
+      sceneNodes: context.nodes.map((node) => ({
+        type: "circle" as const,
+        cx: 50,
+        cy: 50,
+        r: 12,
+        style: { fill: "#4682b4", cursor: context.config.cursor },
+        datum: node,
+        id: node.id
+      })),
+      sceneEdges: []
+    })
+    const props = {
+      chartType: "force" as const,
+      customNetworkLayout: customLayout as never,
+      nodes: [{ id: "a" }],
+      edges: [],
+      enableHover: false,
+      animate: false,
+      size: [240, 180] as [number, number],
+      frameScheduler: scheduler.scheduler
+    }
+    const { container, rerender, unmount } = render(
+      <StreamNetworkFrame {...props} layoutConfig={{ cursor: "pointer" }} />
+    )
+
+    await act(async () => { scheduler.flush() })
+    const canvas = container.querySelector("canvas")!
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+
+    // Force charts use the centered 40px margin, so plot-relative (50, 50)
+    // is client-space (90, 90) in jsdom's zero-origin canvas rect.
+    fireEvent.mouseMove(image, { clientX: 90, clientY: 90 })
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("pointer")
+
+    fireEvent.mouseLeave(image)
+    expect(canvas.style.cursor).toBe("")
+
+    fireEvent.mouseMove(image, { clientX: 90, clientY: 90 })
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("pointer")
+
+    rerender(<StreamNetworkFrame {...props} layoutConfig={{}} />)
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("")
+
+    fireEvent.mouseMove(image, { clientX: 0, clientY: 0 })
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("")
+
+    // Keep the detached element reference to verify cleanup is explicit.
+    canvas.style.cursor = "pointer"
+    unmount()
+    expect(canvas.style.cursor).toBe("")
+  })
+
+  it("hit-tests a non-centered custom glyph cursor at the painted icon rather than its logical anchor", async () => {
+    const scheduler = createFrameScheduler(0)
+    const glyph = {
+      viewBox: [40, 40] as [number, number],
+      // Deliberately float the icon above its logical node anchor. This makes
+      // a center-at-cx/cy shortcut observably wrong while remaining valid
+      // glyph placement geometry.
+      anchor: [0.5, 2.5] as [number, number],
+      parts: [{ d: "M0 0 H40 V40 H0 Z" }]
+    }
+    const customLayout = (context: { nodes: Array<{ id: string }> }) => ({
+      sceneNodes: [{
+        type: "glyph" as const,
+        cx: 80,
+        cy: 80,
+        size: 20,
+        glyph,
+        style: { fill: "#4682b4", cursor: "pointer" as const },
+        datum: context.nodes[0],
+        id: context.nodes[0].id
+      }],
+      sceneEdges: []
+    })
+    const { container } = render(
+      <StreamNetworkFrame
+        chartType="force"
+        customNetworkLayout={customLayout as never}
+        nodes={[{ id: "icon" }]}
+        edges={[]}
+        enableHover={false}
+        animate={false}
+        size={[240, 180]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    await act(async () => scheduler.flush())
+    const canvas = container.querySelector("canvas")!
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+
+    // With the 40px force margin, the glyph's drawn center is client (120, 80)
+    // while its logical node anchor remains client (120, 120).
+    fireEvent.mouseMove(image, { clientX: 120, clientY: 80 })
+    await act(async () => scheduler.flush())
+    expect(canvas.style.cursor).toBe("pointer")
+
+    fireEvent.mouseMove(image, { clientX: 120, clientY: 120 })
+    await act(async () => scheduler.flush())
+    expect(canvas.style.cursor).toBe("")
+  })
+
+  it("uses built-in nodeStyle cursors on the retained canvas with hover disabled", async () => {
+    const scheduler = createFrameScheduler(0)
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const { container } = render(
+      <StreamNetworkFrame
+        ref={ref}
+        chartType="sankey"
+        nodes={[{ id: "a" }, { id: "b" }]}
+        edges={[{ source: "a", target: "b", value: 1 }]}
+        nodeStyle={() => ({ cursor: "pointer" })}
+        enableHover={false}
+        animate={false}
+        size={[400, 240]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    await act(async () => { scheduler.flush() })
+    const node = ref.current!.getTopology().nodes.find((candidate) => candidate.id === "a")!
+    expect([node.x0, node.x1, node.y0, node.y1].every(Number.isFinite)).toBe(true)
+
+    const canvas = container.querySelector("canvas")!
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+    const clientX = 80 + ((node.x0! + node.x1!) / 2)
+    const clientY = 20 + ((node.y0! + node.y1!) / 2)
+    fireEvent.mouseMove(image, { clientX, clientY })
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("pointer")
+
+    fireEvent.mouseMove(image, { clientX: 0, clientY: 0 })
+    await act(async () => { scheduler.flush() })
+    expect(canvas.style.cursor).toBe("")
+  })
+
+  it("re-hit-tests a stationary pointer when custom-layout geometry moves", async () => {
+    const scheduler = createFrameScheduler(0)
+    const customLayout = (context: { config: { x: number } }) => ({
+      sceneNodes: [{
+        type: "circle" as const,
+        cx: context.config.x,
+        cy: 50,
+        r: 12,
+        style: { cursor: "pointer" as const },
+        datum: { id: "moving" },
+        id: "moving"
+      }],
+      sceneEdges: []
+    })
+    const props = {
+      chartType: "force" as const,
+      customNetworkLayout: customLayout as never,
+      nodes: [{ id: "moving" }],
+      edges: [],
+      enableHover: false,
+      animate: false,
+      size: [240, 180] as [number, number],
+      frameScheduler: scheduler.scheduler
+    }
+    const { container, rerender } = render(
+      <StreamNetworkFrame {...props} layoutConfig={{ x: 50 }} />
+    )
+    await act(async () => scheduler.flush())
+    const canvas = container.querySelector("canvas")!
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+    fireEvent.mouseMove(image, { clientX: 90, clientY: 90 })
+    await act(async () => scheduler.flush())
+    expect(canvas.style.cursor).toBe("pointer")
+
+    rerender(<StreamNetworkFrame {...props} layoutConfig={{ x: 150 }} />)
+    await act(async () => scheduler.flush())
+    expect(canvas.style.cursor).toBe("")
+  })
+
+  it("does not schedule pointer hit-testing when hover is disabled and the scene has no cursor", async () => {
+    const scheduler = createFrameScheduler(0)
+    const { container } = render(
+      <StreamNetworkFrame
+        chartType="sankey"
+        nodes={[{ id: "a" }, { id: "b" }]}
+        edges={[{ source: "a", target: "b", value: 1 }]}
+        enableHover={false}
+        animate={false}
+        size={[400, 240]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    await act(async () => { scheduler.flush() })
+    expect(scheduler.pendingCount).toBe(0)
+    const requestsBeforeMove = scheduler.requestedHandles.length
+
+    fireEvent.mouseMove(container.querySelector<HTMLElement>('[role="img"]')!, {
+      clientX: 100,
+      clientY: 100
+    })
+
+    expect(scheduler.pendingCount).toBe(0)
+    expect(scheduler.requestedHandles).toHaveLength(requestsBeforeMove)
   })
 
   // ── Push API + clear→reload lifecycle ────────────────────────────────

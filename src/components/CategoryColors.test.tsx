@@ -4,7 +4,9 @@ import * as React from "react"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { COLOR_SCHEMES, DEFAULT_COLORS } from "./charts/shared/colorUtils"
 
-function createWrapper(providerProps: React.ComponentProps<typeof CategoryColorProvider>) {
+function createWrapper(
+  providerProps: React.ComponentProps<typeof CategoryColorProvider>
+) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return React.createElement(CategoryColorProvider, providerProps, children)
   }
@@ -25,11 +27,10 @@ describe("CategoryColorProvider with explicit colors", () => {
   it("provides the exact color map passed via the colors prop", () => {
     const colors = { North: "#e41a1c", South: "#377eb8", East: "#4daf4a" }
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ colors, children: null }),
+      wrapper: createWrapper({ colors, children: null })
     })
     expect(result.current).toEqual(colors)
   })
-
 })
 
 // ── CategoryColorProvider with categories (auto-assignment) ──────────────
@@ -38,7 +39,7 @@ describe("CategoryColorProvider with categories", () => {
   it("assigns colors from default category10 scheme", () => {
     const categories = ["A", "B", "C"]
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ categories, children: null }),
+      wrapper: createWrapper({ categories, children: null })
     })
     expect(result.current).not.toBeNull()
     const map = result.current!
@@ -54,7 +55,7 @@ describe("CategoryColorProvider with categories", () => {
     // category10 has 10 colors; create 12 categories
     const categories = Array.from({ length: 12 }, (_, i) => `cat${i}`)
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ categories, children: null }),
+      wrapper: createWrapper({ categories, children: null })
     })
     const map = result.current!
     const palette = COLOR_SCHEMES.category10 as readonly string[]
@@ -66,7 +67,11 @@ describe("CategoryColorProvider with categories", () => {
   it("uses a custom color scheme name", () => {
     const categories = ["X", "Y"]
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ categories, colorScheme: "tableau10", children: null }),
+      wrapper: createWrapper({
+        categories,
+        colorScheme: "tableau10",
+        children: null
+      })
     })
     const map = result.current!
     const palette = COLOR_SCHEMES.tableau10 as readonly string[]
@@ -78,7 +83,11 @@ describe("CategoryColorProvider with categories", () => {
     const customPalette = ["#ff0000", "#00ff00", "#0000ff"]
     const categories = ["R", "G", "B"]
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ categories, colorScheme: customPalette, children: null }),
+      wrapper: createWrapper({
+        categories,
+        colorScheme: customPalette,
+        children: null
+      })
     })
     const map = result.current!
     expect(map["R"]).toBe("#ff0000")
@@ -88,9 +97,22 @@ describe("CategoryColorProvider with categories", () => {
 
   it("handles empty categories array", () => {
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ categories: [], children: null }),
+      wrapper: createWrapper({ categories: [], children: null })
     })
     expect(result.current).toEqual({})
+  })
+
+  it("stores prototype-like categories as own color keys", () => {
+    const categories = ["__proto__", "constructor", "toString"]
+    const { result } = renderHook(() => useCategoryColors(), {
+      wrapper: createWrapper({ categories, children: null })
+    })
+    const map = result.current!
+    expect(Object.keys(map)).toEqual(categories)
+    for (const category of categories) {
+      expect(Object.prototype.hasOwnProperty.call(map, category)).toBe(true)
+      expect(typeof map[category]).toBe("string")
+    }
   })
 
   it("uses an object-map colorScheme for exact per-category colors", () => {
@@ -99,8 +121,8 @@ describe("CategoryColorProvider with categories", () => {
       wrapper: createWrapper({
         categories,
         colorScheme: { North: "#e41a1c", South: "#377eb8" },
-        children: null,
-      }),
+        children: null
+      })
     })
     const map = result.current!
     expect(map["North"]).toBe("#e41a1c")
@@ -113,8 +135,8 @@ describe("CategoryColorProvider with categories", () => {
       wrapper: createWrapper({
         categories,
         colorScheme: { North: "#e41a1c" }, // "West" unmapped
-        children: null,
-      }),
+        children: null
+      })
     })
     const map = result.current!
     expect(map["North"]).toBe("#e41a1c")
@@ -122,7 +144,6 @@ describe("CategoryColorProvider with categories", () => {
     expect(map["West"]).toBe(DEFAULT_COLORS[0])
     expect(map["West"]).not.toBe(map["North"])
   })
-
 })
 
 // ── CategoryColorProvider with no props ──────────────────────────────────
@@ -130,7 +151,7 @@ describe("CategoryColorProvider with categories", () => {
 describe("CategoryColorProvider with neither colors nor categories", () => {
   it("provides an empty map", () => {
     const { result } = renderHook(() => useCategoryColors(), {
-      wrapper: createWrapper({ children: null }),
+      wrapper: createWrapper({ children: null })
     })
     expect(result.current).toEqual({})
   })
@@ -141,13 +162,16 @@ describe("CategoryColorProvider with neither colors nor categories", () => {
 describe("CategoryColorProvider with unknown scheme name", () => {
   it("falls back to DEFAULT_COLORS for unrecognized scheme string", () => {
     const categories = ["A", "B"]
-    const unknownScheme = "nonexistent_scheme" as unknown as React.ComponentProps<typeof CategoryColorProvider>["colorScheme"]
+    const unknownScheme =
+      "nonexistent_scheme" as unknown as React.ComponentProps<
+        typeof CategoryColorProvider
+      >["colorScheme"]
     const { result } = renderHook(() => useCategoryColors(), {
       wrapper: createWrapper({
         categories,
         colorScheme: unknownScheme,
-        children: null,
-      }),
+        children: null
+      })
     })
     const map = result.current!
     // Should fall back to DEFAULT_COLORS

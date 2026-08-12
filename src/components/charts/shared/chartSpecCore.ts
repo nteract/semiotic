@@ -181,7 +181,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   },
   width: { type: "number", default: 600 },
   height: { type: "number", default: 400 },
-  margin: { type: "object", description: "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation." },
+  margin: { type: ["number", "object"], description: "Uniform numeric margin or an object margin. A side value of \"auto\" or null leaves that side available for auto-reservation." },
   className: { type: "string" },
   title: {
     type: "string",
@@ -257,7 +257,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   loading: { type: "boolean", description: "Show loading skeleton / loadingContent." },
   loadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode override for loading state; false suppresses." },
   emptyContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode when data is empty; false suppresses." },
-  hoverHighlight: { type: "boolean", description: "Dim non-hovered series/categories (requires colorBy string field)." },
+  hoverHighlight: { type: ["boolean", "string"], description: "Dim non-hovered series/categories (true or the series-level mode; requires colorBy)." },
   chartId: { type: "string", description: "Stable id for linked selection / observation / nav sync." },
   emphasis: { type: "string", enum: ["primary", "secondary"] as const },
   responsiveWidth: { type: "boolean" },
@@ -281,7 +281,11 @@ const xyAxisProps: Record<string, ChartPropSpec> = {
   xFormat: { type: "function", omitFromSchema: true },
   yFormat: { type: "function", omitFromSchema: true },
   xScaleType: { type: "string", enum: ["linear", "log", "time"], description: "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)." },
-  yScaleType: { type: "string", enum: ["linear", "log", "time"], description: "y scale type." },
+  yScaleType: {
+    type: "string",
+    enum: ["linear", "log", "symlog"],
+    description: 'y scale type. "symlog" supports signed values while compressing large magnitudes.',
+  },
 }
 
 const ordinalAxisProps: Record<string, ChartPropSpec> = {
@@ -293,34 +297,56 @@ const ordinalAxisProps: Record<string, ChartPropSpec> = {
   // while omitting them from the generated tool schema.
   valueFormat: { type: "function", omitFromSchema: true },
   categoryFormat: { type: "function", omitFromSchema: true },
+  dataIdAccessor: { type: ["string", "function"], description: "Stable datum id used by push-mode remove() and update()." },
 }
 
 // Realtime charts share a different prop surface than static charts:
 // `size` is the canonical sizing prop (with `width`/`height` aliases),
-// they don't expose `colorBy`/`colorScheme`/`title`/`showLegend`/`showGrid`,
+// they use chart-specific color encodings rather than the common
+// `colorBy`/`colorScheme` pair, but share the same accessibility and legend
+// metadata as the static chart wrappers,
 // and they add streaming-window controls (`windowSize`, `windowMode`,
 // `arrowOfTime`) plus the encoding configs (`decay`, `pulse`, `staleness`).
 // Push-only — `dataShape: "realtime"` and `required: []` (data arrives via
 // the ref API, not props).
 const realtimeProps: Record<string, ChartPropSpec> = {
+  data: { type: "array", description: "Optional initial/controlled streaming window; omit for ref-driven push mode." },
+  mode: {
+    type: "string",
+    enum: ["primary", "context", "sparkline", "mobile"] as const,
+    default: "primary",
+    description: "Display mode controlling dimensions, chrome, and interaction defaults.",
+  },
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
   maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes." },
-  margin: { type: "object" },
+  margin: { type: ["number", "object"] },
   className: { type: "string" },
+  title: { type: "string", description: "Visible title and accessible chart name." },
+  description: { type: "string", description: "Concise accessible chart description." },
+  summary: { type: "string", description: "Screen-reader-only takeaway or interaction guidance." },
+  accessibleTable: { type: "boolean", default: true, description: "Expose the current streaming window as an accessible data table." },
+  showLegend: { type: "boolean" },
+  legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const, default: "right" },
+  legendInteraction: { type: "string", enum: ["highlight", "isolate", "none"] as const, default: "none" },
   timeAccessor: { type: ["string", "function"], description: "Key for time/x values" },
   valueAccessor: { type: ["string", "function"], description: "Key for y values" },
   windowSize: { type: "number", description: "Number of data points visible" },
-  windowMode: { type: "string", enum: ["sliding", "stepping"] as const },
+  windowMode: { type: "string", enum: ["sliding", "growing"] as const },
   arrowOfTime: { type: "string", enum: ["left", "right"] as const },
   timeExtent: { type: "array" },
   valueExtent: { type: "array" },
   extentPadding: { type: "number" },
   showAxes: { type: "boolean" },
   background: { type: "string" },
+  cursor: {
+    type: "string",
+    description:
+      "Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior."
+  },
   enableHover: { type: ["boolean", "object"] },
-  tooltip: { type: ["function", "object"], description: "Tooltip content function or config" },
+  tooltip: { type: ["boolean", "string", "function", "object"], description: "Tooltip boolean, multi-series mode, content function, or config." },
   // `tooltipContent` and `onHover` are function-only callbacks — runtime-only.
   tooltipContent: { type: "function", omitFromSchema: true },
   onHover: { type: "function", omitFromSchema: true },
@@ -335,10 +361,31 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   decay: { type: "object", description: "Decay config: { type, halfLife, minOpacity }" },
   pulse: { type: "object", description: "Pulse config: { duration, color, glowRadius }" },
   staleness: { type: "object", description: "Staleness config: { threshold, dimOpacity, showBadge }" },
+  linkedHover: { type: ["boolean", "string", "object"] },
+  selection: { type: "object" },
+  loading: { type: "boolean" },
+  loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
+  emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
+  chartId: { type: "string" },
+  emphasis: { type: "string", enum: ["primary", "secondary"] as const },
+  pointIdAccessor: { type: ["string", "function"], omitFromSchema: true },
+  onObservation: { type: "function", omitFromSchema: true },
 }
+
+const realtimeStaticProps: Record<string, ChartPropSpec> = Object.fromEntries(
+  Object.entries(realtimeProps).filter(
+    ([propName]) => propName !== "windowSize" && propName !== "windowMode",
+  ),
+)
 
 const physicsProps: Record<string, ChartPropSpec> = {
   data: { type: "array", description: "Array of source records. Each record becomes one or more simulated bodies." },
+  mode: {
+    type: "string",
+    enum: ["primary", "context", "sparkline", "mobile"] as const,
+    default: "primary",
+    description: "Display mode controlling dimensions, chrome, and interaction defaults.",
+  },
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
@@ -354,19 +401,37 @@ const physicsProps: Record<string, ChartPropSpec> = {
     description: "Screen-reader-only takeaway and interaction guidance.",
   },
   accessibleTable: {
-    type: ["boolean", "object"],
+    type: "boolean",
     description: "Expose source data through Semiotic's screen-reader data table.",
   },
   chartId: { type: "string", description: "Stable chart identity for linked observation and navigation." },
   emphasis: { type: "string", enum: ["primary", "secondary"] as const },
   responsiveWidth: { type: "boolean" },
   responsiveHeight: { type: "boolean" },
+  responsiveRules: { type: "array", description: "Semantic responsive transforms applied before chart-mode defaults." },
+  mobileSemantics: { type: "object", description: "Phone/mobile visualization contract." },
+  mobileInteraction: { type: ["boolean", "object"], description: "Touch-first interaction policy." },
   colorBy: { type: ["string", "function"], description: "Categorical field or accessor used to color simulated bodies." },
+  color: { type: "string" },
+  stroke: { type: "string" },
+  strokeWidth: { type: "number" },
+  opacity: { type: "number" },
   seed: { type: "number", default: 1, description: "Deterministic simulation seed." },
   ballRadius: { type: "number", description: "Radius of each simulated circular body in pixels." },
   hoverRadius: { type: "number", description: "Pixel hit radius for body hover tooltips." },
   paused: { type: "boolean", description: "Pause the simulation at mount or on prop update." },
-  tooltip: { type: ["boolean", "function", "object"], description: "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips." },
+  tooltip: { type: ["boolean", "string", "function", "object"], description: "Tooltip content function/config, multi mode, true for the default body tooltip, or false to disable hover tooltips." },
+  annotations: { type: "array" },
+  autoPlaceAnnotations: { type: ["boolean", "object"] },
+  background: { type: "string" },
+  legend: { type: ["array", "object"], omitFromSchema: true },
+  legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const },
+  legendLayout: { type: "object" },
+  selection: { type: "object" },
+  linkedHover: { type: ["boolean", "string", "object"] },
+  loading: { type: "boolean" },
+  loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
+  emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
   frameProps: { type: "object", omitFromSchema: true },
 }
 
@@ -375,6 +440,7 @@ export const PROP_BAGS = {
   xyAxis: xyAxisProps,
   ordinalAxis: ordinalAxisProps,
   realtime: realtimeProps,
+  realtimeStatic: realtimeStaticProps,
   physics: physicsProps,
 } as const
 

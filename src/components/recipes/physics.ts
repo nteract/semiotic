@@ -483,8 +483,7 @@ export {
   processLaneWalls,
   processStageLayout,
   processStageRegions,
-  routeSurfaceRegion,
-  stageTargetInVolume
+  routeSurfaceRegion
 } from "./processPhysics"
 
 export {
@@ -493,7 +492,10 @@ export {
   regionCountsToProjectionRows
 } from "./processAggregates"
 
-export { processVolumePolygons } from "./processVolumeGeometry"
+export {
+  processVolumePolygons,
+  stageTargetInVolume
+} from "./processVolumeGeometry"
 
 export { comparePhysicsTrace, physicsReferenceEnvelope } from "./physicsReference"
 export type {
@@ -523,11 +525,13 @@ export {
 export {
   composePhysicsControllers,
   createCapacityQueueController,
-  createPortalController,
+  createPortalController
+} from "../stream/physics/PhysicsControllers"
+export {
   createDependencyGateController,
   createServiceLevelController,
   createServiceResourcePoolController
-} from "../stream/physics/PhysicsControllers"
+} from "../stream/physics/ServiceOperationsControllers"
 export type {
   CapacityQueueAbandonedInfo,
   CapacityQueueAgeSummary,
@@ -538,22 +542,26 @@ export type {
   CapacityQueueVisitInfo,
   CapacityQueueWindowSnapshot,
   ComposedPhysicsControllers,
+  PhysicsController,
+  PhysicsControllerTickContext
+} from "../stream/physics/PhysicsControllers"
+export type {
   DependencyGateController,
+  ServiceLevelController,
+  ServiceResourcePoolController
+} from "../stream/physics/ServiceOperationsControllers"
+export type {
   DependencyGateOptions,
   DependencyGateSnapshot,
-  PhysicsController,
-  PhysicsControllerTickContext,
   ServiceLevelCaseInfo,
   ServiceLevelCaseState,
-  ServiceLevelController,
   ServiceLevelControllerOptions,
   ServiceLevelSnapshot,
   ServiceResourceAssignment,
   ServiceResourceDefinition,
-  ServiceResourcePoolController,
   ServiceResourcePoolOptions,
   ServiceResourcePoolSnapshot
-} from "../stream/physics/PhysicsControllers"
+} from "../stream/physics/ServiceOperationsTypes"
 
 // Process chrome (stage bays, capacity badges, feature sockets).
 export { processChrome } from "./processChrome"

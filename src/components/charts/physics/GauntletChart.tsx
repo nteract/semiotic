@@ -1,7 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type { Style } from "../../stream/types"
 import StreamPhysicsFrame, {
@@ -70,38 +78,7 @@ import {
 } from "./gauntletChrome"
 import type { GauntletChartProps } from "./gauntletChartProps"
 
-// Public pure API (also used by SSR + tests)
-export {
-  GAUNTLET_WALL,
-  clampGauntletPoint,
-  buildGauntletPhysics
-} from "./gauntletPhysics"
-export {
-  applyGauntletEffect,
-  planGauntletPropertyWork,
-  replaceGauntletNegative
-} from "./gauntletEffects"
-export type {
-  GauntletAccessors,
-  GauntletCoreBodyFn,
-  GauntletEffect,
-  GauntletEvent,
-  GauntletEventContext,
-  GauntletEventLogItem,
-  GauntletGate,
-  GauntletLayout,
-  GauntletPopSpec,
-  GauntletProjectPlacement,
-  GauntletProjectPlacementFn,
-  GauntletProjectState,
-  GauntletPropertyDefinition,
-  GauntletPropertyForceContext,
-  GauntletPropertyWorkPlan,
-  GauntletPropertyWorkPlanOptions,
-  GauntletNegativeReplacementOptions,
-  GauntletViabilityFn
-} from "./gauntletPhysics"
-export type { GauntletChartProps }
+export * from "./gauntletPublic"
 
 const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
 
@@ -111,56 +88,27 @@ const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
  *
  * @example
  * ```tsx
- * <GauntletChart
- *   data={[{ id: "plan-a", positives: ["homes"], negatives: ["cost"] }]}
+ * <GauntletChart data={[{ id: "plan-a", positives: ["homes"], negatives: ["cost"] }]}
  *   positiveProperties={[{ id: "homes", label: "Homes", radius: 10 }]}
  *   negativeProperties={[{ id: "cost", label: "Cost", load: 1.2, radius: 8 }]}
- *   size={[720, 380]}
- * />
+ *   size={[720, 380]} />
  * ```
  *
  * @example
- * Multiple attached properties routed through timed gates, with the
- * settled viability/outcome projection strip enabled:
  * ```tsx
- * <GauntletChart
- *   data={[{ id: "plan-a", positives: ["homes", "jobs"], negatives: ["cost"] }]}
- *   positiveProperties={[
- *     { id: "homes", label: "Homes", radius: 10 },
- *     { id: "jobs", label: "Jobs", radius: 10 },
- *   ]}
- *   negativeProperties={[{ id: "cost", label: "Cost", load: 1.2, radius: 8 }]}
- *   gates={[
- *     { id: "review", label: "Review" },
- *     { id: "budget", label: "Budget" },
- *   ]}
- *   showProjection
- *   size={[720, 380]}
- * />
+ * <GauntletChart data={[{ id: "alpha", start: 0, work: 3 }, { id: "beta", start: 1.5, work: 1, risks: ["risk"] }]}
+ *   startTimeAccessor="start" negativeAccessor="risks"
+ *   negativeProperties={[{ id: "risk", label: "Review risk", load: 1.4 }]}
+ *   gates={[{ id: "review", time: 2, capacity: { unitsPerSecond: 2, unitAccessor: "work" } }]}
+ *   events={[{ id: "done", gateId: "review", time: 2, effects: [{ popNegative: ["risk"] }] }]}
+ *   showProjection />
  * ```
  *
- * @example
- * Stagger negative-only compound entities on project-local clocks and share a
- * finite service across their root bodies:
- * ```tsx
- * <GauntletChart
- *   data={pullRequests}
- *   startTimeAccessor="arrival"
- *   negativeAccessor="risks"
- *   negativeProperties={riskProperties}
- *   gates={[{
- *     id: "review",
- *     capacity: { unitsPerSecond: 5, unitAccessor: "reviewWork" }
- *   }]}
- *   events={reviewEvents}
- *   onCapacityChange={setCapacity}
- * />
- * ```
+ * Compose timed gates, capacity controls, staggered starts, and projections through the corresponding props.
  */
-export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Datum = Datum>(
-  props: GauntletChartProps<TDatum>,
-  ref: React.Ref<PhysicsFrameHandle>
-) {
+export const GauntletChart = forwardRef(function GauntletChart<
+  TDatum extends Datum = Datum
+>(props: GauntletChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     bodyGroups,
     coreBody,
@@ -184,8 +132,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     positiveProperties = EMPTY_GAUNTLET_PROPERTIES,
     projectPlacement,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed,
     showTethers = true,
     terminalBehavior = "outcome",
@@ -245,7 +191,10 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     loadingContent,
     size: chartSize
   })
-  const safeData = useMemo(() => filterSparseArray(data ?? []) as TDatum[], [data])
+  const safeData = useMemo(
+    () => filterSparseArray(data ?? []) as TDatum[],
+    [data]
+  )
   const dataKey = useMemo(
     () =>
       safeData
@@ -263,15 +212,23 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     [safeData, stateAccessors.idAccessor]
   )
   const positiveById = useMemo(
-    () => new Map(positiveProperties.map((property) => [property.id, property])),
+    () =>
+      new Map(positiveProperties.map((property) => [property.id, property])),
     [positiveProperties]
   )
   const negativeById = useMemo(
-    () => new Map(negativeProperties.map((property) => [property.id, property])),
+    () =>
+      new Map(negativeProperties.map((property) => [property.id, property])),
     [negativeProperties]
   )
-  const layout = useMemo(() => buildLayout(chartSize, gates, crashOffset), [chartSize, crashOffset, gates])
-  const gateById = useMemo(() => new Map(layout.gates.map((gate) => [gate.id, gate])), [layout.gates])
+  const layout = useMemo(
+    () => buildLayout(chartSize, gates, crashOffset),
+    [chartSize, crashOffset, gates]
+  )
+  const gateById = useMemo(
+    () => new Map(layout.gates.map((gate) => [gate.id, gate])),
+    [layout.gates]
+  )
   const gateRegionEffects = useMemo<StreamPhysicsRegionEffect[]>(
     () =>
       layout.gates.map((gate) => ({
@@ -291,10 +248,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           x: gate.x,
           y: layout.routeY,
           width: gate.capacity
-            ? gate.capacity.sensorWidth ?? Math.max(
+            ? (gate.capacity.sensorWidth ??
+              Math.max(
                 layout.width < 220 ? 12 : 96,
                 gate.width * (layout.width < 220 ? 2 : 6)
-              )
+              ))
             : Math.max(gate.width, layout.width < 220 ? 10 : 54),
           height: Math.max(
             4,
@@ -306,7 +264,13 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   )
   const [states, setStates] = useState<GauntletProjectState<TDatum>[]>(() =>
     safeData.map((datum, index) => {
-      const state = createInitialState(datum, index, stateAccessors, positiveProperties, negativeById)
+      const state = createInitialState(
+        datum,
+        index,
+        stateAccessors,
+        positiveProperties,
+        negativeById
+      )
       return {
         ...state,
         viability:
@@ -345,37 +309,38 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     viability
   }
 
-  const createState = useCallback((
-    datum: TDatum,
-    index: number,
-    defaultStartedAt = 0
-  ) => {
-    const deps = createStateDepsRef.current
-    const state = createInitialState(
-      datum,
-      index,
-      deps.stateAccessors,
-      deps.positiveProperties,
-      deps.negativeById
-    )
-    if (!deps.stateAccessors.startTimeAccessor) {
-      state.startedAt = Math.max(0, defaultStartedAt)
-    }
-    return {
-      ...state,
-      viability:
-        deps.viability?.(state, {
-          negativeProperties: deps.negativeById,
-          positiveProperties: deps.positiveById
-        }) ?? defaultViability(state, deps.positiveById, deps.negativeById)
-    }
-  }, [])
+  const createState = useCallback(
+    (datum: TDatum, index: number, defaultStartedAt = 0) => {
+      const deps = createStateDepsRef.current
+      const state = createInitialState(
+        datum,
+        index,
+        deps.stateAccessors,
+        deps.positiveProperties,
+        deps.negativeById
+      )
+      if (!deps.stateAccessors.startTimeAccessor) {
+        state.startedAt = Math.max(0, defaultStartedAt)
+      }
+      return {
+        ...state,
+        viability:
+          deps.viability?.(state, {
+            negativeProperties: deps.negativeById,
+            positiveProperties: deps.positiveById
+          }) ?? defaultViability(state, deps.positiveById, deps.negativeById)
+      }
+    },
+    []
+  )
 
   const resetRunState = useCallback(() => {
     processedGateVisitsRef.current.clear()
     capacitySnapshotsRef.current = []
     elapsedRef.current = 0
-    const next = safeDataRef.current.map((datum, index) => createState(datum, index))
+    const next = safeDataRef.current.map((datum, index) =>
+      createState(datum, index)
+    )
     statesRef.current = next
     setStates(next)
   }, [createState])
@@ -404,12 +369,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     }),
     [frameProps.config?.colliders, frameProps.config?.kernel, layout, seed]
   )
-  const rerun = usePhysicsRerun(
-    physicsConfig,
-    rerunMS,
-    paused,
-    resetRunState
-  )
+  const rerun = usePhysicsRerun(physicsConfig, rerunMS, paused, resetRunState)
   // Capacity controllers own queue state, so a replay must construct fresh
   // controllers along with the new physics store.
   const capacityControllers = useMemo(
@@ -435,7 +395,9 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     processedGateVisitsRef.current.clear()
     capacitySnapshotsRef.current = []
     elapsedRef.current = 0
-    const next = safeDataRef.current.map((datum, index) => createState(datum, index))
+    const next = safeDataRef.current.map((datum, index) =>
+      createState(datum, index)
+    )
     statesRef.current = next
     setStates(next)
   }, [createState, dataKey])
@@ -447,7 +409,8 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
 
   const projectEvents = useCallback(
     (project: GauntletProjectState<TDatum>) => {
-      const resolved = typeof events === "function" ? events(project, layout) : events
+      const resolved =
+        typeof events === "function" ? events(project, layout) : events
       return [...(resolved ?? [])].sort((a, b) => a.time - b.time)
     },
     [events, layout]
@@ -489,27 +452,48 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   const initialSpawns = useMemo(
     () =>
       states.flatMap((project, index) => {
-        const placement = resolvePlacement(project, index, layout, projectPlacement)
-        return buildProjectSpawns(project, index, layout, placement, positiveById, negativeById, coreBody)
+        const placement = resolvePlacement(
+          project,
+          index,
+          layout,
+          projectPlacement
+        )
+        return buildProjectSpawns(
+          project,
+          index,
+          layout,
+          placement,
+          positiveById,
+          negativeById,
+          coreBody
+        )
       }),
     [coreBody, layout, negativeById, positiveById, projectPlacement, states]
   )
 
-  const updateProjectState = useCallback((projectId: string, updater: (project: GauntletProjectState<TDatum>) => GauntletProjectState<TDatum>) => {
-    let changed = false
-    const next = statesRef.current.map((project) => {
-      if (project.id !== projectId) return project
-      const updated = updater(project)
-      changed = changed || updated !== project
-      return updated
-    })
-    if (!changed) return
+  const updateProjectState = useCallback(
+    (
+      projectId: string,
+      updater: (
+        project: GauntletProjectState<TDatum>
+      ) => GauntletProjectState<TDatum>
+    ) => {
+      let changed = false
+      const next = statesRef.current.map((project) => {
+        if (project.id !== projectId) return project
+        const updated = updater(project)
+        changed = changed || updated !== project
+        return updated
+      })
+      if (!changed) return
 
-    // Physics ticks can outpace React commits. Advance the authoritative ref
-    // immediately so a due event cannot be discovered again on the next tick.
-    statesRef.current = next
-    setStates(next)
-  }, [])
+      // Physics ticks can outpace React commits. Advance the authoritative ref
+      // immediately so a due event cannot be discovered again on the next tick.
+      statesRef.current = next
+      setStates(next)
+    },
+    []
+  )
 
   useImperativeHandle(
     ref,
@@ -526,7 +510,14 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         coreBody,
         createState
       }),
-    [coreBody, createState, layout, negativeById, positiveById, projectPlacement]
+    [
+      coreBody,
+      createState,
+      layout,
+      negativeById,
+      positiveById,
+      projectPlacement
+    ]
   )
 
   // A context-scale pop burst overwhelms a sparkline (its expansion is tens of
@@ -534,7 +525,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   const popScale =
     chartMode === "sparkline" ? 0.22 : chartMode === "mobile" ? 0.55 : 1
   const addBodiesForEffect = useCallback(
-    (project: GauntletProjectState<TDatum>, effect: GauntletEffect, controls: PhysicsPipelineControlSurface) => {
+    (
+      project: GauntletProjectState<TDatum>,
+      effect: GauntletEffect,
+      controls: PhysicsPipelineControlSurface
+    ) => {
       spawnBodiesForGauntletEffect({
         project,
         effect,
@@ -566,11 +561,23 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         terminalBehavior,
         elapsed: elapsedRef.current
       }),
-    [coreForceMode, gateById, layout, negativeById, positiveById, projectEvents, projectPlacement, terminalBehavior]
+    [
+      coreForceMode,
+      gateById,
+      layout,
+      negativeById,
+      positiveById,
+      projectEvents,
+      projectPlacement,
+      terminalBehavior
+    ]
   )
 
   const onTick = useCallback(
-    (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface) => {
+    (
+      result: PhysicsPipelineTickResult,
+      controls: PhysicsPipelineControlSurface
+    ) => {
       runGauntletTick(result, controls, {
         frameProps,
         elapsedRef,
@@ -618,7 +625,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         fill:
           datum.kind === CORE_KIND
             ? "var(--semiotic-primary, #0f766e)"
-            : datum.property?.color ?? "var(--semiotic-primary, #38bdf8)",
+            : (datum.property?.color ?? "var(--semiotic-primary, #38bdf8)"),
         // Halo + outline follow theme paper/ink so cores and property marks
         // stay legible under light and dark ThemeProvider modes.
         stroke:
@@ -636,7 +643,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     () =>
       typeof bodyGroups === "function"
         ? bodyGroups(states, layout)
-        : bodyGroups ?? [],
+        : (bodyGroups ?? []),
     [bodyGroups, layout, states]
   )
   const bodyGroupSemanticItems = useMemo(
@@ -718,7 +725,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   ) : undefined
   const backgroundGraphics = composePhysicsFrameGraphics(
     showChrome ? (
-      <GauntletChrome layout={layout} states={states} compact={layoutMode.resolved.compactMode} />
+      <GauntletChrome
+        layout={layout}
+        states={states}
+        compact={layoutMode.resolved.compactMode}
+      />
     ) : undefined,
     frameProps.backgroundGraphics
   )
@@ -727,7 +738,8 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     frameProps.foregroundGraphics
   )
   const renderBody = frameProps.renderBody ?? drawGauntletBody
-  const tooltipContent = tooltipProps.tooltipContent ?? defaultGauntletTooltipContent
+  const tooltipContent =
+    tooltipProps.tooltipContent ?? defaultGauntletTooltipContent
 
   return renderPhysicsFrame(
     "GauntletChart",
@@ -746,7 +758,10 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         "var(--semiotic-bg, transparent)"
       }
       bodyForces={bodyForces}
-      bodySemanticItems={(frameProps.bodySemanticItems as PhysicsBodySemanticItemAccessor | undefined) ?? gauntletSemanticItem}
+      bodySemanticItems={
+        (frameProps.bodySemanticItems as
+          PhysicsBodySemanticItemAccessor | undefined) ?? gauntletSemanticItem
+      }
       bodyStyle={bodyStyle}
       beforePaint={beforePaint}
       onClick={onClick ? gauntletOnClick : sharedFrameProps.onClick}
@@ -762,16 +777,16 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       paused={paused}
       regionEffects={regionEffects}
       renderBody={renderBody}
-      responsiveHeight={responsiveHeight}
-      responsiveWidth={responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       size={chartSize}
       tooltipContent={tooltipContent}
-    />
+    />,
+    layoutMode
   )
 }) as unknown as {
   <TDatum extends Datum = Datum>(
-    props: GauntletChartProps<TDatum> &
-      React.RefAttributes<PhysicsFrameHandle>
+    props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }

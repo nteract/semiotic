@@ -1,13 +1,23 @@
 "use client"
 import type { Datum } from "./datumTypes"
 
-import { useRef, useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
-import { createColorScale, getColor, STREAMING_PALETTE } from "./colorUtils"
+import {
+  createColorScale,
+  getColor,
+  resolveExplicitColor,
+  STREAMING_PALETTE
+} from "./colorUtils"
 import type { Accessor } from "./types"
 import { useThemeCategorical, type LegendPosition } from "./hooks"
-import { useLinkedChartCategories } from "../../LinkedCharts"
+import {
+  useLinkedChartCategories,
+  useLinkedChartCategoryRegistryActive
+} from "../../LinkedCharts"
 import { useCategoryColors } from "../../CategoryColors"
+
+const FUNCTION_COLOR_BY_DOMAIN = Symbol("streaming-function-color-domain")
 
 /**
  * Low-level push-API category-discovery wrapper.
@@ -38,6 +48,8 @@ export function useStreamingLegend({
   colorScheme,
   showLegend,
   legendPosition = "right",
+  trackCategoryDomain = true,
+  registerLinkedCategories = true
 }: {
   /** True when data prop is undefined (push API mode) */
   isPushMode: boolean
@@ -49,54 +61,83 @@ export function useStreamingLegend({
   showLegend: boolean | undefined
   /** Legend position */
   legendPosition?: LegendPosition
+  /** Install frame-domain discovery; disable when no legend/linked consumer needs it. */
+  trackCategoryDomain?: boolean
+  /** Disable when the caller already registers the same domain through chart setup. */
+  registerLinkedCategories?: boolean
 }) {
-  // Track discovered categories — ref to avoid re-render on every push
-  const categoriesRef = useRef<Set<string>>(new Set())
-  // Ordered list of categories (preserves discovery order for stable colors)
-  const orderedRef = useRef<string[]>([])
   // State version — incremented only when a NEW category is discovered
   const [version, setVersion] = useState(0)
   const categoryColors = useCategoryColors()
   const themeCategorical = useThemeCategorical()
+  const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
+  const shouldTrackCategoryDomain =
+    isPushMode &&
+    !!colorBy &&
+    (trackCategoryDomain || linkedCategoryRegistryActive)
+  // Parent components commonly recreate inline accessors. Keep the last
+  // emitted domain visible across those identity-only changes; the frame still
+  // receives the latest function and authoritatively replaces this domain if
+  // its actual category semantics changed.
+  const colorByDomainKey =
+    typeof colorBy === "function" ? FUNCTION_COLOR_BY_DOMAIN : colorBy
+  const domain = useMemo(
+    () => ({
+      lifecycle: { colorByDomainKey, isPushMode, shouldTrackCategoryDomain },
+      categories: new Set<string>(),
+      ordered: [] as string[]
+    }),
+    [colorByDomainKey, isPushMode, shouldTrackCategoryDomain]
+  )
 
   const extractCategory = useCallback(
     (datum: Datum): string | null => {
       if (!colorBy) return null
-      const val = typeof colorBy === "function" ? colorBy(datum) : datum[colorBy as string]
-      return val != null ? String(val) : null
+      const val =
+        typeof colorBy === "function"
+          ? colorBy(datum)
+          : datum[colorBy as string]
+      return String(val)
     },
     [colorBy]
   )
 
   const processData = useCallback(
     (items: Datum[]) => {
-      if (!isPushMode || !colorBy) return
+      if (!shouldTrackCategoryDomain) return
       let changed = false
       for (const d of items) {
         if (!d || typeof d !== "object") continue
         const cat = extractCategory(d)
-        if (cat != null && !categoriesRef.current.has(cat)) {
-          categoriesRef.current.add(cat)
-          orderedRef.current.push(cat)
+        if (cat != null && !domain.categories.has(cat)) {
+          domain.categories.add(cat)
+          domain.ordered.push(cat)
           changed = true
         }
       }
       if (changed) {
-        setVersion(v => v + 1)
+        setVersion((v) => v + 1)
       }
     },
-    [isPushMode, colorBy, extractCategory]
+    [domain, extractCategory, shouldTrackCategoryDomain]
   )
 
-  const setCategoryDomain = useCallback((categories: string[]) => {
-    if (!isPushMode || !colorBy) return
-    const next = Array.from(new Set(categories.map(String)))
-    const current = orderedRef.current
-    if (current.length === next.length && current.every((v, i) => v === next[i])) return
-    categoriesRef.current = new Set(next)
-    orderedRef.current = next
-    setVersion(v => v + 1)
-  }, [isPushMode, colorBy])
+  const setCategoryDomain = useCallback(
+    (categories: string[]) => {
+      if (!shouldTrackCategoryDomain) return
+      const next = Array.from(new Set(categories.map(String)))
+      const current = domain.ordered
+      if (
+        current.length === next.length &&
+        current.every((v, i) => v === next[i])
+      )
+        return
+      domain.categories = new Set(next)
+      domain.ordered = next
+      setVersion((v) => v + 1)
+    },
+    [domain, shouldTrackCategoryDomain]
+  )
 
   /** Wrap push to intercept data for category discovery */
   const wrapPush = useCallback(
@@ -122,12 +163,17 @@ export function useStreamingLegend({
 
   /** Reset discovered categories (called on clear) */
   const resetCategories = useCallback(() => {
-    categoriesRef.current = new Set()
-    orderedRef.current = []
-    setVersion(v => v + 1)
-  }, [])
+    domain.categories = new Set()
+    domain.ordered = []
+    setVersion((v) => v + 1)
+  }, [domain])
 
-  const linkedCategories = isPushMode && colorBy ? orderedRef.current : []
+  const categorySnapshot = useMemo(() => {
+    void version
+    return shouldTrackCategoryDomain ? [...domain.ordered] : []
+  }, [domain, shouldTrackCategoryDomain, version])
+  const linkedCategories =
+    registerLinkedCategories && isPushMode && colorBy ? categorySnapshot : []
   useLinkedChartCategories(linkedCategories)
 
   // Build legend from discovered categories. Color resolution mirrors the
@@ -138,7 +184,7 @@ export function useStreamingLegend({
     if (!isPushMode || !colorBy || showLegend === false) return undefined
     // Use version to trigger recompute (consumed by useMemo dep)
     void version
-    const categories = orderedRef.current
+    const categories = domain.ordered
     if (categories.length === 0) return undefined
 
     // Resolution order matches `useColorScale` so the legend swatch and the
@@ -146,25 +192,54 @@ export function useStreamingLegend({
     // (e.g. "category10") → theme categorical → STREAMING_PALETTE. The string
     // case was previously ignored — `createColorScale` resolves it via d3
     // `scaleOrdinal` which understands the named schemes.
-    const effectiveScheme: string | string[] = Array.isArray(colorScheme) && colorScheme.length > 0
-      ? colorScheme
-      : (typeof colorScheme === "string" && colorScheme.length > 0)
+    const effectiveScheme: string | string[] =
+      Array.isArray(colorScheme) && colorScheme.length > 0
         ? colorScheme
-        : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
+        : typeof colorScheme === "string" && colorScheme.length > 0
+          ? colorScheme
+          : themeCategorical && themeCategorical.length > 0
+            ? themeCategorical
+            : STREAMING_PALETTE
 
     // Build synthetic data so createLegend can extract categories
-    const syntheticColorBy = typeof colorBy === "string" ? colorBy : "__streamCat"
-    const syntheticData = categories.map(cat => ({ [syntheticColorBy]: cat }))
-    const fallbackScale = createColorScale(syntheticData, syntheticColorBy, effectiveScheme)
-    const syntheticScale = (v: string) => categoryColors?.[v] || fallbackScale(v) || "#999"
+    const syntheticColorBy =
+      typeof colorBy === "string" ? colorBy : "__streamCat"
+    const syntheticData = categories.map((cat) => ({ [syntheticColorBy]: cat }))
+    const fallbackScale = createColorScale(
+      syntheticData,
+      syntheticColorBy,
+      effectiveScheme
+    )
+    const explicitColorMap =
+      colorScheme &&
+      typeof colorScheme === "object" &&
+      !Array.isArray(colorScheme)
+        ? colorScheme
+        : undefined
+    const syntheticScale = (v: string) =>
+      (categoryColors ? resolveExplicitColor(categoryColors, v) : undefined) ??
+      (explicitColorMap
+        ? resolveExplicitColor(explicitColorMap, v)
+        : undefined) ??
+      fallbackScale(v) ??
+      "#999"
 
     return createLegend({
       data: syntheticData,
       colorBy: syntheticColorBy,
       colorScale: syntheticScale,
-      getColor,
+      getColor
     })
-  }, [isPushMode, colorBy, showLegend, colorScheme, categoryColors, themeCategorical, version])
+  }, [
+    isPushMode,
+    colorBy,
+    showLegend,
+    colorScheme,
+    categoryColors,
+    themeCategorical,
+    version,
+    domain
+  ])
 
   /** Margin adjustment needed for streaming legend */
   const streamingMarginAdjust = useMemo(() => {
@@ -180,14 +255,14 @@ export function useStreamingLegend({
     wrapPush,
     wrapPushMany,
     resetCategories,
-    categories: orderedRef.current,
-    categoryDomainProps: isPushMode && colorBy
+    categories: categorySnapshot,
+    categoryDomainProps: shouldTrackCategoryDomain
       ? {
-        legendCategoryAccessor: colorBy,
-        onCategoriesChange: setCategoryDomain,
-      }
+          legendCategoryAccessor: colorBy,
+          onCategoriesChange: setCategoryDomain
+        }
       : {},
     streamingLegend,
-    streamingMarginAdjust,
+    streamingMarginAdjust
   }
 }

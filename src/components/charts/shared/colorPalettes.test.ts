@@ -5,6 +5,7 @@ import {
   interpolateViridis,
   interpolateTurbo,
   interpolateRdBu,
+  getSequentialInterpolator,
 } from "./colorPalettes"
 
 describe("colorPalettes — interpolator output shape", () => {
@@ -41,6 +42,15 @@ describe("colorPalettes — interpolator output shape", () => {
     expect(interpolateRdBu(0)).toBe("#67001f")
     expect(interpolateRdBu(1)).toBe("#053061")
   })
+
+  it.each(["__proto__", "constructor", "toString"])(
+    "falls back for prototype-like sequential scheme %s",
+    (scheme) => {
+      const interpolator = getSequentialInterpolator(scheme)
+      expect(interpolator).toBe(interpolateBlues)
+      expect(interpolator(0.5)).toMatch(/^#[0-9a-f]{6}$/)
+    }
+  )
 })
 
 describe("colorPalettes — categorical schemes", () => {

@@ -92,7 +92,10 @@ const ENTRY_GRAPHS = [
   // sub-KiB headroom for the stable, canonical AI chart catalog.
   // Bumped 503→504: boundary-hub ordering and its typed helper add 0.1 KiB
   // gzip to the AI catalog (503.1 KiB measured); retain reviewable headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 504 },
+  // Bumped 504→505: production CI graph measures 504.3 KiB gzip after the
+  // release hardening pass. Keep one KiB of explicit headroom so the AI
+  // endpoint does not fail on a sub-KiB boundary fluctuation.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 505 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

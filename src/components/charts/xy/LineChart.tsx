@@ -75,7 +75,7 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * Scale type for the y-axis
    * @default "linear"
    */
-  yScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log" | "symlog"
 
   /**
    * Field name or function to group data into multiple lines

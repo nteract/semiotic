@@ -1095,6 +1095,22 @@ function makeSsrParityCases(React) {
       props: { data: hierarchy, childrenAccessor: "children", valueAccessor: "value", width: 420, height: 360 },
     },
     {
+      id: "orbit",
+      component: "OrbitDiagram",
+      comparison: "structural",
+      props: {
+        data: hierarchy,
+        childrenAccessor: "children",
+        nodeIdAccessor: "name",
+        colorByDepth: true,
+        showRings: true,
+        showLabels: true,
+        animated: false,
+        width: 420,
+        height: 360,
+      },
+    },
+    {
       id: "process-sankey",
       component: "ProcessSankey",
       props: {

@@ -14,6 +14,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { dirname, extname, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { build } from "esbuild"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
@@ -177,19 +178,19 @@ function validatePilotDefinitions(failures, definitions, validateDefinitions) {
 }
 
 async function loadManifest(filePath) {
-  const source = read(filePath)
-  const resolvedSource = source.replace(
-    /from\s+["'](\.[^"']+)["']/g,
-    (_, relativePath) => {
-      const extension = extname(relativePath) ? "" : ".js"
-      const resolvedPath = pathToFileURL(
-        resolve(dirname(filePath), `${relativePath}${extension}`)
-      ).href
-      return `from ${JSON.stringify(resolvedPath)}`
-    }
-  )
+  // Bundle the small pure-data registry before importing it. Importing a
+  // typeless `.js` file URL directly makes Node reparse it as ESM and emit a
+  // MODULE_TYPELESS_PACKAGE_JSON warning on every release check.
+  const bundled = await build({
+    entryPoints: [filePath],
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    write: false,
+    logLevel: "silent"
+  })
   return import(
-    `data:text/javascript;base64,${Buffer.from(resolvedSource).toString("base64")}`
+    `data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].text).toString("base64")}`
   )
 }
 

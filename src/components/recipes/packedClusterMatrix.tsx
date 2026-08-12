@@ -360,7 +360,7 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
   const fillFor = (colorKey: string, t: number): string => {
     let f = shaders.get(colorKey)
     if (!f) {
-      const base = (colorMap && colorMap[colorKey]) || ctx.resolveColor(colorKey)
+      const base = colorMap && Object.prototype.hasOwnProperty.call(colorMap, colorKey) && typeof colorMap[colorKey] === "string" && colorMap[colorKey] ? colorMap[colorKey] : ctx.resolveColor(colorKey)
       f = makeShade(base, shadeStrength)
       shaders.set(colorKey, f)
     }
@@ -388,7 +388,7 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
   // optional stroked icon is drawn inside for values present in `iconMap`.
   const iconMap = cfg.iconMap
   const iconFor = (val: string): NetworkSymbolName | null =>
-    iconAcc && iconMap && iconMap[val] ? iconMap[val] : null
+    iconAcc && iconMap && Object.prototype.hasOwnProperty.call(iconMap, val) ? iconMap[val] ?? null : null
   // The base shape: a circle in icon mode, otherwise the symbol encoding.
   const baseShapeFor = (m: RawMark): NetworkSymbolName => (iconAcc ? "circle" : symbolFor(m.symVal))
 

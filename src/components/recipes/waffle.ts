@@ -182,7 +182,7 @@ export interface CellWeight {
   weight: number
 }
 
-export type AllocatedCells<T extends CellWeight = CellWeight> = T & {
+export interface AllocatedCells extends CellWeight {
   /** The category's exact (fractional) share of `totalCells`. */
   exact: number
   /** The integer cells assigned to this category. */
@@ -190,6 +190,9 @@ export type AllocatedCells<T extends CellWeight = CellWeight> = T & {
   /** Fractional leftover (`exact - floor(exact)`), the largest-remainder key. */
   remainder: number
 }
+
+/** Allocation metadata while preserving any additional fields from the input. */
+export type AllocatedCellsFor<T extends CellWeight = CellWeight> = T & AllocatedCells
 
 export interface AllocateCellsOptions {
   /** Cells guaranteed to every category with a positive weight, when the cell
@@ -225,7 +228,7 @@ export function allocateCells<T extends CellWeight>(
   weights: readonly T[],
   totalCells: number,
   opts?: AllocateCellsOptions,
-): AllocatedCells<T>[] {
+): AllocatedCellsFor<T>[] {
   const cellBudget = Number.isFinite(totalCells) ? Math.max(0, Math.floor(totalCells)) : 0
   const safeWeight = (weight: number) => Number.isFinite(weight) ? Math.max(0, weight) : 0
   const positiveCategoryCount = weights.reduce(
@@ -241,7 +244,7 @@ export function allocateCells<T extends CellWeight>(
     return weights.map((w) => ({ ...w, exact: 0, cells: 0, remainder: 0 }))
   }
 
-  const groups: AllocatedCells<T>[] = weights.map((w) => {
+  const groups: AllocatedCellsFor<T>[] = weights.map((w) => {
     const weight = safeWeight(w.weight)
     const exact = (weight / total) * cellBudget
     return {

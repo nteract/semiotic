@@ -3,7 +3,7 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import type { StreamXYFrameProps } from "../stream/types"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import {
   buildEvidence,
   numericDomain,
@@ -27,6 +27,8 @@ import {
   generateAxesSVG
 } from "./staticSVGChrome"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
+import { normalizeXYData } from "../stream/normalizeXYData"
+import { resolveFrameGraphics } from "../stream/frameGraphics"
 
 export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
@@ -34,7 +36,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const size = props.size || [500, 300]
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const hasVisibleTitle = hasTextTitle(props.title)
-  const data = filterSparseArray(props.data)
+  const data = normalizeXYData(filterSparseArray(props.data), props.lineDataAccessor)
   const xyLegendCategories = props.showLegend
     ? extractCategories(data, props.colorAccessor || props.groupAccessor || props.categoryAccessor)
     : []
@@ -68,12 +70,13 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   const pipelineConfig: PipelineConfig = {
     chartType: props.chartType,
+    runtimeMode: isStreaming ? "streaming" : "bounded",
     windowSize: props.windowSize ?? 200,
     windowMode: props.windowMode ?? "sliding",
     arrowOfTime: isStreaming ? (props.arrowOfTime ?? "right") : "right",
     extentPadding: props.extentPadding ?? 0.1,
-    xAccessor: isStreaming ? undefined : props.xAccessor,
-    yAccessor: isStreaming ? undefined : props.yAccessor,
+    xAccessor: props.xAccessor,
+    yAccessor: props.yAccessor,
     timeAccessor: isStreaming ? props.timeAccessor : undefined,
     valueAccessor: props.valueAccessor,
     colorAccessor: props.colorAccessor,
@@ -83,7 +86,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     // passes them through; without them here symbolBy no-ops in SSR.
     symbolAccessor: props.symbolAccessor,
     symbolMap: props.symbolMap,
-    groupAccessor: props.groupAccessor,
+    groupAccessor: props.groupAccessor || (props.lineDataAccessor ? "_lineGroup" : undefined),
     categoryAccessor: props.categoryAccessor,
     lineDataAccessor: props.lineDataAccessor,
     xExtent: props.xExtent,
@@ -136,6 +139,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     colorScheme: effectiveColorScheme,
     themeCategorical: theme.colors.categorical,
     themeSequential: theme.colors.sequential,
+    themeDiverging: theme.colors.diverging,
     themeSemantic: resolveThemeSemanticColors(theme),
     customLayout: props.customLayout,
     layoutConfig: props.layoutConfig,
@@ -148,6 +152,11 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     showValues: props.showValues,
     heatmapValueFormat: props.heatmapValueFormat,
     heatmapColorScale: props.heatmapColorScale,
+    heatmapAggregation: props.heatmapAggregation,
+    heatmapXBins: props.heatmapXBins,
+    heatmapYBins: props.heatmapYBins,
+    pointIdAccessor: props.pointIdAccessor,
+    onLayoutError: props.onLayoutError,
   }
 
   const store = new PipelineStore(pipelineConfig)
@@ -157,8 +166,20 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   }
 
   store.computeScene({ width, height })
+  const resolvedBackgroundGraphics = resolveFrameGraphics(
+    props.backgroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
+  const resolvedForegroundGraphics = resolveFrameGraphics(
+    props.foregroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
 
-  if (!store.scales || store.scene.length === 0) {
+  if (!store.scales) {
     if (sink) {
       sink.evidence = buildEvidence({
         frameType: "xy",
@@ -170,8 +191,26 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         margin,
       })
     }
+    const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
+      ? (
+        <>
+          {resolvedBackgroundGraphics}
+          {props.annotations ? renderStaticAnnotations({
+            annotations: props.annotations,
+            autoPlaceAnnotations: props.autoPlaceAnnotations,
+            svgAnnotationRules: props.svgAnnotationRules,
+            annotationData: data,
+            scales: {},
+            layout: { width, height },
+            theme,
+            idPrefix: props._idPrefix,
+          }) : null}
+          {resolvedForegroundGraphics}
+        </>
+      )
+      : null
     return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(null, {
+      wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
         title: props.title, description: props.description, background: props.background,
@@ -186,7 +225,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const renderedScene = renderSceneListWithBackend({
     nodes: store.scene,
     renderMode: props.renderMode,
-    fallback: (node, index) => xySceneNodeToSVG(node, index, idPfx),
+    fallback: (node, index) =>
+      xySceneNodeToSVG(node, index, idPfx, props.hoverRadius ?? 30),
   })
 
   if (sink) {
@@ -260,7 +300,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   const content = (
     <>
-      {props.backgroundGraphics}
+      {resolvedBackgroundGraphics}
       {svgPreRendererNodes}
       {grid}
       <defs>
@@ -271,7 +311,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       <g clipPath={`url(#${plotClipId})`}>{dataMarks}</g>
       {axes}
       {annotationNodes}
-      {props.foregroundGraphics}
+      {resolvedForegroundGraphics}
       {store.customLayoutOverlays}
     </>
   )

@@ -4,83 +4,31 @@ import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSan
 import { buildProcessSankeyBackgroundGraphics } from "../charts/network/processSankey/axisChrome"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
-import { createEdgeStyleFn, inferNodesFromEdges, flattenHierarchy } from "../charts/network/../shared/networkUtils"
-import { createColorScale, getColor, resolveCategoricalPalette, DEPTH_PALETTE_COLORS } from "../charts/shared/colorUtils"
+import {
+  createEdgeStyleFn,
+  inferNodesFromEdges,
+  flattenHierarchy
+} from "../charts/network/../shared/networkUtils"
+import {
+  createColorScale,
+  getColor,
+  resolveCategoricalPalette,
+  DEPTH_PALETTE_COLORS
+} from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
-import { type ChartConfig, primitiveStyleOverrides } from "./serverChartConfigShared"
-import { mergeShapeStyle, hasPrimitiveOverrides } from "../charts/shared/mergeShapeStyle"
+import {
+  type ChartConfig,
+  primitiveStyleOverrides
+} from "./serverChartConfigShared"
+import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
-import {
-  composeHierarchyNodeStyle,
-  resolveForceEdgeStyle,
-} from "./serverChartConfigNetworkStyles"
+import { composeHierarchyNodeStyle } from "./serverChartConfigNetworkStyles"
 import * as React from "react"
 
 // ── Network Charts ─────────────────────────────────────────────────────
-export const forceDirectedGraph: ChartConfig = {
-  frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const edgeStyle = resolveForceEdgeStyle(rest)
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
-    const baseNodeStyle = rest.nodeStyle ?? ((d: Datum) => {
-      const raw = (d?.data as Datum) || d
-      return {
-        // ForceDirectedGraph is intentionally monocolor until colorBy is
-        // requested; the network layout's palette fallback would otherwise
-        // assign a different color to each node on SSR.
-        fill: colorBy
-          ? getColor(raw, colorBy as string | ((node: Datum) => string), undefined)
-          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
-        ...(typeof rest.nodeSize === "number" && { r: rest.nodeSize }),
-      }
-    })
-    const ruleNodeStyle = styleRulesToNodeStyle(
-      rest.styleRules,
-      colorBy as string | ((d: Datum) => unknown) | undefined,
-      typeof rest.nodeSize === "number" ? undefined : rest.nodeSize,
-    )
-    const ruledNodeStyle = ruleNodeStyle
-      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
-      : baseNodeStyle
-    // Node-only props win over the generic primitives, matching the HOC's
-    // documented `nodeStroke ?? stroke` precedence.
-    const configuredNodeStyle = mergeShapeStyle(ruledNodeStyle, {
-      stroke: (rest.nodeStroke ?? rest.stroke) as string | undefined,
-      strokeWidth: (rest.nodeStrokeWidth ?? rest.strokeWidth) as number | undefined,
-      opacity: rest.opacity as number | undefined,
-    })
-    return {
-      chartType: "force",
-      nodes: rest.nodes,
-      edges: rest.edges,
-      // Accept the canonical `nodeIdAccessor` (and the legacy `nodeIDAccessor`
-      // alias), matching the HOC and the other network SSR configs.
-      nodeIDAccessor: rest.nodeIdAccessor || rest.nodeIDAccessor,
-      sourceAccessor: rest.sourceAccessor,
-      targetAccessor: rest.targetAccessor,
-      colorBy,
-      colorScheme,
-      iterations: rest.iterations,
-      forceStrength: rest.forceStrength,
-      showLabels: rest.showLabels ?? false,
-      nodeLabel: rest.nodeLabel,
-      nodeSize: rest.nodeSize ?? 8,
-      nodeSizeRange: rest.nodeSizeRange,
-      nodeStyle: configuredNodeStyle,
-      edgeStyle,
-      // `...common` last, mirroring the HOC's trailing `{...frameProps}`: an
-      // explicit frameProps nodeStyle/edgeStyle is the documented escape hatch
-      // and outranks the primitive overlay on both paths.
-      ...common,
-    }
-  },
-}
-
 // ProcessSankey is unique among network HOCs in that it doesn't use a
 // built-in chartType — it composes via the `customNetworkLayout`
 // escape hatch. The SSR config therefore runs the algorithm + path
@@ -111,7 +59,10 @@ export const processSankey: ChartConfig = {
     const groupBy = rest.groupBy
     const edgeIdAccessor = rest.edgeIdAccessor || "id"
 
-    const accVal = (acc: unknown, d: Datum): unknown => typeof acc === "function" ? (acc as (d: Datum) => unknown)(d) : d[acc as string]
+    const accVal = (acc: unknown, d: Datum): unknown =>
+      typeof acc === "function"
+        ? (acc as (d: Datum) => unknown)(d)
+        : d[acc as string]
 
     const rawEdges: Datum[] = Array.isArray(rest.edges) ? rest.edges : []
     // Match the HOC: when `nodes` is omitted, infer them from the
@@ -119,17 +70,18 @@ export const processSankey: ChartConfig = {
     // validation issue and `renderChart("ProcessSankey", { edges })`
     // would refuse to draw.
     const explicitNodes: Datum[] = Array.isArray(rest.nodes) ? rest.nodes : []
-    const rawNodes: Datum[] = explicitNodes.length > 0
-      ? explicitNodes
-      : (inferNodesFromEdges(
-          [],
-          rawEdges,
-          sourceAccessor as string | ((d: Datum) => string),
-          targetAccessor as string | ((d: Datum) => string),
-        ) as Datum[])
+    const rawNodes: Datum[] =
+      explicitNodes.length > 0
+        ? explicitNodes
+        : (inferNodesFromEdges(
+            [],
+            rawEdges,
+            sourceAccessor as string | ((d: Datum) => string),
+            targetAccessor as string | ((d: Datum) => string)
+          ) as Datum[])
     const domain: [number, number] = [
       toTime((rest.domain as [unknown, unknown])?.[0]),
-      toTime((rest.domain as [unknown, unknown])?.[1]),
+      toTime((rest.domain as [unknown, unknown])?.[1])
     ]
 
     const ns = rawNodes.map((n) => {
@@ -144,16 +96,21 @@ export const processSankey: ChartConfig = {
         __raw: Datum
       } = { id, label: labelValue == null ? id : String(labelValue), __raw: n }
       const groupValue = groupBy ? accVal(groupBy, n) : null
-      if (groupValue != null && String(groupValue) !== "") out.group = String(groupValue)
+      if (groupValue != null && String(groupValue) !== "")
+        out.group = String(groupValue)
       if (Array.isArray(x) && x.length === 2) {
-        const a = toTime(x[0]); const b = toTime(x[1])
+        const a = toTime(x[0])
+        const b = toTime(x[1])
         if (Number.isFinite(a) && Number.isFinite(b)) out.xExtent = [a, b]
       }
       return out
     })
     const es = rawEdges.map((e, i) => {
       const fromAcc = accVal(edgeIdAccessor, e) as string | undefined
-      const id = fromAcc != null ? String(fromAcc) : `${accVal(sourceAccessor, e)}-${accVal(targetAccessor, e)}-${i}`
+      const id =
+        fromAcc != null
+          ? String(fromAcc)
+          : `${accVal(sourceAccessor, e)}-${accVal(targetAccessor, e)}-${i}`
       const out: {
         id: string
         source: string
@@ -171,7 +128,7 @@ export const processSankey: ChartConfig = {
         value: Number(accVal(valueAccessor, e)),
         startTime: toTime(accVal(startTimeAccessor, e)),
         endTime: toTime(accVal(endTimeAccessor, e)),
-        __raw: e,
+        __raw: e
       }
       if (systemInTimeAccessor) {
         const t = toTime(accVal(systemInTimeAccessor, e))
@@ -191,16 +148,20 @@ export const processSankey: ChartConfig = {
     // back through frame props (otherwise dimensions diverge and the
     // chart visibly clips against the legend).
     const [width, height] = (common.size as [number, number]) ?? [600, 400]
-    const userMargin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | undefined
-    const orientation = rest.orientation === "vertical" ? "vertical" : "horizontal"
-    const hasAxisTicks = Array.isArray(rest.axisTicks) && rest.axisTicks.length > 0
+    const userMargin = common.margin as
+      | { top?: number; right?: number; bottom?: number; left?: number }
+      | undefined
+    const orientation =
+      rest.orientation === "vertical" ? "vertical" : "horizontal"
+    const hasAxisTicks =
+      Array.isArray(rest.axisTicks) && rest.axisTicks.length > 0
     const hasTitle = Boolean(common.title)
     const showQualityReadout = Boolean(rest.showQualityReadout)
     const defaultMargin = resolveProcessSankeyMarginDefaults(
       hasTitle,
       showQualityReadout,
       hasAxisTicks,
-      orientation,
+      orientation
     )
     const baseMargin = { ...defaultMargin, ...userMargin }
     // ProcessSankey owns a categorical legend rather than using the frame's
@@ -208,15 +169,22 @@ export const processSankey: ChartConfig = {
     const showLegend = common.showLegend ?? Boolean(colorBy)
     const legendActive = showLegend && Boolean(colorBy)
     const legendPos = (common.legendPosition as string | undefined) ?? "right"
-    const explicitMargin = common.__explicitMargin as { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
+    const explicitMargin = common.__explicitMargin as
+      | { top?: number; right?: number; bottom?: number; left?: number }
+      | number
+      | undefined
     const marginWasSet = (side: "top" | "right" | "bottom" | "left") =>
       typeof explicitMargin === "number" ||
-      (explicitMargin != null && typeof explicitMargin === "object" && explicitMargin[side] != null)
+      (explicitMargin != null &&
+        typeof explicitMargin === "object" &&
+        explicitMargin[side] != null)
     // Match the HOC's custom legend reservation. Do not overwrite a side the
     // caller explicitly set: that is the contract used for external legends.
     if (legendActive) {
-      if (legendPos === "right" && !marginWasSet("right")) baseMargin.right = Math.max(baseMargin.right, 140)
-      else if (legendPos === "bottom" && !marginWasSet("bottom")) baseMargin.bottom = Math.max(baseMargin.bottom, 80)
+      if (legendPos === "right" && !marginWasSet("right"))
+        baseMargin.right = Math.max(baseMargin.right, 140)
+      else if (legendPos === "bottom" && !marginWasSet("bottom"))
+        baseMargin.bottom = Math.max(baseMargin.bottom, 80)
     }
     const margin = baseMargin
     const plotW = width - margin.left - margin.right
@@ -233,15 +201,18 @@ export const processSankey: ChartConfig = {
     const palette = resolveCategoricalPalette(
       colorScheme,
       resolvedTheme.colors.categorical,
-      schemeCategory10,
+      schemeCategory10
     )
-    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const colorByFn =
+      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
     const scaleSourceData: Datum[] = colorByFn
       ? rawNodes.map((n) => ({ _cat: colorByFn(n) }))
       : rawNodes
     const scaleColorBy: string | ((d: Datum) => string) | undefined = colorByFn
       ? "_cat"
-      : (typeof colorBy === "string" ? colorBy : undefined)
+      : typeof colorBy === "string"
+        ? colorBy
+        : undefined
     const effectiveScheme = colorScheme ?? [...palette]
     const colorScale = scaleColorBy
       ? createColorScale(scaleSourceData, scaleColorBy, effectiveScheme)
@@ -254,9 +225,17 @@ export const processSankey: ChartConfig = {
         if (colorByFn) {
           // Project through the function to derive the category, then
           // look up in the scale built from the synthetic `_cat` rows.
-          return getColor({ _cat: colorByFn(raw) }, "_cat", colorScale ?? undefined) as string
+          return getColor(
+            { _cat: colorByFn(raw) },
+            "_cat",
+            colorScale ?? undefined
+          ) as string
         }
-        return getColor(raw, typeof colorBy === "string" ? colorBy : "id", colorScale ?? undefined) as string
+        return getColor(
+          raw,
+          typeof colorBy === "string" ? colorBy : "id",
+          colorScale ?? undefined
+        ) as string
       }
       return palette[idx % palette.length]
     }
@@ -265,36 +244,45 @@ export const processSankey: ChartConfig = {
     // `colorOf` function. Supplying the same config here avoids the generic
     // network auto-legend (whose labels, swatches, and placement differ from
     // ProcessSankey's chart-level legend).
-    const chartLegend = legendActive && colorBy ? (() => {
-      const seen = new Map<string, { label: string; color: string }>()
-      rawNodes.forEach((node, index) => {
-        const value = accVal(colorBy, node)
-        const label = value == null ? "" : String(value)
-        if (!label || seen.has(label)) return
-        seen.set(label, { label, color: colorOf(String(accVal(nodeIdAccessor, node)), index) })
-      })
-      const items = Array.from(seen.values())
-      return items.length > 0
-        ? {
-            legendGroups: [{
-              type: "fill" as const,
-              label: "",
-              items,
-              styleFn: (item: { color?: string }) => {
-                const color = item.color || "#333"
-                return { fill: color, stroke: color }
-              },
-            }],
-          }
+    const chartLegend =
+      legendActive && colorBy
+        ? (() => {
+            const seen = new Map<string, { label: string; color: string }>()
+            rawNodes.forEach((node, index) => {
+              const value = accVal(colorBy, node)
+              const label = value == null ? "" : String(value)
+              if (!label || seen.has(label)) return
+              seen.set(label, {
+                label,
+                color: colorOf(String(accVal(nodeIdAccessor, node)), index)
+              })
+            })
+            const items = Array.from(seen.values())
+            return items.length > 0
+              ? {
+                  legendGroups: [
+                    {
+                      type: "fill" as const,
+                      label: "",
+                      items,
+                      styleFn: (item: { color?: string }) => {
+                        const color = item.color || "#333"
+                        return { fill: color, stroke: color }
+                      }
+                    }
+                  ]
+                }
+              : undefined
+          })()
         : undefined
-    })() : undefined
     const legend = composeLegendConfigs(chartLegend, common.legend)
 
-    const showLabels = rest.showLabels === false
-      ? false
-      : rest.showLabels === "auto"
-        ? "auto" as const
-        : true
+    const showLabels =
+      rest.showLabels === false
+        ? false
+        : rest.showLabels === "auto"
+          ? ("auto" as const)
+          : true
     const { layout, layoutConfig, issues, xScale } = buildProcessSankeyScenes({
       nodes: ns,
       edges: es,
@@ -303,25 +291,34 @@ export const processSankey: ChartConfig = {
       plotH,
       orientation,
       ribbonLane: rest.ribbonLane || "both",
-      ribbonMinRun: rest.ribbonMinRun === "auto" || typeof rest.ribbonMinRun === "number"
-        ? rest.ribbonMinRun
-        : 0,
-      edgeOpacity: typeof rest.edgeOpacity === "number" ? (rest.edgeOpacity as number) : 0.35,
+      ribbonMinRun:
+        rest.ribbonMinRun === "auto" || typeof rest.ribbonMinRun === "number"
+          ? rest.ribbonMinRun
+          : 0,
+      edgeOpacity:
+        typeof rest.edgeOpacity === "number"
+          ? (rest.edgeOpacity as number)
+          : 0.35,
       colorOf,
       showLabels,
       styleRules: rest.styleRules,
       colorBy: colorBy as string | ((d: Datum) => unknown) | undefined,
-      valueAccessor: valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      valueAccessor: valueAccessor as
+        string | ((d: Datum) => unknown) | undefined,
       layoutOpts: {
         pairing: rest.pairing || "temporal",
         packing: rest.packing || "reuse",
         laneOrder: rest.laneOrder || "crossing-min",
         lifetimeMode: rest.lifetimeMode || "half",
-        maxValueScale: typeof rest.maxValueScale === "number" ? rest.maxValueScale : undefined,
+        maxValueScale:
+          typeof rest.maxValueScale === "number"
+            ? rest.maxValueScale
+            : undefined,
         lanePlacement: rest.lanePlacement || "stack",
         nodeSizing: rest.nodeSizing || "temporal",
-        groupPadding: typeof rest.groupPadding === "number" ? rest.groupPadding : 0,
-      },
+        groupPadding:
+          typeof rest.groupPadding === "number" ? rest.groupPadding : 0
+      }
     })
 
     // Surface validation failures the same way the HOC does — throw
@@ -339,26 +336,34 @@ export const processSankey: ChartConfig = {
     // StreamNetworkFrame feature. Recreate that chrome here from the same
     // pure layout result so SSR gets the baseline, optional ticks, and grids
     // rather than silently dropping the entire time-axis contract.
-    const backgroundGraphics = layout ? buildProcessSankeyBackgroundGraphics({
-      layout,
-      nodes: ns,
-      orientation,
-      plotW,
-      plotH,
-      timelineExtent: orientation === "vertical" ? plotH : plotW,
-      axisTicks: Array.isArray(rest.axisTicks) ? (rest.axisTicks as Array<{ date: unknown; label?: string }>).map((tick) => ({
-        date: tick.date as string | number | Date,
-        label: tick.label,
-      })) : [],
-      showQualityReadout: Boolean(rest.showQualityReadout),
-      showLaneRails: Boolean(rest.showLaneRails),
-      timeFormat: typeof rest.timeFormat === "function"
-        ? (d: Date) => (rest.timeFormat as (d: Date) => string | React.ReactNode)(d)
-        : undefined,
-      colorOf,
-      toTime: (v) => toTime(v),
-      xScale: (t) => Number(xScale(t)),
-    }) : undefined
+    const backgroundGraphics = layout
+      ? buildProcessSankeyBackgroundGraphics({
+          layout,
+          nodes: ns,
+          orientation,
+          plotW,
+          plotH,
+          timelineExtent: orientation === "vertical" ? plotH : plotW,
+          axisTicks: Array.isArray(rest.axisTicks)
+            ? (rest.axisTicks as Array<{ date: unknown; label?: string }>).map(
+                (tick) => ({
+                  date: tick.date as string | number | Date,
+                  label: tick.label
+                })
+              )
+            : [],
+          showQualityReadout: Boolean(rest.showQualityReadout),
+          showLaneRails: Boolean(rest.showLaneRails),
+          timeFormat:
+            typeof rest.timeFormat === "function"
+              ? (d: Date) =>
+                  (rest.timeFormat as (d: Date) => string | React.ReactNode)(d)
+              : undefined,
+          colorOf,
+          toTime: (v) => toTime(v),
+          xScale: (t) => Number(xScale(t))
+        })
+      : undefined
 
     return {
       chartType: "force",
@@ -398,51 +403,75 @@ export const processSankey: ChartConfig = {
       // computed against this exact `plotW`/`plotH`; without this the
       // frame would overlay the data on a slightly different inner
       // rect (visible as legend-clipping or band-shift).
-      margin,
+      margin
     }
-  },
+  }
 }
 
 export const sankeyDiagram: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 800, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const nodes = Array.isArray(rest.nodes) ? rest.nodes as Datum[] : inferNodesFromEdges(
-      [],
-      Array.isArray(rest.edges) ? rest.edges as Datum[] : [],
-      (rest.sourceAccessor || "source") as string | ((d: Datum) => string),
-      (rest.targetAccessor || "target") as string | ((d: Datum) => string),
-    ) as Datum[]
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const nodes = Array.isArray(rest.nodes)
+      ? (rest.nodes as Datum[])
+      : (inferNodesFromEdges(
+          [],
+          Array.isArray(rest.edges) ? (rest.edges as Datum[]) : [],
+          (rest.sourceAccessor || "source") as string | ((d: Datum) => string),
+          (rest.targetAccessor || "target") as string | ((d: Datum) => string)
+        ) as Datum[])
+    const themeCategorical = resolveTheme(
+      common.theme as Parameters<typeof resolveTheme>[0]
+    ).colors.categorical
     const categoryIndexMap = new Map<string, number>()
-    const colorKey = typeof colorBy === "string" ? colorBy : "__ssrSankeyColorBy"
-    const colorRows = typeof colorBy === "function"
-      ? nodes.map(d => ({ ...d, __ssrSankeyColorBy: colorBy(d) }))
-      : nodes
+    const colorKey =
+      typeof colorBy === "string" ? colorBy : "__ssrSankeyColorBy"
+    const colorRows =
+      typeof colorBy === "function"
+        ? nodes.map((d) => ({ ...d, __ssrSankeyColorBy: colorBy(d) }))
+        : nodes
     const colorScale = colorBy
-      ? createColorScale(colorRows, colorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
+      ? createColorScale(
+          colorRows,
+          colorKey,
+          (colorScheme ?? common.colorScheme ?? themeCategorical) as
+            string | string[] | Record<string, string>
+        )
       : undefined
     const baseNodeStyle = (d: Datum) => {
       const raw = (d?.data as Datum) || d
       return {
         fill: colorBy
-          ? getColor(raw, colorBy as string | ((node: Datum) => string), colorScale)
-          : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+          ? getColor(
+              raw,
+              colorBy as string | ((node: Datum) => string),
+              colorScale
+            )
+          : resolveDefaultFill(
+              undefined,
+              themeCategorical,
+              colorScheme,
+              undefined,
+              categoryIndexMap
+            ),
         // `stroke`/`strokeWidth`/`opacity` are not COMMON_FRAME_PROP_KEYS, so
         // reading them off `common` always fell through to the defaults.
         stroke: (rest.stroke as string | undefined) ?? "black",
         strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
-        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+        ...(rest.opacity !== undefined && { opacity: rest.opacity })
       }
     }
     // Wire styleRules into nodeStyle for hatch and threshold fills.
     const ruleNodeStyle = styleRulesToNodeStyle(
       rest.styleRules,
       colorBy as string | ((d: Datum) => unknown) | undefined,
-      rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      rest.valueAccessor as string | ((d: Datum) => unknown) | undefined
     )
     const configuredNodeStyle = ruleNodeStyle
-      ? (d: Datum, index?: number) => ({ ...baseNodeStyle(d), ...ruleNodeStyle(d, index) })
+      ? (d: Datum, index?: number) => ({
+          ...baseNodeStyle(d),
+          ...ruleNodeStyle(d, index)
+        })
       : baseNodeStyle
     const baseEdgeStyle = createEdgeStyleFn({
       edgeColorBy: rest.edgeColorBy ?? "source",
@@ -450,186 +479,99 @@ export const sankeyDiagram: ChartConfig = {
       colorScale,
       nodeStyleFn: configuredNodeStyle,
       edgeOpacity: rest.edgeOpacity ?? 0.5,
-      baseStyle: { stroke: "none", strokeWidth: 0 },
+      baseStyle: { stroke: "none", strokeWidth: 0 }
     })
     return {
-    chartType: "sankey",
-    nodes: rest.nodes,
-    edges: rest.edges,
-    nodeIDAccessor: rest.nodeIdAccessor || rest.nodeIDAccessor,
-    sourceAccessor: rest.sourceAccessor,
-    targetAccessor: rest.targetAccessor,
-    valueAccessor: rest.valueAccessor,
-    orientation: rest.orientation,
-    nodeAlign: rest.nodeAlign,
-    nodeWidth: rest.nodeWidth,
-    nodePaddingRatio: rest.nodePaddingRatio,
-    showLabels: rest.showLabels,
-    nodeLabel: rest.nodeLabel,
-    colorBy,
-    edgeColorBy: rest.edgeColorBy,
-    edgeOpacity: rest.edgeOpacity,
-    nodeStyle: mergeShapeStyle(
-      (rest.nodeStyle || configuredNodeStyle) as (d: Datum) => Datum,
-      primitiveStyleOverrides(rest),
-    ),
-    edgeStyle: mergeShapeStyle(
-      (rest.edgeStyle || baseEdgeStyle) as (d: Datum) => Datum,
-      primitiveStyleOverrides(rest),
-    ),
-    colorScheme,
-    // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
-    ...common,
-    }
-  },
-}
-
-export const chordDiagram: ChartConfig = {
-  frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => {
-    // Match ChordDiagram HOC coloring:
-    //  - colorBy → categorical scale fill
-    //  - else → stable per-node palette slot (NOT monochrome resolveDefaultFill,
-    //    which painted every SSR arc the same and broke ssr-csr-chord parity)
-    //  - styleRules layer on top when present
-    // When nothing needs a custom nodeStyle, omit it so the layout plugin's
-    // built-in path stays identical to the pre-styleRules SSR config.
-    const hasStyleRules = Array.isArray(rest.styleRules) && (rest.styleRules as unknown[]).length > 0
-    // Top-level primitives need a nodeStyle too — without them in this gate,
-    // `renderChart("ChordDiagram", { stroke })` took the built-in path below
-    // and the arcs kept their default black outline.
-    const needsNodeStyle = Boolean(
-      colorBy || hasStyleRules || common.nodeStyle || rest.nodeStyle ||
-      hasPrimitiveOverrides(primitiveStyleOverrides(rest))
-    )
-    if (!needsNodeStyle) {
-      return {
-        chartType: "chord",
-        nodes: rest.nodes,
-        edges: rest.edges,
-        valueAccessor: rest.valueAccessor,
-        padAngle: rest.padAngle,
-        groupWidth: rest.groupWidth,
-        showLabels: rest.showLabels,
-        colorBy,
-        edgeColorBy: rest.edgeColorBy,
-        colorScheme,
-        ...common,
-      }
-    }
-
-    const edges = Array.isArray(rest.edges) ? rest.edges as Datum[] : []
-    const nodes = Array.isArray(rest.nodes) && (rest.nodes as Datum[]).length > 0
-      ? rest.nodes as Datum[]
-      : inferNodesFromEdges(
-          [],
-          edges,
-          (rest.sourceAccessor || "source") as string | ((d: Datum) => string),
-          (rest.targetAccessor || "target") as string | ((d: Datum) => string),
-        ) as Datum[]
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-    const palette = resolveCategoricalPalette(
-      colorScheme as string | string[] | Record<string, string> | undefined,
-      themeCategorical as string[],
-    )
-    const colorKey = typeof colorBy === "string" ? colorBy : "__ssrChordColorBy"
-    const colorRows = typeof colorBy === "function"
-      ? nodes.map(d => ({ ...d, __ssrChordColorBy: colorBy(d) }))
-      : nodes
-    const colorScale = colorBy
-      ? createColorScale(colorRows, colorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
-      : undefined
-    const nodeIndexMap = new Map<string, number>()
-    const nodeIdAccessor = (rest.nodeIdAccessor || rest.nodeIDAccessor || "id") as string
-    const baseNodeStyle = (d: Datum, i?: number) => {
-      const raw = (d?.data as Datum) || d
-      let fill: string
-      if (colorBy) {
-        fill = getColor(raw, colorBy as string | ((node: Datum) => string), colorScale) as string
-      } else {
-        const id = String(
-          (d as { id?: unknown }).id
-            ?? raw?.[nodeIdAccessor]
-            ?? "",
-        )
-        if (!nodeIndexMap.has(id)) nodeIndexMap.set(id, nodeIndexMap.size)
-        const index = (d as { index?: number }).index ?? i ?? nodeIndexMap.get(id)!
-        fill = palette[index % palette.length]
-      }
-      return {
-        fill,
-        // Read the top-level primitives off `rest`: they are deliberately not
-        // in COMMON_FRAME_PROP_KEYS, so `common.stroke` is always undefined
-        // and this used to collapse to the hardcoded default every time.
-        stroke: (rest.stroke as string | undefined) ?? "black",
-        strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
-        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
-      }
-    }
-    // styleRulesToNodeStyle layers rules over an optional user style — pass
-    // baseNodeStyle as the user style so rules merge on top of palette/colorBy.
-    const configuredNodeStyle = styleRulesToNodeStyle(
-      rest.styleRules as Parameters<typeof styleRulesToNodeStyle>[0],
-      colorBy as string | ((d: Datum) => unknown) | undefined,
-      rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
-      baseNodeStyle,
-    ) ?? baseNodeStyle
-    return {
-      chartType: "chord",
+      chartType: "sankey",
       nodes: rest.nodes,
       edges: rest.edges,
+      nodeIDAccessor: rest.nodeIdAccessor || rest.nodeIDAccessor,
+      sourceAccessor: rest.sourceAccessor,
+      targetAccessor: rest.targetAccessor,
       valueAccessor: rest.valueAccessor,
-      padAngle: rest.padAngle,
-      groupWidth: rest.groupWidth,
+      orientation: rest.orientation,
+      nodeAlign: rest.nodeAlign,
+      nodeWidth: rest.nodeWidth,
+      nodePaddingRatio: rest.nodePaddingRatio,
       showLabels: rest.showLabels,
+      nodeLabel: rest.nodeLabel,
       colorBy,
       edgeColorBy: rest.edgeColorBy,
-      colorScheme,
+      edgeOpacity: rest.edgeOpacity,
       nodeStyle: mergeShapeStyle(
         (rest.nodeStyle || configuredNodeStyle) as (d: Datum) => Datum,
-        primitiveStyleOverrides(rest),
+        primitiveStyleOverrides(rest)
       ),
+      edgeStyle: mergeShapeStyle(
+        (rest.edgeStyle || baseEdgeStyle) as (d: Datum) => Datum,
+        primitiveStyleOverrides(rest)
+      ),
+      colorScheme,
       // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
-      ...common,
+      ...common
     }
-  },
+  }
 }
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const themeCategorical = resolveTheme(
+      common.theme as Parameters<typeof resolveTheme>[0]
+    ).colors.categorical
     const categoryIndexMap = new Map<string, number>()
     // Flatten the hierarchy so categorical colorBy on leaves gets a full domain.
     const allNodes = flattenHierarchy(
       (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
+      rest.childrenAccessor as string | ((d: Datum) => Datum[])
     )
-    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const colorByFn =
+      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
     const scaleSource: Datum[] = colorByFn
       ? allNodes.map((n) => ({ __ssrTreeColorBy: colorByFn(n) }))
       : allNodes
-    const scaleColorKey = colorByFn ? "__ssrTreeColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
-    const colorScale = colorBy && scaleColorKey
-      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
-      : undefined
+    const scaleColorKey = colorByFn
+      ? "__ssrTreeColorBy"
+      : typeof colorBy === "string"
+        ? colorBy
+        : undefined
+    const colorScale =
+      colorBy && scaleColorKey
+        ? createColorScale(
+            scaleSource,
+            scaleColorKey,
+            (colorScheme ?? common.colorScheme ?? themeCategorical) as
+              string | string[] | Record<string, string>
+          )
+        : undefined
     const baseNodeStyle = (d: Datum) => {
       const raw = (d?.data as Datum) || d
       return {
         fill: rest.colorByDepth
-          ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
+          ? DEPTH_PALETTE_COLORS[
+              Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length
+            ]
           : colorBy
-            ? (colorByFn
-                ? getColor({ __ssrTreeColorBy: colorByFn(raw) }, "__ssrTreeColorBy", colorScale ?? undefined)
-                : getColor(raw, colorBy as string, colorScale ?? undefined))
-            : resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap),
+            ? colorByFn
+              ? getColor(
+                  { __ssrTreeColorBy: colorByFn(raw) },
+                  "__ssrTreeColorBy",
+                  colorScale ?? undefined
+                )
+              : getColor(raw, colorBy as string, colorScale ?? undefined)
+            : resolveDefaultFill(
+                undefined,
+                themeCategorical,
+                colorScheme,
+                undefined,
+                categoryIndexMap
+              ),
         // `stroke`/`strokeWidth`/`opacity` are not COMMON_FRAME_PROP_KEYS, so
         // reading them off `common` always fell through to the defaults.
         stroke: (rest.stroke as string | undefined) ?? "black",
         strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
-        ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+        ...(rest.opacity !== undefined && { opacity: rest.opacity })
       }
     }
     // HOC defaults showLabels true and supplies nodeLabel || nodeIdAccessor;
@@ -640,19 +582,25 @@ export const treeDiagram: ChartConfig = {
       | Record<string, unknown>
       | undefined
     return {
-    chartType: rest.layout === "cluster" ? "cluster" : "tree",
-    data,
-    childrenAccessor: rest.childrenAccessor,
-    colorBy,
-    colorByDepth: rest.colorByDepth,
-    orientation: rest.orientation,
-    showLabels: rest.showLabels,
-    nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
-    colorScheme,
-    ...common,
-    nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
+      chartType: rest.layout === "cluster" ? "cluster" : "tree",
+      data,
+      childrenAccessor: rest.childrenAccessor,
+      colorBy,
+      colorByDepth: rest.colorByDepth,
+      orientation: rest.orientation,
+      showLabels: rest.showLabels,
+      nodeLabel: effectiveShowLabels
+        ? rest.nodeLabel || rest.nodeIdAccessor
+        : undefined,
+      colorScheme,
+      ...common,
+      nodeStyle: composeHierarchyNodeStyle(
+        baseNodeStyle,
+        userNodeStyle,
+        primitiveStyleOverrides(rest)
+      )
     }
-  },
+  }
 }
 
 export const treemap: ChartConfig = {
@@ -665,36 +613,62 @@ export const treemap: ChartConfig = {
     // scale over the flattened hierarchy; SSR must do the same or every tile
     // collapses to one color. Build the same scale off the leaves so a
     // categorical `colorBy` (e.g. sku) paints distinct tiles.
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
+    const themeCategorical = resolveTheme(
+      common.theme as Parameters<typeof resolveTheme>[0]
+    ).colors.categorical
     const categoryIndexMap = new Map<string, number>()
     const allNodes = flattenHierarchy(
       (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
+      rest.childrenAccessor as string | ((d: Datum) => Datum[])
     )
-    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const colorByFn =
+      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
     const scaleSource: Datum[] = colorByFn
       ? allNodes.map((n) => ({ __ssrTreemapColorBy: colorByFn(n) }))
       : allNodes
-    const scaleColorKey = colorByFn ? "__ssrTreemapColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
-    const colorScale = colorBy && scaleColorKey
-      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
-      : undefined
+    const scaleColorKey = colorByFn
+      ? "__ssrTreemapColorBy"
+      : typeof colorBy === "string"
+        ? colorBy
+        : undefined
+    const colorScale =
+      colorBy && scaleColorKey
+        ? createColorScale(
+            scaleSource,
+            scaleColorKey,
+            (colorScheme ?? common.colorScheme ?? themeCategorical) as
+              string | string[] | Record<string, string>
+          )
+        : undefined
     const baseNodeStyle = (d: Datum) => {
       const raw = (d?.data as Datum) || d
       const fill = rest.colorByDepth
-        ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
+        ? DEPTH_PALETTE_COLORS[
+            Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length
+          ]
         : colorBy
-          ? (colorByFn
-              ? getColor({ __ssrTreemapColorBy: colorByFn(raw) }, "__ssrTreemapColorBy", colorScale ?? undefined)
-              : getColor(raw, colorBy as string, colorScale ?? undefined))
-          : resolveDefaultFill(undefined, themeCategorical, colorScheme as string | string[] | Record<string, string> | undefined, undefined, categoryIndexMap)
+          ? colorByFn
+            ? getColor(
+                { __ssrTreemapColorBy: colorByFn(raw) },
+                "__ssrTreemapColorBy",
+                colorScale ?? undefined
+              )
+            : getColor(raw, colorBy as string, colorScale ?? undefined)
+          : resolveDefaultFill(
+              undefined,
+              themeCategorical,
+              colorScheme as
+                string | string[] | Record<string, string> | undefined,
+              undefined,
+              categoryIndexMap
+            )
       return {
         fill,
         // Preserve Treemap's HOC-level border token. The surrounding page/theme
         // resolves this CSS variable identically for the static SVG and canvas.
         stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
         strokeWidth: 1,
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.8
       }
     }
     // Mirror Treemap.tsx's resolvedPaddingTop: reserve a label band on parent
@@ -702,14 +676,17 @@ export const treemap: ChartConfig = {
     // room and the tile chrome differs from CSR. Prefer top-level rest, then
     // frameProps (already flattened into `common`) so hide-root wrappers that
     // pass paddingTop only via frameProps still get the nested header band.
-    const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
+    const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as
+      boolean | undefined
     const labelMode = rest.labelMode as "leaf" | "parent" | "all" | undefined
-    const explicitPaddingTop = rest.paddingTop !== undefined
-      ? rest.paddingTop
-      : common.paddingTop
-    const resolvedPaddingTop = explicitPaddingTop !== undefined
-      ? explicitPaddingTop
-      : (effectiveShowLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
+    const explicitPaddingTop =
+      rest.paddingTop !== undefined ? rest.paddingTop : common.paddingTop
+    const resolvedPaddingTop =
+      explicitPaddingTop !== undefined
+        ? explicitPaddingTop
+        : effectiveShowLabels && (labelMode === "parent" || labelMode === "all")
+          ? 18
+          : undefined
     // Compose like Treemap.tsx: base colorBy/colorByDepth fill + user overlay
     // (hide-root transparent fill, custom borders). Replace-not-compose made
     // any custom nodeStyle drop color encoding → monochrome "flat" tiles.
@@ -726,75 +703,22 @@ export const treemap: ChartConfig = {
       colorByDepth: rest.colorByDepth,
       showLabels: rest.showLabels,
       labelMode,
-      nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
+      nodeLabel: effectiveShowLabels
+        ? rest.nodeLabel || rest.nodeIdAccessor
+        : undefined,
       ...(rest.padding != null && { padding: rest.padding }),
       ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
       colorScheme,
       ...common,
-      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
+      nodeStyle: composeHierarchyNodeStyle(
+        baseNodeStyle,
+        userNodeStyle,
+        primitiveStyleOverrides(rest)
+      )
     }
-  },
+  }
 }
 
-export const circlePack: ChartConfig = {
-  frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => {
-    // Mirror Treemap: hierarchy scene builder never applies colorBy itself;
-    // HOC builds fill in nodeStyle over flattened nodes. SSR must match or
-    // every circle is monochrome and labels never emit.
-    const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
-    const allNodes = flattenHierarchy(
-      (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[]),
-    )
-    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
-    const scaleSource: Datum[] = colorByFn
-      ? allNodes.map((n) => ({ __ssrCirclePackColorBy: colorByFn(n) }))
-      : allNodes
-    const scaleColorKey = colorByFn ? "__ssrCirclePackColorBy" : (typeof colorBy === "string" ? colorBy : undefined)
-    const colorScale = colorBy && scaleColorKey
-      ? createColorScale(scaleSource, scaleColorKey, (colorScheme ?? common.colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
-      : undefined
-    const baseNodeStyle = (d: Datum) => {
-      const raw = (d?.data as Datum) || d
-      const fill = rest.colorByDepth
-        ? DEPTH_PALETTE_COLORS[Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length]
-        : colorBy
-          ? (colorByFn
-              ? getColor({ __ssrCirclePackColorBy: colorByFn(raw) }, "__ssrCirclePackColorBy", colorScale ?? undefined)
-              : getColor(raw, colorBy as string, colorScale ?? undefined))
-          : resolveDefaultFill(undefined, themeCategorical, colorScheme as string | string[] | Record<string, string> | undefined, undefined, categoryIndexMap)
-      return {
-        fill,
-        fillOpacity: rest.circleOpacity ?? 0.7,
-        // CirclePack's client style deliberately uses currentColor for the
-        // subtle dark outline; hierarchy's generic fallback uses the theme
-        // surface (white), which made SSR visibly diverge.
-        stroke: "currentColor",
-        strokeWidth: 1,
-        strokeOpacity: 0.3,
-      }
-    }
-    const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as boolean | undefined
-    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
-      | ((d: Datum) => Record<string, unknown> | undefined | null)
-      | Record<string, unknown>
-      | undefined
-    return {
-      chartType: "circlepack",
-      data,
-      childrenAccessor: rest.childrenAccessor,
-      hierarchySum: rest.valueAccessor,
-      colorBy,
-      colorByDepth: rest.colorByDepth,
-      showLabels: rest.showLabels,
-      nodeLabel: effectiveShowLabels ? (rest.nodeLabel || rest.nodeIdAccessor) : undefined,
-      ...(rest.padding != null && { padding: rest.padding }),
-      colorScheme,
-      ...common,
-      nodeStyle: composeHierarchyNodeStyle(baseNodeStyle, userNodeStyle, primitiveStyleOverrides(rest)),
-    }
-  },
-}
+export { chordDiagram } from "./serverChartConfigsNetworkChord"
+export { forceDirectedGraph } from "./serverChartConfigsNetworkForce"
+export { circlePack, orbitDiagram } from "./serverChartConfigsNetworkHierarchy"

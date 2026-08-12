@@ -6,12 +6,12 @@ _Edit dist/semiotic-geo.d.ts's sources, then re-run `npm run docs:api-surface` t
 ```
 const DEFAULT_HIT_RADIUS: 8
 function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<TDatum>): React.JSX.Element
-function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function StreamGeoFrame(: import("../../../dist/semiotic-geo").StreamGeoFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-geo").StreamGeoFrameHandle>): React.ReactNode
+function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StreamGeoFrame(: React.RefAttributes<import("semiotic-internal/semiotic-geo").StreamGeoFrameHandle> & import("semiotic-internal/semiotic-geo").StreamGeoFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
@@ -23,37 +23,37 @@ function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]
 function hatchFillId(prefix: string, h: HatchFill): string
-function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function isHatchFill(fill: unknown): boolean
-function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
-function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeNodeRuleContext(colorBy: ((d: Datum) => unknown) | string | undefined, valueAccessor?: ((d: Datum) => unknown) | string | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: ((d: Datum) => unknown) | string | undefined): (d: Datum) => number | undefined
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
-function mergeData<T extends Datum>(features: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], data: T[], options: { featureKey: string; dataKey: string; }): import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
+function mergeData<T extends Datum>(features: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], data: T[], options: {featureKey: string; dataKey: string;}): import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
 function resolveReferenceGeography(name: ReferenceGeography): Promise<import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]>
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
-function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
+function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
-function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: { width: number; height: number; }, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
+function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], scales: Pick<GeoScales, "geoPath" | "invertedPoint">, dimensions: {width: number; height: number;}, options?: GeographicDotGridSampleOptions | undefined): GeographicDotGridSampleResult
 interface CategoricalLegendConfig
-interface ChoroplethMapProps<TDatum extends Datum = Datum>
+interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface CustomLayoutFailureDiagnostic
 interface DistanceCartogramConfig
-interface DistanceCartogramProps<TDatum extends Datum = Datum>
-interface FlowMapProps<TDatum extends Datum = Datum>
+interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps
+interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface GeoAreaHitTargetProps
 interface GeoAreaSceneNode
-interface GeoCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface GeoCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps
 interface GeoLayoutContext<C extends object = Record<string, unknown>>
 interface GeoLayoutResult
 interface GeoParticleStyle
 interface GeoPipelineConfig
 interface GeoScales
-interface GeographicDotGridConfig
-interface GeographicDotGridDatum
+interface GeographicDotGridConfig extends GeographicDotGridSampleOptions
+interface GeographicDotGridDatum extends Datum
 interface GeographicDotGridSampleOptions
 interface GeographicGridConfig
 interface GeographicGridInput<T = Datum>
@@ -63,16 +63,16 @@ interface GlyphSceneNode
 interface GradientLegendConfig
 interface GradientLegendValue
 interface GraticuleConfig
-interface GridifiedGeographicPoint<T = Datum>
+interface GridifiedGeographicPoint<T = Datum> extends GeographicGridInput<T>
 interface GridifyGeographicPointsOptions
 interface HatchFill
 interface HitTargetPointProps
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
-interface MultiLineTooltipConfig
+interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
-interface ProportionalSymbolMapProps<TDatum extends Datum = Datum>
+interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
@@ -81,28 +81,571 @@ interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<s
 interface SceneAccessibilityMetadata
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps<T = Datum>
+interface Style
 interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface TooltipConfig
 interface TooltipField
-interface TooltipRootProps
+interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
+interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
+interface-member ChoroplethMapProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member ChoroplethMapProps::property::areaOpacity = optional areaOpacity: number | undefined
+interface-member ChoroplethMapProps::property::areas = required areas: AreasProp
+interface-member ChoroplethMapProps::property::colorScheme = optional colorScheme: string | undefined
+interface-member ChoroplethMapProps::property::dragRotate = optional dragRotate: boolean | undefined
+interface-member ChoroplethMapProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ChoroplethMapProps::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member ChoroplethMapProps::property::frameProps = optional frameProps: Partial<Omit<StreamGeoFrameProps<Datum>, "areas" | "projection">> | undefined
+interface-member ChoroplethMapProps::property::graticule = optional graticule: boolean | import("../../semiotic-geo").GraticuleConfig | undefined
+interface-member ChoroplethMapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ChoroplethMapProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member ChoroplethMapProps::property::onZoom = optional onZoom: ((state: {projection: import("d3-geo").GeoProjection; zoom: number;}) => void) | undefined
+interface-member ChoroplethMapProps::property::projection = optional projection: ProjectionProp | undefined
+interface-member ChoroplethMapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ChoroplethMapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ChoroplethMapProps::property::tileAttribution = optional tileAttribution: string | undefined
+interface-member ChoroplethMapProps::property::tileCacheSize = optional tileCacheSize: number | undefined
+interface-member ChoroplethMapProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined
+interface-member ChoroplethMapProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ChoroplethMapProps::property::valueAccessor = required valueAccessor: ChartAccessor<TDatum, number>
+interface-member ChoroplethMapProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
+interface-member ChoroplethMapProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
+interface-member CustomLayoutFailureDiagnostic::property::code = required code: "CUSTOM_LAYOUT_ERROR"
+interface-member CustomLayoutFailureDiagnostic::property::component = required component: CustomLayoutFamily
+interface-member CustomLayoutFailureDiagnostic::property::error = required error: {name: string; message: string;}
+interface-member CustomLayoutFailureDiagnostic::property::message = required message: string
+interface-member CustomLayoutFailureDiagnostic::property::phase = required phase: "layout"
+interface-member CustomLayoutFailureDiagnostic::property::preservedLastGoodScene = required preservedLastGoodScene: boolean
+interface-member CustomLayoutFailureDiagnostic::property::recovery = required recovery: CustomLayoutFailureRecovery
+interface-member CustomLayoutFailureDiagnostic::property::severity = required severity: "error"
+interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
+interface-member DistanceCartogramConfig::property::center = required center: string
+interface-member DistanceCartogramConfig::property::centerAccessor = optional centerAccessor: ((d: Datum) => string) | string | undefined
+interface-member DistanceCartogramConfig::property::costAccessor = required costAccessor: ((d: Datum) => number) | string
+interface-member DistanceCartogramConfig::property::layout = optional layout: "radial" | "strip" | undefined
+interface-member DistanceCartogramConfig::property::lineMode = optional lineMode: "fractional" | "straight" | undefined
+interface-member DistanceCartogramConfig::property::strength = optional strength: number | undefined
+interface-member DistanceCartogramProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member DistanceCartogramProps::property::cartogramLayout = optional cartogramLayout: "radial" | "strip" | undefined
+interface-member DistanceCartogramProps::property::center = required center: string
+interface-member DistanceCartogramProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member DistanceCartogramProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member DistanceCartogramProps::property::costAccessor = required costAccessor: ((d: Datum) => number) | string
+interface-member DistanceCartogramProps::property::costLabel = optional costLabel: string | undefined
+interface-member DistanceCartogramProps::property::dragRotate = optional dragRotate: boolean | undefined
+interface-member DistanceCartogramProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member DistanceCartogramProps::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member DistanceCartogramProps::property::frameProps = optional frameProps: Partial<Omit<StreamGeoFrameProps<Datum>, "projection">> | undefined
+interface-member DistanceCartogramProps::property::graticule = optional graticule: boolean | import("../../semiotic-geo").GraticuleConfig | undefined
+interface-member DistanceCartogramProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member DistanceCartogramProps::property::lineMode = optional lineMode: "fractional" | "straight" | undefined
+interface-member DistanceCartogramProps::property::lines = optional lines: (Record<string, unknown> & {source: string; target: string; coordinates?: Datum[];})[] | undefined
+interface-member DistanceCartogramProps::property::nodeIdAccessor = optional nodeIdAccessor: string | undefined
+interface-member DistanceCartogramProps::property::onZoom = optional onZoom: ((state: {projection: import("d3-geo").GeoProjection; zoom: number;}) => void) | undefined
+interface-member DistanceCartogramProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member DistanceCartogramProps::property::points = optional points: TDatum[] | undefined
+interface-member DistanceCartogramProps::property::projection = optional projection: ProjectionProp | undefined
+interface-member DistanceCartogramProps::property::ringStyle = optional ringStyle: DistanceCartogramRingStyle | undefined
+interface-member DistanceCartogramProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member DistanceCartogramProps::property::showNorth = optional showNorth: boolean | undefined
+interface-member DistanceCartogramProps::property::showRingLabels = optional showRingLabels: boolean | undefined
+interface-member DistanceCartogramProps::property::showRings = optional showRings: boolean | number | number[] | undefined
+interface-member DistanceCartogramProps::property::strength = optional strength: number | undefined
+interface-member DistanceCartogramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member DistanceCartogramProps::property::tileAttribution = optional tileAttribution: string | undefined
+interface-member DistanceCartogramProps::property::tileCacheSize = optional tileCacheSize: number | undefined
+interface-member DistanceCartogramProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined
+interface-member DistanceCartogramProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member DistanceCartogramProps::property::transition = optional transition: number | undefined
+interface-member DistanceCartogramProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DistanceCartogramProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DistanceCartogramProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
+interface-member DistanceCartogramProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member FlowMapProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member FlowMapProps::property::areaStyle = optional areaStyle: Style | undefined
+interface-member FlowMapProps::property::areas = optional areas: AreasProp | undefined
+interface-member FlowMapProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member FlowMapProps::property::dragRotate = optional dragRotate: boolean | undefined
+interface-member FlowMapProps::property::edgeColorBy = optional edgeColorBy: ChartAccessor<Datum, string> | undefined
+interface-member FlowMapProps::property::edgeLinecap = optional edgeLinecap: "butt" | "round" | "square" | undefined
+interface-member FlowMapProps::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member FlowMapProps::property::edgeWidthRange = optional edgeWidthRange: [number, number] | undefined
+interface-member FlowMapProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member FlowMapProps::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member FlowMapProps::property::flowStyle = optional flowStyle: "arc" | "basic" | "offset" | undefined
+interface-member FlowMapProps::property::flows = optional flows: (Datum & {source: string; target: string; value?: number;})[] | undefined
+interface-member FlowMapProps::property::frameProps = optional frameProps: Partial<Omit<StreamGeoFrameProps<Datum>, "projection">> | undefined
+interface-member FlowMapProps::property::graticule = optional graticule: boolean | import("../../semiotic-geo").GraticuleConfig | undefined
+interface-member FlowMapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member FlowMapProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member FlowMapProps::property::lineIdAccessor = optional lineIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member FlowMapProps::property::lineType = optional lineType: "geo" | "line" | undefined
+interface-member FlowMapProps::property::nodeIdAccessor = optional nodeIdAccessor: string | undefined
+interface-member FlowMapProps::property::nodes = optional nodes: TDatum[] | undefined
+interface-member FlowMapProps::property::onZoom = optional onZoom: ((state: {projection: import("d3-geo").GeoProjection; zoom: number;}) => void) | undefined
+interface-member FlowMapProps::property::particleStyle = optional particleStyle: GeoParticleStyle | undefined
+interface-member FlowMapProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member FlowMapProps::property::projection = optional projection: ProjectionProp | undefined
+interface-member FlowMapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member FlowMapProps::property::showParticles = optional showParticles: boolean | undefined
+interface-member FlowMapProps::property::tileAttribution = optional tileAttribution: string | undefined
+interface-member FlowMapProps::property::tileCacheSize = optional tileCacheSize: number | undefined
+interface-member FlowMapProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined
+interface-member FlowMapProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member FlowMapProps::property::valueAccessor = optional valueAccessor: string | undefined
+interface-member FlowMapProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member FlowMapProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member FlowMapProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
+interface-member FlowMapProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member GeoAreaHitTargetProps::property::bounds = required bounds: [[number, number], [number, number]]
+interface-member GeoAreaHitTargetProps::property::centroid = required centroid: [number, number]
+interface-member GeoAreaHitTargetProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member GeoAreaHitTargetProps::property::datum = required datum: SceneDatum
+interface-member GeoAreaHitTargetProps::property::group = optional group: string | undefined
+interface-member GeoAreaHitTargetProps::property::pathData = required pathData: string
+interface-member GeoAreaHitTargetProps::property::screenArea = optional screenArea: number | undefined
+interface-member GeoAreaSceneNode::property::_cachedPath2D = optional _cachedPath2D: Path2D | undefined
+interface-member GeoAreaSceneNode::property::_decayOpacity = optional _decayOpacity: number | undefined
+interface-member GeoAreaSceneNode::property::_pulseColor = optional _pulseColor: string | undefined
+interface-member GeoAreaSceneNode::property::_pulseIntensity = optional _pulseIntensity: number | undefined
+interface-member GeoAreaSceneNode::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member GeoAreaSceneNode::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member GeoAreaSceneNode::property::bounds = required bounds: [[number, number], [number, number]]
+interface-member GeoAreaSceneNode::property::centroid = required centroid: [number, number]
+interface-member GeoAreaSceneNode::property::datum = required datum: SceneDatum
+interface-member GeoAreaSceneNode::property::group = optional group: string | undefined
+interface-member GeoAreaSceneNode::property::interactive = optional interactive: boolean | undefined
+interface-member GeoAreaSceneNode::property::pathData = required pathData: string
+interface-member GeoAreaSceneNode::property::screenArea = required screenArea: number
+interface-member GeoAreaSceneNode::property::style = required style: Style
+interface-member GeoAreaSceneNode::property::type = required type: "geoarea"
+interface-member GeoCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member GeoCustomChartProps::property::areas = optional areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[] | undefined
+interface-member GeoCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member GeoCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member GeoCustomChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member GeoCustomChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamGeoFrameProps<Datum>, "areas" | "customLayout" | "layoutConfig" | "layoutSelection" | "lineDataAccessor" | "lines" | "points" | "projection" | "size" | "xAccessor" | "yAccessor">> | undefined
+interface-member GeoCustomChartProps::property::layout = required layout: GeoCustomLayout<TConfig>
+interface-member GeoCustomChartProps::property::layoutConfig = optional layoutConfig: TConfig | undefined
+interface-member GeoCustomChartProps::property::lineDataAccessor = optional lineDataAccessor: ((d: TDatum) => Datum[]) | string | undefined
+interface-member GeoCustomChartProps::property::lines = optional lines: TDatum[] | undefined
+interface-member GeoCustomChartProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("../../semiotic-geo").CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member GeoCustomChartProps::property::points = optional points: TDatum[] | undefined
+interface-member GeoCustomChartProps::property::projection = optional projection: ProjectionProp | undefined
+interface-member GeoCustomChartProps::property::recipe = optional recipe: ChartRecipe<TDatum, TConfig> | undefined
+interface-member GeoCustomChartProps::property::recipeId = optional recipeId: string | undefined
+interface-member GeoCustomChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member GeoCustomChartProps::property::xAccessor = optional xAccessor: ((d: TDatum) => number) | string | undefined
+interface-member GeoCustomChartProps::property::yAccessor = optional yAccessor: ((d: TDatum) => number) | string | undefined
+interface-member GeoLayoutContext::property::areas = required areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
+interface-member GeoLayoutContext::property::config = required config: C
+interface-member GeoLayoutContext::property::dimensions = required dimensions: {width: number; height: number; margin: MarginType; plot: {x: number; y: number; width: number; height: number;};}
+interface-member GeoLayoutContext::property::lines = required lines: Datum[]
+interface-member GeoLayoutContext::property::points = required points: Datum[]
+interface-member GeoLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
+interface-member GeoLayoutContext::property::scales = required scales: GeoScales
+interface-member GeoLayoutContext::property::selection = optional selection: CustomLayoutSelection | null | undefined
+interface-member GeoLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member GeoLayoutResult::property::nodes = optional nodes: GeoSceneNode[] | undefined
+interface-member GeoLayoutResult::property::overlays = optional overlays: ReactNode
+interface-member GeoLayoutResult::property::restyle = optional restyle: ((node: GeoSceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member GeoParticleStyle::property::color = optional color: ((datum: Datum) => string) | string | undefined
+interface-member GeoParticleStyle::property::maxPerLine = optional maxPerLine: number | undefined
+interface-member GeoParticleStyle::property::opacity = optional opacity: number | undefined
+interface-member GeoParticleStyle::property::radius = optional radius: number | undefined
+interface-member GeoParticleStyle::property::spawnRate = optional spawnRate: number | undefined
+interface-member GeoParticleStyle::property::speedMultiplier = optional speedMultiplier: number | undefined
+interface-member GeoPipelineConfig::property::annotations = optional annotations: Datum[] | undefined
+interface-member GeoPipelineConfig::property::areaStyle = optional areaStyle: ((d: GeoJSON.Feature) => Style) | Style | undefined
+interface-member GeoPipelineConfig::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
+interface-member GeoPipelineConfig::property::clock = optional clock: import("./FrameRuntime").FrameClock | undefined
+interface-member GeoPipelineConfig::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member GeoPipelineConfig::property::customLayout = optional customLayout: GeoCustomLayout | undefined
+interface-member GeoPipelineConfig::property::decay = optional decay: DecayConfig | undefined
+interface-member GeoPipelineConfig::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member GeoPipelineConfig::property::flowStyle = optional flowStyle: "arc" | "basic" | "offset" | undefined
+interface-member GeoPipelineConfig::property::graticule = optional graticule: GraticuleConfig | boolean | undefined
+interface-member GeoPipelineConfig::property::introAnimation = optional introAnimation: boolean | undefined
+interface-member GeoPipelineConfig::property::layoutConfig = optional layoutConfig: object | undefined
+interface-member GeoPipelineConfig::property::layoutMargin = optional layoutMargin: MarginType | undefined
+interface-member GeoPipelineConfig::property::layoutSelection = optional layoutSelection: CustomLayoutSelection | null | undefined
+interface-member GeoPipelineConfig::property::lineDataAccessor = optional lineDataAccessor: ((d: Datum) => Datum[]) | string | undefined
+interface-member GeoPipelineConfig::property::lineIdAccessor = optional lineIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member GeoPipelineConfig::property::lineStyle = optional lineStyle: ((d: Datum, group?: string) => Style) | Style | undefined
+interface-member GeoPipelineConfig::property::lineType = optional lineType: "geo" | "line" | undefined
+interface-member GeoPipelineConfig::property::onLayoutError = optional onLayoutError: ((diagnostic: CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member GeoPipelineConfig::property::pointIdAccessor = optional pointIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member GeoPipelineConfig::property::pointStyle = optional pointStyle: ((d: Datum) => Style & {r?: number;}) | undefined
+interface-member GeoPipelineConfig::property::projection = required projection: ProjectionProp
+interface-member GeoPipelineConfig::property::projectionExtent = optional projectionExtent: [[number, number], [number, number]] | undefined
+interface-member GeoPipelineConfig::property::projectionTransform = optional projectionTransform: DistanceCartogramConfig | undefined
+interface-member GeoPipelineConfig::property::pulse = optional pulse: PulseConfig | undefined
+interface-member GeoPipelineConfig::property::themeCategorical = optional themeCategorical: string[] | undefined
+interface-member GeoPipelineConfig::property::themeDiverging = optional themeDiverging: string | undefined
+interface-member GeoPipelineConfig::property::themeSemantic = optional themeSemantic: ThemeSemanticColors | undefined
+interface-member GeoPipelineConfig::property::themeSequential = optional themeSequential: string | undefined
+interface-member GeoPipelineConfig::property::transition = optional transition: TransitionConfig | undefined
+interface-member GeoPipelineConfig::property::windowSize = optional windowSize: number | undefined
+interface-member GeoPipelineConfig::property::xAccessor = optional xAccessor: ((d: Datum) => number) | string | undefined
+interface-member GeoPipelineConfig::property::yAccessor = optional yAccessor: ((d: Datum) => number) | string | undefined
+interface-member GeoScales::property::geoPath = required geoPath: GeoPath<void, GeoPermissibleObjects>
+interface-member GeoScales::property::invertedPoint = required invertedPoint: (px: number, py: number) => [number, number] | null
+interface-member GeoScales::property::projectedPoint = required projectedPoint: (lon: number, lat: number) => [number, number] | null
+interface-member GeoScales::property::projection = required projection: GeoProjection
+interface-member GeographicDotGridConfig::property::categoryAccessor = optional categoryAccessor: GeographicDotGridAccessor | undefined
+interface-member GeographicDotGridConfig::property::dotRadius = optional dotRadius: number | undefined
+interface-member GeographicDotGridConfig::property::fillAccessor = optional fillAccessor: GeographicDotGridAccessor | undefined
+interface-member GeographicDotGridConfig::property::markStyle = optional markStyle: ((datum: GeographicDotGridDatum, index: number) => Style) | Style | undefined
+interface-member GeographicDotGridConfig::property::outlineStyle = optional outlineStyle: Style | undefined
+interface-member GeographicDotGridConfig::property::radiusRatio = optional radiusRatio: number | undefined
+interface-member GeographicDotGridConfig::property::shape = optional shape: GeographicDotGridShape | undefined
+interface-member GeographicDotGridConfig::property::showOutline = optional showOutline: boolean | undefined
+interface-member GeographicDotGridDatum::property::dotIndex = required dotIndex: number
+interface-member GeographicDotGridDatum::property::featureId = required featureId: string
+interface-member GeographicDotGridDatum::property::featureIndex = required featureIndex: number
+interface-member GeographicDotGridDatum::property::gridColumn = required gridColumn: number
+interface-member GeographicDotGridDatum::property::gridRow = required gridRow: number
+interface-member GeographicDotGridDatum::property::latitude = required latitude: number
+interface-member GeographicDotGridDatum::property::longitude = required longitude: number
+interface-member GeographicDotGridSampleOptions::property::cellSize = optional cellSize: number | undefined
+interface-member GeographicDotGridSampleOptions::property::columns = optional columns: number | undefined
+interface-member GeographicDotGridSampleOptions::property::dotFilter = optional dotFilter: ((datum: GeographicDotGridDatum, index: number) => boolean) | undefined
+interface-member GeographicDotGridSampleOptions::property::featureFilter = optional featureFilter: ((feature: GeoJSON.Feature, index: number) => boolean) | undefined
+interface-member GeographicDotGridSampleOptions::property::gridOrigin = optional gridOrigin: [number, number] | undefined
+interface-member GeographicDotGridSampleOptions::property::layoutPadding = optional layoutPadding: number | undefined
+interface-member GeographicDotGridSampleOptions::property::maxSamples = optional maxSamples: number | undefined
+interface-member GeographicGridConfig::property::categoryAccessor = optional categoryAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::cellPadding = optional cellPadding: number | undefined
+interface-member GeographicGridConfig::property::columnAccessor = optional columnAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::columns = optional columns: number | undefined
+interface-member GeographicGridConfig::property::fillAccessor = optional fillAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::filter = optional filter: ((datum: Datum, index: number) => boolean) | undefined
+interface-member GeographicGridConfig::property::idAccessor = optional idAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::labelAccessor = optional labelAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::labelColor = optional labelColor: string | undefined
+interface-member GeographicGridConfig::property::labelFontFamily = optional labelFontFamily: string | undefined
+interface-member GeographicGridConfig::property::labelFontSize = optional labelFontSize: number | undefined
+interface-member GeographicGridConfig::property::labelFontWeight = optional labelFontWeight: number | string | undefined
+interface-member GeographicGridConfig::property::latitudeAccessor = optional latitudeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::layoutPadding = optional layoutPadding: number | undefined
+interface-member GeographicGridConfig::property::longitudeAccessor = optional longitudeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::markStyle = optional markStyle: ((datum: Datum, index: number) => Style) | Style | undefined
+interface-member GeographicGridConfig::property::maxLabelLength = optional maxLabelLength: number | undefined
+interface-member GeographicGridConfig::property::occupancy = optional occupancy: number | undefined
+interface-member GeographicGridConfig::property::rowAccessor = optional rowAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::rows = optional rows: number | undefined
+interface-member GeographicGridConfig::property::shape = optional shape: GeographicGridShape | undefined
+interface-member GeographicGridConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member GeographicGridConfig::property::sizeAccessor = optional sizeAccessor: GridAccessor<Datum> | undefined
+interface-member GeographicGridConfig::property::sizeDomain = optional sizeDomain: [number, number] | undefined
+interface-member GeographicGridConfig::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member GeographicGridConfig::property::source = optional source: GeographicGridSource | undefined
+interface-member GeographicGridInput::property::datum = required datum: T
+interface-member GeographicGridInput::property::x = required x: number
+interface-member GeographicGridInput::property::y = required y: number
+interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
+interface-member GlyphDef::property::parts = required parts: GlyphPart[]
+interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
+interface-member GlyphPart::property::d = required d: string
+interface-member GlyphPart::property::fill = optional fill: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::opacity = optional opacity: number | undefined
+interface-member GlyphPart::property::stroke = optional stroke: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member GlyphPart::property::strokeLinejoin = optional strokeLinejoin: "bevel" | "miter" | "round" | undefined
+interface-member GlyphPart::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GlyphSceneNode::property::_decayOpacity = optional _decayOpacity: number | undefined
+interface-member GlyphSceneNode::property::_pulseColor = optional _pulseColor: string | undefined
+interface-member GlyphSceneNode::property::_pulseGlowRadius = optional _pulseGlowRadius: number | undefined
+interface-member GlyphSceneNode::property::_pulseIntensity = optional _pulseIntensity: number | undefined
+interface-member GlyphSceneNode::property::_targetOpacity = optional _targetOpacity: number | undefined
+interface-member GlyphSceneNode::property::_targetR = optional _targetR: number | undefined
+interface-member GlyphSceneNode::property::_targetX = optional _targetX: number | undefined
+interface-member GlyphSceneNode::property::_targetY = optional _targetY: number | undefined
+interface-member GlyphSceneNode::property::_transitionKey = optional _transitionKey: string | undefined
+interface-member GlyphSceneNode::property::accent = optional accent: string | undefined
+interface-member GlyphSceneNode::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member GlyphSceneNode::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member GlyphSceneNode::property::color = optional color: string | undefined
+interface-member GlyphSceneNode::property::datum = required datum: SceneDatum
+interface-member GlyphSceneNode::property::fraction = optional fraction: number | undefined
+interface-member GlyphSceneNode::property::fractionDirection = optional fractionDirection: "horizontal" | "vertical" | undefined
+interface-member GlyphSceneNode::property::fractionStart = optional fractionStart: number | undefined
+interface-member GlyphSceneNode::property::ghostColor = optional ghostColor: string | undefined
+interface-member GlyphSceneNode::property::glyph = required glyph: GlyphDef
+interface-member GlyphSceneNode::property::pointId = optional pointId: string | undefined
+interface-member GlyphSceneNode::property::rotation = optional rotation: number | undefined
+interface-member GlyphSceneNode::property::size = required size: number
+interface-member GlyphSceneNode::property::style = required style: Style
+interface-member GlyphSceneNode::property::type = required type: "glyph"
+interface-member GlyphSceneNode::property::x = required x: number
+interface-member GlyphSceneNode::property::y = required y: number
+interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
+interface-member GradientLegendConfig::property::domain = required domain: [number, number]
+interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
+interface-member GradientLegendConfig::property::label = optional label: string | undefined
+interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
+interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member GraticuleConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member GraticuleConfig::property::step = optional step: [number, number] | undefined
+interface-member GraticuleConfig::property::stroke = optional stroke: string | undefined
+interface-member GraticuleConfig::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member GraticuleConfig::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GridifiedGeographicPoint::property::column = required column: number
+interface-member GridifiedGeographicPoint::property::row = required row: number
+interface-member GridifyGeographicPointsOptions::property::aspectRatio = optional aspectRatio: number | undefined
+interface-member GridifyGeographicPointsOptions::property::columns = optional columns: number | undefined
+interface-member GridifyGeographicPointsOptions::property::occupancy = optional occupancy: number | undefined
+interface-member GridifyGeographicPointsOptions::property::rows = optional rows: number | undefined
+interface-member HatchFill::property::angle = optional angle: number | undefined
+interface-member HatchFill::property::background = optional background: string | undefined
+interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member HatchFill::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchFill::property::spacing = optional spacing: number | undefined
+interface-member HatchFill::property::stroke = optional stroke: string | undefined
+interface-member HatchFill::property::type = required type: "hatch"
+interface-member HitTargetPointProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member HitTargetPointProps::property::datum = required datum: SceneDatum
+interface-member HitTargetPointProps::property::id = optional id: number | string | undefined
+interface-member HitTargetPointProps::property::r = optional r: number | undefined
+interface-member HitTargetPointProps::property::x = required x: number
+interface-member HitTargetPointProps::property::y = required y: number
+interface-member LegendGroup::property::items = required items: LegendItem[]
+interface-member LegendGroup::property::label = required label: string
+interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
+interface-member LegendGroup::property::type = optional type: ItemType | undefined
+interface-member LegendItem::index::%24index = required (key: string): unknown
+interface-member LegendItem::property::color = optional color: string | undefined
+interface-member LegendItem::property::label = required label: string
+interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
+interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
+interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
+interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined
+interface-member LegendLayout::property::rowHeight = optional rowHeight: number | undefined
+interface-member LegendLayout::property::sideGutter = optional sideGutter: number | undefined
+interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
+interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
+interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
+interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member ProportionalSymbolMapProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member ProportionalSymbolMapProps::property::areaStyle = optional areaStyle: Style | undefined
+interface-member ProportionalSymbolMapProps::property::areas = optional areas: AreasProp | undefined
+interface-member ProportionalSymbolMapProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member ProportionalSymbolMapProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ProportionalSymbolMapProps::property::dragRotate = optional dragRotate: boolean | undefined
+interface-member ProportionalSymbolMapProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ProportionalSymbolMapProps::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member ProportionalSymbolMapProps::property::frameProps = optional frameProps: Partial<Omit<StreamGeoFrameProps<Datum>, "points" | "projection">> | undefined
+interface-member ProportionalSymbolMapProps::property::graticule = optional graticule: boolean | import("../../semiotic-geo").GraticuleConfig | undefined
+interface-member ProportionalSymbolMapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ProportionalSymbolMapProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member ProportionalSymbolMapProps::property::onZoom = optional onZoom: ((state: {projection: import("d3-geo").GeoProjection; zoom: number;}) => void) | undefined
+interface-member ProportionalSymbolMapProps::property::points = optional points: TDatum[] | undefined
+interface-member ProportionalSymbolMapProps::property::projection = optional projection: ProjectionProp | undefined
+interface-member ProportionalSymbolMapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ProportionalSymbolMapProps::property::sizeBy = required sizeBy: ChartAccessor<TDatum, number>
+interface-member ProportionalSymbolMapProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member ProportionalSymbolMapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ProportionalSymbolMapProps::property::tileAttribution = optional tileAttribution: string | undefined
+interface-member ProportionalSymbolMapProps::property::tileCacheSize = optional tileCacheSize: number | undefined
+interface-member ProportionalSymbolMapProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined
+interface-member ProportionalSymbolMapProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ProportionalSymbolMapProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProportionalSymbolMapProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ProportionalSymbolMapProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
+interface-member ProportionalSymbolMapProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member ResponsiveRule::property::description = optional description: string | undefined
+interface-member ResponsiveRule::property::id = optional id: string | undefined
+interface-member ResponsiveRule::property::priority = optional priority: number | undefined
+interface-member ResponsiveRule::property::transform = required transform: Partial<TProps> & Record<string, unknown>
+interface-member ResponsiveRule::property::when = required when: ResponsiveRuleCondition
+interface-member ResponsiveRuleCondition::property::maxAspectRatio = optional maxAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::minAspectRatio = optional minAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::orientation = optional orientation: ResponsiveOrientation | undefined
+interface-member ResponsiveRuleContext::property::height = optional height: number | undefined
+interface-member ResponsiveRuleContext::property::width = required width: number
+interface-member ResponsiveRuleMatch::property::index = required index: number
+interface-member ResponsiveRuleMatch::property::rule = required rule: ResponsiveRule<TProps>
+interface-member ResponsiveRuleResult::property::matches = required matches: ResponsiveRuleMatch<TProps>[]
+interface-member ResponsiveRuleResult::property::props = required props: TProps
+interface-member SceneAccessibilityMetadata::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member SceneAccessibilityMetadata::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member StreamGeoFrameHandle::method::clear = required clear(): void
+interface-member StreamGeoFrameHandle::method::getCartogramLayout = required getCartogramLayout(): null | {cx: number; cy: number; maxCost: number; availableRadius: number; layout?: "radial" | "strip";}
+interface-member StreamGeoFrameHandle::method::getCustomLayout = required getCustomLayout(): import("./geoCustomLayout").GeoLayoutResult | null
+interface-member StreamGeoFrameHandle::method::getData = required getData(): Datum[]
+interface-member StreamGeoFrameHandle::method::getGeoPath = required getGeoPath(): GeoPath<void, GeoPermissibleObjects> | null
+interface-member StreamGeoFrameHandle::method::getLayoutFailure = required getLayoutFailure(): CustomLayoutFailureDiagnostic | null
+interface-member StreamGeoFrameHandle::method::getLines = required getLines(): Datum[]
+interface-member StreamGeoFrameHandle::method::getProjection = required getProjection(): GeoProjection | null
+interface-member StreamGeoFrameHandle::method::getZoom = required getZoom(): number
+interface-member StreamGeoFrameHandle::method::push = required push(datum: Datum): void
+interface-member StreamGeoFrameHandle::method::pushLine = required pushLine(line: Datum): void
+interface-member StreamGeoFrameHandle::method::pushMany = required pushMany(data: Datum[]): void
+interface-member StreamGeoFrameHandle::method::pushManyLines = required pushManyLines(lines: Datum[]): void
+interface-member StreamGeoFrameHandle::method::removeLine = required removeLine(id: string | string[]): Datum[]
+interface-member StreamGeoFrameHandle::method::removePoint = required removePoint(id: string | string[]): Datum[]
+interface-member StreamGeoFrameHandle::method::resetZoom = required resetZoom(): void
+interface-member StreamGeoFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamGeoFrameProps::property::allowTooltipOverflow = optional allowTooltipOverflow: boolean | undefined
+interface-member StreamGeoFrameProps::property::animate = optional animate: AnimateProp | undefined
+interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member StreamGeoFrameProps::property::areaStyle = optional areaStyle: ((d: GeoJSON.Feature) => Style) | Style | undefined
+interface-member StreamGeoFrameProps::property::areas = optional areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[] | undefined
+interface-member StreamGeoFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
+interface-member StreamGeoFrameProps::property::background = optional background: string | undefined
+interface-member StreamGeoFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<GeoScales>
+interface-member StreamGeoFrameProps::property::chartId = optional chartId: string | undefined
+interface-member StreamGeoFrameProps::property::className = optional className: string | undefined
+interface-member StreamGeoFrameProps::property::clock = optional clock: import("./FrameRuntime").FrameClock | undefined
+interface-member StreamGeoFrameProps::property::colorBy = optional colorBy: ((GeoJSON.Feature | d: T) => string) | string | undefined
+interface-member StreamGeoFrameProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member StreamGeoFrameProps::property::customClickBehavior = optional customClickBehavior: SemanticClickBehavior<HoverData> | undefined
+interface-member StreamGeoFrameProps::property::customHoverBehavior = optional customHoverBehavior: SemanticHoverBehavior<HoverData> | undefined
+interface-member StreamGeoFrameProps::property::customLayout = optional customLayout: GeoCustomLayout | undefined
+interface-member StreamGeoFrameProps::property::decay = optional decay: DecayConfig | undefined
+interface-member StreamGeoFrameProps::property::description = optional description: string | undefined
+interface-member StreamGeoFrameProps::property::dragRotate = optional dragRotate: boolean | undefined
+interface-member StreamGeoFrameProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member StreamGeoFrameProps::property::fitPadding = optional fitPadding: null | number | undefined
+interface-member StreamGeoFrameProps::property::flowStyle = optional flowStyle: "arc" | "basic" | "offset" | undefined
+interface-member StreamGeoFrameProps::property::foregroundGraphics = optional foregroundGraphics: FrameGraphicsProp<GeoScales>
+interface-member StreamGeoFrameProps::property::frameScheduler = optional frameScheduler: import("./useFrame").FrameScheduler | undefined
+interface-member StreamGeoFrameProps::property::graticule = optional graticule: GraticuleConfig | boolean | undefined
+interface-member StreamGeoFrameProps::property::height = optional height: number | undefined
+interface-member StreamGeoFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
+interface-member StreamGeoFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
+interface-member StreamGeoFrameProps::property::layoutSelection = optional layoutSelection: CustomLayoutSelection | null | undefined
+interface-member StreamGeoFrameProps::property::legend = optional legend: LegendValue
+interface-member StreamGeoFrameProps::property::legendCategoryAccessor = optional legendCategoryAccessor: ((d: T) => string) | string | undefined
+interface-member StreamGeoFrameProps::property::legendClickBehavior = optional legendClickBehavior: ((item: LegendItem) => void) | undefined
+interface-member StreamGeoFrameProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
+interface-member StreamGeoFrameProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: LegendItem | null) => void) | undefined
+interface-member StreamGeoFrameProps::property::legendIsolatedCategories = optional legendIsolatedCategories: Set<string> | undefined
+interface-member StreamGeoFrameProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
+interface-member StreamGeoFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member StreamGeoFrameProps::property::lineDataAccessor = optional lineDataAccessor: ((d: T) => Datum[]) | string | undefined
+interface-member StreamGeoFrameProps::property::lineIdAccessor = optional lineIdAccessor: ((d: T) => string) | string | undefined
+interface-member StreamGeoFrameProps::property::lineStyle = optional lineStyle: ((d: Datum, group?: string) => Style) | Style | undefined
+interface-member StreamGeoFrameProps::property::lineType = optional lineType: "geo" | "line" | undefined
+interface-member StreamGeoFrameProps::property::lines = optional lines: T[] | undefined
+interface-member StreamGeoFrameProps::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member StreamGeoFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamGeoFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
+interface-member StreamGeoFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
+interface-member StreamGeoFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member StreamGeoFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::onZoom = optional onZoom: ((state: {projection: GeoProjection; zoom: number;}) => void) | undefined
+interface-member StreamGeoFrameProps::property::particleStyle = optional particleStyle: GeoParticleStyle | undefined
+interface-member StreamGeoFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamGeoFrameProps::property::pointIdAccessor = optional pointIdAccessor: ((d: T) => string) | string | undefined
+interface-member StreamGeoFrameProps::property::pointStyle = optional pointStyle: ((d: Datum) => Style & {r?: number;}) | undefined
+interface-member StreamGeoFrameProps::property::points = optional points: T[] | undefined
+interface-member StreamGeoFrameProps::property::projection = required projection: ProjectionProp
+interface-member StreamGeoFrameProps::property::projectionExtent = optional projectionExtent: [[number, number], [number, number]] | undefined
+interface-member StreamGeoFrameProps::property::projectionTransform = optional projectionTransform: DistanceCartogramConfig | undefined
+interface-member StreamGeoFrameProps::property::pulse = optional pulse: PulseConfig | undefined
+interface-member StreamGeoFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
+interface-member StreamGeoFrameProps::property::renderMode = optional renderMode: SceneRenderMode<GeoSceneNode> | undefined
+interface-member StreamGeoFrameProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member StreamGeoFrameProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member StreamGeoFrameProps::property::runtimeMode = optional runtimeMode: "bounded" | "streaming" | undefined
+interface-member StreamGeoFrameProps::property::seed = optional seed: number | undefined
+interface-member StreamGeoFrameProps::property::showAxes = optional showAxes: boolean | undefined
+interface-member StreamGeoFrameProps::property::showParticles = optional showParticles: boolean | undefined
+interface-member StreamGeoFrameProps::property::size = optional size: [number, number] | undefined
+interface-member StreamGeoFrameProps::property::staleness = optional staleness: StalenessConfig | undefined
+interface-member StreamGeoFrameProps::property::summary = optional summary: string | undefined
+interface-member StreamGeoFrameProps::property::suspendWhenHidden = optional suspendWhenHidden: boolean | undefined
+interface-member StreamGeoFrameProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
+interface-member StreamGeoFrameProps::property::tileAttribution = optional tileAttribution: string | undefined
+interface-member StreamGeoFrameProps::property::tileCacheSize = optional tileCacheSize: number | undefined
+interface-member StreamGeoFrameProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined
+interface-member StreamGeoFrameProps::property::title = optional title: ReactNode
+interface-member StreamGeoFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
+interface-member StreamGeoFrameProps::property::transition = optional transition: TransitionConfig | undefined
+interface-member StreamGeoFrameProps::property::width = optional width: number | undefined
+interface-member StreamGeoFrameProps::property::windowSize = optional windowSize: number | undefined
+interface-member StreamGeoFrameProps::property::xAccessor = optional xAccessor: ((d: T) => number) | string | undefined
+interface-member StreamGeoFrameProps::property::yAccessor = optional yAccessor: ((d: T) => number) | string | undefined
+interface-member StreamGeoFrameProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
+interface-member StreamGeoFrameProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member Style::property::_edgeFade = optional _edgeFade: boolean | undefined
+interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
+interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
+interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::opacity = optional opacity: number | undefined
+interface-member Style::property::r = optional r: number | undefined
+interface-member Style::property::stroke = optional stroke: string | undefined
+interface-member Style::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member Style::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member Style::property::strokeOpacity = optional strokeOpacity: number | undefined
+interface-member Style::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRule::property::id = optional id: string | undefined
+interface-member StyleRule::property::label = optional label: string | undefined
+interface-member StyleRule::property::style = required style: ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle) | StyleRuleStyle
+interface-member StyleRule::property::when = optional when: StyleRulePredicate | StyleRuleThreshold | boolean | undefined
+interface-member StyleRuleContext::property::category = optional category: string | undefined
+interface-member StyleRuleContext::property::index = optional index: number | undefined
+interface-member StyleRuleContext::property::size = optional size: number | undefined
+interface-member StyleRuleContext::property::value = required value: number | undefined
+interface-member StyleRuleContext::property::x = optional x: number | undefined
+interface-member StyleRuleContext::property::y = optional y: number | undefined
+interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
+interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
+interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
+interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member StyleRuleStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRuleThreshold::property::axis = optional axis: "value" | "x" | "y" | undefined
+interface-member StyleRuleThreshold::property::eq = optional eq: number | string | undefined
+interface-member StyleRuleThreshold::property::field = optional field: string | undefined
+interface-member StyleRuleThreshold::property::gt = optional gt: number | undefined
+interface-member StyleRuleThreshold::property::gte = optional gte: number | undefined
+interface-member StyleRuleThreshold::property::in = optional in: (number | string)[] | undefined
+interface-member StyleRuleThreshold::property::lt = optional lt: number | undefined
+interface-member StyleRuleThreshold::property::lte = optional lte: number | undefined
+interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
+interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
+interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::className = optional className: string | undefined
+interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
+interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipConfig::property::style = optional style: React.CSSProperties | undefined
+interface-member TooltipConfig::property::title = optional title: Accessor<string> | undefined
+interface-member TooltipField::property::accessor = optional accessor: Accessor | undefined
+interface-member TooltipField::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipField::property::key = optional key: Accessor | undefined
+interface-member TooltipField::property::label = optional label: string | undefined
+interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
 type AreasProp = GeoJSON.Feature[] | ReferenceGeography
-type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
-type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
+type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
+type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type GeoCustomLayout<C extends object = Record<string, unknown>> = (ctx: GeoLayoutContext<C>) => GeoLayoutResult
-type GeoSceneNode = GeoAreaSceneNode | PointSceneNode | GlyphSceneNode | GeoLineSceneNode
-type GeographicDotGridAccessor = string | ((datum: GeographicDotGridDatum, index: number) => unknown)
-type GeographicDotGridShape = "circle" | "square" | "hexagon"
-type GeographicGridShape = "circle" | "square" | "hexagon"
-type GeographicGridSource = "auto" | "areas" | "points"
-type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
-type ProjectionName = "mercator" | "equalEarth" | "albersUsa" | "orthographic" | "naturalEarth" | "equirectangular"
-type ProjectionProp = GeoProjection | ProjectionName | ProjectionConfig
-type ReferenceGeography = "world-110m" | "world-50m" | "land-110m" | "land-50m"
-type ResponsiveOrientation = "portrait" | "landscape"
+type GeoSceneNode = GeoAreaSceneNode | GeoLineSceneNode | GlyphSceneNode | PointSceneNode
+type GeographicDotGridAccessor = ((datum: GeographicDotGridDatum, index: number) => unknown) | string
+type GeographicDotGridShape = "circle" | "hexagon" | "square"
+type GeographicGridShape = "circle" | "hexagon" | "square"
+type GeographicGridSource = "areas" | "auto" | "points"
+type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type ProjectionName = "albersUsa" | "equalEarth" | "equirectangular" | "mercator" | "naturalEarth" | "orthographic"
+type ProjectionProp = GeoProjection | ProjectionConfig | ProjectionName
+type ReferenceGeography = "land-110m" | "land-50m" | "world-110m" | "world-50m"
+type ResponsiveOrientation = "landscape" | "portrait"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "default" | "css"
-type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type TooltipChromeMode = "css" | "default"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

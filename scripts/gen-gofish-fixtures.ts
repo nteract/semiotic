@@ -180,7 +180,7 @@ const SPECS: FixtureSpec[] = [
     label: "Flower meadow",
     source: "https://gofish.graphics/js/examples/flower-chart.html",
     blurb:
-      "GoFish's real flower chart, verbatim: a meadow where each lake is a green stem (a bar whose height is the lake's total catch) topped by a polar fan of petals, one per species, sized by count. It is layer([stems, flowers]) — the flowers selectAll the stems and stack a polar petal fan on each. The composition's root is a combinator (no ChartBuilder.toDisplayList), so it is baked through GoFish's mark-resolution contract; see gofish-displaylist-findings.md.",
+      "GoFish's real flower chart, verbatim: a meadow where each lake is a green stem (a bar whose height is the lake's total catch) topped by a polar fan of petals, one per species, sized by count. It is layer([stems, flowers]) — the flowers selectAll the stems and stack a polar petal fan on each. The composition's root is a combinator (no ChartBuilder.toDisplayList), so it is baked through GoFish's mark-resolution contract.",
     build: async () => {
       const FLOWER_RADIUS = 40
       // One row per species, tagged with its lake's planting x (the stem's location).
@@ -226,9 +226,7 @@ const SPECS: FixtureSpec[] = [
       // bake. This is the documented headless path for a combinator root; the
       // missing `.toDisplayList()` terminal is the one real gap (see findings doc).
       const node = await (
-        built as unknown as (
-          data?: unknown
-        ) => Promise<{
+        built as unknown as (data?: unknown) => Promise<{
           toDisplayList: (o: {
             w: number
             h: number
@@ -243,7 +241,7 @@ const SPECS: FixtureSpec[] = [
     label: "Polar ribbon chart",
     source: "https://gofish.graphics/js/examples/polar-ribbon-chart.html",
     blurb:
-      "GoFish's polar ribbon chart, verbatim: the catch stacked radially per lake under a clock() projection, then a smooth area ribbon drawn across the lakes for each species (selectAll the bars, group by species). The wrap, the open gap, and the bumped ribbons are all baked into absolute-pixel paths; the radial bars keep their datum (hit targets), the ribbons are area chrome. Root is a layer({ coord: clock() }) combinator, baked through GoFish's mark-resolution contract — see gofish-displaylist-findings.md.",
+      "GoFish's polar ribbon chart, verbatim: the catch stacked radially per lake under a clock() projection, then a smooth area ribbon drawn across the lakes for each species (selectAll the bars, group by species). The wrap, the open gap, and the bumped ribbons are all baked into absolute-pixel paths; the radial bars keep their datum (hit targets), the ribbons are area chrome. Root is a layer({ coord: clock() }) combinator, baked through GoFish's mark-resolution contract.",
     build: async () => {
       const built = layer({ coord: clock() }, [
         // Radial stacked bars: scatter the lakes around the full circle (x = lake,
@@ -273,9 +271,7 @@ const SPECS: FixtureSpec[] = [
       // Same combinator-root bake path as the flower (the missing `.toDisplayList()`
       // terminal — see findings doc): resolve via the mark contract, then bake.
       const node = await (
-        built as unknown as (
-          data?: unknown
-        ) => Promise<{
+        built as unknown as (data?: unknown) => Promise<{
           toDisplayList: (o: {
             w: number
             h: number
@@ -340,7 +336,7 @@ const SPECS: FixtureSpec[] = [
     source:
       "https://gofish.graphics/js/examples/python-tutor-memory-diagram.html",
     blurb:
-      "A Python Tutor runtime memory diagram: a Global Frame of variables (c, d → pointers; x = 5) whose arrows fan into a heap of tuples, with tuple cells pointing on to further tuples. NOTE: GoFish's own example is not a portable spec — it relies on ~250 lines of unpublished story helpers (globalFrame/heap/tuple/Arrow). This is a best-effort reconstruction from GoFish primitives only (rect/text/Arrow/ref + .name()). It is also vertically flipped vs the live example: a free-space Layer baked through toDisplayList orients y-down differently than .render() (GoFish issue #143/#16). See gofish-displaylist-findings.md §6.",
+      "A Python Tutor runtime memory diagram: a Global Frame of variables (c, d → pointers; x = 5) whose arrows fan into a heap of tuples, with tuple cells pointing on to further tuples. NOTE: GoFish's own example is not a portable spec — it relies on ~250 lines of unpublished story helpers (globalFrame/heap/tuple/Arrow). This is a best-effort reconstruction from GoFish primitives only (rect/text/Arrow/ref + .name()). It is also vertically flipped vs the live example: a free-space Layer baked through toDisplayList orients y-down differently than .render() (GoFish issue #143/#16).",
     build: async () => {
       const FONT = "verdana, arial, helvetica, sans-serif"
       // A heap tuple cell: yellow box + index label (top-left) + value (centered),
@@ -515,7 +511,6 @@ async function main() {
   // fixtures; declaration generation and consumers of `semiotic/experimental`
   // must not need it installed. Shape-compatible with DisplayList.DisplayListDocument.
   const header =
-    `/* eslint-disable */\n` +
     `// @generated by scripts/gen-gofish-fixtures.ts — DO NOT EDIT BY HAND.\n` +
     `// Regenerate with: node --experimental-strip-types scripts/gen-gofish-fixtures.ts --write\n` +
     `//\n` +

@@ -93,6 +93,26 @@ describe("browser baseline helpers", () => {
     assert.equal(comparison.ok, false)
   })
 
+  it("can report reviewed snapshot drift without weakening validation or timing checks", () => {
+    const expected = baseline()
+    const changedFixture = clone(expected)
+    changedFixture.referenceEnvironment = environment("different browser")
+    changedFixture.metrics.browser.checks.forceWorker.positionCount = 11
+
+    const candidate = compareBrowserBaselines(expected, changedFixture, { enforceStatic: false })
+    assert.equal(candidate.snapshotDifferences.length > 0, true)
+    assert.deepEqual(candidate.blockingStructuralDifferences, [])
+    assert.equal(candidate.ok, true)
+
+    const invalid = clone(changedFixture)
+    delete invalid.metrics.timings.updateCanvasPaint
+    assert.equal(compareBrowserBaselines(expected, invalid, { enforceStatic: false }).ok, false)
+
+    const slow = clone(expected)
+    slow.metrics.timings.initialCanvasPaint.p50Ms = 100
+    assert.equal(compareBrowserBaselines(expected, slow, { enforceStatic: false }).ok, false)
+  })
+
   it("keeps host-specific browser concurrency diagnostic-only", () => {
     const expected = baseline()
     expected.metrics.browser.context = { hardwareConcurrency: 10 }

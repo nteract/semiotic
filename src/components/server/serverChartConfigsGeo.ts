@@ -7,6 +7,7 @@ import { type ChartConfig } from "./serverChartConfigShared"
 import { composeStyleRules, makeNodeRuleContext } from "../charts/shared/styleRules"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
 import { scaleSequential } from "d3-scale"
+import type { GradientLegendConfig } from "../types/legendTypes"
 
 /**
  * Build a geo symbol map's per-point base `pointStyle` (colorBy fill + sizeBy
@@ -60,12 +61,17 @@ function flattenFeature(f: Datum): Datum {
  * server can't resolve a `"world-110m"` string synchronously — that path
  * errors later in `renderGeoFrame`).
  */
-function buildChoroplethAreaStyle(
+interface ChoroplethColorModel {
+  domain: [number, number]
+  colorScale: (value: number) => string
+  valueAccessor: (feature: Datum) => number | undefined
+}
+
+function buildChoroplethColorModel(
   areas: unknown,
   valueAccessor: string | ((d: Datum) => number | undefined) | undefined,
   colorScheme: string | undefined,
-  areaOpacity: number,
-): ((f: Datum) => Datum) | undefined {
+): ChoroplethColorModel | undefined {
   if (!Array.isArray(areas)) return undefined
   const valAcc = (d: Datum): number | undefined =>
     typeof valueAccessor === "function"
@@ -81,14 +87,27 @@ function buildChoroplethAreaStyle(
     if (v < min) min = v
     if (v > max) max = v
   }
-  const scale = scaleSequential(getSequentialInterpolator(colorScheme)).domain([
+  const domain: [number, number] = [
     Number.isFinite(min) ? min : 0,
     Number.isFinite(max) ? max : 1,
-  ])
+  ]
+  const scale = scaleSequential(getSequentialInterpolator(colorScheme)).domain(domain)
+  return {
+    domain,
+    colorScale: (value) => scale(value),
+    valueAccessor: valAcc,
+  }
+}
+
+function buildChoroplethAreaStyle(
+  model: ChoroplethColorModel | undefined,
+  areaOpacity: number,
+): ((f: Datum) => Datum) | undefined {
+  if (!model) return undefined
   return (f: Datum): Datum => {
-    const v = valAcc(f)
+    const v = model.valueAccessor(f)
     return {
-      fill: v != null && isFinite(v) ? scale(v) : "#ccc",
+      fill: v != null && isFinite(v) ? model.colorScale(v) : "#ccc",
       stroke: "#999",
       strokeWidth: 0.5,
       fillOpacity: areaOpacity,
@@ -103,11 +122,16 @@ export const choroplethMap: ChartConfig = {
   layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const scheme = typeof colorScheme === "string" ? colorScheme : "blues"
+    const colorModel = buildChoroplethColorModel(
+      rest.areas,
+      rest.valueAccessor,
+      scheme,
+    )
     // Base sequential fill (CSR parity) — user `areaStyle` overrides it, matching
     // the client where the built-in fill is used unless a style fn is supplied.
     const baseAreaStyle =
       rest.areaStyle ??
-      buildChoroplethAreaStyle(rest.areas, rest.valueAccessor, scheme, rest.areaOpacity ?? 1)
+      buildChoroplethAreaStyle(colorModel, rest.areaOpacity ?? 1)
     // Layer declarative style rules on top of the base fill (features flattened
     // so field thresholds can read `properties`; `ctx.value` = the feature value).
     const valAcc = (d: Datum): number | undefined =>
@@ -119,6 +143,15 @@ export const choroplethMap: ChartConfig = {
     const areaStyle = rest.styleRules
       ? composeStyleRules(baseAreaStyle, rest.styleRules, (raw: Datum) => ({ value: valAcc(raw) }), flattenFeature)
       : baseAreaStyle
+    const gradientLegend = common.showLegend !== false && colorModel
+      ? {
+          gradient: {
+            colorFn: colorModel.colorScale,
+            domain: colorModel.domain,
+            label: typeof rest.valueAccessor === "string" ? rest.valueAccessor : "value",
+          } satisfies GradientLegendConfig,
+        }
+      : undefined
     return {
       areas: rest.areas,
       projection: rest.projection || "equalEarth",
@@ -128,6 +161,7 @@ export const choroplethMap: ChartConfig = {
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
       ...common,
+      ...(common.legend === undefined && gradientLegend ? { legend: gradientLegend } : {}),
     }
   },
 }

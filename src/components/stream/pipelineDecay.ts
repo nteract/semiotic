@@ -140,9 +140,7 @@ export function applyDecay(
     const idx = indexMap.get(node.datum)
     if (idx == null) continue
     const decayOpacity = computeDecayOpacity(decay, idx, bufferSize)
-    if (node.type === "heatcell") {
-      node.style = { opacity: decayOpacity }
-    } else if (node.type === "candlestick") {
+    if (node.type === "candlestick") {
       // Candlestick doesn't have a style object — store opacity for renderer
       node._decayOpacity = decayOpacity
     } else {

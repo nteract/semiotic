@@ -2,22 +2,29 @@
 import * as React from "react"
 import {
   ThemeProvider as StoreProvider,
-  useThemeSelector,
+  useThemeSelector
+} from "./store/ThemeStore"
+import {
   LIGHT_THEME,
   DARK_THEME,
   HIGH_CONTRAST_THEME,
   resolveThemeUpdate
-} from "./store/ThemeStore"
-import type { SemioticTheme, SemioticThemeUpdate, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
-import { resolveThemePreset } from "./semiotic-themes-core"
-import type { ThemePresetName } from "./semiotic-themes-core"
-import { themeToCSSVariables } from "./store/themeSerialization"
+} from "./store/themeCore"
+import type {
+  SemioticTheme,
+  SemioticThemeUpdate,
+  ThemeStoreUpdate
+} from "./store/themeCore"
+import type { ThemeStoreState } from "./store/ThemeStore"
+import { resolveThemePreset } from "./store/themePresets"
+import type { ThemePresetName } from "./store/themePresets"
+import { themeToCSSVariables } from "./store/themeCSSVariables"
 import { addMqlListener } from "./stream/useMediaPreferences"
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
 interface ThemeProviderProps {
-  /** Theme preset name (e.g. "tufte", "pastels-dark", "bi-tool") or a partial SemioticTheme object. */
+  /** Built-in preset name or partial theme. Unknown strings warn and fall back to light at runtime. */
   theme?: ThemePresetName | SemioticThemeUpdate
   children: React.ReactNode
 }
@@ -37,7 +44,9 @@ function themeToStoreUpdate(
   theme: ThemePresetName | SemioticThemeUpdate
 ): ThemeStoreUpdate {
   if (typeof theme !== "string") return theme
-  if (theme === "light" || theme === "dark" || theme === "high-contrast") return theme
+  if (theme === "light") return "light"
+  if (theme === "dark") return "dark"
+  if (theme === "high-contrast") return "high-contrast"
 
   // Try named presets next (covers "tufte", "pastels-dark", etc.).
   const preset = resolveThemePreset(theme)

@@ -67,6 +67,7 @@ export type {
   LegendLayout,
   LegendValue,
 } from "./types/legendTypes"
+export type { Style } from "./stream/types"
 import { evaluatePhysicsBodyBudget } from "./stream/physics/PhysicsBodyBudget"
 import {
   PhysicsSedimentAccumulator,
@@ -75,11 +76,13 @@ import {
 import {
   composePhysicsControllers,
   createCapacityQueueController,
-  createPortalController,
+  createPortalController
+} from "./stream/physics/PhysicsControllers"
+import {
   createDependencyGateController,
   createServiceLevelController,
   createServiceResourcePoolController
-} from "./stream/physics/PhysicsControllers"
+} from "./stream/physics/ServiceOperationsControllers"
 import { processChrome } from "./recipes/processChrome"
 import {
   absorbRegion,
@@ -310,22 +313,26 @@ export type {
   CapacityQueueVisitInfo,
   CapacityQueueWindowSnapshot,
   ComposedPhysicsControllers,
+  PhysicsController,
+  PhysicsControllerTickContext
+} from "./stream/physics/PhysicsControllers"
+export type {
   DependencyGateController,
+  ServiceLevelController,
+  ServiceResourcePoolController
+} from "./stream/physics/ServiceOperationsControllers"
+export type {
   DependencyGateOptions,
   DependencyGateSnapshot,
-  PhysicsController,
-  PhysicsControllerTickContext,
   ServiceLevelCaseInfo,
   ServiceLevelCaseState,
-  ServiceLevelController,
   ServiceLevelControllerOptions,
   ServiceLevelSnapshot,
   ServiceResourceAssignment,
   ServiceResourceDefinition,
-  ServiceResourcePoolController,
   ServiceResourcePoolOptions,
   ServiceResourcePoolSnapshot
-} from "./stream/physics/PhysicsControllers"
+} from "./stream/physics/ServiceOperationsTypes"
 export type {
   ProcessChromeGroup,
   ProcessChromeLayout,

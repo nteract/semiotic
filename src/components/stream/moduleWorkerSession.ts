@@ -29,6 +29,12 @@ export interface ModuleWorkerSessionOptions<TRequest, TResponse> {
    * Wrap a domain request for `postMessage`. Default: `{ requestId, request }`.
    */
   encodeRequest?: (requestId: number, request: TRequest) => unknown
+  /**
+   * Terminate the worker when a request is aborted. Worker message handlers
+   * cannot interrupt CPU-bound synchronous layout code, so termination is the
+   * only cancellation mode that actually stops superseded work.
+   */
+  terminateOnAbort?: boolean
 }
 
 interface Pending<TResponse> {
@@ -140,9 +146,18 @@ export class ModuleWorkerSession<TRequest, TResponse> {
 
     return new Promise((resolve, reject) => {
       const onAbort = () => {
+        const isOnlyPendingRequest = this.pending.size === 1
         this.pending.delete(requestId)
         signal?.removeEventListener("abort", onAbort)
         reject(makeAbortError(this.options.name))
+        // Termination is the only way to interrupt synchronous CPU work, but
+        // a shared worker may also be carrying requests for unrelated chart
+        // instances. Only tear it down when the aborted request was the sole
+        // pending consumer; otherwise discard this response and let the
+        // remaining requests drain normally.
+        if (this.options.terminateOnAbort && isOnlyPendingRequest) {
+          this.terminate()
+        }
       }
       const cleanup = () => signal?.removeEventListener("abort", onAbort)
       this.pending.set(requestId, { cleanup, reject, resolve })

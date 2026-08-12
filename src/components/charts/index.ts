@@ -176,7 +176,10 @@ export type { OrbitDiagramProps, OrbitNode } from "./network/OrbitDiagram"
 // ============================================================================
 
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
-export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
+export type {
+  RealtimeLineChartHandle,
+  RealtimeLineChartProps
+} from "./realtime/RealtimeLineChart"
 
 export { RealtimeTemporalHistogram, RealtimeHistogram, TemporalHistogram } from "./realtime/RealtimeHistogram"
 export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps, TemporalHistogramProps } from "./realtime/RealtimeHistogram"
@@ -260,15 +263,17 @@ export {
   processLaneWalls,
   processStageLayout,
   processStageRegions,
-  routeSurfaceRegion,
-  stageTargetInVolume
+  routeSurfaceRegion
 } from "../recipes/processPhysics"
 export {
   aggregateRegionCounts,
   groupCompletionRows,
   regionCountsToProjectionRows
 } from "../recipes/processAggregates"
-export { processVolumePolygons } from "../recipes/processVolumeGeometry"
+export {
+  processVolumePolygons,
+  stageTargetInVolume
+} from "../recipes/processVolumeGeometry"
 export {
   createProcessJourneyLedger,
   processJourneyRows,

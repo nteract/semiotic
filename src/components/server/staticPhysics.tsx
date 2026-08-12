@@ -1,18 +1,54 @@
 import {
-  PhysicsPipelineStore
+  PhysicsPipelineStore,
+  type PhysicsQueuedSpawn
 } from "../stream/physics/PhysicsPipelineStore"
 import {
-  renderPhysicsSettledSVG
+  renderPhysicsSettledSVG,
+  type PhysicsSettledSVGOptions
 } from "../stream/physics/PhysicsSettledSVG"
+import { buildEvidence, type EvidenceSink } from "./renderEvidence"
+import { themeToCSSVariables } from "../store/themeCSSVariables"
+import { resolveTheme } from "./themeResolver"
+import { resolvePhysicsFramePipelineConfig } from "../stream/physics/physicsFramePipelineConfig"
 import {
-  buildEvidence,
-  type EvidenceSink
-} from "./renderEvidence"
-import type { StaticPhysicsFrameProps } from "./staticSVGChrome"
+  renderPhysicsSettledChrome,
+  type PhysicsSettledChromeProps
+} from "../stream/physics/physicsSettledChrome"
+import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
 
-export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: EvidenceSink): string {
+export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
+  config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
+  initialSpawns?: PhysicsQueuedSpawn[]
+  projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
+  size?: [number, number]
+  theme?: Parameters<typeof resolveTheme>[0]
+  _idPrefix?: string
+} & PhysicsSettledChromeProps &
+  Pick<StreamPhysicsFrameProps, "regionEffects" | "seed">
+
+const DEFAULT_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
+
+export function renderPhysicsFrame(
+  props: StaticPhysicsFrameProps,
+  sink?: EvidenceSink
+): string {
   const size = props.size ?? [props.width ?? 600, props.height ?? 400]
-  const store = new PhysicsPipelineStore(props.config)
+  const theme = resolveTheme(props.theme)
+  const themeVariables =
+    props.theme === undefined ? {} : themeToCSSVariables(theme)
+  const authoredBodyStyle = props.bodyStyle
+  const margin = { ...DEFAULT_MARGIN, ...props.margin }
+  const config = resolvePhysicsFramePipelineConfig({
+    annotations: props.annotations,
+    chartId: props.chartId,
+    chartType: "StreamPhysicsFrame",
+    config: props.config,
+    onRegionObservation: () => {},
+    regionEffects: props.regionEffects ?? [],
+    seed: props.seed,
+    size
+  })
+  const store = new PhysicsPipelineStore(config)
   if (Array.isArray(props.initialSpawns) && props.initialSpawns.length > 0) {
     store.enqueue(
       props.initialSpawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
@@ -22,10 +58,28 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
     ...props,
     width: size[0],
     height: size[1],
+    background: props.background ?? theme.colors.background,
+    bodyStyle: (body, context) => ({
+      fill: theme.colors.primary,
+      stroke: theme.colors.text,
+      strokeWidth: 1,
+      opacity: 0.9,
+      ...(typeof authoredBodyStyle === "function"
+        ? authoredBodyStyle(body, context)
+        : authoredBodyStyle)
+    }),
+    style: {
+      ...themeVariables,
+      fontFamily: theme.typography.fontFamily,
+      ...props.style
+    },
     // A spawn can be decorative or expand into several semantic bodies. Only
     // an explicit charge can state the ledger claim being checked.
     charge: props.charge,
-    idPrefix: props.idPrefix ?? props._idPrefix ?? "physics"
+    idPrefix: props.idPrefix ?? props._idPrefix ?? "physics",
+    margin,
+    renderChrome: (scene) =>
+      renderPhysicsSettledChrome(scene, props, size, margin)
   })
   if (sink) {
     sink.evidence = buildEvidence({
@@ -35,9 +89,11 @@ export function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: Eviden
       marks: result.scene.sceneNodes,
       title: props.title,
       description: props.description,
-      annotations: [],
+      annotations: props.annotations,
       extraWarnings: [
-        ...(result.scene.sceneNodes.length === 0 ? ["PHYSICS_EMPTY_SCENE"] : []),
+        ...(result.scene.sceneNodes.length === 0
+          ? ["PHYSICS_EMPTY_SCENE"]
+          : []),
         ...result.scene.evidence.warnings
       ]
     })

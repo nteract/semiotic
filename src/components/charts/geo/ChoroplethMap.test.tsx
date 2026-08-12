@@ -2,7 +2,7 @@ import type { CapturedGeoFrameProps } from "../../../test-utils/capturedFramePro
 import type { StreamGeoFrameHandle } from "../../stream/geoTypes"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { ChoroplethMap } from "./ChoroplethMap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
@@ -156,6 +156,21 @@ describe("ChoroplethMap", () => {
       )
       expect(lastGeoFrameProps.title).toBe("GDP Map")
     })
+
+    it("forwards responsive dimensions", () => {
+      render(
+        <Wrapper>
+          <ChoroplethMap
+            areas={sampleAreas}
+            valueAccessor="gdp"
+            responsiveWidth
+            responsiveHeight
+          />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.responsiveWidth).toBe(true)
+      expect(lastGeoFrameProps.responsiveHeight).toBe(true)
+    })
   })
 
   // ── Color encoding ────────────────────────────────────────────────────
@@ -194,6 +209,81 @@ describe("ChoroplethMap", () => {
       const style = lastGeoFrameProps.areaStyle(sampleAreas[0])
       expect(typeof style.fill).toBe("string")
       expect(style.fill).not.toBe("#ccc")
+    })
+
+    it("builds a matching continuous legend by default", () => {
+      render(
+        <Wrapper>
+          <ChoroplethMap areas={sampleAreas} valueAccessor="gdp" />
+        </Wrapper>
+      )
+      const legend = lastGeoFrameProps.legend as unknown as {
+        gradient: { domain: [number, number]; label: string; colorFn: (v: number) => string }
+      }
+      expect(legend.gradient.domain).toEqual([50, 200])
+      expect(legend.gradient.label).toBe("gdp")
+      expect(legend.gradient.colorFn(50)).toBe(lastGeoFrameProps.areaStyle(sampleAreas[2]).fill)
+    })
+
+    it.each([
+      ["right", "right", 110],
+      ["left", "left", 110],
+      ["top", "top", 56],
+      ["bottom", "bottom", 80],
+    ] as const)(
+      "reserves a labeled gradient legend at %s",
+      (legendPosition, marginSide, expectedMargin) => {
+        render(
+          <Wrapper>
+            <ChoroplethMap
+              areas={sampleAreas}
+              valueAccessor="gdp"
+              legendPosition={legendPosition}
+            />
+          </Wrapper>
+        )
+
+        expect(lastGeoFrameProps.legendPosition).toBe(legendPosition)
+        expect(lastGeoFrameProps.margin[marginSide]).toBe(expectedMargin)
+      }
+    )
+
+    it.each(["right", "left", "top", "bottom"] as const)(
+      "preserves an explicitly owned %s gradient-legend margin",
+      (legendPosition) => {
+        render(
+          <Wrapper>
+            <ChoroplethMap
+              areas={sampleAreas}
+              valueAccessor="gdp"
+              legendPosition={legendPosition}
+              margin={{ [legendPosition]: 19 }}
+            />
+          </Wrapper>
+        )
+
+        expect(lastGeoFrameProps.margin[legendPosition]).toBe(19)
+      }
+    )
+
+    it("uses gradient legend isolation to dim values outside the selected range", () => {
+      render(
+        <Wrapper>
+          <ChoroplethMap
+            areas={sampleAreas}
+            valueAccessor="gdp"
+            legendInteraction="isolate"
+          />
+        </Wrapper>
+      )
+      act(() => {
+        lastGeoFrameProps.legendClickBehavior({
+          label: "50 – 100",
+          valueRange: [50, 100],
+        })
+      })
+      expect(lastGeoFrameProps.areaStyle(sampleAreas[0]).opacity).toBeUndefined()
+      expect(lastGeoFrameProps.areaStyle(sampleAreas[1]).opacity).toBeLessThan(1)
     })
   })
 

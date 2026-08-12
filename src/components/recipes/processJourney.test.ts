@@ -88,4 +88,67 @@ describe("process journey ledger", () => {
       }
     ])
   })
+
+  it("preserves prototype-named entity and stage ids without reading inherited state", () => {
+    const stages = [
+      { id: "constructor" },
+      { id: "__proto__" },
+      { id: "fallback" }
+    ]
+    let ledger = createProcessJourneyLedger({ stages })
+    const event = (
+      bodyId: string,
+      regionId: string,
+      metadata: Record<string, unknown>
+    ) => ({
+      type: "region-enter" as const,
+      bodyId,
+      datum: { id: bodyId },
+      observation: { timestamp: 1 } as never,
+      region: {
+        id: regionId,
+        metadata,
+        shape: { type: "aabb" as const, x: 0, y: 0, width: 10, height: 10 }
+      }
+    })
+
+    ledger = updateProcessJourney(
+      ledger,
+      event("constructor", "unused", { stageId: "constructor" })
+    )
+    ledger = updateProcessJourney(
+      ledger,
+      event("constructor", "unused", { stageId: "__proto__" })
+    )
+    const inheritedMetadata = Object.create({ stageId: "constructor" }) as Record<
+      string,
+      unknown
+    >
+    ledger = updateProcessJourney(
+      ledger,
+      event("constructor", "fallback", inheritedMetadata)
+    )
+
+    expect(Object.prototype.hasOwnProperty.call(ledger.entities, "constructor")).toBe(true)
+    expect(ledger.entities["constructor"].visitsByStage["constructor"]).toBe(1)
+    expect(ledger.entities["constructor"].visitsByStage["__proto__"]).toBe(1)
+    expect(ledger.entities["constructor"].visitsByStage.fallback).toBe(1)
+    expect(processJourneyRows(ledger).map((row) => row.visits)).toEqual([1, 1, 1])
+  })
+
+  it("falls back safely for malformed serialized entity state", () => {
+    const ledger = createProcessJourneyLedger({
+      stages: [{ id: "constructor" }],
+      bodyIds: ["constructor"]
+    })
+    ledger.entities["constructor"] = {
+      id: "constructor",
+      visitsByStage: "malformed"
+    } as never
+
+    expect(processJourneyRows(ledger)[0]).toMatchObject({
+      visits: 0,
+      entered: 0
+    })
+  })
 })

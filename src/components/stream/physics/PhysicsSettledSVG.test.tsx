@@ -48,7 +48,12 @@ describe("physics settled SVG renderer", () => {
     const projectionRows = buildPhysicsSettledProjection(
       [
         { id: "window-0", label: "0-12s" },
-        { id: "window-1", label: "12-24s", secondary: 1, secondaryLabel: "late" }
+        {
+          id: "window-1",
+          label: "12-24s",
+          secondary: 1,
+          secondaryLabel: "late"
+        }
       ],
       {
         bodies: store.readBodies(),
@@ -72,7 +77,9 @@ describe("physics settled SVG renderer", () => {
 
     expect(result.svg).toContain("<svg")
     expect(result.svg).toContain('role="img"')
-    expect(result.svg).toContain('aria-labelledby="event_drop-title event_drop-desc"')
+    expect(result.svg).toContain(
+      'aria-labelledby="event_drop-title event_drop-desc"'
+    )
     expect(result.svg).toContain("<title")
     expect(result.svg).toContain("Settled EventDrop")
     expect(result.svg).toContain("<desc")
@@ -83,6 +90,16 @@ describe("physics settled SVG renderer", () => {
     expect(result.svg).toContain('x="55"')
     expect(result.svg).toContain('fill="#2563eb"')
     expect(result.svg).toContain('fill="#dc2626"')
+    expect(result.svg).not.toContain('transform="translate(0,0)"')
+    const document = new DOMParser().parseFromString(
+      result.svg,
+      "image/svg+xml"
+    )
+    const svg = document.documentElement
+    const background = svg.querySelector('rect[fill="#ffffff"]')
+    const dataArea = svg.querySelector('g[id="event_drop-data-area"]')
+    expect(background?.parentElement).toBe(svg)
+    expect(dataArea?.hasAttribute("transform")).toBe(false)
     expect(result.scene.sceneNodes.map((node) => node.type)).toEqual([
       "point",
       "rect"
@@ -130,13 +147,14 @@ describe("physics settled SVG renderer", () => {
       height: 100,
       idPrefix: "layer order",
       margin: { top: 7, left: 11 },
+      backgroundGraphicsBackdrop: "#f8fafc",
       backgroundGraphics: (context) => {
         contexts.push(context)
-        return <g data-testid="settled-background" />
+        return <circle data-testid="settled-background" cx={4} cy={5} r={2} />
       },
       foregroundGraphics: (context) => {
         contexts.push(context)
-        return <g data-testid="settled-foreground" />
+        return <circle data-testid="settled-foreground" cx={6} cy={7} r={2} />
       }
     })
 
@@ -150,12 +168,34 @@ describe("physics settled SVG renderer", () => {
         margin: { top: 7, right: 0, bottom: 0, left: 11 }
       }
     ])
-    const backgroundIndex = result.svg.indexOf('data-testid="settled-background"')
+    const backgroundIndex = result.svg.indexOf(
+      'data-testid="settled-background"'
+    )
     const bodyIndex = result.svg.indexOf('id="layer_order-data-area"')
-    const foregroundIndex = result.svg.indexOf('data-testid="settled-foreground"')
+    const foregroundIndex = result.svg.indexOf(
+      'data-testid="settled-foreground"'
+    )
     expect(backgroundIndex).toBeGreaterThan(-1)
     expect(bodyIndex).toBeGreaterThan(backgroundIndex)
     expect(foregroundIndex).toBeGreaterThan(bodyIndex)
+
+    const document = new DOMParser().parseFromString(
+      result.svg,
+      "image/svg+xml"
+    )
+    const svg = document.documentElement
+    const backdrop = svg.querySelector("rect.stream-frame-background__backdrop")
+    const background = svg.querySelector('[data-testid="settled-background"]')
+    const dataArea = svg.querySelector('g[id="layer_order-data-area"]')
+    const foreground = svg.querySelector('[data-testid="settled-foreground"]')
+    expect(backdrop?.parentElement).toBe(svg)
+    expect(background?.parentElement?.getAttribute("transform")).toBe(
+      "translate(11,7)"
+    )
+    expect(background?.parentElement?.parentElement).toBe(svg)
+    expect(dataArea?.getAttribute("transform")).toBe("translate(11,7)")
+    expect(dataArea?.parentElement).toBe(svg)
+    expect(foreground?.parentElement).toBe(svg)
   })
 
   it("can explicitly own a backdrop beneath custom background graphics", () => {
@@ -178,9 +218,7 @@ describe("physics settled SVG renderer", () => {
     )
     expect(backdropIndex).toBeGreaterThan(-1)
     expect(result.svg).toContain('width="120" height="80"')
-    expect(result.svg).toContain(
-      'fill="var(--semiotic-bg, transparent)"'
-    )
+    expect(result.svg).toContain('fill="var(--semiotic-bg, transparent)"')
     expect(backgroundIndex).toBeGreaterThan(backdropIndex)
     expect(result.svg).not.toContain("#should-remain-suppressed")
   })
@@ -199,10 +237,47 @@ describe("physics settled SVG renderer", () => {
       idPrefix: "chart one!",
       renderBodySVG: (_body, _style, index, idPrefix) => {
         receivedPrefixes.push(idPrefix)
-        return <g data-testid={`custom-${index}`} id={`${idPrefix}-custom-${index}`} />
+        return (
+          <g
+            data-testid={`custom-${index}`}
+            id={`${idPrefix}-custom-${index}`}
+          />
+        )
       }
     })
 
     expect(receivedPrefixes).toEqual(["chart_one_"])
+  })
+
+  it("wraps custom body SVG output with the authored body cursor", () => {
+    const store = new PhysicsPipelineStore({ fixedDt: 1 / 60 })
+    store.spawnNow(circle("cursor-body", 20, 20))
+
+    const result = renderPhysicsSettledSVG(store, {
+      width: 100,
+      height: 100,
+      bodyStyle: { cursor: "pointer" },
+      renderBodySVG: () => (
+        <path data-testid="custom-cursor-body" d="M0 0h8v8z" />
+      )
+    })
+
+    expect(result.svg).toContain('data-semiotic-mark-cursor="pointer"')
+    expect(result.svg).toContain('style="cursor:pointer"')
+    expect(result.svg).toContain('data-testid="custom-cursor-body"')
+  })
+
+  it("falls back to the default body SVG when a custom renderer returns null", () => {
+    const store = new PhysicsPipelineStore({ fixedDt: 1 / 60 })
+    store.spawnNow(circle("fallback-body", 20, 20))
+
+    const result = renderPhysicsSettledSVG(store, {
+      width: 100,
+      height: 100,
+      renderBodySVG: () => null
+    })
+
+    expect(result.svg).toContain("<circle")
+    expect(result.svg).toContain('cx="20"')
   })
 })

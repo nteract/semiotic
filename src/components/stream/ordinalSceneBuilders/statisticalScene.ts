@@ -81,7 +81,8 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
           // Outlier fill: box fill > theme secondary > hardcoded #999.
           style: {
             fill: style.fill || ctx.config.themeSemantic?.secondary || "#999",
-            opacity: 0.6
+            opacity: 0.6,
+            cursor: style.cursor
           },
           datum: o.datum
         })

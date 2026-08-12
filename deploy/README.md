@@ -6,7 +6,7 @@ provenance and compatibility expectations.
 
 | Channel | Cloud Run service | Source | Deployment trigger | Intended users |
 | --- | --- | --- | --- | --- |
-| Stable | `semiotic-mcp-server` (`us-west1`) | Exact published npm release | Manual/tagged release | Public users and registries |
+| Stable | `semiotic-mcp-server` (`us-west1`) | Exact published npm release | Protected tagged-release job | Public users and registries |
 | Nightly | `semiotic-mcp-nightly` (`us-central1`) | Repository `main` commit | Automatic after merge, after manual smoke approval | Maintainers and live validation |
 | Legacy | `semiotic-mcp` | Existing deployment | None in this workflow | Leave untouched until nightly verification completes |
 
@@ -143,12 +143,14 @@ For an image-digest rollback, use `gcloud run services update` with only
 service-replacement command or copy settings from the stable service. The
 nightly deployment README has the exact image path and trigger procedure.
 
-To promote a validated nightly commit, make a normal stable patch release from
-that commit: tag and publish the exact npm package, update the exact
-`semiotic` version and lockfile in `deploy/cloud-run`, run the release checks,
-then manually deploy `semiotic-mcp-server`. Update the registry/surface manifest and
-GitHub Release as the same release operation. Promotion is never an image copy
-from nightly and never changes stable traffic automatically.
+To promote a validated nightly commit, make a normal stable release from that
+commit. The tag workflow publishes one immutable npm tarball, generates a
+Cloud Run source artifact whose npm-generated lock resolves that exact
+integrity, and deploys it through the protected `stable-mcp` GitHub
+environment. Registry publication cannot begin until hosted `/health` and the
+MCP build identity report that release version and commit. Promotion is never
+an image copy from nightly and never points stable at an arbitrary `main`
+checkout.
 
 To pause nightly automation without affecting stable, disable only its Cloud
 Build trigger; do not delete either Cloud Run service. The exact reversible

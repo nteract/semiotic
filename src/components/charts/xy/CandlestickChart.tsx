@@ -21,9 +21,9 @@ import { normalizePartialMargin } from "../../types/marginType"
 export interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]
   xAccessor?: ChartAccessor<TDatum, number>
-  /** Required — upper bound (candlestick high, or range top) */
+  /** Upper bound (candlestick high, or range top). @default "high" */
   highAccessor?: ChartAccessor<TDatum, number>
-  /** Required — lower bound (candlestick low, or range bottom) */
+  /** Lower bound (candlestick low, or range bottom). @default "low" */
   lowAccessor?: ChartAccessor<TDatum, number>
   /** Optional — when paired with closeAccessor, renders OHLC candlesticks. Omit both to render a range chart. */
   openAccessor?: ChartAccessor<TDatum, number>
@@ -250,6 +250,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
       // CandlestickChart has no `hoverHighlight` prop, but the click
       // predicate still includes `linkedHover` (cross-chart click-to-lock).
       linkedHover, selection, onObservation, onClick,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: resolved.mobileInteraction,
       customHoverBehavior, customClickBehavior,
     }),

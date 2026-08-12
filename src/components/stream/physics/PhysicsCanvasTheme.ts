@@ -57,7 +57,16 @@ type CSSVarCandidate = {
 }
 
 const THEME_CANDIDATES: Record<
-  "background" | "border" | "danger" | "focus" | "grid" | "primary" | "success" | "text" | "textSecondary" | "warning",
+  | "background"
+  | "border"
+  | "danger"
+  | "focus"
+  | "grid"
+  | "primary"
+  | "success"
+  | "text"
+  | "textSecondary"
+  | "warning",
   CSSVarCandidate
 > = {
   background: {
@@ -102,6 +111,25 @@ const THEME_CANDIDATES: Record<
   }
 }
 
+export type PhysicsCanvasThemeCSSKey = keyof typeof THEME_CANDIDATES
+
+/**
+ * Serialize the canvas theme's ordered CSS-variable candidates for SVG/SSR.
+ *
+ * Canvas reads the first non-empty computed custom property at paint time.
+ * A nested `var()` chain gives settled SVG the same candidate order and the
+ * same unthemed fallback without requiring DOM style inspection on the server.
+ */
+export function physicsCanvasThemeCSSValue(
+  key: PhysicsCanvasThemeCSSKey
+): string {
+  const candidate = THEME_CANDIDATES[key]
+  return candidate.names.reduceRight(
+    (fallback, name) => `var(${name}, ${fallback})`,
+    candidate.fallback
+  )
+}
+
 function readCSSVar(
   ctx: CanvasRenderingContext2D,
   style: CSSStyleDeclaration | null,
@@ -134,7 +162,9 @@ export function physicsCanvasColorWithAlpha(
   }
   const rgb = trimmed.match(/^rgb\s*\(\s*([^)]+?)\s*\)$/i)
   if (rgb) return `rgba(${rgb[1]}, ${alpha})`
-  const rgba = trimmed.match(/^rgba\s*\(\s*([^,]+,\s*[^,]+,\s*[^,]+),\s*[^)]+\)$/i)
+  const rgba = trimmed.match(
+    /^rgba\s*\(\s*([^,]+,\s*[^,]+,\s*[^,]+),\s*[^)]+\)$/i
+  )
   if (rgba) return `rgba(${rgba[1]}, ${alpha})`
   return trimmed
 }
@@ -154,11 +184,7 @@ export function resolvePhysicsCanvasTheme(
   const border = readCSSVar(ctx, style, THEME_CANDIDATES.border)
   const background = readCSSVar(ctx, style, THEME_CANDIDATES.background)
   const text = readCSSVar(ctx, style, THEME_CANDIDATES.text)
-  const textSecondary = readCSSVar(
-    ctx,
-    style,
-    THEME_CANDIDATES.textSecondary
-  )
+  const textSecondary = readCSSVar(ctx, style, THEME_CANDIDATES.textSecondary)
   const focus = readCSSVar(ctx, style, THEME_CANDIDATES.focus)
   const grid = readCSSVar(ctx, style, THEME_CANDIDATES.grid)
 

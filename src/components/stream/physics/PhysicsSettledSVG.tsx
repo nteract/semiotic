@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { xySceneNodeToSVG } from "../SceneToSVG"
+import { withSceneMarkCursor } from "../sceneCursor"
 import type { Style } from "../types"
 import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
 import type { PhysicsBodyState } from "./PhysicsKernel"
@@ -25,6 +26,8 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
   foregroundGraphics?: FrameGraphicsProp
   idPrefix?: string
   margin?: Partial<FrameMargin>
+  /** Root SVG styles, including inherited theme custom properties for exports. */
+  style?: React.CSSProperties
   // The SSR sibling of StreamPhysicsFrame's canvas `renderBody` prop: lets a
   // chart substitute its own mark for a body's default circle/rect (e.g.
   // CrucibleChart's shadowed hexagon + inner ring for settled products).
@@ -40,6 +43,8 @@ export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
     index: number,
     idPrefix: string
   ) => React.ReactNode | undefined
+  /** Visible title/legend/annotation chrome rendered above foreground graphics. */
+  renderChrome?: (scene: PhysicsSettledScene) => React.ReactNode
 }
 
 export interface PhysicsSettledSVGRender {
@@ -80,7 +85,9 @@ export function renderPhysicsSettledSVG(
     foregroundGraphics,
     idPrefix = "physics",
     margin: marginProp,
+    style,
     renderBodySVG,
+    renderChrome,
     ...sceneOptions
   } = options
   const scene = buildPhysicsSettledScene(store, sceneOptions)
@@ -92,6 +99,16 @@ export function renderPhysicsSettledSVG(
   const titleId = title ? `${prefix}-title` : undefined
   const descId = description ? `${prefix}-desc` : undefined
   const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+  const plotTransform =
+    margin.left || margin.top
+      ? `translate(${margin.left},${margin.top})`
+      : undefined
+  const translatedBackground =
+    plotTransform && resolvedBackground != null ? (
+      <g transform={plotTransform}>{resolvedBackground}</g>
+    ) : (
+      resolvedBackground
+    )
 
   const svg = ReactDOMServer.renderToStaticMarkup(
     <svg
@@ -102,6 +119,7 @@ export function renderPhysicsSettledSVG(
       viewBox={`0 0 ${width} ${height}`}
       role="img"
       aria-labelledby={labelledBy}
+      style={style}
     >
       {title && <title id={titleId}>{title}</title>}
       {description && <desc id={descId}>{description}</desc>}
@@ -119,17 +137,21 @@ export function renderPhysicsSettledSVG(
       {!backgroundGraphics && background && background !== "transparent" ? (
         <rect x={0} y={0} width={width} height={height} fill={background} />
       ) : null}
-      {resolvedBackground}
-      <g id={`${prefix}-data-area`}>
+      {translatedBackground}
+      <g id={`${prefix}-data-area`} transform={plotTransform}>
         {scene.sceneNodes.map((node, index) => {
           const body = scene.bodies[index]
-          const custom = body && renderBodySVG
-            ? renderBodySVG(body, node.style ?? {}, index, prefix)
-            : undefined
-          return custom ?? xySceneNodeToSVG(node, index, prefix)
+          const custom =
+            body && renderBodySVG
+              ? renderBodySVG(body, node.style ?? {}, index, prefix)
+              : undefined
+          return custom != null
+            ? withSceneMarkCursor(custom, node, index)
+            : xySceneNodeToSVG(node, index, prefix)
         })}
       </g>
       {resolvedForeground}
+      {renderChrome?.(scene)}
     </svg>
   )
 

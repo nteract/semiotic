@@ -21,7 +21,12 @@ const COLOR_LUT_SIZE = 256
 const colorLutCache = new Map<string, string[]>()
 
 function getColorLut(schemeName: string): string[] {
-  const cacheKey = schemeName in SEQUENTIAL_INTERPOLATORS ? schemeName : "blues"
+  const cacheKey = Object.prototype.hasOwnProperty.call(
+    SEQUENTIAL_INTERPOLATORS,
+    schemeName
+  )
+    ? schemeName
+    : "blues"
   let lut = colorLutCache.get(cacheKey)
   if (lut) return lut
   lut = new Array(COLOR_LUT_SIZE)
@@ -166,7 +171,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
     const labelOpts = showValues
       ? { value: val, showValues: true as const, valueFormat }
-      : undefined
+      : { value: val }
     const datum = cellDatums[i]
     nodes.push(applyHeatcellStyle(buildHeatcellNode(
       xi * cellW,
@@ -266,7 +271,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
 
       const labelOpts = showValues
         ? { value: val, showValues: true as const, valueFormat }
-        : undefined
+        : { value: val }
       // Enrich the datum with the bin's data-space center coords + the
       // aggregation type so consumer tooltips can show meaningful values.
       // Without these the streaming heatmap datum is just `{xi, yi, ...}`

@@ -2,41 +2,15 @@ import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-
-/**
- * Parse a CSS color string to [R, G, B] (0–255).
- * Handles hex (#rgb, #rrggbb), rgb(), and falls back to mid-gray for unknowns.
- */
-function parseColorToRGB(color: string): [number, number, number] {
-  // #rrggbb
-  if (color.startsWith("#")) {
-    let hex = color.slice(1)
-    if (hex.length === 3) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
-    }
-    if (hex.length === 6) {
-      return [
-        parseInt(hex.slice(0, 2), 16),
-        parseInt(hex.slice(2, 4), 16),
-        parseInt(hex.slice(4, 6), 16)
-      ]
-    }
-  }
-  // rgb(r, g, b) or rgba(r, g, b, a)
-  const rgbMatch = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
-  if (rgbMatch) {
-    return [+rgbMatch[1], +rgbMatch[2], +rgbMatch[3]]
-  }
-  // Fallback: mid-gray (will produce black text)
-  return [128, 128, 128]
-}
+import { resolveCanvasPaint } from "./canvasRenderHelpers"
+import { parseCanvasColor } from "./colorUtils"
 
 /**
  * Returns a contrasting text color (black or white) based on the
  * relative luminance of the background color.
  */
-function contrastTextColor(fillColor: string): string {
-  const [r, g, b] = parseColorToRGB(fillColor)
+function contrastTextColor(ctx: CanvasRenderingContext2D, fillColor: string): string {
+  const [r, g, b] = parseCanvasColor(ctx, fillColor)
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b
   return luminance > 128 ? "#000" : "#fff"
 }
@@ -68,7 +42,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
       ctx.globalAlpha = nodeStyle.opacity
     }
 
-    ctx.fillStyle = node.fill
+    const resolvedFill = resolveCanvasPaint(ctx, node.fill, "#4e79a7")
+    ctx.fillStyle = resolvedFill
     ctx.fillRect(node.x, node.y, node.w, node.h)
 
     // Cell border — explicit scene style wins; zero suppresses the stroke.
@@ -104,7 +79,10 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
       const centerX = node.x + node.w / 2
       const centerY = node.y + node.h / 2
 
-      ctx.fillStyle = contrastTextColor(node.fill)
+      ctx.fillStyle = contrastTextColor(
+        ctx,
+        typeof resolvedFill === "string" ? resolvedFill : "#4e79a7"
+      )
       ctx.font = `${fontSize}px sans-serif`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"

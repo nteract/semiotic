@@ -3,6 +3,7 @@ import { _resetCSSColorCacheForTest } from "../renderers/resolveCSSColor"
 import {
   createPhysicsCanvasThemeCache,
   physicsCanvasColorWithAlpha,
+  physicsCanvasThemeCSSValue,
   resolvePhysicsCanvasTheme
 } from "./PhysicsCanvasTheme"
 
@@ -17,6 +18,18 @@ function canvasContext(): CanvasRenderingContext2D {
 }
 
 describe("physics canvas theme", () => {
+  it("serializes the canvas candidate order for settled SVG", () => {
+    expect(physicsCanvasThemeCSSValue("background")).toBe(
+      "var(--semiotic-bg, var(--surface-1, var(--surface-0, #f8fafc)))"
+    )
+    expect(physicsCanvasThemeCSSValue("primary")).toBe(
+      "var(--semiotic-primary, var(--accent, var(--viz-5, #0ea5e9)))"
+    )
+    expect(physicsCanvasThemeCSSValue("text")).toBe(
+      "var(--semiotic-text, var(--text-primary, #0f172a))"
+    )
+  })
+
   it("resolves Semiotic CSS variables for canvas-safe colors", () => {
     const ctx = canvasContext()
     try {

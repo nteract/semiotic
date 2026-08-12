@@ -536,6 +536,57 @@ describe("StreamOrdinalFrame", () => {
       fireEvent.mouseLeave(frame)
     })
 
+    it("uses hoverRadius for point click hit testing", () => {
+      const clickSpy = vi.fn()
+      const datum = { id: "target", category: "A", value: 1 }
+      const customLayout = () => ({
+        nodes: [{
+          type: "point" as const,
+          x: 50,
+          y: 50,
+          r: 2,
+          style: { fill: "#4e79a7" },
+          datum,
+        }],
+      })
+      const frameProps = {
+        chartType: "point" as const,
+        data: [datum],
+        size: [100, 100] as [number, number],
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        customLayout,
+        customClickBehavior: clickSpy,
+      }
+
+      const { container, rerender } = render(
+        <StreamOrdinalFrame {...frameProps} hoverRadius={12} />
+      )
+      const canvas = container.querySelector("canvas")!
+      vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+        left: 0,
+        top: 0,
+        right: 100,
+        bottom: 100,
+        width: 100,
+        height: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      })
+      const interactionSurface = container.querySelector('[role="img"]')!
+
+      fireEvent.click(interactionSurface, { clientX: 68, clientY: 50 })
+      expect(clickSpy).toHaveBeenLastCalledWith(null, undefined)
+
+      clickSpy.mockClear()
+      rerender(<StreamOrdinalFrame {...frameProps} hoverRadius={20} />)
+      fireEvent.click(interactionSurface, { clientX: 68, clientY: 50 })
+      expect(clickSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ data: datum }),
+        expect.objectContaining({ type: "activate" }),
+      )
+    })
+
     it("does not rebuild the scene (or restart transitions) on hover when animate is on", async () => {
       // Regression: useSemanticFrameInteractions always returned a hover
       // wrapper, and StreamOrdinalFrame treated any truthy customHoverBehavior

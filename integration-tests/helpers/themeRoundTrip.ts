@@ -14,9 +14,17 @@ async function waitForThemePaint(page: Page) {
   await page.evaluate(
     () =>
       new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+        ),
+    ),
   )
+  // ThemeProvider updates before chart remounts and CSS-variable consumers
+  // finish their paint. Leave one short task boundary for those surfaces on
+  // constrained CI runners.
+  await page.waitForTimeout(50)
 }
 
 /** Assert a docs-controlled light → dark → light transition restores exactly. */

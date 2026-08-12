@@ -1,11 +1,18 @@
 import * as React from "react"
 import { act } from "react"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { hydrateRoot } from "react-dom/client"
+import { renderToString } from "react-dom/server"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { render } from "@testing-library/react"
-import { setupCanvasMock, type CanvasContextMock } from "../../../test-utils/canvasMock"
+import {
+  recordCanvasOps,
+  setupCanvasMock,
+  type CanvasContextMock
+} from "../../../test-utils/canvasMock"
 import { ThemeProvider } from "../../ThemeProvider"
 import { _resetCSSColorCacheForTest } from "../renderers/resolveCSSColor"
 import { createFrameScheduler } from "../test-utils/frameScheduler"
+import { physicsCanvasThemeCSSValue } from "./PhysicsCanvasTheme"
 import StreamPhysicsFrame from "./StreamPhysicsFrame"
 
 const quietKernel = {
@@ -49,6 +56,194 @@ describe("StreamPhysicsFrame theme repainting", () => {
     _resetCSSColorCacheForTest()
   })
 
+  it("keeps scoped fallback tokens aligned across settled SSR and hydration", () => {
+    const scheduler = createFrameScheduler(0)
+    const ctx = getMockCtx()
+    const backgroundPaint = captureFillRectStyles(ctx)
+    const bodyPaint = recordCanvasOps(ctx)
+    const canvasContext = ctx as CanvasContextMock & {
+      canvas: HTMLCanvasElement
+    }
+    const getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(function (this: HTMLCanvasElement) {
+        canvasContext.canvas = this
+        return ctx as unknown as CanvasRenderingContext2D
+      })
+    const mount = document.createElement("div")
+    document.body.appendChild(mount)
+    const chart = (
+      <div
+        data-testid="fallback-theme-scope"
+        style={
+          {
+            "--surface-1": "#101820",
+            "--accent": "#3366ff",
+            "--text-primary": "#eeeeee"
+          } as React.CSSProperties
+        }
+      >
+        <StreamPhysicsFrame
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+          initialSpawns={[
+            {
+              id: "scoped-body",
+              x: 30,
+              y: 30,
+              shape: { type: "circle", radius: 5 },
+              mass: 1
+            }
+          ]}
+        />
+      </div>
+    )
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    let root: ReturnType<typeof hydrateRoot> | null = null
+
+    try {
+      mount.innerHTML = renderToString(chart)
+      const settledSVG = mount.querySelector("svg.stream-physics-frame__svg")
+      expect(settledSVG?.querySelector(":scope > rect")).toHaveAttribute(
+        "fill",
+        physicsCanvasThemeCSSValue("background")
+      )
+      const settledBody = settledSVG?.querySelector(
+        "g[id$='-data-area'] circle"
+      )
+      expect(settledBody).toHaveAttribute(
+        "fill",
+        physicsCanvasThemeCSSValue("primary")
+      )
+      expect(settledBody).toHaveAttribute(
+        "stroke",
+        physicsCanvasThemeCSSValue("text")
+      )
+
+      backgroundPaint.styles.length = 0
+      bodyPaint.fillStyles.length = 0
+      bodyPaint.strokeStyles.length = 0
+      act(() => {
+        root = hydrateRoot(mount, chart)
+      })
+
+      if (scheduler.pendingCount) {
+        act(() => scheduler.flush())
+      }
+
+      expect(backgroundPaint.styles).toContain("#101820")
+      expect(bodyPaint.fillStyles).toContain("#3366ff")
+      expect(bodyPaint.strokeStyles).toContain("#eeeeee")
+      expect(
+        errorSpy.mock.calls.filter((call) =>
+          /did not match|hydration failed|hydration error/i.test(
+            String(call[0] ?? "")
+          )
+        )
+      ).toEqual([])
+    } finally {
+      if (root) act(() => root?.unmount())
+      errorSpy.mockRestore()
+      getContextSpy.mockRestore()
+      backgroundPaint.restore()
+      mount.remove()
+    }
+  })
+
+  it("keeps plot-space margin translation aligned across settled SSR and canvas hydration", () => {
+    const scheduler = createFrameScheduler(0)
+    const ctx = getMockCtx()
+    const translate = ctx.translate as ReturnType<typeof vi.fn>
+    const canvasContext = ctx as CanvasContextMock & {
+      canvas: HTMLCanvasElement
+    }
+    const getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(function (this: HTMLCanvasElement) {
+        canvasContext.canvas = this
+        return ctx as unknown as CanvasRenderingContext2D
+      })
+    const mount = document.createElement("div")
+    document.body.appendChild(mount)
+    const chart = (
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        margin={{ top: 7, right: 0, bottom: 0, left: 11 }}
+        frameScheduler={scheduler.scheduler}
+        backgroundGraphicsBackdrop="#f8fafc"
+        backgroundGraphics={
+          <circle data-testid="margin-background" cx={4} cy={5} r={2} />
+        }
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[
+          {
+            id: "margin-body",
+            x: 30,
+            y: 30,
+            shape: { type: "circle", radius: 5 },
+            mass: 1
+          }
+        ]}
+      />
+    )
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    let root: ReturnType<typeof hydrateRoot> | null = null
+
+    try {
+      mount.innerHTML = renderToString(chart)
+      const settledSVG = mount.querySelector("svg.stream-physics-frame__svg")
+      const settledBackdrop = settledSVG?.querySelector(
+        "rect.stream-frame-background__backdrop"
+      )
+      const settledBackground = settledSVG?.querySelector(
+        '[data-testid="margin-background"]'
+      )
+      const settledDataArea = settledSVG?.querySelector("g[id$='-data-area']")
+      expect(settledBackdrop?.parentElement).toBe(settledSVG)
+      expect(settledBackground?.parentElement).toHaveAttribute(
+        "transform",
+        "translate(11,7)"
+      )
+      expect(settledDataArea).toHaveAttribute("transform", "translate(11,7)")
+
+      translate.mockClear()
+      act(() => {
+        root = hydrateRoot(mount, chart)
+      })
+      if (scheduler.pendingCount) {
+        act(() => scheduler.flush())
+      }
+
+      expect(mount.querySelector("svg.stream-physics-frame__svg")).toBeNull()
+      const hydratedBackdrop = mount.querySelector(
+        "rect.stream-frame-background__backdrop"
+      )
+      const hydratedBackground = mount.querySelector(
+        '[data-testid="margin-background"]'
+      )
+      expect(hydratedBackdrop?.parentElement?.tagName.toLowerCase()).toBe("svg")
+      expect(hydratedBackdrop?.parentElement).not.toHaveAttribute("transform")
+      expect(hydratedBackground?.parentElement).toHaveAttribute(
+        "transform",
+        "translate(11,7)"
+      )
+      expect(translate).toHaveBeenCalledWith(11, 7)
+      expect(
+        errorSpy.mock.calls.filter((call) =>
+          /did not match|hydration failed|hydration error/i.test(
+            String(call[0] ?? "")
+          )
+        )
+      ).toEqual([])
+    } finally {
+      if (root) act(() => root?.unmount())
+      errorSpy.mockRestore()
+      getContextSpy.mockRestore()
+      mount.remove()
+    }
+  })
+
   it("repaints a settled canvas when ThemeProvider switches in place", () => {
     const scheduler = createFrameScheduler(0)
     const ctx = getMockCtx()
@@ -65,21 +260,27 @@ describe("StreamPhysicsFrame theme repainting", () => {
     )
 
     const { container, rerender } = render(chart("carbon"))
-    const canvasContext = ctx as CanvasContextMock & { canvas: HTMLCanvasElement }
+    const canvasContext = ctx as CanvasContextMock & {
+      canvas: HTMLCanvasElement
+    }
     canvasContext.canvas = container.querySelector("canvas")!
     capture.styles.length = 0
 
     try {
       const requestsBeforeDark = scheduler.requestedHandles.length
       rerender(chart("carbon-dark"))
-      expect(scheduler.requestedHandles.length).toBeGreaterThan(requestsBeforeDark)
+      expect(scheduler.requestedHandles.length).toBeGreaterThan(
+        requestsBeforeDark
+      )
       if (scheduler.pendingCount) act(() => scheduler.flush())
       expect(capture.styles).toContain("#161616")
 
       capture.styles.length = 0
       const requestsBeforeLight = scheduler.requestedHandles.length
       rerender(chart("carbon"))
-      expect(scheduler.requestedHandles.length).toBeGreaterThan(requestsBeforeLight)
+      expect(scheduler.requestedHandles.length).toBeGreaterThan(
+        requestsBeforeLight
+      )
       if (scheduler.pendingCount) act(() => scheduler.flush())
       expect(capture.styles).toContain("#ffffff")
     } finally {
@@ -103,7 +304,9 @@ describe("StreamPhysicsFrame theme repainting", () => {
         />
       </div>
     )
-    const canvasContext = ctx as CanvasContextMock & { canvas: HTMLCanvasElement }
+    const canvasContext = ctx as CanvasContextMock & {
+      canvas: HTMLCanvasElement
+    }
     canvasContext.canvas = container.querySelector("canvas")!
     capture.styles.length = 0
 
@@ -116,7 +319,9 @@ describe("StreamPhysicsFrame theme repainting", () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
-      expect(scheduler.requestedHandles.length).toBeGreaterThan(requestsBeforeChange)
+      expect(scheduler.requestedHandles.length).toBeGreaterThan(
+        requestsBeforeChange
+      )
       if (scheduler.pendingCount) act(() => scheduler.flush())
       expect(capture.styles).toContain("#abcdef")
     } finally {

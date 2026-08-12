@@ -113,4 +113,16 @@ describe("RealtimeLineChart", () => {
     )
     expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
+
+  it("renders its single-series legend when requested", () => {
+    const { getByText } = render(
+      <TooltipProvider>
+        <RealtimeLineChart
+          data={[{ time: 1, value: 10 }]}
+          showLegend
+        />
+      </TooltipProvider>
+    )
+    expect(getByText("Series")).toBeTruthy()
+  })
 })

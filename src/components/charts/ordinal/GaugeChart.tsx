@@ -7,13 +7,16 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
-import { useChartMode } from "../shared/hooks"
+import { useChartMode, useChartSelection } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildGaugeArcModel, type GaugeGradientFill } from "../shared/gaugeGradient"
 import { normalizeColorGradient } from "../shared/gradient"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -226,6 +229,27 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const pieceStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(pieceStyle, { stroke, strokeWidth, opacity }),
     [pieceStyle, stroke, strokeWidth, opacity]
+  )
+  const {
+    activeSelectionHook,
+    customHoverBehavior,
+    customClickBehavior,
+  } = useChartSelection({
+    selection: props.selection,
+    linkedHover: props.linkedHover,
+    fallbackFields: ["category"],
+    onObservation: props.onObservation,
+    chartType: "GaugeChart",
+    chartId: props.chartId,
+    onClick: props.onClick,
+    hoverHighlight: props.hoverHighlight,
+    colorByField: "category",
+    mobileInteraction: resolved.mobileInteraction,
+  })
+  const resolvedSelection = useResolvedSelection(props.selection)
+  const interactivePieceStyle = useMemo(
+    () => wrapStyleWithSelection(pieceStyleWithPrimitives, activeSelectionHook, resolvedSelection),
+    [pieceStyleWithPrimitives, activeSelectionHook, resolvedSelection],
   )
 
   // ── Arc geometry ────────────────────────────────────────────────────
@@ -457,6 +481,13 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     }
   }, [clampedValue])
 
+  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(Number.isFinite(value) ? [{ value }] : [], width, height, props.emptyContent)
+    : null
+
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
   if (gaugeData.length === 0) {
     return <ChartError componentName="GaugeChart" message="No data to display" width={width} height={height} />
   }
@@ -468,7 +499,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     rAccessor: "value",
     oSort: false,  // preserve threshold zone order (don't sort by value)
     projection: "radial",
-    pieceStyle: pieceStyleWithPrimitives,
+    pieceStyle: interactivePieceStyle,
     innerRadius,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,
@@ -494,6 +525,17 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
+    ...buildCustomBehaviorProps({
+      linkedHover: props.linkedHover,
+      selection: props.selection,
+      onObservation: props.onObservation,
+      onClick: props.onClick,
+      hoverRadius: props.hoverRadius,
+      hoverHighlight: props.hoverHighlight,
+      mobileInteraction: resolved.mobileInteraction,
+      customHoverBehavior,
+      customClickBehavior,
+    }),
     svgAnnotationRules,
     ...(allAnnotations.length > 0 && { annotations: allAnnotations }),
     ...(title && { title }),

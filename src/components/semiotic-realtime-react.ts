@@ -1,8 +1,9 @@
 /**
- * Realtime React-only exports.
+ * Supplemental realtime React hooks.
  *
- * Hooks and runtime-facing adapters that are not safe for pure rendering
- * surfaces and are meant for component-driven consumers.
+ * The historical `/realtime/core` entry already owns Frames, HOCs, tooltips,
+ * and data helpers. This slice adds hooks and runtime-facing adapters; it is
+ * not the only React-bearing realtime subpath.
  */
 
 // User-facing stream-status observer — wraps any push-API ref to expose
@@ -22,4 +23,3 @@ export type {
   SyncedPushDataOptions,
   PushIdAccessor,
 } from "./charts/shared/useSyncedPushData"
-

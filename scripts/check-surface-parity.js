@@ -48,7 +48,6 @@ const SERVER_CONFIG_EXCLUDED = new Map([
   ["MultiAxisLineChart", "composite dual-axis HOC; renderable through the HOC SSR path, not serverChartConfigs"],
   ["ScatterplotMatrix", "SVG composite with internal brush overlay; renderable through the HOC SSR path"],
   ["MinimapChart", "interactive composite with overview/detail brush; renderable through the HOC SSR path"],
-  ["OrbitDiagram", "animated hierarchy HOC; MCP HOC render path is the supported static snapshot"],
   ["DistanceCartogram", "stateful geo HOC; MCP HOC render path is the supported static snapshot"],
   ["ChainReactionChart", "settled reading is an authored overlay over zero bodies (delivery balls exist only mid-replay), so a body-counting serverChartConfigs entry would report an empty scene; renderable through the HOC SSR path"],
 ])

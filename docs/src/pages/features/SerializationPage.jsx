@@ -33,6 +33,15 @@ const barData = [
   { category: "Q4", value: 410 },
 ]
 
+const DEMO_CREATED_AT = "2026-08-11T00:00:00.000Z"
+
+function toDemoConfig(componentName, props, options) {
+  return {
+    ...toConfig(componentName, props, options),
+    createdAt: DEMO_CREATED_AT,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Interactive demo: Round-trip serializer
 // ---------------------------------------------------------------------------
@@ -81,7 +90,7 @@ function RoundTripDemo() {
 
   const chartOption = CHART_OPTIONS[selectedChart]
   const config = useMemo(
-    () => toConfig(selectedChart, chartOption.props, { includeData }),
+    () => toDemoConfig(selectedChart, chartOption.props, { includeData }),
     [selectedChart, includeData, chartOption.props]
   )
 
@@ -222,7 +231,7 @@ function RoundTripDemo() {
 function ConfigEditorDemo() {
   const [configText, setConfigText] = useState(() =>
     JSON.stringify(
-      toConfig("BarChart", {
+      toDemoConfig("BarChart", {
         data: barData,
         categoryAccessor: "category",
         valueAccessor: "value",

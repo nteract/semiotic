@@ -201,7 +201,7 @@ export interface BigNumberProps<_TDatum extends Datum = Datum> {
    *  routes the card into its empty state (see `emptyContent`); this lets
    *  consumers pass `data?.revenue` style optional values without a
    *  conditional. */
-  value: number | null | undefined
+  value?: number | null
   /** Top-line descriptor — e.g. `"Q3 Revenue"`. Rendered above the value. */
   label?: string
   /** Secondary descriptor, smaller, below the label. */

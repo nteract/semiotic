@@ -95,11 +95,6 @@
       "reason": "New in 3.8.6: cohesive ranking-chart HOC \u2014 the pure rankBumpData transform, the bumpLayout scene builder, color/annotation resolution, and the XYCustomChart wiring share one series-identity contract (ribbon geometry is already factored into bumpRibbonGeometry.ts). Split plan on meaningful touch: extract rankBumpData + resolveBumpColorScheme into a bumpData.ts helper to drop back under 800. Do not grow past this reviewed ceiling."
     },
     {
-      "path": "src/components/server/serverChartConfigsXY.ts",
-      "maxLines": 914,
-      "reason": "Single registry of per-chart XY SSR render configs (like chartSpecsPhysics for physics). Keeping the configs adjacent makes renderChart completeness review straightforward; grew in 3.8.6 with the BumpChart config plus the semanticLine/gradient stop plumbing. Split on meaningful touch (e.g. by chart family); do not grow past this reviewed ceiling."
-    },
-    {
       "path": "src/components/recipes/packedClusterMatrix.tsx",
       "maxLines": 1031,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
@@ -151,8 +146,8 @@
     },
     {
       "path": "src/components/stream/physics/StreamPhysicsFrame.tsx",
-      "maxLines": 1610,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1598,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. -12 (3.9.0): extracted shared physics hover/cursor hit-testing and cursor lifecycle into usePhysicsCanvasPointer."
     },
     {
       "path": "src/components/stream/PipelineStore.ts",

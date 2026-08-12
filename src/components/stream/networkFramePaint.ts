@@ -38,6 +38,8 @@ export interface NetworkFramePaintContext {
   adjustedWidth: number
   adjustedHeight: number
   background?: string
+  /** Theme surface fallback used when `background` is unset. */
+  themeBackground?: string
   maxDevicePixelRatio?: number
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   /** Skip opaque canvas fill when an SVG backgroundGraphics layer is present. */
@@ -70,6 +72,11 @@ export interface NetworkFramePaintContext {
   scheduleNextFrame: () => void
   /** Resync color caches from scene fills after an invalidating rebuild. */
   syncColorMap?: () => void
+  /** Refresh cursor inventory/presentation after scene mutations. */
+  onSceneOrStyleChange?: (change: {
+    inventoryChanged: boolean
+    geometryChanged: boolean
+  }) => void
 }
 
 /**
@@ -86,6 +93,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     adjustedWidth,
     adjustedHeight,
     background,
+    themeBackground,
     maxDevicePixelRatio,
     renderMode,
     hasBackgroundGraphics = false,
@@ -108,7 +116,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     lastAnnotationFrameTimeRef,
     setAnnotationFrame,
     scheduleNextFrame,
-    syncColorMap
+    syncColorMap,
+    onSceneOrStyleChange
   } = ctx
 
   const c2d = canvas.getContext("2d")
@@ -119,10 +128,13 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     : 0.016
   lastFrameTimeRef.current = now
 
+  const transitionWasActive = store.transition != null
   const transitionActive = store.advanceTransition(
     reducedMotion ? now + 1e6 : now
   )
   const isTransitioning = reducedMotion ? false : transitionActive
+  const transitionFinishedThisFrame =
+    transitionWasActive && !transitionActive
 
   const animationTicked = reducedMotion
     ? false
@@ -133,7 +145,10 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     store.getLastUpdateResult(),
     isTransitioning
   )
-  const computedScene = transitionActive || wasDirty || animationTicked
+  // The final transition step mutates/snap-aligns geometry while returning
+  // false. Rebuild once for that step too so paint and pointer geometry reach
+  // the same target.
+  const computedScene = transitionWasActive || wasDirty || animationTicked
   if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
     // Resync particle/hover color caches from the freshly rebuilt scene fills
@@ -161,9 +176,21 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   // and asks for a repaint via this flag — folded into the paint gate only.
   // resolutionDirty is the same paint-only path for browser zoom / DPR caps.
   const stylePaintPending = store.consumeStylePaintPending()
+  if (computedScene || stylePaintPending) {
+    onSceneOrStyleChange?.({
+      // Pure force/orbit motion preserves the authored style inventory. Avoid
+      // a second O(n+m) scan on every animation frame; the frame caches this
+      // bit from invalidating/style rebuilds.
+      inventoryChanged: wasDirty || stylePaintPending,
+      geometryChanged: computedScene
+    })
+  }
   const needsResolutionRepaint = resolutionDirtyRef?.current === true
   const needsDataRepaint = needsDataCanvasPaint({
-    dirtyOrRebuilt: wasDirty,
+    // `advanceTransition` returns false on the terminal frame after snapping
+    // geometry to its target. `computedScene` deliberately includes that
+    // frame, so it must drive the paint gate as well as the scene rebuild.
+    dirtyOrRebuilt: computedScene,
     transitioning: isTransitioning,
     animationTicked,
     continuous: particlesWanted || isContinuous,
@@ -185,9 +212,12 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
 
     paintCanvasBackground(c2d, {
       background,
+      themeBackground,
       hasBackgroundGraphics,
-      width: adjustedWidth,
-      height: adjustedHeight
+      x: -margin.left,
+      y: -margin.top,
+      width: size[0],
+      height: size[1]
     })
 
     if (decay) store.applyDecay()
@@ -264,7 +294,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
 
   dirtyRef.current = false
 
-  if (wasDirty || isTransitioning || animationTicked) {
+  if (computedScene) {
     canvas.setAttribute(
       "aria-label",
       computeNetworkAriaLabel(
@@ -276,13 +306,12 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   }
 
   const wantsAnnotationUpdate =
-    wasDirty ||
-    isTransitioning ||
-    animationTicked ||
+    computedScene ||
     pendingAnnotationFrameRef.current
   if (
     wantsAnnotationUpdate &&
-    now - lastAnnotationFrameTimeRef.current >= 33
+    (transitionFinishedThisFrame ||
+      now - lastAnnotationFrameTimeRef.current >= 33)
   ) {
     setAnnotationFrame((f) => f + 1)
     lastAnnotationFrameTimeRef.current = now

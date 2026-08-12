@@ -22,19 +22,21 @@ import {
 import {
   type ThemeAwareProps,
   type StaticFrameProps,
-  type StaticPhysicsFrameProps,
-  type FrameType,
+  type FrameType
 } from "./staticSVGChrome"
 import { renderStreamXYFrame } from "./staticXY"
 import { renderOrdinalFrame } from "./staticOrdinal"
 import { renderNetworkFrame } from "./staticNetwork"
 import { renderGeoFrame } from "./staticGeo"
-import { renderPhysicsFrame } from "./staticPhysics"
+import {
+  renderPhysicsFrame,
+  type StaticPhysicsFrameProps
+} from "./staticPhysics"
 import type { SharpFactory, SharpModule } from "./optionalImageTypes"
 import {
   renderValueChart,
   VALUE_RENDERERS,
-  type ValueChartName,
+  type ValueChartName
 } from "./staticValue"
 
 export function renderToStaticSVG(
@@ -45,13 +47,19 @@ export function renderToStaticSVG(
     case "xy":
       return renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps)
     case "ordinal":
-      return renderOrdinalFrame(props as StreamOrdinalFrameProps & ThemeAwareProps)
+      return renderOrdinalFrame(
+        props as StreamOrdinalFrameProps & ThemeAwareProps
+      )
     case "network":
-      return renderNetworkFrame(props as StreamNetworkFrameProps & ThemeAwareProps)
+      return renderNetworkFrame(
+        props as StreamNetworkFrameProps & ThemeAwareProps
+      )
     case "geo":
       return renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps)
     case "physics":
-      return renderPhysicsFrame(props as StaticPhysicsFrameProps & ThemeAwareProps)
+      return renderPhysicsFrame(
+        props as StaticPhysicsFrameProps & ThemeAwareProps
+      )
     default:
       throw new Error(
         `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", or "physics".`
@@ -59,19 +67,27 @@ export function renderToStaticSVG(
   }
 }
 
-export function renderXYToStaticSVG(props: StreamXYFrameProps & ThemeAwareProps): string {
+export function renderXYToStaticSVG(
+  props: StreamXYFrameProps & ThemeAwareProps
+): string {
   return renderStreamXYFrame(props)
 }
 
-export function renderOrdinalToStaticSVG(props: StreamOrdinalFrameProps & ThemeAwareProps): string {
+export function renderOrdinalToStaticSVG(
+  props: StreamOrdinalFrameProps & ThemeAwareProps
+): string {
   return renderOrdinalFrame(props)
 }
 
-export function renderNetworkToStaticSVG(props: StreamNetworkFrameProps & ThemeAwareProps): string {
+export function renderNetworkToStaticSVG(
+  props: StreamNetworkFrameProps & ThemeAwareProps
+): string {
   return renderNetworkFrame(props)
 }
 
-export function renderGeoToStaticSVG(props: StreamGeoFrameProps & ThemeAwareProps): string {
+export function renderGeoToStaticSVG(
+  props: StreamGeoFrameProps & ThemeAwareProps
+): string {
   return renderGeoFrame(props)
 }
 
@@ -112,6 +128,7 @@ const COMMON_FRAME_PROP_KEYS = [
   "rExtent",
   "oExtent",
   "extentPadding",
+  "hoverRadius",
   "scalePadding",
   "sizeRange",
   "innerRadius",
@@ -143,7 +160,7 @@ const COMMON_FRAME_PROP_KEYS = [
   // BaseChartProps / AI annotation workflows — without this top-level
   // renderChart(..., { autoPlaceAnnotations: true }) silently no-ops
   // (static* frames honor the prop when present on the built frame props).
-  "autoPlaceAnnotations",
+  "autoPlaceAnnotations"
 ] as const
 
 const CHART_MODE_PROP_KEYS = [
@@ -167,7 +184,7 @@ const CHART_MODE_PROP_KEYS = [
   "linkedHover",
   "mobileInteraction",
   "mobileSemantics",
-  "responsiveRules",
+  "responsiveRules"
 ] as const
 
 function pickDefinedProps(source: Datum, keys: readonly string[]): Datum {
@@ -206,7 +223,12 @@ export function renderChartWithEvidence(
   options?: RenderChartOptions
 ): { svg: string; evidence: RenderEvidence } {
   const sink: EvidenceSink = {}
-  const { svg, frameType } = renderChartInternal(component, props, options, sink)
+  const { svg, frameType } = renderChartInternal(
+    component,
+    props,
+    options,
+    sink
+  )
   const evidence: RenderEvidence =
     sink.evidence ??
     // Defensive: every frame renderer populates the sink, so this only fires
@@ -218,9 +240,10 @@ export function renderChartWithEvidence(
       height: typeof props.height === "number" ? props.height : 400,
       marks: [],
       title: typeof props.title === "string" ? props.title : undefined,
-      description: typeof props.description === "string" ? props.description : undefined,
+      description:
+        typeof props.description === "string" ? props.description : undefined,
       annotations: props.annotations,
-      extraWarnings: ["NO_EVIDENCE"],
+      extraWarnings: ["NO_EVIDENCE"]
     })
   evidence.component = component
   return { svg, evidence }
@@ -235,7 +258,7 @@ function renderChartInternal(
   if (component in VALUE_RENDERERS) {
     return {
       svg: renderValueChart(component as ValueChartName, props, sink),
-      frameType: "value",
+      frameType: "value"
     }
   }
 
@@ -246,25 +269,33 @@ function renderChartInternal(
   if (!config) {
     throw new Error(
       `Unknown chart component: "${component}". ` +
-      `Run \`npx semiotic-ai --list\` for supported chart types.`
+        `Run \`npx semiotic-ai --list\` for supported chart types.`
     )
   }
   // Some chart families also own a chart-specific `mode` prop (for example
   // physics `mode="mechanical"`). Only consume the four semantic display
   // modes here; the original prop remains in `rest` for the chart builder.
-  const requestedMode = config.layout?.mode ?? (isChartMode(props.mode) ? props.mode : undefined)
+  const requestedMode =
+    config.layout?.mode ?? (isChartMode(props.mode) ? props.mode : undefined)
   const resolvedMode = resolveChartMode(
     requestedMode,
     {
       ...config.layout?.modeDefaults,
-      ...pickDefinedProps(props, CHART_MODE_PROP_KEYS),
+      ...pickDefinedProps(props, CHART_MODE_PROP_KEYS)
     },
-    config.layout?.primarySize,
+    config.layout?.primarySize
   )
 
   const {
-    data, theme, background, className, annotations,
-    margin, colorScheme, colorBy, legendPosition,
+    data,
+    theme,
+    background,
+    className,
+    annotations,
+    margin,
+    colorScheme,
+    colorBy,
+    legendPosition,
     ...rest
   } = props
 
@@ -274,27 +305,38 @@ function renderChartInternal(
   // Top-level props win so renderChart mirrors the React HOC API.
   const framePropsOverrides = rest.frameProps || {}
   const layoutMargin = config.layout?.margin
-  const defaultMargin = typeof layoutMargin === "function"
-    ? layoutMargin(props, resolvedMode)
-    : layoutMargin ?? resolvedMode.marginDefaults
+  const defaultMargin =
+    typeof layoutMargin === "function"
+      ? layoutMargin(props, resolvedMode)
+      : (layoutMargin ?? resolvedMode.marginDefaults)
   // Keep the caller-supplied margin separately from the resolved default.
   // Some chart HOCs (for example DifferenceChart's custom legend) only
   // reserve their standard legend gutter when that side was not explicitly
   // set by the caller. The static configuration needs the same distinction.
-  const explicitMargin = margin !== undefined ? margin : framePropsOverrides.margin
+  const explicitMargin =
+    margin !== undefined ? margin : framePropsOverrides.margin
   // useChartLegendAndMargin merges partial caller margins over its mode
   // defaults. Preserve that same shape before handing props to a static
   // frame; otherwise `{ right: 64 }` accidentally falls back to the lower
   // level frame's 20px top/left defaults.
-  const normalizedExplicitMargin = normalizePartialMargin(explicitMargin as PartialMargin | undefined)
-  const effectiveMargin = typeof explicitMargin === "number"
-    ? { top: explicitMargin, right: explicitMargin, bottom: explicitMargin, left: explicitMargin }
-    : { ...defaultMargin, ...normalizedExplicitMargin }
+  const normalizedExplicitMargin = normalizePartialMargin(
+    explicitMargin as PartialMargin | undefined
+  )
+  const effectiveMargin =
+    typeof explicitMargin === "number"
+      ? {
+          top: explicitMargin,
+          right: explicitMargin,
+          bottom: explicitMargin,
+          left: explicitMargin
+        }
+      : { ...defaultMargin, ...normalizedExplicitMargin }
   const topLevelFrameProps = pickDefinedProps(rest, COMMON_FRAME_PROP_KEYS)
   // `frameProps` overrides mode-resolved defaults, matching the client HOC's
   // last-spread escape-hatch behavior.
-  const withFramePropsOverride = <K extends keyof typeof resolvedMode>(key: K) =>
-    (framePropsOverrides as Datum)[key] ?? resolvedMode[key]
+  const withFramePropsOverride = <K extends keyof typeof resolvedMode>(
+    key: K
+  ) => (framePropsOverrides as Datum)[key] ?? resolvedMode[key]
   const common: Datum & ThemeAwareProps & { size: [number, number] } = {
     ...framePropsOverrides,
     ...topLevelFrameProps,
@@ -309,45 +351,74 @@ function renderChartInternal(
     yLabel: withFramePropsOverride("yLabel"),
     categoryLabel: withFramePropsOverride("categoryLabel"),
     valueLabel: withFramePropsOverride("valueLabel"),
-    background, className, annotations,
+    background,
+    className,
+    annotations,
     size,
     margin: effectiveMargin,
     __explicitMargin: explicitMargin,
+    __compactMode: resolvedMode.compactMode,
     // renderChart is the HOC-level server API. Its legend reservation must
     // follow useChartLegendAndMargin rather than the lower-level static
     // renderer's content-measurement-only behavior.
     __autoLegendMargin: true,
     ...(colorScheme !== undefined && { colorScheme }),
     ...(legendPosition !== undefined && { legendPosition }),
-    _idPrefix: rest._idPrefix,
+    _idPrefix: rest._idPrefix
   }
 
-  const frameProps2 = config.buildProps(data, colorBy, colorScheme, common, rest)
+  const frameProps2 = config.buildProps(
+    data,
+    colorBy,
+    colorScheme,
+    common,
+    rest
+  )
 
   // Dispatch to the appropriate frame renderer
   let svg: string
   switch (config.frameType) {
     case "xy":
-      svg = renderStreamXYFrame(frameProps2 as StreamXYFrameProps & ThemeAwareProps, sink)
+      svg = renderStreamXYFrame(
+        frameProps2 as StreamXYFrameProps & ThemeAwareProps,
+        sink
+      )
       break
     case "ordinal":
-      svg = renderOrdinalFrame(frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps, sink)
+      svg = renderOrdinalFrame(
+        frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps,
+        sink
+      )
       break
     case "network":
-      svg = renderNetworkFrame(frameProps2 as StreamNetworkFrameProps & ThemeAwareProps, sink)
+      svg = renderNetworkFrame(
+        frameProps2 as StreamNetworkFrameProps & ThemeAwareProps,
+        sink
+      )
       break
     case "geo":
-      svg = renderGeoFrame(frameProps2 as StreamGeoFrameProps & ThemeAwareProps, sink)
+      svg = renderGeoFrame(
+        frameProps2 as StreamGeoFrameProps & ThemeAwareProps,
+        sink
+      )
       break
     case "physics":
       svg = renderPhysicsFrame(frameProps2 as StaticPhysicsFrameProps, sink)
       break
   }
 
-  const overlay = config.renderOverlay?.(frameProps2, { theme: resolveTheme(theme) })
+  const overlay = config.renderOverlay?.(frameProps2, {
+    theme: resolveTheme(theme)
+  })
   if (overlay != null) {
     const overlayMarkup = ReactDOMServer.renderToStaticMarkup(<>{overlay}</>)
-    svg = svg.replace("</svg>", `${overlayMarkup}</svg>`)
+    // Overlays belong to the outer chart SVG. Gauge center content can itself
+    // contain an <svg>, so replacing the first closing tag corrupts nesting.
+    const closingSvgIndex = svg.lastIndexOf("</svg>")
+    svg =
+      closingSvgIndex < 0
+        ? `${svg}${overlayMarkup}`
+        : `${svg.slice(0, closingSvgIndex)}${overlayMarkup}${svg.slice(closingSvgIndex)}`
   }
 
   return { svg, frameType: config.frameType as RenderEvidence["frameType"] }
@@ -381,7 +452,10 @@ export async function renderToImage(
   let svg: string
   const frameTypes = ["xy", "ordinal", "network", "geo", "physics"]
   if (frameTypes.includes(frameTypeOrComponent)) {
-    svg = renderToStaticSVG(frameTypeOrComponent as FrameType, props as StaticFrameProps)
+    svg = renderToStaticSVG(
+      frameTypeOrComponent as FrameType,
+      props as StaticFrameProps
+    )
   } else {
     svg = renderChart(frameTypeOrComponent as ChartName, props)
   }
@@ -403,19 +477,22 @@ export async function renderToImage(
   } catch {
     throw new Error(
       `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +
-      `  npm install sharp\n` +
-      `sharp is listed as an optional dependency of semiotic.`
+        `  npm install sharp\n` +
+        `sharp is listed as an optional dependency of semiotic.`
     )
   }
 
   const width = props.width || props.size?.[0] || 600
   const height = props.height || props.size?.[1] || 400
 
-  const svgBuffer = typeof globalThis.Buffer !== "undefined"
-    ? globalThis.Buffer.from(svg)
-    : new TextEncoder().encode(svg)
-  const pipeline = sharp(svgBuffer, { density: 72 * scale })
-    .resize(Math.round(width * scale), Math.round(height * scale))
+  const svgBuffer =
+    typeof globalThis.Buffer !== "undefined"
+      ? globalThis.Buffer.from(svg)
+      : new TextEncoder().encode(svg)
+  const pipeline = sharp(svgBuffer, { density: 72 * scale }).resize(
+    Math.round(width * scale),
+    Math.round(height * scale)
+  )
 
   if (format === "jpeg") {
     return pipeline.jpeg({ quality: 90 }).toBuffer()
@@ -468,7 +545,7 @@ export function renderDashboard(
     width = 1200,
     height: heightInput,
     layout = {},
-    background,
+    background
   } = options
 
   const theme = resolveTheme(themeInput)
@@ -487,7 +564,13 @@ export function renderDashboard(
   const cellWidth = Math.floor((chartAreaWidth - gap * (columns - 1)) / columns)
 
   // Lay out charts in rows
-  const rows: { chart: DashboardChart; x: number; y: number; w: number; h: number }[] = []
+  const rows: {
+    chart: DashboardChart
+    x: number
+    y: number
+    w: number
+    h: number
+  }[] = []
   let col = 0
   let rowY = headerHeight + gap
   let rowHeight = 0
@@ -511,7 +594,7 @@ export function renderDashboard(
     col += span
   }
 
-  const totalHeight = heightInput || (rowY + rowHeight + gap)
+  const totalHeight = heightInput || rowY + rowHeight + gap
 
   // Render each chart as an embedded SVG
   const chartElements = rows.map((item, i) => {
@@ -521,14 +604,17 @@ export function renderDashboard(
       width: w,
       height: h,
       theme: themeInput,
-      _idPrefix: `chart-${i}`,
+      _idPrefix: `chart-${i}`
     }
 
     let svgStr: string
     if (chart.component) {
       svgStr = renderChart(chart.component, chartProps)
     } else if (chart.frameType) {
-      svgStr = renderToStaticSVG(chart.frameType, chartProps as StaticFrameProps)
+      svgStr = renderToStaticSVG(
+        chart.frameType,
+        chartProps as StaticFrameProps
+      )
     } else {
       svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`
     }
@@ -559,11 +645,18 @@ export function renderDashboard(
     >
       {title && <title>{title}</title>}
       {background && (
-        <rect x={0} y={0} width={width} height={totalHeight} fill={background} />
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={totalHeight}
+          fill={background}
+        />
       )}
       {title && (
         <text
-          x={width / 2} y={24}
+          x={width / 2}
+          y={24}
           textAnchor="middle"
           fontSize={s.titleSize + 4}
           fontWeight="bold"
@@ -575,7 +668,8 @@ export function renderDashboard(
       )}
       {subtitle && (
         <text
-          x={width / 2} y={title ? 46 : 20}
+          x={width / 2}
+          y={title ? 46 : 20}
           textAnchor="middle"
           fontSize={s.labelSize}
           fill={s.textSecondary}

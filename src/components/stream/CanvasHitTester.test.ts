@@ -1,6 +1,7 @@
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
+import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 
 describe("CanvasHitTester — findNearestNode", () => {
   it("finds nearest point on a sorted line path", () => {
@@ -51,6 +52,45 @@ describe("CanvasHitTester — findNearestNode", () => {
     expect(result!.datum!.id).toBe("b")
   })
 
+  it("skips interactive:false points in linear and indexed hit paths", () => {
+    const decorative: PointSceneNode = {
+      type: "point",
+      x: 50,
+      y: 50,
+      r: 10,
+      style: { fill: "#999", cursor: "pointer" },
+      datum: { id: "decorative" },
+      interactive: false
+    }
+    const qt = quadtree<PointSceneNode>()
+      .x((node) => node.x)
+      .y((node) => node.y)
+      .add(decorative)
+
+    expect(findNearestNode([decorative], 50, 50)).toBeNull()
+    expect(findNearestNode([decorative], 50, 50, 30, qt, 10)).toBeNull()
+  })
+
+  it("excludes interactive:false points from the retained XY spatial index", () => {
+    const decorative = Array.from({ length: 501 }, (_, index): PointSceneNode => ({
+      type: "point",
+      x: index,
+      y: 0,
+      r: 100,
+      style: {},
+      datum: { index },
+      interactive: false
+    }))
+    const active: PointSceneNode = {
+      type: "point", x: 0, y: 0, r: 4, style: {}, datum: { id: "active" }
+    }
+    const index = new PipelineSpatialIndex()
+    index.rebuild("custom", [...decorative, active])
+
+    expect(index.quadtree).toBeNull()
+    expect(index.maxPointRadius).toBe(4)
+  })
+
   it("respects maxDistance threshold", () => {
     const line: LineSceneNode = {
       type: "line",
@@ -76,6 +116,58 @@ describe("CanvasHitTester — findNearestNode", () => {
     const result = findNearestNode([area], 48, 52)
     expect(result).not.toBeNull()
     expect(result!.x).toBeCloseTo(50, 0)
+  })
+
+  it("keeps area interaction on the top path instead of the filled polygon", () => {
+    const area: AreaSceneNode = {
+      type: "area",
+      topPath: [[10, 50], [50, 50], [90, 50]],
+      bottomPath: [[10, 100], [50, 100], [90, 100]],
+      style: { fill: "#000", cursor: "pointer" },
+      datum: [{ x: 1 }, { x: 5 }, { x: 9 }]
+    }
+
+    expect(findNearestNode([area], 50, 55, 30)).not.toBeNull()
+    expect(findNearestNode([area], 50, 95, 30)).toBeNull()
+  })
+
+  it("follows the rendered area top-path segment between sparse samples", () => {
+    const area: AreaSceneNode = {
+      type: "area",
+      topPath: [[10, 80], [90, 20]],
+      bottomPath: [[10, 100], [90, 100]],
+      style: { fill: "#000", cursor: "pointer" },
+      datum: [{ x: 1 }, { x: 9 }]
+    }
+
+    expect(findNearestNode([area], 50, 50, 5)).not.toBeNull()
+  })
+
+  it("does not hit a clipped-away portion of an area top path", () => {
+    const area: AreaSceneNode = {
+      type: "area",
+      topPath: [[10, 50], [50, 50], [90, 50]],
+      bottomPath: [[10, 100], [50, 100], [90, 100]],
+      style: { fill: "#000", cursor: "pointer" },
+      datum: [{ x: 1 }, { x: 5 }, { x: 9 }],
+      clipRect: { x: 10, y: 40, width: 30, height: 20 }
+    }
+
+    expect(findNearestNode([area], 20, 50, 30)).not.toBeNull()
+    expect(findNearestNode([area], 80, 50, 30)).toBeNull()
+  })
+
+  it("suppresses hits for interactive:false areas even when they carry a cursor style", () => {
+    const area: AreaSceneNode = {
+      type: "area",
+      topPath: [[10, 50], [50, 50], [90, 50]],
+      bottomPath: [[10, 100], [50, 100], [90, 100]],
+      style: { fill: "#000", cursor: "pointer" },
+      datum: [{ x: 1 }, { x: 5 }, { x: 9 }],
+      interactive: false
+    }
+
+    expect(findNearestNode([area], 50, 50, 30)).toBeNull()
   })
 
   it("handles empty scene", () => {
@@ -161,6 +253,23 @@ describe("CanvasHitTester — findNearestNode", () => {
     const hit = findNearestNode(scene, 50, 0, 30, qt, 80)
     expect(hit).not.toBeNull()
     expect(hit!.datum!.id).toBe("big")
+  })
+
+  it("keeps large-point hit geometry identical with and without a quadtree", () => {
+    const big: PointSceneNode = {
+      type: "point", x: 90, y: 0, r: 80,
+      style: { fill: "green" }, datum: { id: "big" }
+    }
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .add(big)
+
+    const linear = findNearestNode([big], 50, 0, 30)
+    const indexed = findNearestNode([big], 50, 0, 30, qt, 80)
+    expect(linear?.datum?.id).toBe("big")
+    expect(indexed?.datum?.id).toBe("big")
+    expect(linear?.distance).toBe(indexed?.distance)
   })
 
   it("quadtree does not interfere with non-point node types", () => {

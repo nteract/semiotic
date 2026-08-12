@@ -12,7 +12,7 @@ const sharedControls = [
   { name: "windowSize", type: "number", label: "Buffer Size", group: "Data",
     default: 200, min: 50, max: 500, step: 50 },
   { name: "arrowOfTime", type: "select", label: "Direction", group: "Layout",
-    default: "right", options: ["right", "left", "up", "down"] },
+    default: "right", options: ["right", "left"] },
   { name: "showAxes", type: "boolean", label: "Show Axes", group: "Layout",
     default: true },
   { name: "enableHover", type: "boolean", label: "Enable Hover", group: "Interaction",

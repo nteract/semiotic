@@ -1,10 +1,24 @@
 import { execSync } from "child_process"
-import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "fs"
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from "fs"
 import { build as tsupBuild } from "tsup"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
+const isDeclarationsOnly = args.includes("--declarations-only")
+
+if (isDeclarationsOnly && (isProduction || isAnalyze)) {
+  throw new Error(
+    "--declarations-only cannot be combined with --production or --analyze"
+  )
+}
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"))
 const optionalDependencyNames = Object.keys(pkg.optionalDependencies ?? {})
@@ -17,21 +31,32 @@ const explicitExternals = [
   /^world-atlas\//,
   "react-dom/server",
   "react/jsx-runtime",
-  "react/jsx-dev-runtime",
+  "react/jsx-dev-runtime"
 ]
 
-function useClientDirectivePlugin({ clientOnly = false } = {}) {
+function useClientDirectivePlugin({
+  clientOnly = false,
+  entryNames = []
+} = {}) {
+  const entryFiles = new Set(
+    entryNames.flatMap((name) => [`${name}.module.min.js`, `${name}.min.js`])
+  )
   return {
     name: "use-client-directive",
     buildEnd({ writtenFiles }) {
       if (!clientOnly) return
       for (const file of writtenFiles) {
         if (!file.name.endsWith(".js")) continue
+        const fileName = file.name.split(/[\\/]/).pop()
+        // The directive declares a public client boundary. Static and lazy
+        // chunks are already below that boundary; tagging each one adds
+        // redundant bytes to every separately-compressed request.
+        if (!fileName || !entryFiles.has(fileName)) continue
         const code = readFileSync(file.name, "utf8")
         if (/^["']use client["'];/.test(code)) continue
         writeFileSync(file.name, `"use client";\n${code}`)
       }
-    },
+    }
   }
 }
 
@@ -43,17 +68,17 @@ const terserOptions = {
     drop_console: false,
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
-    passes: 2,
+    passes: 2
   },
   mangle: {
-    properties: false,
+    properties: false
   },
   format: {
-    comments: false,
-  },
+    comments: false
+  }
 }
 
-function baseBuildOptions({ minify, serverOnly, clientOnly }) {
+function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames }) {
   return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
@@ -68,8 +93,8 @@ function baseBuildOptions({ minify, serverOnly, clientOnly }) {
     terserOptions,
     external: explicitExternals,
     pure: ["console.log", "console.debug"],
-    plugins: [useClientDirectivePlugin({ clientOnly })],
-    silent: true,
+    plugins: [useClientDirectivePlugin({ clientOnly, entryNames })],
+    silent: true
   }
 }
 
@@ -84,11 +109,11 @@ async function createCjsBundle(options = {}) {
     name = "semiotic",
     minify = false,
     serverOnly = false,
-    clientOnly = false,
+    clientOnly = false
   } = options
 
   await tsupBuild({
-    ...baseBuildOptions({ minify, serverOnly, clientOnly }),
+    ...baseBuildOptions({ minify, serverOnly, clientOnly, entryNames: [name] }),
     entry: { [name]: input },
     name: `${name}:cjs`,
     format: "cjs",
@@ -96,7 +121,7 @@ async function createCjsBundle(options = {}) {
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
       esbuildOptions.conditions = ["module", "import", "default"]
-    },
+    }
   })
 }
 
@@ -120,24 +145,36 @@ async function createSharedEsmGroup({
   clientOnly = false,
   groupName = "esm",
   analyze = false,
+  esbuildPlugins = []
 } = {}) {
   const names = Object.keys(entries)
   if (names.length === 0) return
 
   await tsupBuild({
-    ...baseBuildOptions({ minify, serverOnly, clientOnly }),
+    ...baseBuildOptions({
+      minify,
+      serverOnly,
+      clientOnly,
+      entryNames: names
+    }),
     entry: entries,
     name: `${groupName}:esm`,
     format: "esm",
     splitting: true,
     metafile: analyze,
-    outExtension: () => ({ js: ".module.min.js" }),
+    esbuildPlugins,
+    // Public ESM entries retain the package's historical `.module.min.js`
+    // names, while private content-hashed chunks use the shorter `.min.js`
+    // suffix. Both remain covered by package.json's `dist/*.min.js` file glob.
+    outExtension: () => ({ js: ".js" }),
     esbuildOptions(esbuildOptions) {
-      // Stable prefix so package `files` can ship `dist/chunk-*.module.min.js`
-      // and consumer bundlers can content-hash cache them.
-      esbuildOptions.chunkNames = "chunk-[name]-[hash]"
+      esbuildOptions.entryNames = "[name].module.min"
+      // Private filenames do not need a descriptive basename: the content
+      // hash is their cache identity, and shorter specifiers recur throughout
+      // every separately-compressed entry graph.
+      esbuildOptions.chunkNames = "c-[hash].min"
       esbuildOptions.conditions = ["module", "import", "default"]
-    },
+    }
   })
 
   console.log(
@@ -148,6 +185,28 @@ async function createSharedEsmGroup({
   }
 }
 
+function externalizeExperimentalBridgeStoresPlugin() {
+  return {
+    name: "externalize-experimental-bridge-stores",
+    setup(build) {
+      build.onResolve(
+        {
+          filter: /^\.\.\/store\/(?:ObservationStore|SelectionStore)$/
+        },
+        (args) => {
+          if (!/[\\/]ai[\\/]SemioticVACPBridge\.tsx$/.test(args.importer)) {
+            return null
+          }
+          return {
+            path: "./semiotic-client-shared.module.min.js",
+            external: true
+          }
+        }
+      )
+    }
+  }
+}
+
 async function createCjsBundlesWithConcurrency(bundles, concurrency) {
   const workers = Array.from(
     { length: Math.min(concurrency, bundles.length) },
@@ -155,11 +214,50 @@ async function createCjsBundlesWithConcurrency(bundles, concurrency) {
       for (let i = workerIndex; i < bundles.length; i += concurrency) {
         const b = bundles[i]
         await createCjsBundle(b)
-        console.log(`\u2705 ${b.name} CJS created${b.minify ? " (minified)" : ""}`)
+        console.log(
+          `\u2705 ${b.name} CJS created${b.minify ? " (minified)" : ""}`
+        )
       }
     }
   )
   await Promise.all(workers)
+}
+
+const clientCjsNamespaces = {
+  semiotic: "semiotic",
+  xy: "xy",
+  ordinal: "ordinal",
+  network: "network",
+  realtime: "realtime",
+  "semiotic-realtime-core": "realtimeCore",
+  "semiotic-realtime-react": "realtimeReact",
+  physics: "physics",
+  "semiotic-ai": "ai",
+  geo: "geo",
+  controls: "controls",
+  "semiotic-themes-react": "themesReact",
+  "semiotic-utils": "utils",
+  "semiotic-utils-react": "utilsReact",
+  "semiotic-recipes": "recipes",
+  "semiotic-recipes-react": "recipesReact",
+  "semiotic-experimental": "experimental",
+  "semiotic-value": "value"
+}
+
+function writeClientCjsFacades(clientBundles) {
+  for (const bundle of clientBundles) {
+    const namespace = clientCjsNamespaces[bundle.name]
+    if (!namespace) {
+      throw new Error(`Missing shared CommonJS namespace for ${bundle.name}`)
+    }
+    writeFileSync(
+      `dist/${bundle.name}.min.js`,
+      `"use client";\nmodule.exports=require("./semiotic-client-cjs-shared.min.js").${namespace};\n`
+    )
+  }
+  console.log(
+    `✅ ${clientBundles.length} shared CommonJS client facades created`
+  )
 }
 
 const generatedBundleMetadata = {
@@ -169,7 +267,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   xy: {
     platform: "browser",
@@ -177,7 +275,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   ordinal: {
     platform: "browser",
@@ -185,7 +283,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   network: {
     platform: "browser",
@@ -193,23 +291,23 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
-  "semiotic-realtime": {
+  realtime: {
     platform: "browser",
     rsc: false,
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-realtime-core": {
-    platform: "neutral",
-    rsc: true,
-    edge: true,
+    platform: "browser",
+    rsc: false,
+    edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-realtime-react": {
     platform: "browser",
@@ -217,7 +315,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   physics: {
     platform: "browser",
@@ -225,23 +323,23 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
-  "semiotic-physics-matter": {
+  "physics-matter": {
     platform: "neutral",
     rsc: false,
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
-  "semiotic-physics-rapier": {
+  "physics-rapier": {
     platform: "neutral",
     rsc: false,
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   server: {
     platform: "node",
@@ -249,7 +347,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: true,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-server-node": {
     platform: "node",
@@ -257,7 +355,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: true,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-server-edge": {
     platform: "neutral",
@@ -265,7 +363,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-ai": {
     platform: "browser",
@@ -273,7 +371,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-ai-core": {
     platform: "neutral",
@@ -281,7 +379,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-data": {
     platform: "neutral",
@@ -289,7 +387,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   geo: {
     platform: "browser",
@@ -297,7 +395,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   rough: {
     platform: "neutral",
@@ -305,7 +403,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-themes": {
     platform: "neutral",
@@ -313,7 +411,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-themes-core": {
     platform: "neutral",
@@ -321,7 +419,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-themes-react": {
     platform: "browser",
@@ -329,7 +427,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-utils": {
     platform: "browser",
@@ -337,7 +435,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-utils-core": {
     platform: "neutral",
@@ -345,7 +443,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-utils-react": {
     platform: "browser",
@@ -353,15 +451,15 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-recipes": {
-    platform: "neutral",
-    rsc: true,
-    edge: true,
+    platform: "browser",
+    rsc: false,
+    edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-recipes-core": {
     platform: "neutral",
@@ -369,7 +467,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-recipes-react": {
     platform: "browser",
@@ -377,7 +475,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-experimental": {
     platform: "browser",
@@ -385,7 +483,7 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "experimental",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-experimental-vacp": {
     platform: "neutral",
@@ -393,7 +491,7 @@ const generatedBundleMetadata = {
     edge: true,
     native: false,
     stability: "experimental",
-    loading: "eager",
+    loading: "eager"
   },
   "semiotic-value": {
     platform: "browser",
@@ -401,9 +499,49 @@ const generatedBundleMetadata = {
     edge: false,
     native: false,
     stability: "stable",
-    loading: "eager",
-  },
+    loading: "eager"
+  }
 }
+
+function assertGeneratedBundleMetadata() {
+  const errors = []
+  const allowedPlatforms = new Set(["browser", "neutral", "node"])
+  const allowedStability = new Set(["stable", "experimental"])
+  const allowedLoading = new Set(["eager", "lazy"])
+
+  for (const [name, metadata] of Object.entries(generatedBundleMetadata)) {
+    if (!allowedPlatforms.has(metadata.platform))
+      errors.push(`${name}.platform`)
+    if (!allowedStability.has(metadata.stability))
+      errors.push(`${name}.stability`)
+    if (!allowedLoading.has(metadata.loading)) errors.push(`${name}.loading`)
+    for (const capability of ["rsc", "edge", "native"]) {
+      if (typeof metadata[capability] !== "boolean") {
+        errors.push(`${name}.${capability}`)
+      }
+    }
+  }
+
+  const edgeServer = generatedBundleMetadata["semiotic-server-edge"]
+  if (
+    edgeServer?.platform !== "neutral" ||
+    edgeServer?.rsc !== true ||
+    edgeServer?.edge !== true ||
+    edgeServer?.native !== false
+  ) {
+    errors.push(
+      "semiotic-server-edge must be neutral, RSC-safe, edge-compatible, and native-free"
+    )
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Invalid generated bundle metadata:\n - ${errors.join("\n - ")}`
+    )
+  }
+}
+
+assertGeneratedBundleMetadata()
 
 function applyGeneratedMetadata(bundle) {
   const metadata = generatedBundleMetadata[bundle.name]
@@ -412,7 +550,9 @@ function applyGeneratedMetadata(bundle) {
 
 async function createForceLayoutWorkerBundle({ minify = false } = {}) {
   await tsupBuild({
-    entry: { forceLayoutWorker: "src/components/stream/layouts/forceLayoutWorker.js" },
+    entry: {
+      forceLayoutWorker: "src/components/stream/layouts/forceLayoutWorker.js"
+    },
     outDir: "dist",
     target: "es2020",
     platform: "browser",
@@ -425,7 +565,7 @@ async function createForceLayoutWorkerBundle({ minify = false } = {}) {
     minify: minify ? "terser" : false,
     outExtension: () => ({ js: ".js" }),
     external: explicitExternals,
-    silent: true,
+    silent: true
   })
   console.log(`✅ force-layout worker created${minify ? " (minified)" : ""}`)
 }
@@ -445,14 +585,17 @@ async function createPhysicsWorkerBundle({ minify = false } = {}) {
     minify: minify ? "terser" : false,
     outExtension: () => ({ js: ".js" }),
     external: explicitExternals,
-    silent: true,
+    silent: true
   })
   console.log(`✅ physics worker created${minify ? " (minified)" : ""}`)
 }
 
 async function createProcessSankeyLayoutWorkerBundle({ minify = false } = {}) {
   await tsupBuild({
-    entry: { processSankeyLayoutWorker: "src/components/charts/network/processSankey/processSankeyLayoutWorker.js" },
+    entry: {
+      processSankeyLayoutWorker:
+        "src/components/charts/network/processSankey/processSankeyLayoutWorker.js"
+    },
     outDir: "dist",
     target: "es2020",
     platform: "browser",
@@ -465,11 +608,12 @@ async function createProcessSankeyLayoutWorkerBundle({ minify = false } = {}) {
     minify: minify ? "terser" : false,
     outExtension: () => ({ js: ".js" }),
     external: explicitExternals,
-    silent: true,
+    silent: true
   })
-  console.log(`✅ process-sankey layout worker created${minify ? " (minified)" : ""}`)
+  console.log(
+    `✅ process-sankey layout worker created${minify ? " (minified)" : ""}`
+  )
 }
-
 
 function buildDeclarations() {
   try {
@@ -487,12 +631,37 @@ function buildDeclarations() {
   // module resolution (TypeScript with `moduleResolution: "node"`) can follow
   // the re-export graph through the leaf declaration files.
   const entryPoints = [
-    "semiotic", "semiotic-ai", "semiotic-ai-core", "semiotic-data", "semiotic-xy",
-    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-realtime-core", "semiotic-realtime-react",
-    "semiotic-server", "semiotic-server-node", "semiotic-server-edge", "semiotic-geo", "semiotic-rough", "semiotic-controls", "semiotic-physics",
-    "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-themes-core", "semiotic-themes-react",
-    "semiotic-utils", "semiotic-utils-core", "semiotic-utils-react", "semiotic-recipes", "semiotic-recipes-core", "semiotic-recipes-react",
-    "semiotic-experimental", "semiotic-experimental-vacp", "semiotic-value"
+    "semiotic",
+    "semiotic-ai",
+    "semiotic-ai-core",
+    "semiotic-data",
+    "semiotic-xy",
+    "semiotic-ordinal",
+    "semiotic-network",
+    "semiotic-realtime",
+    "semiotic-realtime-core",
+    "semiotic-realtime-react",
+    "semiotic-server",
+    "semiotic-server-node",
+    "semiotic-server-edge",
+    "semiotic-geo",
+    "semiotic-rough",
+    "semiotic-controls",
+    "semiotic-physics",
+    "semiotic-physics-matter",
+    "semiotic-physics-rapier",
+    "semiotic-themes",
+    "semiotic-themes-core",
+    "semiotic-themes-react",
+    "semiotic-utils",
+    "semiotic-utils-core",
+    "semiotic-utils-react",
+    "semiotic-recipes",
+    "semiotic-recipes-core",
+    "semiotic-recipes-react",
+    "semiotic-experimental",
+    "semiotic-experimental-vacp",
+    "semiotic-value"
   ]
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
@@ -527,6 +696,49 @@ function cleanDist() {
   console.log("\u2705 dist cleaned")
 }
 
+function cleanDeclarationArtifacts(directory = "dist") {
+  if (!existsSync(directory)) return
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = `${directory}/${entry.name}`
+    if (entry.isDirectory()) cleanDeclarationArtifacts(path)
+    else if (entry.isFile() && entry.name.endsWith(".d.ts")) rmSync(path)
+  }
+}
+
+function writeClientPassThroughFacades() {
+  const facades = {
+    "realtime.module.min.js":
+      '"use client";\nexport*from"./semiotic-realtime-core.module.min.js";export*from"./semiotic-realtime-react.module.min.js";\n',
+    "semiotic-themes-react.module.min.js":
+      '"use client";\nexport{ThemeProvider,useTheme}from"./semiotic-client-shared.module.min.js";\n',
+    "semiotic-utils-react.module.min.js":
+      '"use client";\nexport{ThemeProvider,useTheme,useReducedMotion,useHighContrast}from"./semiotic-client-shared.module.min.js";export{useResponsiveSize,resolveResponsiveDimension}from"./semiotic-client-responsive.module.min.js";\n',
+    "semiotic-recipes-react.module.min.js":
+      '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-shared.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";\n',
+    "semiotic-utils.module.min.js":
+      '"use client";\nexport*from"./semiotic-utils-core.module.min.js";export*from"./semiotic-utils-react.module.min.js";\n',
+    "semiotic-recipes.module.min.js":
+      '"use client";\nexport*from"./semiotic-recipes-core.module.min.js";export*from"./semiotic-recipes-react.module.min.js";\n',
+    // Keep the unstable catch-all out of the stable client graph: its broad
+    // combination of otherwise unrelated modules creates another chunk
+    // reachability partition for every stable family. Identity-sensitive
+    // exports come from their canonical public graph; the remaining stateless
+    // adapters live in one auxiliary projection. Packed runtime-key parity is
+    // checked in smoke-pack.mjs so this hand-authored projection cannot drift.
+    "semiotic-experimental.module.min.js":
+      '"use client";\n' +
+      'export*from"./semiotic-experimental-auxiliary.module.min.js";' +
+      'export*from"./semiotic-experimental-vacp.module.min.js";' +
+      'export{SemioticVACPBridge as unstable_SemioticVACPBridge}from"./semiotic-experimental-react-shared.module.min.js";' +
+      'export{BuiltInPhysicsEngineAdapter as unstable_BuiltInPhysicsEngineAdapter,createDefaultPhysicsEngineAdapter as unstable_createDefaultPhysicsEngineAdapter,PhysicsPipelineStore as unstable_PhysicsPipelineStore,evaluatePhysicsBodyBudget as unstable_evaluatePhysicsBodyBudget,PhysicsSedimentAccumulator as unstable_PhysicsSedimentAccumulator,sedimentHeightfield as unstable_sedimentHeightfield,StreamPhysicsFrame as unstable_StreamPhysicsFrame,PhysicsCustomChart as unstable_PhysicsCustomChart}from"./physics.module.min.js";\n'
+  }
+
+  for (const [fileName, code] of Object.entries(facades)) {
+    writeFileSync(`dist/${fileName}`, code)
+  }
+  console.log("\u2705 client pass-through facades created")
+}
+
 function assertNoEmptyJavaScriptArtifacts() {
   const emptyArtifacts = readdirSync("dist")
     .filter((name) => /\.(?:cjs|js|mjs)$/.test(name))
@@ -537,8 +749,8 @@ function assertNoEmptyJavaScriptArtifacts() {
       `Empty JavaScript build artifacts detected:\n${emptyArtifacts
         .map((name) => `   - dist/${name}`)
         .join("\n")}\n` +
-      "This usually means one bundled entry imports another public facade entry. " +
-      "Point internal imports at the facade's core implementation instead."
+        "This usually means one bundled entry imports another public facade entry. " +
+        "Point internal imports at the facade's core implementation instead."
     )
   }
 
@@ -550,63 +762,245 @@ async function build() {
 
   const minify = isProduction
   const analyze = isAnalyze
-  const requestedConcurrency = Number.parseInt(process.env.SEMIOTIC_BUILD_CONCURRENCY ?? "2", 10)
-  const bundleConcurrency = Number.isFinite(requestedConcurrency) && requestedConcurrency > 0
-    ? requestedConcurrency
-    : 2
+  const requestedConcurrency = Number.parseInt(
+    process.env.SEMIOTIC_BUILD_CONCURRENCY ?? "2",
+    10
+  )
+  const bundleConcurrency =
+    Number.isFinite(requestedConcurrency) && requestedConcurrency > 0
+      ? requestedConcurrency
+      : 2
 
   // Three categories drive the post-build directive-placement gate:
   //   serverOnly: true   — must NOT carry "use client" (semiotic/server)
   //   clientOnly: true   — must carry "use client" (Stream-Frame-based
   //                        chart bundles + theming + AI / utils that
   //                        wrap React hooks or providers)
-  //   neither            — agnostic pure-function bundle (data, recipes)
+  //   neither            — agnostic pure-function bundle (data, recipes/core)
   const bundles = [
-    { input: "src/components/semiotic.ts", name: "semiotic", analyze, minify, clientOnly: true },
-    { input: "src/components/semiotic-xy.ts", name: "xy", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-realtime-core.ts", name: "semiotic-realtime-core", analyze: false, minify },
-    { input: "src/components/semiotic-realtime-react.ts", name: "semiotic-realtime-react", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-physics.ts", name: "physics", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-physics-matter.ts", name: "physics-matter", analyze: false, minify },
-    { input: "src/components/semiotic-physics-rapier.ts", name: "physics-rapier", analyze: false, minify },
+    {
+      input: "src/components/semiotic.ts",
+      name: "semiotic",
+      analyze,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-xy.ts",
+      name: "xy",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-ordinal.ts",
+      name: "ordinal",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-network.ts",
+      name: "network",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-realtime.ts",
+      name: "realtime",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-realtime-core.ts",
+      name: "semiotic-realtime-core",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-realtime-react.ts",
+      name: "semiotic-realtime-react",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-physics.ts",
+      name: "physics",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-physics-matter.ts",
+      name: "physics-matter",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-physics-rapier.ts",
+      name: "physics-rapier",
+      analyze: false,
+      minify
+    },
     // `serverOnly: true` keeps the `"use client"` directive off the
     // server bundle. Without this, transitive imports of client-tagged
     // Stream Frame source files leak the directive into a Node-only
     // entry point, which Next.js then refuses to call from a Server
     // Component (`renderChart` throws "X is on the client").
-    { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify, serverOnly: true },
-    { input: "src/components/semiotic-server-node.ts", name: "semiotic-server-node", analyze: false, minify, serverOnly: true },
-    { input: "src/components/semiotic-server-edge.ts", name: "semiotic-server-edge", analyze: false, minify },
-    { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-ai-core.ts", name: "semiotic-ai-core", analyze: false, minify, serverOnly: true },
-    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
-    { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-rough.ts", name: "rough", analyze: false, minify },
-    { input: "src/components/semiotic-controls.ts", name: "controls", analyze: false, minify, clientOnly: true },
+    {
+      input: "src/components/semiotic-server.ts",
+      name: "server",
+      analyze: false,
+      minify,
+      serverOnly: true
+    },
+    {
+      input: "src/components/semiotic-server-node.ts",
+      name: "semiotic-server-node",
+      analyze: false,
+      minify,
+      serverOnly: true
+    },
+    {
+      input: "src/components/semiotic-server-edge.ts",
+      name: "semiotic-server-edge",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-ai.ts",
+      name: "semiotic-ai",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-ai-core.ts",
+      name: "semiotic-ai-core",
+      analyze: false,
+      minify,
+      serverOnly: true
+    },
+    {
+      input: "src/components/semiotic-data.ts",
+      name: "semiotic-data",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-geo.ts",
+      name: "geo",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-rough.ts",
+      name: "rough",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-controls.ts",
+      name: "controls",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
     // `semiotic-themes`, `semiotic-utils`, and `semiotic-recipes` are split
     // into core and react slices so pure-only consumers can avoid React-hook
-    // imports while preserving old facades.
-    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
-    { input: "src/components/semiotic-themes-core.ts", name: "semiotic-themes-core", analyze: false, minify },
-    { input: "src/components/semiotic-themes-react.ts", name: "semiotic-themes-react", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
-    { input: "src/components/semiotic-utils-core.ts", name: "semiotic-utils-core", analyze: false, minify },
-    { input: "src/components/semiotic-utils-react.ts", name: "semiotic-utils-react", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify },
-    { input: "src/components/semiotic-recipes-core.ts", name: "semiotic-recipes-core", analyze: false, minify },
-    { input: "src/components/semiotic-recipes-react.ts", name: "semiotic-recipes-react", analyze: false, minify, clientOnly: true },
+    // imports while preserving old mixed facades. The utils/recipes facades
+    // still re-export their React slices, so they must retain the client
+    // boundary; only their `/core` entries are RSC-safe.
+    {
+      input: "src/components/semiotic-themes.ts",
+      name: "semiotic-themes",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-themes-core.ts",
+      name: "semiotic-themes-core",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-themes-react.ts",
+      name: "semiotic-themes-react",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-utils.ts",
+      name: "semiotic-utils",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-utils-core.ts",
+      name: "semiotic-utils-core",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-utils-react.ts",
+      name: "semiotic-utils-react",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-recipes.ts",
+      name: "semiotic-recipes",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-recipes-core.ts",
+      name: "semiotic-recipes-core",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-recipes-react.ts",
+      name: "semiotic-recipes-react",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
     // Unstable browser preview surface for adapters and React components.
     // The pure VACP subpath stays in the neutral graph for headless/server
     // hosts without making the mixed experimental facade RSC-callable.
-    { input: "src/components/semiotic-experimental.ts", name: "semiotic-experimental", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-experimental-vacp.ts", name: "semiotic-experimental-vacp", analyze: false, minify },
+    {
+      input: "src/components/semiotic-experimental.ts",
+      name: "semiotic-experimental",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-experimental-vacp.ts",
+      name: "semiotic-experimental-vacp",
+      analyze: false,
+      minify
+    },
     // `semiotic-value` is a plain-React HOC bundle — single component
     // (BigNumber) plus pure formatting/threshold helpers. Client-only
     // because BigNumber uses useState/useEffect/useImperativeHandle.
-    { input: "src/components/semiotic-value.ts", name: "semiotic-value", analyze: false, minify, clientOnly: true }
+    {
+      input: "src/components/semiotic-value.ts",
+      name: "semiotic-value",
+      analyze: false,
+      minify,
+      clientOnly: true
+    }
   ]
 
   const bundledEntries = bundles.map(applyGeneratedMetadata)
@@ -634,28 +1028,102 @@ async function build() {
     `Bundling ESM shared groups (client=${Object.keys(clientEntries).length}, ` +
       `server=${Object.keys(serverEntries).length}, neutral=${Object.keys(neutralEntries).length})`
   )
+  // Keep interoperable chart/AI/React exports in one graph so ThemeProvider,
+  // selection hooks, and other stateful modules retain a single identity for
+  // multi-subpath consumers. Small standalone client entries get a separate
+  // graph. Mixed and React-only utility facades are written below as static
+  // pass-through modules to canonical client entries; treating every facade as
+  // independent bundle entries would fragment the primary graph by every
+  // possible entry-reachability combination and inflate cold gzip cost.
+  const auxiliaryClientEntryNames = new Set([
+    "controls",
+    "semiotic-realtime-react",
+    "semiotic-value"
+  ])
+  const passThroughClientEntryNames = new Set([
+    "realtime",
+    "semiotic-themes-react",
+    "semiotic-utils",
+    "semiotic-utils-react",
+    "semiotic-recipes",
+    "semiotic-recipes-react",
+    "semiotic-experimental"
+  ])
+  const primaryClientEntries = Object.fromEntries(
+    Object.entries(clientEntries).filter(
+      ([name]) =>
+        !auxiliaryClientEntryNames.has(name) &&
+        !passThroughClientEntryNames.has(name)
+    )
+  )
+  primaryClientEntries["semiotic-client-shared"] =
+    "src/components/semiotic-client-shared.ts"
+  const auxiliaryClientEntries = Object.fromEntries(
+    Object.entries(clientEntries).filter(([name]) =>
+      auxiliaryClientEntryNames.has(name)
+    )
+  )
+  // Stateless React helpers do not belong in the context-identity anchor.
+  // Auxiliary entries keep public facades small without fragmenting every
+  // chart-family graph by another entry-reachability combination.
+  auxiliaryClientEntries["semiotic-client-responsive"] =
+    "src/components/stream/useResponsiveSize.ts"
+  auxiliaryClientEntries["semiotic-client-glyph"] =
+    "src/components/recipes/recipeGlyph.tsx"
+  auxiliaryClientEntries["semiotic-experimental-auxiliary"] =
+    "src/components/internal/semioticExperimentalEsmAuxiliary.ts"
+  // The bridge itself is experimental and otherwise partitions every stable
+  // chart/AI chunk. Bundle it with auxiliary clients, but resolve its two
+  // context-bearing selectors through the canonical primary client anchor so
+  // it still observes the nearest LinkedCharts providers.
+  auxiliaryClientEntries["semiotic-experimental-react-shared"] =
+    "src/components/ai/SemioticVACPBridge.tsx"
   await createSharedEsmGroup({
-    entries: clientEntries,
+    entries: primaryClientEntries,
     minify,
     clientOnly: true,
-    groupName: "client",
-    analyze,
+    groupName: "client-primary",
+    analyze
+  })
+  await createSharedEsmGroup({
+    entries: auxiliaryClientEntries,
+    minify,
+    clientOnly: true,
+    groupName: "client-auxiliary",
+    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin()]
   })
   await createSharedEsmGroup({
     entries: serverEntries,
     minify,
     serverOnly: true,
-    groupName: "server",
+    groupName: "server"
   })
   await createSharedEsmGroup({
     entries: neutralEntries,
     minify,
-    groupName: "neutral",
+    groupName: "neutral"
   })
+  writeClientPassThroughFacades()
 
-  // ── CJS: fat per-entry (no cross-entry chunk sharing) ───────────────────
-  console.log(`Bundling ${bundledEntries.length} CJS entry points with concurrency ${bundleConcurrency}`)
-  await createCjsBundlesWithConcurrency(bundledEntries, bundleConcurrency)
+  // ── CJS: one client namespace graph + independent non-client entries ─────
+  // CommonJS cannot split chunks. Building every browser subpath separately
+  // duplicates module-scoped React contexts, so a provider from one `require`
+  // path cannot reach a chart from another. Bundle all client namespaces once
+  // and emit tiny public facades that select the requested namespace.
+  const clientCjsBundles = bundledEntries.filter((bundle) => bundle.clientOnly)
+  const standaloneCjsBundles = bundledEntries.filter(
+    (bundle) => !bundle.clientOnly
+  )
+  await createCjsBundle({
+    input: "src/components/internal/semioticClientCjsShared.ts",
+    name: "semiotic-client-cjs-shared",
+    minify
+  })
+  writeClientCjsFacades(clientCjsBundles)
+  console.log(
+    `Bundling ${standaloneCjsBundles.length} standalone CJS entry points with concurrency ${bundleConcurrency}`
+  )
+  await createCjsBundlesWithConcurrency(standaloneCjsBundles, bundleConcurrency)
 
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })
@@ -686,7 +1154,7 @@ async function build() {
  *   is not defined", etc.).
  *
  * - **Neither** — agnostic. Pure-function or preview bundles
- *   (`semiotic/data`, `semiotic/recipes`, `semiotic/experimental/vacp`) contain
+ *   (`semiotic/data`, `semiotic/recipes/core`, `semiotic/experimental/vacp`) contain
  *   no client-only React component code, so they neither need nor harm from
  *   the directive. Skip them.
  *
@@ -706,28 +1174,52 @@ function assertDirectivePlacement(bundles) {
       const head = readFileSync(path, "utf8").slice(0, 64)
       const hasDirective = /^["']use client["'];/.test(head)
       if (b.serverOnly && hasDirective) {
-        failures.push({ path, problem: 'server-only bundle carries "use client"' })
+        failures.push({
+          path,
+          problem: 'server-only bundle carries "use client"'
+        })
       } else if (b.clientOnly && !hasDirective) {
-        failures.push({ path, problem: 'client-only bundle missing "use client" directive' })
+        failures.push({
+          path,
+          problem: 'client-only bundle missing "use client" directive'
+        })
       }
     }
   }
   if (failures.length === 0) {
-    console.log("\u2705 directive placement verified (server bundles clean, client bundles tagged)")
+    console.log(
+      "\u2705 directive placement verified (server bundles clean, client bundles tagged)"
+    )
     return
   }
   console.error("\u274c directive placement check failed:")
-  for (const { path, problem } of failures) console.error(`   - ${path}: ${problem}`)
-  console.error("\nFor server-only bundle failures: a transitive import pulled a client-tagged source file in. Audit the entry point's import graph.")
-  console.error("For client-only bundle failures: useClientPlugin missed flagging a module — likely the leading-directive detection. Inspect hasLeadingUseClientDirective().")
+  for (const { path, problem } of failures)
+    console.error(`   - ${path}: ${problem}`)
+  console.error(
+    "\nFor server-only bundle failures: a transitive import pulled a client-tagged source file in. Audit the entry point's import graph."
+  )
+  console.error(
+    "For client-only bundle failures: useClientPlugin missed flagging a module — likely the leading-directive detection. Inspect hasLeadingUseClientDirective()."
+  )
   process.exit(1)
 }
 
-build()
+const buildPromise = isDeclarationsOnly
+  ? Promise.resolve().then(() => {
+      // A scoped declaration build must not trust stale generated output: an
+      // entry removed from source should become a hard missing-file failure in
+      // API/package checks. Preserve JavaScript bundles while clearing only
+      // declaration artifacts before tsc recreates the complete graph.
+      cleanDeclarationArtifacts()
+      buildDeclarations()
+    })
+  : build()
+
+buildPromise
   .then(() => {
     process.exit(0)
   })
-  .catch(err => {
+  .catch((err) => {
     console.error(err)
     process.exit(1)
   })

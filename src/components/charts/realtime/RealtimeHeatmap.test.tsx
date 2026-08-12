@@ -1,9 +1,10 @@
 
 import React from "react"
-import { render, act } from "@testing-library/react"
+import { render, act, waitFor } from "@testing-library/react"
 import { RealtimeHeatmap } from "./RealtimeHeatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import { getSequentialInterpolator } from "../shared/colorPalettes"
 
 describe("RealtimeHeatmap", () => {
   let cleanup: () => void
@@ -97,5 +98,59 @@ describe("RealtimeHeatmap", () => {
 
     expect(customColorScale).toHaveBeenCalledWith(2)
     expect(customColorScale).toHaveBeenCalledWith(7)
+  })
+
+  it.each(["__proto__", "constructor", "toString"])(
+    "falls back safely for prototype-like scheme %s",
+    async (colorScheme) => {
+      const { container } = render(
+        <TooltipProvider>
+          <RealtimeHeatmap
+            data={[{ x: 2, value: 2 }, { x: 8, value: 7 }]}
+            timeAccessor="x"
+            valueAccessor="value"
+            timeExtent={[0, 10]}
+            valueExtent={[0, 10]}
+            aggregation="sum"
+            colorScheme={colorScheme}
+            showLegend
+          />
+        </TooltipProvider>
+      )
+
+      const blues = getSequentialInterpolator(undefined)
+      await waitFor(() => {
+        const stopColors = Array.from(
+          container.querySelectorAll("stop"),
+          (stop) => stop.getAttribute("stop-color")
+        )
+        // The default side legend runs from the high end to the low end.
+        // Asserting both endpoints proves the unsafe name selected the full
+        // Blues interpolator rather than an inherited object property.
+        expect(stopColors[0]).toBe(blues(1))
+        expect(stopColors.at(-1)).toBe(blues(0))
+      })
+    }
+  )
+
+  it("renders an interactive continuous legend over the aggregated value domain", async () => {
+    const { container, getByText } = render(
+      <TooltipProvider>
+        <RealtimeHeatmap
+          data={[{ x: 5, y: 5, value: 2 }, { x: 95, y: 95, value: 7 }]}
+          timeAccessor="x"
+          valueAccessor="value"
+          timeExtent={[0, 100]}
+          valueExtent={[0, 100]}
+          aggregation="sum"
+          showLegend
+          legendInteraction="highlight"
+        />
+      </TooltipProvider>
+    )
+    await waitFor(() => {
+      expect(getByText("sum")).toBeTruthy()
+      expect(container.querySelectorAll(".semiotic-gradient-legend-bin")).toHaveLength(5)
+    })
   })
 })

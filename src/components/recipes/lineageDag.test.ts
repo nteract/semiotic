@@ -154,4 +154,61 @@ describe("lineageDagLayout", () => {
     const byId = Object.fromEntries(r.sceneNodes!.map((n) => [n.id!, n as NetworkRectNode]))
     expect(byId.src.x).toBeLessThan(byId.snk.x)
   })
+
+  it("treats inherited object keys as unmapped partition and edge colors", () => {
+    const prototypeNodes = [
+      {
+        id: "source",
+        x: 0,
+        y: 0,
+        data: {
+          id: "source",
+          x: 0,
+          y: 0,
+          partition: "constructor",
+          semantic: "source",
+          label: "source"
+        }
+      },
+      {
+        id: "sink",
+        x: 1,
+        y: 0,
+        data: {
+          id: "sink",
+          x: 1,
+          y: 0,
+          partition: "toString",
+          semantic: "sink",
+          label: "sink"
+        }
+      }
+    ] as unknown as RealtimeNode[]
+    const prototypeEdges = [
+      {
+        source: "source",
+        target: "sink",
+        data: {
+          source: "source",
+          target: "sink",
+          edgeType: "constructor"
+        }
+      }
+    ] as unknown as RealtimeEdge[]
+
+    const result = lineageDagLayout(
+      makeCtx(
+        { layerCount: 2, maxLayerSize: 1 },
+        prototypeNodes,
+        prototypeEdges
+      )
+    )
+
+    for (const node of result.sceneNodes ?? []) {
+      expect(node.style.fill).toBe("#5a5a6a")
+    }
+    expect(result.sceneEdges?.[0]?.style.stroke).toBe(
+      "var(--semiotic-border, #6b6b7d)"
+    )
+  })
 })

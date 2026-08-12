@@ -43,7 +43,8 @@ import {
   chordDiagram,
   treeDiagram,
   treemap,
-  circlePack
+  circlePack,
+  orbitDiagram
 } from "./serverChartConfigsNetwork"
 import {
   choroplethMap,
@@ -113,6 +114,7 @@ export const CHART_CONFIGS = {
   TreeDiagram: treeDiagram,
   Treemap: treemap,
   CirclePack: circlePack,
+  OrbitDiagram: orbitDiagram,
   ChoroplethMap: choroplethMap,
   ProportionalSymbolMap: proportionalSymbolMap,
   FlowMap: flowMap,

@@ -200,13 +200,56 @@ if (
     "release.yml must call publish-mcp-registry.yml after the npm publish job.",
   )
 }
+const registryJob = releaseWorkflow.slice(
+  releaseWorkflow.indexOf("  publish-mcp-registry:"),
+)
+if (!/^\s+needs:\s*\[[^\]]*\bpublish\b[^\]]*\]/m.test(registryJob)) {
+  fail(
+    "release.yml Registry publication job must depend on the npm publish job.",
+  )
+}
+if (!/^\s+needs:\s*\[[^\]]*\bverify-stable-mcp\b[^\]]*\]/m.test(registryJob)) {
+  fail(
+    "release.yml Registry publication job must depend on live stable MCP verification.",
+  )
+}
 if (
-  !/publish-mcp-registry:\s*\n(?:[^\n]*\n)*?\s+needs:\s+publish\b/.test(
-    releaseWorkflow,
+  !publisherWorkflow.includes("--expected-package-version \"$EXPECTED_VERSION\"") ||
+  !publisherWorkflow.includes("--expected-channel stable")
+) {
+  fail(
+    "publish-mcp-registry.yml must verify that the stable hosted endpoint serves EXPECTED_VERSION before publication.",
+  )
+}
+if (
+  !releaseWorkflow.includes(
+    "npm run check:mcp-registry-live -- --allow-stale-remote",
   )
 ) {
   fail(
-    "release.yml Registry publication job must depend on the npm publish job.",
+    "release.yml must use the narrowly scoped stale-remote allowance only before target deployment.",
+  )
+}
+if (publisherWorkflow.includes("--allow-stale-remote")) {
+  fail(
+    "publish-mcp-registry.yml must never allow a stale hosted package version.",
+  )
+}
+if (
+  !releaseWorkflow.includes("needs: [publish, deploy-stable-mcp]") ||
+  !releaseWorkflow.includes('--expected-package-version "$VERSION"') ||
+  !releaseWorkflow.includes('--expected-build-id "release-v${VERSION}"')
+) {
+  fail(
+    "release.yml must run exact hosted package/build identity verification after stable deployment.",
+  )
+}
+if (
+  publisherWorkflow.includes("releases/latest/download") ||
+  !publisherWorkflow.includes("sha256sum --check --strict")
+) {
+  fail(
+    "publish-mcp-registry.yml must download a version-pinned mcp-publisher archive and verify its checksum.",
   )
 }
 

@@ -42,6 +42,8 @@ export const connectorCanvasRenderer = (
 
     // Draw stroke lines
     for (const node of segments) {
+      const strokeWidth = node.style.strokeWidth ?? 1
+      if (strokeWidth <= 0 || node.style.stroke === "none") continue
       ctx.beginPath()
       ctx.moveTo(node.x1, node.y1)
       ctx.lineTo(node.x2, node.y2)
@@ -52,7 +54,7 @@ export const connectorCanvasRenderer = (
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke)
         || resolveCanvasFill(ctx, node.style.fill, "")
         || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
-      ctx.lineWidth = node.style.strokeWidth || 1
+      ctx.lineWidth = strokeWidth
       ctx.globalAlpha = node.style.opacity ?? 0.5
       ctx.stroke()
       ctx.globalAlpha = 1

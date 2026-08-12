@@ -3,14 +3,14 @@
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
-  type StreamPhysicsFrameHandle,
-  type StreamPhysicsFrameProps
+  type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildGaltonBoardPhysics,
+  composePhysicsBodyStyle,
   generateGaltonMechanicalSamples,
   type GaltonBoardProjectionMetadata,
   physicsChartArea,
@@ -18,7 +18,10 @@ import {
   styleFromColorAccessor
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
+import {
+  usePhysicsHocHandle,
+  type PhysicsFrameHandle
+} from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -35,24 +38,16 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import type { ChartMode } from "../shared/types"
+import {
+  galtonBoardOverlay,
+  type GaltonBoardReferenceLine
+} from "./physicsProjectionOverlays"
 
-type ProjectionRow = {
-  label: string
-  value: number
-}
-
-export interface GaltonBoardReferenceLine {
-  value: number
-  label?: React.ReactNode
-  color?: string
-  className?: string
-  strokeDasharray?: string
-  strokeWidth?: number
-  labelPosition?: "top" | "bottom"
-}
+export type { GaltonBoardReferenceLine } from "./physicsProjectionOverlays"
 
 export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode" | "selection">,
+  extends
+    Omit<BaseChartProps, "margin" | "mode" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -102,149 +97,6 @@ function normalizeValueExtent(
   return a <= b ? [a, b] : [b, a]
 }
 
-function galtonBoardOverlay(
-  rows: ProjectionRow[],
-  bins: number,
-  enabled: boolean | undefined,
-  metadata: GaltonBoardProjectionMetadata | undefined,
-  referenceLines: GaltonBoardChartProps["referenceLines"]
-): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  const referenceLineArray = Array.isArray(referenceLines)
-    ? referenceLines
-    : referenceLines
-      ? [referenceLines]
-      : []
-  if (enabled === false && referenceLineArray.length === 0) return undefined
-  return ({ size }) => {
-    const resolvedSize: [number, number] = [
-      Number(size[0]) || 700,
-      Number(size[1]) || 420
-    ]
-    const area = physicsChartArea(resolvedSize)
-    const resolvedBins = Math.max(2, Math.round(bins))
-    const laneWidth = area.plot.width / resolvedBins
-    const yBottom = area.plot.y + area.plot.height
-    const maxValue = Math.max(1, ...rows.map((row) => row.value))
-    const showScaffold = enabled !== false
-    const [domainStart, domainEnd] = metadata?.valueExtent ?? [0, resolvedBins]
-    const domainSpan = domainEnd === domainStart ? 1 : domainEnd - domainStart
-    // The ghost curve traces the exact settled count per bin — the "truth
-    // layer" the physical pile of units assembles itself into as it falls.
-    const curve = rows
-      .map((row, index) => {
-        const x = area.plot.x + (index + 0.5) * laneWidth
-        const y = yBottom - (row.value / maxValue) * area.plot.height * 0.9
-        return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`
-      })
-      .join(" ")
-
-    return (
-      <svg
-        aria-hidden="true"
-        data-testid="galton-board-structure-overlay"
-        width={resolvedSize[0]}
-        height={resolvedSize[1]}
-        viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-      >
-        {showScaffold ? (
-          <>
-            {Array.from({ length: resolvedBins + 1 }, (_, index) => {
-              const x = area.plot.x + index * laneWidth
-              return (
-                <line
-                  key={`bin-wall-${index}`}
-                  data-testid="galton-board-bin-wall"
-                  x1={x}
-                  x2={x}
-                  y1={area.plot.y}
-                  y2={yBottom}
-                  stroke="var(--semiotic-border, #d1d5db)"
-                  strokeOpacity={0.28}
-                  strokeWidth={1}
-                />
-              )
-            })}
-            <line
-              x1={area.plot.x}
-              x2={area.plot.x + area.plot.width}
-              y1={yBottom}
-              y2={yBottom}
-              stroke="var(--semiotic-border, #d1d5db)"
-              strokeWidth={1.5}
-            />
-            <path
-              d={curve}
-              fill="none"
-              stroke="var(--semiotic-primary, #4e79a7)"
-              strokeOpacity={0.7}
-              strokeWidth={2}
-              strokeLinejoin="round"
-            />
-            {rows.map((row, index) => {
-              if (row.value <= 0) return null
-              const x = area.plot.x + (index + 0.5) * laneWidth
-              const y = yBottom - (row.value / maxValue) * area.plot.height * 0.9
-              return (
-                <text
-                  key={`${row.label}-${index}`}
-                  x={x}
-                  y={Math.max(area.plot.y + 10, y - 6)}
-                  textAnchor="middle"
-                  fill="var(--semiotic-text-secondary, #555)"
-                  fontSize={10}
-                  fontWeight={700}
-                >
-                  {row.value}
-                </text>
-              )
-            })}
-          </>
-        ) : null}
-        {referenceLineArray.map((line, index) => {
-          const value = Number(line.value)
-          if (!Number.isFinite(value)) return null
-          const ratio = Math.max(0, Math.min(1, (value - domainStart) / domainSpan))
-          const x = area.plot.x + ratio * area.plot.width
-          const color = line.color ?? "var(--semiotic-warning, #f28e2b)"
-          const labelY =
-            line.labelPosition === "bottom"
-              ? Math.min(resolvedSize[1] - 8, yBottom + 16)
-              : area.plot.y + 16
-          return (
-            <g
-              key={`galton-reference-${index}-${value}`}
-              className={line.className}
-              data-testid="galton-board-reference-line"
-            >
-              <line
-                x1={x}
-                x2={x}
-                y1={area.plot.y + 8}
-                y2={yBottom - 4}
-                stroke={color}
-                strokeDasharray={line.strokeDasharray ?? "6 5"}
-                strokeWidth={line.strokeWidth ?? 2}
-              />
-              {line.label == null ? null : (
-                <text
-                  x={Math.min(area.plot.x + area.plot.width - 4, x + 6)}
-                  y={labelY}
-                  fill={color}
-                  fontSize={10}
-                  fontWeight={700}
-                >
-                  {line.label}
-                </text>
-              )}
-            </g>
-          )
-        })}
-      </svg>
-    )
-  }
-}
-
 /**
  * Physics-backed Galton board chart that drops values through seeded pegs into a settled distribution.
  *
@@ -288,8 +140,6 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     pegRows,
     referenceLines,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed = 1,
     valueExtent
   } = props
@@ -310,7 +160,8 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     accessibleTable: modeAccessibleTable
   } = layoutMode
   const resolvedBallRadius =
-    ballRadius ?? (chartMode === "sparkline" ? 1.5 : chartMode === "context" ? 4 : 6)
+    ballRadius ??
+    (chartMode === "sparkline" ? 1.5 : chartMode === "context" ? 4 : 6)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const resolvedPegRows = Math.max(1, Math.round(pegRows ?? bins - 1))
   const resolvedValueExtent = useMemo(
@@ -352,7 +203,15 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         size: chartSize,
         valueExtent: resolvedValueExtent
       }),
-    [bins, chartData, chartSize, resolvedBallRadius, resolvedValueExtent, seed, valueAccessor]
+    [
+      bins,
+      chartData,
+      chartSize,
+      resolvedBallRadius,
+      resolvedValueExtent,
+      seed,
+      valueAccessor
+    ]
   )
   const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
 
@@ -380,7 +239,14 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         spawns: [spawn as PhysicsQueuedSpawn]
       }
     },
-    [bins, chartSize, resolvedBallRadius, resolvedValueExtent, seed, valueAccessor]
+    [
+      bins,
+      chartSize,
+      resolvedBallRadius,
+      resolvedValueExtent,
+      seed,
+      valueAccessor
+    ]
   )
   usePhysicsHocHandle(ref, {
     frameRef,
@@ -392,15 +258,21 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     simulationMode === "mechanical" && colorBy == null
       ? ("side" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
-  const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
-      styleRules,
-      valueAccessor: valueAccessor as string | ((d: Datum) => unknown),
-    }),
+  const generatedBodyStyle = useMemo(
+    () =>
+      styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+        styleRules,
+        valueAccessor: valueAccessor as string | ((d: Datum) => unknown)
+      }),
     [resolvedColorBy, styleRules, valueAccessor]
   )
+  const bodyStyle = useMemo(
+    () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
+    [generatedBodyStyle, frameProps?.bodyStyle]
+  )
   const semanticItems = useMemo(
-    () => projectionRowsToSemanticItems(layout.projectionRows, chartSize, "bin"),
+    () =>
+      projectionRowsToSemanticItems(layout.projectionRows, chartSize, "bin"),
     [chartSize, layout.projectionRows]
   )
 
@@ -453,7 +325,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     "GaltonBoardChart",
     chartSize,
     <StreamPhysicsFrame
-      key={rerun.rerunKey}
+      key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
@@ -467,11 +339,12 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       initialSpawns={layout.initialSpawns}
       initialSpawnPacing={layout.initialSpawnPacing}
       paused={paused}
-      responsiveHeight={responsiveHeight}
-      responsiveWidth={responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       size={chartSize}
       bodyStyle={bodyStyle}
-    />
+    />,
+    layoutMode
   )
 })
 

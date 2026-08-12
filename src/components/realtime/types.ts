@@ -1,8 +1,13 @@
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import type { ScaleBand, ScaleLinear } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
+/**
+ * Direction of the streaming time axis. `left` and `right` are the supported
+ * XY layouts. `up` and `down` remain accepted for 3.x source compatibility
+ * and safely use the default rightward layout.
+ */
 export type ArrowOfTime = "up" | "down" | "left" | "right"
 export type WindowMode = "sliding" | "growing"
 export type ThresholdType = "greater" | "lesser"
@@ -12,6 +17,7 @@ export interface LineStyle {
   strokeWidth?: number
   strokeDasharray?: string
   opacity?: number
+  cursor?: CSSProperties["cursor"]
 }
 
 /**
@@ -124,6 +130,7 @@ export interface BarStyle {
   strokeWidth?: number
   opacity?: number
   gap?: number
+  cursor?: CSSProperties["cursor"]
 }
 
 export interface WaterfallStyle {
@@ -135,6 +142,7 @@ export interface WaterfallStyle {
   stroke?: string
   strokeWidth?: number
   opacity?: number
+  cursor?: CSSProperties["cursor"]
 }
 
 export interface SwarmStyle {
@@ -143,6 +151,7 @@ export interface SwarmStyle {
   opacity?: number
   stroke?: string
   strokeWidth?: number
+  cursor?: CSSProperties["cursor"]
 }
 
 export interface RealtimeFrameProps {

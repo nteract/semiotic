@@ -179,6 +179,7 @@ const realtimeHeatmapProps = [
   { name: "aggregation", type: '"count" | "sum" | "mean"', required: false, default: '"count"', description: "How values are aggregated within each grid cell." },
   { name: "colorScheme", type: "string", required: false, default: 'theme sequential or "blues"', description: 'Sequential color scheme, or "custom" with customColorScale.' },
   { name: "customColorScale", type: "(value: number) => string", required: false, default: null, description: 'Custom value-to-color scale used when colorScheme is "custom".' },
+  { name: "cursor", type: "CSS cursor", required: false, default: null, description: 'Presentation-only cursor for cells, such as "pointer". It does not add click or keyboard behavior.' },
   { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show canvas-drawn axes." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on cells." },

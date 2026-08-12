@@ -106,7 +106,7 @@ const stylingProps = [
     required: false,
     default: "{}",
     description:
-      "Inline SVG style applied to marks. When a function, receives the data element. Use for fill, stroke, opacity, etc. On HOC charts, pass via frameProps (e.g. frameProps={{ pieceStyle: fn }} for ordinal, frameProps={{ pointStyle: fn }} for XY). Omitting 'fill' lets colorBy colors show through.",
+      "Retained mark style applied across canvas, SVG, and static rendering. When a function, receives the data element. Use for fill, stroke, opacity, cursor, etc. On HOC charts, pass via frameProps (e.g. frameProps={{ pieceStyle: fn }} for ordinal, frameProps={{ pointStyle: fn }} for XY). Omitting 'fill' lets colorBy colors show through.",
   },
   {
     name: "className / lineClass / pointClass",
@@ -122,7 +122,7 @@ const stylingProps = [
     required: false,
     default: "null",
     description:
-      "SVG elements rendered on top of all data marks. Can be a function receiving { size, margin }. Coordinates are in the chart area coordinate space (origin at top-left of chart area, not the SVG edge).",
+      "SVG elements rendered on top of all data marks. Can be a function receiving { size, margin, scales }. Coordinates are in the chart area coordinate space (origin at top-left of chart area, not the SVG edge).",
   },
   {
     name: "backgroundGraphics",
@@ -130,7 +130,7 @@ const stylingProps = [
     required: false,
     default: "null",
     description:
-      "SVG elements rendered behind all data marks. Can be a function receiving { size, margin }. Same coordinate space as foregroundGraphics.",
+      "SVG elements rendered behind all data marks. Can be a function receiving { size, margin, scales }. Same coordinate space as foregroundGraphics.",
   },
   {
     name: "renderMode",
@@ -471,6 +471,20 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
       strokeWidth: d.above ? 1.5 : 0,
     }),
   }}
+/>
+
+// Cursor intent can be datum-specific and works in canvas or SVG.
+// It is presentation only, so pair it with the frame's interaction API.
+<StreamNetworkFrame
+  nodes={nodes}
+  edges={edges}
+  nodeStyle={(d) => ({
+    fill: colorScale(d.group),
+    cursor: d.url ? "pointer" : "default",
+  })}
+  customClickBehavior={(d) => {
+    if (d?.url) window.location.assign(d.url)
+  }}
 />`}
         language="jsx"
       />
@@ -513,7 +527,9 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         Every Frame has two SVG layers for custom graphics:{" "}
         <code>backgroundGraphics</code> (behind data marks) and{" "}
         <code>foregroundGraphics</code> (on top). Pass static SVG or a function
-        receiving <code>{`{ size, margin }`}</code>.
+        receiving <code>{`{ size, margin, scales }`}</code>. Resolved frame
+        scales let overlays share the exact data-to-pixel mapping used by the
+        marks and axes.
       </p>
 
       <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -545,9 +561,9 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
               </g>
             )
           },
-          foregroundGraphics: ({ size, margin }) => {
+          foregroundGraphics: ({ size, margin, scales }) => {
             const w = size[0] - margin.left - margin.right
-            const yPos = (size[1] - margin.top - margin.bottom) * 0.42
+            const yPos = scales?.y?.(20) ?? (size[1] - margin.top - margin.bottom) * 0.42
             return (
               <g>
                 <line x1={0} y1={yPos} x2={w} y2={yPos} stroke="#E0488B" strokeWidth={1} strokeDasharray="4 4" />
@@ -584,9 +600,9 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
     </g>
   )
 }`,
-          foregroundGraphics: `({ size, margin }) => {
+          foregroundGraphics: `({ size, margin, scales }) => {
   const w = size[0] - margin.left - margin.right
-  const yPos = (size[1] - margin.top - margin.bottom) * 0.42
+  const yPos = scales?.y?.(20) ?? (size[1] - margin.top - margin.bottom) * 0.42
   return (
     <g>
       <line x1={0} y1={yPos} x2={w} y2={yPos}

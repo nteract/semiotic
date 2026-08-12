@@ -3,6 +3,7 @@ import type {
   RectSceneNode,
   SceneAccessibilityMetadata,
   SceneDatum,
+  Style,
 } from "./types"
 import type { GeoAreaSceneNode } from "./geoTypes"
 import type {
@@ -70,6 +71,8 @@ export interface HitTargetPointProps {
   id?: string | number
   /** Hit + keyboard-focus radius in px. @default {@link DEFAULT_HIT_RADIUS} */
   r?: number
+  /** Presentation-only cursor for the matching overlay-drawn mark. */
+  cursor?: Style["cursor"]
 }
 
 /**
@@ -94,7 +97,7 @@ export function hitTargetPoint(props: HitTargetPointProps): PointSceneNode {
     x: props.x,
     y: props.y,
     r: props.r ?? DEFAULT_HIT_RADIUS,
-    style: { ...TRANSPARENT_STYLE },
+    style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
     datum: props.datum,
     pointId: id,
     _transitionKey: id,
@@ -136,6 +139,8 @@ export interface GeoAreaHitTargetProps {
   group?: string
   /** Screen-space area in px^2. Defaults to the bounding-box area. */
   screenArea?: number
+  /** Presentation-only cursor for the matching overlay-drawn area. */
+  cursor?: Style["cursor"]
 }
 
 /**
@@ -165,7 +170,7 @@ export function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
     centroid: props.centroid,
     bounds: props.bounds,
     screenArea: props.screenArea ?? Math.abs((x1 - x0) * (y1 - y0)),
-    style: { ...TRANSPARENT_STYLE },
+    style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
     datum: props.datum,
     group: props.group,
     interactive: true,
@@ -190,6 +195,8 @@ export interface HitTargetRectProps {
   id?: string | number
   /** Optional series/category key for grouped selection + legend interaction. */
   group?: string
+  /** Presentation-only cursor for the matching overlay-drawn mark. */
+  cursor?: Style["cursor"]
 }
 
 /**
@@ -205,7 +212,7 @@ export function hitTargetRect(props: HitTargetRectProps): RectSceneNode {
     y: props.y,
     w: props.width,
     h: props.height,
-    style: { ...TRANSPARENT_STYLE },
+    style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
     datum: props.datum,
     group: props.group,
     _transitionKey: idString(props.id),
@@ -230,6 +237,8 @@ export interface NetworkHitTargetCircleProps {
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   /** Accessible label and/or a curated data-table projection. */
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Presentation-only cursor for the matching overlay-drawn node. */
+  cursor?: Style["cursor"]
 }
 
 export interface NetworkHitTargetRectProps {
@@ -251,6 +260,8 @@ export interface NetworkHitTargetRectProps {
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   /** Accessible label and/or a curated data-table projection. */
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Presentation-only cursor for the matching overlay-drawn node. */
+  cursor?: Style["cursor"]
 }
 
 /**
@@ -292,7 +303,7 @@ export function networkHitTarget(
       y: props.y,
       w: props.width,
       h: props.height,
-      style: { ...TRANSPARENT_STYLE },
+      style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
       datum: props.datum,
       id,
       label: props.label,
@@ -305,7 +316,7 @@ export function networkHitTarget(
     cx: props.x,
     cy: props.y,
     r: props.r ?? DEFAULT_HIT_RADIUS,
-    style: { ...TRANSPARENT_STYLE },
+    style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
     datum: props.datum,
     id,
     label: props.label,
@@ -331,6 +342,8 @@ export interface NetworkEdgeHitTargetBaseProps {
    * @default true
    */
   interactive?: boolean
+  /** Presentation-only cursor for the matching overlay-drawn edge. */
+  cursor?: Style["cursor"]
 }
 
 export interface NetworkLineEdgeHitTargetProps
@@ -366,7 +379,7 @@ export function networkEdgeHitTarget(
   props: NetworkLineEdgeHitTargetProps | NetworkPathEdgeHitTargetProps,
 ): NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge {
   const common = {
-    style: { ...TRANSPARENT_STYLE },
+    style: { ...TRANSPARENT_STYLE, cursor: props.cursor },
     datum: props.datum,
     id: idString(props.id),
     label: props.label,

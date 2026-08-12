@@ -20,17 +20,31 @@ import type { Datum } from "./datumTypes"
 
 import { useCallback, useMemo, useState } from "react"
 import type { AxisChromeInput } from "../../legendLayout"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps, resolveMobileInteraction, distinctCategories } from "./hooks"
+import {
+  useColorScale,
+  useChartSelection,
+  useChartLegendAndMargin,
+  useLegendInteraction,
+  useThemeCategorical,
+  DEFAULT_COLOR,
+  getCrosshairProps,
+  resolveMobileInteraction,
+  distinctCategories
+} from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
-import { createColorScale, STREAMING_PALETTE } from "./colorUtils"
+import {
+  createColorScale,
+  resolveExplicitColor,
+  STREAMING_PALETTE
+} from "./colorUtils"
 import type {
   Accessor,
   SelectionConfig,
   LinkedHoverProp,
   HoverHighlightMode,
   MobileInteractionProp,
-  ResolvedMobileInteractionConfig,
+  ResolvedMobileInteractionConfig
 } from "./types"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -154,7 +168,8 @@ export interface ChartSetupResult {
   /** Props to spread into the stream frame for legend behavior */
   legendBehaviorProps: Record<string, unknown>
   /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
-  crosshairProps: { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
+  crosshairProps:
+    { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
   /**
    * Selection config merged with theme-level defaults. HOCs should pass this
    * to `wrapStyleWithSelection` instead of the raw `selection` prop so that
@@ -210,7 +225,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     width,
     height,
     hasTitle,
-    axisChrome,
+    axisChrome
   } = input
   const isPushMode = rawData === undefined
 
@@ -239,8 +254,12 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const [frameCategories, setFrameCategories] = useState<string[]>([])
 
   const onCategoriesChange = useCallback((categories: string[]) => {
-    setFrameCategories(prev => {
-      if (prev.length === categories.length && prev.every((v, i) => v === categories[i])) return prev
+    setFrameCategories((prev) => {
+      if (
+        prev.length === categories.length &&
+        prev.every((v, i) => v === categories[i])
+      )
+        return prev
       return categories
     })
   }, [])
@@ -248,10 +267,17 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // ── Selection hooks (always called) ────────────────────────────────────
   const colorByField = typeof colorBy === "string" ? colorBy : undefined
   const resolvedMobileInteraction = useMemo(
-    () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
-    [mobileInteraction, width, mobileSemantics],
+    () =>
+      resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
+    [mobileInteraction, width, mobileSemantics]
   )
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior,
+    customClickBehavior,
+    crosshairSourceId
+  } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields,
@@ -262,7 +288,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     onClick,
     hoverHighlight,
     colorByField,
-    mobileInteraction: resolvedMobileInteraction,
+    mobileInteraction: resolvedMobileInteraction
   })
 
   // ── Linked crosshair (x-position mode) ────────────────────────────────
@@ -283,7 +309,11 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   }, [isPushMode, frameCategories, allCategories])
 
   // ── Legend interaction ─────────────────────────────────────────────────
-  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
+  const legendState = useLegendInteraction(
+    legendInteraction,
+    colorBy,
+    activeCategories
+  )
 
   // ── Merge hover highlight > legend selection > cross-chart selection ───
   const effectiveSelectionHook = useMemo(() => {
@@ -311,16 +341,35 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const legendColorScale = useMemo<((v: string) => string) | undefined>(() => {
     if (colorScale) return colorScale
     if (!colorBy || activeCategories.length === 0) return undefined
-    const effectiveScheme: string | string[] = Array.isArray(colorScheme) && colorScheme.length > 0
-      ? colorScheme
-      : (typeof colorScheme === "string" && colorScheme.length > 0)
+    const effectiveScheme: string | string[] =
+      Array.isArray(colorScheme) && colorScheme.length > 0
         ? colorScheme
-        : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
+        : typeof colorScheme === "string" && colorScheme.length > 0
+          ? colorScheme
+          : themeCategorical && themeCategorical.length > 0
+            ? themeCategorical
+            : STREAMING_PALETTE
     const syntheticField = "__streamCat"
-    const syntheticData = activeCategories.map(cat => ({ [syntheticField]: cat }))
-    const fallbackScale = createColorScale(syntheticData, syntheticField, effectiveScheme)
-    return (v: string) => categoryColors?.[v] || fallbackScale(v) || "#999"
-  }, [colorScale, colorBy, activeCategories, colorScheme, themeCategorical, categoryColors])
+    const syntheticData = activeCategories.map((cat) => ({
+      [syntheticField]: cat
+    }))
+    const fallbackScale = createColorScale(
+      syntheticData,
+      syntheticField,
+      effectiveScheme
+    )
+    return (v: string) =>
+      (categoryColors ? resolveExplicitColor(categoryColors, v) : undefined) ??
+      fallbackScale(v) ??
+      "#999"
+  }, [
+    colorScale,
+    colorBy,
+    activeCategories,
+    colorScheme,
+    themeCategorical,
+    categoryColors
+  ])
 
   // ── Legend & margin ────────────────────────────────────────────────────
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
@@ -336,7 +385,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartWidth: width,
     legendLayout,
     hasTitle,
-    axisChrome,
+    axisChrome
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────
@@ -358,7 +407,19 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
       props.onCategoriesChange = onCategoriesChange
     }
     return props
-  }, [legend, legendPosition, legendLayout, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
+  }, [
+    legend,
+    legendPosition,
+    legendLayout,
+    legendInteraction,
+    legendState.onLegendHover,
+    legendState.onLegendClick,
+    legendState.highlightedCategory,
+    legendState.isolatedCategories,
+    isPushMode,
+    colorBy,
+    onCategoriesChange
+  ])
 
   // ── Loading / empty state (computed after all hooks) ───────────────────
   // Empty-state UI is driven by `rawData` (the user's original prop) so
@@ -369,9 +430,13 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // need to catch sparse-but-nonempty input like `[null, undefined]`
   // that fails to render anything; filter `rawData` itself for the
   // emptiness check so the user's array is the source of truth.
-  const emptyStateInput = Array.isArray(rawData) ? filterSparseArray(rawData) : rawData
+  const emptyStateInput = Array.isArray(rawData)
+    ? filterSparseArray(rawData)
+    : rawData
   const loadingEl = renderLoadingState(loading, width, height, loadingContent)
-  const emptyEl = loadingEl ? null : renderEmptyState(emptyStateInput, width, height, emptyContent)
+  const emptyEl = loadingEl
+    ? null
+    : renderEmptyState(emptyStateInput, width, height, emptyContent)
   const earlyReturn = loadingEl || emptyEl || null
 
   return {
@@ -390,7 +455,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     earlyReturn,
     legendBehaviorProps,
     crosshairProps,
-    resolvedSelection,
+    resolvedSelection
   }
 }
 

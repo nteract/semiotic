@@ -95,7 +95,8 @@ export function buildTreeScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity
+      opacity: userStyle.opacity,
+      cursor: userStyle.cursor
     }
 
     sceneNodes.push({
@@ -138,7 +139,8 @@ export function buildTreeScene(
       // Edge stroke: user > theme border (chart chrome) > theme secondary > #999.
       stroke: userStyle.stroke || config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
       strokeWidth: userStyle.strokeWidth ?? 1.5,
-      opacity: userStyle.opacity ?? edgeOpacity
+      opacity: userStyle.opacity ?? edgeOpacity,
+      cursor: userStyle.cursor
     }
 
     sceneEdges.push({
@@ -247,7 +249,8 @@ export function buildRectScene(
       strokeWidth: userStyle.strokeWidth ?? 1,
       opacity: userStyle.opacity,
       fillOpacity: userStyle.fillOpacity,
-      strokeOpacity: userStyle.strokeOpacity
+      strokeOpacity: userStyle.strokeOpacity,
+      cursor: userStyle.cursor
     }
 
     sceneNodes.push({
@@ -362,7 +365,8 @@ export function buildCircleScene(
       // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
       stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity ?? circleOpacity
+      opacity: userStyle.opacity ?? circleOpacity,
+      cursor: userStyle.cursor
     }
 
     sceneNodes.push({

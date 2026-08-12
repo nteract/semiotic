@@ -155,6 +155,7 @@ export class ForceLayoutWorkerSession {
     this.session = new ModuleWorkerSession({
       name: "Force layout",
       createWorker: () => worker,
+      terminateOnAbort: true,
       parseMessage: (data) => {
         const response = data as ForceWorkerWireResponse
         const { requestId, error } = parseModuleWorkerErrorField(response)

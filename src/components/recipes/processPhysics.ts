@@ -1020,4 +1020,3 @@ export {
   regionCountsToProjectionRows
 } from "./processAggregates"
 export type { RegionCountBucket, RegionCountMap } from "./processAggregates"
-export { stageTargetInVolume } from "./processVolumeGeometry"

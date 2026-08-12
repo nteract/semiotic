@@ -17,7 +17,10 @@ import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "./StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "./PhysicsPipelineStore"
-import type { PhysicsCanvasPaintContext } from "./StreamPhysicsTypes"
+import type {
+  PhysicsCanvasPaintContext,
+  StreamPhysicsFrameProps
+} from "./StreamPhysicsTypes"
 import { createPhysicsWorkerRuntime } from "./PhysicsWorkerRuntime"
 import type {
   PhysicsWorkerRequest,
@@ -48,7 +51,10 @@ function mutableReducedMotionPreference(initial = false) {
     addEventListener: (_type: string, listener: MediaQueryChangeListener) => {
       listeners.add(listener)
     },
-    removeEventListener: (_type: string, listener: MediaQueryChangeListener) => {
+    removeEventListener: (
+      _type: string,
+      listener: MediaQueryChangeListener
+    ) => {
       listeners.delete(listener)
     },
     addListener: (listener: MediaQueryChangeListener) => {
@@ -175,6 +181,7 @@ describe("StreamPhysicsFrame", () => {
   afterEach(() => {
     document.body.removeChild(container)
     cleanupCanvas()
+    vi.unstubAllGlobals()
     Object.defineProperty(globalThis, "Worker", {
       configurable: true,
       value: originalWorker
@@ -192,7 +199,9 @@ describe("StreamPhysicsFrame", () => {
       />
     )
 
-    expect(document.querySelector(".stream-physics-frame canvas")).not.toBeNull()
+    expect(
+      document.querySelector(".stream-physics-frame canvas")
+    ).not.toBeNull()
     expect(typeof ref.current?.pushMany).toBe("function")
 
     act(() => {
@@ -256,7 +265,9 @@ describe("StreamPhysicsFrame", () => {
     const colliders = ref.current!.snapshot().world.colliders
     expect(
       colliders
-        .filter((collider) => collider.id.startsWith("stream-region-review-box"))
+        .filter((collider) =>
+          collider.id.startsWith("stream-region-review-box")
+        )
         .map((collider) => collider.id)
     ).toEqual([
       "stream-region-review-box",
@@ -267,7 +278,9 @@ describe("StreamPhysicsFrame", () => {
     ])
     expect(
       colliders
-        .filter((collider) => collider.id.startsWith("stream-region-review-box"))
+        .filter((collider) =>
+          collider.id.startsWith("stream-region-review-box")
+        )
         .every((collider) => {
           const filter = collider.bodyFilter
           return (
@@ -342,7 +355,7 @@ describe("StreamPhysicsFrame", () => {
       (
         ctx: CanvasRenderingContext2D,
         bodies: Array<{ id: string; x: number; y: number }>,
-        _paint: PhysicsCanvasPaintContext,
+        _paint: PhysicsCanvasPaintContext
       ) => {
         ctx.strokeStyle = "#123456"
         ctx.beginPath()
@@ -357,7 +370,7 @@ describe("StreamPhysicsFrame", () => {
       (
         ctx: CanvasRenderingContext2D,
         bodies: Array<{ id: string; x: number; y: number }>,
-        _paint: PhysicsCanvasPaintContext,
+        _paint: PhysicsCanvasPaintContext
       ) => {
         ctx.strokeStyle = "#654321"
         for (const body of bodies) {
@@ -416,7 +429,9 @@ describe("StreamPhysicsFrame", () => {
         />
       )
 
-      expect(container.querySelector("[data-testid='physics-bg']")).not.toBeNull()
+      expect(
+        container.querySelector("[data-testid='physics-bg']")
+      ).not.toBeNull()
       expect(
         container.querySelector(".stream-frame-background__backdrop")
       ).toBeNull()
@@ -449,9 +464,9 @@ describe("StreamPhysicsFrame", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /view data summary/i })).toHaveTextContent(
-        "1 semantic item"
-      )
+      expect(
+        screen.getByRole("button", { name: /view data summary/i })
+      ).toHaveTextContent("1 semantic item")
     })
 
     const frame = container.querySelector(".stream-physics-frame")!
@@ -539,11 +554,15 @@ describe("StreamPhysicsFrame", () => {
     fireEvent.keyDown(frame, { key: "Enter" })
     expect(focused).toEqual(["Flow A", "Flow B"])
     expect(activated).toEqual(["Flow B"])
-    expect(observations.filter((event) => event.type === "focus")).toHaveLength(2)
-    expect(observations).toContainEqual(expect.objectContaining({
-      type: "activate",
-      inputType: "keyboard"
-    }))
+    expect(observations.filter((event) => event.type === "focus")).toHaveLength(
+      2
+    )
+    expect(observations).toContainEqual(
+      expect.objectContaining({
+        type: "activate",
+        inputType: "keyboard"
+      })
+    )
 
     fireEvent.keyDown(frame, { key: "Escape" })
     expect(focused).toEqual(["Flow A", "Flow B", "none"])
@@ -619,9 +638,7 @@ describe("StreamPhysicsFrame", () => {
       />
     )
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /view data summary/i })
-    )
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
 
     const region = screen.getByRole("region", {
       name: /data summary for semantic physics/i
@@ -661,7 +678,9 @@ describe("StreamPhysicsFrame", () => {
       </DataSummaryProvider>
     )
 
-    fireEvent.click(screen.getByRole("button", { name: /toggle data summary/i }))
+    fireEvent.click(
+      screen.getByRole("button", { name: /toggle data summary/i })
+    )
 
     expect(
       screen.getByRole("region", { name: /data summary for context physics/i })
@@ -670,17 +689,32 @@ describe("StreamPhysicsFrame", () => {
   })
 
   it("renders SVG on the server and hydrates to the canvas frame without mismatch warnings", () => {
-    const props = {
+    const props: StreamPhysicsFrameProps = {
       size: [200, 120] as [number, number],
       title: "Physics hydration",
       config: { fixedDt: 0.1, kernel: quietKernel },
-      initialSpawns: [circle("a")]
+      initialSpawns: [circle("a")],
+      legend: {
+        legendGroups: [
+          {
+            label: "Kinds",
+            type: "fill",
+            styleFn: (item) => ({ fill: item.color }),
+            items: [{ label: "Hydrated packet", color: "#4e79a7" }]
+          }
+        ]
+      },
+      annotations: [
+        { id: "hydration-note", type: "label", bodyId: "a", label: "Body note" }
+      ]
     }
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const html = renderToString(<StreamPhysicsFrame {...props} />)
 
     expect(html).toContain("<svg")
     expect(html).not.toContain("<canvas")
+    expect(html).toContain("Hydrated packet")
+    expect(html).toContain("Body note")
     container.innerHTML = html
 
     let root: ReturnType<typeof hydrateRoot> | null = null
@@ -693,10 +727,12 @@ describe("StreamPhysicsFrame", () => {
       return /did not match|hydration failed|hydration error/i.test(message)
     })
     expect(mismatchWarnings).toEqual([])
-    expect(container.querySelector(".stream-physics-frame")?.getAttribute("role")).toBe(
-      "group"
-    )
+    expect(
+      container.querySelector(".stream-physics-frame")?.getAttribute("role")
+    ).toBe("group")
     expect(container.querySelector("canvas")).not.toBeNull()
+    expect(container.textContent).toContain("Hydrated packet")
+    expect(container.textContent).toContain("Body note")
 
     const mountedRoot = root as ReturnType<typeof hydrateRoot> | null
     mountedRoot?.unmount()
@@ -775,15 +811,21 @@ describe("StreamPhysicsFrame", () => {
       pointerType: "mouse"
     })
 
-    expect(observations.some((o) => o.type === "hover" && o.chartId === "physics-obs")).toBe(
-      true
-    )
-    expect(observations.some((o) => o.type === "click" && o.chartId === "physics-obs")).toBe(
-      true
-    )
-    expect(observations.some((o) => o.type === "activate" && o.chartId === "physics-obs")).toBe(
-      true
-    )
+    expect(
+      observations.some(
+        (o) => o.type === "hover" && o.chartId === "physics-obs"
+      )
+    ).toBe(true)
+    expect(
+      observations.some(
+        (o) => o.type === "click" && o.chartId === "physics-obs"
+      )
+    ).toBe(true)
+    expect(
+      observations.some(
+        (o) => o.type === "activate" && o.chartId === "physics-obs"
+      )
+    ).toBe(true)
     expect(clicks[0]).toMatchObject({ id: "obs-body", value: 7 })
   })
 
@@ -845,7 +887,9 @@ describe("StreamPhysicsFrame", () => {
     expect(root).toHaveClass("stream-physics-frame--mode-sparkline")
     expect(root.getAttribute("data-semiotic-mode")).toBe("sparkline")
     // ChartContainer exportChart requires an svg + canvas pair
-    expect(container.querySelector("svg.stream-physics-frame__overlay")).not.toBeNull()
+    expect(
+      container.querySelector("svg.stream-physics-frame__overlay")
+    ).not.toBeNull()
     expect(container.querySelector("canvas")).not.toBeNull()
   })
 
@@ -934,10 +978,14 @@ describe("StreamPhysicsFrame", () => {
     )
     expect(container.textContent).toMatch(/Lane A/)
     // Barrier annotations feed world colliders (pipeline stores them on the kernel).
-    const worldColliders = ref.current?.getStore().snapshot().world.colliders ?? []
+    const worldColliders =
+      ref.current?.getStore().snapshot().world.colliders ?? []
     expect(
       worldColliders.some((collider) => {
-        if (String(collider.id).includes("wall") || String(collider.id).includes("ann")) {
+        if (
+          String(collider.id).includes("wall") ||
+          String(collider.id).includes("ann")
+        ) {
           return true
         }
         if (collider.shape?.type !== "segment") return false
@@ -977,12 +1025,15 @@ describe("StreamPhysicsFrame", () => {
         continuous
         paused
         config={{ fixedDt: 0.1, kernel: quietKernel }}
-      />,
+      />
     )
     expect(scheduler.pendingCount).toBe(0)
 
     act(() => {
-      frameRef.current?.push(circle("a"), { pacing: { ratePerSec: 2 }, startAt: 0 })
+      frameRef.current?.push(circle("a"), {
+        pacing: { ratePerSec: 2 },
+        startAt: 0
+      })
     })
     expect(scheduler.pendingCount).toBe(0)
 
@@ -995,7 +1046,7 @@ describe("StreamPhysicsFrame", () => {
           continuous
           paused={false}
           config={{ fixedDt: 0.1, kernel: quietKernel }}
-        />,
+        />
       )
     })
     expect(scheduler.pendingCount).toBe(1)
@@ -1015,7 +1066,7 @@ describe("StreamPhysicsFrame", () => {
           continuous
           paused
           config={{ fixedDt: 0.1, kernel: quietKernel }}
-        />,
+        />
       )
     })
     expect(scheduler.pendingCount).toBe(0)
@@ -1029,17 +1080,22 @@ describe("StreamPhysicsFrame", () => {
           continuous
           paused={false}
           config={{ fixedDt: 0.1, kernel: quietKernel }}
-        />,
+        />
       )
     })
     expect(scheduler.pendingCount).toBe(1)
-    expect(scheduler.requestedHandles.length).toBeGreaterThan(requestedAfterResume)
+    expect(scheduler.requestedHandles.length).toBeGreaterThan(
+      requestedAfterResume
+    )
   })
 
   it("does not schedule continuous renders when hidden, and resumes scheduling after visible", () => {
     const scheduler = createFrameScheduler(10)
     const frameRef = React.createRef<StreamPhysicsFrameHandle>()
-    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(document, "hidden")
+    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      "hidden"
+    )
     const setVisibility = (hidden: boolean) => {
       Object.defineProperty(document, "hidden", {
         configurable: true,
@@ -1056,7 +1112,7 @@ describe("StreamPhysicsFrame", () => {
         continuous
         paused={false}
         config={{ fixedDt: 0.1, kernel: quietKernel }}
-      />,
+      />
     )
     expect(scheduler.pendingCount).toBe(1)
 
@@ -1089,7 +1145,10 @@ describe("StreamPhysicsFrame", () => {
   it("restores the visibility gate when hidden-page suspension is disabled", () => {
     const scheduler = createFrameScheduler(10)
     const frameRef = React.createRef<StreamPhysicsFrameHandle>()
-    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(document, "hidden")
+    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      "hidden"
+    )
     Object.defineProperty(document, "hidden", {
       configurable: true,
       get: () => true
@@ -1105,7 +1164,7 @@ describe("StreamPhysicsFrame", () => {
           paused={false}
           suspendWhenHidden
           config={{ fixedDt: 0.1, kernel: quietKernel }}
-        />,
+        />
       )
       expect(frameRef.current?.snapshot().visible).toBe(false)
 
@@ -1119,7 +1178,7 @@ describe("StreamPhysicsFrame", () => {
             paused={false}
             suspendWhenHidden={false}
             config={{ fixedDt: 0.1, kernel: quietKernel }}
-          />,
+          />
         )
       })
 
@@ -1355,7 +1414,10 @@ describe("StreamPhysicsFrame", () => {
         ref={ref}
         size={[200, 120]}
         paused
-        initialSpawns={[circle("paused-seed", 40, 50), circle("paused-seed-b", 60, 50)]}
+        initialSpawns={[
+          circle("paused-seed", 40, 50),
+          circle("paused-seed-b", 60, 50)
+        ]}
         config={{ fixedDt: 1 / 60, kernel: quietKernel }}
       />
     )

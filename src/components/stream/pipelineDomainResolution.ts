@@ -26,8 +26,8 @@ export type StackExtentCache = {
   yDomain: [number, number]
 }
 
-export function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
-  return arrowOfTime === "up" || arrowOfTime === "down" ? "y" : "x"
+export function getTimeAxis(_arrowOfTime: ArrowOfTime): "x" {
+  return "x"
 }
 
 export function mergePartialDomain(
@@ -368,27 +368,19 @@ export function buildPipelineScales(options: {
   )
 
   if (isStreaming) {
-    const timeAxis = getTimeAxis(config.arrowOfTime)
-    if (timeAxis === "x") {
-      const xRange: [number, number] =
-        config.arrowOfTime === "right"
-          ? [sp, layout.width - sp]
-          : [layout.width - sp, sp]
-      return {
-        x: scaleLinear().domain(xDomain).range(xRange),
-        y: makePipelineScale(config.yScaleType, yDomain, [
-          layout.height - sp,
-          sp
-        ])
-      }
-    }
-    const yRange: [number, number] =
-      config.arrowOfTime === "down"
-        ? [sp, layout.height - sp]
-        : [layout.height - sp, sp]
+    // Streaming XY scene builders consistently encode time on x and value on
+    // y. Treat the source-compatible legacy vertical values (and any untyped
+    // invalid runtime value) as the safe default `right` direction instead of
+    // constructing a vertical scale that the builders do not consume.
+    const xRange: [number, number] = config.arrowOfTime === "left"
+      ? [layout.width - sp, sp]
+      : [sp, layout.width - sp]
     return {
-      x: makePipelineScale(config.yScaleType, yDomain, [sp, layout.width - sp]),
-      y: scaleLinear().domain(xDomain).range(yRange)
+      x: scaleLinear().domain(xDomain).range(xRange),
+      y: makePipelineScale(config.yScaleType, yDomain, [
+        layout.height - sp,
+        sp
+      ])
     }
   }
 

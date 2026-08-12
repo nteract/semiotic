@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import type { GeoAreaSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
+import { quadtree } from "d3-quadtree"
 
 type TestPath2D = Path2D & { __testId: string }
 type MockHitContext = Pick<CanvasRenderingContext2D, "isPointInPath"> & {
@@ -55,6 +56,20 @@ describe("findNearestGeoNode", () => {
     expect(result!.node).toBe(pointNode)
   })
 
+  it("keeps large-point hit geometry identical with and without a quadtree", () => {
+    const pointNode: PointSceneNode = {
+      type: "point", x: 90, y: 0, r: 80,
+      style: { fill: "green" }, datum: { id: "big" }
+    }
+    const qt = quadtree<PointSceneNode>()
+      .x((node) => node.x)
+      .y((node) => node.y)
+      .add(pointNode)
+    const hitCtx = createMockHitCtx()
+    expect(findNearestGeoNode([pointNode], 50, 0, 30, hitCtx)?.node).toBe(pointNode)
+    expect(findNearestGeoNode([pointNode], 50, 0, 30, hitCtx, qt, 80)?.node).toBe(pointNode)
+  })
+
   it("returns null when no nodes are near", () => {
     const pointNode: PointSceneNode = {
       type: "point",
@@ -86,6 +101,28 @@ describe("findNearestGeoNode", () => {
     const result = findNearestGeoNode([pointNode], 100, 100, 30, hitCtx)
 
     expect(result).toBeNull()
+  })
+
+  it("skips decorative non-interactive points supplied by an index", () => {
+    const pointNode: PointSceneNode = {
+      type: "point",
+      x: 100,
+      y: 100,
+      r: 8,
+      style: { fill: "red", cursor: "pointer" },
+      datum: { id: "texture-dot" },
+      interactive: false
+    }
+    const qt = quadtree<PointSceneNode>()
+      .x((node) => node.x)
+      .y((node) => node.y)
+      .add(pointNode)
+
+    expect(
+      findNearestGeoNode(
+        [pointNode], 100, 100, 30, createMockHitCtx(), qt, 8
+      )
+    ).toBeNull()
   })
 
   it("prefers points over areas (z-order)", () => {

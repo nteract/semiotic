@@ -148,6 +148,37 @@ describe("physicsReferenceEnvelope", () => {
     expect(samples).toEqual(before)
   })
 
+  it("reads only own accessor-path segments while preserving own prototype-named fields", () => {
+    const inheritedPayload = Object.create({ constructor: 99 }) as Record<string, unknown>
+    const inheritedTime = Object.assign(
+      Object.create({ time: 0 }) as Record<string, unknown>,
+      { payload: { constructor: 101 } }
+    )
+    const envelope = physicsReferenceEnvelope<Record<string, unknown>>({
+      runs: [
+        {
+          id: "own",
+          samples: [
+            {
+              time: 0,
+              payload: Object.fromEntries([["constructor", 7]])
+            }
+          ]
+        },
+        {
+          id: "inherited-value",
+          samples: [{ time: 0, payload: inheritedPayload }]
+        },
+        { id: "inherited-time", samples: [inheritedTime] }
+      ],
+      sampleAt: [0],
+      timeAccessor: "time",
+      valueAccessor: "payload.constructor"
+    })
+
+    expect(envelope.points[0]).toMatchObject({ count: 1, median: 7 })
+  })
+
   it("passes trace identity to function accessors", () => {
     const runs: PhysicsReferenceTrace<Sample>[] = [
       { id: "first", samples: [{ t: 0, load: 2 }] },

@@ -6,20 +6,44 @@ _Edit dist/semiotic-utils.d.ts's sources, then re-run `npm run docs:api-surface`
 ```
 class IncrementalExtent
 class RingBuffer<T>
-const CARBON_ALERT: { readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce"; }
+class-member IncrementalExtent::get::dirty = get dirty: boolean
+class-member IncrementalExtent::get::extent = get extent: [number, number]
+class-member IncrementalExtent::get::max = get max: number
+class-member IncrementalExtent::get::min = get min: number
+class-member IncrementalExtent::method::clear = required clear(): void
+class-member IncrementalExtent::method::evict = required evict(value: number): void
+class-member IncrementalExtent::method::push = required push(value: number): void
+class-member IncrementalExtent::method::recalculate = required recalculate<T>(values: Iterable<T>, accessor?: ((v: T) => number) | undefined): void
+class-member RingBuffer::construct::%24construct = required new <T>(_capacity: number): RingBuffer<T>
+class-member RingBuffer::get::capacity = get capacity: number
+class-member RingBuffer::get::full = get full: boolean
+class-member RingBuffer::get::size = get size: number
+class-member RingBuffer::method::%5BSymbol%2Eiterator%5D = required [Symbol.iterator](): Iterator<T, any, any>
+class-member RingBuffer::method::clear = required clear(): void
+class-member RingBuffer::method::forEach = required forEach(callback: (value: T, index: number) => void): void
+class-member RingBuffer::method::get = required get(index: number): T | undefined
+class-member RingBuffer::method::peek = required peek(): T | undefined
+class-member RingBuffer::method::peekOldest = required peekOldest(): T | undefined
+class-member RingBuffer::method::push = required push(value: T): T | undefined
+class-member RingBuffer::method::pushMany = required pushMany(values: T[]): T[]
+class-member RingBuffer::method::remove = required remove(predicate: (item: T) => boolean): T[]
+class-member RingBuffer::method::resize = required resize(newCapacity: number): T[]
+class-member RingBuffer::method::toArray = required toArray(): T[]
+class-member RingBuffer::method::update = required update(predicate: (item: T) => boolean, updater: (item: T) => T): T[]
+const CARBON_ALERT: {readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce";}
 const CARBON_CATEGORICAL_14: string[]
 const COLOR_BLIND_SAFE_CATEGORICAL: string[]
 const DARK_THEME: SemioticTheme
 const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
-const THEME_PRESETS: { light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme; }
+const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
-function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (value: string | number | Date, index?: number, allTicks?: number[]) => string
+function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
+function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (Date | number | value: string, index?: number, allTicks?: number[]) => string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
 function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
@@ -37,14 +61,14 @@ function darkenColor(hex: string, factor?: number | undefined): string
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
 function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
-function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
+function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
-function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
+function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
 function fromURL(urlString: string): ChartConfig
-function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
+function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
 function hasOwnTooltipChrome(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
@@ -52,26 +76,26 @@ function hatchFillKey(h: HatchFill): string
 function isHatchFill(fill: unknown): boolean
 function isMultiTooltip(tooltip: TooltipProp | undefined): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
-function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
-function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeNodeRuleContext(colorBy: ((d: Datum) => unknown) | string | undefined, valueAccessor?: ((d: Datum) => unknown) | string | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: ((d: Datum) => unknown) | string | undefined): (d: Datum) => number | undefined
 function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
-function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function makeXYRuleContext(xAccessor: ((d: Datum) => unknown) | string | undefined, yAccessor: ((d: Datum) => unknown) | string | undefined): (d: Datum, category?: string) => StyleRuleContext
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function mobileVisualizationCaveats(): string[]
-function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
-function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
+function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
+function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
-function resolveMultiCapableTooltip(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; }
+function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi";}
 function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveThemePreset(name: string): SemioticTheme | undefined
-function resolveTooltipContent(input: { tooltip: TooltipProp | undefined; defaultTooltipContent: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover"; }): { tooltipContent: (d: any) => React.ReactNode; }
+function resolveTooltipContent(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode;}
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
-function smartTickFormat(value: string | number | Date | null | undefined): string
+function smartTickFormat(value: Date | null | number | string | undefined): string
 function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
@@ -101,7 +125,7 @@ interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
 interface CheckedNumericContract
 interface DataAuditChartNotification
-interface DataAuditDiagnosis
+interface DataAuditDiagnosis extends Diagnosis
 interface DataAuditNotificationOptions
 interface DataAuditResult
 interface DescribeCapabilityContext
@@ -115,7 +139,7 @@ interface MobileVisualizationCustomContract
 interface MobileVisualizationFinding
 interface MobileVisualizationInteractionContract
 interface MobileVisualizationLabelContract
-interface MultiLineTooltipConfig
+interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
 interface NavTreeNode
 interface NumericAggregateContract
@@ -148,32 +172,384 @@ interface SweepAngles
 interface ToConfigOptions
 interface TooltipConfig
 interface TooltipField
-interface TooltipRootProps
+interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface VegaLiteEncoding
 interface VegaLiteSpec
-type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
-type A11yStatus = "pass" | "fail" | "warn" | "manual" | "not-applicable"
-type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
+interface-member A11yFinding::property::critical = required critical: boolean
+interface-member A11yFinding::property::fix = optional fix: string | undefined
+interface-member A11yFinding::property::heuristic = required heuristic: string
+interface-member A11yFinding::property::id = required id: string
+interface-member A11yFinding::property::message = required message: string
+interface-member A11yFinding::property::principle = required principle: A11yPrinciple
+interface-member A11yFinding::property::status = required status: A11yStatus
+interface-member AccessibilityAuditResult::property::component = required component: string
+interface-member AccessibilityAuditResult::property::findings = required findings: A11yFinding[]
+interface-member AccessibilityAuditResult::property::ok = required ok: boolean
+interface-member AccessibilityAuditResult::property::reference = required reference: string
+interface-member AccessibilityAuditResult::property::summary = required summary: {criticalsPassed: number; criticalsEvaluated: number; fails: number; warnings: number; manual: number; passes: number;}
+interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
+interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
+interface-member ArcBoundingBox::property::cx = required cx: number
+interface-member ArcBoundingBox::property::cy = required cy: number
+interface-member ArcBoundingBox::property::height = required height: number
+interface-member ArcBoundingBox::property::maxX = required maxX: number
+interface-member ArcBoundingBox::property::maxY = required maxY: number
+interface-member ArcBoundingBox::property::minX = required minX: number
+interface-member ArcBoundingBox::property::minY = required minY: number
+interface-member ArcBoundingBox::property::width = required width: number
+interface-member AuditAccessibilityOptions::property::describe = optional describe: boolean | undefined
+interface-member AuditAccessibilityOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
+interface-member AuditAccessibilityOptions::property::navigable = optional navigable: boolean | undefined
+interface-member AuditDataOptions::property::checkOutliers = optional readonly checkOutliers: boolean | undefined
+interface-member AuditDataOptions::property::contracts = optional readonly contracts: NumericContracts | undefined
+interface-member AuditMobileVisualizationOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
+interface-member AuditMobileVisualizationOptions::property::targetSize = optional targetSize: number | undefined
+interface-member AuditMobileVisualizationOptions::property::viewportWidth = optional viewportWidth: number | undefined
+interface-member AuditObservedSceneInput::property::annotations = optional annotations: readonly Datum[] | undefined
+interface-member AuditObservedSceneInput::property::chart = optional chart: undefined | {title?: string; summary?: string; description?: string; accessibleTable?: boolean; navigationTree?: NavTreeNode; selectedIds?: ReadonlyArray<string>;}
+interface-member AuditObservedSceneInput::property::dimensions = required dimensions: {width: number; height: number; plot?: {x?: number; y?: number; width: number; height: number;};}
+interface-member AuditObservedSceneInput::property::inputData = required inputData: readonly Datum[]
+interface-member AuditObservedSceneInput::property::layoutConfig = optional layoutConfig: Record<string, unknown> | undefined
+interface-member AuditObservedSceneInput::property::recipe = required recipe: ChartRecipe<Datum, Record<string, unknown>>
+interface-member AuditObservedSceneInput::property::scene = required scene: null | readonly Record<string, unknown>[] | undefined | {nodes?: ReadonlyArray<Record<string, unknown>>; sceneNodes?: ReadonlyArray<Record<string, unknown>>; sceneEdges?: ReadonlyArray<Record<string, unknown>>;}
+interface-member AuditObservedSceneInput::property::theme = optional theme: undefined | {background?: string; categorical?: string[];}
+interface-member BuildNavigationTreeOptions::property::locale = optional locale: string | undefined
+interface-member BuildNavigationTreeOptions::property::maxLeaves = optional maxLeaves: number | undefined
+interface-member BuildNavigationTreeOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member ChartConfig::property::component = required component: string
+interface-member ChartConfig::property::createdAt = required createdAt: string
+interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string;}
+interface-member ChartConfig::property::portable = optional portable: boolean | undefined
+interface-member ChartConfig::property::props = required props: Datum
+interface-member ChartConfig::property::reason = optional reason: string | undefined
+interface-member ChartConfig::property::recipeId = optional recipeId: string | undefined
+interface-member ChartConfig::property::selections = optional selections: SerializedSelections | undefined
+interface-member ChartConfig::property::version = required version: string
+interface-member ChartConfig::property::warnings = optional warnings: string[] | undefined
+interface-member ChartReaderGrounding::property::component = required component: string
+interface-member ChartReaderGrounding::property::description = required description: DescribeChartResult
+interface-member ChartReaderGrounding::property::facts = optional facts: ChartReaderGroundingFacts | undefined
+interface-member ChartReaderGrounding::property::intent = optional intent: ChartReaderGroundingIntent | undefined
+interface-member ChartReaderGrounding::property::physics = optional physics: PhysicsReaderGrounding | undefined
+interface-member ChartReaderGrounding::property::structure = optional structure: NavTreeNode | undefined
+interface-member ChartReaderGrounding::property::text = required text: string
+interface-member ChartReaderGroundingIntent::property::act = required act: CommunicativeAct
+interface-member ChartReaderGroundingIntent::property::family = optional family: ChartFamily | undefined
+interface-member ChartReaderGroundingIntent::property::intentScores = optional intentScores: Partial<Record<IntentId, number>> | undefined
+interface-member ChartReaderGroundingIntent::property::sentence = required sentence: string
+interface-member ChartReaderGroundingOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member ChartReaderGroundingOptions::property::capability = optional capability: ChartCapability | DescribeCapabilityContext | undefined
+interface-member ChartReaderGroundingOptions::property::includeStructure = optional includeStructure: boolean | undefined
+interface-member ChartReaderGroundingOptions::property::levels = optional levels: DescribeLevel[] | undefined
+interface-member ChartReaderGroundingOptions::property::locale = optional locale: string | undefined
+interface-member ChartReaderGroundingOptions::property::maxLeaves = optional maxLeaves: number | undefined
+interface-member ChartReaderGroundingOptions::property::physics = optional physics: PhysicsReaderGroundingInput | boolean | undefined
+interface-member CheckedNumericContract::property::accessor = required readonly accessor: string
+interface-member CheckedNumericContract::property::allowMissing = required readonly allowMissing: boolean
+interface-member CheckedNumericContract::property::dataProp = required readonly dataProp: string
+interface-member CheckedNumericContract::property::domain = required readonly domain: boolean
+interface-member CheckedNumericContract::property::missingValue = optional readonly missingValue: number | undefined
+interface-member CheckedNumericContract::property::requirements = required readonly requirements: readonly NumericRequirement[]
+interface-member CheckedNumericContract::property::role = required readonly role: NumericFieldRole
+interface-member DataAuditChartNotification::property::dismissible = required readonly dismissible: true
+interface-member DataAuditChartNotification::property::id = required readonly id: string
+interface-member DataAuditChartNotification::property::level = required readonly level: "error" | "warning"
+interface-member DataAuditChartNotification::property::message = required readonly message: string
+interface-member DataAuditChartNotification::property::source = required readonly source: "Semiotic data audit"
+interface-member DataAuditChartNotification::property::title = required readonly title: string
+interface-member DataAuditDiagnosis::property::count = optional readonly count: number | undefined
+interface-member DataAuditDiagnosis::property::domain = required readonly domain: "data"
+interface-member DataAuditDiagnosis::property::field = optional readonly field: string | undefined
+interface-member DataAuditDiagnosis::property::role = optional readonly role: NumericFieldRole | undefined
+interface-member DataAuditDiagnosis::property::rows = optional readonly rows: readonly number[] | undefined
+interface-member DataAuditNotificationOptions::property::errorsOnly = optional readonly errorsOnly: boolean | undefined
+interface-member DataAuditNotificationOptions::property::max = optional readonly max: number | undefined
+interface-member DataAuditResult::property::component = required readonly component: string
+interface-member DataAuditResult::property::contracts = required readonly contracts: readonly CheckedNumericContract[]
+interface-member DataAuditResult::property::diagnoses = required readonly diagnoses: readonly DataAuditDiagnosis[]
+interface-member DataAuditResult::property::ok = required readonly ok: boolean
+interface-member DataAuditResult::property::rowCount = required readonly rowCount: number
+interface-member DataAuditResult::property::summary = required readonly summary: {readonly fieldsChecked: number; readonly errors: number; readonly warnings: number;}
+interface-member DescribeCapabilityContext::property::act = optional act: CommunicativeAct | undefined
+interface-member DescribeCapabilityContext::property::family = optional family: ChartFamily | undefined
+interface-member DescribeCapabilityContext::property::intentScores = optional intentScores: Partial<Record<IntentId, number>> | undefined
+interface-member DescribeChartOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member DescribeChartOptions::property::capability = optional capability: ChartCapability | DescribeCapabilityContext | undefined
+interface-member DescribeChartOptions::property::includeCaveats = optional includeCaveats: boolean | undefined
+interface-member DescribeChartOptions::property::levels = optional levels: DescribeLevel[] | undefined
+interface-member DescribeChartOptions::property::locale = optional locale: string | undefined
+interface-member DescribeChartOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member DescribeChartResult::property::annotations = optional annotations: string | undefined
+interface-member DescribeChartResult::property::caveats = optional caveats: string[] | undefined
+interface-member DescribeChartResult::property::levels = required levels: {l1?: string; l2?: string; l3?: string; l4?: string;}
+interface-member DescribeChartResult::property::text = required text: string
+interface-member HatchFill::property::angle = optional angle: number | undefined
+interface-member HatchFill::property::background = optional background: string | undefined
+interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member HatchFill::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchFill::property::spacing = optional spacing: number | undefined
+interface-member HatchFill::property::stroke = optional stroke: string | undefined
+interface-member HatchFill::property::type = required type: "hatch"
+interface-member HatchPatternOptions::property::angle = optional angle: number | undefined
+interface-member HatchPatternOptions::property::background = optional background: string | undefined
+interface-member HatchPatternOptions::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchPatternOptions::property::spacing = optional spacing: number | undefined
+interface-member HatchPatternOptions::property::stroke = optional stroke: string | undefined
+interface-member MobileVisualizationAuditResult::property::component = required component: string
+interface-member MobileVisualizationAuditResult::property::findings = required findings: MobileVisualizationFinding[]
+interface-member MobileVisualizationAuditResult::property::ok = required ok: boolean
+interface-member MobileVisualizationAuditResult::property::reference = required reference: string
+interface-member MobileVisualizationAuditResult::property::summary = required summary: {highRisk: number; warnings: number; manual: number; passes: number;}
+interface-member MobileVisualizationAuditResult::property::viewportWidth = required viewportWidth: number
+interface-member MobileVisualizationContract::property::breakpoints = optional breakpoints: number[] | undefined
+interface-member MobileVisualizationContract::property::custom = optional custom: MobileVisualizationCustomContract | undefined
+interface-member MobileVisualizationContract::property::interaction = optional interaction: MobileVisualizationInteractionContract | undefined
+interface-member MobileVisualizationContract::property::labels = optional labels: MobileVisualizationLabelContract | undefined
+interface-member MobileVisualizationContract::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member MobileVisualizationContract::property::maxMarks = optional maxMarks: number | undefined
+interface-member MobileVisualizationContract::property::minViewportWidth = optional minViewportWidth: number | undefined
+interface-member MobileVisualizationContract::property::minimumHitTarget = optional minimumHitTarget: number | undefined
+interface-member MobileVisualizationContract::property::responsive = optional responsive: boolean | undefined
+interface-member MobileVisualizationContract::property::strategy = optional strategy: string | undefined
+interface-member MobileVisualizationContract::property::summary = optional summary: boolean | string | undefined
+interface-member MobileVisualizationContract::property::supportsResponsiveLayout = optional supportsResponsiveLayout: boolean | undefined
+interface-member MobileVisualizationCustomContract::property::dataBearingSceneNodes = optional dataBearingSceneNodes: boolean | undefined
+interface-member MobileVisualizationCustomContract::property::navigationGranularity = optional navigationGranularity: string | undefined
+interface-member MobileVisualizationCustomContract::property::stableIds = optional stableIds: boolean | undefined
+interface-member MobileVisualizationFinding::property::category = required category: MobileAuditCategory
+interface-member MobileVisualizationFinding::property::fix = optional fix: string | undefined
+interface-member MobileVisualizationFinding::property::id = required id: string
+interface-member MobileVisualizationFinding::property::impact = required impact: MobileAuditImpact
+interface-member MobileVisualizationFinding::property::message = required message: string
+interface-member MobileVisualizationFinding::property::status = required status: MobileAuditStatus
+interface-member MobileVisualizationInteractionContract::property::alternatives = optional alternatives: string[] | undefined
+interface-member MobileVisualizationInteractionContract::property::hoverFallback = optional hoverFallback: string | undefined
+interface-member MobileVisualizationInteractionContract::property::primary = optional primary: string | undefined
+interface-member MobileVisualizationInteractionContract::property::targetSize = optional targetSize: number | undefined
+interface-member MobileVisualizationLabelContract::property::minFontSize = optional minFontSize: number | undefined
+interface-member MobileVisualizationLabelContract::property::strategy = optional strategy: string | undefined
+interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
+interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
+interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
+interface-member NavTreeNode::property::datum = optional datum: Datum | null | undefined
+interface-member NavTreeNode::property::id = required id: string
+interface-member NavTreeNode::property::label = required label: string
+interface-member NavTreeNode::property::level = required level: number
+interface-member NavTreeNode::property::role = required role: NavTreeRole
+interface-member NavTreeNode::property::value = optional value: number | undefined
+interface-member NumericAggregateContract::property::defaultGroupAccessor = optional readonly defaultGroupAccessor: string | undefined
+interface-member NumericAggregateContract::property::groupAccessor = optional readonly groupAccessor: string | undefined
+interface-member NumericAggregateContract::property::kind = required readonly kind: "normalized-total" | "positive-total"
+interface-member NumericAggregateContract::property::role = required readonly role: NumericFieldRole
+interface-member NumericAggregateContract::property::whenProp = optional readonly whenProp: string | undefined
+interface-member NumericContracts::property::aggregates = optional readonly aggregates: readonly NumericAggregateContract[] | undefined
+interface-member NumericContracts::property::fields = required readonly fields: readonly NumericFieldContract[]
+interface-member NumericFieldContract::property::accessor = required readonly accessor: string
+interface-member NumericFieldContract::property::allowMissing = optional readonly allowMissing: boolean | undefined
+interface-member NumericFieldContract::property::dataProp = optional readonly dataProp: string | undefined
+interface-member NumericFieldContract::property::defaultAccessor = optional readonly defaultAccessor: string | undefined
+interface-member NumericFieldContract::property::defaultNestedDataAccessor = optional readonly defaultNestedDataAccessor: string | undefined
+interface-member NumericFieldContract::property::domain = optional readonly domain: boolean | undefined
+interface-member NumericFieldContract::property::missingValue = optional readonly missingValue: number | undefined
+interface-member NumericFieldContract::property::nestedDataAccessorProp = optional readonly nestedDataAccessorProp: string | undefined
+interface-member NumericFieldContract::property::requirements = optional readonly requirements: readonly NumericRequirement[] | undefined
+interface-member NumericFieldContract::property::role = required readonly role: NumericFieldRole
+interface-member NumericFieldContract::property::temporalValues = optional readonly temporalValues: "date" | "date-like" | undefined
+interface-member NumericFieldContract::property::whenProps = optional readonly whenProps: readonly string[] | undefined
+interface-member NumericFieldProfile::property::field = required readonly field: string
+interface-member NumericFieldProfile::property::finiteCount = required readonly finiteCount: number
+interface-member NumericFieldProfile::property::fractionalCount = required readonly fractionalCount: number
+interface-member NumericFieldProfile::property::max = optional readonly max: number | undefined
+interface-member NumericFieldProfile::property::median = optional readonly median: number | undefined
+interface-member NumericFieldProfile::property::min = optional readonly min: number | undefined
+interface-member NumericFieldProfile::property::missingCount = required readonly missingCount: number
+interface-member NumericFieldProfile::property::negativeCount = required readonly negativeCount: number
+interface-member NumericFieldProfile::property::nonFiniteCount = required readonly nonFiniteCount: number
+interface-member NumericFieldProfile::property::nonNumericCount = required readonly nonNumericCount: number
+interface-member NumericFieldProfile::property::observedCount = required readonly observedCount: number
+interface-member NumericFieldProfile::property::q1 = optional readonly q1: number | undefined
+interface-member NumericFieldProfile::property::q3 = optional readonly q3: number | undefined
+interface-member NumericFieldProfile::property::zeroCount = required readonly zeroCount: number
+interface-member ObservedAuditFinding::property::category = required category: "accessibility" | "coverage" | "geometry" | "identity" | "interaction" | "manual-at" | "visual"
+interface-member ObservedAuditFinding::property::evidence = optional evidence: Record<string, unknown> | undefined
+interface-member ObservedAuditFinding::property::id = required id: string
+interface-member ObservedAuditFinding::property::message = required message: string
+interface-member ObservedAuditFinding::property::remediation = optional remediation: string | undefined
+interface-member ObservedAuditFinding::property::status = required status: ObservedAuditStatus
+interface-member ObservedSceneAuditResult::property::declaredSemantics = required declaredSemantics: DeclaredRecipeSemantics
+interface-member ObservedSceneAuditResult::property::manualATChecks = required manualATChecks: ObservedAuditFinding[]
+interface-member ObservedSceneAuditResult::property::observedSceneEvidence = required observedSceneEvidence: ObservedAuditFinding[]
+interface-member ObservedSceneAuditResult::property::ok = required ok: boolean
+interface-member ObservedSceneAuditResult::property::recipeId = required recipeId: string
+interface-member ObservedSceneAuditResult::property::summary = required summary: {marks: number; passes: number; warnings: number; failures: number; manual: number;}
+interface-member PhysicsReaderGrounding::property::aggregates = optional aggregates: PhysicsReaderGroundingAggregates | undefined
+interface-member PhysicsReaderGrounding::property::geometry = optional geometry: PhysicsReaderGroundingGeometry | undefined
+interface-member PhysicsReaderGrounding::property::sediment = optional sediment: PhysicsReaderGroundingSediment | undefined
+interface-member PhysicsReaderGrounding::property::simulation = required simulation: PhysicsReaderGroundingSimulation
+interface-member PhysicsReaderGrounding::property::text = required text: string
+interface-member PhysicsReaderGroundingAggregate::property::count = required count: number
+interface-member PhysicsReaderGroundingAggregate::property::id = optional id: string | undefined
+interface-member PhysicsReaderGroundingAggregate::property::label = required label: string
+interface-member PhysicsReaderGroundingAggregate::property::observed = optional observed: number | undefined
+interface-member PhysicsReaderGroundingAggregate::property::secondary = optional secondary: number | undefined
+interface-member PhysicsReaderGroundingAggregate::property::secondaryLabel = optional secondaryLabel: string | undefined
+interface-member PhysicsReaderGroundingAggregates::property::leader = optional leader: PhysicsReaderGroundingAggregate | undefined
+interface-member PhysicsReaderGroundingAggregates::property::populatedCount = required populatedCount: number
+interface-member PhysicsReaderGroundingAggregates::property::rows = required rows: PhysicsReaderGroundingAggregate[]
+interface-member PhysicsReaderGroundingAggregates::property::totalCount = required totalCount: number
+interface-member PhysicsReaderGroundingGeometry::property::activeSensorPairs = optional activeSensorPairs: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::colliders = optional colliders: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::sensors = optional sensors: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::springs = optional springs: number | undefined
+interface-member PhysicsReaderGroundingInput::property::aggregates = optional aggregates: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::config = optional config: unknown
+interface-member PhysicsReaderGroundingInput::property::evidence = optional evidence: unknown
+interface-member PhysicsReaderGroundingInput::property::projectionRows = optional projectionRows: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::sediment = optional sediment: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::sedimentTotals = optional sedimentTotals: unknown
+interface-member PhysicsReaderGroundingInput::property::snapshot = optional snapshot: unknown
+interface-member PhysicsReaderGroundingSediment::property::bins = required bins: number
+interface-member PhysicsReaderGroundingSediment::property::count = required count: number
+interface-member PhysicsReaderGroundingSediment::property::leader = optional leader: undefined | {id?: string; label: string; count: number; total?: number;}
+interface-member PhysicsReaderGroundingSediment::property::total = optional total: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::elapsedSeconds = optional elapsedSeconds: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::eviction = optional eviction: string | undefined
+interface-member PhysicsReaderGroundingSimulation::property::fixedDt = optional fixedDt: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::gravity = optional gravity: undefined | {x: number; y: number;}
+interface-member PhysicsReaderGroundingSimulation::property::liveBodies = optional liveBodies: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::maxSubsteps = optional maxSubsteps: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::paused = optional paused: boolean | undefined
+interface-member PhysicsReaderGroundingSimulation::property::queued = optional queued: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::seed = optional seed: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::settled = optional settled: boolean | undefined
+interface-member PhysicsReaderGroundingSimulation::property::sleepingBodies = optional sleepingBodies: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::state = optional state: string | undefined
+interface-member PhysicsReaderGroundingSimulation::property::timeScale = optional timeScale: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::visible = optional visible: boolean | undefined
+interface-member ProfileNumericFieldsOptions::property::quantiles = optional readonly quantiles: boolean | undefined
+interface-member ResponsiveRule::property::description = optional description: string | undefined
+interface-member ResponsiveRule::property::id = optional id: string | undefined
+interface-member ResponsiveRule::property::priority = optional priority: number | undefined
+interface-member ResponsiveRule::property::transform = required transform: Partial<TProps> & Record<string, unknown>
+interface-member ResponsiveRule::property::when = required when: ResponsiveRuleCondition
+interface-member ResponsiveRuleCondition::property::maxAspectRatio = optional maxAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::minAspectRatio = optional minAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::orientation = optional orientation: ResponsiveOrientation | undefined
+interface-member ResponsiveRuleContext::property::height = optional height: number | undefined
+interface-member ResponsiveRuleContext::property::width = required width: number
+interface-member ResponsiveRuleMatch::property::index = required index: number
+interface-member ResponsiveRuleMatch::property::rule = required rule: ResponsiveRule<TProps>
+interface-member ResponsiveRuleResult::property::matches = required matches: ResponsiveRuleMatch<TProps>[]
+interface-member ResponsiveRuleResult::property::props = required props: TProps
+interface-member ResponsiveSizeOptions::property::heightStep = optional heightStep: number | undefined
+interface-member ResponsiveSizeOptions::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveSizeOptions::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveSizeOptions::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveSizeOptions::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveSizeOptions::property::widthStep = optional widthStep: number | undefined
+interface-member SemioticTheme::property::accessibility = optional accessibility: undefined | {colorBlindSafe?: boolean; highContrast?: boolean;}
+interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
+interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
+interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
+interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
+interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; tickFontFamily?: string; titleFontSize?: number;}
+interface-member SerializedSelection::property::clauses = required clauses: {clientId: string; type: "interval" | "point"; fields: Record<string, SerializedFieldSelection>;}[]
+interface-member SerializedSelection::property::name = required name: string
+interface-member SerializedSelection::property::resolution = required resolution: "crossfilter" | "intersect" | "union"
+interface-member StyleRule::property::id = optional id: string | undefined
+interface-member StyleRule::property::label = optional label: string | undefined
+interface-member StyleRule::property::style = required style: ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle) | StyleRuleStyle
+interface-member StyleRule::property::when = optional when: StyleRulePredicate | StyleRuleThreshold | boolean | undefined
+interface-member StyleRuleContext::property::category = optional category: string | undefined
+interface-member StyleRuleContext::property::index = optional index: number | undefined
+interface-member StyleRuleContext::property::size = optional size: number | undefined
+interface-member StyleRuleContext::property::value = required value: number | undefined
+interface-member StyleRuleContext::property::x = optional x: number | undefined
+interface-member StyleRuleContext::property::y = optional y: number | undefined
+interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
+interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
+interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
+interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member StyleRuleStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRuleThreshold::property::axis = optional axis: "value" | "x" | "y" | undefined
+interface-member StyleRuleThreshold::property::eq = optional eq: number | string | undefined
+interface-member StyleRuleThreshold::property::field = optional field: string | undefined
+interface-member StyleRuleThreshold::property::gt = optional gt: number | undefined
+interface-member StyleRuleThreshold::property::gte = optional gte: number | undefined
+interface-member StyleRuleThreshold::property::in = optional in: (number | string)[] | undefined
+interface-member StyleRuleThreshold::property::lt = optional lt: number | undefined
+interface-member StyleRuleThreshold::property::lte = optional lte: number | undefined
+interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
+interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
+interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member SweepAngles::property::gapDeg = required gapDeg: number
+interface-member SweepAngles::property::offsetRad = required offsetRad: number
+interface-member SweepAngles::property::startAngleDeg = required startAngleDeg: number
+interface-member SweepAngles::property::startAngleRad = required startAngleRad: number
+interface-member SweepAngles::property::sweepRad = required sweepRad: number
+interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
+interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
+interface-member TooltipConfig::property::className = optional className: string | undefined
+interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
+interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipConfig::property::style = optional style: React.CSSProperties | undefined
+interface-member TooltipConfig::property::title = optional title: Accessor<string> | undefined
+interface-member TooltipField::property::accessor = optional accessor: Accessor | undefined
+interface-member TooltipField::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipField::property::key = optional key: Accessor | undefined
+interface-member TooltipField::property::label = optional label: string | undefined
+interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member VegaLiteEncoding::property::aggregate = optional aggregate: string | undefined
+interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}
+interface-member VegaLiteEncoding::property::bin = optional bin: boolean | undefined | {maxbins?: number;}
+interface-member VegaLiteEncoding::property::field = optional field: string | undefined
+interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
+interface-member VegaLiteEncoding::property::stack = optional stack: boolean | null | string | undefined
+interface-member VegaLiteEncoding::property::type = optional type: "nominal" | "ordinal" | "quantitative" | "temporal" | undefined
+interface-member VegaLiteEncoding::property::value = optional value: boolean | null | number | string | undefined
+interface-member VegaLiteSpec::property::concat = optional concat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::data = optional data: undefined | {values?: Datum[]; url?: string;}
+interface-member VegaLiteSpec::property::encoding = optional encoding: Record<string, VegaLiteEncoding> | undefined
+interface-member VegaLiteSpec::property::facet = optional facet: Datum | undefined
+interface-member VegaLiteSpec::property::hconcat = optional hconcat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::height = optional height: number | undefined
+interface-member VegaLiteSpec::property::layer = optional layer: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::mark = required mark: (Datum & {type: string;}) | string
+interface-member VegaLiteSpec::property::params = optional params: Datum[] | undefined
+interface-member VegaLiteSpec::property::repeat = optional repeat: Datum | string[] | undefined
+interface-member VegaLiteSpec::property::selection = optional selection: Datum | undefined
+interface-member VegaLiteSpec::property::title = optional title: string | undefined | {text: string;}
+interface-member VegaLiteSpec::property::transform = optional transform: Datum[] | undefined
+interface-member VegaLiteSpec::property::usermeta = optional usermeta: (Datum & {idid?: Datum;}) | undefined
+interface-member VegaLiteSpec::property::vconcat = optional vconcat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::width = optional width: number | undefined
+type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
+type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
+type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "comparing" | "locating" | "nesting" | "presenting" | "ranking" | "relating" | "tracing" | "tracking"
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
-type MobileAuditCategory = "layout" | "density" | "interaction" | "annotation" | "semantics"
-type MobileAuditImpact = "high" | "medium" | "low"
-type MobileAuditStatus = "pass" | "warn" | "manual" | "not-applicable"
-type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
-type NumericFieldRole = "x" | "y" | "value" | "size" | "count" | "opacity" | "time" | "lower" | "upper" | "open" | "close" | "high" | "low" | (string & {})
-type NumericRequirement = "finite" | "positive" | "non-negative" | "integer" | "unit-interval"
-type ResponsiveOrientation = "portrait" | "landscape"
-type SerializedFieldSelection = {
-    type: "point";
-    values: unknown[];
-} | {
-    type: "interval";
-    range: [number, number];
-}
+type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
+type MobileAuditCategory = "annotation" | "density" | "interaction" | "layout" | "semantics"
+type MobileAuditImpact = "high" | "low" | "medium"
+type MobileAuditStatus = "manual" | "not-applicable" | "pass" | "warn"
+type NavTreeRole = "annotation" | "axis" | "chart" | "datum" | "series"
+type NumericFieldRole = "close" | "count" | "high" | "low" | "lower" | "opacity" | "open" | "size" | "time" | "upper" | "value" | "x" | "y" | (string & {})
+type NumericRequirement = "finite" | "integer" | "non-negative" | "positive" | "unit-interval"
+type ResponsiveOrientation = "landscape" | "portrait"
+type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}
 type SerializedSelections = Record<string, SerializedSelection>
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type ThemePresetName = keyof typeof THEME_PRESETS
-type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
-type TooltipChromeMode = "default" | "css"
-type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type ThemePresetName = (string & {}) | KnownThemePresetName
+type TimeGranularity = "days" | "hours" | "minutes" | "months" | "seconds" | "years"
+type TooltipChromeMode = "css" | "default"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

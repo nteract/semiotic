@@ -7,6 +7,7 @@ import type {
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { PhysicsColliderSpec } from "../../stream/physics/PhysicsKernel"
 import { applyCrucibleEvent, cloneCrucibleState } from "./crucibleEffects"
+import { createCrucibleRecord, mergeCrucibleRecords } from "./crucibleRecord"
 import type {
   CrucibleBodyDatum,
   CrucibleCompileOptions,
@@ -33,7 +34,6 @@ export const DEFAULT_CRUCIBLE_SIZE: [number, number] = [
   DEFAULT_CRUCIBLE_WIDTH,
   DEFAULT_CRUCIBLE_HEIGHT
 ]
-
 export const DEFAULT_CRUCIBLE_OUTLETS: readonly CrucibleOutlet[] = [
   { id: "product", label: "Products", side: "bottom", order: 0 },
   { id: "retained", label: "Retained", side: "bottom", order: 1 },
@@ -134,9 +134,9 @@ function normalizedMetrics(
         )
       )
     }
-    return {}
+    return createCrucibleRecord<number>()
   }
-  const result: CrucibleMetricMap = {}
+  const result = createCrucibleRecord<number>()
   for (const [key, raw] of Object.entries(value)) {
     const number = finite(raw)
     if (number == null) {
@@ -174,10 +174,10 @@ export function createInitialCrucibleState<TDatum extends Datum>(
   options: CrucibleCompileOptions<TDatum>
 ): CrucibleInitialStateResult<TDatum> {
   const diagnostics: CrucibleDiagnostic[] = []
-  const components: Record<string, CrucibleComponentState<TDatum>> = {}
+  const components = createCrucibleRecord<CrucibleComponentState<TDatum>>()
   const ids: string[] = []
   let inputAmount = 0
-  const inputMetrics: CrucibleMetricMap = {}
+  const inputMetrics = createCrucibleRecord<number>()
 
   options.data.forEach((datum, index) => {
     const fallbackId = String(datum.id ?? `component-${index}`)
@@ -276,7 +276,7 @@ export function createInitialCrucibleState<TDatum extends Datum>(
         `data.${index}.category`
       )
     )
-    if (!components[id]) {
+    if (!Object.hasOwn(components, id)) {
       components[id] = {
         id,
         label,
@@ -285,8 +285,8 @@ export function createInitialCrucibleState<TDatum extends Datum>(
         status,
         initialAmount: resolvedAmount,
         amount: resolvedAmount,
-        initialMetrics: { ...metrics },
-        metrics: { ...metrics },
+        initialMetrics: mergeCrucibleRecords(metrics),
+        metrics: mergeCrucibleRecords(metrics),
         productIds: [],
         history: []
       }
@@ -323,11 +323,11 @@ export function createInitialCrucibleState<TDatum extends Datum>(
       outcome: "in_process",
       eventsApplied: [],
       components,
-      products: {},
-      relations: {},
+      products: createCrucibleRecord<CrucibleProductState>(),
+      relations: createCrucibleRecord(),
       input: { amount: inputAmount, metrics: inputMetrics },
       metrics,
-      loss: { amount: 0, metrics: {} },
+      loss: { amount: 0, metrics: createCrucibleRecord<number>() },
       history: []
     },
     diagnostics
@@ -1380,7 +1380,7 @@ export function compileCruciblePlan<TDatum extends Datum>(
   const outlets = orderedOutlets(options.outlets ?? DEFAULT_CRUCIBLE_OUTLETS)
   const products = (options.products ?? []).map((product) => ({
     ...product,
-    metrics: product.metrics ? { ...product.metrics } : undefined
+    metrics: product.metrics ? mergeCrucibleRecords(product.metrics) : undefined
   }))
   const eventResult = compileEvents(
     options.events ?? [],

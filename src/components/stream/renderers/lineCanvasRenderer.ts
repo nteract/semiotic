@@ -87,7 +87,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // rejects `var(...)` strings and falls back to #000000.
     const rawStroke = node.style.stroke || "#007bff"
     const baseColor = resolveCSSColor(ctx, rawStroke) || rawStroke
-    const lineWidth = node.style.strokeWidth || 2
+    const lineWidth = node.style.strokeWidth ?? 2
     const thresholds = node.colorThresholds
     const rawValues = node.rawValues
 
@@ -101,11 +101,11 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.globalAlpha = node.style.opacity
     }
 
-    ctx.lineWidth = lineWidth
+    if (lineWidth > 0) ctx.lineWidth = lineWidth
     ctx.lineCap = (node.style.strokeLinecap as CanvasLineCap) || "butt"
 
     // Edge-fade for anti-meridian split segments
-    if (node.style._edgeFade) {
+    if (node.style._edgeFade && lineWidth > 0) {
       const baseOpacity = node.style.opacity ?? 1
       renderEdgeFadeLine(
         ctx,
@@ -125,8 +125,10 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     const hasThresholds = thresholds && thresholds.length > 0 && rawValues && rawValues.length === node.path.length
     const decayOpacities = node._decayOpacities
 
-    // Decay path: per-segment rendering with varying globalAlpha
-    if (decayOpacities && decayOpacities.length === node.path.length && !hasThresholds) {
+    // Decay path: per-segment rendering with varying globalAlpha. Canvas
+    // ignores an assignment of lineWidth=0, so explicitly skip all stroke
+    // calls while still allowing a configured area-under-line fill.
+    if (lineWidth > 0 && decayOpacities && decayOpacities.length === node.path.length && !hasThresholds) {
       ctx.strokeStyle = baseColor
       const baseOpacity = node.style.opacity ?? 1
       for (let i = 0; i < node.path.length - 1; i++) {
@@ -138,7 +140,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         ctx.stroke()
       }
     // Fast path: no color thresholds — single-path draw
-    } else if (!hasThresholds) {
+    } else if (lineWidth > 0 && !hasThresholds) {
       ctx.beginPath()
 
       const strokeGrad = node.strokeGradient && node.path.length >= 2
@@ -168,7 +170,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         }
       }
       ctx.stroke()
-    } else {
+    } else if (lineWidth > 0) {
       // Threshold mode: segment-based drawing with interpolated crossings
       // Curves are not applied in threshold mode — fall back to linear segments
       const segments = buildThresholdLineSegments(node.path, rawValues!, thresholds!, baseColor)

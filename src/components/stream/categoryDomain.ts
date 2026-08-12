@@ -13,7 +13,6 @@ export function extractCategoryDomain<T extends Datum>(
   for (const d of data) {
     if (!d || typeof d !== "object") continue
     const raw = typeof accessor === "function" ? accessor(d) : d[accessor]
-    if (raw == null) continue
     const category = String(raw)
     if (seen.has(category)) continue
     seen.add(category)

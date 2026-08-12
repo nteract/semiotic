@@ -16,10 +16,10 @@ const {
   ChordDiagram,
 } = Semiotic
 
-const TestCase = ({ title, children, testId, key }) =>
+const TestCase = ({ title, children, testId, caseKey }) =>
   React.createElement(
     "div",
-    { className: "test-case", "data-testid": testId, key: key || testId },
+    { className: "test-case", "data-testid": testId, key: caseKey || testId },
     React.createElement("h2", null, title),
     children
   )
@@ -379,8 +379,8 @@ root.render(
   React.createElement(
     "div",
     { className: "test-grid" },
-    examples.map(({ key, title, testId, component }) =>
-      React.createElement(TestCase, { key, title, testId, children: React.createElement(component) })
+    examples.map(({ key: caseKey, title, testId, component }) =>
+      React.createElement(TestCase, { key: caseKey, caseKey, title, testId, children: React.createElement(component) })
     )
   )
 )

@@ -80,7 +80,7 @@ export function findNearestNode(
   // null, no point hit exists and the linear point scan below is skipped.
   if (pointQuadtree) {
     const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
-    if (hit) {
+    if (hit && hit.node.interactive !== false) {
       best = { node: hit.node, datum: hit.node.datum, x: hit.node.x, y: hit.node.y, distance: hit.distance }
     }
   }
@@ -90,6 +90,7 @@ export function findNearestNode(
 
     switch (node.type) {
       case "point":
+        if (node.interactive === false) break
         // Quadtree visit was authoritative — skip redundant linear scan.
         if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
@@ -117,14 +118,17 @@ export function findNearestNode(
         // Skip non-interactive areas (e.g. decorative bounds bands)
         if (node.interactive === false) break
         // Areas are hit-tested by finding nearest x on the top path
-        result = hitTestAreaPath(node, px, py)
+        result = hitTestAreaPath(node, px, py, maxDistance)
         break
       case "candlestick":
         result = hitTestCandlestick(node, px, py)
         break
     }
 
-    if (result && result.distance < maxDistance) {
+    // Each type-specific tester has already applied its effective visual hit
+    // geometry. Do not re-cap large bubbles/glyphs at maxDistance here; the
+    // quadtree path intentionally honors the same visual radius.
+    if (result) {
       if (!best || result.distance < best.distance) {
         best = result
       }
@@ -352,15 +356,50 @@ function hitTestCandlestick(node: CandlestickSceneNode, px: number, py: number):
   return null
 }
 
-function hitTestAreaPath(node: { type: "area"; topPath: [number, number][]; datum: SceneDatum }, px: number, py: number): HitResult | null {
+function hitTestAreaPath(
+  node: AreaSceneNode,
+  px: number,
+  py: number,
+  maxDistance: number
+): HitResult | null {
   if (node.topPath.length === 0) return null
+  if (
+    node.clipRect &&
+    (px < node.clipRect.x ||
+      px > node.clipRect.x + node.clipRect.width ||
+      py < node.clipRect.y ||
+      py > node.clipRect.y + node.clipRect.height)
+  ) return null
+
+  // Follow the rendered top edge, including curve interpolation, while
+  // retaining the nearest raw sample for datum/tooltip identity.
+  const hitPath = getCurveSampledPath(node.topPath, node.curve)
+  const hitIdx = binarySearchPath(hitPath, px)
   const idx = binarySearchPath(node.topPath, px)
-  if (idx < 0) return null
+  if (hitIdx < 0 || idx < 0) return null
+
+  let dist: number
+  if (hitPath.length > 1) {
+    let minSegDist = Infinity
+    const startSeg = Math.max(0, hitIdx - 1)
+    const endSeg = Math.min(hitPath.length - 2, hitIdx)
+    for (let i = startSeg; i <= endSeg; i++) {
+      const [ax, ay] = hitPath[i]
+      const [bx, by] = hitPath[i + 1]
+      minSegDist = Math.min(
+        minSegDist,
+        pointToSegmentDist(px, py, ax, ay, bx, by)
+      )
+    }
+    dist = minSegDist
+  } else {
+    const dx = px - hitPath[0][0]
+    const dy = py - hitPath[0][1]
+    dist = Math.sqrt(dx * dx + dy * dy)
+  }
+  if (dist > maxDistance) return null
 
   const [nx, ny] = node.topPath[idx]
-  const dx = px - nx
-  const dy = py - ny
-  const dist = Math.sqrt(dx * dx + dy * dy)
 
   // Extract the specific data point at the hit index (like hitTestLine does)
   const datum = Array.isArray(node.datum) && node.datum[idx]

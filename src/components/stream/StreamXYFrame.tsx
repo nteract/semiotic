@@ -1,33 +1,20 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import {
-  useRef,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useImperativeHandle,
-  useId,
-  forwardRef,
-  memo
-} from "react"
+import { forwardRef, memo, useCallback, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react"
 import type {
-  StreamXYFrameProps,
-  StreamXYFrameHandle,
-  HoverData,
   HoverAnnotationConfig,
+  HoverData,
   SceneNode,
-  StreamScales
+  StreamScales,
+  StreamXYFrameHandle,
+  StreamXYFrameProps
 } from "./types"
 import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
 import { DataSourceAdapter } from "./DataSourceAdapter"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
-import {
-  SceneRevisionDiagnosticsObserver,
-  useSceneRevisionDiagnostics
-} from "./sceneRevisionDiagnostics"
+import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
@@ -42,10 +29,7 @@ import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
-import {
-  createFrameThemeColorCache,
-  LIGHT_FRAME_THEME
-} from "./frameThemeColors"
+import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
 export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
@@ -73,6 +57,10 @@ import { isAnnotationActivationTarget } from "../charts/shared/annotationActivat
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useXYKeyboardNavigation } from "./frameKeyboardNavigation"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
+import { normalizeXYData } from "./normalizeXYData"
+import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
+import { shouldHandleFramePointer } from "./frameCursorInteraction"
+import { rehitXYFrameCursor } from "./xyFrameCursorInteraction"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -210,6 +198,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       showValues,
       heatmapValueFormat,
       heatmapColorScale,
+      onColorDomainChange,
       marginalGraphics,
       pointIdAccessor,
       xScaleType,
@@ -354,6 +343,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
+    const sceneHasAuthoredCursorRef = useRef(false)
     const hoveredNodeRef = useRef<SceneNode | null>(null)
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
@@ -484,6 +474,30 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // scheduleRender comes from useFrame above.
 
     const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getData())
+    const colorDomainEmissionRef = useRef({ onColorDomainChange, chartType })
+    const previousColorDomainRef = useRef<[number, number] | null | undefined>(undefined)
+    colorDomainEmissionRef.current = { onColorDomainChange, chartType }
+    const emitColorDomain = useCallback(() => {
+      const { onColorDomainChange, chartType } = colorDomainEmissionRef.current
+      if (!onColorDomainChange || chartType !== "heatmap") return
+      let min = Infinity
+      let max = -Infinity
+      for (const node of storeRef.current?.scene ?? []) {
+        if (node.type !== "heatcell") continue
+        const value = Number(node.value ?? (node.datum as Datum | undefined)?.value)
+        if (!Number.isFinite(value)) continue
+        if (value < min) min = value
+        if (value > max) max = value
+      }
+      const next: [number, number] | null = Number.isFinite(min) && Number.isFinite(max)
+        ? [min, max]
+        : null
+      const previous = previousColorDomainRef.current
+      if (previous === null && next === null) return
+      if (previous && next && previous[0] === next[0] && previous[1] === next[1]) return
+      previousColorDomainRef.current = next
+      onColorDomainChange(next)
+    }, [])
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -581,32 +595,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     useEffect(() => {
       if (!data) return
-      // When lineDataAccessor is set, data is an array of line objects
-      // (e.g. [{ label: "A", coordinates: [...] }]). Flatten into coordinate
-      // datums for the pipeline — the pipeline needs flat data for extent
-      // tracking and scale computation.
-      if (lineDataAccessor && safeData.length > 0 && typeof safeData[0] === "object" && safeData[0] !== null) {
-        const key = typeof lineDataAccessor === "string" ? lineDataAccessor : "coordinates"
-        const hasCoords = safeData[0][key]
-        if (Array.isArray(hasCoords)) {
-          const flat: Datum[] = []
-          for (const line of safeData) {
-            const coords = line[key]
-            if (Array.isArray(coords)) {
-              // Stamp group key onto each datum for grouping
-              const groupKey = line.label || line.id || line.key
-              if (groupKey != null) {
-                for (const c of coords) flat.push({ ...c, _lineGroup: groupKey })
-              } else {
-                for (const c of coords) flat.push(c)
-              }
-            }
-          }
-          adapterRef.current?.setBoundedData(flat)
-          return
-        }
-      }
-      adapterRef.current?.setBoundedData(safeData)
+      adapterRef.current?.setBoundedData(normalizeXYData(safeData, lineDataAccessor))
     }, [data, safeData, lineDataAccessor])
 
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
@@ -624,11 +613,15 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Hover handlers ───────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
     // come from useFrame above; frame still owns the closure bodies.
-    const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
+    const {
+      hoverHandlerRef,
+      hoverLeaveRef,
+      onPointerMove,
+      onPointerLeave,
+      pointerStateRef
+    } = frame
 
     hoverHandlerRef.current = (e: HoverPointerCoords) => {
-      if (!effectiveHoverAnnotation) return
-
       const canvas = canvasRef.current
       if (!canvas) return
       const rect = canvas.getBoundingClientRect()
@@ -637,6 +630,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const chartY = e.clientY - rect.top - margin.top
 
       if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+        setCanvasMarkCursor(canvas)
+        if (!effectiveHoverAnnotation) return
         if (hoverRef.current) {
           hoverRef.current = null
           hoveredNodeRef.current = null
@@ -650,11 +645,16 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       const store = storeRef.current
-      if (!store || store.scene.length === 0) return
+      if (!store || store.scene.length === 0) {
+        setCanvasMarkCursor(canvas)
+        return
+      }
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
       const hitRadius = getPointerHitRadius(hoverRadius, e.pointerType)
       const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
+      setCanvasMarkCursor(canvas, sceneMarkCursor(hit?.node))
+      if (!effectiveHoverAnnotation) return
       const isMulti = tooltipMode === "multi"
 
       const clearHover = () => {
@@ -763,6 +763,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }
 
     hoverLeaveRef.current = () => {
+      setCanvasMarkCursor(canvasRef.current)
       if (hoverRef.current) {
         hoverRef.current = null
         hoveredNodeRef.current = null
@@ -771,6 +772,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         scheduleRender()
       }
     }
+
+    useCanvasMarkCursorCleanup(canvasRef)
 
     // pointermove coalescing + onPointerLeave come from useFrame above.
 
@@ -828,18 +831,26 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced
     // hover path so the per-frame work cap still applies.
     const onPointerMoveWrapped = useCallback((e: React.PointerEvent) => {
+      if (!shouldHandleFramePointer(
+        pointerStateRef, e, Boolean(effectiveHoverAnnotation),
+        sceneHasAuthoredCursorRef.current, canvasRef.current
+      )) return
       lastPointerTypeRef.current = e.pointerType
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
-    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
+    }, [canvasRef, effectiveHoverAnnotation, focusedNavPointRef, kbFocusIndexRef, onPointerMove, pointerStateRef])
 
     const onMouseMoveFallback = useCallback((e: React.MouseEvent) => {
+      if (!shouldHandleFramePointer(
+        pointerStateRef, e, Boolean(effectiveHoverAnnotation),
+        sceneHasAuthoredCursorRef.current, canvasRef.current, "mouse"
+      )) return
       lastPointerTypeRef.current = "mouse"
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove({ clientX: e.clientX, clientY: e.clientY, pointerType: "mouse" })
-    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
+    }, [canvasRef, effectiveHoverAnnotation, focusedNavPointRef, kbFocusIndexRef, onPointerMove, pointerStateRef])
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
       lastPointerTypeRef.current = e.pointerType
@@ -863,6 +874,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // When reduced motion is active, skip animation — treat as instant
       // Fast-forward transitions when reduced motion is active so target positions
       // are applied immediately and transition state is cleared properly
+      const transitionWasActive = store.activeTransition != null
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
@@ -873,12 +885,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const dimsChanged =
         lastSceneDimsRef.current.w !== adjustedWidth || lastSceneDimsRef.current.h !== adjustedHeight
 
-      // Determine if data canvas needs repaint (data/props changed or animating).
-      // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
+      // Use frame-start state so the terminal transition snap is painted.
       // resolutionDirty (browser zoom / maxDevicePixelRatio) re-rasterizes only —
       // it must not force a scene rebuild.
       const needsResolutionRepaint = resolutionDirtyRef.current
-      const needsDataRepaint = dirtyRef.current || transitionActive || dimsChanged
+      const needsDataRepaint = dirtyRef.current || transitionWasActive || dimsChanged
+      const transitionFinishedThisFrame = transitionWasActive && !transitionActive
       // A custom-layout restyle mutates scene styles in place (no rebuild) and
       // asks for a repaint via this flag — OR'd into the paint gate below, but
       // NOT into the scene-recompute gate, so the restyle isn't overwritten.
@@ -889,11 +901,26 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Compute scene graph (scales + scene nodes) — when data changed, or when
       // the dimensions changed (the latter wins over an active transition).
-      if (needsDataRepaint && (!isTransitioning || dimsChanged)) {
+      if ((dirtyRef.current || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()
+        emitColorDomain()
+      }
+      if (computedSceneThisFrame || stylePaintPending) {
+        sceneHasAuthoredCursorRef.current = sceneHasAuthoredCursor(store.scene)
+        if (!sceneHasAuthoredCursorRef.current) setCanvasMarkCursor(canvas)
+      }
+      if (
+        sceneHasAuthoredCursorRef.current &&
+        (transitionWasActive || computedSceneThisFrame || stylePaintPending)
+      ) {
+        rehitXYFrameCursor({
+          canvas, pointer: pointerStateRef.current, store, margin,
+          width: adjustedWidth, height: adjustedHeight, hoverRadius,
+          geometryMoved: transitionWasActive || computedSceneThisFrame
+        })
       }
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
 
@@ -934,11 +961,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           //     layer beneath.
           //   • `backgroundGraphics` — user supplied their own SVG
           //     background (rendered as a DOM sibling behind the canvas).
-          //     The canvas fills the full size[0] × size[1] area opaquely,
-          //     which would cover the SVG. Skip the fill so the user's
-          //     background shows through. If the user also wants a themed
-          //     color behind their graphics, they can apply it in the SVG
-          //     they render.
+          //     Skip the canvas fill so the SVG remains visible. When an
+          //     explicit solid `background` is also present, that solid is
+          //     rendered as the SVG layer's backdrop before the graphics.
           paintCanvasBackground(ctx, {
             background,
             hasBackgroundGraphics: Boolean(backgroundGraphics),
@@ -1106,10 +1131,11 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // store between React renders. Throttle overlay invalidation so SVG
       // annotations track the canvas without asking React to reconcile at 60Hz.
       const hasSvgOverlayContent = (annotations && annotations.length > 0) || customLayout
-      const wantsAnnotationFrame = hasSvgOverlayContent && (computedSceneThisFrame || isTransitioning)
+      const wantsAnnotationFrame = hasSvgOverlayContent && (computedSceneThisFrame || transitionWasActive)
       if (
         wantsAnnotationFrame &&
-        (computedSceneThisFrame || now - lastAnnotationFrameTimeRef.current >= 33)
+        (computedSceneThisFrame || transitionFinishedThisFrame ||
+          now - lastAnnotationFrameTimeRef.current >= 33)
       ) {
         setAnnotationFrame(f => f + 1)
         lastAnnotationFrameTimeRef.current = now
@@ -1128,7 +1154,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }
 
     // Staleness check timer
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
 
     // ── Auto-detect date x-axis formatting ──────────────────────────────
     const autoDateXFormat = useMemo(() => {
@@ -1211,7 +1237,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Compute scene synchronously for server rendering
       const store = storeRef.current
       if (store && data) {
-        store.ingest({ inserts: safeData, bounded: true })
+        store.ingest({
+          inserts: normalizeXYData(safeData, lineDataAccessor),
+          bounded: true
+        })
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 
@@ -1259,12 +1288,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             style={{ position: "absolute", left: 0, top: 0 }}
           >
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {ssrBackground}
-            </g>
-            <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
+              {ssrBackground}
+            </g>
+            <g transform={`translate(${margin.left},${margin.top})`}>
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
               ))}
@@ -1272,7 +1301,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
                 node,
                 index: i,
                 renderMode,
-                fallback: () => xySceneNodeToSVG(node, i, svgInstanceId)
+                fallback: () => xySceneNodeToSVG(node, i, svgInstanceId, hoverRadius)
               })).filter(Boolean)}
             </g>
           </svg>
@@ -1363,14 +1392,18 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           role="img"
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
-          onMouseMove={effectiveHoverAnnotation ? onMouseMoveFallback : undefined}
-          onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onPointerMove={onPointerMoveWrapped}
+          onMouseMove={onMouseMoveFallback}
+          onPointerLeave={onPointerLeave}
+          onMouseLeave={onPointerLeave}
           onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
           onClick={hasClickBehavior ? onClick : undefined}
         >
-        <CanvasFrameBackground size={size} margin={margin}>
+        <CanvasFrameBackground
+          size={size}
+          margin={margin}
+          backdropFill={backgroundGraphics ? background : undefined}
+        >
           {resolvedBackground}
         </CanvasFrameBackground>
         <SVGUnderlay

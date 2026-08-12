@@ -186,7 +186,12 @@ const SOURCE_LABELS: Record<string, string> = {
 function applyVisibleProvenance(a: Datum): Datum {
   const prov = a?.provenance
   if (!prov || typeof prov !== "object") return a
-  const source = typeof prov.source === "string" ? (SOURCE_LABELS[prov.source] ?? prov.source) : null
+  const source =
+    typeof prov.source === "string"
+      ? Object.prototype.hasOwnProperty.call(SOURCE_LABELS, prov.source)
+        ? SOURCE_LABELS[prov.source]
+        : prov.source
+      : null
   const confidence =
     typeof prov.confidence === "number" && Number.isFinite(prov.confidence)
       ? `${Math.round(Math.max(0, Math.min(1, prov.confidence)) * 100)}%`

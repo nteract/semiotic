@@ -91,9 +91,10 @@ describe("resolveStringAccessor", () => {
     expect(resolveStringAccessor(undefined)).toBeUndefined()
   })
 
-  it("passes through a function accessor", () => {
-    const fn = (d: Datum) => d.label
-    const get = resolveStringAccessor(fn)
-    expect(get).toBe(fn)
+  it("wraps a function accessor with the same string coercion as a key", () => {
+    const get = resolveStringAccessor((d: Datum) => d.label)!
+    expect(get({ label: "alpha" })).toBe("alpha")
+    expect(get({ label: null })).toBe("null")
+    expect(get({})).toBe("undefined")
   })
 })

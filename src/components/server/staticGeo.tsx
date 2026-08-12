@@ -15,7 +15,7 @@ import {
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
@@ -23,6 +23,7 @@ import {
   renderFrameLegend,
   wrapSVG
 } from "./staticSVGChrome"
+import { resolveFrameGraphics } from "../stream/frameGraphics"
 
 export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
@@ -63,22 +64,29 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
 
   const config: GeoPipelineConfig = {
     projection: props.projection || "equalEarth",
+    projectionExtent: props.projectionExtent,
     xAccessor: props.xAccessor,
     yAccessor: props.yAccessor,
     lineDataAccessor: props.lineDataAccessor,
     pointIdAccessor: props.pointIdAccessor,
+    lineIdAccessor: props.lineIdAccessor,
     lineType: props.lineType,
+    flowStyle: props.flowStyle,
     areaStyle: props.areaStyle,
     pointStyle: props.pointStyle,
     lineStyle: props.lineStyle,
+    colorScheme: props.colorScheme,
     graticule: props.graticule,
     fitPadding: props.fitPadding,
     projectionTransform: props.projectionTransform,
     customLayout: props.customLayout,
     layoutConfig: props.layoutConfig,
     layoutMargin: margin,
+    onLayoutError: props.onLayoutError,
     themeCategorical: theme.colors.categorical,
     themeSemantic: resolveThemeSemanticColors(theme),
+    themeSequential: theme.colors.sequential,
+    themeDiverging: theme.colors.diverging,
   }
 
   const store = new GeoPipelineStore(config)
@@ -98,6 +106,18 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   if (props.lines) store.setLines(lines)
 
   store.computeScene({ width, height })
+  const resolvedBackgroundGraphics = resolveFrameGraphics(
+    props.backgroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
+  const resolvedForegroundGraphics = resolveFrameGraphics(
+    props.foregroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
 
   const renderedScene = renderSceneListWithBackend({
     nodes: store.scene,
@@ -112,7 +132,11 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       marks: renderedScene.map(entry => entry.node),
       title: props.title, description: props.description,
       annotations: props.annotations,
-      legendItems: geoLegendCategories.length > 0 ? geoLegendCategories.length : undefined,
+      legendItems: geoLegendCategories.length > 0
+        ? geoLegendCategories.length
+        : props.legend != null
+          ? 1
+          : undefined,
       margin,
     })
   }
@@ -121,10 +145,10 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     // Even when the data scene is empty, bg/fg graphics and annotations are
     // valid surfaces a caller may have legitimately set. Pipe them through
     // so the empty-data path doesn't silently drop them.
-    const emptyContent = (props.backgroundGraphics || props.foregroundGraphics || props.annotations || store.customLayoutOverlays)
+    const emptyContent = (resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations || store.customLayoutOverlays)
       ? (
         <>
-          {props.backgroundGraphics}
+          {resolvedBackgroundGraphics}
           {props.annotations ? renderStaticAnnotations({
             annotations: props.annotations,
             autoPlaceAnnotations: props.autoPlaceAnnotations,
@@ -138,7 +162,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
             theme,
             idPrefix: props._idPrefix,
           }) : null}
-          {props.foregroundGraphics}
+          {resolvedForegroundGraphics}
           {store.customLayoutOverlays}
         </>
       )
@@ -194,10 +218,10 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
 
   const content = (
     <>
-      {props.backgroundGraphics}
+      {resolvedBackgroundGraphics}
       {dataMarks}
       {annotationNodes}
-      {props.foregroundGraphics}
+      {resolvedForegroundGraphics}
       {store.customLayoutOverlays}
     </>
   )

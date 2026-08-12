@@ -40,6 +40,7 @@ import {
   perCornerSvgPath,
   symbolSceneNodeToSVG
 } from "./sceneToSVGShared"
+import { withSceneMarkCursor } from "./sceneCursor"
 
 function formatFunnelNumber(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -97,6 +98,14 @@ function funnelRectLabels(node: RectSceneNode, key: string): React.ReactNode {
 }
 
 export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefix?: string): React.ReactNode {
+  return withSceneMarkCursor(
+    ordinalSceneNodeToSVGMark(node, i, idPrefix),
+    node,
+    `ordinal-cursor-${i}`
+  )
+}
+
+function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?: string): React.ReactNode {
   // Build a unique key combining node type, category (or group), and index
   // to avoid duplicate key warnings when multiple nodes share the same index
   // within stacked/grouped ordinal charts. `idPrefix` (when provided) is
@@ -311,34 +320,35 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
     case "boxplot": {
       const n = node as BoxplotSceneNode
       const halfW = n.columnWidth / 2
+      const strokeWidth = n.style.strokeWidth ?? 1
       if (n.projection === "vertical") {
         return (
           <g key={baseKey}>
-            <line x1={n.x} y1={n.minPos} x2={n.x} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.x} y1={n.minPos} x2={n.x} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
             <rect
               x={n.x - halfW} y={Math.min(n.q1Pos, n.q3Pos)}
               width={n.columnWidth} height={Math.abs(n.q3Pos - n.q1Pos)}
               fill={svgFill(n.style.fill)} fillOpacity={n.style.fillOpacity ?? 0.6}
-              stroke={n.style.stroke || "#333"} strokeWidth={1}
+              stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth}
             />
-            <line x1={n.x - halfW} y1={n.medianPos} x2={n.x + halfW} y2={n.medianPos} stroke={n.style.stroke || "#333"} strokeWidth={2} />
-            <line x1={n.x - halfW * 0.5} y1={n.minPos} x2={n.x + halfW * 0.5} y2={n.minPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
-            <line x1={n.x - halfW * 0.5} y1={n.maxPos} x2={n.x + halfW * 0.5} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.x - halfW} y1={n.medianPos} x2={n.x + halfW} y2={n.medianPos} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth * 2} />
+            <line x1={n.x - halfW * 0.5} y1={n.minPos} x2={n.x + halfW * 0.5} y2={n.minPos} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
+            <line x1={n.x - halfW * 0.5} y1={n.maxPos} x2={n.x + halfW * 0.5} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
           </g>
         )
       } else {
         return (
           <g key={baseKey}>
-            <line x1={n.minPos} y1={n.y} x2={n.maxPos} y2={n.y} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.minPos} y1={n.y} x2={n.maxPos} y2={n.y} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
             <rect
               x={Math.min(n.q1Pos, n.q3Pos)} y={n.y - halfW}
               width={Math.abs(n.q3Pos - n.q1Pos)} height={n.columnWidth}
               fill={svgFill(n.style.fill)} fillOpacity={n.style.fillOpacity ?? 0.6}
-              stroke={n.style.stroke || "#333"} strokeWidth={1}
+              stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth}
             />
-            <line x1={n.medianPos} y1={n.y - halfW} x2={n.medianPos} y2={n.y + halfW} stroke={n.style.stroke || "#333"} strokeWidth={2} />
-            <line x1={n.minPos} y1={n.y - halfW * 0.5} x2={n.minPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={1} />
-            <line x1={n.maxPos} y1={n.y - halfW * 0.5} x2={n.maxPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.medianPos} y1={n.y - halfW} x2={n.medianPos} y2={n.y + halfW} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth * 2} />
+            <line x1={n.minPos} y1={n.y - halfW * 0.5} x2={n.minPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
+            <line x1={n.maxPos} y1={n.y - halfW * 0.5} x2={n.maxPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
           </g>
         )
       }
@@ -353,7 +363,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
           fill={svgFill(n.style.fill)}
           fillOpacity={n.style.fillOpacity ?? 0.6}
           stroke={n.style.stroke || "#333"}
-          strokeWidth={n.style.strokeWidth || 1}
+          strokeWidth={n.style.strokeWidth ?? 1}
         />
       ]
       if (n.iqrLine && n.bounds) {
@@ -393,12 +403,15 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
     }
     case "connector": {
       const n = node as ConnectorSceneNode
+      const fallbackStroke = n.style.fill && n.style.fill !== "none"
+        ? svgFill(n.style.fill, "var(--semiotic-border, #999)")
+        : "var(--semiotic-border, #999)"
       return (
         <line
           key={baseKey}
           x1={n.x1} y1={n.y1} x2={n.x2} y2={n.y2}
-          stroke={n.style.stroke || "#999"}
-          strokeWidth={n.style.strokeWidth || 1}
+          stroke={n.style.stroke || fallbackStroke}
+          strokeWidth={n.style.strokeWidth ?? 1}
           opacity={n.style.opacity ?? 0.5}
         />
       )

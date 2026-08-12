@@ -4,7 +4,7 @@ import { scaleLinear } from "d3-scale"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { XYCustomChartProps } from "../custom/XYCustomChart"
 import type { Datum } from "../shared/datumTypes"
-import { BumpChart, rankBumpData } from "./BumpChart"
+import { BumpChart, rankBumpData, resolveBumpColorScheme } from "./BumpChart"
 import { LIGHT_THEME, ThemeProvider } from "../../ThemeProvider"
 import { isMultiTooltipConfig } from "../../Tooltip/Tooltip"
 
@@ -62,6 +62,28 @@ describe("rankBumpData", () => {
     expect(new Set(
       ranked.data.filter(d => !d.__bumpHighlighted).map(d => d.__bumpColorGroup),
     )).toEqual(new Set(["Other"]))
+  })
+})
+
+describe("resolveBumpColorScheme", () => {
+  it("retains special series names as own color-map keys", () => {
+    const colors = resolveBumpColorScheme({
+      seriesOrder: ["__proto__", "constructor", "toString"],
+      overallOrder: ["__proto__", "constructor", "toString"],
+      highlightTop: 1,
+      colorScheme: ["#ff0000"],
+      neutralColor: "#cccccc",
+    }) as Record<string, string>
+
+    expect(Object.keys(colors)).toEqual([
+      "__proto__",
+      "constructor",
+      "toString",
+    ])
+    expect(colors["__proto__"]).toBe("#ff0000")
+    expect(colors["constructor"]).toBe("#cccccc")
+    expect(colors["toString"]).toBe("#cccccc")
+    expect(Object.getPrototypeOf(colors)).toBe(Object.prototype)
   })
 })
 

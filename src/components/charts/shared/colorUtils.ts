@@ -46,7 +46,9 @@ export function resolveCategoricalPalette(
   }
   if (Array.isArray(colorScheme) && colorScheme.length > 0) return colorScheme
   if (typeof colorScheme === "string") {
-    const named = COLOR_SCHEMES[colorScheme]
+    const named = Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, colorScheme)
+      ? COLOR_SCHEMES[colorScheme]
+      : undefined
     if (Array.isArray(named) && named.length > 0) return named
   }
   if (themeCategorical && themeCategorical.length > 0) return themeCategorical

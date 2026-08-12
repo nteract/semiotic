@@ -41,6 +41,41 @@ describe("process aggregates", () => {
     ])
   })
 
+  it("treats prototype-named region ids as own buckets and ignores inherited buckets", () => {
+    let counts: RegionCountMap = {}
+    for (const id of ["__proto__", "constructor", "toString"]) {
+      counts = aggregateRegionCounts(counts, {
+        type: "region-enter",
+        bodyId: `body:${id}`,
+        region: {
+          id,
+          shape: { type: "aabb", x: 0, y: 0, width: 1, height: 1 }
+        }
+      })
+    }
+
+    expect(Object.keys(counts)).toEqual(["__proto__", "constructor", "toString"])
+    expect(
+      regionCountsToProjectionRows(counts, ["__proto__", "constructor", "toString"])
+    ).toEqual([
+      { label: "__proto__", value: 1 },
+      { label: "constructor", value: 1 },
+      { label: "toString", value: 1 }
+    ])
+    expect(regionCountsToProjectionRows({}, ["constructor", "toString"])).toEqual([])
+  })
+
+  it("drops malformed serialized region buckets", () => {
+    const counts = {
+      valid: { id: "valid", count: 2, bodyIds: ["a", "b"] },
+      malformed: { id: "malformed", count: 2, bodyIds: "not-an-array" }
+    } as unknown as RegionCountMap
+
+    expect(regionCountsToProjectionRows(counts)).toEqual([
+      { label: "valid", value: 2 }
+    ])
+  })
+
   it("tracks group completion from absorbed members", () => {
     const group = bodyGroupSpec({
       id: "auth",
@@ -144,6 +179,29 @@ describe("process aggregates", () => {
       complete: false,
       absorbed: 1,
       total: 2
+    })
+  })
+
+  it("uses only own finite weights while preserving own special member ids", () => {
+    const weights = Object.create({ constructor: 100 }) as Record<string, number>
+    Object.defineProperty(weights, "__proto__", {
+      value: 4,
+      enumerable: true
+    })
+    const group = bodyGroupSpec({
+      id: "special",
+      bodyIds: ["constructor", "__proto__"],
+      completion: {
+        mode: "threshold",
+        threshold: 5,
+        valueByBodyId: weights
+      }
+    })
+
+    expect(groupCompletionRows([group], ["__proto__"])[0]).toMatchObject({
+      totalValue: 5,
+      absorbedValue: 4,
+      complete: false
     })
   })
 })

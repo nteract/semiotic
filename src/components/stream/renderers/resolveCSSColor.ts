@@ -31,7 +31,9 @@ function extractVar(value: string): { name: string; fallback?: string } | null {
   }
   const name = inner.slice(0, commaIdx).trim()
   const fallback = inner.slice(commaIdx + 1).trim()
-  return name.startsWith("--") ? { name, fallback: fallback || undefined } : null
+  return name.startsWith("--")
+    ? { name, fallback: fallback || undefined }
+    : null
 }
 
 interface CacheEntry {
@@ -58,6 +60,27 @@ type LegacyMediaQueryList = MediaQueryList & {
   removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
 }
 
+function teardownGlobalObserver(): void {
+  installedObserver?.disconnect()
+  installedObserver = null
+
+  if (installedMql && installedMqlHandler) {
+    if (typeof installedMql.removeEventListener === "function") {
+      installedMql.removeEventListener("change", installedMqlHandler)
+    } else if (
+      typeof (installedMql as LegacyMediaQueryList).removeListener ===
+      "function"
+    ) {
+      ;(installedMql as LegacyMediaQueryList).removeListener(
+        installedMqlHandler
+      )
+    }
+  }
+  installedMql = null
+  installedMqlHandler = null
+  observerInstalled = false
+}
+
 function ensureGlobalObserver(): void {
   if (observerInstalled) return
   // Don't latch the flag in non-DOM environments (SSR/pre-render) — the next
@@ -65,27 +88,62 @@ function ensureGlobalObserver(): void {
   if (typeof window === "undefined" || typeof document === "undefined") return
   observerInstalled = true
 
-  const invalidateAndNotify = (targets?: readonly Element[]) => {
+  const customPropertySignature = (cssText: string | null): string => {
+    if (!cssText?.includes("--")) return ""
+    const scratch = document.createElement("span").style
+    scratch.cssText = cssText
+    const properties = Array.from(scratch)
+      .filter((name) => name.startsWith("--"))
+      .sort()
+    return properties
+      .map(
+        (name) =>
+          `${name}:${scratch.getPropertyValue(name)}!${scratch.getPropertyPriority(name)}`
+      )
+      .join(";")
+  }
+
+  const recordAffects = (record: MutationRecord, element: Element): boolean => {
+    const target = record.target
+    if (!(target instanceof Element)) return false
+
+    // The subscribed frame root or one of its ancestors can change inherited
+    // variables directly.
+    if (target === element || target.contains(element)) return true
+    if (!element.contains(target)) return false
+
+    // A descendant matters only when it is (or wraps) a canvas whose computed
+    // variables the frame paints. This keeps tooltip/class/position churn out
+    // of the render loop while preserving scoped wrappers inside the frame.
+    const isCanvas = target.tagName === "CANVAS"
+    if (!isCanvas && !target.querySelector("canvas")) return false
+
+    // Imperative cursor updates mutate the retained canvas's inline style.
+    // They do not change color variables, so compare only custom-property
+    // declarations for a style mutation on the canvas itself.
+    if (isCanvas && record.attributeName === "style") {
+      return (
+        customPropertySignature(record.oldValue) !==
+        customPropertySignature(target.getAttribute("style"))
+      )
+    }
+    return true
+  }
+
+  const invalidateAndNotify = (records?: readonly MutationRecord[]) => {
     const affectedSubscribers: CSSColorInvalidationSubscriber[] = []
     for (const subscriber of invalidationSubscribers) {
       const element = subscriber.getElement()
       if (!element) continue
       const affected =
-        !targets ||
-        targets.some(
-          (target) =>
-            target === element ||
-            target.contains(element) ||
-            element.contains(target)
-        )
+        !records || records.some((record) => recordAffects(record, element))
       if (affected) affectedSubscribers.push(subscriber)
     }
 
-    // Attribute mutations are observed on the whole document, but only a
-    // mutation in (or on) a subscribed canvas branch can change a cached
-    // computed custom property. Avoid invalidating every canvas cache for
-    // unrelated DOM churn elsewhere in the document.
-    if (targets && affectedSubscribers.length === 0) return
+    // Attribute mutations are observed on the whole document, but unrelated
+    // branches and descendant presentation churn cannot affect a subscribed
+    // canvas's computed custom properties.
+    if (records && affectedSubscribers.length === 0) return
 
     currentVersion++
     for (const subscriber of affectedSubscribers) subscriber.listener()
@@ -93,14 +151,7 @@ function ensureGlobalObserver(): void {
 
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
     installedObserver = new MutationObserver((records) => {
-      const targets = Array.from(
-        new Set(
-          records
-            .map((record) => record.target)
-            .filter((target): target is Element => target instanceof Element)
-        )
-      )
-      invalidateAndNotify(targets)
+      invalidateAndNotify(records)
     })
     // Observe the whole document tree so intermediate-wrapper scoped CSS vars
     // (`<div style={{ "--semiotic-danger": "#4b0082" }}>` around a chart)
@@ -116,7 +167,8 @@ function ensureGlobalObserver(): void {
         "data-semiotic-theme",
         "data-semiotic-theme-mode"
       ],
-      subtree: true,
+      attributeOldValue: true,
+      subtree: true
     })
   }
 
@@ -126,7 +178,9 @@ function ensureGlobalObserver(): void {
       installedMqlHandler = () => invalidateAndNotify()
       if (typeof installedMql.addEventListener === "function") {
         installedMql.addEventListener("change", installedMqlHandler)
-      } else if (typeof (installedMql as LegacyMediaQueryList).addListener === "function") {
+      } else if (
+        typeof (installedMql as LegacyMediaQueryList).addListener === "function"
+      ) {
         // Safari 14 fallback
         ;(installedMql as LegacyMediaQueryList).addListener(installedMqlHandler)
       }
@@ -150,7 +204,12 @@ export function subscribeToCSSColorInvalidation(
   const subscriber = { getElement, listener }
   invalidationSubscribers.add(subscriber)
   return () => {
-    invalidationSubscribers.delete(subscriber)
+    if (
+      invalidationSubscribers.delete(subscriber) &&
+      invalidationSubscribers.size === 0
+    ) {
+      teardownGlobalObserver()
+    }
   }
 }
 
@@ -171,8 +230,6 @@ export function resolveCSSColor(
 
   const canvas = ctx.canvas
   if (!canvas) return resolveFallback()
-
-  ensureGlobalObserver()
 
   let entry = cache.get(canvas)
   if (!entry || entry.version !== currentVersion) {
@@ -220,19 +277,6 @@ export function getCSSColorCacheVersion(): number {
  */
 export function _resetCSSColorCacheForTest(): void {
   currentVersion++
-  if (installedObserver) {
-    installedObserver.disconnect()
-    installedObserver = null
-  }
-  if (installedMql && installedMqlHandler) {
-    if (typeof installedMql.removeEventListener === "function") {
-      installedMql.removeEventListener("change", installedMqlHandler)
-    } else if (typeof (installedMql as LegacyMediaQueryList).removeListener === "function") {
-      ;(installedMql as LegacyMediaQueryList).removeListener(installedMqlHandler)
-    }
-    installedMql = null
-    installedMqlHandler = null
-  }
   invalidationSubscribers.clear()
-  observerInstalled = false
+  teardownGlobalObserver()
 }

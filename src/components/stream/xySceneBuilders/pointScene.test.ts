@@ -403,6 +403,23 @@ describe("buildPointScene", () => {
     expect(b.map((n) => n.symbolType)).toEqual(a.map((n) => n.symbolType))
   })
 
+  it("does not treat inherited symbol-map keys as explicit glyphs", () => {
+    const data = [
+      { x: 1, y: 1, cls: "constructor" },
+      { x: 2, y: 2, cls: "toString" },
+    ]
+    const ctx = makeCtx({
+      config: { chartType: "scatter", symbolMap: {} },
+      getSymbol: (d) => d.cls,
+    })
+
+    const nodes = buildPointScene(ctx, data) as { symbolType?: string }[]
+    expect(nodes.map((node) => node.symbolType)).toEqual([
+      "circle",
+      "triangle",
+    ])
+  })
+
   it("carries pointId onto symbol nodes for annotation anchoring", () => {
     const data = [{ x: 10, y: 20, cls: "A", id: "p1" }]
     const ctx = makeCtx({

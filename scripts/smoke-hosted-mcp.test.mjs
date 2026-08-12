@@ -277,7 +277,11 @@ describe("smoke-hosted-mcp", () => {
 
   it("accepts the stable server name and exact published package version", async () => {
     await withFixture({ channel: "stable" }, async (fixture) => {
-      const result = await runSmoke(fixture.endpoint, [], "stable")
+      const result = await runSmoke(
+        fixture.endpoint,
+        ["--expected-package-version", "3.8.3"],
+        "stable",
+      )
       assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
       assert.match(result.stdout, /hosted MCP smoke passed/)
       assert.equal(result.stderr, "")
@@ -312,6 +316,17 @@ describe("smoke-hosted-mcp", () => {
   it("fails for a wrong Git SHA", () => expectFailure({ wrongSha: true }, /commitSha did not match/))
   it("fails for a wrong deployment channel", () => expectFailure({ wrongChannel: true }, /channel did not match/))
   it("fails for a wrong Cloud Build ID", () => expectFailure({ wrongBuildId: true }, /buildId did not match/))
+  it("fails for a wrong expected package version", async () => {
+    await withFixture({ channel: "stable" }, async (fixture) => {
+      const result = await runSmoke(
+        fixture.endpoint,
+        ["--expected-package-version", "9.9.9"],
+        "stable",
+      )
+      assert.notEqual(result.code, 0)
+      assert.match(`${result.stdout}${result.stderr}`, /packageVersion did not match/)
+    })
+  })
   it("fails when a public tool is missing", () => expectFailure({ missingTool: true }, /exactly the five public tools/))
   it("fails when rendering is cancelled", () => expectFailure({ cancelledRender: true }, /MCP_RENDER_CANCELLED/))
   it("fails when health returns HTTP 404", () => expectFailure({ healthStatus: 404 }, /health returned HTTP 404/))

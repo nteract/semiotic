@@ -348,10 +348,11 @@ describe("Heatmap", () => {
     // 42px legendDistance is measured from the *outside* of the bottom axis
     // chrome rather than the plot edge, so the legend clears the tick labels.
     // The bottom margin grows to hold chrome + distance + legend, which moves
-    // the plot up; the legend lands at 366 with its 34px height ending flush
-    // at the 400px canvas edge, and the 22px tick band sits above it.
+    // the plot up; the labeled gradient's shared 46px layout box starts at
+    // 354 and ends flush at the 400px canvas edge, with the 22px tick band
+    // above it.
     expect(gradient?.parentElement?.getAttribute("transform")).toBe(
-      "translate(70, 366)"
+      "translate(70, 354)"
     )
   })
 

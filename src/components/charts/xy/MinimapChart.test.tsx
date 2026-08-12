@@ -265,4 +265,28 @@ describe("MinimapChart", () => {
     const mainProps = xyFrameRenders.find((p) => p.enableHover === true)!
     expect(mainProps.xExtent).toEqual([1, 3])
   })
+
+  it("assigns accessibility metadata to detail only and groups the composite", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <MinimapChart
+          data={sampleData}
+          title="Signal history"
+          description="Detail view with a brushable overview"
+          summary="The latest values are elevated."
+          accessibleTable
+        />
+      </TooltipProvider>
+    )
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)!
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
+
+    expect(container.querySelector("[role='group']")?.getAttribute("aria-label"))
+      .toBe("Detail view with a brushable overview")
+    expect(mainProps.title).toBe("Signal history")
+    expect(mainProps.summary).toBe("The latest values are elevated.")
+    expect(mainProps.accessibleTable).toBe(true)
+    expect(overviewProps.accessibleTable).toBe(false)
+    expect(overviewProps.description).toContain("overview")
+  })
 })

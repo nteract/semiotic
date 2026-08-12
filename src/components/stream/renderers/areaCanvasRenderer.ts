@@ -122,9 +122,10 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       }
 
       // Stroke on top with per-segment decay
-      if (node.style.stroke && node.style.stroke !== "none") {
+      const strokeWidth = node.style.strokeWidth ?? 2
+      if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
         ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-        ctx.lineWidth = node.style.strokeWidth || 2
+        ctx.lineWidth = strokeWidth
         ctx.setLineDash([])
         for (let i = 0; i < node.topPath.length - 1; i++) {
           const segAlpha = (decayOpacities[i] + decayOpacities[i + 1]) * 0.5
@@ -172,7 +173,8 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     }
 
     // Stroke on top
-    if (node.style.stroke && node.style.stroke !== "none") {
+    const strokeWidth = node.style.strokeWidth ?? 2
+    if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
       ctx.globalAlpha = nodeOpacity
       const baseStroke = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       const strokeGrad = !hasThresholds && !hasStrokeColorBands && node.strokeGradient && node.topPath.length >= 2
@@ -184,7 +186,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
             node.topPath[node.topPath.length - 1][0], 0,
           )
         : null
-      ctx.lineWidth = node.style.strokeWidth || 2
+      ctx.lineWidth = strokeWidth
       ctx.setLineDash([])
 
       if (hasStrokeColorBands) {

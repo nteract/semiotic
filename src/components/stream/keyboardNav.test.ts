@@ -153,6 +153,23 @@ describe("extractXYNavPoints", () => {
     expect(result[1].x).toBe(50)
     expect(result[2].x).toBe(100)
   })
+
+  it("skips interactive:false points and areas", () => {
+    const scene = [
+      { type: "point", x: 10, y: 10, datum: d("point"), interactive: false },
+      {
+        type: "area",
+        topPath: [[20, 20]] as [number, number][],
+        bottomPath: [[20, 40]] as [number, number][],
+        datum: [d("area")],
+        interactive: false
+      },
+      { type: "point", x: 30, y: 30, datum: d("active") }
+    ]
+
+    expect(extractXYNavPoints(asXY(scene)).map(point => idOf(point.datum)))
+      .toEqual(["active"])
+  })
 })
 
 describe("extractOrdinalNavPoints", () => {
@@ -255,6 +272,16 @@ describe("extractOrdinalNavPoints", () => {
       { type: "wedge", cx: null, cy: 50, startAngle: 0, endAngle: Math.PI, datum: { skip: true } }
     ]
     expect(extractOrdinalNavPoints(asOrd(scene))).toEqual([])
+  })
+
+  it("skips interactive:false point nodes", () => {
+    const scene = [
+      { type: "point", x: 10, y: 10, datum: d("decorative"), interactive: false },
+      { type: "point", x: 20, y: 20, datum: d("active") }
+    ]
+    expect(
+      extractOrdinalNavPoints(asOrd(scene)).map(point => idOf(point.datum))
+    ).toEqual(["active"])
   })
 
 })
@@ -474,6 +501,15 @@ describe("extractGeoNavPoints", () => {
     // Only the interactive, data-backed area is navigable.
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ shape: "geoarea", datum: { properties: { name: "France" } } })
+  })
+
+  it("skips non-interactive geo points", () => {
+    const scene = [
+      { type: "point", x: 10, y: 10, datum: d("decorative"), interactive: false },
+      { type: "point", x: 20, y: 20, datum: d("active") }
+    ]
+    expect(extractGeoNavPoints(asGeo(scene)).map(point => idOf(point.datum)))
+      .toEqual(["active"])
   })
 
   it("returns empty array for empty scene", () => {

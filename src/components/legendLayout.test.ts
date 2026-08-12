@@ -136,6 +136,20 @@ describe("resolveHorizontalLegendHeight", () => {
       resolveHorizontalLegendHeight(singleGroup, 500) + 16
     )
   })
+
+  it("includes the labeled gradient header without changing unlabeled legends", () => {
+    const gradient = {
+      gradient: {
+        domain: [0, 1] as [number, number],
+        colorFn: () => "#555",
+      }
+    }
+
+    expect(resolveHorizontalLegendHeight(gradient, 500)).toBe(26)
+    expect(resolveHorizontalLegendHeight({
+      gradient: { ...gradient.gradient, label: "Probability" }
+    }, 500)).toBe(46)
+  })
 })
 
 describe("resolveAxisChromeGutter", () => {

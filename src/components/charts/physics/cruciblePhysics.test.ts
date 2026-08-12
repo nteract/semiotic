@@ -190,6 +190,97 @@ describe("Crucible compilation and replay", () => {
     expect(plan.terminalState).toEqual(first.state)
   })
 
+  it("compiles and replays prototype-key component, product, relation, and metric ids", () => {
+    const specialMetrics = Object.fromEntries([
+      ["__proto__", 1],
+      ["constructor", 2],
+      ["toString", 3]
+    ])
+    const plan = compileCruciblePlan({
+      data: ["__proto__", "constructor", "toString"].map((id) => ({
+        id,
+        amount: 1,
+        category: "special",
+        metrics: specialMetrics
+      })),
+      idAccessor: "id",
+      amountAccessor: "amount",
+      categoryAccessor: "category",
+      metricsAccessor: "metrics",
+      metrics: specialMetrics,
+      phases: [{ id: "heat", duration: 1 }],
+      outlets: [{ id: "product", side: "bottom" }],
+      products: [
+        { id: "__proto__", outletId: "product" },
+        { id: "toString", outletId: "product" }
+      ],
+      events: [
+        {
+          id: "relate",
+          at: { time: 0.1 },
+          effects: [
+            {
+              type: "set-relation",
+              relation: {
+                id: "constructor",
+                sourceIds: ["constructor", "toString"]
+              }
+            },
+            {
+              type: "set-metric",
+              target: "run",
+              metricsDelta: specialMetrics
+            }
+          ]
+        },
+        {
+          id: "form-prototype",
+          at: { time: 0.2 },
+          effects: [
+            {
+              type: "combine",
+              sourceIds: ["__proto__"],
+              productId: "__proto__"
+            }
+          ]
+        },
+        {
+          id: "form-string",
+          at: { time: 0.3 },
+          effects: [
+            {
+              type: "combine",
+              sourceIds: ["constructor", "toString"],
+              productId: "toString",
+              basisRelationIds: ["constructor"]
+            }
+          ]
+        }
+      ]
+    })
+
+    expect(
+      plan.diagnostics.filter((diagnostic) => diagnostic.severity === "error")
+    ).toEqual([])
+    const state = replayCruciblePlan(plan).state
+    for (const id of ["__proto__", "constructor", "toString"]) {
+      expect(Object.hasOwn(state.components, id)).toBe(true)
+      expect(Object.hasOwn(state.metrics, id)).toBe(true)
+      expect(state.metrics[id]).toBe(specialMetrics[id] * 2)
+    }
+    expect(Object.hasOwn(state.products, "__proto__")).toBe(true)
+    expect(Object.hasOwn(state.products, "toString")).toBe(true)
+    expect(Object.hasOwn(state.relations, "constructor")).toBe(true)
+    expect(state.products["__proto__"].sourceIds).toEqual(["__proto__"])
+    const stringProductId: string = "toString"
+    const constructorRelationId: string = "constructor"
+    expect(state.products[stringProductId].sourceIds).toEqual([
+      "constructor",
+      "toString"
+    ])
+    expect(state.relations[constructorRelationId].status).toBe("resolved")
+  })
+
   it("has a canonical key for fresh equivalent arrays", () => {
     const first = compileCruciblePlan(options())
     const second = compileCruciblePlan({

@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest"
-import { designTokensToTheme, resolveThemePreset, themeToTokens } from "../semiotic-themes"
+import {
+  designTokensToTheme,
+  resolveThemePreset,
+  themeToTokens,
+  THEME_PRESETS,
+} from "../semiotic-themes"
 
 describe("designTokensToTheme", () => {
   it("rejects prototype properties as theme preset names", () => {
     expect(resolveThemePreset("constructor")).toBeUndefined()
     expect(resolveThemePreset("toString")).toBeUndefined()
     expect(resolveThemePreset("__proto__")).toBeUndefined()
+  })
+
+  it("preserves the public string-keyed preset registry contract", () => {
+    const presetName: string = "tufte"
+    expect(THEME_PRESETS[presetName]).toBe(THEME_PRESETS.tufte)
   })
 
   it("round-trips a theme through themeToTokens (native semiotic.* path)", () => {

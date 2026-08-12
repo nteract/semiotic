@@ -242,6 +242,26 @@ describe("annotationLayout", () => {
     expect(placed.label).toBe("AI flagged this (AI · 70%)")
   })
 
+  it("renders prototype-named provenance sources as authored text", () => {
+    const annotations: Datum[] = [
+      {
+        type: "label",
+        x: 50,
+        y: 50,
+        label: "Flagged",
+        defensive: true,
+        provenance: { source: "constructor", confidence: 0.7 }
+      }
+    ]
+    const [placed] = annotationLayout({
+      annotations,
+      context: context(),
+      density: true
+    })
+
+    expect(placed.label).toBe("Flagged (constructor · 70%)")
+  })
+
   it("does not touch the label of a non-defensive note with provenance", () => {
     const annotations: Datum[] = [
       { type: "label", x: 50, y: 50, label: "Plain", provenance: { source: "ai", confidence: 0.7 } },

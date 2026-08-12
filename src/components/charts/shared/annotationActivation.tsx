@@ -1,13 +1,17 @@
 import * as React from "react"
-import type { Datum } from "./datumTypes"
 import type {
   ChartObservation,
   OnObservationCallback,
   ObservationInputType
 } from "../../store/ObservationStore"
 import { useObservationSelector } from "../../store/ObservationStore"
+import {
+  annotationStableId,
+  type ChartAnnotation
+} from "./annotationIdentity"
 
-export type ChartAnnotation = Datum
+export { annotationStableId } from "./annotationIdentity"
+export type { ChartAnnotation } from "./annotationIdentity"
 
 export interface AnnotationActivationEvent {
   annotation: ChartAnnotation
@@ -43,16 +47,6 @@ export function useAnnotationActivationOptions(
     () => ({ ...options, onObservation }),
     [onObservation, options]
   )
-}
-
-/**
- * Resolve a durable annotation identity without ever falling back to array
- * position. Provenance stable IDs are accepted for agent-authored notes.
- */
-export function annotationStableId(annotation: ChartAnnotation): string | undefined {
-  const provenance = annotation.provenance as Record<string, unknown> | undefined
-  const candidate = annotation.id ?? annotation.stableId ?? provenance?.stableId
-  return candidate == null || candidate === "" ? undefined : String(candidate)
 }
 
 function activationInputType(

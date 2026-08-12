@@ -1,9 +1,16 @@
 import { dirname, resolve } from "node:path"
+import { argv, cwd } from "node:process"
 import { fileURLToPath } from "node:url"
-import { pick, writeCompactStrategyModule } from "./compactStrategyJson.mjs"
+import { pick, writeCompactStrategyModule } from "./compactProjectionJson.mjs"
 
 const dataDirectory = dirname(fileURLToPath(import.meta.url))
-const sourcePath = resolve(dataDirectory, "../../../../strategy/united_states_history_river_dataset.json")
+const sourceArgument = argv[2]
+if (!sourceArgument) {
+  throw new Error(
+    "Usage: node docs/src/pages/examples/data/unitedStatesHistoryRiver.build.mjs <source-json-path>",
+  )
+}
+const sourcePath = resolve(cwd(), sourceArgument)
 const outputPath = resolve(dataDirectory, "unitedStatesHistoryRiver.source.generated.js")
 
 const EVENT_IDS = new Set([
@@ -31,7 +38,6 @@ writeCompactStrategyModule({
   exportName: "unitedStatesHistoryRiverSource",
   builderName: "unitedStatesHistoryRiver.build.mjs",
   buildCompact: (source) => ({
-    generated_from: "docs/strategy/united_states_history_river_dataset.json",
     metadata: pick(source.metadata, [
       "title",
       "version",

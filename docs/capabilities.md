@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-08-05 · 57 charts indexed.
+Last regen: 2026-08-11 · 57 charts indexed.
 
 **Column key**
 
@@ -62,7 +62,7 @@ Last regen: 2026-08-05 · 57 charts indexed.
 | **ChordDiagram** | — | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **CirclePack** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
 | **ForceDirectedGraph** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `force-simulation` |
-| **OrbitDiagram** | — | ✓ | ✓ | — | — | categorical | plugin | `hierarchy` `animated` `hoc-ssr-only` |
+| **OrbitDiagram** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` `animated` |
 | **ProcessSankey** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | custom | `temporal` `particles` `lane-reuse` `quality-metrics` `slack-aware-placement` `vertical-orientation` `style-rules` `worker-layout` |
 | **SankeyDiagram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **TreeDiagram** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
@@ -114,6 +114,6 @@ Last regen: 2026-08-05 · 57 charts indexed.
 
 - 47/57 charts render a top-level legend.
 - 45/57 charts expose a push API.
-- 46/57 charts SSR via the `renderChart()` registry.
+- 47/57 charts SSR via the `renderChart()` registry.
 - 2/57 charts use the customLayout escape hatch.
 - 11/57 charts use synthetic (no-layout) construction.

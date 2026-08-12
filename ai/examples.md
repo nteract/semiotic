@@ -910,7 +910,7 @@ useEffect(() => {
 />
 ```
 
-Key props: `timeAccessor`, `valueAccessor`, `windowSize`, `stroke`, `strokeWidth`
+Key props: `timeAccessor`, `valueAccessor`, `windowSize`, `stroke`, `strokeWidth`. For bounded out-of-order input, set `eventTime={{ lateness: "2s" }}`, type the ref as `RealtimeLineChartHandle`, and call `chartRef.current?.flush()` when the source ends to release the grace-window tail in order.
 
 ### RealtimeHistogram
 
@@ -1205,6 +1205,7 @@ import { BarChart } from "semiotic/ordinal"
   data={salesData}
   categoryAccessor="region"
   valueAccessor="revenue"
+  styleRules={[{ when: true, style: { cursor: "pointer" } }]}
   onClick={(datum, { x, y }) => {
     console.log(`Clicked ${datum.region}: $${datum.revenue}`)
     setSelectedRegion(datum.region)
@@ -1212,7 +1213,7 @@ import { BarChart } from "semiotic/ordinal"
 />
 ```
 
-Key props: `onClick` receives the original datum and pixel coordinates. Works on all chart types.
+Key props: `onClick` receives the original datum and pixel coordinates. Works on all chart types. `cursor` only changes pointer presentation; the explicit interaction API supplies behavior, and an actionable chart still needs an accessible activation path.
 
 ---
 

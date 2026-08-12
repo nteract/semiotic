@@ -16,7 +16,7 @@ export function buildOrdinalPointSpatialIndex(
   let pointCount = 0
   let maxRadius = 0
   for (const node of scene) {
-    if (node.type === "point") {
+    if (node.type === "point" && node.interactive !== false) {
       pointCount++
       if (node.r > maxRadius) maxRadius = node.r
     }
@@ -29,7 +29,9 @@ export function buildOrdinalPointSpatialIndex(
   const points: PointSceneNode[] = new Array(pointCount)
   let index = 0
   for (const node of scene) {
-    if (node.type === "point") points[index++] = node as PointSceneNode
+    if (node.type === "point" && node.interactive !== false) {
+      points[index++] = node as PointSceneNode
+    }
   }
   return {
     maxRadius,

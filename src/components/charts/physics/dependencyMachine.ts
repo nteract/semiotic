@@ -1,6 +1,6 @@
 import type { Datum } from "../shared/datumTypes"
 import { resolveMotionAccessor } from "../shared/motionEncoding"
-import { buildDirectedAdjacency, reachableFrom } from "../../recipes/networkAnalysis"
+import { buildDirectedAdjacency, reachableFrom } from "../../recipes/directedReachability"
 
 export type DependencyAccessor<TDatum, TValue> =
   | keyof TDatum
@@ -652,4 +652,3 @@ export function calculateBlockerAmplification<TDatum extends Datum = Datum>(
     affectedLanes
   }
 }
-

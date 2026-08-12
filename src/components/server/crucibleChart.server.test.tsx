@@ -87,6 +87,35 @@ describe("CrucibleChart static rendering", () => {
     expect(evidence.markCount).toBe(4)
   })
 
+  it("uses the same primary and compact plot margins as the client HOC", () => {
+    const primary = renderChart("CrucibleChart", fixture)
+    const context = renderChart("CrucibleChart", {
+      ...fixture,
+      mode: "context"
+    })
+    const sparkline = renderChart("CrucibleChart", {
+      ...fixture,
+      mode: "sparkline"
+    })
+
+    expect(primary).toMatch(/<g id="[^"]*-data-area">/)
+    expect(context).toMatch(
+      /<g id="[^"]*-data-area" transform="translate\(8,8\)">/
+    )
+    expect(sparkline).toMatch(
+      /<g id="[^"]*-data-area" transform="translate\(2,2\)">/
+    )
+  })
+
+  it("only injects theme tokens when a server theme is explicit", () => {
+    const unthemed = renderChart("CrucibleChart", fixture)
+    const light = renderChart("CrucibleChart", { ...fixture, theme: "light" })
+    const openingTag = (svg: string) => svg.slice(0, svg.indexOf(">") + 1)
+
+    expect(openingTag(unthemed)).not.toContain("--semiotic-primary")
+    expect(openingTag(light)).toContain("--semiotic-primary:#00a2ce")
+  })
+
   it("honors authored snapshotAt only in snapshot mode", () => {
     const early = renderChartWithEvidence("CrucibleChart", {
       ...fixture,

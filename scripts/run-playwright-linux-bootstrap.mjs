@@ -81,11 +81,18 @@ if (!hasUpdateArg) {
   playwrightArgs.push("--update-snapshots=all")
 }
 
+const missingOnly = playwrightArgs.some((arg) => arg === "--update-snapshots=missing")
+const visualCommand = missingOnly
+  ? `node scripts/run-playwright-missing-snapshot-bootstrap.mjs ${playwrightArgs
+      .filter((arg) => arg !== "--update-snapshots=missing")
+      .join(" ")}`
+  : `npx playwright test ${playwrightArgs.join(" ")}`
+
 const command = [
   "npm ci",
   "npm run dist",
   "npx playwright install --with-deps chromium firefox webkit",
-  `npx playwright test ${playwrightArgs.join(" ")}`,
+  visualCommand,
 ].join(" && ")
 
 const dockerArgs = [

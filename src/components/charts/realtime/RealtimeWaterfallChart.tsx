@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -8,25 +8,57 @@ import type {
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { ReactNode } from "react"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  useChartLegendAndMargin,
+  useChartSelection,
+  useLegendInteraction
+} from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
+import type {
+  ChartMode,
+  ChartAccessor,
+  SelectionConfig,
+  MobileInteractionProp
+} from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildWaterfallTooltip } from "./defaultRealtimeTooltip"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import {
+  renderLoadingState,
+  renderEmptyState
+} from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveTooltipContent } from "../../Tooltip/Tooltip"
+import type {
+  RealtimeAccessibilityProps,
+  RealtimeData,
+  RealtimePointIdAccessor,
+  RealtimeTooltipProp
+} from "./realtimeChartTypes"
+import type { LegendValue } from "../../types/legendTypes"
+import type { PartialMargin } from "../../types/marginType"
+import {
+  buildRealtimeFrameChromeProps,
+  useRealtimeChartMode,
+  useRealtimeFrameHandle,
+  useRealtimeSelectionStyle
+} from "./realtimeChartRuntime"
 
-export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
+export interface RealtimeWaterfallChartProps<
+  TDatum extends Datum = Datum
+> extends RealtimeAccessibilityProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -44,7 +76,7 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   /** Chart margins */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  margin?: PartialMargin
   /** CSS class name */
   className?: string
   onObservation?: OnObservationCallback
@@ -56,7 +88,7 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Datum[]
+  data?: RealtimeData<TDatum>
   /** Time value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor (positive = gain, negative = loss) */
@@ -67,6 +99,14 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   valueExtent?: [number, number]
   /** Extent padding factor */
   extentPadding?: number
+  /** Age-based opacity decay for streaming bars. */
+  decay?: DecayConfig
+  /** Arrival pulse for newly pushed bars. */
+  pulse?: PulseConfig
+  /** Dim or badge stale streaming values. */
+  staleness?: StalenessConfig
+  /** Mark transition configuration. */
+  transition?: TransitionConfig
   /** Color for positive (gain) bars */
   positiveColor?: string
   /** Color for negative (loss) bars */
@@ -83,6 +123,8 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   strokeWidth?: number
   /** Uniform bar opacity (0–1). */
   opacity?: number
+  /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
+  cursor?: CSSProperties["cursor"]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -98,13 +140,17 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Opt into automatic placement for note-like annotations without manual offsets. */
   autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
-  tooltip?: TooltipProp
+  /** Declarative tooltip config or the legacy full-HoverData callback. */
+  tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -124,7 +170,7 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: Datum) => string)
+  pointIdAccessor?: RealtimePointIdAccessor<TDatum>
 }
 
 /**
@@ -160,15 +206,11 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
  * ```
  */
 export const RealtimeWaterfallChart = forwardRef(
-  function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: RealtimeWaterfallChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    const resolved = useChartMode(props.mode, {
-      width: props.size?.[0] ?? props.width,
-      height: props.size?.[1] ?? props.height,
-      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-          mobileInteraction: props.mobileInteraction,
-      mobileSemantics: props.mobileSemantics,
-      responsiveRules: props.responsiveRules,
-})
+  function RealtimeWaterfallChart<TDatum extends Datum = Datum>(
+    props: RealtimeWaterfallChartProps<TDatum>,
+    ref: React.Ref<RealtimeFrameHandle>
+  ) {
+    const resolved = useRealtimeChartMode(props)
 
     const {
       size,
@@ -183,6 +225,10 @@ export const RealtimeWaterfallChart = forwardRef(
       timeExtent,
       valueExtent,
       extentPadding,
+      decay,
+      pulse,
+      staleness,
+      transition,
       positiveColor,
       negativeColor,
       connectorStroke,
@@ -191,6 +237,7 @@ export const RealtimeWaterfallChart = forwardRef(
       stroke,
       strokeWidth,
       opacity,
+      cursor,
       background,
       tooltipContent,
       tooltip,
@@ -208,13 +255,65 @@ export const RealtimeWaterfallChart = forwardRef(
       loadingContent,
       emptyContent,
       emphasis,
-      legendPosition: legendPositionProp,
+      legendPosition: legendPositionProp
     } = props
 
     const showAxes = resolved.showAxes
     const enableHover = resolved.enableHover
-    const margin = userMargin ?? resolved.marginDefaults
-    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
+    const resolvedSize: [number, number] = size ?? [
+      resolved.width,
+      resolved.height
+    ]
+    const waterfallLegend = useMemo<LegendValue | undefined>(() => {
+      if (!resolved.showLegend) return undefined
+      return {
+        legendGroups: [
+          {
+            label: "Change",
+            type: "fill",
+            items: [
+              { label: "Positive", color: positiveColor },
+              { label: "Negative", color: negativeColor }
+            ],
+            styleFn: (item) => ({
+              fill:
+                item.color ||
+                (item.label === "Positive"
+                  ? "var(--semiotic-success, #28a745)"
+                  : "var(--semiotic-danger, #dc3545)")
+            })
+          }
+        ]
+      }
+    }, [negativeColor, positiveColor, resolved.showLegend])
+    const legendValueAccessor = useCallback(
+      (datum: Datum) => {
+        const raw =
+          datum.delta ??
+          (typeof valueAccessor === "function"
+            ? valueAccessor(datum as TDatum)
+            : datum[valueAccessor ?? "value"])
+        return Number(raw) >= 0 ? "Positive" : "Negative"
+      },
+      [valueAccessor]
+    )
+    const legendState = useLegendInteraction(
+      props.legendInteraction,
+      legendValueAccessor,
+      ["Positive", "Negative"]
+    )
+    const { legend, margin, legendPosition } = useChartLegendAndMargin({
+      data: [],
+      colorBy: undefined,
+      colorScale: undefined,
+      showLegend: false,
+      legendPosition: legendPositionProp,
+      userMargin,
+      defaults: resolved.marginDefaults,
+      additionalLegend: waterfallLegend,
+      chartWidth: resolvedSize[0],
+      axisChrome: { hasAxis: resolved.showAxes !== false }
+    })
     // Waterfall-aware default tooltip. Each bar's height represents
     // the per-tick `delta`, but its TOP ends at the running
     // cumulative total — the value the bar's projection on the
@@ -222,17 +321,33 @@ export const RealtimeWaterfallChart = forwardRef(
     // enriches each rect's datum with `baseline`, `cumEnd`, and
     // `delta`; surface those so a hovered bar reads "x: <time>",
     // "Δ: +5.2", "total: 87.4" instead of just "y: 5.2".
-    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
-      tooltip,
-      defaultTooltipContent: buildWaterfallTooltip({ timeAccessor, valueAccessor }),
-    }).tooltipContent
+    const resolvedTooltip =
+      tooltipContent ??
+      resolveTooltipContent({
+        tooltip,
+        defaultTooltipContent: buildWaterfallTooltip({
+          timeAccessor,
+          valueAccessor
+        }),
+        customFunctionContext: "hover"
+      }).tooltipContent
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover via shared hook ──
-    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeWaterfallChart", chartId
+    const {
+      activeSelectionHook,
+      hoverSelectionHook,
+      customHoverBehavior: linkedHoverBehavior,
+      customClickBehavior
+    } = useChartSelection({
+      selection,
+      linkedHover,
+      unwrapData: true,
+      onObservation,
+      chartType: "RealtimeWaterfallChart",
+      chartId,
+      mobileInteraction: resolved.mobileInteraction
     })
 
     const combinedHoverBehavior = useCallback(
@@ -243,30 +358,39 @@ export const RealtimeWaterfallChart = forwardRef(
       [onHover, linkedHoverBehavior]
     )
 
-    // `[]` deps so the handle stays stable — see useFrameImperativeHandle.
-    useImperativeHandle(ref, () => ({
-      push: (point) => frameRef.current?.push(point),
-      pushMany: (points) => frameRef.current?.pushMany(points),
-      remove: (id) => frameRef.current?.remove(id) ?? [],
-      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-      clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? [],
-      getScales: () => frameRef.current?.getScales() ?? null
-    }), [])
+    useRealtimeFrameHandle(ref, frameRef)
 
     // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
-    const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
+    const loadingEl = renderLoadingState(
+      loading,
+      resolvedSize[0],
+      resolvedSize[1],
+      loadingContent
+    )
+    const emptyEl = !loadingEl
+      ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+      : null
 
     const waterfallStyle: WaterfallStyle = {}
     if (positiveColor != null) waterfallStyle.positiveColor = positiveColor
     if (negativeColor != null) waterfallStyle.negativeColor = negativeColor
-    if (connectorStroke != null) waterfallStyle.connectorStroke = connectorStroke
+    if (connectorStroke != null)
+      waterfallStyle.connectorStroke = connectorStroke
     if (connectorWidth != null) waterfallStyle.connectorWidth = connectorWidth
     if (gap != null) waterfallStyle.gap = gap
     if (stroke != null) waterfallStyle.stroke = stroke
     if (strokeWidth != null) waterfallStyle.strokeWidth = strokeWidth
     if (opacity != null) waterfallStyle.opacity = opacity
+    if (cursor != null) waterfallStyle.cursor = cursor
+    const effectiveSelectionHook =
+      hoverSelectionHook ||
+      legendState.legendSelectionHook ||
+      activeSelectionHook
+    const interactiveBarStyle = useRealtimeSelectionStyle(
+      undefined,
+      [effectiveSelectionHook],
+      selection
+    )
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
@@ -287,6 +411,11 @@ export const RealtimeWaterfallChart = forwardRef(
         maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={margin}
         className={resolvedClassName}
+        {...buildRealtimeFrameChromeProps(
+          resolved,
+          legendState,
+          props.legendInteraction
+        )}
         arrowOfTime={arrowOfTime}
         windowMode={windowMode}
         windowSize={windowSize}
@@ -296,7 +425,12 @@ export const RealtimeWaterfallChart = forwardRef(
         xExtent={timeExtent}
         yExtent={valueExtent}
         extentPadding={extentPadding}
+        decay={decay}
+        pulse={pulse}
+        staleness={staleness}
+        transition={transition}
         waterfallStyle={waterfallStyle}
+        areaStyle={interactiveBarStyle}
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
@@ -307,20 +441,27 @@ export const RealtimeWaterfallChart = forwardRef(
           onObservation,
           forceHoverBehavior: true,
           mobileInteraction: resolved.mobileInteraction,
-          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+          customHoverBehavior: combinedHoverBehavior as (
+            d: Datum | null
+          ) => void,
+          customClickBehavior
         })}
         annotations={annotations}
         autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
-        legendPosition={legendPositionProp}
+        legend={legend}
+        legendPosition={legendPosition}
         pointIdAccessor={props.pointIdAccessor}
       />
     )
   }
 ) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeWaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(
+    props: RealtimeWaterfallChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 RealtimeWaterfallChart.displayName = "RealtimeWaterfallChart"

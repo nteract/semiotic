@@ -85,6 +85,7 @@ export type TileURLTemplate =
 interface CachedTile {
   img: HTMLImageElement
   loaded: boolean
+  failed: boolean
   key: string
   lastUsed: number
 }
@@ -112,13 +113,37 @@ function resolveTileURL(
 // ── Tile cache ────────────────────────────────────────────────────────
 
 const DEFAULT_CACHE_LIMIT = 256
+const tileProviderIds = new WeakMap<(...args: never[]) => unknown, number>()
+let nextTileProviderId = 1
+
+function tileProviderKey(template: TileURLTemplate): string {
+  if (typeof template === "string") return `template:${template}`
+  const fn = template as (...args: never[]) => unknown
+  let id = tileProviderIds.get(fn)
+  if (id == null) {
+    id = nextTileProviderId++
+    tileProviderIds.set(fn, id)
+  }
+  return `provider:${id}`
+}
+
+function normalizeCacheLimit(limit: number): number {
+  return Number.isFinite(limit)
+    ? Math.max(1, Math.floor(limit))
+    : DEFAULT_CACHE_LIMIT
+}
 
 export class TileCache {
   private cache = new Map<string, CachedTile>()
   private limit: number
 
   constructor(limit = DEFAULT_CACHE_LIMIT) {
-    this.limit = limit
+    this.limit = normalizeCacheLimit(limit)
+  }
+
+  setLimit(limit: number): void {
+    this.limit = normalizeCacheLimit(limit)
+    if (this.cache.size > this.limit) this.evict()
   }
 
   get(key: string): CachedTile | undefined {
@@ -205,11 +230,13 @@ export function renderTiles(
   })
 
   const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+  const providerKey = tileProviderKey(tileURL)
   let allLoaded = true
 
   for (const t of layout.tiles) {
     const [x, y, z] = tileWrap(t)
-    const key = `${z}/${x}/${y}`
+    const resolvedURL = resolveTileURL(tileURL, z, x, y, dpr)
+    const key = `${providerKey}|dpr:${dpr}|${z}/${x}/${y}|${resolvedURL}`
 
     let cached = tileCache.get(key)
 
@@ -220,6 +247,7 @@ export function renderTiles(
       const entry: CachedTile = {
         img,
         loaded: false,
+        failed: false,
         key,
         lastUsed: performance.now()
       }
@@ -232,8 +260,10 @@ export function renderTiles(
       img.onerror = () => {
         // Mark as loaded (with broken image) to avoid re-fetching
         entry.loaded = true
+        entry.failed = true
+        onTileLoad?.()
       }
-      img.src = resolveTileURL(tileURL, z, x, y, dpr)
+      img.src = resolvedURL
       cached = entry
     }
 
@@ -241,6 +271,7 @@ export function renderTiles(
       allLoaded = false
       continue
     }
+    if (cached.failed) continue
 
     // Compute tile position on canvas. t[0] / t[1] are the original
     // (unwrapped) tile coords; the layout-level scale + translate

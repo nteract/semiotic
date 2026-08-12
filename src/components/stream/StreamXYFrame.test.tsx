@@ -2,12 +2,25 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act, fireEvent, waitFor } from "@testing-library/react"
 import StreamXYFrame, { withAlpha } from "./StreamXYFrame"
-import type { StreamXYFrameHandle } from "./types"
-import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
+import type { StreamXYFrameHandle, StreamXYFrameProps } from "./types"
+import {
+  setupCanvasMock,
+  type CanvasContextMock
+} from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
 
+const publicFramePropsMustNotExposeInternalColorResolution: StreamXYFrameProps =
+  {
+    chartType: "swarm",
+    // @ts-expect-error — wrapper-owned lazy category resolution must not become public API.
+    categoryColorResolver: () => "#000"
+  }
+void publicFramePropsMustNotExposeInternalColorResolution
+
 // Mock ResizeObserver for jsdom
-const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+const resizeObserverGlobal = globalThis as typeof globalThis & {
+  ResizeObserver?: typeof ResizeObserver
+}
 if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
   resizeObserverGlobal.ResizeObserver = class {
     constructor(_callback: ResizeObserverCallback) {}
@@ -41,7 +54,9 @@ describe("withAlpha (theme color + alpha concatenation)", () => {
   })
 
   it("converts rgb() to rgba() with numeric alpha", () => {
-    expect(withAlpha("rgb(170, 170, 170)", "66")).toMatch(/^rgba\(170, 170, 170, 0\.4/)
+    expect(withAlpha("rgb(170, 170, 170)", "66")).toMatch(
+      /^rgba\(170, 170, 170, 0\.4/
+    )
   })
 
   it("falls back to the raw color when the form isn't recognized", () => {
@@ -52,16 +67,18 @@ describe("withAlpha (theme color + alpha concatenation)", () => {
 
 describe("StreamXYFrame", () => {
   let cleanup: () => void
-  beforeEach(() => { cleanup = setupCanvasMock() })
-  afterEach(() => { cleanup() })
+  beforeEach(() => {
+    cleanup = setupCanvasMock()
+  })
+  afterEach(() => {
+    cleanup()
+  })
 
   // ── Basic rendering ───────────────────────────────────────────────────
 
   describe("basic rendering", () => {
     it("mounts with minimal props and renders a canvas element", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector(".stream-xy-frame")
       expect(frame).toBeTruthy()
       const canvases = frame?.querySelectorAll("canvas")
@@ -73,7 +90,10 @@ describe("StreamXYFrame", () => {
       const { container } = render(
         <StreamXYFrame
           chartType="line"
-          data={[{ x: 0, y: 1 }, { x: 1, y: 2 }]}
+          data={[
+            { x: 0, y: 1 },
+            { x: 1, y: 2 }
+          ]}
           xAccessor="x"
           yAccessor="y"
           size={[150, 24]}
@@ -104,9 +124,7 @@ describe("StreamXYFrame", () => {
     })
 
     it("sets role=img on the container", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector("[role='img']")
       expect(frame).toBeTruthy()
     })
@@ -120,12 +138,49 @@ describe("StreamXYFrame", () => {
     })
 
     it("defaults aria-label to 'XY chart' when no title", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector("[role='img']")
       expect(frame?.getAttribute("aria-label")).toBe("XY chart")
     })
+
+    it.each([
+      {
+        accessorName: "string",
+        valueAccessor: "count" as const,
+        data: [
+          { column: "A", row: "x", count: 7 },
+          { column: "B", row: "x", count: 19 }
+        ]
+      },
+      {
+        accessorName: "function",
+        valueAccessor: (datum: Datum) => Number(datum.score) * 2,
+        data: [
+          { column: "A", row: "x", score: 3 },
+          { column: "B", row: "x", score: 11 }
+        ]
+      }
+    ])(
+      "emits the bounded heatmap color domain for a $accessorName value accessor",
+      ({ valueAccessor, data }) => {
+        const onColorDomainChange = vi.fn()
+
+        render(
+          <StreamXYFrame
+            chartType="heatmap"
+            data={data}
+            xAccessor="column"
+            yAccessor="row"
+            valueAccessor={valueAccessor}
+            onColorDomainChange={onColorDomainChange}
+          />
+        )
+
+        expect(onColorDomainChange).toHaveBeenLastCalledWith(
+          valueAccessor === "count" ? [7, 19] : [6, 22]
+        )
+      }
+    )
 
     it("renders with custom size", () => {
       const { container } = render(
@@ -138,9 +193,7 @@ describe("StreamXYFrame", () => {
     })
 
     it("sets tabIndex=0 for keyboard accessibility", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector(".stream-xy-frame")
       expect(frame?.getAttribute("tabindex")).toBe("0")
     })
@@ -202,7 +255,12 @@ describe("StreamXYFrame", () => {
 
     it("handles empty data array gracefully", () => {
       const { container } = render(
-        <StreamXYFrame chartType="scatter" data={[]} xAccessor="x" yAccessor="y" />
+        <StreamXYFrame
+          chartType="scatter"
+          data={[]}
+          xAccessor="x"
+          yAccessor="y"
+        />
       )
       expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
     })
@@ -214,7 +272,12 @@ describe("StreamXYFrame", () => {
     it("exposes push, pushMany, clear, getData, getScales, getExtents on ref", () => {
       const ref = React.createRef<StreamXYFrameHandle>()
       render(
-        <StreamXYFrame ref={ref} chartType="scatter" xAccessor="x" yAccessor="y" />
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          xAccessor="x"
+          yAccessor="y"
+        />
       )
       expect(ref.current).toBeTruthy()
       expect(typeof ref.current!.push).toBe("function")
@@ -236,8 +299,12 @@ describe("StreamXYFrame", () => {
           valueAccessor="v"
         />
       )
-      await act(async () => { ref.current!.push({ t: 1, v: 10 }) })
-      await act(async () => { ref.current!.push({ t: 2, v: 20 }) })
+      await act(async () => {
+        ref.current!.push({ t: 1, v: 10 })
+      })
+      await act(async () => {
+        ref.current!.push({ t: 2, v: 20 })
+      })
       const data = ref.current!.getData()
       expect(data.length).toBe(2)
     })
@@ -282,21 +349,25 @@ describe("StreamXYFrame", () => {
       await act(async () => {
         ref.current!.pushMany([
           { id: "a", t: 1, v: 10, series: "A" },
-          { id: "b", t: 2, v: 20, series: "B" },
+          { id: "b", t: 2, v: 20, series: "B" }
         ])
         await Promise.resolve()
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
 
-      await act(async () => { ref.current!.remove("b") })
+      await act(async () => {
+        ref.current!.remove("b")
+      })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
 
       await act(async () => {
-        ref.current!.update("a", d => ({ ...d, series: "C" }))
+        ref.current!.update("a", (d) => ({ ...d, series: "C" }))
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["C"])
 
-      await act(async () => { ref.current!.clear() })
+      await act(async () => {
+        ref.current!.clear()
+      })
       expect(onCategoriesChange).toHaveBeenLastCalledWith([])
     })
 
@@ -311,16 +382,18 @@ describe("StreamXYFrame", () => {
           valueAccessor="v"
         />
       )
-      await act(async () => { ref.current!.push({ t: 1, v: 10 }) })
-      await act(async () => { ref.current!.clear() })
+      await act(async () => {
+        ref.current!.push({ t: 1, v: 10 })
+      })
+      await act(async () => {
+        ref.current!.clear()
+      })
       expect(ref.current!.getData().length).toBe(0)
     })
 
     it("getScales returns null or empty scales when no data has been pushed", () => {
       const ref = React.createRef<StreamXYFrameHandle>()
-      render(
-        <StreamXYFrame ref={ref} chartType="scatter" />
-      )
+      render(<StreamXYFrame ref={ref} chartType="scatter" />)
       // With no data, scales may be null or may have been initialized with empty domains
       const scales = ref.current!.getScales()
       // Either null or an object is acceptable — the key is no crash
@@ -356,7 +429,10 @@ describe("StreamXYFrame", () => {
         <StreamXYFrame
           ref={ref}
           chartType="scatter"
-          data={[{ x: 1, y: 12 }, { x: 2, y: 87 }]}
+          data={[
+            { x: 1, y: 12 },
+            { x: 2, y: 87 }
+          ]}
           xAccessor="x"
           yAccessor="y"
           extentPadding={0.1}
@@ -365,7 +441,9 @@ describe("StreamXYFrame", () => {
           size={[400, 300]}
         />
       )
-      await act(async () => { await Promise.resolve() })
+      await act(async () => {
+        await Promise.resolve()
+      })
       const domain = ref.current!.getScales()!.y.domain() as [number, number]
       expect(domain[0]).toBeLessThan(12)
       expect(domain[1]).toBeGreaterThan(87)
@@ -442,7 +520,7 @@ describe("StreamXYFrame", () => {
             { x: 0, y: 10, series: "A" },
             { x: 10, y: 10, series: "A" },
             { x: 0, y: 5, series: "B" },
-            { x: 10, y: 5, series: "B" },
+            { x: 10, y: 5, series: "B" }
           ]}
           xAccessor="x"
           yAccessor="y"
@@ -458,9 +536,13 @@ describe("StreamXYFrame", () => {
         />
       )
 
-      await act(async () => { await Promise.resolve() })
+      await act(async () => {
+        await Promise.resolve()
+      })
 
-      const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
+      const hoverTarget = container.querySelector(
+        ".stream-xy-frame > div[role='img']"
+      )!
       fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 85 })
 
       expect(hoverSpy).toHaveBeenCalled()
@@ -470,7 +552,10 @@ describe("StreamXYFrame", () => {
       expect(hover.allSeries).toHaveLength(2)
 
       const valuesByGroup = Object.fromEntries(
-        hover.allSeries.map((s: { group: string; value: number }) => [s.group, s.value])
+        hover.allSeries.map((s: { group: string; value: number }) => [
+          s.group,
+          s.value
+        ])
       )
       expect(valuesByGroup.A).toBeCloseTo(10)
       expect(valuesByGroup.B).toBeCloseTo(5)
@@ -492,14 +577,16 @@ describe("StreamXYFrame", () => {
           xAccessor="x"
           yAccessor="y"
           legend={{
-            legendGroups: [{
-              label: "Series",
-              items: [
-                { label: "A", color: "red" },
-                { label: "B", color: "blue" }
-              ],
-              styleFn: () => ({})
-            }]
+            legendGroups: [
+              {
+                label: "Series",
+                items: [
+                  { label: "A", color: "red" },
+                  { label: "B", color: "blue" }
+                ],
+                styleFn: () => ({})
+              }
+            ]
           }}
         />
       )
@@ -509,9 +596,7 @@ describe("StreamXYFrame", () => {
     })
 
     it("renders without legend when legend prop is omitted", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       // Should render fine with no legend items
       const frame = container.querySelector(".stream-xy-frame")
       expect(frame).toBeTruthy()
@@ -522,9 +607,7 @@ describe("StreamXYFrame", () => {
 
   describe("loading and empty states", () => {
     it("renders the frame even with no data (Stream Frame does not gate on empty data)", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
       expect(container.querySelector("canvas")).toBeTruthy()
     })
@@ -542,7 +625,9 @@ describe("StreamXYFrame", () => {
         />
       )
       // Push some data so lastIngestTime is set
-      await act(async () => { ref.current!.push({ t: Date.now(), v: 10 }) })
+      await act(async () => {
+        ref.current!.push({ t: Date.now(), v: 10 })
+      })
       // The badge should exist (initially "LIVE")
       const badge = container.querySelector(".stream-staleness-badge")
       expect(badge).toBeTruthy()
@@ -553,9 +638,7 @@ describe("StreamXYFrame", () => {
 
   describe("keyboard navigation", () => {
     it("handles arrow key presses without crashing when scene is empty", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector(".stream-xy-frame")!
       // Arrow keys on empty scene should be a no-op
       fireEvent.keyDown(frame, { key: "ArrowRight" })
@@ -597,19 +680,26 @@ describe("StreamXYFrame", () => {
           chartType="scatter"
           data={[
             { x: 1, y: 10, label: "Alpha" },
-            { x: 2, y: 20, label: "Bravo" },
+            { x: 2, y: 20, label: "Bravo" }
           ]}
           xAccessor="x"
           yAccessor="y"
           size={[300, 200]}
           enableHover
-          tooltipContent={hover => <div data-testid="keyboard-tooltip">{hover.data?.label}</div>}
+          tooltipContent={(hover) => (
+            <div data-testid="keyboard-tooltip">{hover.data?.label}</div>
+          )}
         />
       )
 
-      fireEvent.keyDown(container.querySelector(".stream-xy-frame")!, { key: "ArrowRight" })
+      fireEvent.keyDown(container.querySelector(".stream-xy-frame")!, {
+        key: "ArrowRight"
+      })
       await waitFor(() => {
-        expect(container.querySelector("[data-testid='keyboard-tooltip']")?.textContent).toBe("Alpha")
+        expect(
+          container.querySelector("[data-testid='keyboard-tooltip']")
+            ?.textContent
+        ).toBe("Alpha")
       })
     })
 
@@ -628,7 +718,10 @@ describe("StreamXYFrame", () => {
         />
       )
       await act(async () => {
-        ref.current!.pushMany([{ t: 1, v: 10 }, { t: 2, v: 20 }])
+        ref.current!.pushMany([
+          { t: 1, v: 10 },
+          { t: 2, v: 20 }
+        ])
       })
 
       const frame = container.querySelector(".stream-xy-frame")!
@@ -663,7 +756,7 @@ describe("StreamXYFrame", () => {
       await act(async () => {
         ref.current!.pushMany([
           { id: "a", t: 1, v: 10 },
-          { id: "b", t: 2, v: 20 },
+          { id: "b", t: 2, v: 20 }
         ])
       })
       const frame = container.querySelector(".stream-xy-frame")!
@@ -676,7 +769,7 @@ describe("StreamXYFrame", () => {
       onObservation.mockClear()
       fireEvent.keyDown(frame, { key: " " })
       expect(onObservation).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: "activate" }),
+        expect.objectContaining({ type: "activate" })
       )
     })
   })
@@ -721,7 +814,9 @@ describe("StreamXYFrame", () => {
       const { container } = render(
         <StreamXYFrame
           chartType="scatter"
-          backgroundGraphics={<rect data-testid="bg" width={100} height={100} fill="red" />}
+          backgroundGraphics={
+            <rect data-testid="bg" width={100} height={100} fill="red" />
+          }
         />
       )
       const bgRect = container.querySelector("[data-testid='bg']")
@@ -739,14 +834,17 @@ describe("StreamXYFrame", () => {
       // mock's lifecycle ever changes.
       function captureFillRectStyles(ctx: CanvasContextMock) {
         const styles: string[] = []
-        const orig = ctx.fillRect as ((...args: unknown[]) => unknown) | undefined
+        const orig = ctx.fillRect as
+          ((...args: unknown[]) => unknown) | undefined
         ctx.fillRect = vi.fn((...args: unknown[]) => {
           styles.push(String(ctx.fillStyle))
           return orig?.apply(ctx, args)
         })
         return {
           styles,
-          restore: () => { ctx.fillRect = orig },
+          restore: () => {
+            ctx.fillRect = orig
+          }
         }
       }
       const getMockCtx = () =>
@@ -793,7 +891,9 @@ describe("StreamXYFrame", () => {
           render(
             <StreamXYFrame
               chartType="scatter"
-              backgroundGraphics={<rect x={0} y={0} width={10} height={10} fill="red" />}
+              backgroundGraphics={
+                <rect x={0} y={0} width={10} height={10} fill="red" />
+              }
             />
           )
           expect(cap.styles).toHaveLength(0)
@@ -823,9 +923,7 @@ describe("StreamXYFrame", () => {
     })
 
     it("does not render brush overlay when brush prop is absent", () => {
-      const { container } = render(
-        <StreamXYFrame chartType="scatter" />
-      )
+      const { container } = render(<StreamXYFrame chartType="scatter" />)
       const brushG = container.querySelector(".brush-g")
       expect(brushG).toBeFalsy()
     })
@@ -833,10 +931,13 @@ describe("StreamXYFrame", () => {
     describe("keyboard accessibility", () => {
       const data = [
         { x: 0, y: 0 },
-        { x: 10, y: 20 },
+        { x: 10, y: 20 }
       ]
 
-      async function renderBrush(dimension: "x" | "y" | "xy", onBrush = vi.fn()) {
+      async function renderBrush(
+        dimension: "x" | "y" | "xy",
+        onBrush = vi.fn()
+      ) {
         const result = render(
           <StreamXYFrame
             chartType="scatter"
@@ -850,16 +951,22 @@ describe("StreamXYFrame", () => {
           />
         )
         await waitFor(() => {
-          expect(result.container.querySelector('svg[role="region"]')).toBeTruthy() // test-quality-gate: allow-mount-only - precondition for keyboard/aria assertions below (waits for the lazy-loaded brush overlay to mount).
+          expect(
+            result.container.querySelector('svg[role="region"]')
+          ).toBeTruthy() // test-quality-gate: allow-mount-only - precondition for keyboard/aria assertions below (waits for the lazy-loaded brush overlay to mount).
         })
-        const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
+        const region = result.container.querySelector(
+          'svg[role="region"]'
+        ) as SVGSVGElement
         return { ...result, region, onBrush }
       }
 
       it("nudges an x-dimension brush left/right and ignores vertical arrows", async () => {
         const { region, onBrush } = await renderBrush("x")
         fireEvent.keyDown(region, { key: "ArrowRight" })
-        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ x: expect.any(Array) }))
+        expect(onBrush).toHaveBeenCalledWith(
+          expect.objectContaining({ x: expect.any(Array) })
+        )
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "ArrowLeft" })
         expect(onBrush).toHaveBeenCalled()
@@ -881,7 +988,9 @@ describe("StreamXYFrame", () => {
       it("nudges a y-dimension brush up/down and ignores horizontal arrows", async () => {
         const { region, onBrush } = await renderBrush("y")
         fireEvent.keyDown(region, { key: "ArrowUp" })
-        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ y: expect.any(Array) }))
+        expect(onBrush).toHaveBeenCalledWith(
+          expect.objectContaining({ y: expect.any(Array) })
+        )
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "ArrowDown", shiftKey: true })
         expect(onBrush).toHaveBeenCalled()
@@ -916,7 +1025,9 @@ describe("StreamXYFrame", () => {
         const { region } = await renderBrush("y")
         expect(region.getAttribute("aria-label")).toBe("Y data range brush")
         const describedBy = region.getAttribute("aria-describedby")
-        const description = describedBy ? region.querySelector(`#${describedBy}`) : null
+        const description = describedBy
+          ? region.querySelector(`#${describedBy}`)
+          : null
         expect(description?.textContent).toBe(
           "Use arrow keys to move the selected range, Shift plus an arrow key to resize it, and Escape to clear it."
         )
@@ -927,15 +1038,13 @@ describe("StreamXYFrame", () => {
   // ── Chart type variants ───────────────────────────────────────────────
 
   describe("chart type variants", () => {
-    const chartTypes: Array<"line" | "area" | "scatter" | "heatmap" | "bar" | "bubble"> = [
-      "line", "area", "scatter", "heatmap", "bar", "bubble"
-    ]
+    const chartTypes: Array<
+      "line" | "area" | "scatter" | "heatmap" | "bar" | "bubble"
+    > = ["line", "area", "scatter", "heatmap", "bar", "bubble"]
 
     for (const ct of chartTypes) {
       it(`renders chartType="${ct}" without crashing`, () => {
-        const { container } = render(
-          <StreamXYFrame chartType={ct} />
-        )
+        const { container } = render(<StreamXYFrame chartType={ct} />)
         expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
       })
     }
@@ -968,12 +1077,17 @@ describe("StreamXYFrame", () => {
       const { container } = render(
         <StreamXYFrame
           chartType="scatter"
-          data={[{ x: 0, y: 0 }, { x: 100, y: 100 }]}
+          data={[
+            { x: 0, y: 0 },
+            { x: 100, y: 100 }
+          ]}
           xAccessor="x"
           yAccessor="y"
           size={[240, 160]}
           autoPlaceAnnotations
-          annotations={[{ type: "label", x: 96, y: 50, label: "Edge label needs room" }]}
+          annotations={[
+            { type: "label", x: 96, y: 50, label: "Edge label needs room" }
+          ]}
           svgAnnotationRules={(annotation) => (
             <g
               data-testid="laid-out-ann"
@@ -997,7 +1111,7 @@ describe("StreamXYFrame", () => {
       const data = [
         { ts: 1, value: 10, _upper: 15, _lower: 5, isForecast: true },
         { ts: 2, value: 20, _upper: 25, _lower: 15, isForecast: true },
-        { ts: 3, value: 30, _upper: 35, _lower: 25, isForecast: true },
+        { ts: 3, value: 30, _upper: 35, _lower: 25, isForecast: true }
       ]
 
       const { container } = render(
@@ -1013,8 +1127,8 @@ describe("StreamXYFrame", () => {
               upperAccessor: "_upper",
               lowerAccessor: "_lower",
               fill: "#6366f1",
-              fillOpacity: 0.15,
-            },
+              fillOpacity: 0.15
+            }
           ]}
         />
       )
@@ -1029,7 +1143,7 @@ describe("StreamXYFrame", () => {
       const data = [
         { x: 1, y: 10, _upper: 15, _lower: 5 },
         { x: 2, y: 20, _upper: 25, _lower: 15 },
-        { x: 3, y: 30, _upper: 35, _lower: 25 },
+        { x: 3, y: 30, _upper: 35, _lower: 25 }
       ]
 
       const { container } = render(
@@ -1045,8 +1159,8 @@ describe("StreamXYFrame", () => {
               upperAccessor: "_upper",
               lowerAccessor: "_lower",
               fill: "#ff0000",
-              fillOpacity: 0.2,
-            },
+              fillOpacity: 0.2
+            }
           ]}
         />
       )
@@ -1073,17 +1187,30 @@ describe("StreamXYFrame", () => {
       const lineStyle = { stroke: "__LINE_STYLE__" }
       const pointStyle = () => ({ fill: "__POINT_STYLE__", r: 5 })
       const areaStyle = () => ({ fill: "__AREA_STYLE__" })
-      const barStyle = { fill: "__BAR_STYLE__", stroke: "__BAR_STROKE__", strokeWidth: 3 }
+      const barStyle = {
+        fill: "__BAR_STYLE__",
+        stroke: "__BAR_STROKE__",
+        strokeWidth: 3
+      }
       const swarmStyle = { fill: "__SWARM_STYLE__", radius: 4 }
-      const waterfallStyle = { positiveColor: "__WF_POS__", negativeColor: "__WF_NEG__" }
-      const candlestickStyle = { upColor: "__CS_UP__", downColor: "__CS_DOWN__" }
+      const waterfallStyle = {
+        positiveColor: "__WF_POS__",
+        negativeColor: "__WF_NEG__"
+      }
+      const candlestickStyle = {
+        upColor: "__CS_UP__",
+        downColor: "__CS_DOWN__"
+      }
       const boundsStyle = { fill: "__BOUNDS_STYLE__" }
 
       // Spy on PipelineStore.updateConfig — it's invoked on every pipelineConfig
       // memo change, including on first-mount useLayoutEffect, so the captured
       // argument is the merged config the store actually saw.
       const PipelineStoreModule = await import("./PipelineStore")
-      const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
+      const updateSpy = vi.spyOn(
+        PipelineStoreModule.PipelineStore.prototype,
+        "updateConfig"
+      )
 
       try {
         render(
@@ -1103,8 +1230,12 @@ describe("StreamXYFrame", () => {
         // The PipelineStore is instantiated once per mount AND updateConfig is
         // called at least once on first useLayoutEffect. Either surface exposes
         // the merged config.
-        const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
-        expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
+        const lastConfig =
+          updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+        expect(
+          lastConfig,
+          "updateConfig should be invoked with the initial merged config"
+        ).toBeDefined()
 
         // Each *Style value must have reached the store config.
         expect(lastConfig.lineStyle).toBe(lineStyle)
@@ -1125,10 +1256,14 @@ describe("StreamXYFrame", () => {
 
   it("forwards accessorRevision to the XY pipeline config", async () => {
     const PipelineStoreModule = await import("./PipelineStore")
-    const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
+    const updateSpy = vi.spyOn(
+      PipelineStoreModule.PipelineStore.prototype,
+      "updateConfig"
+    )
     try {
       render(<StreamXYFrame chartType="line" accessorRevision={7} />)
-      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+      const lastConfig =
+        updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
       expect(lastConfig?.accessorRevision).toBe(7)
     } finally {
       updateSpy.mockRestore()
