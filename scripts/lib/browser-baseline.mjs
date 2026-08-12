@@ -86,13 +86,19 @@ function assertFreshMappedOutput(repoRoot, outputPath) {
   let outputMtime = lstatSync(outputPath).mtimeMs
   if (existsSync(sourceMapPath)) {
     const sources = sourceMapSources(sourceMapPath)
-    if (sources.length === 0) {
-      throw new Error("Source map for " + relative(repoRoot, outputPath) + " has no input sources")
-    }
     outputMtime = Math.max(outputMtime, lstatSync(sourceMapPath).mtimeMs)
-    mappedInputs = sources
-      .map((source) => resolve(dirname(sourceMapPath), source))
-      .filter(existsSync)
+    if (sources.length > 0) {
+      mappedInputs = sources
+        .map((source) => resolve(dirname(sourceMapPath), source))
+        .filter(existsSync)
+    } else {
+      // Shared ESM family facades can have a valid source map with no
+      // `sources` entries: the facade only re-exports generated chunks, so
+      // there is no single source module for the map to name. Treat this the
+      // same as a production bundle without map evidence and conservatively
+      // inspect the component tree below rather than rejecting a fresh build.
+      mappedInputs = sourceFilesUnder(join(repoRoot, "src/components"))
+    }
   } else {
     // Worker bundles intentionally omit source maps to avoid publishing a
     // second large artifact. The non-minified local dist build preserves tsup
