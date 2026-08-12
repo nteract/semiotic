@@ -1,9 +1,24 @@
 import React from "react"
-import { render, fireEvent, act as rtlAct, waitFor } from "@testing-library/react"
+import {
+  render,
+  fireEvent,
+  act as rtlAct,
+  waitFor
+} from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
-import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, useLinkedChartCategories, estimateLegendRowCount } from "./LinkedCharts"
+import {
+  LinkedCharts,
+  useSelection,
+  useLinkedHover,
+  useLinkedLegendSuppression,
+  useLinkedChartCategories,
+  estimateLegendRowCount
+} from "./LinkedCharts"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import type { Datum } from "./charts/shared/datumTypes"
+import { MAX_RETAINED_CATEGORY_ASSIGNMENTS } from "./charts/shared/boundedCategoryRegistry"
+import { useColorScale } from "./charts/shared/hooks"
+import { LIGHT_THEME, ThemeProvider } from "./ThemeProvider"
 
 describe("LinkedCharts", () => {
   it("renders children within a SelectionProvider", () => {
@@ -21,8 +36,15 @@ describe("LinkedCharts", () => {
       return (
         <div>
           <span data-testid="active">{String(isActive)}</span>
-          <button data-testid="select" onClick={() => selectPoints({ cat: ["A"] })}>Select</button>
-          <button data-testid="clear" onClick={clear}>Clear</button>
+          <button
+            data-testid="select"
+            onClick={() => selectPoints({ cat: ["A"] })}
+          >
+            Select
+          </button>
+          <button data-testid="clear" onClick={clear}>
+            Clear
+          </button>
         </div>
       )
     }
@@ -34,9 +56,13 @@ describe("LinkedCharts", () => {
     )
 
     expect(getByTestId("active").textContent).toBe("false")
-    act(() => { getByTestId("select").click() })
+    act(() => {
+      getByTestId("select").click()
+    })
     expect(getByTestId("active").textContent).toBe("true")
-    act(() => { getByTestId("clear").click() })
+    act(() => {
+      getByTestId("clear").click()
+    })
     expect(getByTestId("active").textContent).toBe("false")
   })
 
@@ -47,7 +73,14 @@ describe("LinkedCharts", () => {
     function Producer() {
       const { isActive, selectPoints } = useSelection({ name: "shared" })
       hook1Active = isActive
-      return <button data-testid="produce" onClick={() => selectPoints({ cat: ["X"] })}>Go</button>
+      return (
+        <button
+          data-testid="produce"
+          onClick={() => selectPoints({ cat: ["X"] })}
+        >
+          Go
+        </button>
+      )
     }
 
     function Consumer() {
@@ -66,7 +99,9 @@ describe("LinkedCharts", () => {
     expect(hook1Active).toBe(false)
     expect(hook2Active).toBe(false)
 
-    act(() => { getByTestId("produce").click() })
+    act(() => {
+      getByTestId("produce").click()
+    })
 
     expect(hook1Active).toBe(true)
     expect(hook2Active).toBe(true)
@@ -75,10 +110,12 @@ describe("LinkedCharts", () => {
   it("accepts selections config with resolution modes", () => {
     // Should not throw when configuring resolution modes
     const { container } = render(
-      <LinkedCharts selections={{
-        highlight: { resolution: "union" },
-        brush: { resolution: "crossfilter" }
-      }}>
+      <LinkedCharts
+        selections={{
+          highlight: { resolution: "union" },
+          brush: { resolution: "crossfilter" }
+        }}
+      >
         <div>Charts</div>
       </LinkedCharts>
     )
@@ -94,9 +131,20 @@ describe("LinkedCharts", () => {
     // from a no-op.
     let predicate: (d: Datum) => boolean = () => true
     function CrossfilterConsumer() {
-      const sel = useSelection({ name: "cf", fields: ["region"], clientId: "chart-1" })
+      const sel = useSelection({
+        name: "cf",
+        fields: ["region"],
+        clientId: "chart-1"
+      })
       predicate = sel.predicate
-      return <button data-testid="select" onClick={() => sel.selectPoints({ region: ["East"] })}>select</button>
+      return (
+        <button
+          data-testid="select"
+          onClick={() => sel.selectPoints({ region: ["East"] })}
+        >
+          select
+        </button>
+      )
     }
 
     const { getByTestId } = render(
@@ -105,7 +153,9 @@ describe("LinkedCharts", () => {
       </LinkedCharts>
     )
 
-    act(() => { getByTestId("select").click() })
+    act(() => {
+      getByTestId("select").click()
+    })
     expect(predicate({ region: "West" })).toBe(true)
   })
 
@@ -114,13 +164,19 @@ describe("LinkedCharts", () => {
 
     function HoverProducer() {
       const { onHover } = useLinkedHover({ name: "hl", fields: ["region"] })
-      return <button data-testid="hover" onClick={() => onHover({ region: "East" })}>Hover</button>
+      return (
+        <button data-testid="hover" onClick={() => onHover({ region: "East" })}>
+          Hover
+        </button>
+      )
     }
 
     function SelectionConsumer() {
       const { isActive, predicate } = useSelection({ name: "hl" })
       consumerActive = isActive
-      return <span data-testid="match">{String(predicate({ region: "East" }))}</span>
+      return (
+        <span data-testid="match">{String(predicate({ region: "East" }))}</span>
+      )
     }
 
     const { getByTestId } = render(
@@ -131,7 +187,9 @@ describe("LinkedCharts", () => {
     )
 
     expect(consumerActive).toBe(false)
-    act(() => { getByTestId("hover").click() })
+    act(() => {
+      getByTestId("hover").click()
+    })
     expect(consumerActive).toBe(true)
     expect(getByTestId("match").textContent).toBe("true")
   })
@@ -147,7 +205,9 @@ describe("LinkedCharts", () => {
         <LinkedCharts showLegend>{children}</LinkedCharts>
       </CategoryColorProvider>
     )
-    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    const { result } = renderHook(() => useLinkedLegendSuppression(), {
+      wrapper
+    })
     expect(result.current).toBe(true)
   })
 
@@ -158,7 +218,9 @@ describe("LinkedCharts", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LinkedCharts>{children}</LinkedCharts>
     )
-    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    const { result } = renderHook(() => useLinkedLegendSuppression(), {
+      wrapper
+    })
     expect(result.current).toBe(false)
   })
 
@@ -168,7 +230,9 @@ describe("LinkedCharts", () => {
         <LinkedCharts>{children}</LinkedCharts>
       </CategoryColorProvider>
     )
-    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    const { result } = renderHook(() => useLinkedLegendSuppression(), {
+      wrapper
+    })
     expect(result.current).toBe(true)
   })
 
@@ -176,7 +240,9 @@ describe("LinkedCharts", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LinkedCharts showLegend={false}>{children}</LinkedCharts>
     )
-    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    const { result } = renderHook(() => useLinkedLegendSuppression(), {
+      wrapper
+    })
     expect(result.current).toBe(false)
   })
 
@@ -260,6 +326,122 @@ describe("LinkedCharts", () => {
     })
   })
 
+  it("keeps themed ordinary-chart colors stable through linked registration with parent overrides", async () => {
+    const themedColors = ["#123456", "#abcdef"]
+    const theme = {
+      ...LIGHT_THEME,
+      colors: { ...LIGHT_THEME.colors, categorical: themedColors }
+    }
+    const data = [{ category: "alpha" }, { category: "beta" }]
+    const expected = { alpha: "#parent-alpha", beta: themedColors[1] }
+    const snapshots: Array<{
+      colors: Record<string, string | undefined>
+      registered: boolean
+    }> = []
+
+    function RegisteringChart() {
+      useLinkedChartCategories(["alpha", "beta"])
+      const providerColors = useCategoryColors()
+      const colorScale = useColorScale(data, "category")
+      const snapshot = {
+        colors: {
+          alpha: colorScale?.("alpha"),
+          beta: colorScale?.("beta")
+        },
+        registered: Object.prototype.hasOwnProperty.call(
+          providerColors,
+          "beta"
+        )
+      }
+      snapshots.push(snapshot)
+      return (
+        <output data-testid="ordinary-linked-colors">
+          {JSON.stringify(snapshot)}
+        </output>
+      )
+    }
+
+    const { getByTestId } = render(
+      <ThemeProvider theme={theme}>
+        <CategoryColorProvider colors={{ alpha: "#parent-alpha" }}>
+          <LinkedCharts showLegend={false}>
+            <RegisteringChart />
+          </LinkedCharts>
+        </CategoryColorProvider>
+      </ThemeProvider>
+    )
+
+    expect(snapshots[0]).toEqual({ colors: expected, registered: false })
+    await waitFor(() => {
+      const current = JSON.parse(
+        getByTestId("ordinary-linked-colors").textContent || "{}"
+      )
+      expect(current).toEqual({ colors: expected, registered: true })
+    })
+    expect(snapshots.at(-1)).toEqual({ colors: expected, registered: true })
+  })
+
+  it("treats prototype-like category labels as ordinary linked colors", async () => {
+    const categories = ["__proto__", "constructor", "toString"]
+
+    function RegisteringChart() {
+      useLinkedChartCategories(categories)
+      const colors = useCategoryColors()
+      return <pre data-testid="colors">{JSON.stringify(colors)}</pre>
+    }
+
+    const { getByTestId } = render(
+      <LinkedCharts showLegend={false}>
+        <RegisteringChart />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      const colors = JSON.parse(getByTestId("colors").textContent || "{}")
+      expect(Object.keys(colors)).toEqual(categories)
+      for (const category of categories) {
+        expect(typeof colors[category]).toBe("string")
+      }
+    })
+  })
+
+  it("keeps overflow colors deterministic after high-cardinality eviction", async () => {
+    const categories = Array.from(
+      { length: MAX_RETAINED_CATEGORY_ASSIGNMENTS + 1 },
+      (_, index) => `category-${index}`
+    )
+    const overflowCategory = categories.at(-1)!
+
+    function RegisteringChart({ active }: { active: string[] }) {
+      useLinkedChartCategories(active)
+      const colors = useCategoryColors()
+      return (
+        <output data-testid="overflow">{colors?.[overflowCategory]}</output>
+      )
+    }
+
+    const { getByTestId, rerender } = render(
+      <LinkedCharts showLegend={false}>
+        <RegisteringChart active={categories} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(getByTestId("overflow").textContent).toBeTruthy()
+    })
+    const firstColor = getByTestId("overflow").textContent
+
+    rerender(
+      <LinkedCharts showLegend={false}>
+        <RegisteringChart active={[overflowCategory]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(getByTestId("overflow").textContent).toBe(firstColor)
+    })
+  })
+
   it("does not render legend when showLegend is false", () => {
     const { container } = render(
       <CategoryColorProvider colors={{ North: "#f00" }}>
@@ -287,7 +469,10 @@ describe("LinkedCharts", () => {
     let consumerPredicate: (d: Datum) => boolean = () => true
 
     function Consumer() {
-      const { isActive, predicate } = useSelection({ name: "hl", fields: ["region"] })
+      const { isActive, predicate } = useSelection({
+        name: "hl",
+        fields: ["region"]
+      })
       consumerActive = isActive
       consumerPredicate = predicate
       return <span data-testid="active">{String(isActive)}</span>
@@ -332,7 +517,10 @@ describe("LinkedCharts", () => {
     let consumerPredicate: (d: Datum) => boolean = () => true
 
     function Consumer() {
-      const { isActive, predicate } = useSelection({ name: "hl", fields: ["region"] })
+      const { isActive, predicate } = useSelection({
+        name: "hl",
+        fields: ["region"]
+      })
       consumerActive = isActive
       consumerPredicate = predicate
       return <span data-testid="active">{String(isActive)}</span>
@@ -384,7 +572,9 @@ describe("LinkedCharts", () => {
     // 0 for everything).
     type Entry = { target: Element; cb: ResizeObserverCallback }
     let captured: Entry[] = []
-    const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+    const resizeObserverGlobal = globalThis as typeof globalThis & {
+      ResizeObserver?: typeof ResizeObserver
+    }
     let originalRO: typeof ResizeObserver | undefined
 
     beforeEach(() => {
@@ -392,7 +582,9 @@ describe("LinkedCharts", () => {
       originalRO = resizeObserverGlobal.ResizeObserver
       resizeObserverGlobal.ResizeObserver = class {
         constructor(private cb: ResizeObserverCallback) {}
-        observe(target: Element) { captured.push({ target, cb: this.cb }) }
+        observe(target: Element) {
+          captured.push({ target, cb: this.cb })
+        }
         unobserve() {}
         disconnect() {}
       } as typeof ResizeObserver
@@ -409,7 +601,12 @@ describe("LinkedCharts", () => {
       rtlAct(() => {
         for (const { target, cb } of captured) {
           cb(
-            [{ target, contentRect: { width: w, height: h } } as unknown as ResizeObserverEntry],
+            [
+              {
+                target,
+                contentRect: { width: w, height: h }
+              } as unknown as ResizeObserverEntry
+            ],
             {} as ResizeObserver
           )
         }
@@ -461,7 +658,9 @@ describe("estimateLegendRowCount", () => {
     // 0 is what <LinkedLegend> passes before the first ResizeObserver
     // measurement — we want a conservative single-row SVG until we
     // know better, not a wildly over-sized reservation.
-    expect(estimateLegendRowCount(["North", "South", "East", "West"], 0)).toBe(1)
+    expect(estimateLegendRowCount(["North", "South", "East", "West"], 0)).toBe(
+      1
+    )
   })
 
   it("keeps all items on one row when the container is wide enough", () => {
@@ -471,11 +670,15 @@ describe("estimateLegendRowCount", () => {
   it("wraps items across rows when the container is narrow", () => {
     // Labels of length 6 at 7px/char + 26 swatch/pad ≈ 68px each.
     // 120px container only fits one item per row → 4 labels → 4 rows.
-    expect(estimateLegendRowCount(["North!", "South!", "East!!", "West!!"], 120)).toBe(4)
+    expect(
+      estimateLegendRowCount(["North!", "South!", "East!!", "West!!"], 120)
+    ).toBe(4)
   })
 
   it("wraps partially for medium-width containers", () => {
     // 280px fits ~4 items per row of ~68px (4*68 = 272). 6 items wrap to 2 rows.
-    expect(estimateLegendRowCount(["A1", "B2", "C3", "D4", "E5", "F6"], 100)).toBeGreaterThan(1)
+    expect(
+      estimateLegendRowCount(["A1", "B2", "C3", "D4", "E5", "F6"], 100)
+    ).toBeGreaterThan(1)
   })
 })

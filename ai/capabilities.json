@@ -434,13 +434,12 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": false,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
         "hierarchy",
-        "animated",
-        "hoc-ssr-only"
+        "animated"
       ]
     },
     "ProcessSankey": {

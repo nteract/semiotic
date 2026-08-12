@@ -1,10 +1,11 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback, useMemo } from "react"
+import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
   WindowMode,
   BarStyle,
+  Style,
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
@@ -15,13 +16,26 @@ import type {
   TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { ReactNode } from "react"
-import { useChartSelection, useChartMode, useChartLegendAndMargin } from "../shared/hooks"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  distinctCategories,
+  useChartLegendAndMargin,
+  useChartSelection,
+  useLegendInteraction
+} from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
+import type {
+  ChartMode,
+  ChartAccessor,
+  SelectionConfig,
+  MobileInteractionProp
+} from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildHistogramTooltip } from "./defaultRealtimeTooltip"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import {
+  renderLoadingState,
+  renderEmptyState
+} from "../shared/withChartWrapper"
 import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
@@ -33,11 +47,29 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { LegendValue } from "../../types/legendTypes"
 import type { PartialMargin } from "../../types/marginType"
 import { resolveDownwardHistogramExtent } from "./temporalHistogramConfig"
-import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveTooltipContent } from "../../Tooltip/Tooltip"
+import type {
+  RealtimeAccessibilityProps,
+  RealtimeData,
+  RealtimePointIdAccessor,
+  RealtimeTooltipProp
+} from "./realtimeChartTypes"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
+import {
+  buildRealtimeFrameChromeProps,
+  useRealtimeChartMode,
+  useRealtimeFrameHandle,
+  useRealtimeSelectionStyle
+} from "./realtimeChartRuntime"
+import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
 
 export type RealtimeHistogramDirection = "up" | "down"
 
-export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
+const EMPTY_LEGEND_DATA: Datum[] = []
+
+export interface RealtimeHistogramProps<
+  TDatum extends Datum = Datum
+> extends RealtimeAccessibilityProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -69,7 +101,7 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Datum[]
+  data?: RealtimeData<TDatum>
   /** Time value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
@@ -98,7 +130,7 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
    * Keys also determine stack order (listed keys first, then alphabetical).
    */
   colors?: Record<string, string>
-  /** Bar fill color (non-stacked mode) */
+  /** Bar fill color, or fallback for categories missing from `colors`. */
   fill?: string
   /** Bar stroke color */
   stroke?: string
@@ -106,6 +138,8 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   strokeWidth?: number
   /** Uniform bar opacity (0–1). Pairs with `color` / `stroke` / `strokeWidth` for the designer-facing primitive vocabulary. */
   opacity?: number
+  /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
+  cursor?: CSSProperties["cursor"]
   /** Gap between bars in pixels */
   gap?: number
   /** Show canvas-drawn axes */
@@ -123,13 +157,17 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Opt into automatic placement for note-like annotations without manual offsets. */
   autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
-  tooltip?: TooltipProp
+  /** Declarative tooltip config or the legacy full-HoverData callback. */
+  tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -149,16 +187,21 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
   /** Brush configuration. `true` defaults to `{ dimension: "x", snap: "bin" }`. */
-  brush?: boolean | "x" | {
-    dimension?: "x" | "y" | "xy"
-    snap?: "continuous" | "bin"
-    /** Actual bin boundary values for data-driven snapping (auto-populated from histogram bins when omitted) */
-    binBoundaries?: number[]
-    /** When true, snap during drag (not just on release). Default false. */
-    snapDuring?: boolean
-  }
+  brush?:
+    | boolean
+    | "x"
+    | {
+        dimension?: "x" | "y" | "xy"
+        snap?: "continuous" | "bin"
+        /** Actual bin boundary values for data-driven snapping (auto-populated from histogram bins when omitted) */
+        binBoundaries?: number[]
+        /** When true, snap during drag (not just on release). Default false. */
+        snapDuring?: boolean
+      }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
-  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  onBrush?: (
+    extent: { x: [number, number]; y: [number, number] } | null
+  ) => void
   /** Linked brush for cross-chart coordination via LinkedCharts */
   linkedBrush?: string | { name: string; xField?: string; yField?: string }
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
@@ -172,7 +215,7 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: Datum) => string)
+  pointIdAccessor?: RealtimePointIdAccessor<TDatum>
 }
 
 /**
@@ -208,119 +251,185 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
  * />
  * ```
  */
-export const RealtimeHistogram = forwardRef(
-  function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    // Thread mode-aware dimensions and axes through so `sparkline` and
-    // `context` strip the appropriate chrome.
-    const resolved = useChartMode(props.mode, {
-      width: props.size?.[0] ?? props.width,
-      height: props.size?.[1] ?? props.height,
-      showAxes: props.showAxes,
-      showLegend: props.showLegend,
-      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-      linkedHover: props.linkedHover,
-      mobileInteraction: props.mobileInteraction,
-      mobileSemantics: props.mobileSemantics,
-      responsiveRules: props.responsiveRules,
-    })
+export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
+  TDatum extends Datum = Datum
+>(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  // Thread mode-aware dimensions and axes through so `sparkline` and
+  // `context` strip the appropriate chrome.
+  const resolved = useRealtimeChartMode(props)
 
-    const {
-      binSize,
-      size,
-      margin: userMargin,
-      className,
-      arrowOfTime = "right",
-      windowMode = "sliding",
-      windowSize: windowSizeProp,
-      data,
-      timeAccessor,
-      valueAccessor,
-      direction = "up",
-      timeExtent,
-      valueExtent,
-      extentPadding,
-      categoryAccessor,
+  const {
+    binSize,
+    size,
+    margin: userMargin,
+    className,
+    arrowOfTime = "right",
+    windowMode = "sliding",
+    windowSize: windowSizeProp,
+    data,
+    timeAccessor,
+    valueAccessor,
+    direction = "up",
+    timeExtent,
+    valueExtent,
+    extentPadding,
+    categoryAccessor,
+    colors,
+    fill,
+    stroke,
+    strokeWidth,
+    opacity,
+    cursor,
+    gap,
+    background,
+    tooltipContent,
+    tooltip,
+    onHover,
+    annotations,
+    autoPlaceAnnotations,
+    svgAnnotationRules,
+    tickFormatTime,
+    tickFormatValue,
+    linkedHover,
+    selection,
+    decay,
+    pulse,
+    staleness,
+    transition,
+    onObservation,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
+    emphasis,
+    legendPosition: legendPositionProp,
+    legend: additionalLegend,
+    brush: brushProp,
+    onBrush: userOnBrush,
+    linkedBrush
+  } = props
+
+  const showAxes = resolved.showAxes
+  const enableHover = resolved.enableHover
+  const showHistogramLegend = resolved.showLegend !== false
+  const resolvedSize: [number, number] = size ?? [
+    resolved.width,
+    resolved.height
+  ]
+  const streamingCategories = useStreamingLegend({
+    isPushMode: data === undefined,
+    colorBy: categoryAccessor,
+    colorScheme: colors,
+    // This wrapper builds the visible legend from the shared mark scale below.
+    // Keep this hook focused on push-mode category-domain discovery.
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    trackCategoryDomain: showHistogramLegend,
+    registerLinkedCategories: false
+  })
+  const controlledCategories = useMemo(
+    () => distinctCategories(data ?? [], categoryAccessor),
+    [data, categoryAccessor]
+  )
+  const activeCategories =
+    data === undefined ? streamingCategories.categories : controlledCategories
+  const { colorScale: categoryColorScale, colorMap: resolvedCategoryColors } =
+    useRealtimeCategoryColors({
+      enabled: !!categoryAccessor,
+      categories: activeCategories,
       colors,
-      fill,
-      stroke,
-      strokeWidth,
-      opacity,
-      gap,
-      background,
-      tooltipContent,
-      tooltip,
-      onHover,
-      annotations,
-      autoPlaceAnnotations,
-      svgAnnotationRules,
-      tickFormatTime,
-      tickFormatValue,
-      linkedHover,
-      selection,
-      decay,
-      pulse,
-      staleness,
-      transition,
-      onObservation,
-      chartId,
-      loading,
-      loadingContent,
-      emptyContent,
-      emphasis,
-      legendPosition: legendPositionProp,
-      legend: additionalLegend,
-      brush: brushProp,
-      onBrush: userOnBrush,
-      linkedBrush,
-    } = props
-
-    const showAxes = resolved.showAxes
-    const enableHover = resolved.enableHover
-    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    const histogramColorScale = useMemo(
-      () => colors
-        ? (category: string) => colors[category] ?? fill ?? "#999"
-        : undefined,
-      [colors, fill],
+      fallbackColor: fill,
+      order: "explicit-then-alpha",
+      domainKey: categoryAccessor
+    })
+  const histogramLegendCategories = useMemo(() => {
+    if (!resolvedCategoryColors) return activeCategories
+    const active = new Set(activeCategories)
+    return Object.keys(resolvedCategoryColors).filter((category) =>
+      active.has(category)
     )
-    const { legend, margin, legendPosition } = useChartLegendAndMargin({
-      data: data ?? [],
+  }, [activeCategories, resolvedCategoryColors])
+  const legendColorAccessor = useCallback(
+    (datum: Datum) => {
+      if (datum.category != null) return String(datum.category)
+      const value =
+        typeof categoryAccessor === "function"
+          ? categoryAccessor(datum as TDatum)
+          : categoryAccessor
+            ? datum[categoryAccessor]
+            : ""
+      return String(value)
+    },
+    [categoryAccessor]
+  )
+  const { legend, margin, legendPosition, hasAutomaticLegend } =
+    useChartLegendAndMargin({
+      // `activeCategories` is authoritative here. Keeping sample rows out of
+      // legend construction ensures function category accessors that happen to
+      // return CSS color names still map through the categorical scale, exactly
+      // like the retained marks do.
+      data: EMPTY_LEGEND_DATA,
       colorBy: categoryAccessor,
-      colorScale: histogramColorScale,
+      colorScale: categoryColorScale,
       showLegend: resolved.showLegend,
       legendPosition: legendPositionProp,
       userMargin,
       defaults: resolved.marginDefaults,
+      categories: histogramLegendCategories,
       additionalLegend,
       chartWidth: resolvedSize[0],
       // Reserve the bottom-axis band a bottom legend is placed beyond.
-      axisChrome: { hasAxis: resolved.showAxes !== false },
+      axisChrome: { hasAxis: resolved.showAxes !== false }
     })
-    // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
-    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+  const legendState = useLegendInteraction(
+    props.legendInteraction,
+    categoryAccessor ? legendColorAccessor : undefined,
+    histogramLegendCategories,
+    hasAutomaticLegend,
+    true
+  )
+  // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
+  const resolvedTooltip =
+    tooltipContent ??
+    resolveTooltipContent({
       tooltip,
-      defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor }),
+      defaultTooltipContent: buildHistogramTooltip({
+        timeAccessor,
+        valueAccessor
+      }),
+      customFunctionContext: "hover"
     }).tooltipContent
 
-    const frameRef = useRef<StreamXYFrameHandle>(null)
+  const frameRef = useRef<StreamXYFrameHandle>(null)
 
-    // ── Linked hover via shared hook ──
-    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeHistogram", chartId
-    })
+  // ── Linked hover via shared hook ──
+  const {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior: linkedHoverBehavior,
+    customClickBehavior
+  } = useChartSelection({
+    selection,
+    linkedHover,
+    unwrapData: true,
+    onObservation,
+    chartType: "RealtimeHistogram",
+    chartId,
+    mobileInteraction: resolved.mobileInteraction
+  })
 
-    const combinedHoverBehavior = useCallback(
-      (d: HoverData | null) => {
-        if (onHover) onHover(d)
-        linkedHoverBehavior(d)
-      },
-      [onHover, linkedHoverBehavior]
-    )
+  const combinedHoverBehavior = useCallback(
+    (d: HoverData | null) => {
+      if (onHover) onHover(d)
+      linkedHoverBehavior(d)
+    },
+    [onHover, linkedHoverBehavior]
+  )
 
-    // ── Brush wiring ──
-    // Normalize brush prop: true defaults to x-dimension with bin snapping
-    const normalizedBrush = brushProp === true
+  // ── Brush wiring ──
+  // Normalize brush prop: true defaults to x-dimension with bin snapping
+  const normalizedBrush =
+    brushProp === true
       ? { dimension: "x" as const, snap: "bin" as const }
       : brushProp === "x"
         ? { dimension: "x" as const }
@@ -328,167 +437,207 @@ export const RealtimeHistogram = forwardRef(
           ? brushProp
           : undefined
 
-    // LinkedBrush integration via selection store
-    const brushConfig = normalizeLinkedBrush(linkedBrush)
-    const timeField = typeof timeAccessor === "string" ? timeAccessor : "time"
+  // LinkedBrush integration via selection store
+  const brushConfig = normalizeLinkedBrush(linkedBrush)
+  const timeField = typeof timeAccessor === "string" ? timeAccessor : "time"
 
-    const brushHook = useBrushSelection({
-      name: brushConfig?.name || "__unused_hist_brush__",
-      xField: brushConfig?.xField || timeField,
-      ...(brushConfig?.yField ? { yField: brushConfig.yField } : {})
+  const brushHook = useBrushSelection({
+    name: brushConfig?.name || "__unused_hist_brush__",
+    xField: brushConfig?.xField || timeField,
+    ...(brushConfig?.yField ? { yField: brushConfig.yField } : {})
+  })
+
+  // Stabilize with ref to avoid BrushOverlay re-creation
+  const brushInteractionRef = useRef(brushHook.brushInteraction)
+  brushInteractionRef.current = brushHook.brushInteraction
+
+  const combinedOnBrush = useCallback(
+    (extent: { x: [number, number]; y: [number, number] } | null) => {
+      // Fire user callback
+      if (userOnBrush) userOnBrush(extent)
+
+      // Fire observation event
+      if (onObservation) {
+        if (extent) {
+          onObservation({
+            type: "brush",
+            extent,
+            timestamp: Date.now(),
+            chartType: "RealtimeHistogram",
+            chartId
+          })
+        } else {
+          onObservation({
+            type: "brush-end",
+            timestamp: Date.now(),
+            chartType: "RealtimeHistogram",
+            chartId
+          })
+        }
+      }
+
+      // Update selection store for linkedBrush
+      if (brushConfig) {
+        const bi = brushInteractionRef.current
+        if (!extent) {
+          bi.end(null)
+        } else if (bi.brush === "xBrush") {
+          bi.end(extent.x)
+        } else if (bi.brush === "yBrush") {
+          bi.end(extent.y)
+        } else {
+          bi.end([
+            [extent.x[0], extent.y[0]],
+            [extent.x[1], extent.y[1]]
+          ])
+        }
+      }
+    },
+    [userOnBrush, onObservation, chartId, brushConfig]
+  )
+
+  useRealtimeFrameHandle(ref, frameRef)
+
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  const loadingEl = renderLoadingState(
+    loading,
+    resolvedSize[0],
+    resolvedSize[1],
+    loadingContent
+  )
+  const emptyEl = !loadingEl
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    : null
+
+  const barStyle: BarStyle = {}
+  if (fill != null) barStyle.fill = fill
+  if (stroke != null) barStyle.stroke = stroke
+  if (strokeWidth != null) barStyle.strokeWidth = strokeWidth
+  if (opacity != null) barStyle.opacity = opacity
+  if (cursor != null) barStyle.cursor = cursor
+  if (gap != null) barStyle.gap = gap
+  const categoricalBarStyle = useMemo<
+    ((datum: Datum) => Style) | undefined
+  >(() => {
+    if (!categoryAccessor || !categoryColorScale) return undefined
+    return (datum: Datum) =>
+      datum.category == null
+        ? {}
+        : { fill: categoryColorScale(String(datum.category)) }
+  }, [categoryAccessor, categoryColorScale])
+  const effectiveSelectionHook =
+    hoverSelectionHook || legendState.legendSelectionHook || activeSelectionHook
+  const interactiveBarStyle = useRealtimeSelectionStyle(
+    categoricalBarStyle,
+    [effectiveSelectionHook],
+    selection
+  )
+
+  const resolvedClassName = emphasis
+    ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+    : className
+
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const resolvedValueExtent = useMemo(() => {
+    if (direction !== "down") return valueExtent
+    return resolveDownwardHistogramExtent({
+      data: data as TDatum[] | undefined,
+      valueAccessor,
+      timeAccessor,
+      binSize,
+      valueExtent,
+      extentPadding
     })
+  }, [
+    direction,
+    data,
+    valueAccessor,
+    timeAccessor,
+    binSize,
+    valueExtent,
+    extentPadding
+  ])
 
-    // Stabilize with ref to avoid BrushOverlay re-creation
-    const brushInteractionRef = useRef(brushHook.brushInteraction)
-    brushInteractionRef.current = brushHook.brushInteraction
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
-    const combinedOnBrush = useCallback(
-      (extent: { x: [number, number]; y: [number, number] } | null) => {
-        // Fire user callback
-        if (userOnBrush) userOnBrush(extent)
-
-        // Fire observation event
-        if (onObservation) {
-          if (extent) {
-            onObservation({
-              type: "brush",
-              extent,
-              timestamp: Date.now(),
-              chartType: "RealtimeHistogram",
-              chartId
-            })
-          } else {
-            onObservation({
-              type: "brush-end",
-              timestamp: Date.now(),
-              chartType: "RealtimeHistogram",
-              chartId
-            })
-          }
-        }
-
-        // Update selection store for linkedBrush
-        if (brushConfig) {
-          const bi = brushInteractionRef.current
-          if (!extent) {
-            bi.end(null)
-          } else if (bi.brush === "xBrush") {
-            bi.end(extent.x)
-          } else if (bi.brush === "yBrush") {
-            bi.end(extent.y)
-          } else {
-            bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
-          }
-        }
-      },
-      [userOnBrush, onObservation, chartId, brushConfig]
-    )
-
-    // `[]` deps so the handle stays referentially stable across renders —
-    // see `useFrameImperativeHandle` for the regression class this
-    // prevents (callback refs that pre-seed data re-firing their seed
-    // on every parent re-render).
-    useImperativeHandle(ref, () => ({
-      push: (point) => frameRef.current?.push(point),
-      pushMany: (points) => frameRef.current?.pushMany(points),
-      remove: (id) => frameRef.current?.remove(id) ?? [],
-      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-      clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? [],
-      getScales: () => frameRef.current?.getScales() ?? null
-    }), [])
-
-    // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
-    const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
-
-    const barStyle: BarStyle = {}
-    if (fill != null) barStyle.fill = fill
-    if (stroke != null) barStyle.stroke = stroke
-    if (strokeWidth != null) barStyle.strokeWidth = strokeWidth
-    if (opacity != null) barStyle.opacity = opacity
-    if (gap != null) barStyle.gap = gap
-
-    const resolvedClassName = emphasis
-      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
-      : className
-
-    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
-    const resolvedValueExtent = useMemo(() => {
-      if (direction !== "down") return valueExtent
-      return resolveDownwardHistogramExtent({
-        data: data as TDatum[] | undefined,
-        valueAccessor,
-        timeAccessor,
-        binSize,
-        valueExtent,
-        extentPadding,
-      })
-    }, [direction, data, valueAccessor, timeAccessor, binSize, valueExtent, extentPadding])
-
-    // ── Loading / empty guards (deferred to after all hooks) ───────────────
-    if (loadingEl) return loadingEl
-    if (emptyEl) return emptyEl
-
-    return (
-      <StreamXYFrame
-        ref={frameRef}
-        chartType="bar"
-        runtimeMode="streaming"
-        size={resolvedSize}
-        maxDevicePixelRatio={props.maxDevicePixelRatio}
-        margin={margin}
-        className={resolvedClassName}
-        arrowOfTime={arrowOfTime}
-        windowMode={windowMode}
-        windowSize={windowSize}
-        data={data}
-        timeAccessor={timeAccessor}
-        valueAccessor={valueAccessor}
-        xExtent={timeExtent}
-        yExtent={resolvedValueExtent}
-        extentPadding={extentPadding}
-        binSize={binSize}
-        categoryAccessor={categoryAccessor}
-        barColors={colors}
-        barStyle={barStyle}
-        showAxes={showAxes}
-        background={background}
-        hoverAnnotation={enableHover}
-        tooltipContent={resolvedTooltip}
-        {...buildCustomBehaviorProps({
-          linkedHover,
-          selection,
-          onObservation,
-          forceHoverBehavior: true,
-          mobileInteraction: resolved.mobileInteraction,
-          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
-        })}
-        annotations={annotations}
-        autoPlaceAnnotations={autoPlaceAnnotations}
-        svgAnnotationRules={svgAnnotationRules}
-        tickFormatTime={tickFormatTime}
-        tickFormatValue={tickFormatValue}
-        decay={decay}
-        pulse={pulse}
-        staleness={staleness}
-        transition={transition}
-        pointIdAccessor={props.pointIdAccessor}
-        legend={legend}
-        legendPosition={legendPosition}
-        brush={normalizedBrush || (linkedBrush ? { dimension: "x" as const } : undefined)}
-        onBrush={(normalizedBrush || linkedBrush) ? combinedOnBrush : undefined}
-      />
-    )
-  }
-) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  return (
+    <StreamXYFrame
+      ref={frameRef}
+      chartType="bar"
+      runtimeMode="streaming"
+      size={resolvedSize}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
+      margin={margin}
+      className={resolvedClassName}
+      {...buildRealtimeFrameChromeProps(
+        resolved,
+        legendState,
+        props.legendInteraction
+      )}
+      arrowOfTime={arrowOfTime}
+      windowMode={windowMode}
+      windowSize={windowSize}
+      data={data}
+      timeAccessor={timeAccessor}
+      valueAccessor={valueAccessor}
+      xExtent={timeExtent}
+      yExtent={resolvedValueExtent}
+      extentPadding={extentPadding}
+      binSize={binSize}
+      categoryAccessor={categoryAccessor}
+      barColors={resolvedCategoryColors}
+      barStyle={barStyle}
+      areaStyle={interactiveBarStyle}
+      showAxes={showAxes}
+      background={background}
+      hoverAnnotation={enableHover}
+      tooltipContent={resolvedTooltip}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        forceHoverBehavior: true,
+        mobileInteraction: resolved.mobileInteraction,
+        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customClickBehavior
+      })}
+      annotations={annotations}
+      autoPlaceAnnotations={autoPlaceAnnotations}
+      svgAnnotationRules={svgAnnotationRules}
+      tickFormatTime={tickFormatTime}
+      tickFormatValue={tickFormatValue}
+      decay={decay}
+      pulse={pulse}
+      staleness={staleness}
+      transition={transition}
+      pointIdAccessor={props.pointIdAccessor}
+      legend={legend}
+      legendPosition={legendPosition}
+      {...streamingCategories.categoryDomainProps}
+      brush={
+        normalizedBrush ||
+        (linkedBrush ? { dimension: "x" as const } : undefined)
+      }
+      onBrush={normalizedBrush || linkedBrush ? combinedOnBrush : undefined}
+    />
+  )
+}) as unknown as {
+  <TDatum extends Datum = Datum>(
+    props: RealtimeHistogramProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 RealtimeHistogram.displayName = "RealtimeHistogram"
 
-export interface TemporalHistogramProps<TDatum extends Datum = Datum>
-  extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowSize" | "windowMode"> {
+export interface TemporalHistogramProps<
+  TDatum extends Datum = Datum
+> extends Omit<
+  RealtimeHistogramProps<TDatum>,
+  "data" | "windowSize" | "windowMode"
+> {
   /** Static data array for a bounded temporal histogram. */
   data: TDatum[]
 }
@@ -498,8 +647,15 @@ export interface TemporalHistogramProps<TDatum extends Datum = Datum>
  * bounded array rather than a ref-driven stream; the realtime push API is not
  * part of this public surface.
  */
-export function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>) {
-  return <RealtimeHistogram {...(props as RealtimeHistogramProps<TDatum>)} windowMode="growing" />
+export function TemporalHistogram<TDatum extends Datum = Datum>(
+  props: TemporalHistogramProps<TDatum>
+) {
+  return (
+    <RealtimeHistogram
+      {...(props as RealtimeHistogramProps<TDatum>)}
+      windowMode="growing"
+    />
+  )
 }
 TemporalHistogram.displayName = "TemporalHistogram"
 
@@ -509,4 +665,5 @@ TemporalHistogram.displayName = "TemporalHistogram"
 export const RealtimeTemporalHistogram = RealtimeHistogram
 /** @deprecated Use `RealtimeHistogramProps` instead. Same component, just the
  *  pre-rename type alias. */
-export type RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> = RealtimeHistogramProps<TDatum>
+export type RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> =
+  RealtimeHistogramProps<TDatum>

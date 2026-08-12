@@ -192,6 +192,21 @@ const examples = [
       height: 350,
     }),
   }),
+
+  ...(["right", "left", "top", "bottom"].map((legendPosition) =>
+    TestCase({
+      title: `Gradient legend (${legendPosition})`,
+      testId: `geo-gradient-legend-${legendPosition}`,
+      children: React.createElement(ChoroplethMap, {
+        areas: simpleAreas,
+        valueAccessor: "value",
+        colorScheme: "blues",
+        legendPosition,
+        width: 360,
+        height: 240,
+      }),
+    })
+  )),
 ]
 
 const root = createRoot(document.getElementById("root"))

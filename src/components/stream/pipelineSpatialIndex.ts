@@ -29,7 +29,7 @@ export class PipelineSpatialIndex {
     let pointCount = 0
     let maxRadius = 0
     for (const node of scene) {
-      if (node.type === "point") {
+      if (node.type === "point" && node.interactive !== false) {
         pointCount++
         if (node.r > maxRadius) maxRadius = node.r
       }
@@ -43,7 +43,9 @@ export class PipelineSpatialIndex {
     const points: PointSceneNode[] = new Array(pointCount)
     let index = 0
     for (const node of scene) {
-      if (node.type === "point") points[index++] = node
+      if (node.type === "point" && node.interactive !== false) {
+        points[index++] = node
+      }
     }
     this.tree = d3Quadtree<PointSceneNode>()
       .x((node) => node.x)

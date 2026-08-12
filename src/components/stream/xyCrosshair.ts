@@ -27,25 +27,28 @@ export function drawCrosshair(
   ctx.save()
   const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
   ctx.strokeStyle = crossStyle.stroke || theme.crosshair
-  ctx.lineWidth = crossStyle.strokeWidth || 1
+  const crosshairStrokeWidth = crossStyle.strokeWidth ?? 1
   if (crossStyle.strokeDasharray) {
     ctx.setLineDash(crossStyle.strokeDasharray.split(/[\s,]+/).map(Number))
   } else {
     ctx.setLineDash([4, 4])
   }
 
-  // Vertical crosshair line (always)
-  ctx.beginPath()
-  ctx.moveTo(isMulti ? xPx : hover.x, 0)
-  ctx.lineTo(isMulti ? xPx : hover.x, height)
-  ctx.stroke()
-
-  // Horizontal crosshair line (single-point mode only)
-  if (!isMulti) {
+  if (crosshairStrokeWidth > 0) {
+    ctx.lineWidth = crosshairStrokeWidth
+    // Vertical crosshair line (always)
     ctx.beginPath()
-    ctx.moveTo(0, hover.y)
-    ctx.lineTo(width, hover.y)
+    ctx.moveTo(isMulti ? xPx : hover.x, 0)
+    ctx.lineTo(isMulti ? xPx : hover.x, height)
     ctx.stroke()
+
+    // Horizontal crosshair line (single-point mode only)
+    if (!isMulti) {
+      ctx.beginPath()
+      ctx.moveTo(0, hover.y)
+      ctx.lineTo(width, hover.y)
+      ctx.stroke()
+    }
   }
 
   ctx.restore()
@@ -108,7 +111,12 @@ export function drawLineHighlight(
       ctx.lineTo(node.path[i][0], node.path[i][1])
     }
     ctx.strokeStyle = rawStyle.stroke || node.style.stroke || theme.primary
-    ctx.lineWidth = rawStyle.strokeWidth || (node.style.strokeWidth || 2) + 2
+    const lineWidth = rawStyle.strokeWidth ?? (node.style.strokeWidth ?? 2) + 2
+    if (lineWidth <= 0) {
+      ctx.restore()
+      continue
+    }
+    ctx.lineWidth = lineWidth
     ctx.globalAlpha = rawStyle.opacity ?? 1
     ctx.stroke()
     ctx.restore()

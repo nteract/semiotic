@@ -166,6 +166,18 @@ const BEHAVIOR_CONTRACTS = [
     agentAction: "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.",
   },
   {
+    id: "interaction.cursor-is-presentation-only",
+    category: "interaction",
+    title: "Cursor styling does not create behavior",
+    severity: "warning",
+    appliesTo: {
+      propsAny: ["cursor"],
+      propPathsAny: [["styleRules", "*", "style", "cursor"]],
+    },
+    summary: "Cursor values in realtime props, retained mark styles, styleRules, and custom hit targets change pointer presentation only. They do not install click handlers, keyboard activation, observations, or accessibility semantics.",
+    agentAction: "Use an actionable cursor only when the application separately supplies documented click or observation behavior and an accessible activation path. Treat cursor in serialized/static output as visual metadata, never as proof that a mark is interactive.",
+  },
+  {
     id: "props.data-required-by-usage-mode",
     category: "required-props",
     title: "Data required by usage mode",
@@ -320,8 +332,26 @@ function appliesToComponent(contract, component) {
 
 function appliesToProps(contract, props) {
   const propsAny = contract.appliesTo?.propsAny
-  if (!propsAny || propsAny.length === 0) return true
-  return propsAny.some((prop) => hasOwn(props, prop) && props[prop] !== undefined)
+  const propPathsAny = contract.appliesTo?.propPathsAny
+  if (
+    (!propsAny || propsAny.length === 0) &&
+    (!propPathsAny || propPathsAny.length === 0)
+  )
+    return true
+
+  if (propsAny?.some((prop) => hasOwn(props, prop) && props[prop] !== undefined)) return true
+  return propPathsAny?.some((path) => hasDefinedPath(props, path)) ?? false
+}
+
+function hasDefinedPath(value, path) {
+  if (path.length === 0) return value !== undefined
+  if (value === null || typeof value !== "object") return false
+
+  const [segment, ...rest] = path
+  if (segment === "*") {
+    return Array.isArray(value) && value.some((item) => hasDefinedPath(item, rest))
+  }
+  return hasOwn(value, segment) && hasDefinedPath(value[segment], rest)
 }
 
 function behaviorContractsFor({ component, props } = {}) {

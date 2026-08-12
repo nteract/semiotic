@@ -24,7 +24,6 @@ import type {
 import StreamPhysicsFrame from "../../stream/physics/StreamPhysicsFrame"
 import { useReducedMotion } from "../../stream/useMediaPreferences"
 import { useWasHydratingFromSSR } from "../../stream/useHydration"
-import { useResponsiveSize } from "../../stream/useResponsiveSize"
 import { filterSparseArray } from "../shared/sparseArray"
 import {
   composePhysicsFrameGraphics,
@@ -61,7 +60,11 @@ import {
   defaultCrucibleTooltipContent,
   resolveCrucibleBodyStyle
 } from "./crucibleChrome"
-import { crucibleBodySemanticItem, drawCrucibleBody, drawCrucibleBonds } from "./crucibleBodyRenderers"
+import {
+  crucibleBodySemanticItem,
+  drawCrucibleBody,
+  drawCrucibleBonds
+} from "./crucibleBodyRenderers"
 import {
   boundedCruciblePlaybackRate,
   crucibleColorForKey,
@@ -74,10 +77,7 @@ import type {
   CrucibleChartHandle,
   CrucibleChartProps
 } from "./crucibleChartProps"
-import type {
-  CrucibleBodyDatum,
-  CrucibleProjectionSpec
-} from "./crucibleTypes"
+import type { CrucibleBodyDatum, CrucibleProjectionSpec } from "./crucibleTypes"
 
 // Public pure API (also consumed by SSR, evidence, and focused tests).
 export * from "./crucibleTypes"
@@ -214,8 +214,6 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     projection: projectionProp,
     radiusRange,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed,
     showBonds = true,
     snapshotAt
@@ -229,6 +227,9 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
   const {
     chartMode,
     chartSize,
+    responsiveContainerRef,
+    responsiveHeight,
+    responsiveWidth,
     showChrome,
     showProjection,
     className: modeClassName,
@@ -239,21 +240,9 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     enableHover: modeEnableHover,
     margin: modeMargin
   } = layoutMode
-  // Crucible owns an extra controls wrapper. Measure that wrapper rather than
-  // asking StreamPhysicsFrame to observe its own fixed-width node.
-  const [responsiveContainerRef, measuredSize] = useResponsiveSize(
-    chartSize,
-    responsiveWidth,
-    false
-  )
-  const resolvedWidth = responsiveWidth
-    ? Math.max(1, measuredSize[0])
-    : chartSize[0]
-  const resolvedHeight = chartSize[1]
-  const resolvedChartSize = useMemo<[number, number]>(
-    () => [resolvedWidth, resolvedHeight],
-    [resolvedHeight, resolvedWidth]
-  )
+  // Crucible owns an extra controls wrapper, so attach the shared Physics
+  // measurement ref here rather than adding a second responsive host.
+  const resolvedChartSize = chartSize
   const safeData = useMemo(
     () => filterSparseArray(data ?? []) as TDatum[],
     [data]
@@ -699,7 +688,10 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
       if (!wrapped?.__crucible) return "var(--semiotic-primary, #b8792d)"
       if (wrapped.kind === "product") {
         const product = runtimeRef.current.state.products[wrapped.semanticId]
-        return product?.color ?? crucibleColorForKey(product?.id ?? wrapped.semanticId)
+        return (
+          product?.color ??
+          crucibleColorForKey(product?.id ?? wrapped.semanticId)
+        )
       }
       const component = runtimeRef.current.state.components[wrapped.semanticId]
       if (!component) return "var(--semiotic-primary, #356b63)"
@@ -906,7 +898,8 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
         maxWidth: "100%",
         overflow: "hidden",
         position: "relative",
-        width: responsiveWidth ? "100%" : resolvedChartSize[0]
+        width: responsiveWidth ? "100%" : resolvedChartSize[0],
+        height: responsiveHeight ? "100%" : undefined
       }}
     >
       {controlVisible ? (
@@ -929,7 +922,7 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
         {...frameProps}
         {...tooltipProps}
         {...sharedFrameProps}
-        key={`${visualKey}:${runKey}:${rerun.rerunKey}:${snapshotMode ? resolvedSnapshotTime : "replay"}`}
+        key={`${resolvedChartSize[0]}x${resolvedChartSize[1]}:${visualKey}:${runKey}:${rerun.rerunKey}:${snapshotMode ? resolvedSnapshotTime : "replay"}`}
         ref={frameRef}
         onBodyHover={onBodyHover}
         accessibleTable={props.accessibleTable ?? frameProps.accessibleTable}
@@ -951,7 +944,7 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
         onTick={handleTick}
         paused={framePaused}
         renderBody={frameProps.renderBody ?? drawCrucibleBody}
-        responsiveHeight={responsiveHeight}
+        responsiveHeight={false}
         responsiveWidth={false}
         seed={numericCrucibleSeed(seed)}
         size={resolvedChartSize}

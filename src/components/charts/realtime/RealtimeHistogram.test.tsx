@@ -184,4 +184,29 @@ describe("RealtimeHistogram", () => {
       expect(getByText("Budget")).toBeTruthy()
     })
   })
+
+  it("discovers push-mode categories for its legend", async () => {
+    const ref = React.createRef<RealtimeHistogramTestHandle>()
+    const { getByText } = render(
+      <TooltipProvider>
+        <RealtimeHistogram
+          ref={ref}
+          binSize={100}
+          categoryAccessor="kind"
+          colors={{ Errors: "#d62728", Warnings: "#f59e0b" }}
+          showLegend
+        />
+      </TooltipProvider>
+    )
+    act(() => {
+      ref.current!.pushMany([
+        { time: 1, value: 5, kind: "Errors" },
+        { time: 2, value: 3, kind: "Warnings" },
+      ])
+    })
+    await waitFor(() => {
+      expect(getByText("Errors")).toBeTruthy()
+      expect(getByText("Warnings")).toBeTruthy()
+    })
+  })
 })

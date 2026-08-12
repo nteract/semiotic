@@ -985,7 +985,11 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
             <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene
             node underneath the visible overlay. Use <code>hitTargetPoint</code>,{" "}
             <code>hitTargetRect</code>, <code>networkHitTarget</code>,{" "}
-            <code>geoHitTarget</code>, or <code>geoAreaHitTarget</code> with a useful datum.
+            <code>geoHitTarget</code>, or <code>geoAreaHitTarget</code> with a useful datum. Pass{" "}
+            <code>cursor: &quot;pointer&quot;</code> when the matching overlay glyph is actionable, and pair
+            it with the frame click/observation API; cursor styling does not create activation or
+            keyboard semantics by itself. If an overlay opts back into pointer events, style that
+            overlay element directly because it, rather than the retained canvas, owns the hit.
           </li>
           <li>
             <strong>Tooltip payloads.</strong> Shape datums with user-facing keys, then use{" "}

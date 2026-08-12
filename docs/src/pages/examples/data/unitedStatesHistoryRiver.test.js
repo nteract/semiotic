@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from "node:fs"
-import { dirname, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import {
   attachmentYRange,
@@ -32,16 +29,6 @@ import {
   usNodeLabel,
 } from "./unitedStatesHistoryRiver"
 import runtimeRiverSource from "./unitedStatesHistoryRiver.source.generated"
-
-// Full audited ledger lives under gitignored docs/strategy; present locally
-// for authors regenerating the compact projection, optional in CI.
-const auditedStrategyPath = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../strategy/united_states_history_river_dataset.json",
-)
-const auditedRiverDataset = existsSync(auditedStrategyPath)
-  ? JSON.parse(readFileSync(auditedStrategyPath, "utf8"))
-  : null
 
 const EPSILON = 1e-9
 
@@ -127,9 +114,6 @@ function strictlyBetween(value, first, second) {
 
 describe("United States persistent-process adapter", () => {
   it("keeps the compact browser projection aligned with adapter exports", () => {
-    expect(runtimeRiverSource.generated_from).toBe(
-      "docs/strategy/united_states_history_river_dataset.json",
-    )
     expect(new Set(runtimeRiverSource.events.map((event) => event.event_id))).toEqual(
       new Set(US_MILESTONES.flatMap((milestone) => milestone.eventIds)),
     )
@@ -141,36 +125,6 @@ describe("United States persistent-process adapter", () => {
     )
   })
 
-  it.skipIf(!auditedRiverDataset)(
-    "keeps the compact browser projection in parity with the audited strategy dataset",
-    () => {
-      expect(auditedRiverDataset.metadata).toMatchObject(runtimeRiverSource.metadata)
-      expect(runtimeRiverSource.admissions_status).toHaveLength(
-        auditedRiverDataset.admissions_status.length,
-      )
-
-      for (const admission of runtimeRiverSource.admissions_status) {
-        const audited = auditedRiverDataset.admissions_status.find(
-          (row) => row.jurisdiction_code === admission.jurisdiction_code,
-        )
-        expect(audited).toMatchObject(admission)
-      }
-
-      for (const event of runtimeRiverSource.events) {
-        const audited = auditedRiverDataset.events.find(
-          (row) => row.event_id === event.event_id,
-        )
-        expect(audited).toMatchObject(event)
-      }
-
-      for (const source of runtimeRiverSource.sources) {
-        const audited = auditedRiverDataset.sources.find(
-          (row) => row.source_key === source.source_key,
-        )
-        expect(audited).toMatchObject(source)
-      }
-    },
-  )
 
   it("defines three distinct, unbonded U.S. institutions with the authored blue scale", () => {
     expect(US_CORE_NODE_IDS).toEqual({

@@ -513,6 +513,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
 
   // Interaction
   enableHover?: boolean
+  /** Maximum distance in pixels for point/symbol hover and click hit testing. */
+  hoverRadius?: number
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   customHoverBehavior?: SemanticHoverBehavior<HoverData>

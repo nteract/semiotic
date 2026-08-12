@@ -1,17 +1,25 @@
-import { useMemo, useCallback, useState } from "react"
-import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
+import { useMemo, useCallback, useEffect, useState } from "react"
+import {
+  useLinkedChartCategories,
+  useLinkedChartCategoryRegistryActive,
+  useLinkedLegendSuppression
+} from "../../LinkedCharts"
 import { getColor } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import type { Accessor } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
-import type { LegendLayout, LegendValue } from "../../types/legendTypes"
+import type {
+  LegendItem,
+  LegendLayout,
+  LegendValue
+} from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import {
   resolveAxisChromeGutter,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
   resolveSideLegendMargin,
-  type AxisChromeInput,
+  type AxisChromeInput
 } from "../../legendLayout"
 import type { Datum } from "./datumTypes"
 
@@ -28,7 +36,7 @@ export function distinctCategories(
   const vals = new Set<string>()
   for (const d of data) {
     const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy]
-    if (v != null) vals.add(String(v))
+    vals.add(String(v))
   }
   return Array.from(vals)
 }
@@ -53,7 +61,7 @@ export function useChartLegendAndMargin({
   chartWidth,
   legendLayout,
   hasTitle = false,
-  axisChrome,
+  axisChrome
 }: {
   data: Array<Datum>
   colorBy: Accessor<string> | undefined
@@ -81,38 +89,54 @@ export function useChartLegendAndMargin({
   legend: LegendValue | undefined
   margin: MarginType
   legendPosition: LegendPosition
+  hasAutomaticLegend: boolean
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
   const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
   // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
-  const shouldShowLegend = showLegend !== undefined
-    ? showLegend
-    : linkedLegendActive ? false : !!colorBy
-  const shouldResolveCategories = !!colorBy && (shouldShowLegend || linkedCategoryRegistryActive)
+  const shouldShowLegend =
+    showLegend !== undefined
+      ? showLegend
+      : linkedLegendActive
+        ? false
+        : !!colorBy
+  const shouldResolveCategories =
+    !!colorBy && (shouldShowLegend || linkedCategoryRegistryActive)
 
   const legendCategories = useMemo(() => {
     if (!shouldResolveCategories) return []
     if (categories !== undefined) return categories
     return distinctCategories(data, colorBy)
   }, [categories, colorBy, data, shouldResolveCategories])
-  useLinkedChartCategories(linkedCategoryRegistryActive && colorBy ? legendCategories : [])
+  useLinkedChartCategories(
+    linkedCategoryRegistryActive && colorBy ? legendCategories : []
+  )
 
   const automaticLegend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-    const built = createLegend({ data, colorBy, colorScale, getColor, categories: legendCategories })
+    const built = createLegend({
+      data,
+      colorBy,
+      colorScale,
+      getColor,
+      categories: legendCategories
+    })
     // Suppress empty legends — when a chart using the push API mounts with no
     // `data` yet and no explicit `categories`, createLegend returns a shell
     // with zero items. Returning it would reserve margin for a legend that
     // renders only a title bar ("neatline"), which is what a user sees as
     // empty reserved space. Treat zero-item legends as absent.
-    const totalItems = built.legendGroups.reduce((sum, g) => sum + g.items.length, 0)
+    const totalItems = built.legendGroups.reduce(
+      (sum, g) => sum + g.items.length,
+      0
+    )
     if (totalItems === 0) return undefined
     return built
   }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const legend = useMemo(
     () => composeLegendConfigs(automaticLegend, additionalLegend),
-    [automaticLegend, additionalLegend],
+    [automaticLegend, additionalLegend]
   )
 
   // Depend on the fields, not the object: callers pass an inline literal, so
@@ -120,9 +144,15 @@ export function useChartLegendAndMargin({
   const { hasAxis, hasAxisLabel, rotatedTicks } = axisChrome ?? {}
 
   const margin = useMemo<MarginType>(() => {
-    const userSides = typeof userMargin === "number"
-      ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
-      : (userMargin ?? {})
+    const userSides =
+      typeof userMargin === "number"
+        ? {
+            top: userMargin,
+            bottom: userMargin,
+            left: userMargin,
+            right: userMargin
+          }
+        : (userMargin ?? {})
     const resolveSide = (side: keyof MarginType): number => {
       const value = userSides[side]
       return typeof value === "number" ? value : defaults[side]
@@ -131,17 +161,18 @@ export function useChartLegendAndMargin({
       top: resolveSide("top"),
       right: resolveSide("right"),
       bottom: resolveSide("bottom"),
-      left: resolveSide("left"),
+      left: resolveSide("left")
     }
     // Numeric margin sides are authoritative in 3.x. Only omitted,
     // `"auto"`, null, or undefined sides participate in compatibility
     // auto-reservation, sized from the legend plus legendDistance.
-    const sideSet = (side: keyof MarginType): boolean => typeof userSides[side] === "number"
+    const sideSet = (side: keyof MarginType): boolean =>
+      typeof userSides[side] === "number"
     if (legend) {
       const sideLegendMargin = resolveSideLegendMargin(legend, legendLayout)
       const plotWidth = Math.max(
         1,
-        (chartWidth ?? 600) - finalMargin.left - finalMargin.right,
+        (chartWidth ?? 600) - finalMargin.left - finalMargin.right
       )
       // The axis gutter is part of the reservation, not just the placement:
       // the legend now sits below the tick labels, so the band has to hold
@@ -167,27 +198,59 @@ export function useChartLegendAndMargin({
       // `legendDistance`) grows, and there an axis-less chart such as
       // pie/donut over-reserves slightly rather than colliding. Charts that
       // pass `axisChrome` are exact either way.
-      const bottomAxisChrome: AxisChromeInput = hasAxis === undefined
-        ? { hasAxis: true, hasAxisLabel: true }
-        : { hasAxis, hasAxisLabel, rotatedTicks }
+      const bottomAxisChrome: AxisChromeInput =
+        hasAxis === undefined
+          ? { hasAxis: true, hasAxisLabel: true }
+          : { hasAxis, hasAxisLabel, rotatedTicks }
       const horizontalLegendMargin =
         resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
         resolveLegendDistance(legend) +
         resolveAxisChromeGutter(
           legendPosition === "bottom" ? bottomAxisChrome : undefined,
-          legendLayout,
+          legendLayout
         ) +
         (legendPosition === "top" && hasTitle ? 24 : 0)
-      if (legendPosition === "right" && !sideSet("right") && finalMargin.right < sideLegendMargin) finalMargin.right = sideLegendMargin
-      else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < sideLegendMargin) finalMargin.left = sideLegendMargin
-      else if (legendPosition === "top" && !sideSet("top")) finalMargin.top = Math.max(finalMargin.top, 50, horizontalLegendMargin)
-      else if (legendPosition === "bottom" && !sideSet("bottom")) finalMargin.bottom = Math.max(finalMargin.bottom, 80, horizontalLegendMargin)
+      if (
+        legendPosition === "right" &&
+        !sideSet("right") &&
+        finalMargin.right < sideLegendMargin
+      )
+        finalMargin.right = sideLegendMargin
+      else if (
+        legendPosition === "left" &&
+        !sideSet("left") &&
+        finalMargin.left < sideLegendMargin
+      )
+        finalMargin.left = sideLegendMargin
+      else if (legendPosition === "top" && !sideSet("top"))
+        finalMargin.top = Math.max(finalMargin.top, 50, horizontalLegendMargin)
+      else if (legendPosition === "bottom" && !sideSet("bottom"))
+        finalMargin.bottom = Math.max(
+          finalMargin.bottom,
+          80,
+          horizontalLegendMargin
+        )
     }
     return finalMargin
-  }, [defaults, userMargin, legend, legendPosition, chartWidth, legendLayout, hasTitle,
-      hasAxis, hasAxisLabel, rotatedTicks])
+  }, [
+    defaults,
+    userMargin,
+    legend,
+    legendPosition,
+    chartWidth,
+    legendLayout,
+    hasTitle,
+    hasAxis,
+    hasAxisLabel,
+    rotatedTicks
+  ])
 
-  return { legend, margin, legendPosition }
+  return {
+    legend,
+    margin,
+    legendPosition,
+    hasAutomaticLegend: automaticLegend !== undefined
+  }
 }
 
 // ── Legend interaction ──────────────────────────────────────────────────
@@ -197,10 +260,29 @@ export type LegendInteractionMode = "highlight" | "isolate" | "none"
 export interface LegendInteractionState {
   highlightedCategory: string | null
   isolatedCategories: Set<string>
-  onLegendHover: (item: { label: string } | null) => void
-  onLegendClick: (item: { label: string }) => void
+  onLegendHover: (item: LegendItem | null) => void
+  onLegendClick: (item: LegendItem) => void
   /** Selection predicate that dims non-matching data — use with wrapStyleWithSelection */
-  legendSelectionHook: { isActive: boolean; predicate: (d: Datum) => boolean } | null
+  legendSelectionHook: {
+    isActive: boolean
+    predicate: (d: Datum) => boolean
+  } | null
+}
+
+function legendItemRange(item: LegendItem): [number, number] | null {
+  const range = item.valueRange
+  return Array.isArray(range) &&
+    range.length === 2 &&
+    typeof range[0] === "number" &&
+    typeof range[1] === "number"
+    ? [range[0], range[1]]
+    : null
+}
+
+function legendItemKey(item: LegendItem, range: [number, number]): string {
+  return typeof item.interactionKey === "string"
+    ? item.interactionKey
+    : `${range[0]}:${range[1]}`
 }
 
 /**
@@ -215,76 +297,229 @@ export interface LegendInteractionState {
 export function useLegendInteraction(
   mode: LegendInteractionMode | undefined,
   colorBy: string | ((d: Datum) => string) | undefined,
-  allCategories: string[]
+  allCategories: string[],
+  enabled = true,
+  requireInferredItem = false
 ): LegendInteractionState {
-  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null)
-  const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(new Set())
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(
+    null
+  )
+  const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(
+    new Set()
+  )
   const emptyIsolatedCategories = useMemo(() => new Set<string>(), [])
+  const categorySet = useMemo(() => new Set(allCategories), [allCategories])
+  const reconciledHighlightedCategory =
+    highlightedCategory != null && categorySet.has(highlightedCategory)
+      ? highlightedCategory
+      : null
+  const reconciledIsolatedCategories = useMemo(() => {
+    if (isolatedCategories.size === 0) return isolatedCategories
+    const next = new Set(
+      Array.from(isolatedCategories).filter((category) =>
+        categorySet.has(category)
+      )
+    )
+    if (next.size === 0 || next.size === categorySet.size)
+      return emptyIsolatedCategories
+    return next.size === isolatedCategories.size ? isolatedCategories : next
+  }, [categorySet, emptyIsolatedCategories, isolatedCategories])
+
+  useEffect(() => {
+    if (!enabled || !colorBy || !mode || mode === "none") {
+      setHighlightedCategory(null)
+      setIsolatedCategories((current) =>
+        current.size === 0 ? current : new Set()
+      )
+    }
+  }, [colorBy, enabled, mode])
+
+  useEffect(() => {
+    setHighlightedCategory((current) =>
+      current != null && !categorySet.has(current) ? null : current
+    )
+    setIsolatedCategories((current) => {
+      if (current.size === 0) return current
+      const next = new Set(
+        Array.from(current).filter((category) => categorySet.has(category))
+      )
+      if (next.size === 0 || next.size === categorySet.size) return new Set()
+      return next.size === current.size ? current : next
+    })
+  }, [categorySet])
 
   const onLegendHover = useCallback(
-    (item: { label: string } | null) => {
-      if (mode !== "highlight") return
-      setHighlightedCategory(item ? item.label : null)
+    (item: LegendItem | null) => {
+      if (!enabled || mode !== "highlight") return
+      setHighlightedCategory(
+        item &&
+          categorySet.has(item.label) &&
+          (!requireInferredItem || item.__semioticCategory === true)
+          ? item.label
+          : null
+      )
     },
-    [mode]
+    [categorySet, enabled, mode, requireInferredItem]
   )
 
   const onLegendClick = useCallback(
-    (item: { label: string }) => {
-      if (mode !== "isolate") return
-      setIsolatedCategories(prev => {
-        const next = new Set(prev)
+    (item: LegendItem) => {
+      if (
+        !enabled ||
+        mode !== "isolate" ||
+        !categorySet.has(item.label) ||
+        (requireInferredItem && item.__semioticCategory !== true)
+      )
+        return
+      setIsolatedCategories((prev) => {
+        const next = new Set(
+          Array.from(prev).filter((category) => categorySet.has(category))
+        )
         if (next.has(item.label)) {
           next.delete(item.label)
         } else {
           next.add(item.label)
         }
         // If all categories selected, reset to show all (Carbon behavior)
-        if (next.size === allCategories.length) {
+        if (next.size === categorySet.size) {
           return new Set()
         }
         return next
       })
     },
-    [mode, allCategories.length]
+    [categorySet, enabled, mode, requireInferredItem]
   )
 
   const legendSelectionHook = useMemo(() => {
-    if (!mode || mode === "none" || !colorBy) return null
+    if (!enabled || !mode || mode === "none" || !colorBy) return null
 
-    const colorField = typeof colorBy === "string" ? colorBy : null
+    const category = (d: Datum): string => {
+      const raw = typeof colorBy === "function" ? colorBy(d) : d[colorBy]
+      return typeof raw === "string" ? raw : String(raw)
+    }
 
-    if (mode === "highlight" && highlightedCategory != null) {
+    if (mode === "highlight" && reconciledHighlightedCategory != null) {
       return {
         isActive: true,
-        predicate: (d: Datum) => {
-          const raw = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
-          // Legend labels are String(v)-coerced (useChartSetup's category
-          // extraction), so a non-string colorBy field (number, boolean)
-          // must be coerced the same way or it never matches.
-          const val = typeof raw === "string" ? raw : String(raw ?? "")
-          return val === highlightedCategory
-        }
+        // Legend labels are String(v)-coerced, so numeric and boolean category
+        // fields must follow the same path when interaction predicates run.
+        predicate: (d: Datum) => category(d) === reconciledHighlightedCategory
       }
     }
 
-    if (mode === "isolate" && isolatedCategories.size > 0) {
+    if (mode === "isolate" && reconciledIsolatedCategories.size > 0) {
       return {
         isActive: true,
-        predicate: (d: Datum) => {
-          const raw = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
-          const val = typeof raw === "string" ? raw : String(raw ?? "")
-          return isolatedCategories.has(val)
-        }
+        predicate: (d: Datum) => reconciledIsolatedCategories.has(category(d))
       }
     }
 
     return null
-  }, [mode, colorBy, highlightedCategory, isolatedCategories])
+  }, [
+    colorBy,
+    enabled,
+    mode,
+    reconciledHighlightedCategory,
+    reconciledIsolatedCategories
+  ])
 
   return {
-    highlightedCategory: mode === "highlight" ? highlightedCategory : null,
-    isolatedCategories: mode === "isolate" ? isolatedCategories : emptyIsolatedCategories,
+    highlightedCategory:
+      enabled && mode === "highlight" ? reconciledHighlightedCategory : null,
+    isolatedCategories:
+      enabled && mode === "isolate"
+        ? reconciledIsolatedCategories
+        : emptyIsolatedCategories,
+    onLegendHover,
+    onLegendClick,
+    legendSelectionHook
+  }
+}
+
+/**
+ * Continuous counterpart to `useLegendInteraction`. Gradient legends expose a
+ * small set of keyboard/pointer-addressable ranges; highlight and isolate then
+ * apply those ranges to the chart's numeric value accessor.
+ */
+export function useGradientLegendInteraction(
+  mode: LegendInteractionMode | undefined,
+  valueAccessor: (d: Datum) => number,
+  domain: [number, number],
+  binCount = 5
+): LegendInteractionState {
+  const [domainStart, domainEnd] = domain
+  const [highlighted, setHighlighted] = useState<{
+    key: string
+    range: [number, number]
+  } | null>(null)
+  const [isolatedRanges, setIsolatedRanges] = useState<
+    Map<string, [number, number]>
+  >(new Map())
+  const emptyIsolatedCategories = useMemo(() => new Set<string>(), [])
+
+  useEffect(() => {
+    setHighlighted(null)
+    setIsolatedRanges(new Map())
+  }, [domainStart, domainEnd, binCount, mode])
+
+  const onLegendHover = useCallback(
+    (item: LegendItem | null) => {
+      if (mode !== "highlight" || !item) {
+        if (mode === "highlight") setHighlighted(null)
+        return
+      }
+      const range = legendItemRange(item)
+      if (range) setHighlighted({ key: legendItemKey(item, range), range })
+    },
+    [mode]
+  )
+
+  const onLegendClick = useCallback(
+    (item: LegendItem) => {
+      if (mode !== "isolate") return
+      const range = legendItemRange(item)
+      if (!range) return
+      setIsolatedRanges((previous) => {
+        const next = new Map(previous)
+        const key = legendItemKey(item, range)
+        if (next.has(key)) next.delete(key)
+        else next.set(key, range)
+        return next.size === binCount ? new Map() : next
+      })
+    },
+    [binCount, mode]
+  )
+
+  const legendSelectionHook = useMemo(() => {
+    const ranges =
+      mode === "highlight" && highlighted
+        ? [highlighted.range]
+        : mode === "isolate"
+          ? [...isolatedRanges.values()]
+          : []
+    if (ranges.length === 0) return null
+    return {
+      isActive: true,
+      predicate: (datum: Datum) => {
+        const value = valueAccessor(datum)
+        return (
+          Number.isFinite(value) &&
+          ranges.some(
+            ([start, end]) =>
+              value >= Math.min(start, end) && value <= Math.max(start, end)
+          )
+        )
+      }
+    }
+  }, [highlighted, isolatedRanges, mode, valueAccessor])
+
+  return {
+    highlightedCategory:
+      mode === "highlight" ? (highlighted?.key ?? null) : null,
+    isolatedCategories:
+      mode === "isolate"
+        ? new Set(isolatedRanges.keys())
+        : emptyIsolatedCategories,
     onLegendHover,
     onLegendClick,
     legendSelectionHook

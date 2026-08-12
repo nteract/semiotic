@@ -51,7 +51,6 @@ entry points. Docs routes load it only from example pages.
 
 ## Related
 
-- US history river compact source:  
-  `node docs/src/pages/examples/data/unitedStatesHistoryRiver.build.mjs`  
-  → `unitedStatesHistoryRiver.source.generated.js` from  
-  `docs/strategy/united_states_history_river_dataset.json`
+- US history river compact source:
+  `node docs/src/pages/examples/data/unitedStatesHistoryRiver.build.mjs <source-json-path>`
+  → `unitedStatesHistoryRiver.source.generated.js`

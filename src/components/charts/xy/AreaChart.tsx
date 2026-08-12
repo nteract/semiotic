@@ -551,6 +551,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

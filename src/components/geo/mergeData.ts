@@ -26,7 +26,11 @@ export function mergeData<T extends Datum>(
   // Build lookup from data
   const lookup = new Map<string, T>()
   for (const row of data) {
-    const key = String(row[dataKey])
+    const key = String(
+      Object.prototype.hasOwnProperty.call(row, dataKey)
+        ? row[dataKey]
+        : undefined
+    )
     lookup.set(key, row)
   }
 
@@ -37,6 +41,7 @@ export function mergeData<T extends Datum>(
     let val: NestedValue = feature
     for (const part of parts) {
       val = val !== null && typeof val === "object"
+        && Object.prototype.hasOwnProperty.call(val, part)
         ? (val as Record<string, NestedValue>)[part]
         : undefined
     }

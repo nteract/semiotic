@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PhysicsKernelWorld } from "./PhysicsKernel"
+import { PhysicsKernelWorld, valueAtPath } from "./PhysicsKernel"
 
 function makeWorld() {
   return new PhysicsKernelWorld({
@@ -17,6 +17,17 @@ function step(world: PhysicsKernelWorld, count: number): void {
 }
 
 describe("PhysicsKernelWorld", () => {
+  it("does not traverse inherited body-filter paths but accepts own special keys", () => {
+    const inheritedDatum = Object.create({ kind: "inherited" }) as Record<string, unknown>
+    expect(valueAtPath({ datum: inheritedDatum }, "datum.kind")).toBeUndefined()
+    expect(valueAtPath({}, "constructor")).toBeUndefined()
+
+    const source = Object.fromEntries([
+      ["__proto__", Object.fromEntries([["constructor", "own"]])]
+    ])
+    expect(valueAtPath(source, "__proto__.constructor")).toBe("own")
+  })
+
   it("produces byte-identical seeded runs across fixed steps", () => {
     const run = () => {
       const world = makeWorld()

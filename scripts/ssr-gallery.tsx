@@ -5,7 +5,7 @@
  *   1. Component SSR — actual HOC components via ReactDOMServer.renderToStaticMarkup
  *   2. Standalone SSR — renderToStaticSVG from semiotic/server
  *
- * Usage: npx tsx scripts/ssr-gallery.tsx > ssr-gallery.html
+ * Usage: npm run generate:ssr-gallery
  */
 
 import * as React from "react"

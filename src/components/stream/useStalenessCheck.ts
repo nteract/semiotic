@@ -26,6 +26,7 @@ export function useStalenessCheck(
   storeRef: React.RefObject<StoreWithIngestTime | null>,
   dirtyRef: React.MutableRefObject<boolean>,
   scheduleRender: () => void,
+  now: () => number,
   isStale: boolean,
   setIsStale: (stale: boolean) => void
 ): void {
@@ -34,12 +35,14 @@ export function useStalenessCheck(
   const lastBandRef = useRef<string>("fresh")
 
   useEffect(() => {
-    if (!staleness) return
+    if (!staleness) {
+      lastBandRef.current = "fresh"
+      return
+    }
     const interval = setInterval(() => {
       const store = storeRef.current
       if (!store || store.lastIngestTime === 0) return
-      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-      const resolved = resolveStaleness(staleness, now - store.lastIngestTime)
+      const resolved = resolveStaleness(staleness, now() - store.lastIngestTime)
 
       if (resolved.band !== lastBandRef.current || resolved.isStale !== isStale) {
         lastBandRef.current = resolved.band
@@ -49,5 +52,5 @@ export function useStalenessCheck(
       }
     }, 1000)
     return () => clearInterval(interval)
-  }, [staleness, isStale, scheduleRender, storeRef, setIsStale, dirtyRef])
+  }, [staleness, isStale, scheduleRender, now, storeRef, setIsStale, dirtyRef])
 }

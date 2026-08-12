@@ -15,7 +15,11 @@ import type { NetworkCircleNode } from "./networkTypes"
 export type NetworkPointerHit =
   | { kind: "miss-outside" }
   | { kind: "miss" }
-  | { kind: "hit"; hover: HoverData }
+  | {
+      kind: "hit"
+      hover: HoverData
+      mark: NetworkSceneNode | NetworkSceneEdge | undefined
+    }
 
 export function resolveNetworkPointerHit(options: {
   clientX: number
@@ -29,6 +33,7 @@ export function resolveNetworkPointerHit(options: {
   nodeQuadtree: Quadtree<NetworkCircleNode> | null
   maxNodeRadius: number
   hitRadius?: number
+  includeEdges?: boolean
 }): NetworkPointerHit {
   const {
     clientX,
@@ -41,7 +46,8 @@ export function resolveNetworkPointerHit(options: {
     sceneEdges,
     nodeQuadtree,
     maxNodeRadius,
-    hitRadius = 30
+    hitRadius = 30,
+    includeEdges = true
   } = options
 
   const chartX = clientX - canvasRect.left - margin.left
@@ -63,7 +69,8 @@ export function resolveNetworkPointerHit(options: {
     chartY,
     hitRadius,
     nodeQuadtree,
-    maxNodeRadius
+    maxNodeRadius,
+    includeEdges
   )
 
   if (!hit) return { kind: "miss" }
@@ -72,7 +79,7 @@ export function resolveNetworkPointerHit(options: {
   const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
     nodeOrEdge: hit.type as "node" | "edge"
   })
-  return { kind: "hit", hover }
+  return { kind: "hit", hover, mark: hit.mark }
 }
 
 export function pointerFromMouseEvent(

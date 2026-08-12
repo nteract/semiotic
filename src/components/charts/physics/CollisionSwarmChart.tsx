@@ -4,20 +4,23 @@ import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
   type PhysicsSemanticItem,
-  type StreamPhysicsFrameHandle,
-  type StreamPhysicsFrameProps
+  type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildCollisionSwarmPhysics,
+  composePhysicsBodyStyle,
   physicsChartArea,
   styleFromColorAccessor,
   type CollisionSwarmProjectionMetadata
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
+import {
+  usePhysicsHocHandle,
+  type PhysicsFrameHandle
+} from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -32,9 +35,11 @@ import {
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
+import { collisionSwarmProjectionOverlay } from "./physicsProjectionOverlays"
 
 export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "selection">,
+  extends
+    Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -62,112 +67,6 @@ export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
   tooltip?: TooltipProp
   paused?: boolean
   frameProps?: PhysicsHocFrameProps<"config">
-}
-
-function formatTick(value: number): string {
-  if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  }
-  return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-}
-
-function collisionSwarmProjectionOverlay(
-  metadata: CollisionSwarmProjectionMetadata | undefined,
-  enabled: boolean | undefined
-): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  if (enabled === false || !metadata) return undefined
-
-  return ({ size }) => {
-    const resolvedSize: [number, number] = [
-      Number(size[0]) || 700,
-      Number(size[1]) || 360
-    ]
-    const area = physicsChartArea(resolvedSize)
-    const yAxis = area.plot.y + area.plot.height
-    const [min, max] = metadata.xExtent
-    const mid = min + (max - min) / 2
-    const ticks = [
-      { label: formatTick(min), x: metadata.xRange[0] },
-      { label: formatTick(mid), x: metadata.xRange[0] + (metadata.xRange[1] - metadata.xRange[0]) / 2 },
-      { label: formatTick(max), x: metadata.xRange[1] }
-    ]
-
-    return (
-      <svg
-        aria-hidden="true"
-        data-testid="collision-swarm-projection-overlay"
-        width={resolvedSize[0]}
-        height={resolvedSize[1]}
-        viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none"
-        }}
-      >
-        {metadata.groups.map((group) => (
-          <g key={group.label}>
-            <line
-              x1={area.plot.x}
-              x2={area.plot.x + area.plot.width}
-              y1={group.y}
-              y2={group.y}
-              stroke="var(--semiotic-border, #d1d5db)"
-              strokeDasharray="3 5"
-              strokeWidth={1}
-            />
-            <text
-              x={area.plot.x + 4}
-              y={group.y - 7}
-              fill="var(--semiotic-text-secondary, #555)"
-              fontSize={10}
-              fontWeight={700}
-            >
-              {group.label}
-            </text>
-            <text
-              x={area.plot.x + area.plot.width - 4}
-              y={group.y - 7}
-              textAnchor="end"
-              fill="var(--semiotic-text-secondary, #555)"
-              fontSize={10}
-            >
-              n={group.count}
-            </text>
-          </g>
-        ))}
-        <line
-          x1={metadata.xRange[0]}
-          x2={metadata.xRange[1]}
-          y1={yAxis}
-          y2={yAxis}
-          stroke="var(--semiotic-text-secondary, #555)"
-          strokeWidth={1}
-        />
-        {ticks.map((tick) => (
-          <g key={`${tick.label}-${tick.x}`}>
-            <line
-              x1={tick.x}
-              x2={tick.x}
-              y1={yAxis}
-              y2={yAxis + 5}
-              stroke="var(--semiotic-text-secondary, #555)"
-              strokeWidth={1}
-            />
-            <text
-              x={tick.x}
-              y={Math.min(resolvedSize[1] - 8, yAxis + 18)}
-              textAnchor="middle"
-              fill="var(--semiotic-text-secondary, #555)"
-              fontSize={10}
-            >
-              {tick.label}
-            </text>
-          </g>
-        ))}
-      </svg>
-    )
-  }
 }
 
 function collisionSwarmSemanticItems(
@@ -233,8 +132,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     pointRadius,
     radiusAccessor,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed = 1,
     settle,
     xAccessor = "x" as ChartAccessor<TDatum, number>,
@@ -254,7 +151,8 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     accessibleTable: modeAccessibleTable
   } = layoutMode
   const resolvedPointRadius =
-    pointRadius ?? (chartMode === "sparkline" ? 2 : chartMode === "context" ? 4 : 5)
+    pointRadius ??
+    (chartMode === "sparkline" ? 2 : chartMode === "context" ? 4 : 5)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const chartData = useMemo(() => data ?? [], [data])
   const layout = useMemo(
@@ -291,8 +189,10 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       const single = buildCollisionSwarmPhysics({
         data: [datum],
         xAccessor: xAccessor as ChartAccessor<Datum, number>,
-        groupAccessor: groupAccessor as ChartAccessor<Datum, string> | undefined,
-        radiusAccessor: radiusAccessor as ChartAccessor<Datum, number> | undefined,
+        groupAccessor: groupAccessor as
+          ChartAccessor<Datum, string> | undefined,
+        radiusAccessor: radiusAccessor as
+          ChartAccessor<Datum, number> | undefined,
         pointRadius: resolvedPointRadius,
         seed: seed + index + 1,
         size: chartSize,
@@ -335,12 +235,17 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   const resolvedColorBy =
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
     (groupAccessor as ChartAccessor<Datum, string> | undefined)
-  const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
-      styleRules,
-      valueAccessor: xAccessor as string | ((d: Datum) => unknown),
-    }),
+  const generatedBodyStyle = useMemo(
+    () =>
+      styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+        styleRules,
+        valueAccessor: xAccessor as string | ((d: Datum) => unknown)
+      }),
     [resolvedColorBy, styleRules, xAccessor]
+  )
+  const bodyStyle = useMemo(
+    () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
+    [generatedBodyStyle, frameProps?.bodyStyle]
   )
 
   const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
@@ -352,8 +257,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     onObservation: props.onObservation,
     onClick: props.onClick,
     onBodyHover: frameProps?.onBodyHover,
-    fallbackFields:
-      typeof xAccessor === "string" ? [xAccessor] : undefined
+    fallbackFields: typeof xAccessor === "string" ? [xAccessor] : undefined
   })
 
   const stateEl = renderPhysicsChartState({
@@ -393,7 +297,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     "CollisionSwarmChart",
     chartSize,
     <StreamPhysicsFrame
-      key={rerun.rerunKey}
+      key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
@@ -406,11 +310,12 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       )}
       initialSpawns={layout.initialSpawns}
       paused={paused}
-      responsiveHeight={responsiveHeight}
-      responsiveWidth={responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       size={chartSize}
       bodyStyle={bodyStyle}
-    />
+    />,
+    layoutMode
   )
 })
 

@@ -747,6 +747,12 @@ export default function StyleRulesPage() {
         <code>{'{ axis: "x" }'}</code>); network nodes, geo features, and physics particles expose{" "}
         <code>value</code> plus <code>category</code> (the <code>colorBy</code> group).
       </p>
+      <p className="callout">
+        A rule style may include a CSS <code>cursor</code>, including in static SVG output. Cursor
+        styling is presentation only: it does not add click, observation, or keyboard behavior.
+        Pair an actionable cursor with the chart&apos;s interaction API and an accessible activation
+        path.
+      </p>
 
       <h3 id="xy-points">XY — per-point, either axis</h3>
       <p>

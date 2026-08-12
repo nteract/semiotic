@@ -1442,6 +1442,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       return
     }
     this.applyCustomRestyle(this.scene, selection)
+    this.markStylePaintPending()
     this.updateResults.recordRestyle(true)
   }
 

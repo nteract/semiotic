@@ -701,7 +701,7 @@ export function MotifTranslationChart({ width, height, reducedMotion }) {
       tooltip={MotifTooltip}
       accessibleTable
       description="Four schematic motif translations connect an earlier city-crisis vocabulary to a later suburban-gothic vocabulary across a narrative time axis."
-      summary="Each ribbon carries one editorial motif-translation unit from the design document. Width is not prevalence, public opinion, population, or proof of influence."
+      summary="Each ribbon carries one editorial motif-translation unit from the example's illustrative cultural selection. Width is not prevalence, public opinion, population, or proof of influence."
       frameProps={{ background: "transparent" }}
     />
   )

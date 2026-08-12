@@ -247,6 +247,14 @@ describe("buildSwarmScene", () => {
     expect(nodes[0].style.strokeWidth).toBe(1)
   })
 
+  it("preserves swarmStyle cursor on emitted points", () => {
+    const nodes = buildSwarmScene(
+      makeCtx({ config: { swarmStyle: { cursor: "pointer" } } }),
+      [{ x: 10, y: 20 }]
+    )
+    expect(nodes[0]?.style.cursor).toBe("pointer")
+  })
+
   it("lets pointStyle override category color, outline, opacity, and radius per datum", () => {
     const data = [
       { x: 10, y: 20, category: "A", direction: "add" },

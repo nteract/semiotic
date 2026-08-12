@@ -2,12 +2,13 @@ import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Realtime swarm chart scene builder.
  *
- * Simple point scatter with category-based coloring from barColors config.
+ * Simple point scatter with lazily resolved category-based coloring.
  *
  * Consumed by: PipelineStore.buildSceneNodes (chartType "swarm")
  */
 import type { PointSceneNode } from "../types"
 import type { XYSceneContext } from "./types"
+import { resolveExplicitColor } from "../../charts/shared/colorUtils"
 
 export function buildSwarmScene(
   ctx: XYSceneContext,
@@ -22,6 +23,7 @@ export function buildSwarmScene(
   const opacity = swarm.opacity ?? 0.7
   const stroke = swarm.stroke
   const strokeWidth = swarm.strokeWidth
+  const cursor = swarm.cursor
 
   for (const d of data) {
     const xVal = ctx.getX(d)
@@ -33,8 +35,11 @@ export function buildSwarmScene(
 
     let fill = defaultFill
     if (ctx.getCategory) {
-      const cat = ctx.getCategory(d)
-      fill = ctx.config.barColors?.[cat] || fill
+      const cat = String(ctx.getCategory(d))
+      fill =
+        (ctx.config.barColors
+          ? resolveExplicitColor(ctx.config.barColors, cat)
+          : undefined) ?? fill
     }
 
     // Reuse StreamXYFrame's per-datum point-style channel for advanced swarm
@@ -47,7 +52,7 @@ export function buildSwarmScene(
       x,
       y,
       r: styleR ?? radius,
-      style: { fill, opacity, stroke, strokeWidth, ...restStyle },
+      style: { fill, opacity, stroke, strokeWidth, cursor, ...restStyle },
       datum: d
     }
 

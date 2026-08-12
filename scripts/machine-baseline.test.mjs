@@ -112,6 +112,26 @@ describe("machine baseline helpers", () => {
     assert.equal(comparison.ok, false)
   })
 
+  it("reports candidate snapshot drift without masking validation or timing regressions", () => {
+    const baseline = validBaseline()
+    const changedArtifact = clone(baseline)
+    changedArtifact.referenceEnvironment = referenceEnvironment("different cpu")
+    changedArtifact.metrics.tarball.files[0].size = 11
+
+    const candidate = compareMachineBaselines(baseline, changedArtifact, { enforceStatic: false })
+    assert.equal(candidate.snapshotDifferences.length > 0, true)
+    assert.deepEqual(candidate.blockingStructuralDifferences, [])
+    assert.equal(candidate.ok, true)
+
+    const invalid = clone(changedArtifact)
+    delete invalid.metrics.mcp.toolsList
+    assert.equal(compareMachineBaselines(baseline, invalid, { enforceStatic: false }).ok, false)
+
+    const slow = clone(baseline)
+    slow.metrics.evaluation[0].timing.p50Ms = 100
+    assert.equal(compareMachineBaselines(baseline, slow, { enforceStatic: false }).ok, false)
+  })
+
   it("enforces p50 variance only on the recorded reference environment", () => {
     const baseline = validBaseline()
     const current = clone(baseline)

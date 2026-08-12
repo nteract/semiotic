@@ -5,5 +5,12 @@
     "declarationDir": "dist",
     "emitDeclarationOnly": true
   },
-  "exclude": ["src/**/*.test.*", "src/setupTests.ts", "node_modules"]
+  "exclude": [
+    "src/**/*.test.*",
+    "src/**/__tests__/**",
+    "src/**/test-utils/**",
+    "src/**/internal/**",
+    "src/setupTests.ts",
+    "node_modules"
+  ]
 }

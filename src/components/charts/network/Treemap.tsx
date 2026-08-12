@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import type { NetworkMarkStyle } from "../../stream/networkTypes"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -42,7 +43,7 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
    * custom borders, or per-depth opacity without re-implementing color
    * encoding.
    */
-  nodeStyle?: (d: Datum) => Datum
+  nodeStyle?: (d: Datum) => NetworkMarkStyle
   enableHover?: boolean
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp

@@ -68,7 +68,13 @@ export type {
   TokenLayerValue,
   TokenPosition,
 } from "./recipes/tokenLayer"
-export type { WaffleConfig, CellWeight, AllocatedCells, AllocateCellsOptions } from "./recipes/waffle"
+export type {
+  WaffleConfig,
+  CellWeight,
+  AllocatedCells,
+  AllocatedCellsFor,
+  AllocateCellsOptions,
+} from "./recipes/waffle"
 
 export { calendarLayout } from "./recipes/calendar"
 export type { CalendarConfig } from "./recipes/calendar"
@@ -608,13 +614,13 @@ export type {
 
 export {
   mobileAnnotationStrategy
-} from "./recipes/mobileAnnotationStrategy"
+} from "./recipes/mobileAnnotationBehavior"
 export type {
   MobileAnnotationCalloutItem,
   MobileAnnotationStrategyConfig,
   MobileAnnotationStrategyMode,
   MobileAnnotationStrategyResult
-} from "./recipes/mobileAnnotationStrategy"
+} from "./recipes/mobileAnnotationBehavior"
 
 export {
   mobileAreaChartRecipe,

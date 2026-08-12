@@ -596,7 +596,7 @@ export default function SSRGalleryPage() {
         <code>semiotic/server</code>. You can also generate a standalone HTML
         gallery from the command line:
         <CodeBlock
-          code="npx tsx scripts/ssr-gallery.tsx > ssr-gallery.html"
+          code="npm run generate:ssr-gallery"
           language="bash"
         />
       </div>

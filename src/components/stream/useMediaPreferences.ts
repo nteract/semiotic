@@ -47,7 +47,9 @@ export function useReducedMotion(): boolean {
  * SSR-safe hook that returns true when forced-colors or high-contrast mode is active.
  */
 export function useHighContrast(): boolean {
-  const [highContrast, setHighContrast] = useState(() => queryMatches("(forced-colors: active)"))
+  const [highContrast, setHighContrast] = useState(() =>
+    queryMatches("(forced-colors: active)")
+  )
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return

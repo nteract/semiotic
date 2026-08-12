@@ -203,7 +203,10 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       let fill: string
       if (nodeStyleFn) {
         const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-        fill = userStyle.fill || nodeColorMap.get(node.id) || palette[i % palette.length]
+        fill =
+          (typeof userStyle.fill === "string" ? userStyle.fill : undefined) ||
+          nodeColorMap.get(node.id) ||
+          palette[i % palette.length]
       } else {
         fill = nodeColorMap.get(node.id) || palette[i % palette.length]
       }
@@ -213,7 +216,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         fill,
         stroke: userStyle.stroke || "black",
         strokeWidth: userStyle.strokeWidth ?? 1,
-        opacity: userStyle.opacity
+        opacity: userStyle.opacity,
+        cursor: userStyle.cursor
       }
 
       // d3-chord angles start at 12 o'clock; canvas arc() starts at 3 o'clock
@@ -266,7 +270,9 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       let fill = config.themeSemantic?.border || config.themeSemantic?.secondary || "#999"
       if (edgeStyleFn) {
         const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
-        fill = userStyle.fill || fill
+        fill =
+          (typeof userStyle.fill === "string" ? userStyle.fill : undefined) ||
+          fill
       } else {
         // Auto-color by source or target node
         const srcNode = typeof edge.source === "object" ? edge.source : null
@@ -284,7 +290,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
         stroke: userStyle.stroke || "none",
         strokeWidth: userStyle.strokeWidth,
-        opacity: userStyle.opacity
+        opacity: userStyle.opacity,
+        cursor: userStyle.cursor
       }
 
       sceneEdges.push({

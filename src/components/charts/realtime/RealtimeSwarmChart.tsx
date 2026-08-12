@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -9,25 +9,61 @@ import type {
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { ReactNode } from "react"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  distinctCategories,
+  useChartLegendAndMargin,
+  useChartSelection,
+  useLegendInteraction
+} from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
+import type {
+  ChartMode,
+  ChartAccessor,
+  SelectionConfig,
+  MobileInteractionProp
+} from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import {
+  renderLoadingState,
+  renderEmptyState
+} from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveTooltipContent } from "../../Tooltip/Tooltip"
+import type {
+  RealtimeAccessibilityProps,
+  RealtimeData,
+  RealtimePointIdAccessor,
+  RealtimeTooltipProp
+} from "./realtimeChartTypes"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
+import type { PartialMargin } from "../../types/marginType"
+import {
+  buildRealtimeFrameChromeProps,
+  useRealtimeChartMode,
+  useRealtimeFrameHandle,
+  useRealtimeSelectionStyle
+} from "./realtimeChartRuntime"
+import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
 
-export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
+const EMPTY_LEGEND_DATA: Datum[] = []
+
+export interface RealtimeSwarmChartProps<
+  TDatum extends Datum = Datum
+> extends RealtimeAccessibilityProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -45,7 +81,7 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   /** Chart margins */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  margin?: PartialMargin
   /** CSS class name */
   className?: string
   onObservation?: OnObservationCallback
@@ -57,7 +93,7 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Datum[]
+  data?: RealtimeData<TDatum>
   /** Time value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
@@ -70,13 +106,21 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   yScaleType?: "linear" | "log" | "symlog"
   /** Extent padding factor */
   extentPadding?: number
+  /** Age-based opacity decay for streaming marks. */
+  decay?: DecayConfig
+  /** Arrival pulse for newly pushed marks. */
+  pulse?: PulseConfig
+  /** Dim or badge stale streaming values. */
+  staleness?: StalenessConfig
+  /** Mark transition configuration. */
+  transition?: TransitionConfig
   /** Category accessor for color-coding dots */
   categoryAccessor?: ChartAccessor<TDatum, string>
   /** Category-to-color map */
   colors?: Record<string, string>
   /** Dot radius */
   radius?: number
-  /** Dot fill color (when no categoryAccessor) */
+  /** Dot fill color, or fallback for categories missing from `colors`. */
   fill?: string
   /** Dot opacity */
   opacity?: number
@@ -84,6 +128,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   stroke?: string
   /** Dot stroke width */
   strokeWidth?: number
+  /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
+  cursor?: CSSProperties["cursor"]
   /** Per-datum dot style. Returned values override the top-level dot primitives and category color. */
   pointStyle?: (datum: TDatum) => Style & { r?: number }
   /** Show canvas-drawn axes */
@@ -101,13 +147,17 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Opt into automatic placement for note-like annotations without manual offsets. */
   autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
-  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
-  tooltip?: TooltipProp
+  /** Declarative tooltip config or the legacy full-HoverData callback. */
+  tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -127,7 +177,7 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: Datum) => string)
+  pointIdAccessor?: RealtimePointIdAccessor<TDatum>
 }
 
 /**
@@ -163,169 +213,272 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
  * />
  * ```
  */
-export const RealtimeSwarmChart = forwardRef(
-  function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    const resolved = useChartMode(props.mode, {
-      width: props.size?.[0] ?? props.width,
-      height: props.size?.[1] ?? props.height,
-      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-          mobileInteraction: props.mobileInteraction,
-      mobileSemantics: props.mobileSemantics,
-      responsiveRules: props.responsiveRules,
-})
+export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
+  TDatum extends Datum = Datum
+>(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  const resolved = useRealtimeChartMode(props)
 
-    const {
-      size,
-      margin: userMargin,
-      className,
-      arrowOfTime = "right",
-      windowMode = "sliding",
-      windowSize: windowSizeProp,
-      data,
-      timeAccessor,
-      valueAccessor,
-      timeExtent,
-      valueExtent,
-      yScaleType,
-      extentPadding,
-      categoryAccessor,
-      colors,
-      radius,
-      fill,
-      opacity,
-      stroke,
-      strokeWidth,
-      pointStyle,
-      background,
-      tooltipContent,
-      tooltip,
-      onHover,
-      annotations,
-      autoPlaceAnnotations,
-      svgAnnotationRules,
-      tickFormatTime,
-      tickFormatValue,
-      linkedHover,
-      selection,
-      onObservation,
-      chartId,
-      loading,
-      loadingContent,
-      emptyContent,
-      emphasis,
+  const {
+    size,
+    margin: userMargin,
+    className,
+    arrowOfTime = "right",
+    windowMode = "sliding",
+    windowSize: windowSizeProp,
+    data,
+    timeAccessor,
+    valueAccessor,
+    timeExtent,
+    valueExtent,
+    yScaleType,
+    extentPadding,
+    decay,
+    pulse,
+    staleness,
+    transition,
+    categoryAccessor,
+    colors,
+    radius,
+    fill,
+    opacity,
+    stroke,
+    strokeWidth,
+    cursor,
+    pointStyle,
+    background,
+    tooltipContent,
+    tooltip,
+    onHover,
+    annotations,
+    autoPlaceAnnotations,
+    svgAnnotationRules,
+    tickFormatTime,
+    tickFormatValue,
+    linkedHover,
+    selection,
+    onObservation,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
+    emphasis,
+    legendPosition: legendPositionProp
+  } = props
+
+  const showAxes = resolved.showAxes
+  const enableHover = resolved.enableHover
+  const showSwarmLegend = resolved.showLegend === true
+  const resolvedSize: [number, number] = size ?? [
+    resolved.width,
+    resolved.height
+  ]
+  const streamingCategories = useStreamingLegend({
+    isPushMode: data === undefined,
+    colorBy: categoryAccessor,
+    colorScheme: colors,
+    // This wrapper builds the visible legend from the shared mark scale below.
+    // Keep this hook focused on push-mode category-domain discovery.
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    trackCategoryDomain: showSwarmLegend,
+    registerLinkedCategories: false
+  })
+  const controlledCategories = useMemo(
+    () => distinctCategories(data ?? [], categoryAccessor),
+    [data, categoryAccessor]
+  )
+  const activeCategories =
+    data === undefined ? streamingCategories.categories : controlledCategories
+  const { colorScale: categoryColorScale } = useRealtimeCategoryColors({
+    enabled: !!categoryAccessor,
+    categories: activeCategories,
+    colors,
+    fallbackColor: fill,
+    domainKey: categoryAccessor
+  })
+  const { legend, margin, legendPosition, hasAutomaticLegend } =
+    useChartLegendAndMargin({
+      // `activeCategories` is authoritative here. Keeping sample rows out of
+      // legend construction ensures function category accessors that happen to
+      // return CSS color names still map through the categorical scale, exactly
+      // like the retained marks do.
+      data: EMPTY_LEGEND_DATA,
+      colorBy: categoryAccessor,
+      colorScale: categoryColorScale,
+      showLegend: showSwarmLegend,
       legendPosition: legendPositionProp,
-    } = props
-
-    const showAxes = resolved.showAxes
-    const enableHover = resolved.enableHover
-    const margin = userMargin ?? resolved.marginDefaults
-    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
-    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+      userMargin,
+      defaults: resolved.marginDefaults,
+      categories: activeCategories,
+      chartWidth: resolvedSize[0],
+      axisChrome: { hasAxis: resolved.showAxes !== false }
+    })
+  const legendState = useLegendInteraction(
+    props.legendInteraction,
+    categoryAccessor,
+    activeCategories,
+    hasAutomaticLegend,
+    true
+  )
+  // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
+  const resolvedTooltip =
+    tooltipContent ??
+    resolveTooltipContent({
       tooltip,
-      defaultTooltipContent: buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor }),
+      defaultTooltipContent: buildDefaultRealtimeTooltip({
+        timeAccessor,
+        valueAccessor
+      }),
+      customFunctionContext: "hover"
     }).tooltipContent
 
-    const frameRef = useRef<StreamXYFrameHandle>(null)
+  const frameRef = useRef<StreamXYFrameHandle>(null)
 
-    // ── Linked hover via shared hook ──
-    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeSwarmChart", chartId
-    })
+  // ── Linked hover via shared hook ──
+  const {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior: linkedHoverBehavior,
+    customClickBehavior
+  } = useChartSelection({
+    selection,
+    linkedHover,
+    unwrapData: true,
+    onObservation,
+    chartType: "RealtimeSwarmChart",
+    chartId,
+    mobileInteraction: resolved.mobileInteraction
+  })
 
-    const combinedHoverBehavior = useCallback(
-      (d: HoverData | null) => {
-        if (onHover) onHover(d)
-        linkedHoverBehavior(d)
-      },
-      [onHover, linkedHoverBehavior]
-    )
+  const combinedHoverBehavior = useCallback(
+    (d: HoverData | null) => {
+      if (onHover) onHover(d)
+      linkedHoverBehavior(d)
+    },
+    [onHover, linkedHoverBehavior]
+  )
 
-    // `[]` deps so the handle stays stable — see useFrameImperativeHandle
-    // for the regression class.
-    useImperativeHandle(ref, () => ({
-      push: (point) => frameRef.current?.push(point),
-      pushMany: (points) => frameRef.current?.pushMany(points),
-      remove: (id) => frameRef.current?.remove(id) ?? [],
-      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-      clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? [],
-      getScales: () => frameRef.current?.getScales() ?? null
-    }), [])
+  useRealtimeFrameHandle(ref, frameRef)
 
-    // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
-    const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  const loadingEl = renderLoadingState(
+    loading,
+    resolvedSize[0],
+    resolvedSize[1],
+    loadingContent
+  )
+  const emptyEl = !loadingEl
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    : null
 
-    const swarmStyle: SwarmStyle = {}
-    if (radius != null) swarmStyle.radius = radius
-    if (fill != null) swarmStyle.fill = fill
-    if (opacity != null) swarmStyle.opacity = opacity
-    if (stroke != null) swarmStyle.stroke = stroke
-    if (strokeWidth != null) swarmStyle.strokeWidth = strokeWidth
-    // StreamXYFrame stores heterogeneous Datum rows internally. The wrapper's
-    // generic narrows that same row at its public boundary for caller
-    // autocomplete, so this variance bridge is type-only.
-    const resolvedPointStyle = pointStyle as ((datum: Datum) => Style & { r?: number }) | undefined
+  const swarmStyle: SwarmStyle = {}
+  if (radius != null) swarmStyle.radius = radius
+  if (fill != null) swarmStyle.fill = fill
+  if (opacity != null) swarmStyle.opacity = opacity
+  if (stroke != null) swarmStyle.stroke = stroke
+  if (strokeWidth != null) swarmStyle.strokeWidth = strokeWidth
+  if (cursor != null) swarmStyle.cursor = cursor
+  // StreamXYFrame stores heterogeneous Datum rows internally. The wrapper's
+  // generic narrows that same row at its public boundary for caller
+  // autocomplete, so this variance bridge is type-only.
+  const resolvedPointStyle = pointStyle as
+    ((datum: Datum) => Style & { r?: number }) | undefined
+  const categoricalPointStyle = useMemo<
+    ((datum: Datum) => Style & { r?: number }) | undefined
+  >(() => {
+    if (!categoryAccessor && !resolvedPointStyle) return undefined
+    return (datum: Datum) => {
+      const rawCategory =
+        typeof categoryAccessor === "function"
+          ? categoryAccessor(datum as TDatum)
+          : categoryAccessor
+            ? datum[categoryAccessor]
+            : undefined
+      const categoryStyle =
+        categoryAccessor && categoryColorScale
+          ? { fill: categoryColorScale(String(rawCategory)) }
+          : undefined
+      return { ...categoryStyle, ...resolvedPointStyle?.(datum) }
+    }
+  }, [categoryAccessor, categoryColorScale, resolvedPointStyle])
+  const effectiveSelectionHook =
+    hoverSelectionHook || legendState.legendSelectionHook || activeSelectionHook
+  const interactivePointStyle = useRealtimeSelectionStyle(
+    categoricalPointStyle,
+    [effectiveSelectionHook],
+    selection
+  )
 
-    const resolvedClassName = emphasis
-      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
-      : className
+  const resolvedClassName = emphasis
+    ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+    : className
 
-    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
 
-    // ── Loading / empty guards (deferred to after all hooks) ───────────────
-    if (loadingEl) return loadingEl
-    if (emptyEl) return emptyEl
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
-    return (
-      <StreamXYFrame
-        ref={frameRef}
-        chartType="swarm"
-        runtimeMode="streaming"
-        size={resolvedSize}
-        maxDevicePixelRatio={props.maxDevicePixelRatio}
-        margin={margin}
-        className={resolvedClassName}
-        arrowOfTime={arrowOfTime}
-        windowMode={windowMode}
-        windowSize={windowSize}
-        data={data}
-        timeAccessor={timeAccessor}
-        valueAccessor={valueAccessor}
-        xExtent={timeExtent}
-        yExtent={valueExtent}
-        yScaleType={yScaleType}
-        extentPadding={extentPadding}
-        categoryAccessor={categoryAccessor}
-        barColors={colors}
-        swarmStyle={swarmStyle}
-        pointStyle={resolvedPointStyle}
-        showAxes={showAxes}
-        background={background}
-        hoverAnnotation={enableHover}
-        tooltipContent={resolvedTooltip}
-        {...buildCustomBehaviorProps({
-          linkedHover,
-          selection,
-          onObservation,
-          forceHoverBehavior: true,
-          mobileInteraction: resolved.mobileInteraction,
-          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
-        })}
-        annotations={annotations}
-        autoPlaceAnnotations={autoPlaceAnnotations}
-        svgAnnotationRules={svgAnnotationRules}
-        tickFormatTime={tickFormatTime}
-        tickFormatValue={tickFormatValue}
-        legendPosition={legendPositionProp}
-        pointIdAccessor={props.pointIdAccessor}
-      />
-    )
-  }
-) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeSwarmChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  return (
+    <StreamXYFrame
+      ref={frameRef}
+      chartType="swarm"
+      runtimeMode="streaming"
+      size={resolvedSize}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
+      margin={margin}
+      className={resolvedClassName}
+      {...buildRealtimeFrameChromeProps(
+        resolved,
+        legendState,
+        props.legendInteraction
+      )}
+      arrowOfTime={arrowOfTime}
+      windowMode={windowMode}
+      windowSize={windowSize}
+      data={data}
+      timeAccessor={timeAccessor}
+      valueAccessor={valueAccessor}
+      xExtent={timeExtent}
+      yExtent={valueExtent}
+      yScaleType={yScaleType}
+      extentPadding={extentPadding}
+      decay={decay}
+      pulse={pulse}
+      staleness={staleness}
+      transition={transition}
+      categoryAccessor={categoryAccessor}
+      swarmStyle={swarmStyle}
+      pointStyle={interactivePointStyle}
+      showAxes={showAxes}
+      background={background}
+      hoverAnnotation={enableHover}
+      tooltipContent={resolvedTooltip}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        forceHoverBehavior: true,
+        mobileInteraction: resolved.mobileInteraction,
+        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customClickBehavior
+      })}
+      annotations={annotations}
+      autoPlaceAnnotations={autoPlaceAnnotations}
+      svgAnnotationRules={svgAnnotationRules}
+      tickFormatTime={tickFormatTime}
+      tickFormatValue={tickFormatValue}
+      legend={legend}
+      legendPosition={legendPosition}
+      {...streamingCategories.categoryDomainProps}
+      pointIdAccessor={props.pointIdAccessor}
+    />
+  )
+}) as unknown as {
+  <TDatum extends Datum = Datum>(
+    props: RealtimeSwarmChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 RealtimeSwarmChart.displayName = "RealtimeSwarmChart"

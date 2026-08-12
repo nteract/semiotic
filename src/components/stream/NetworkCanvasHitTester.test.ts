@@ -62,6 +62,19 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(result).not.toBeNull()
       expect(result!.datum!.id).toBe("near")
     })
+
+    it("keeps large-circle hit geometry identical with and without a quadtree", () => {
+      const big: NetworkCircleNode = {
+        type: "circle", cx: 90, cy: 0, r: 80,
+        style: { fill: "green" }, datum: { id: "big" }
+      }
+      const qt = d3Quadtree<NetworkCircleNode>()
+        .x((node) => node.cx)
+        .y((node) => node.cy)
+        .add(big)
+      expect(findNearestNetworkNode([big], [], 50, 0, 30)?.datum?.id).toBe("big")
+      expect(findNearestNetworkNode([big], [], 50, 0, 30, qt, 80)?.datum?.id).toBe("big")
+    })
   })
 
   // ── Rect hit testing (sankey/treemap nodes) ──────────────────────────

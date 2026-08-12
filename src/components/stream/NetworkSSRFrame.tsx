@@ -22,6 +22,7 @@ interface NetworkSSRFrameProps {
   margin: React.ComponentProps<typeof NetworkSVGOverlay>["margin"]
   adjustedWidth: number
   adjustedHeight: number
+  surfaceBackground: string | null
   resolvedBackground: React.ReactNode
   resolvedForeground: React.ReactNode
 }
@@ -34,6 +35,7 @@ export function NetworkSSRFrame({
   margin,
   adjustedWidth,
   adjustedHeight,
+  surfaceBackground,
   resolvedBackground,
   resolvedForeground
 }: NetworkSSRFrameProps) {
@@ -48,7 +50,6 @@ export function NetworkSSRFrame({
     responsiveWidth,
     responsiveHeight,
     summary,
-    background,
     renderMode,
     legend,
     legendPosition,
@@ -118,21 +119,20 @@ export function NetworkSSRFrame({
         height={size[1]}
         style={{ position: "absolute", left: 0, top: 0 }}
       >
-        {resolvedBackground && (
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            {resolvedBackground}
-          </g>
-        )}
+        {surfaceBackground ? (
+          <rect
+            className="stream-frame-background__backdrop"
+            x={0}
+            y={0}
+            width={size[0]}
+            height={size[1]}
+            fill={surfaceBackground}
+          />
+        ) : null}
         <g transform={`translate(${margin.left},${margin.top})`}>
-          {background && (
-            <rect
-              x={0}
-              y={0}
-              width={adjustedWidth}
-              height={adjustedHeight}
-              fill={background}
-            />
-          )}
+          {resolvedBackground}
+        </g>
+        <g transform={`translate(${margin.left},${margin.top})`}>
           {sceneEdges
             .map((edge, index) => renderSceneWithBackend({
               node: edge,

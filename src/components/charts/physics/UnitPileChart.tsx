@@ -3,22 +3,24 @@
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
-  type StreamPhysicsFrameHandle,
-  type StreamPhysicsFrameProps
+  type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor, ChartMode } from "../shared/types"
 import {
   buildPhysicsPile,
+  composePhysicsBodyStyle,
   generatePhysicsPileMechanicalSamples,
   physicsChartArea,
-  pileTubeGeometry,
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
+import {
+  usePhysicsHocHandle,
+  type PhysicsFrameHandle
+} from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -34,14 +36,11 @@ import {
   type PhysicsSimulationMode,
   type TooltipProp
 } from "./physicsHocUtils"
-
-type ProjectionRow = {
-  label: string
-  value: number
-}
+import { pileProjectionOverlay } from "./physicsProjectionOverlays"
 
 export interface UnitPileChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode" | "selection">,
+  extends
+    Omit<BaseChartProps, "margin" | "mode" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
@@ -80,92 +79,6 @@ export interface UnitPileChartProps<TDatum extends Datum = Datum>
 /** @deprecated Renamed to {@link UnitPileChartProps} in 3.9.0. */
 export type PhysicsPileChartProps<TDatum extends Datum = Datum> =
   UnitPileChartProps<TDatum>
-
-function pileProjectionOverlay(
-  rows: ProjectionRow[],
-  ballRadius: number,
-  enabled: boolean | undefined
-): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  if (enabled === false || rows.length === 0) return undefined
-  return ({ size }) => {
-    const resolvedSize: [number, number] = [
-      Number(size[0]) || 700,
-      Number(size[1]) || 380
-    ]
-    const area = physicsChartArea(resolvedSize)
-    const geom = pileTubeGeometry(area.plot, rows.length, ballRadius)
-    const yBottom = area.plot.y + area.plot.height
-
-    return (
-      <svg
-        aria-hidden="true"
-        data-testid="physics-pile-projection-overlay"
-        width={resolvedSize[0]}
-        height={resolvedSize[1]}
-        viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none"
-        }}
-      >
-        <line
-          x1={area.plot.x}
-          x2={area.plot.x + area.plot.width}
-          y1={yBottom}
-          y2={yBottom}
-          stroke="var(--semiotic-border, #d1d5db)"
-          strokeWidth={1}
-        />
-        {rows.map((row, index) => {
-          // The bar is the exact fill target: its height is the same
-          // count→height mapping the tube uses, so the settling units rise to
-          // meet it. It reads as the "truth" the pile assembles.
-          const barHeight = Math.min(area.plot.height, geom.pileHeight(row.value))
-          const barWidth = geom.tubeWidth
-          const x = geom.centerX(index)
-          const y = yBottom - barHeight
-          return (
-            <g key={`${row.label}-${index}`}>
-              <rect
-                x={x - barWidth / 2}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={3}
-                fill="var(--semiotic-primary, #4e79a7)"
-                fillOpacity={0.08}
-                stroke="var(--semiotic-primary, #4e79a7)"
-                strokeOpacity={0.42}
-                strokeWidth={1}
-                strokeDasharray="4 3"
-              />
-              <text
-                x={x}
-                y={Math.max(area.plot.y + 12, y - 6)}
-                textAnchor="middle"
-                fill="var(--semiotic-text-secondary, #555)"
-                fontSize={11}
-                fontWeight={700}
-              >
-                {row.value}
-              </text>
-              <text
-                x={x}
-                y={Math.min(resolvedSize[1] - 8, yBottom + 16)}
-                textAnchor="middle"
-                fill="var(--semiotic-text-secondary, #555)"
-                fontSize={10}
-              >
-                {row.label}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-    )
-  }
-}
 
 /**
  * Physics-backed unit pile chart that converts category values into repeated bodies and a readable settled projection.
@@ -206,8 +119,6 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
     mechanicalCount,
     paused,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed = 1,
     unitValue = 1,
     valueAccessor,
@@ -271,7 +182,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       chartData,
       resolvedValueAccessor,
       seed,
-      unitValue,
+      unitValue
     ]
   )
   const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
@@ -281,7 +192,8 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       const single = buildPhysicsPile({
         data: [datum],
         categoryAccessor: categoryAccessor as ChartAccessor<Datum, string>,
-        valueAccessor: resolvedValueAccessor as ChartAccessor<Datum, number> | undefined,
+        valueAccessor: resolvedValueAccessor as
+          ChartAccessor<Datum, number> | undefined,
         unitValue,
         ballRadius,
         seed: seed + index + 1,
@@ -322,12 +234,18 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
     simulationMode === "mechanical" && colorBy == null
       ? ("category" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
-  const bodyStyle = useMemo(
-    () => styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
-      styleRules,
-      valueAccessor: valueAccessor as string | ((d: Datum) => unknown) | undefined,
-    }),
+  const generatedBodyStyle = useMemo(
+    () =>
+      styleFromColorAccessor(resolvedColorBy, "#4e79a7", {
+        styleRules,
+        valueAccessor: valueAccessor as
+          string | ((d: Datum) => unknown) | undefined
+      }),
     [resolvedColorBy, styleRules, valueAccessor]
+  )
+  const bodyStyle = useMemo(
+    () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
+    [generatedBodyStyle, frameProps?.bodyStyle]
   )
   const semanticItems = useMemo(
     () =>
@@ -392,7 +310,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       {...sharedFrameProps}
       ref={frameRef}
       onBodyHover={onBodyHover}
-      key={rerun.rerunKey}
+      key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
@@ -401,11 +319,12 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       initialSpawns={layout.initialSpawns}
       initialSpawnPacing={layout.initialSpawnPacing}
       paused={paused}
-      responsiveHeight={responsiveHeight}
-      responsiveWidth={responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       size={chartSize}
       bodyStyle={bodyStyle}
-    />
+    />,
+    layoutMode
   )
 })
 

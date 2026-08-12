@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
-import type { LegendLayout, LegendValue } from "../types/legendTypes"
+import type { LegendItem, LegendLayout, LegendValue } from "../types/legendTypes"
 import type {
   Style,
   DecayConfig,
@@ -12,7 +12,8 @@ import type {
   GlyphSceneNode,
   ThemeSemanticColors,
   SceneAccessibilityMetadata,
-  SceneRenderMode
+  SceneRenderMode,
+  FrameGraphicsProp
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
@@ -361,16 +362,18 @@ export interface StreamGeoFrameProps<T = Datum> {
   suspendWhenHidden?: boolean
 
   // ── Rendering ──
-  backgroundGraphics?: ReactNode
-  foregroundGraphics?: ReactNode
+  /** SVG behind the canvas. Function form receives frame geometry + Geo scales. */
+  backgroundGraphics?: FrameGraphicsProp<GeoScales>
+  /** SVG above the canvas. Function form receives frame geometry + Geo scales. */
+  foregroundGraphics?: FrameGraphicsProp<GeoScales>
   title?: string | ReactNode
 
   // ── Legend (passed from HOCs) ──
   legend?: LegendValue
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendLayout?: LegendLayout
-  legendHoverBehavior?: (item: { label: string } | null) => void
-  legendClickBehavior?: (item: { label: string }) => void
+  legendHoverBehavior?: (item: LegendItem | null) => void
+  legendClickBehavior?: (item: LegendItem) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   /** Accessor used to report the current legend category domain in push mode. */

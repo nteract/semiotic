@@ -166,6 +166,7 @@ const realtimeWaterfallChartProps = [
   { name: "gap", type: "number", required: false, default: null, description: "Gap between bars in pixels." },
   { name: "stroke", type: "string", required: false, default: null, description: "Bar stroke (outline) color." },
   { name: "strokeWidth", type: "number", required: false, default: null, description: "Bar stroke width." },
+  { name: "cursor", type: "CSS cursor", required: false, default: null, description: 'Presentation-only cursor for bars, such as "pointer". It does not add click or keyboard behavior.' },
   { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show canvas-drawn axes." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },

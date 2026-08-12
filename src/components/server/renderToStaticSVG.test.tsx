@@ -11,7 +11,10 @@ import {
   renderGeoToStaticSVG
 } from "./renderToStaticSVG"
 import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
-import type { FrameGraphicsContext } from "../stream/types"
+import type { FrameGraphicsContext, StreamScales } from "../stream/types"
+import type { OrdinalScales } from "../stream/ordinalTypes"
+import type { GeoScales } from "../stream/geoTypes"
+import { DARK_THEME } from "../store/ThemeStore"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -33,6 +36,50 @@ describe("renderOrdinalToStaticSVG", () => {
     { category: "B", value: 20 },
     { category: "C", value: 15 }
   ]
+
+  it("resolves scale-aware background and foreground graphics around marks", () => {
+    const contexts: Array<FrameGraphicsContext<OrdinalScales>> = []
+    const svg = renderOrdinalToStaticSVG({
+      chartType: "bar",
+      data: barData,
+      oAccessor: "category",
+      rAccessor: "value",
+      size: [360, 240],
+      margin: { top: 11, right: 12, bottom: 13, left: 14 },
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="ordinal-static-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="ordinal-static-foreground" />
+      }
+    })
+
+    expect(contexts).toHaveLength(2)
+    for (const context of contexts) {
+      expect(context.size).toEqual([360, 240])
+      expect(context.margin).toEqual({
+        top: 11,
+        right: 12,
+        bottom: 13,
+        left: 14
+      })
+      expect(context.scales?.projection).toBe("vertical")
+      expect(context.scales?.o).toBeTypeOf("function")
+      expect(context.scales?.r).toBeTypeOf("function")
+    }
+    const backgroundIndex = svg.indexOf(
+      'data-testid="ordinal-static-background"'
+    )
+    const markIndex = svg.indexOf("<rect", backgroundIndex)
+    const foregroundIndex = svg.indexOf(
+      'data-testid="ordinal-static-foreground"'
+    )
+    expect(backgroundIndex).toBeGreaterThan(-1)
+    expect(markIndex).toBeGreaterThan(backgroundIndex)
+    expect(foregroundIndex).toBeGreaterThan(markIndex)
+  })
 
   it("renders vertical bar chart", () => {
     const svg = renderOrdinalToStaticSVG({
@@ -98,7 +145,9 @@ describe("renderOrdinalToStaticSVG", () => {
       data: barData,
       oAccessor: "category",
       rAccessor: "value",
-      annotations: [{ type: "category-highlight", category: "A", label: "Focus category" }],
+      annotations: [
+        { type: "category-highlight", category: "A", label: "Focus category" }
+      ]
     })
 
     expect(svg).toContain("semiotic-annotations")
@@ -375,6 +424,100 @@ describe("renderToStaticSVG dispatch", () => {
     expect(countMatches(svg, /<rect /g)).toBeGreaterThanOrEqual(2)
   })
 
+  it("resolves XY graphics callbacks with the computed scales", () => {
+    const contexts: Array<FrameGraphicsContext<StreamScales>> = []
+    const svg = renderXYToStaticSVG({
+      chartType: "scatter",
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="xy-callback-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="xy-callback-foreground" />
+      }
+    })
+
+    expect(contexts).toHaveLength(2)
+    expect(
+      contexts.every((context) => typeof context.scales?.x === "function")
+    ).toBe(true)
+    expect(
+      contexts.every((context) => typeof context.scales?.y === "function")
+    ).toBe(true)
+    expect(svg.indexOf('data-testid="xy-callback-background"')).toBeLessThan(
+      svg.indexOf("<circle")
+    )
+    expect(svg.indexOf('data-testid="xy-callback-foreground"')).toBeGreaterThan(
+      svg.indexOf("<circle")
+    )
+  })
+
+  it("resolves Geo graphics callbacks with the computed projection scales", () => {
+    const contexts: Array<FrameGraphicsContext<GeoScales>> = []
+    const svg = renderGeoToStaticSVG({
+      points: [{ lon: 0, lat: 0 }],
+      projection: "mercator",
+      xAccessor: "lon",
+      yAccessor: "lat",
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="geo-callback-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="geo-callback-foreground" />
+      }
+    })
+
+    expect(contexts).toHaveLength(2)
+    expect(
+      contexts.every(
+        (context) => typeof context.scales?.projection === "function"
+      )
+    ).toBe(true)
+    expect(
+      contexts.every(
+        (context) => typeof context.scales?.projectedPoint === "function"
+      )
+    ).toBe(true)
+    expect(svg.indexOf('data-testid="geo-callback-background"')).toBeLessThan(
+      svg.indexOf("<circle")
+    )
+    expect(
+      svg.indexOf('data-testid="geo-callback-foreground"')
+    ).toBeGreaterThan(svg.indexOf("<circle"))
+  })
+
+  it("resolves Network graphics callbacks once with null scales", () => {
+    const contexts: Array<FrameGraphicsContext<null>> = []
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      nodes: [{ id: "a" }],
+      edges: [],
+      backgroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="network-callback-background" />
+      },
+      foregroundGraphics: (context) => {
+        contexts.push(context)
+        return <g data-testid="network-callback-foreground" />
+      }
+    })
+
+    expect(contexts).toHaveLength(2)
+    expect(contexts.every((context) => context.scales === null)).toBe(true)
+    expect(
+      svg.indexOf('data-testid="network-callback-background"')
+    ).toBeLessThan(svg.indexOf("<circle"))
+    expect(
+      svg.indexOf('data-testid="network-callback-foreground"')
+    ).toBeGreaterThan(svg.indexOf("<circle"))
+  })
+
   it("dispatches physics frame type correctly", () => {
     const layout = buildGaltonBoardPhysics({
       data: [
@@ -399,6 +542,79 @@ describe("renderToStaticSVG dispatch", () => {
 
     expect(svg).toContain("stream-physics-frame")
     expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
+  })
+
+  it("resolves standalone physics themes without changing background precedence", () => {
+    const base = {
+      config: {
+        fixedDt: 0.1,
+        kernel: {
+          gravity: { x: 0, y: 0 },
+          velocityDamping: 1,
+          sleepSpeed: 100,
+          sleepAfter: 0.01
+        }
+      },
+      initialSpawns: [
+        {
+          id: "themed-body",
+          x: 40,
+          y: 35,
+          mass: 1,
+          shape: { type: "circle" as const, radius: 5 }
+        }
+      ],
+      size: [160, 100] as [number, number]
+    }
+    const dark = renderToStaticSVG("physics", {
+      ...base,
+      theme: "dark"
+    } as StaticFrameProps)
+
+    expect(dark).toContain(`--semiotic-bg:${DARK_THEME.colors.background}`)
+    expect(dark).toContain(
+      `<rect x="0" y="0" width="160" height="100" fill="${DARK_THEME.colors.background}">`
+    )
+    expect(dark).toContain(`fill="${DARK_THEME.colors.primary}"`)
+    expect(dark).toContain(`stroke="${DARK_THEME.colors.text}"`)
+
+    const customTheme = renderToStaticSVG("physics", {
+      ...base,
+      theme: {
+        mode: "dark",
+        colors: {
+          background: "#101820",
+          primary: "#3366ff",
+          text: "#eeeeee"
+        }
+      }
+    } as StaticFrameProps)
+    expect(customTheme).toContain('fill="#101820"')
+    expect(customTheme).toContain('fill="#3366ff"')
+    expect(customTheme).toContain('stroke="#eeeeee"')
+
+    const explicit = renderToStaticSVG("physics", {
+      ...base,
+      theme: "dark",
+      background: "#112233"
+    } as StaticFrameProps)
+    expect(explicit).toContain(
+      '<rect x="0" y="0" width="160" height="100" fill="#112233">'
+    )
+
+    const customGraphics = renderToStaticSVG("physics", {
+      ...base,
+      theme: "dark",
+      background: "#112233",
+      backgroundGraphics: <g data-testid="themed-custom-background" />
+    } as StaticFrameProps)
+    expect(customGraphics).toContain('data-testid="themed-custom-background"')
+    expect(customGraphics).not.toContain(
+      '<rect x="0" y="0" width="160" height="100" fill="#112233">'
+    )
+    expect(customGraphics).not.toContain(
+      `<rect x="0" y="0" width="160" height="100" fill="${DARK_THEME.colors.background}">`
+    )
   })
 
   it("renders resolved physics graphics below and above settled bodies", () => {
@@ -457,9 +673,9 @@ describe("renderToStaticSVG dispatch", () => {
   })
 
   it("throws for unknown frame type", () => {
-    expect(() => renderToStaticSVG("unknown" as StaticFrameType, {} as StaticFrameProps)).toThrow(
-      /Unknown frame type/
-    )
+    expect(() =>
+      renderToStaticSVG("unknown" as StaticFrameType, {} as StaticFrameProps)
+    ).toThrow(/Unknown frame type/)
   })
 })
 
@@ -513,7 +729,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
         { source: "Revenue", target: "Product", value: 80 },
         { source: "Revenue", target: "Services", value: 50 },
         { source: "Product", target: "Profit", value: 60 },
-        { source: "Services", target: "Profit", value: 40 },
+        { source: "Services", target: "Profit", value: 40 }
       ],
       size: [500, 300]
     } as StaticNetworkProps)
@@ -535,7 +751,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
       edges: [
         { source: "A", target: "B" },
         { source: "B", target: "C" },
-        { source: "C", target: "A" },
+        { source: "C", target: "A" }
       ],
       size: [400, 400]
     } as StaticNetworkProps)

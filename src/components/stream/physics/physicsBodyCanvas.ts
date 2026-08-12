@@ -134,11 +134,11 @@ export function drawBody(
     ctx.fill()
     ctx.restore()
   }
-  if (mark === "halo") {
+  if (mark === "halo" && (strokeWidth ?? 1.5) > 0) {
     ctx.beginPath()
     ctx.arc(body.x, body.y, radius * 1.35, 0, Math.PI * 2)
     ctx.strokeStyle = stroke ?? fill
-    ctx.lineWidth = Math.max(1.5, strokeWidth || 1.5)
+    ctx.lineWidth = Math.max(1.5, strokeWidth ?? 1.5)
     ctx.globalAlpha *= 0.55
     ctx.stroke()
     ctx.globalAlpha /= 0.55
@@ -162,6 +162,127 @@ export function drawBody(
 export function physicsBodyRadius(body: PhysicsBodyState): number {
   if (body.shape.type === "circle") return body.shape.radius
   return Math.max(body.shape.width, body.shape.height) / 2
+}
+
+function bodyDrawRadius(body: PhysicsBodyState, style: Style): number {
+  return body.shape.type === "circle"
+    ? (style.r ?? body.shape.radius)
+    : Math.max(body.shape.width, body.shape.height) / 2
+}
+
+function bodyStrokePadding(style: Style): number {
+  return style.stroke && style.stroke !== "none" && (style.strokeWidth ?? 0) > 0
+    ? (style.strokeWidth ?? 0) / 2
+    : 0
+}
+
+function roundedRectContains(
+  body: PhysicsBodyState,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  padding: number
+): boolean {
+  const halfWidth = width / 2 + padding
+  const halfHeight = height / 2 + padding
+  const dx = Math.abs(x - body.x)
+  const dy = Math.abs(y - body.y)
+  if (dx > halfWidth || dy > halfHeight) return false
+  const corner = Math.min(radius + padding, halfWidth, halfHeight)
+  if (dx <= halfWidth - corner || dy <= halfHeight - corner) return true
+  const cornerDx = dx - (halfWidth - corner)
+  const cornerDy = dy - (halfHeight - corner)
+  return cornerDx * cornerDx + cornerDy * cornerDy <= corner * corner
+}
+
+function regularHexagonContains(
+  body: PhysicsBodyState,
+  x: number,
+  y: number,
+  radius: number
+): boolean {
+  const dx = Math.abs(x - body.x)
+  const dy = Math.abs(y - body.y)
+  // The drawn point-up regular hexagon has vertical radius r and horizontal
+  // radius sqrt(3)r/2.
+  const halfWidth = (Math.sqrt(3) * radius) / 2
+  if (dx > halfWidth || dy > radius) return false
+  return dy <= radius - dx / Math.sqrt(3)
+}
+
+/** Circumscribed center radius for the built-in canvas mark. */
+export function physicsBodyVisualSearchRadius(
+  body: PhysicsBodyState,
+  style: Style
+): number {
+  const mark = resolveBodyMark(body, style)
+  const radius = bodyDrawRadius(body, style)
+  const padding = bodyStrokePadding(style)
+  if (mark === "pill" || mark === "square" || body.shape.type === "aabb") {
+    const width =
+      mark === "pill"
+        ? radius * 2.4
+        : body.shape.type === "aabb"
+          ? body.shape.width
+          : radius * 1.7
+    const height =
+      mark === "pill"
+        ? radius * 1.35
+        : body.shape.type === "aabb"
+          ? body.shape.height
+          : radius * 1.7
+    return Math.hypot(width / 2 + padding, height / 2 + padding)
+  }
+  if (mark === "halo" && (style.strokeWidth ?? 0) > 0) {
+    return radius * 1.35 + Math.max(1.5, style.strokeWidth ?? 1.5) / 2
+  }
+  return radius + padding
+}
+
+/** Exact built-in canvas mark hit, including authored radius/shape. */
+export function physicsBodyVisualHitDistanceSquared(
+  body: PhysicsBodyState,
+  style: Style,
+  x: number,
+  y: number
+): number | null {
+  const mark = resolveBodyMark(body, style)
+  const radius = bodyDrawRadius(body, style)
+  const padding = bodyStrokePadding(style)
+  const dx = x - body.x
+  const dy = y - body.y
+  let hit = false
+
+  if (mark === "pill" || mark === "square" || body.shape.type === "aabb") {
+    const width =
+      mark === "pill"
+        ? radius * 2.4
+        : body.shape.type === "aabb"
+          ? body.shape.width
+          : radius * 1.7
+    const height =
+      mark === "pill"
+        ? radius * 1.35
+        : body.shape.type === "aabb"
+          ? body.shape.height
+          : radius * 1.7
+    const corner = mark === "pill" ? height / 2 : Math.min(4, width / 4)
+    hit = roundedRectContains(body, x, y, width, height, corner, padding)
+  } else if (mark === "diamond") {
+    hit = Math.abs(dx) + Math.abs(dy) <= radius + padding * Math.SQRT2
+  } else if (mark === "faceted") {
+    hit = regularHexagonContains(body, x, y, radius + padding)
+  } else {
+    const hitRadius =
+      mark === "halo" && (style.strokeWidth ?? 0) > 0
+        ? radius * 1.35 + Math.max(1.5, style.strokeWidth ?? 1.5) / 2
+        : radius + padding
+    hit = dx * dx + dy * dy <= hitRadius * hitRadius
+  }
+
+  return hit ? dx * dx + dy * dy : null
 }
 
 export function drawPopAnimations(

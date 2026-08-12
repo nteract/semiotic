@@ -250,7 +250,7 @@ const RealtimeHistogramKeyProps = [
   { name: "size", type: "[number, number]", required: false, default: "[500, 300]", description: "Chart dimensions as [width, height]." },
   { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: 'Data retention strategy.' },
   { name: "categoryAccessor", type: "string | function", required: false, default: null, description: "Category accessor for stacked bars." },
-  { name: "fill", type: "string", required: false, default: null, description: "Bar fill color in non-stacked mode." },
+  { name: "fill", type: "string", required: false, default: null, description: "Bar fill color, or fallback for categories missing from colors." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },
 ]
 
@@ -262,7 +262,7 @@ const realtimeSwarmChartKeyProps = [
   { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: 'Data retention strategy.' },
   { name: "categoryAccessor", type: "string | function", required: false, default: null, description: "Category accessor for color-coding dots by group." },
   { name: "radius", type: "number", required: false, default: null, description: "Dot radius in pixels." },
-  { name: "fill", type: "string", required: false, default: null, description: "Dot fill color when no categoryAccessor is set." },
+  { name: "fill", type: "string", required: false, default: null, description: "Dot fill color, or fallback for categories missing from colors." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on dots." },
 ]
 

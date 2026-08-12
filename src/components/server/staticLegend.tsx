@@ -9,11 +9,15 @@ import * as React from "react"
 import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveExplicitColor } from "../charts/shared/colorUtils"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { CategoricalLegendConfig, GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
 import {
   DEFAULT_LEGEND_ROW_HEIGHT,
+  GRADIENT_LEGEND_HORIZONTAL_HEIGHT,
+  GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED,
+  GRADIENT_LEGEND_LABEL_BASELINE,
+  GRADIENT_LEGEND_LABELED_BAR_Y,
   layoutVerticalLegendGroups,
   resolveAxisChromeGutter,
   resolveLegendDistance,
@@ -367,13 +371,17 @@ export function measureStaticGradientLegend(config: StaticGradientLegendConfig):
   if (isHorizontal) {
     return {
       width: Math.min(config.legendLayout?.maxWidth ?? plotWidth, 200),
-      height: config.gradient.label ? 34 : 26,
+      height: config.gradient.label
+        ? GRADIENT_LEGEND_HORIZONTAL_HEIGHT
+        : GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED,
       swatchSize: 12,
     }
   }
   return {
     width: config.gradient.label ? 86 : 72,
-    height: config.gradient.label ? 124 : 108,
+    height: config.gradient.label
+      ? GRADIENT_LEGEND_LABELED_BAR_Y + 108
+      : 108,
     swatchSize: 14,
   }
 }
@@ -705,8 +713,10 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
 
   if (isHorizontal) {
     const barHeight = 12
-    const labelY = config.gradient.label ? 0 : undefined
-    const barY = config.gradient.label ? 8 : 0
+    const labelY = config.gradient.label
+      ? GRADIENT_LEGEND_LABEL_BASELINE
+      : undefined
+    const barY = config.gradient.label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
     return (
       <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
         <defs><linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">{stops}</linearGradient></defs>
@@ -720,14 +730,17 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
 
   const barWidth = 14
   const barHeight = 100
-  const labelY = config.gradient.label ? -6 : undefined
+  const labelY = config.gradient.label
+    ? GRADIENT_LEGEND_LABEL_BASELINE
+    : undefined
+  const barY = config.gradient.label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
   return (
-    <g className="semiotic-legend" transform={`translate(${tx},${ty + (config.gradient.label ? 12 : 0)})`}>
+    <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
       <defs><linearGradient id={id} x1="0%" y1="0%" x2="0%" y2="100%">{stops}</linearGradient></defs>
       {config.gradient.label && <text x={0} y={labelY} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
-      <rect x={0} y={0} width={barWidth} height={barHeight} fill={`url(#${id})`} rx={2} />
-      <text x={barWidth + 5} y={10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
-      <text x={barWidth + 5} y={barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
+      <rect x={0} y={barY} width={barWidth} height={barHeight} fill={`url(#${id})`} rx={2} />
+      <text x={barWidth + 5} y={barY + 10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
+      <text x={barWidth + 5} y={barY + barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
     </g>
   )
 }

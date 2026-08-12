@@ -53,6 +53,32 @@ export interface ProcessJourneyRow {
   repeatVisits: number
 }
 
+function ownValue<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(record, key)
+    ? record[key]
+    : undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
+function isJourneyEntity(value: unknown): value is ProcessJourneyEntityState {
+  if (!isRecord(value)) return false
+  return (
+    typeof value.id === "string" &&
+    typeof value.furthestStageIndex === "number" &&
+    Number.isFinite(value.furthestStageIndex) &&
+    Array.isArray(value.visitedStageIds) &&
+    value.visitedStageIds.every((id) => typeof id === "string") &&
+    isRecord(value.visitsByStage) &&
+    isRecord(value.firstEnteredAt) &&
+    isRecord(value.lastEnteredAt) &&
+    typeof value.regressionCount === "number" &&
+    Number.isFinite(value.regressionCount)
+  )
+}
+
 function emptyJourneyEntity(id: string): ProcessJourneyEntityState {
   return {
     id,
@@ -72,7 +98,11 @@ function journeyStageId(
   const authored = options.stageId?.(event)
   if (authored) return authored
   const metadata = event.region.metadata
-  if (metadata && typeof metadata === "object") {
+  if (
+    metadata &&
+    typeof metadata === "object" &&
+    Object.prototype.hasOwnProperty.call(metadata, "stageId")
+  ) {
     const stageId = (metadata as Record<string, unknown>).stageId
     if (typeof stageId === "string") return stageId
   }
@@ -110,13 +140,21 @@ export function updateProcessJourney(
 
   const bodyId = options.entityId?.(event) ?? event.bodyId
   if (!bodyId) return previous
-  const current = previous.entities[bodyId] ?? emptyJourneyEntity(bodyId)
+  const existing = ownValue(previous.entities, bodyId)
+  const current = isJourneyEntity(existing)
+    ? existing
+    : emptyJourneyEntity(bodyId)
   const previousStageIndex = current.currentStageId
     ? previous.stages.findIndex((stage) => stage.id === current.currentStageId)
     : -1
   const firstVisit = !current.visitedStageIds.includes(stageId)
   const timestamp = Number(event.observation.timestamp)
   const enteredAt = Number.isFinite(timestamp) ? timestamp : 0
+  const priorVisits = ownValue(current.visitsByStage, stageId)
+  const visitCount =
+    typeof priorVisits === "number" && Number.isFinite(priorVisits)
+      ? priorVisits
+      : 0
   const nextEntity: ProcessJourneyEntityState = {
     ...current,
     currentStageId: stageId,
@@ -130,7 +168,7 @@ export function updateProcessJourney(
       : current.visitedStageIds,
     visitsByStage: {
       ...current.visitsByStage,
-      [stageId]: (current.visitsByStage[stageId] ?? 0) + 1
+      [stageId]: visitCount + 1
     },
     firstEnteredAt: firstVisit
       ? { ...current.firstEnteredAt, [stageId]: enteredAt }
@@ -156,7 +194,10 @@ export function processJourneyRows(
   ledger: ProcessJourneyLedger
 ): ProcessJourneyRow[] {
   const entities = ledger.bodyIds.map(
-    (bodyId) => ledger.entities[bodyId] ?? emptyJourneyEntity(bodyId)
+    (bodyId) => {
+      const entity = ownValue(ledger.entities, bodyId)
+      return isJourneyEntity(entity) ? entity : emptyJourneyEntity(bodyId)
+    }
   )
   const total = entities.length
   let previousReached = total
@@ -169,7 +210,10 @@ export function processJourneyRows(
       entity.visitedStageIds.includes(stage.id)
     ).length
     const visits = entities.reduce(
-      (sum, entity) => sum + (entity.visitsByStage[stage.id] ?? 0),
+      (sum, entity) => {
+        const value = ownValue(entity.visitsByStage, stage.id)
+        return sum + (typeof value === "number" && Number.isFinite(value) ? value : 0)
+      },
       0
     )
     const row = {

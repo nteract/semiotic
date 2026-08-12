@@ -136,7 +136,7 @@ export default function RenderStudioPage() {
   const config = CHART_TYPES[chartType]
   const dataset = DATASETS[config.dataset]
 
-  const { svg, code, elapsed } = useMemo(() => {
+  const { svg, code } = useMemo(() => {
     const baseProps = config.propsTemplate(dataset)
     const props = {
       ...baseProps,
@@ -158,7 +158,6 @@ export default function RenderStudioPage() {
     }
     if (annotations.length > 0) props.annotations = annotations
 
-    const t0 = performance.now()
     let result
     try {
       result = renderChart(chartType, props)
@@ -166,15 +165,13 @@ export default function RenderStudioPage() {
       const msg = escapeForSVG(e && e.message ? e.message : String(e))
       result = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><text x="20" y="40" fill="red">${msg}</text></svg>`
     }
-    const t1 = performance.now()
-
     const codeProps = { ...props }
     delete codeProps.width
     delete codeProps.height
     const codeStr = `import { renderChart } from "semiotic/server"\n\nconst svg = renderChart("${chartType}", ${JSON.stringify(codeProps, null, 2).replace(/"(\w+)":/g, "$1:")
     })`
 
-    return { svg: result, code: codeStr, elapsed: (t1 - t0).toFixed(1) }
+    return { svg: result, code: codeStr }
   }, [chartType, theme, showLegend, showGrid, legendPosition, width, height, title, description, thresholdValue, thresholdLabel, orientation, config, dataset])
 
   // ── Animated preview ─────────────────────────────────────────────
@@ -444,9 +441,7 @@ export default function RenderStudioPage() {
                 <span>{animFrames.length} frames generated via generateFrameSVGs()</span>
               </>
             ) : (
-              <>
-                <span>renderChart() returned {(svg.length / 1024).toFixed(1)}KB SVG in {elapsed}ms</span>
-              </>
+              <span>renderChart() returned {(svg.length / 1024).toFixed(1)}KB SVG</span>
             )}
           </div>
 

@@ -612,6 +612,15 @@ describe("defaultDivergingScheme", () => {
     expect(palette[0]).toBe("#da1e28")
   })
 
+  it.each(["__proto__", "constructor", "toString"])(
+    "falls back for prototype-like diverging scheme %s",
+    (scheme) => {
+      expect(defaultDivergingScheme(5, scheme)).toEqual(
+        defaultDivergingScheme(5)
+      )
+    }
+  )
+
   it("handles n=1 for both paths", () => {
     expect(defaultDivergingScheme(1)).toEqual(["#a8a8a8"])
     const themed1 = defaultDivergingScheme(1, "RdBu")

@@ -47,7 +47,7 @@ describe("hellhole evidence contracts", () => {
     }
   })
 
-  it("keeps design-document citation codes attached to source records", () => {
+  it("keeps editorial citation codes attached to source records", () => {
     const citationIds = SOURCE_REGISTRY.map((source) => source.citationId ?? source.id)
     expect(new Set(citationIds).size).toBe(citationIds.length)
     expect(
@@ -61,6 +61,11 @@ describe("hellhole evidence contracts", () => {
     expect(
       SOURCE_REGISTRY.find((source) => source.id === "pew-density-preference-2026"),
     ).toMatchObject({ citationId: "R11" })
+  })
+
+  it("does not expose private strategy-document references", () => {
+    const publicEvidence = JSON.stringify({ SOURCE_REGISTRY, CULTURAL_WORKS })
+    expect(publicEvidence).not.toMatch(/docs\/strategy|design[_ -]doc|hellhole-design-doc/i)
   })
 
   it("keeps all three evidence classes structurally separate", () => {

@@ -27,6 +27,33 @@ export interface Point {
   y: number
 }
 
+function hasOwn(record: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key)
+}
+
+function ownValue<T>(record: Record<string, T>, key: string): T | undefined {
+  return hasOwn(record, key) ? record[key] : undefined
+}
+
+/** Define arbitrary author ids as data properties, including `__proto__`. */
+function setOwnValue<T>(record: Record<string, T>, key: string, value: T): void {
+  Object.defineProperty(record, key, {
+    value,
+    enumerable: true,
+    configurable: true,
+    writable: true
+  })
+}
+
+function idDictionary<T>(): Record<string, T> {
+  return Object.create(null) as Record<string, T>
+}
+
+export {
+  buildDirectedAdjacency,
+  reachableFrom,
+} from "./directedReachability"
+
 /** Build an undirected adjacency map: node id → set of neighbor ids. */
 export function buildAdjacency(
   nodes: ReadonlyArray<GraphNode>,
@@ -43,63 +70,16 @@ export function buildAdjacency(
   return adj
 }
 
-/**
- * Build a **directed** adjacency map: node id → set of successor ids, following
- * `source → target` only. The directed sibling of {@link buildAdjacency}, for
- * DAG / flow / dependency graphs where edge direction carries meaning.
- */
-export function buildDirectedAdjacency(
-  nodes: ReadonlyArray<GraphNode>,
-  edges: ReadonlyArray<GraphEdge>
-): Map<string, Set<string>> {
-  const adj = new Map<string, Set<string>>()
-  for (const n of nodes) adj.set(n.id, new Set())
-  for (const e of edges) {
-    if (!adj.has(e.source)) adj.set(e.source, new Set())
-    if (!adj.has(e.target)) adj.set(e.target, new Set())
-    adj.get(e.source)!.add(e.target)
-  }
-  return adj
-}
-
-/**
- * The set of nodes reachable from `start` by following the adjacency (BFS).
- * Works on either an undirected ({@link buildAdjacency}) or directed
- * ({@link buildDirectedAdjacency}) adjacency map.
- *
- * `start` itself is excluded unless it is reachable via a cycle, or
- * `includeStart` is set — so on a DAG this is exactly the descendant set, and
- * on a cyclic graph a node that can reach itself is reported as such.
- */
-export function reachableFrom(
-  adjacency: Map<string, Set<string>>,
-  start: string,
-  options: { includeStart?: boolean } = {}
-): Set<string> {
-  const reached = new Set<string>()
-  const queue: string[] = [...(adjacency.get(start) ?? [])]
-  let head = 0
-  while (head < queue.length) {
-    const cur = queue[head]
-    head += 1
-    if (reached.has(cur)) continue
-    reached.add(cur)
-    for (const nb of adjacency.get(cur) ?? []) queue.push(nb)
-  }
-  if (options.includeStart) reached.add(start)
-  return reached
-}
-
 /** Degree (neighbor count) per node id. */
 export function degree(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
   const out: Record<string, number> = {}
-  for (const n of nodes) out[n.id] = 0
+  for (const n of nodes) setOwnValue(out, n.id, 0)
   for (const e of edges) {
-    out[e.source] = (out[e.source] || 0) + 1
-    out[e.target] = (out[e.target] || 0) + 1
+    setOwnValue(out, e.source, (ownValue(out, e.source) ?? 0) + 1)
+    setOwnValue(out, e.target, (ownValue(out, e.target) ?? 0) + 1)
   }
   return out
 }
@@ -109,15 +89,16 @@ export function bfsDistances(
   adjacency: Map<string, Set<string>>,
   start: string
 ): Record<string, number> {
-  const dist: Record<string, number> = { [start]: 0 }
+  const dist: Record<string, number> = {}
+  setOwnValue(dist, start, 0)
   const queue: string[] = [start]
   let head = 0
   while (head < queue.length) {
     const cur = queue[head]
     head += 1
     for (const nb of adjacency.get(cur) || []) {
-      if (dist[nb] === undefined) {
-        dist[nb] = dist[cur] + 1
+      if (!hasOwn(dist, nb)) {
+        setOwnValue(dist, nb, dist[cur] + 1)
         queue.push(nb)
       }
     }
@@ -137,7 +118,8 @@ export function shortestPath(
 ): string[] {
   if (source === target) return source ? [source] : []
   const adj = buildAdjacency(nodes, edges)
-  const prev: Record<string, string | null> = { [source]: null }
+  const prev = idDictionary<string | null>()
+  prev[source] = null
   const queue: string[] = [source]
   let head = 0
   while (head < queue.length) {
@@ -145,13 +127,13 @@ export function shortestPath(
     head += 1
     if (cur === target) break
     for (const nb of adj.get(cur) || []) {
-      if (prev[nb] === undefined) {
+      if (!hasOwn(prev, nb)) {
         prev[nb] = cur
         queue.push(nb)
       }
     }
   }
-  if (prev[target] === undefined) return []
+  if (!hasOwn(prev, target)) return []
   const path: string[] = []
   let cur: string | null = target
   while (cur != null) {
@@ -175,7 +157,7 @@ export function egoNetwork(
   if (!adj.has(id)) return new Set()
   const dist = bfsDistances(adj, id)
   const out = new Set<string>()
-  for (const key in dist) if (dist[key] <= depth) out.add(key)
+  for (const key of Object.keys(dist)) if (dist[key] <= depth) out.add(key)
   return out
 }
 
@@ -190,13 +172,13 @@ export function betweenness(
 ): Record<string, number> {
   const adj = buildAdjacency(nodes, edges)
   const cb: Record<string, number> = {}
-  for (const n of nodes) cb[n.id] = 0
+  for (const n of nodes) setOwnValue(cb, n.id, 0)
 
   for (const s of nodes.map((n) => n.id)) {
     const stack: string[] = []
-    const pred: Record<string, string[]> = {}
-    const sigma: Record<string, number> = {}
-    const dist: Record<string, number> = {}
+    const pred = idDictionary<string[]>()
+    const sigma = idDictionary<number>()
+    const dist = idDictionary<number>()
     for (const n of nodes) {
       pred[n.id] = []
       sigma[n.id] = 0
@@ -221,18 +203,18 @@ export function betweenness(
         }
       }
     }
-    const delta: Record<string, number> = {}
+    const delta = idDictionary<number>()
     for (const n of nodes) delta[n.id] = 0
     while (stack.length) {
       const w = stack.pop()!
       for (const v of pred[w]) {
         delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w])
       }
-      if (w !== s) cb[w] += delta[w]
+      if (w !== s) setOwnValue(cb, w, (ownValue(cb, w) ?? 0) + delta[w])
     }
   }
   // Undirected: each pair counted twice.
-  for (const id in cb) cb[id] /= 2
+  for (const id of Object.keys(cb)) setOwnValue(cb, id, cb[id] / 2)
   return cb
 }
 
@@ -250,11 +232,11 @@ export function closeness(
     const dist = bfsDistances(adj, n.id)
     let sum = 0
     let reach = 0
-    for (const key in dist) {
+    for (const key of Object.keys(dist)) {
       sum += dist[key]
       reach += 1
     }
-    out[n.id] = sum > 0 ? (reach - 1) / sum : 0
+    setOwnValue(out, n.id, sum > 0 ? (reach - 1) / sum : 0)
   }
   return out
 }
@@ -273,7 +255,7 @@ export function clustering(
     const nb = [...(adj.get(n.id) || [])]
     const k = nb.length
     if (k < 2) {
-      out[n.id] = 0
+      setOwnValue(out, n.id, 0)
       continue
     }
     let links = 0
@@ -282,7 +264,7 @@ export function clustering(
         if (adj.get(nb[i])?.has(nb[j])) links += 1
       }
     }
-    out[n.id] = (2 * links) / (k * (k - 1))
+    setOwnValue(out, n.id, (2 * links) / (k * (k - 1)))
   }
   return out
 }
@@ -290,9 +272,11 @@ export function clustering(
 /** Rescale a score map to 0–1 by its maximum (for size/opacity encodings). */
 export function normalizeScores(scores: Record<string, number>): Record<string, number> {
   let max = 0
-  for (const id in scores) if (scores[id] > max) max = scores[id]
+  for (const id of Object.keys(scores)) if (scores[id] > max) max = scores[id]
   const out: Record<string, number> = {}
-  for (const id in scores) out[id] = max > 0 ? scores[id] / max : 0
+  for (const id of Object.keys(scores)) {
+    setOwnValue(out, id, max > 0 ? scores[id] / max : 0)
+  }
   return out
 }
 
@@ -329,7 +313,7 @@ export function proximityProblem(
   options: ProximityProblemOptions = {}
 ): ProximityProblemResult {
   const adj = buildAdjacency(nodes, edges)
-  const dist: Record<string, Record<string, number>> = {}
+  const dist = idDictionary<Record<string, number>>()
   for (const n of nodes) dist[n.id] = bfsDistances(adj, n.id)
 
   let minHops = options.minHops ?? 4
@@ -342,8 +326,8 @@ export function proximityProblem(
       for (let j = i + 1; j < nodes.length; j += 1) {
         const a = nodes[i].id
         const b = nodes[j].id
-        const pa = positions[a]
-        const pb = positions[b]
+        const pa = ownValue(positions, a)
+        const pb = ownValue(positions, b)
         if (!pa || !pb) continue
         const hops = dist[a][b] === undefined ? Infinity : dist[a][b]
         const dx = pa.x - pb.x

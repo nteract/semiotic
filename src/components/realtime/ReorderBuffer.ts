@@ -8,9 +8,11 @@
 // grace window.
 //
 // An event whose time is older than `watermark − lateness` is **late**:
-// it missed its grace window. Late events are dropped or kept per
-// policy, and always counted so lateness is observable rather than
-// silent (Kafka's grace-period / late-record model).
+// it missed its grace window. An explicit `flush()` also commits the
+// released tail as an ordering frontier, so later backdated input is late.
+// Late events are dropped or kept per policy, and always counted so
+// lateness is observable rather than silent (Kafka's grace-period /
+// late-record model).
 //
 // Tradeoff: a `lateness` window delays display by that much in exchange
 // for correct ordering. Default-off; when unused the stream behaves
@@ -53,6 +55,10 @@ export class ReorderBuffer<T> {
   // Events still inside the grace window, awaiting release.
   private held: T[] = []
   private _watermark: number = -Infinity
+  // Largest finite event-time already released. Normally this trails the
+  // watermark by `lateness`; an explicit flush advances it to the tail and
+  // therefore commits a hard ordering boundary for any later pushes.
+  private _releasedThrough: number = -Infinity
   private _lateCount: number = 0
 
   constructor(config: ReorderBufferConfig<T>) {
@@ -73,8 +79,13 @@ export class ReorderBuffer<T> {
     }
 
     const late: T[] = []
-    // Late if it missed the grace window relative to the current watermark.
-    if (this._watermark !== -Infinity && t < this._watermark - this.lateness) {
+    // Late if it missed either the moving grace window or a tail the caller
+    // explicitly committed with flush().
+    const lateThreshold = Math.max(
+      this._watermark - this.lateness,
+      this._releasedThrough
+    )
+    if (this._watermark !== -Infinity && t < lateThreshold) {
       this._lateCount += 1
       late.push(item)
       if (this.latePolicy === "drop") {
@@ -103,6 +114,7 @@ export class ReorderBuffer<T> {
     }
     this.held = remaining
     ready.sort((a, b) => this.getTime(a) - this.getTime(b))
+    this.markReleased(ready)
     return ready
   }
 
@@ -114,12 +126,23 @@ export class ReorderBuffer<T> {
     const all = this.held
     this.held = []
     all.sort((a, b) => this.getTime(a) - this.getTime(b))
+    this.markReleased(all)
     return all
+  }
+
+  private markReleased(items: T[]): void {
+    for (const item of items) {
+      const time = this.getTime(item)
+      if (Number.isFinite(time) && time > this._releasedThrough) {
+        this._releasedThrough = time
+      }
+    }
   }
 
   clear(): void {
     this.held = []
     this._watermark = -Infinity
+    this._releasedThrough = -Infinity
     this._lateCount = 0
   }
 

@@ -390,6 +390,31 @@ describe("DistanceCartogram", () => {
       expect(markup).toContain("hrs")
     })
 
+    it("keeps rings and the north indicator plot-relative with asymmetric margins", async () => {
+      mockGetCartogramLayout.mockReturnValue({
+        cx: 300, cy: 200, maxCost: 22, availableRadius: 150, layout: "radial",
+      })
+      render(
+        <Wrapper>
+          <DistanceCartogram
+            points={samplePoints}
+            center="London"
+            costAccessor="flightHours"
+            margin={{ top: 17, right: 13, bottom: 29, left: 31 }}
+          />
+        </Wrapper>
+      )
+      await waitFor(() => expect(lastGeoFrameProps.foregroundGraphics).toBeTruthy())
+      const markup = renderToStaticMarkup(
+        <svg>{lastGeoFrameProps.foregroundGraphics}</svg>
+      )
+
+      expect(lastGeoFrameProps.margin).toEqual({ top: 17, right: 13, bottom: 29, left: 31 })
+      expect(markup).toContain('cx="300" cy="200"')
+      expect(markup).toContain('transform="translate(24, 24)"')
+      expect(markup).not.toContain('cx="331" cy="217"')
+    })
+
     it("accepts showRings=false without error", () => {
       render(
         <Wrapper>

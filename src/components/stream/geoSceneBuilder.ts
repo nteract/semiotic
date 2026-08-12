@@ -69,7 +69,7 @@ export function buildBuiltInGeoScene({
         style: {
           fill: "none",
           stroke: gratConfig.stroke || "#e0e0e0",
-          strokeWidth: gratConfig.strokeWidth || 0.5,
+          strokeWidth: gratConfig.strokeWidth ?? 0.5,
           strokeDasharray: gratConfig.strokeDasharray || "2,2"
         },
         datum: null,

@@ -24,7 +24,10 @@ import type { Datum } from "../shared/datumTypes"
  * set, pushed events are reduced into event-time windows and the chart
  * draws one mark per window (mean / sum / min / max / count) plus an
  * optional ±σ or min–max envelope — bounded render cost regardless of
- * arrival rate.
+ * arrival rate. Structural window changes start a new accumulator epoch:
+ * controlled `data` is replayed, while push-only history resets because the
+ * transform intentionally does not retain every raw event. `stat`, `band`,
+ * and `sigma` are readout-only and update existing windows in place.
  */
 export interface AggregateConfig {
   /** Window kind. @default "tumbling" */

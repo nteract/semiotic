@@ -11,4 +11,10 @@ function useReducedMotion(): boolean
 function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [RefObject<HTMLDivElement | null>, [number, number]]
 function useTheme(): SemioticTheme
 interface ResponsiveSizeOptions
+interface-member ResponsiveSizeOptions::property::heightStep = optional heightStep: number | undefined
+interface-member ResponsiveSizeOptions::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveSizeOptions::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveSizeOptions::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveSizeOptions::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveSizeOptions::property::widthStep = optional widthStep: number | undefined
 ```

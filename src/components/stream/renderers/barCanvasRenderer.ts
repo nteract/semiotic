@@ -72,8 +72,10 @@ function resolveBarFill(
  */
 function prepareBarStroke(ctx: CanvasRenderingContext2D, node: RectSceneNode): boolean {
   if (!node.style.stroke || node.style.stroke === "none") return false
+  const strokeWidth = node.style.strokeWidth ?? 1
+  if (strokeWidth <= 0) return false
   ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-  ctx.lineWidth = node.style.strokeWidth || 1
+  ctx.lineWidth = strokeWidth
   return true
 }
 

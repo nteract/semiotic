@@ -155,11 +155,12 @@ export function resolvePipelineLineStyle(
   if (ls && typeof ls === "object") {
     return {
       stroke: ls.stroke || themePrimary || "#007bff",
-      strokeWidth: ls.strokeWidth || 2,
+      strokeWidth: ls.strokeWidth ?? 2,
       strokeDasharray: ls.strokeDasharray,
       fill: ls.fill,
       fillOpacity: ls.fillOpacity,
-      opacity: ls.opacity
+      opacity: ls.opacity,
+      cursor: ls.cursor
     }
   }
   const color = resolveGroupColor(group) || themePrimary || "#007bff"
@@ -197,7 +198,8 @@ export function resolvePipelineAreaStyle(
       fill: ls.fill || ls.stroke || themePrimary || "#4e79a7",
       fillOpacity: ls.fillOpacity ?? 0.7,
       stroke: ls.stroke || themePrimary || "#4e79a7",
-      strokeWidth: ls.strokeWidth || 2
+      strokeWidth: ls.strokeWidth ?? 2,
+      cursor: ls.cursor
     }
   }
   const color = resolveGroupColor(group) || themePrimary || "#4e79a7"
@@ -221,6 +223,7 @@ export function resolvePipelineBoundsStyle(
   return {
     fill: lineStyle.stroke || config.themeSemantic?.primary || "#4e79a7",
     fillOpacity: 0.2,
-    stroke: "none"
+    stroke: "none",
+    cursor: lineStyle.cursor
   }
 }

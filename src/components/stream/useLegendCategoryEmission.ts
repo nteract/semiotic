@@ -1,4 +1,4 @@
-import { useCallback, useRef, type RefObject } from "react"
+import { useCallback, useEffect, useRef, type RefObject } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   extractCategoryDomain,
@@ -16,7 +16,7 @@ export function useLegendCategoryEmission<TStore extends object, TDatum extends 
   const latestRef = useRef({ accessor, onChange, readData })
   const previousRef = useRef<string[]>([])
   latestRef.current = { accessor, onChange, readData }
-  return useCallback(() => {
+  const emit = useCallback(() => {
     const { accessor, onChange, readData } = latestRef.current
     if (!onChange || !accessor) return
     const categories = extractCategoryDomain(
@@ -27,4 +27,9 @@ export function useLegendCategoryEmission<TStore extends object, TDatum extends 
     previousRef.current = categories
     onChange(categories)
   }, [storeRef])
+  useEffect(() => {
+    previousRef.current = []
+    emit()
+  }, [accessor, emit, onChange])
+  return emit
 }

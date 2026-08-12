@@ -22,6 +22,8 @@ jobs:
       EXPECTED_NAME: io.github.nteract/semiotic
       EXPECTED_REMOTE: https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp
       REGISTRY_SEARCH_URL: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.nteract/semiotic
+      MCP_PUBLISHER_VERSION: v1.7.9
+      MCP_PUBLISHER_LINUX_AMD64_SHA256: ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac
 
     steps:
       - name: Require the authoritative repository
@@ -32,7 +34,7 @@ jobs:
           }
 
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Display workflow commit
         run: |
@@ -40,7 +42,7 @@ jobs:
           git show --no-patch --format='commit=%H%nsubject=%s' HEAD
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
@@ -99,16 +101,29 @@ jobs:
           }
           echo "Verified public npm semiotic@${VERSION}"
 
+      - name: Require the stable hosted endpoint to serve this package version
+        run: |
+          node scripts/smoke-hosted-mcp.mjs \
+            --endpoint "${EXPECTED_REMOTE%/mcp}" \
+            --expected-channel stable \
+            --expected-package-version "$EXPECTED_VERSION"
+
       - name: Install the official mcp-publisher binary
         run: |
+          ARCHIVE="$RUNNER_TEMP/mcp-publisher_linux_amd64.tar.gz"
+          BIN_DIR="$RUNNER_TEMP/mcp-publisher-bin"
           curl --fail --location --silent --show-error \
-            "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
-            | tar xz mcp-publisher
-          chmod +x ./mcp-publisher
-          ./mcp-publisher --help
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
+            --output "$ARCHIVE"
+          echo "${MCP_PUBLISHER_LINUX_AMD64_SHA256}  ${ARCHIVE}" | sha256sum --check --strict
+          mkdir -p "$BIN_DIR"
+          tar -xzf "$ARCHIVE" -C "$BIN_DIR" mcp-publisher
+          chmod 0755 "$BIN_DIR/mcp-publisher"
+          echo "$BIN_DIR" >> "$GITHUB_PATH"
+          "$BIN_DIR/mcp-publisher" --help
 
       - name: Validate Registry metadata
-        run: ./mcp-publisher validate
+        run: mcp-publisher validate
 
       - name: Check Registry state before publishing
         id: registry-preflight
@@ -148,11 +163,11 @@ jobs:
 
       - name: Authenticate to MCP Registry with GitHub OIDC
         if: steps.registry-preflight.outputs.publish_required == 'true'
-        run: ./mcp-publisher login github-oidc
+        run: mcp-publisher login github-oidc
 
       - name: Publish MCP Registry metadata
         if: steps.registry-preflight.outputs.publish_required == 'true'
-        run: ./mcp-publisher publish
+        run: mcp-publisher publish
 
       - name: Verify published Registry entry and print summary
         env:

@@ -300,6 +300,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     labels: NetworkLabel[]
   } {
     const nodeStyleFn = config.nodeStyle
+    const edgeStyleFn = config.edgeStyle
     const nodeSize = config.nodeSize
     const nodeSizeFn = typeof nodeSize === "number"
       ? () => nodeSize
@@ -362,7 +363,8 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
         // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
         stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
         strokeWidth: userStyle.strokeWidth ?? 1,
-        opacity: userStyle.opacity ?? ((node.depth ?? 0) === 0 ? 1 : 0.85)
+        opacity: userStyle.opacity ?? ((node.depth ?? 0) === 0 ? 1 : 0.85),
+        cursor: userStyle.cursor
       }
 
       sceneNodes.push({
@@ -388,10 +390,14 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
       if (!sourceNode || !targetNode) continue
       if (sourceNode.x == null || targetNode.x == null) continue
 
+      const userStyle = edgeStyleFn
+        ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
+        : {}
       const style: Style = {
-        stroke: "rgba(128,128,128,0.35)",
-        strokeWidth: 0.5,
-        opacity: 1
+        stroke: userStyle.stroke || "rgba(128,128,128,0.35)",
+        strokeWidth: userStyle.strokeWidth ?? 0.5,
+        opacity: userStyle.opacity ?? 1,
+        cursor: userStyle.cursor
       }
 
       sceneEdges.push({

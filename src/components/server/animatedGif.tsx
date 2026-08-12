@@ -20,12 +20,13 @@ import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
-import { xySceneNodeToSVG, ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
+import { xySceneNodeToSVG } from "../stream/SceneToSVG"
 import { renderSceneWithBackend } from "../stream/renderBackend"
+import { renderOrdinalSceneListWithBackend } from "../stream/ordinalSceneSVG"
 import type { SceneNode, SceneRenderMode } from "../stream/types"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import { reserveTitleMargin, TITLE_BASELINE } from "../stream/titleLayout"
 import { renderChart } from "./renderToStaticSVG"
 import {
@@ -195,6 +196,8 @@ export function generateFrameSVGs(
         colorAccessor: props.colorAccessor || props.colorBy,
         stackBy: props.stackBy,
         groupBy: props.groupBy,
+        connectorAccessor: props.connectorAccessor,
+        connectorStyle: props.connectorStyle,
         barPadding: props.barPadding,
         innerRadius: props.innerRadius,
         normalize: props.normalize,
@@ -531,12 +534,11 @@ function renderOrdinalFrameSVG(
   const bg = resolveBackground(props, theme)
 
   const renderMode = props.renderMode as SceneRenderMode<OrdinalSceneNode> | undefined
-  const dataMarks = scene.map((node, i) => renderSceneWithBackend({
-    node,
-    index: i,
+  const dataMarks = renderOrdinalSceneListWithBackend({
+    nodes: scene,
     renderMode,
-    fallback: () => ordinalSceneNodeToSVG(node, i)
-  })).filter(Boolean)
+    idPrefix: props.idPrefix
+  }).map(entry => entry.element)
   const titleText = typeof props.title === "string" ? props.title : undefined
   const descText = typeof props.description === "string" ? props.description : undefined
   const titleId = titleText ? "semiotic-title" : undefined

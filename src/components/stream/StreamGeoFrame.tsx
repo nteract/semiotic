@@ -1,36 +1,18 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import {
-  useRef,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useImperativeHandle,
-  forwardRef,
-  memo
-} from "react"
-import type {
-  StreamGeoFrameProps,
-  StreamGeoFrameHandle,
-  GeoSceneNode,
-  GeoAreaSceneNode,
-  GeoLineSceneNode
-} from "./geoTypes"
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode, StreamGeoFrameHandle, StreamGeoFrameProps } from "./geoTypes"
 import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
-import {
-  SceneRevisionDiagnosticsObserver,
-  useSceneRevisionDiagnostics
-} from "./sceneRevisionDiagnostics"
+import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { GeoSVGOverlay } from "./GeoSVGOverlay"
@@ -70,6 +52,7 @@ import {
   DEFAULT_GEO_HOVER_RADIUS,
   defaultGeoParticleMaxPerLine,
   defaultGeoParticleSpawnRate,
+  resolveGeoPointerHit,
   zoomButtonStyle,
   resolveProjectionName,
   ensureHitCanvasContext,
@@ -80,11 +63,15 @@ import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useGeoKeyboardNavigation } from "./frameKeyboardNavigation"
+import { createFrameGraphicsScaleTracker, resolveSubscribedFrameLayers, type FrameGraphicsScaleTracker } from "./frameGraphicsSubscription"
+import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
+import { shouldHandleFramePointer } from "./frameCursorInteraction"
+import { rehitGeoFrameCursor } from "./geoFrameCursorInteraction"
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 
-const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
-  function StreamGeoFrame(props, ref) {
+const StreamGeoFrame = memo(
+  forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(function StreamGeoFrame(props, ref) {
     const {
       // Projection
       projection,
@@ -195,14 +182,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       summary
     } = props
 
-    const { customHoverBehavior, customClickBehavior, hasClickBehavior } =
-      useSemanticFrameInteractions<HoverData>({
-        customHoverBehavior: customHoverBehaviorProp,
-        customClickBehavior: customClickBehaviorProp,
-        onObservation,
-        chartId,
-        chartType: "StreamGeoFrame"
-      })
+    const { customHoverBehavior, customClickBehavior, hasClickBehavior } = useSemanticFrameInteractions<HoverData>({
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      chartId,
+      chartType: "StreamGeoFrame"
+    })
 
     // ── Frame composition (Tier A + B concerns; see useFrame.ts) ────────
     // Geo accepts size as either `size: [w, h]` or as separate `width`/
@@ -220,8 +206,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       title,
       legend,
       legendPosition,
-      foregroundGraphics,
-      backgroundGraphics,
       animate,
       transitionProp,
       frameScheduler,
@@ -230,7 +214,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       seed,
       paused,
       suspendWhenHidden,
-      themeDirtyRef: dirtyRef,
+      themeDirtyRef: dirtyRef
     })
     const {
       reducedMotionRef,
@@ -239,14 +223,14 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       margin,
       adjustedWidth,
       adjustedHeight,
-      resolvedForeground,
-      resolvedBackground,
       transition,
       introEnabled,
       tableId,
       frameRuntime,
-      rafRef, renderFnRef, scheduleRender,
-      currentTheme,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
+      currentTheme
     } = frame
 
     // ── Hydration boundary ─────────────────────────────────────────────
@@ -257,55 +241,80 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // (matches server output); pure CSR mounts skip it.
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
-    const safeAreas = useMemo(
-      () => Array.isArray(areas) ? filterSparseArray(areas) : areas,
-      [areas]
-    )
+    const safeAreas = useMemo(() => (Array.isArray(areas) ? filterSparseArray(areas) : areas), [areas])
     const safePoints = useMemo(() => filterSparseArray(points), [points])
     const safeLines = useMemo(() => filterSparseArray(lines), [lines])
 
     // Resolve dragRotate — defaults to true for orthographic
-    const effectiveDragRotate = useMemo(() => {
-      if (dragRotateProp != null) return dragRotateProp
-      const projName = resolveProjectionName(projection)
-      return projName === "orthographic"
-    }, [dragRotateProp, projection])
+    const effectiveDragRotate = dragRotateProp ?? (resolveProjectionName(projection) === "orthographic")
 
     // ── Pipeline config ───────────────────────────────────────────────
 
-    const pipelineConfig: GeoPipelineConfig = useMemo(() => ({
-      projection,
-      projectionExtent,
-      fitPadding,
-      xAccessor,
-      yAccessor,
-      lineDataAccessor,
-      lineType,
-      flowStyle,
-      areaStyle,
-      pointStyle,
-      lineStyle,
-      colorScheme,
-      themeSemantic: resolveThemeSemanticColors(currentTheme),
-      themeSequential: currentTheme?.colors?.sequential,
-      themeDiverging: currentTheme?.colors?.diverging,
-      themeCategorical: currentTheme?.colors?.categorical,
-      graticule,
-      projectionTransform,
-      windowSize,
-      clock: frameRuntime.now,
-      decay,
-      pulse,
-      transition,
-      introAnimation: introEnabled,
-      annotations,
-      pointIdAccessor,
-      lineIdAccessor,
-      customLayout,
-      layoutConfig,
-      onLayoutError,
-      layoutMargin: margin
-    }), [projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor, lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, currentTheme, graticule, projectionTransform, windowSize, frameRuntime.now, decay, pulse, transition, introEnabled, annotations, pointIdAccessor, lineIdAccessor, customLayout, layoutConfig, onLayoutError, margin])
+    const pipelineConfig: GeoPipelineConfig = useMemo(
+      () => ({
+        projection,
+        projectionExtent,
+        fitPadding,
+        xAccessor,
+        yAccessor,
+        lineDataAccessor,
+        lineType,
+        flowStyle,
+        areaStyle,
+        pointStyle,
+        lineStyle,
+        colorScheme,
+        themeSemantic: resolveThemeSemanticColors(currentTheme),
+        themeSequential: currentTheme?.colors?.sequential,
+        themeDiverging: currentTheme?.colors?.diverging,
+        themeCategorical: currentTheme?.colors?.categorical,
+        graticule,
+        projectionTransform,
+        windowSize,
+        clock: frameRuntime.now,
+        decay,
+        pulse,
+        transition,
+        introAnimation: introEnabled,
+        annotations,
+        pointIdAccessor,
+        lineIdAccessor,
+        customLayout,
+        layoutConfig,
+        onLayoutError,
+        layoutMargin: margin
+      }),
+      [
+        projection,
+        projectionExtent,
+        fitPadding,
+        xAccessor,
+        yAccessor,
+        lineDataAccessor,
+        lineType,
+        flowStyle,
+        areaStyle,
+        pointStyle,
+        lineStyle,
+        colorScheme,
+        currentTheme,
+        graticule,
+        projectionTransform,
+        windowSize,
+        frameRuntime.now,
+        decay,
+        pulse,
+        transition,
+        introEnabled,
+        annotations,
+        pointIdAccessor,
+        lineIdAccessor,
+        customLayout,
+        layoutConfig,
+        onLayoutError,
+        margin
+      ]
+    )
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See
@@ -316,9 +325,18 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // ── Store ─────────────────────────────────────────────────────────
 
     const storeRef = useRef<GeoPipelineStore | null>(null)
-    if (!storeRef.current) {
-      storeRef.current = new GeoPipelineStore(stablePipelineConfig)
+    if (!storeRef.current) storeRef.current = new GeoPipelineStore(stablePipelineConfig)
+    const store = storeRef.current
+    const graphicsScaleTrackerRef = useRef<FrameGraphicsScaleTracker | null>(null)
+    const graphicsScaleTracker = graphicsScaleTrackerRef.current ??= createFrameGraphicsScaleTracker(store.scales)
+    const renderSVG = isServerEnvironment || (!hydrated && wasHydratingFromSSR)
+    if (renderSVG && (safeAreas || points || lines)) {
+      if (safeAreas) store.setAreas(safeAreas)
+      if (points) store.setPoints(safePoints)
+      if (lines) store.setLines(safeLines)
+      store.computeScene({ width: adjustedWidth, height: adjustedHeight })
     }
+    const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveSubscribedFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: store.scales, background, themeBackgroundColor: currentTheme.colors.background, tracker: graphicsScaleTracker, readScales: () => store.scales })
 
     // ── Refs ──────────────────────────────────────────────────────────
 
@@ -326,8 +344,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     const hitCanvasRef = useRef<HTMLCanvasElement | OffscreenCanvas | null>(null)
     const tileCacheRef = useRef<TileCache | null>(null)
     if (tileURL && !tileCacheRef.current) {
-      tileCacheRef.current = new TileCache(tileCacheSize || 256)
+      tileCacheRef.current = new TileCache(tileCacheSize ?? 256)
     }
+    tileCacheRef.current?.setLimit(tileCacheSize ?? 256)
     // rafRef + renderFnRef + scheduleRender + cancel-on-unmount + dirtyRef
     // + theme-change effect all destructured from useFrame above; not
     // redeclared here.
@@ -339,15 +358,22 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     const isZoomingRef = useRef(false)
     const containerRef = useRef<HTMLDivElement | null>(null)
 
-    const combinedRef = useCallback((el: HTMLDivElement | null) => {
-      containerRef.current = el
-      if (responsiveRef && typeof responsiveRef === "object") {
-        (responsiveRef as React.MutableRefObject<HTMLDivElement | null>).current = el
-      }
-    }, [responsiveRef])
+    const combinedRef = useCallback(
+      (el: HTMLDivElement | null) => {
+        containerRef.current = el
+        if (responsiveRef && typeof responsiveRef === "object") {
+          ;(responsiveRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+        }
+      },
+      [responsiveRef]
+    )
 
     // Drag-rotate state (globe spinning)
-    const dragStartRef = useRef<{ x: number; y: number; rotation: [number, number, number] } | null>(null)
+    const dragStartRef = useRef<{
+      x: number
+      y: number
+      rotation: [number, number, number]
+    } | null>(null)
     // Pending rotation from drag — applied in the render loop to coalesce pointer events
     const pendingRotationRef = useRef<[number, number, number] | null>(null)
 
@@ -361,6 +387,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     // Hover state
     const hoverRef = useRef<HoverData | null>(null)
+    const sceneHasAuthoredCursorRef = useRef(false)
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
     /** True when interaction canvas last painted hover content (for idle skip). */
     const interactionHasContentRef = useRef(false)
@@ -374,7 +401,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // Staleness
     const [isStale, setIsStale] = useState(false)
 
-    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getPoints())
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, (store) => store.getPoints())
 
     // scheduleRender comes from useFrame above.
 
@@ -404,35 +431,47 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // mirrors the bounded-ingest hardening. `ref.push(null)` or
     // `ref.pushMany([null, valid])` would otherwise crash extent /
     // accessor reads inside the store.
-    const pushPoint = useCallback((datum: Datum) => {
-      if (datum == null || typeof datum !== "object") return
-      storeRef.current?.pushPoint(datum)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [scheduleRender])
+    const pushPoint = useCallback(
+      (datum: Datum) => {
+        if (datum == null || typeof datum !== "object") return
+        storeRef.current?.pushPoint(datum)
+        dirtyRef.current = true
+        scheduleRender()
+      },
+      [scheduleRender]
+    )
 
-    const pushMany = useCallback((data: Datum[]) => {
-      const safe = filterSparseArray(data)
-      if (safe.length === 0) return
-      storeRef.current?.pushMany(safe)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [scheduleRender])
+    const pushMany = useCallback(
+      (data: Datum[]) => {
+        const safe = filterSparseArray(data)
+        if (safe.length === 0) return
+        storeRef.current?.pushMany(safe)
+        dirtyRef.current = true
+        scheduleRender()
+      },
+      [scheduleRender]
+    )
 
-    const pushLine = useCallback((line: Datum) => {
-      if (line == null || typeof line !== "object") return
-      storeRef.current?.pushLine(line)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [scheduleRender])
+    const pushLine = useCallback(
+      (line: Datum) => {
+        if (line == null || typeof line !== "object") return
+        storeRef.current?.pushLine(line)
+        dirtyRef.current = true
+        scheduleRender()
+      },
+      [scheduleRender]
+    )
 
-    const pushManyLines = useCallback((lines: Datum[]) => {
-      const safe = filterSparseArray(lines)
-      if (safe.length === 0) return
-      storeRef.current?.pushManyLines(safe)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [scheduleRender])
+    const pushManyLines = useCallback(
+      (lines: Datum[]) => {
+        const safe = filterSparseArray(lines)
+        if (safe.length === 0) return
+        storeRef.current?.pushManyLines(safe)
+        dirtyRef.current = true
+        scheduleRender()
+      },
+      [scheduleRender]
+    )
 
     const clearAll = useCallback(() => {
       storeRef.current?.clear()
@@ -440,47 +479,48 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       scheduleRender()
     }, [scheduleRender])
 
-    useImperativeHandle(ref, () => ({
-      push: pushPoint,
-      pushMany,
-      removePoint: (id: string | string[]) => {
-        const removed = storeRef.current?.removePoint(id) ?? []
-        if (removed.length > 0) {
-          dirtyRef.current = true
-          scheduleRender()
-        }
-        return removed
-      },
-      pushLine,
-      pushManyLines,
-      removeLine: (id: string | string[]) => {
-        const removed = storeRef.current?.removeLine(id) ?? []
-        if (removed.length > 0) {
-          dirtyRef.current = true
-          scheduleRender()
-        }
-        return removed
-      },
-      getLines: () => storeRef.current?.getLines() ?? [],
-      clear: clearAll,
-      getProjection: () => storeRef.current?.scales?.projection ?? null,
-      getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
-      getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
-      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
-      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
-      getZoom: () => zoomTransformRef.current.k,
-      resetZoom: () => {
-        const container = containerRef.current
-        if (container && zoomBehaviorRef.current) {
-          // Reset zoom transform — immediate (no d3-transition dependency)
-          select(container).call(
-            zoomBehaviorRef.current.transform,
-            zoomIdentity
-          )
-        }
-      },
-      getData: () => storeRef.current?.getPoints() ?? []
-    }), [pushPoint, pushMany, pushLine, pushManyLines, clearAll, scheduleRender])
+    useImperativeHandle(
+      ref,
+      () => ({
+        push: pushPoint,
+        pushMany,
+        removePoint: (id: string | string[]) => {
+          const removed = storeRef.current?.removePoint(id) ?? []
+          if (removed.length > 0) {
+            dirtyRef.current = true
+            scheduleRender()
+          }
+          return removed
+        },
+        pushLine,
+        pushManyLines,
+        removeLine: (id: string | string[]) => {
+          const removed = storeRef.current?.removeLine(id) ?? []
+          if (removed.length > 0) {
+            dirtyRef.current = true
+            scheduleRender()
+          }
+          return removed
+        },
+        getLines: () => storeRef.current?.getLines() ?? [],
+        clear: clearAll,
+        getProjection: () => storeRef.current?.scales?.projection ?? null,
+        getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
+        getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
+        getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
+        getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
+        getZoom: () => zoomTransformRef.current.k,
+        resetZoom: () => {
+          const container = containerRef.current
+          if (container && zoomBehaviorRef.current) {
+            // Reset zoom transform — immediate (no d3-transition dependency)
+            select(container).call(zoomBehaviorRef.current.transform, zoomIdentity)
+          }
+        },
+        getData: () => storeRef.current?.getPoints() ?? []
+      }),
+      [pushPoint, pushMany, pushLine, pushManyLines, clearAll, scheduleRender]
+    )
 
     // ── Hover handler ─────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
@@ -488,7 +528,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // body (hit testing on hover) further down via useEffect, and the
     // hover-leave body (clear hover state + schedule render) inline
     // where `frame.hoverLeaveRef.current = ...` is set a few lines below.
-    const { hoverHandlerRef, onPointerMove, onPointerLeave } = frame
+    const { hoverHandlerRef, onPointerMove, onPointerLeave, pointerStateRef } = frame
 
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       hydrated,
@@ -497,84 +537,48 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       dirtyRef,
       cleanup: () => tileCacheRef.current?.clear(),
       maxDevicePixelRatio,
-      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
+      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, tileURL, tileCacheSize, scheduleRender]
     })
 
     useEffect(() => {
       hoverHandlerRef.current = (e: HoverPointerCoords) => {
-        if (!enableHover) return
-        const store = storeRef.current
-        if (!store || !store.scene.length) return
-
         // Read the rect from canvasRef rather than e.currentTarget so this
         // handler still works when invoked from the rAF-coalesced path with a
         // synthetic `{ clientX, clientY }` payload (no currentTarget).
         const canvas = canvasRef.current
         if (!canvas) return
-        const rect = canvas.getBoundingClientRect()
-        const chartX = e.clientX - rect.left - margin.left
-        const chartY = e.clientY - rect.top - margin.top
+        const store = storeRef.current
+        if (!store || !store.scene.length) {
+          setCanvasMarkCursor(canvas)
+          return
+        }
+        const result = resolveGeoPointerHit({
+          pointer: e,
+          canvasRect: canvas.getBoundingClientRect(),
+          margin,
+          width: adjustedWidth,
+          height: adjustedHeight,
+          scene: store.scene,
+          pointQuadtree: store.quadtree,
+          maxPointRadius: store.maxPointRadius,
+          hitCanvasRef
+        })
+        setCanvasMarkCursor(canvas, result.kind === "hit" ? sceneMarkCursor(result.node) : undefined)
+        if (!enableHover || hoverAnnotation === false) return
 
-        if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+        if (result.kind === "hit") {
+          hoverRef.current = result.hover
+          hoveredNodeRef.current = result.node
+          setHoverPoint(result.hover)
+          customHoverBehavior?.(result.hover)
+          scheduleRender()
+        } else if (result.kind === "outside") {
           hoverRef.current = null
           hoveredNodeRef.current = null
           setHoverPoint(null)
           customHoverBehavior?.(null)
           scheduleRender()
-          return
-        }
-
-        // Ensure hit testing canvas
-        if (!hitCanvasRef.current) {
-          if (typeof OffscreenCanvas !== "undefined") {
-            hitCanvasRef.current = new OffscreenCanvas(1, 1)
-          } else {
-            hitCanvasRef.current = document.createElement("canvas")
-          }
-        }
-        const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
-        if (!hitCtx) return
-
-        const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, e.pointerType)
-        const lineHitRadius = getPointerHitRadius(6, e.pointerType)
-        const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
-
-        if (hit) {
-          const node = hit.node
-          const datum = node.datum
-          const rawData = Array.isArray(datum)
-            ? null
-            : (datum?.properties ? datum : (datum?.data || datum))
-
-          let x: number, y: number
-          if (node.type === "point") {
-            x = (node as PointSceneNode).x
-            y = (node as PointSceneNode).y
-          } else if (node.type === "geoarea") {
-            const geoNode = node as GeoAreaSceneNode
-            x = geoNode.centroid[0]
-            y = geoNode.centroid[1]
-          } else {
-            x = chartX
-            y = chartY
-          }
-
-          // Flatten GeoJSON feature properties so custom tooltips
-          // can access d.name, d.population etc. directly
-          const hover: HoverData = {
-            ...rawData,
-            ...(rawData?.properties || {}),
-            data: rawData,
-            properties: rawData?.properties,
-            __semioticHoverData: true,
-            x, y,
-          }
-          hoverRef.current = hover
-          hoveredNodeRef.current = node
-          setHoverPoint(hover)
-          customHoverBehavior?.(hover)
-          scheduleRender()
-        } else {
+        } else if (result.kind === "miss") {
           if (hoverRef.current) {
             hoverRef.current = null
             hoveredNodeRef.current = null
@@ -584,13 +588,17 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           }
         }
       }
-    }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender, hoverHandlerRef, canvasRef])
+    }, [enableHover, hoverAnnotation, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender, hoverHandlerRef, canvasRef])
 
     // pointermove coalescing + onPointerLeave come from useFrame above.
     // Geo's family-specific leave behavior goes into hoverLeaveRef.current,
     // which the hook's onPointerLeave invokes after cancelling any pending
     // coalesced move.
     frame.hoverLeaveRef.current = () => {
+      setCanvasMarkCursor(canvasRef.current)
+      // Cursor-only interaction never mutates hover state or canvas paint.
+      // Reset the DOM cursor, then avoid the legacy hover cleanup repaint.
+      if (!enableHover || hoverAnnotation === false) return
       hoverRef.current = null
       hoveredNodeRef.current = null
       setHoverPoint(null)
@@ -598,89 +606,93 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       scheduleRender()
     }
 
-    const onClick = useCallback((e: React.MouseEvent) => {
-      if (isAnnotationActivationTarget(e.target)) return
-      if (!customClickBehavior) return
-      const store = storeRef.current
-      if (!store || !store.scene.length) {
-        customClickBehavior(null)
-        return
-      }
+    useCanvasMarkCursorCleanup(canvasRef)
 
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const chartX = e.clientX - rect.left - margin.left
-      const chartY = e.clientY - rect.top - margin.top
-      if (
-        chartX < 0 ||
-        chartX > adjustedWidth ||
-        chartY < 0 ||
-        chartY > adjustedHeight
-      ) {
-        customClickBehavior(null)
-        return
-      }
-
-      if (!hitCanvasRef.current) {
-        if (typeof OffscreenCanvas !== "undefined") {
-          hitCanvasRef.current = new OffscreenCanvas(1, 1)
-        } else {
-          hitCanvasRef.current = document.createElement("canvas")
+    const onClick = useCallback(
+      (e: React.MouseEvent) => {
+        if (isAnnotationActivationTarget(e.target)) return
+        if (!customClickBehavior) return
+        const store = storeRef.current
+        if (!store || !store.scene.length) {
+          customClickBehavior(null)
+          return
         }
-      }
-      const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
-      if (!hitCtx) {
-        customClickBehavior(null)
-        return
-      }
 
-      const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, lastPointerTypeRef.current)
-      const lineHitRadius = getPointerHitRadius(6, lastPointerTypeRef.current)
-      const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
-      if (hit) {
-        const datum = hit.node.datum
-        const rawData = Array.isArray(datum)
-          ? null
-          : (datum?.properties ? datum : (datum?.data || datum))
-        const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
-        customClickBehavior({
-          ...flattened,
-          data: rawData,
-          properties: rawData?.properties,
-          __semioticHoverData: true,
-          x: chartX,
-          y: chartY,
-          time: chartX,
-          value: chartY,
-        }, {
-          type: "activate",
-          inputType: observationInputType(lastPointerTypeRef.current)
-        })
-        return
-      }
-      customClickBehavior(null)
-    }, [adjustedHeight, adjustedWidth, customClickBehavior, margin])
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const chartX = e.clientX - rect.left - margin.left
+        const chartY = e.clientY - rect.top - margin.top
+        if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+          customClickBehavior(null)
+          return
+        }
+
+        if (!hitCanvasRef.current) {
+          if (typeof OffscreenCanvas !== "undefined") {
+            hitCanvasRef.current = new OffscreenCanvas(1, 1)
+          } else {
+            hitCanvasRef.current = document.createElement("canvas")
+          }
+        }
+        const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
+        if (!hitCtx) {
+          customClickBehavior(null)
+          return
+        }
+
+        const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, lastPointerTypeRef.current)
+        const lineHitRadius = getPointerHitRadius(6, lastPointerTypeRef.current)
+        const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
+        if (hit) {
+          const datum = hit.node.datum
+          const rawData = Array.isArray(datum) ? null : datum?.properties ? datum : datum?.data || datum
+          const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
+          customClickBehavior(
+            {
+              ...flattened,
+              data: rawData,
+              properties: rawData?.properties,
+              __semioticHoverData: true,
+              x: chartX,
+              y: chartY,
+              time: chartX,
+              value: chartY
+            },
+            {
+              type: "activate",
+              inputType: observationInputType(lastPointerTypeRef.current)
+            }
+          )
+          return
+        }
+        customClickBehavior(null)
+      },
+      [adjustedHeight, adjustedWidth, customClickBehavior, margin]
+    )
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
-      useGeoKeyboardNavigation({
-        storeRef,
-        hoverRef,
-        hoveredNodeRef,
-        setHoverPoint,
-        customHoverBehavior,
-        customClickBehavior,
-        scheduleRender
-      })
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } = useGeoKeyboardNavigation({
+      storeRef,
+      hoverRef,
+      hoveredNodeRef,
+      setHoverPoint,
+      customHoverBehavior,
+      customClickBehavior,
+      scheduleRender
+    })
 
     // Clear keyboard focus on mouse interaction; reuses useFrame's
     // rAF-coalesced pointermove path.
-    const onPointerMoveWrapped = useCallback((e: React.PointerEvent) => {
-      lastPointerTypeRef.current = e.pointerType
-      kbFocusIndexRef.current = -1
-      focusedNavPointRef.current = null
-      onPointerMove(e)
-    }, [focusedNavPointRef, kbFocusIndexRef, onPointerMove])
+    const onPointerMoveWrapped = useCallback(
+      (e: React.PointerEvent) => {
+        if (!shouldHandleFramePointer(pointerStateRef, e, enableHover && hoverAnnotation !== false, sceneHasAuthoredCursorRef.current, canvasRef.current)) return
+        lastPointerTypeRef.current = e.pointerType
+        kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
+        onPointerMove(e)
+      },
+      [canvasRef, enableHover, hoverAnnotation, focusedNavPointRef, kbFocusIndexRef, onPointerMove, pointerStateRef]
+    )
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
       lastPointerTypeRef.current = e.pointerType
@@ -690,6 +702,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     renderFnRef.current = () => {
       rafRef.current = null
+      graphicsScaleTracker.sync(storeRef.current?.scales ?? null)
       if (!frameRuntime.isActive) return
       const canvas = canvasRef.current
       const store = storeRef.current
@@ -708,15 +721,11 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         rotationApplied = true
       }
 
-      // Advance transition — skip when reduced motion
-      // Fast-forward transitions when reduced motion is active so target positions
-      // are applied immediately and transition state is cleared properly
+      // Fast-forward reduced motion so target positions apply and transition state clears.
+      const transitionWasActive = store.activeTransition != null
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
-      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
-        store.getLastUpdateResult(),
-        isTransitioning
-      )
+      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(store.getLastUpdateResult(), isTransitioning)
 
       // Recompute scene when dirty
       let computedSceneThisFrame = false
@@ -730,8 +739,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         // the pre-compute default [0,0,0] would clobber an authored
         // projection.rotate (e.g. orthographic facing the Americas).
         const hadProjection = store.hasProjection()
-        const savedRotation =
-          effectiveDragRotate && hadProjection ? store.getRotation() : null
+        const savedRotation = effectiveDragRotate && hadProjection ? store.getRotation() : null
 
         store.computeScene(layout)
 
@@ -753,43 +761,47 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         dirtyRef.current = false
         computedSceneThisFrame = true
 
-        // Update canvas aria-label imperatively after scene changes
-        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
-
         // Emit live category domain for push-mode legend synthesis.
         // Runs after the scene rebuild so HOC-side `useChartSetup` /
         // `useStreamingLegend` see the same category set the renderer
         // just drew.
         emitLegendCategories()
       }
-      sceneRevisionDiagnosticsRef.current.afterCompute(
-        sceneRevisionCheck,
-        computedSceneThisFrame,
-        false
-      )
+      graphicsScaleTracker.sync(store.scales)
+      sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, false)
 
       const dpr = getDevicePixelRatio(maxDevicePixelRatio)
 
       // Particles / transition / scene rebuild / rotation need a full data paint.
       // Hover-only scheduleRender skips the data canvas and only updates the
       // interaction layer (same pattern as StreamXYFrame / Network).
-      const particlesWanted =
-        showParticles && !reducedMotionRef.current && !!particlePoolRef.current
+      const particlesWanted = showParticles && !reducedMotionRef.current && !!particlePoolRef.current
       // A custom-layout restyle mutates scene styles in place (no scene
       // recompute, which stays gated on dirtyRef above) and asks for a repaint
       // via this flag — folded into the paint gate only.
       const stylePaintPending = store.consumeStylePaintPending()
-      const pulseRefresh = refreshIdlePulse(
-        store,
-        now,
-        computedSceneThisFrame,
-        pulseFramePendingRef
-      )
+      if (computedSceneThisFrame || rotationApplied || stylePaintPending) {
+        sceneHasAuthoredCursorRef.current = sceneHasAuthoredCursor(store.scene)
+        if (!sceneHasAuthoredCursorRef.current) setCanvasMarkCursor(canvas)
+      }
+      if (sceneHasAuthoredCursorRef.current && (transitionWasActive || computedSceneThisFrame || rotationApplied || stylePaintPending)) {
+        rehitGeoFrameCursor({
+          canvas,
+          pointer: pointerStateRef.current,
+          store,
+          margin,
+          width: adjustedWidth,
+          height: adjustedHeight,
+          hitCanvasRef,
+          geometryMoved: transitionWasActive || computedSceneThisFrame || rotationApplied
+        })
+      }
+      const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       // Browser zoom / maxDevicePixelRatio: re-rasterize without scene rebuild.
       const needsResolutionRepaint = resolutionDirtyRef.current
       const needsDataRepaint = needsDataCanvasPaint({
         dirtyOrRebuilt: computedSceneThisFrame,
-        transitioning: isTransitioning,
+        transitioning: transitionWasActive,
         continuous: particlesWanted,
         liveEncoding: pulseRefresh.changed,
         forced: rotationApplied || stylePaintPending || needsResolutionRepaint
@@ -797,8 +809,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       resolutionDirtyRef.current = false
 
       // ── Tile canvas (behind data canvas) ──
-      // Always attempt when tiles are configured — incomplete loads set
-      // needsContinuation so progressive tile load keeps working.
+      // Always attempt when tiles are configured. Image completion callbacks
+      // schedule the next paint, avoiding a requestAnimationFrame polling loop
+      // while network requests are pending.
       if (tileURL && tileCacheRef.current) {
         const tileCanvas = tileCanvasRef.current
         if (tileCanvas && store.scales?.projection) {
@@ -810,7 +823,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             tctx.rect(0, 0, adjustedWidth, adjustedHeight)
             tctx.clip()
 
-            const allLoaded = renderTiles(tctx, {
+            renderTiles(tctx, {
               tileURL,
               projection: store.scales.projection,
               width: adjustedWidth,
@@ -819,9 +832,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               maxDevicePixelRatio,
               onTileLoad: () => scheduleRender()
             })
-
             tctx.restore()
-            if (!allLoaded) needsContinuation = true
           }
         }
       }
@@ -836,9 +847,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         if (!tileURL) {
           paintCanvasBackground(ctx, {
             background,
+            themeBackground,
             hasBackgroundGraphics: Boolean(backgroundGraphics),
-            width: adjustedWidth,
-            height: adjustedHeight
+            x: -margin.left,
+            y: -margin.top,
+            width: size[0],
+            height: size[1]
           })
         }
 
@@ -866,9 +880,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         // ── Geo particles ── (skipped under reduced motion: decorative movement)
         if (particlesWanted && particlePoolRef.current) {
           const pool = particlePoolRef.current
-          const lineNodes = scene.filter(
-            (n): n is GeoLineSceneNode => n.type === "line"
-          )
+          const lineNodes = scene.filter((n): n is GeoLineSceneNode => n.type === "line")
 
           if (lineNodes.length > 0) {
             const pStyle = particleStyle || {}
@@ -880,14 +892,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
             // Compute deltaTime
             const nowMs = now / 1000
-            const dt = lastParticleTimeRef.current > 0
-              ? Math.min(nowMs - lastParticleTimeRef.current, 0.1)
-              : 0.016
+            const dt = lastParticleTimeRef.current > 0 ? Math.min(nowMs - lastParticleTimeRef.current, 0.1) : 0.016
             lastParticleTimeRef.current = nowMs
 
             // Build path and width arrays
-            const paths = lineNodes.map(n => n.path)
-            const widths = lineNodes.map(n => n.style.strokeWidth || 2)
+            const paths = lineNodes.map((n) => n.path)
+            const widths = lineNodes.map((n) => n.style.strokeWidth ?? 2)
 
             // Spawn particles
             for (let li = 0; li < lineNodes.length; li++) {
@@ -905,11 +915,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               const p = pool.particles[i]
               if (!p.active) continue
               const lineNode = lineNodes[p.lineIndex]
-              const color = typeof pStyle.color === "function"
-                ? pStyle.color(lineNode?.datum ?? {})
-                : pStyle.color === "source" || !pStyle.color
-                  ? (lineNode?.style.stroke || "#fff")
-                  : pStyle.color
+              const color =
+                typeof pStyle.color === "function"
+                  ? pStyle.color(lineNode?.datum ?? {})
+                  : pStyle.color === "source" || !pStyle.color
+                    ? lineNode?.style.stroke || "#fff"
+                    : pStyle.color
               ctx.beginPath()
               ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
               ctx.fillStyle = color
@@ -924,17 +935,14 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         ctx.restore()
       }
 
+      if (computedSceneThisFrame || (transitionWasActive && !transitionActive)) canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
+
       // ── Interaction canvas (hover highlight) ──
       // Skip clear/draw when idle; force one clear when hover ends so
       // the previous highlight does not stick.
       const hoveredNode = hoveredNodeRef.current
-      const interactionActive = Boolean(
-        hoveredNode && (hoveredNode.type === "geoarea" || hoveredNode.type === "point")
-      )
-      const needsInteractionRepaint = needsInteractionCanvasPaint(
-        interactionActive,
-        interactionHasContentRef.current
-      )
+      const interactionActive = Boolean(hoveredNode && (hoveredNode.type === "geoarea" || hoveredNode.type === "point"))
+      const needsInteractionRepaint = needsInteractionCanvasPaint(interactionActive, interactionHasContentRef.current)
       const interCanvas = interactionCanvasRef.current
       if (interCanvas && needsInteractionRepaint) {
         const ictx = prepareCanvas(interCanvas, size, margin, dpr)
@@ -985,15 +993,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       // Only trigger SVG overlay re-render when data or hover/annotation state changed
       const annotationsChanged = annotations !== prevAnnotationsRef.current
       if (annotationsChanged) prevAnnotationsRef.current = annotations
-      const wantsAnnotationFrame =
-        computedSceneThisFrame ||
-        annotationsChanged ||
-        (isTransitioning && annotations && annotations.length > 0)
-      if (
-        wantsAnnotationFrame &&
-        (computedSceneThisFrame || annotationsChanged || now - lastAnnotationFrameTimeRef.current >= 33)
-      ) {
-        setAnnotationFrame(f => f + 1)
+      const wantsAnnotationFrame = computedSceneThisFrame || annotationsChanged || (transitionWasActive && annotations && annotations.length > 0)
+      if (wantsAnnotationFrame && (computedSceneThisFrame || annotationsChanged || (transitionWasActive && !transitionActive) || now - lastAnnotationFrameTimeRef.current >= 33)) {
+        setAnnotationFrame((f) => f + 1)
         lastAnnotationFrameTimeRef.current = now
       }
 
@@ -1003,17 +1005,14 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       }
     }
 
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
 
     // Dev warning: tiles only work with Mercator projection
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && tileURL) {
         const projName = resolveProjectionName(projection)
         if (projName && projName !== "mercator") {
-          console.warn(
-            `[StreamGeoFrame] tileURL is set but projection is "${projName}". ` +
-            `Raster tiles use Web Mercator and will not align with other projections.`
-          )
+          console.warn(`[StreamGeoFrame] tileURL is set but projection is "${projName}". ` + `Raster tiles use Web Mercator and will not align with other projections.`)
         }
       }
     }, [tileURL, projection])
@@ -1029,8 +1028,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           zoomBehaviorRef.current = null
         }
         if (container) {
-          select(container).on("mousedown.rotate", null)
-            .on("touchstart.rotate", null)
+          select(container).on("mousedown.rotate", null).on("touchstart.rotate", null)
         }
         return
       }
@@ -1096,7 +1094,11 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           if (!store) return
 
           const rotation = store.getRotation()
-          dragStartRef.current = { x: e.clientX, y: e.clientY, rotation: [...rotation] as [number, number, number] }
+          dragStartRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            rotation: [...rotation] as [number, number, number]
+          }
           container.setPointerCapture(e.pointerId)
           e.preventDefault()
         }
@@ -1165,8 +1167,14 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       // ── Standard pan/zoom mode ──
       const behavior = d3Zoom<HTMLDivElement, unknown>()
         .scaleExtent([minZoom, maxZoom])
-        .extent([[0, 0], [size[0], size[1]]])
-        .translateExtent([[-Infinity, -Infinity], [Infinity, Infinity]])
+        .extent([
+          [0, 0],
+          [size[0], size[1]]
+        ])
+        .translateExtent([
+          [-Infinity, -Infinity],
+          [Infinity, Infinity]
+        ])
         .on("zoom", (event: D3ZoomEvent<HTMLDivElement, unknown>) => {
           const transform = event.transform
           zoomTransformRef.current = transform
@@ -1203,11 +1211,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     // ── Tooltip ───────────────────────────────────────────────────────
 
-    const effectiveHoverAnnotation = enableHover && (hoverAnnotation !== false)
+    const effectiveHoverAnnotation = enableHover && hoverAnnotation !== false
 
-    const tooltipRendered = effectiveHoverAnnotation && hoverPoint
-      ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultGeoTooltip data={hoverPoint} />)
-      : null
+    const tooltipRendered = effectiveHoverAnnotation && hoverPoint ? tooltipContent ? tooltipContent(hoverPoint) : <DefaultGeoTooltip data={hoverPoint} /> : null
 
     const tooltipElement = tooltipRendered ? (
       <FlippingTooltip
@@ -1227,16 +1233,8 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     // SSR + actual SSR-hydration only — pure CSR mounts skip the
     // wasted SVG render. See StreamXYFrame for the full rationale.
-    if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-      const store = storeRef.current
-      if (store && (safeAreas || points || lines)) {
-        if (safeAreas) store.setAreas(safeAreas)
-        if (points) store.setPoints(safePoints)
-        if (lines) store.setLines(safeLines)
-        store.computeScene({ width: adjustedWidth, height: adjustedHeight })
-      }
-
-      const scene = store?.scene ?? []
+    if (renderSVG) {
+      const scene = store.scene
 
       return (
         <div
@@ -1250,29 +1248,33 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           style={{
             position: "relative",
             width: responsiveWidth ? "100%" : size[0],
-            height: responsiveHeight ? "100%" : size[1],
+            height: responsiveHeight ? "100%" : size[1]
           }}
         >
           <ScreenReaderSummary summary={summary} />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={size[0]}
-            height={size[1]}
-            style={{ position: "absolute", left: 0, top: 0 }}
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width={size[0]} height={size[1]} style={{ position: "absolute", left: 0, top: 0 }}>
+            {surfaceBackground ? (
+              <rect
+                className="stream-frame-background__backdrop"
+                x={0}
+                y={0}
+                width={size[0]}
+                height={size[1]}
+                fill={surfaceBackground}
+              />
+            ) : null}
             <g transform={`translate(${margin.left},${margin.top})`}>
               {resolvedBackground}
             </g>
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {background && (
-                <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
+              {scene.map((node, i) =>
+                renderSceneWithBackend({
+                  node,
+                  index: i,
+                  renderMode,
+                  fallback: () => geoSceneNodeToSVG(node, i)
+                })
               )}
-              {scene.map((node, i) => renderSceneWithBackend({
-                node,
-                index: i,
-                renderMode,
-                fallback: () => geoSceneNodeToSVG(node, i)
-              }))}
             </g>
           </svg>
           <GeoSVGOverlay
@@ -1290,10 +1292,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
-            foregroundGraphics={composeOverlays(
-              resolvedForeground,
-              wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
-            )}
+            foregroundGraphics={composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
             annotations={annotations}
             onAnnotationActivate={onAnnotationActivate}
             onObservation={annotationObservationCallback ?? onObservation}
@@ -1327,13 +1326,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         onKeyDown={onKeyDown}
       >
         {process.env.NODE_ENV !== "production" && storeRef.current && (
-          <SceneRevisionDiagnosticsObserver
-            store={storeRef.current}
-            diagnostics={sceneRevisionDiagnosticsRef.current}
-          />
+          <SceneRevisionDiagnosticsObserver store={storeRef.current} diagnostics={sceneRevisionDiagnosticsRef.current} />
         )}
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
+        {accessibleTable && (
+          <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
+        )}
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
@@ -1342,141 +1340,143 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
-          onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onPointerMove={onPointerMoveWrapped}
+          onPointerLeave={onPointerLeave}
           onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
           onClick={hasClickBehavior ? onClick : undefined}
         >
-        <CanvasFrameBackground size={size} margin={margin}>
-          {resolvedBackground}
-        </CanvasFrameBackground>
-        {tileURL && (
-          <canvas
-            ref={tileCanvasRef}
-            style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
-          />
-        )}
-        <canvas
-          ref={canvasRef}
-          aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")}
-          style={{ position: "absolute", left: 0, top: 0 }}
-        />
-        <canvas
-          ref={interactionCanvasRef}
-          style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
-        />
-        <GeoSVGOverlay
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          showAxes={showAxes}
-          title={title}
-          legend={legend}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={composeOverlays(
-            resolvedForeground,
-            wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
+          <CanvasFrameBackground size={size} margin={margin} backdropFill={surfaceBackground ?? undefined}>
+            {resolvedBackground}
+          </CanvasFrameBackground>
+          {tileURL && (
+            <canvas
+              ref={tileCanvasRef}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                pointerEvents: "none"
+              }}
+            />
           )}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamGeoFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
-          geoProjection={storeRef.current?.scales?.projectedPoint}
-        />
-        {staleness?.showBadge && (
-          <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
-        )}
-        {zoomable && (
-          <div
-            className="stream-geo-zoom-controls"
+          <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")} style={{ position: "absolute", left: 0, top: 0 }} />
+          <canvas
+            ref={interactionCanvasRef}
             style={{
               position: "absolute",
-              bottom: margin.bottom + 8,
-              left: margin.left + 8,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              zIndex: 2
+              left: 0,
+              top: 0,
+              pointerEvents: "none"
             }}
-          >
-            <button
-              type="button"
-              aria-label="Zoom in"
-              onClick={(e) => {
-                e.stopPropagation()
-                const container = containerRef.current
-                const behavior = zoomBehaviorRef.current
-                if (container && behavior?.scaleBy) {
-                  behavior.scaleBy(select(container), 1.5)
-                }
+          />
+          <GeoSVGOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            showAxes={showAxes}
+            title={title}
+            legend={legend}
+            legendPosition={legendPosition}
+            legendLayout={legendLayout}
+            legendHoverBehavior={legendHoverBehavior}
+            legendClickBehavior={legendClickBehavior}
+            legendHighlightedCategory={legendHighlightedCategory}
+            legendIsolatedCategories={legendIsolatedCategories}
+            foregroundGraphics={composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
+            annotations={annotations}
+            onAnnotationActivate={onAnnotationActivate}
+            onObservation={annotationObservationCallback ?? onObservation}
+            chartId={chartId}
+            chartType="StreamGeoFrame"
+            autoPlaceAnnotations={autoPlaceAnnotations}
+            svgAnnotationRules={svgAnnotationRules}
+            pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
+            geoProjection={storeRef.current?.scales?.projectedPoint}
+          />
+          {staleness?.showBadge && <StalenessBadge isStale={isStale} position={staleness.badgePosition} />}
+          {zoomable && (
+            <div
+              className="stream-geo-zoom-controls"
+              style={{
+                position: "absolute",
+                bottom: margin.bottom + 8,
+                left: margin.left + 8,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                zIndex: 2
               }}
-              style={zoomButtonStyle}
             >
-              +
-            </button>
-            <button
-              type="button"
-              aria-label="Zoom out"
-              onClick={(e) => {
-                e.stopPropagation()
-                const container = containerRef.current
-                const behavior = zoomBehaviorRef.current
-                if (container && behavior?.scaleBy) {
-                  behavior.scaleBy(select(container), 1 / 1.5)
-                }
+              <button
+                type="button"
+                aria-label="Zoom in"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const container = containerRef.current
+                  const behavior = zoomBehaviorRef.current
+                  if (container && behavior?.scaleBy) {
+                    behavior.scaleBy(select(container), 1.5)
+                  }
+                }}
+                style={zoomButtonStyle}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                aria-label="Zoom out"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const container = containerRef.current
+                  const behavior = zoomBehaviorRef.current
+                  if (container && behavior?.scaleBy) {
+                    behavior.scaleBy(select(container), 1 / 1.5)
+                  }
+                }}
+                style={zoomButtonStyle}
+              >
+                −
+              </button>
+            </div>
+          )}
+          {tileAttribution && (
+            <div
+              className="stream-geo-tile-attribution"
+              style={{
+                position: "absolute",
+                bottom: margin.bottom + 2,
+                right: margin.right + 4,
+                fontSize: 10,
+                color: "rgba(0,0,0,0.6)",
+                background: "rgba(255,255,255,0.7)",
+                padding: "1px 4px",
+                borderRadius: 2,
+                pointerEvents: "none",
+                zIndex: 2
               }}
-              style={zoomButtonStyle}
             >
-              −
-            </button>
-          </div>
-        )}
-        {tileAttribution && (
-          <div
-            className="stream-geo-tile-attribution"
-            style={{
-              position: "absolute",
-              bottom: margin.bottom + 2,
-              right: margin.right + 4,
-              fontSize: 10,
-              color: "rgba(0,0,0,0.6)",
-              background: "rgba(255,255,255,0.7)",
-              padding: "1px 4px",
-              borderRadius: 2,
-              pointerEvents: "none",
-              zIndex: 2
-            }}
-          >
-            {tileAttribution}
-          </div>
-        )}
-        <FocusRing
-          active={kbFocusIndexRef.current >= 0}
-          hoverPoint={hoverPoint}
-          margin={margin}
-          size={size}
-          shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | "geoarea" | undefined}
-          width={focusedNavPointRef.current?.w}
-          height={focusedNavPointRef.current?.h}
-          pathData={focusedNavPointRef.current?.pathData}
-        />
-        {tooltipElement}
-        </div>{/* end role="img" */}
+              {tileAttribution}
+            </div>
+          )}
+          <FocusRing
+            active={kbFocusIndexRef.current >= 0}
+            hoverPoint={hoverPoint}
+            margin={margin}
+            size={size}
+            shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | "geoarea" | undefined}
+            width={focusedNavPointRef.current?.w}
+            height={focusedNavPointRef.current?.h}
+            pathData={focusedNavPointRef.current?.pathData}
+          />
+          {tooltipElement}
+        </div>
+        {/* end role="img" */}
       </div>
     )
-  }
-))
+  })
+)
 
 StreamGeoFrame.displayName = "StreamGeoFrame"
 export default StreamGeoFrame

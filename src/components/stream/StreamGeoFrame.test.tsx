@@ -1,9 +1,12 @@
 import * as React from "react"
+import { renderToString } from "react-dom/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { act, fireEvent, render, waitFor } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createMockCanvasContext, setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamGeoFrameHandle } from "./geoTypes"
+import type { FrameScheduler } from "./useFrame"
+import { DARK_THEME, ThemeProvider } from "../ThemeProvider"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
@@ -20,6 +23,34 @@ describe("StreamGeoFrame", () => {
   afterEach(() => {
     restoreCanvas?.()
     restoreCanvas = null
+  })
+
+  it("composes the ThemeProvider surface beneath geo canvas, tiles, and SSR output", () => {
+    const chart = (
+      <ThemeProvider theme="dark">
+        <StreamGeoFrame
+          projection="mercator"
+          points={[]}
+          tileURL="https://tiles.example/{z}/{x}/{y}.png"
+          size={[240, 140]}
+          accessibleTable={false}
+        />
+      </ThemeProvider>
+    )
+    const expectedFill = `var(--semiotic-bg, ${DARK_THEME.colors.background})`
+
+    const { container } = render(chart)
+    const surface = container.querySelector(
+      ".stream-geo-frame .stream-frame-background__backdrop"
+    )
+    expect(surface).toHaveAttribute("fill", expectedFill)
+    expect(surface).toHaveAttribute("width", "240")
+    expect(surface).toHaveAttribute("height", "140")
+
+    const html = renderToString(chart)
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain('class="stream-frame-background__backdrop"')
+    expect(html).toContain(`fill="${expectedFill}"`)
   })
 
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────
@@ -189,6 +220,78 @@ describe("StreamGeoFrame — legend category emission", () => {
     expect(onObservation).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: "activate" }),
     )
+  })
+
+  it("coalesces scale-aware SVG graphics across imperative zoom and rotation", () => {
+    let queuedFrame: FrameRequestCallback | null = null
+    const frameScheduler: FrameScheduler = {
+      requestAnimationFrame: vi.fn((callback) => {
+        queuedFrame = callback
+        return 1
+      }),
+      cancelAnimationFrame: vi.fn(() => {
+        queuedFrame = null
+      })
+    }
+    const flushFrame = () => {
+      const callback = queuedFrame
+      queuedFrame = null
+      callback?.(performance.now())
+    }
+    const backgroundGraphics = vi.fn(({ scales }) => (
+      <text data-testid="geo-background-scale">
+        {scales?.projection.scale().toFixed(2) ?? "pending"}
+      </text>
+    ))
+    const foregroundGraphics = vi.fn(({ scales }) => (
+      <text data-testid="geo-foreground-rotation">
+        {scales?.projection.rotate?.()[0].toFixed(2) ?? "pending"}
+      </text>
+    ))
+    const { container, getByTestId } = render(
+      <StreamGeoFrame
+        projection="orthographic"
+        areas={[]}
+        size={[300, 200]}
+        zoomable
+        accessibleTable={false}
+        frameScheduler={frameScheduler}
+        backgroundGraphics={backgroundGraphics}
+        foregroundGraphics={foregroundGraphics}
+      />
+    )
+
+    act(flushFrame)
+    const initialScale = getByTestId("geo-background-scale").textContent
+    const backgroundCalls = backgroundGraphics.mock.calls.length
+    const foregroundCalls = foregroundGraphics.mock.calls.length
+    const frame = container.querySelector<HTMLElement>(".stream-geo-frame")!
+
+    act(() => {
+      for (let index = 0; index < 6; index++) {
+        fireEvent.wheel(frame, { deltaY: -1 })
+      }
+      flushFrame()
+    })
+    expect(getByTestId("geo-background-scale").textContent).not.toBe(initialScale)
+    expect(backgroundGraphics).toHaveBeenCalledTimes(backgroundCalls + 1)
+    expect(foregroundGraphics).toHaveBeenCalledTimes(foregroundCalls + 1)
+
+    const zoomedBackgroundCalls = backgroundGraphics.mock.calls.length
+    const zoomedForegroundCalls = foregroundGraphics.mock.calls.length
+    Object.assign(frame, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn()
+    })
+    act(() => {
+      fireEvent.pointerDown(frame, { button: 0, clientX: 100, clientY: 80, pointerId: 1 })
+      fireEvent.pointerMove(frame, { clientX: 140, clientY: 80, pointerId: 1 })
+      fireEvent.pointerUp(frame, { clientX: 140, clientY: 80, pointerId: 1 })
+      flushFrame()
+    })
+    expect(getByTestId("geo-foreground-rotation")).toHaveTextContent("16.00")
+    expect(backgroundGraphics).toHaveBeenCalledTimes(zoomedBackgroundCalls + 1)
+    expect(foregroundGraphics).toHaveBeenCalledTimes(zoomedForegroundCalls + 1)
   })
 
   // ── Push API + clear→reload lifecycle ────────────────────────────────

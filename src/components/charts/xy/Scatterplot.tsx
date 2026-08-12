@@ -42,7 +42,7 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   /** X scale type @default "linear" */
   xScaleType?: "linear" | "log" | "time"
   /** Y scale type @default "linear" */
-  yScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log" | "symlog"
   /** Field name or function to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data or custom colors array @default "category10" */
@@ -493,6 +493,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

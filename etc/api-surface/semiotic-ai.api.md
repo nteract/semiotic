@@ -18,7 +18,7 @@ const ChoroplethMapCapability: ChartCapability
 const CirclePackCapability: ChartCapability
 const ConnectedScatterplotCapability: ChartCapability
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
-const DEFAULT_SCALE_THRESHOLDS: { readonly rows: { readonly tiny: 3; readonly small: 25; readonly medium: 250; readonly large: 5000; }; readonly cardinality: { readonly low: 7; readonly medium: 25; }; readonly fields: { readonly narrow: 3; readonly typical: 10; }; }
+const DEFAULT_SCALE_THRESHOLDS: {readonly rows: {readonly tiny: 3; readonly small: 25; readonly medium: 250; readonly large: 5000;}; readonly cardinality: {readonly low: 7; readonly medium: 25;}; readonly fields: {readonly narrow: 3; readonly typical: 10;};}
 const DifferenceChartCapability: ChartCapability
 const DistanceCartogramCapability: ChartCapability
 const DonutChartCapability: ChartCapability
@@ -53,77 +53,78 @@ const analystPersona: AudienceProfile
 const dataScientistPersona: AudienceProfile
 const executivePersona: AudienceProfile
 function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
-function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BigNumber(props: BigNumberProps<import("../shared/datumTypes").Datum> & { ref?: React.ForwardedRef<BigNumberHandle>; }): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function CategoryColorProvider({ colors, categories, colorScheme, children, }: CategoryColorProviderProps): React.JSX.Element
-function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function ChartContainer(: import("../../../dist/semiotic-ai").ChartContainerProps & React.RefAttributes<import("../../../dist/semiotic-ai").ChartContainerHandle>): React.ReactNode
+function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BigNumber(props: BigNumberProps<import("../shared/datumTypes").Datum> & {ref?: React.ForwardedRef<BigNumberHandle>;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CategoryColorProvider({ colors, categories, colorScheme, children }: CategoryColorProviderProps): React.JSX.Element
+function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ChartContainer(: React.RefAttributes<import("semiotic-internal/semiotic-ai").ChartContainerHandle> & import("semiotic-internal/semiotic-ai").ChartContainerProps): React.ReactNode
 function ChartGrid({ children, columns, minCellWidth, gap, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, chartDefaults, className, style, }: ChartGridProps): React.JSX.Element
-function ChartRecipe(props: ChartRecipeProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
-function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function ChartRecipe(props: ChartRecipeProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
-function CollisionSwarmChart(: import("../../../dist/semiotic-physics").CollisionSwarmChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function CollisionSwarmChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
-function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
-function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function EventDropChart(: import("../../../dist/semiotic-physics").EventDropChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function GaltonBoardChart(: import("../../../dist/semiotic-physics").GaltonBoardChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function EventDropChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GaltonBoardChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function IntentMark({ manifest, label, className, showSummary, }: IntentMarkProps): React.JSX.Element
-function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function LinkedCharts({ children, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField, }: LinkedChartsProps): React.JSX.Element
+function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function LinkedCharts({ children, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MobileAnnotationCalloutList({ items, title, empty, ordered, renderItem, className, style, }: MobileAnnotationCalloutListProps): React.JSX.Element | null
 function MobileChartContainer({ children, controls, mobile, breakpoint, chartMode, mobileInteraction, mobileSemantics, mobileSummary, chips, activeChip, onChipChange, detail, detailTitle, detailMode, initialDetailOpen, allowHorizontalScroll, hideToolbar, chartDefaults, ...containerProps }: MobileChartContainerProps): React.JSX.Element
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
-function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
-function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function ProcessFlowChart(: import("../../../dist/semiotic-physics").ProcessFlowChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RealtimeHeatmap<TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RealtimeLineChart<TDatum extends Datum = Datum>(props: RealtimeLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: RealtimeSwarmChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: RealtimeWaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ProcessFlowChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeLineChartHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
 function SmallMultipleChart<TItem extends SmallMultipleItem<unknown> = SmallMultipleItem<unknown>>({ items, children, columns, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, gap, mode, chartHeight, sharedExtent, valueAccessor, dataAccessor, extentProps, linkedHover, selection, linkedBy, linkProvider, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField, mobileInteraction, mobileSemantics, labelMode, chartDefaults, className, style, }: SmallMultipleChartProps<TItem>): React.JSX.Element
-function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwarmPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwarmPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwimlaneChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwimlaneChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
-function TooltipProvider(: import("../../../dist/components/store/createStore").StoreProviderProps<TooltipStoreState>): import("react").ReactNode | Promise<import("react").ReactNode>
+function TooltipProvider(: import("semiotic-internal/components/store/createStore").StoreProviderProps<TooltipStoreState>): Promise<import("react").ReactNode> | import("react").ReactNode
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
-function UnitPileChart(: import("../../../dist/semiotic-physics").UnitPileChartProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-physics").PhysicsFrameHandle>): React.ReactNode
-function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
+function UnitPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
 function annotationFreshnessFor<T>(annotation: Annotated<T>, nowMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function annotationStableId(annotation: Datum): string | undefined
 function applyAnnotationLifecycle<T>(annotations: readonly Annotated<T>[], options?: ApplyAnnotationLifecycleOptions | undefined): Annotated<T>[]
@@ -153,8 +154,8 @@ function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function countNodes(root: NavTreeNode): number
 function createChartToolHandler(optionsFor?: ((input: PrepareChartInput) => PrepareChartOptions) | undefined): (input: PrepareChartInput) => PrepareChartResult
-function createIndexedDBConversationArcSink(options?: IndexedDBConversationArcSinkOptions | undefined): ConversationArcSink & { load(): Promise<ConversationArcEvent[]>; }
-function createLocalStorageConversationArcSink(options?: LocalStorageConversationArcSinkOptions | undefined): ConversationArcSink & { load(): ConversationArcEvent[]; }
+function createIndexedDBConversationArcSink(options?: IndexedDBConversationArcSinkOptions | undefined): ConversationArcSink & {load(): Promise<ConversationArcEvent[]>;}
+function createLocalStorageConversationArcSink(options?: LocalStorageConversationArcSinkOptions | undefined): ConversationArcSink & {load(): ConversationArcEvent[];}
 function createWebhookConversationArcSink(options: WebhookConversationArcSinkOptions): ConversationArcSink
 function currentTimestamp(): string
 function dataQualityToAnnotations(results: readonly DataQualityResult[], options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
@@ -169,18 +170,18 @@ function disableConversationArc(): void
 function effectiveFamiliarity(component: string, defaultFamiliarity: number, audience: AudienceProfile | undefined): number
 function enableConversationArc(options?: EnableConversationArcOptions | undefined): ConversationArcStore
 function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataProfile, audience?: AudienceProfile | undefined, options?: EvaluateVariantProposalOptions | undefined): VariantScore
-function explainCapabilityFit(data: readonly Datum[] | null | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
-function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
+function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
+function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function filterAnnotationsByStatus<T>(annotations: readonly Annotated<T>[], options?: AnnotationStatusVisibility | undefined): Annotated<T>[]
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
-function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
+function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
 function fromDbtArtifacts(artifacts: DbtArtifacts, options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
 function fromGreatExpectations(validation: GEValidationResult, options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
 function fromURL(urlString: string): ChartConfig
-function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
+function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function getCapabilities(): readonly ChartCapability[]
 function getCapability(component: string): ChartCapability | undefined
 function getChartRecipe(recipeId: string): ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>> | undefined
@@ -200,14 +201,14 @@ function mobileVisualizationCaveats(): string[]
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
 function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
-function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
-function profileNumericFields(data: readonly Datum[] | null | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
+function profileData(data: null | readonly Datum[] | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
+function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function receivabilityBias(audit: AccessibilityAuditResult, modality: ReceptionModality): ReceivabilitySignal
 function recipeToChartCapability(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): ChartCapability
-function recordAnnotationStatusChange(toStatus: AnnotationStatus, opts?: { annotationId?: string; fromStatus?: AnnotationStatus; chartId?: string; arcId?: string; meta?: Record<string, unknown>; } | undefined): ConversationArcEvent | null
-function recordAudienceChange(audience: string, previous?: string | null | undefined, extra?: { arcId?: string; meta?: Record<string, unknown>; } | undefined): ConversationArcEvent | null
+function recordAnnotationStatusChange(toStatus: AnnotationStatus, opts?: undefined | {annotationId?: string; fromStatus?: AnnotationStatus; chartId?: string; arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
+function recordAudienceChange(audience: string, previous?: null | string | undefined, extra?: undefined | {arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
 function registerChartCapability(capability: ChartCapability): void
 function registerChartRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): void
 function registerConversationArcSink(sink: ConversationArcSink): () => void
@@ -215,35 +216,35 @@ function registerIntent(intent: IntentDescriptor): void
 function registerRecipeLayout(layoutId: string, layout: CustomLayoutFunction): void
 function registerStreamChartCapability(capability: StreamChartCapability): void
 function registerVariantDiscovery(fn: ProposeVariantFn): () => void
-function repairChartConfig(component: string, data: readonly Datum[] | null | undefined, options?: RepairOptions | undefined): RepairResult
+function repairChartConfig(component: string, data: null | readonly Datum[] | undefined, options?: RepairOptions | undefined): RepairResult
 function replayConversationArc(events: readonly ConversationArcEvent[], options?: LoadConversationArcOptions | undefined): readonly ConversationArcEvent[]
-function resolveCardinalityToNumber(declared: number | CardinalityBand | undefined, measured: number | undefined, scale?: DataScaleProfile | undefined): number | undefined
+function resolveCardinalityToNumber(declared: CardinalityBand | number | undefined, measured: number | undefined, scale?: DataScaleProfile | undefined): number | undefined
 function resolveChartRecipe(value: unknown): ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>> | undefined
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
 function resolveRecipeRoleField(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, role: DataRoleDefinition, profile: ChartDataProfile): string | undefined
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
-function resolveRowsToNumber(declared: number | ScaleBand | undefined, measuredRows: number, scale?: DataScaleProfile | undefined): number
+function resolveRowsToNumber(declared: ScaleBand | number | undefined, measuredRows: number, scale?: DataScaleProfile | undefined): number
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function runQualityScorecard(fixtures: readonly ScorecardFixture[], capabilities?: readonly ChartCapability[] | undefined): ScorecardReport
 function scaleHints(hint: ScaleHintInput): ScaleFitFn
-function scoreChart(component: string, data: readonly Datum[] | null | undefined, options?: { intent?: IntentId | IntentId[]; variantKey?: string; profile?: ChartDataProfile; audience?: AudienceProfile; portability?: "portable" | "local"; riskTolerance?: "low" | "medium" | "high"; receptionChannel?: ReceptionModality; } | undefined): Suggestion | { reason: string; }
+function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: undefined | {intent?: IntentId | IntentId[]; variantKey?: string; profile?: ChartDataProfile; audience?: AudienceProfile; portability?: "local" | "portable"; riskTolerance?: "high" | "low" | "medium"; receptionChannel?: ReceptionModality;}): Suggestion | {reason: string;}
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): number
 function subscribeToConversationArcChange(listener: () => void): () => void
-function suggestCharts(data: readonly Datum[] | null | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
-function suggestChartsGrouped(data: readonly Datum[] | null | undefined, options?: (SuggestChartsOptions & { maxPerBand?: number; }) | undefined): ScaledSuggestionGroups
-function suggestDashboard(data: readonly Datum[] | null | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
+function suggestCharts(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
+function suggestChartsGrouped(data: null | readonly Datum[] | undefined, options?: (SuggestChartsOptions & {maxPerBand?: number;}) | undefined): ScaledSuggestionGroups
+function suggestDashboard(data: null | readonly Datum[] | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
 function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): StreamSuggestion[]
-function suggestStretchCharts(data: readonly Datum[] | null | undefined, options?: SuggestStretchChartsOptions | undefined): StretchSuggestion[]
+function suggestStretchCharts(data: null | readonly Datum[] | undefined, options?: SuggestStretchChartsOptions | undefined): StretchSuggestion[]
 function suggestTokenEncoding(input: SuggestTokenEncodingInput): TokenEncodingSuggestion
 function summarizeArc(events: readonly ConversationArcEvent[]): ConversationArcSummary
-function summarizeData(data: readonly Datum[] | null | undefined, options?: SummarizeOptions | undefined): DataSummary
+function summarizeData(data: null | readonly Datum[] | undefined, options?: SummarizeOptions | undefined): DataSummary
 function summarizeIntentManifest(manifest: IntentManifest): string
-function toAnthropicTool(def: ChartToolDefinition): { name: string; description: string; input_schema: Record<string, unknown>; }
+function toAnthropicTool(def: ChartToolDefinition): {name: string; description: string; input_schema: Record<string, unknown>;}
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toOpenAIResponsesTool(def: ChartToolDefinition, options?: OpenAIResponsesToolOptions | undefined): OpenAIResponsesTool
-function toOpenAITool(def: ChartToolDefinition): { type: "function"; function: { name: string; description: string; parameters: Record<string, unknown>; }; }
+function toOpenAITool(def: ChartToolDefinition): {type: "function"; function: {name: string; description: string; parameters: Record<string, unknown>;};}
 function toURL(config: ChartConfig): string
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
 function unregisterChartCapability(component: string): void
@@ -255,7 +256,7 @@ function useCategoryColors(): CategoryColorMap | null
 function useChartFocus(options?: UseChartFocusOptions | undefined): InterrogationFocus | null
 function useChartInterrogation(options: UseChartInterrogationOptions): UseChartInterrogationResult
 function useChartObserver(options?: UseChartObserverOptions | undefined): UseChartObserverResult
-function useChartSuggestions(data: readonly Datum[] | null | undefined, options?: UseChartSuggestionsOptions | undefined): UseChartSuggestionsResult
+function useChartSuggestions(data: null | readonly Datum[] | undefined, options?: UseChartSuggestionsOptions | undefined): UseChartSuggestionsResult
 function useConversationArc(options?: UseConversationArcOptions | undefined): UseConversationArcResult
 function useFilteredData<T extends Datum>(data: T[], selectionName: string, clientId?: string | undefined): T[]
 function useLinkedChartsActive(): boolean
@@ -267,66 +268,66 @@ function useSelectionActions(name: string, clientId?: string | undefined): UseSe
 function useTheme(): SemioticTheme
 function validateChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): void
 function validateProps(componentName: string, props: Datum): ValidationResult
-function withCurrentProvenance<T extends object>(annotation: T, rest?: (Omit<AnnotationProvenance, "createdAt"> & { createdAt?: string; }) | undefined): Annotated<T>
-function withProvenance<T extends object>(annotation: T, blocks: { provenance?: AnnotationProvenance; lifecycle?: AnnotationLifecycle; }): Annotated<T>
+function withCurrentProvenance<T extends object>(annotation: T, rest?: (Omit<AnnotationProvenance, "createdAt"> & {createdAt?: string;}) | undefined): Annotated<T>
+function withProvenance<T extends object>(annotation: T, blocks: {provenance?: AnnotationProvenance; lifecycle?: AnnotationLifecycle;}): Annotated<T>
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
 interface A11yFinding
 interface AccessibilityAuditResult
 interface AccessibilityExpectations
 interface AccessibilityTableField
 interface AccessibleNavTreeProps
-interface ActivateObservation
-interface AnnotationActivateObservation
+interface ActivateObservation extends ObservationBase
+interface AnnotationActivateObservation extends ObservationBase
 interface AnnotationActivationEvent
 interface AnnotationLifecycle
 interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
-interface AnnotationStatusChangedEvent
-interface AnnotationStatusTreatment
+interface AnnotationStatusChangedEvent extends ConversationArcEventBase
+interface AnnotationStatusTreatment extends AnnotationStatusVisibility
 interface AnnotationStatusVisibility
 interface AnomalyConfig
 interface AudienceBiasResult
 interface AudienceFitDefinition
 interface AudienceProfile
-interface AudienceSetEvent
+interface AudienceSetEvent extends ConversationArcEventBase
 interface AudienceTarget
 interface AuditAccessibilityOptions
 interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
 interface AuditVisualizationControlsOptions
-interface BrushEndObservation
-interface BrushObservation
+interface BrushEndObservation extends ObservationBase
+interface BrushObservation extends ObservationBase
 interface BuildNavigationTreeOptions
 interface CategoricalFieldSummary
 interface CategoryColorProviderProps
-interface ChartAbandonedEvent
+interface ChartAbandonedEvent extends ConversationArcEventBase
 interface ChartCapability
 interface ChartConfig
-interface ChartContainerDataAuditOptions
+interface ChartContainerDataAuditOptions extends Pick<AuditDataOptions, "checkOutliers">, DataAuditNotificationOptions
 interface ChartContainerHandle
 interface ChartContainerMobileOptions
 interface ChartContainerProps
-interface ChartDataProfile
-interface ChartEditedEvent
-interface ChartExportedEvent
+interface ChartDataProfile extends DataSummary
+interface ChartEditedEvent extends ConversationArcEventBase
+interface ChartExportedEvent extends ConversationArcEventBase
 interface ChartGridProps
 interface ChartNotification
 interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
 interface ChartRecipeDefinition<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
-interface ChartRecipeProps
-interface ChartRenderedEvent
-interface ChartReplacedEvent
+interface ChartRecipeProps extends Datum
+interface ChartRenderedEvent extends ConversationArcEventBase
+interface ChartReplacedEvent extends ConversationArcEventBase
 interface ChartRubric
 interface ChartScalePreference
 interface ChartToolDefinition
 interface ChartToolOptions
 interface ChartVariant
 interface CheckedNumericContract
-interface ClickEndObservation
-interface ClickObservation
+interface ClickEndObservation extends ObservationBase
+interface ClickObservation extends ObservationBase
 interface ComputeAnnotationFreshnessOptions
 interface ContextLayoutProps
 interface ControlAuditFinding
@@ -338,7 +339,7 @@ interface ConversationArcSummary
 interface DashboardPanel
 interface DashboardSuggestion
 interface DataAuditChartNotification
-interface DataAuditDiagnosis
+interface DataAuditDiagnosis extends Diagnosis
 interface DataAuditNotificationOptions
 interface DataAuditResult
 interface DataQualityAnnotationOptions
@@ -366,19 +367,19 @@ interface EvaluateVariantProposalOptions
 interface ExplainCapabilityFitResult
 interface FieldCandidate
 interface FieldTypeChange
-interface FocusObservation
+interface FocusObservation extends ObservationBase
 interface ForecastConfig
 interface GEValidationResult
-interface HoverEndObservation
-interface HoverObservation
+interface HoverEndObservation extends ObservationBase
+interface HoverObservation extends ObservationBase
 interface IndexedDBConversationArcSinkOptions
 interface InferIntentResult
 interface IntentDescriptor
 interface IntentManifest
 interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
-interface InterrogationAnsweredEvent
-interface InterrogationAskedEvent
+interface InterrogationAnsweredEvent extends ConversationArcEventBase
+interface InterrogationAskedEvent extends ConversationArcEventBase
 interface InterrogationContext
 interface InterrogationFocus
 interface InterrogationMessage
@@ -390,7 +391,7 @@ interface LoadConversationArcOptions
 interface LocalStorageConversationArcSinkOptions
 interface MobileAnnotationCalloutListProps
 interface MobileChartChip
-interface MobileChartContainerProps
+interface MobileChartContainerProps extends Omit<ChartContainerProps, "mobile">
 interface MobileInteractionConfig
 interface MobileStandardBrushControls
 interface MobileStandardControlLegendItem
@@ -403,8 +404,8 @@ interface MobileVisualizationCustomContract
 interface MobileVisualizationFinding
 interface MobileVisualizationInteractionContract
 interface MobileVisualizationLabelContract
-interface NavBranchExpandedEvent
-interface NavNodeFocusedEvent
+interface NavBranchExpandedEvent extends ConversationArcEventBase
+interface NavNodeFocusedEvent extends ConversationArcEventBase
 interface NavTreeNode
 interface NumericAggregateContract
 interface NumericContracts
@@ -426,7 +427,7 @@ interface PhysicsReaderGroundingInput
 interface PhysicsReaderGroundingSediment
 interface PhysicsReaderGroundingSimulation
 interface PortableNavigationStrategy
-interface PositionedToken<D = unknown>
+interface PositionedToken<D = unknown> extends VisualToken<D>
 interface PrepareChartInput
 interface PrepareChartOptions
 interface PrepareChartResult
@@ -434,7 +435,7 @@ interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
 interface ProfileNumericFieldsOptions
-interface ProposalRefusedEvent
+interface ProposalRefusedEvent extends ConversationArcEventBase
 interface ReceivabilitySignal
 interface ReceptionDefinition
 interface RecipeAudienceDefinition
@@ -446,7 +447,7 @@ interface RecipePortabilityConfig
 interface RecipeStrategyContext<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 interface RegisteredRecipeLayout
 interface RejectedCapability
-interface RenderEvidenceEvent
+interface RenderEvidenceEvent extends ConversationArcEventBase
 interface RepairAlternativeResult
 interface RepairOkResult
 interface RepairOptions
@@ -464,8 +465,8 @@ interface ScaleThresholds
 interface ScaledSuggestionGroups
 interface ScorecardFixture
 interface ScorecardReport
-interface SelectionEndObservation
-interface SelectionObservation
+interface SelectionEndObservation extends ObservationBase
+interface SelectionObservation extends ObservationBase
 interface SerializedSelection
 interface SmallMultipleChartProps<TItem extends SmallMultipleItem = SmallMultipleItem>
 interface SmallMultipleItem<TDatum = unknown>
@@ -476,15 +477,15 @@ interface StreamFieldSchema
 interface StreamSchema
 interface StreamSuggestion
 interface StretchSuggestion
-interface SuggestChartsOptions
+interface SuggestChartsOptions extends ProfileDataOptions
 interface SuggestDashboardOptions
 interface SuggestStreamChartsOptions
 interface SuggestStretchChartsOptions
 interface SuggestTokenEncodingInput
 interface Suggestion
-interface SuggestionChosenEvent
+interface SuggestionChosenEvent extends ConversationArcEventBase
 interface SuggestionScaleRange
-interface SuggestionShownEvent
+interface SuggestionShownEvent extends ConversationArcEventBase
 interface SummarizeOptions
 interface ToConfigOptions
 interface TokenDiagnostic
@@ -501,9 +502,9 @@ interface UseChartInterrogationOptions
 interface UseChartInterrogationResult
 interface UseChartObserverOptions
 interface UseChartObserverResult
-interface UseChartSuggestionsOptions
+interface UseChartSuggestionsOptions extends SuggestChartsOptions, ProfileDataOptions
 interface UseChartSuggestionsResult
-interface UseConversationArcOptions
+interface UseConversationArcOptions extends EnableConversationArcOptions
 interface UseConversationArcResult
 interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
@@ -519,115 +520,1513 @@ interface VisualToken<D = unknown>
 interface VisualizationControlDefinition
 interface WebhookConversationArcSinkOptions
 interface WhyCustomExplanation
-type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
-type A11yStatus = "pass" | "fail" | "warn" | "manual" | "not-applicable"
-type Annotated<T> = T & {
-    provenance?: AnnotationProvenance;
-    lifecycle?: AnnotationLifecycle;
-}
-type AnnotationActorKind = "human" | "agent" | "watcher" | "system" | (string & {})
-type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
-type AnnotationBasis = "human-note" | "statistical-test" | "rule" | "llm-inference" | "external-source" | "computed" | (string & {})
+interface-member A11yFinding::property::critical = required critical: boolean
+interface-member A11yFinding::property::fix = optional fix: string | undefined
+interface-member A11yFinding::property::heuristic = required heuristic: string
+interface-member A11yFinding::property::id = required id: string
+interface-member A11yFinding::property::message = required message: string
+interface-member A11yFinding::property::principle = required principle: A11yPrinciple
+interface-member A11yFinding::property::status = required status: A11yStatus
+interface-member AccessibilityAuditResult::property::component = required component: string
+interface-member AccessibilityAuditResult::property::findings = required findings: A11yFinding[]
+interface-member AccessibilityAuditResult::property::ok = required ok: boolean
+interface-member AccessibilityAuditResult::property::reference = required reference: string
+interface-member AccessibilityAuditResult::property::summary = required summary: {criticalsPassed: number; criticalsEvaluated: number; fails: number; warnings: number; manual: number; passes: number;}
+interface-member AccessibilityExpectations::property::accessibleTable = optional accessibleTable: "not-applicable" | "recommended" | "required" | undefined
+interface-member AccessibilityExpectations::property::dataBearingSceneNodes = optional dataBearingSceneNodes: "not-applicable" | "recommended" | "required" | undefined
+interface-member AccessibilityExpectations::property::description = optional description: "not-applicable" | "recommended" | "required" | undefined
+interface-member AccessibilityExpectations::property::fallbackTable = optional fallbackTable: boolean | undefined
+interface-member AccessibilityExpectations::property::keyboardNavigation = optional keyboardNavigation: "not-applicable" | "recommended" | "required" | undefined
+interface-member AccessibilityExpectations::property::minimumHitTarget = optional minimumHitTarget: number | undefined
+interface-member AccessibilityExpectations::property::navigationGranularity = optional navigationGranularity: string | undefined
+interface-member AccessibilityExpectations::property::redundantEncodings = optional redundantEncodings: string[] | undefined
+interface-member AccessibilityExpectations::property::requirements = optional requirements: string[] | undefined
+interface-member AccessibilityExpectations::property::requiresAccessibleTable = optional requiresAccessibleTable: boolean | undefined
+interface-member AccessibilityExpectations::property::requiresSummary = optional requiresSummary: boolean | undefined
+interface-member AccessibilityExpectations::property::requiresTitle = optional requiresTitle: boolean | undefined
+interface-member AccessibilityExpectations::property::tableFields = optional tableFields: AccessibilityTableField[] | undefined
+interface-member AccessibilityExpectations::property::tableRoles = optional tableRoles: string[] | undefined
+interface-member AccessibilityTableField::property::field = optional field: string | undefined
+interface-member AccessibilityTableField::property::format = optional format: string | undefined
+interface-member AccessibilityTableField::property::label = required label: string
+interface-member AccessibilityTableField::property::role = optional role: string | undefined
+interface-member AccessibleNavTreeProps::property::activeId = optional activeId: string | undefined
+interface-member AccessibleNavTreeProps::property::chartId = optional chartId: string | undefined
+interface-member AccessibleNavTreeProps::property::className = optional className: string | undefined
+interface-member AccessibleNavTreeProps::property::label = optional label: string | undefined
+interface-member AccessibleNavTreeProps::property::onActiveChange = optional onActiveChange: ((node: NavTreeNode) => void) | undefined
+interface-member AccessibleNavTreeProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
+interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member AccessibleNavTreeProps::property::tree = required tree: NavTreeNode
+interface-member AccessibleNavTreeProps::property::visible = optional visible: boolean | undefined
+interface-member ActivateObservation::property::datum = required datum: Datum
+interface-member ActivateObservation::property::inputType = required inputType: ObservationInputType
+interface-member ActivateObservation::property::type = required type: "activate"
+interface-member AnnotationActivateObservation::property::annotationId = required annotationId: string
+interface-member AnnotationActivateObservation::property::inputType = required inputType: ObservationInputType
+interface-member AnnotationActivateObservation::property::type = required type: "annotation-activate"
+interface-member AnnotationActivationEvent::property::annotation = required annotation: import("./datumTypes").Datum
+interface-member AnnotationActivationEvent::property::annotationId = optional annotationId: string | undefined
+interface-member AnnotationActivationEvent::property::chartId = optional chartId: string | undefined
+interface-member AnnotationActivationEvent::property::inputType = required inputType: ObservationInputType
+interface-member AnnotationLifecycle::property::anchor = optional anchor: AnnotationAnchor | undefined
+interface-member AnnotationLifecycle::property::freshness = optional freshness: LifecycleBand | undefined
+interface-member AnnotationLifecycle::property::status = optional status: AnnotationStatus | undefined
+interface-member AnnotationLifecycle::property::supersedes = optional supersedes: string | undefined
+interface-member AnnotationLifecycle::property::ttlHint = optional ttlHint: number | string | undefined
+interface-member AnnotationLifecycleTreatment::property::labelSuffix = optional labelSuffix: Partial<Record<LifecycleBand, string>> | undefined
+interface-member AnnotationLifecycleTreatment::property::opacity = optional opacity: Partial<Record<LifecycleBand, null | number>> | undefined
+interface-member AnnotationLifecycleTreatment::property::showExpiredAnnotations = optional showExpiredAnnotations: boolean | undefined
+interface-member AnnotationLifecycleTreatment::property::strokeDasharray = optional strokeDasharray: Partial<Record<LifecycleBand, null | string>> | undefined
+interface-member AnnotationProvenance::property::author = optional author: string | undefined
+interface-member AnnotationProvenance::property::authorKind = optional authorKind: AnnotationActorKind | undefined
+interface-member AnnotationProvenance::property::basis = optional basis: AnnotationBasis | undefined
+interface-member AnnotationProvenance::property::confidence = optional confidence: number | undefined
+interface-member AnnotationProvenance::property::createdAt = optional createdAt: string | undefined
+interface-member AnnotationProvenance::property::dataVersion = optional dataVersion: string | undefined
+interface-member AnnotationProvenance::property::source = optional source: AnnotationSource | undefined
+interface-member AnnotationProvenance::property::stableId = optional stableId: string | undefined
+interface-member AnnotationStatusChangedEvent::property::annotationId = optional annotationId: string | undefined
+interface-member AnnotationStatusChangedEvent::property::chartId = optional chartId: string | undefined
+interface-member AnnotationStatusChangedEvent::property::fromStatus = optional fromStatus: AnnotationStatus | undefined
+interface-member AnnotationStatusChangedEvent::property::toStatus = required toStatus: AnnotationStatus
+interface-member AnnotationStatusChangedEvent::property::type = required type: "annotation-status-changed"
+interface-member AnnotationStatusTreatment::property::labelSuffix = optional labelSuffix: Partial<Record<AnnotationStatus, string>> | undefined
+interface-member AnnotationStatusTreatment::property::opacity = optional opacity: Partial<Record<AnnotationStatus, null | number>> | undefined
+interface-member AnnotationStatusTreatment::property::strokeDasharray = optional strokeDasharray: Partial<Record<AnnotationStatus, null | string>> | undefined
+interface-member AnnotationStatusVisibility::property::showRetractedAnnotations = optional showRetractedAnnotations: boolean | undefined
+interface-member AnnotationStatusVisibility::property::showSupersededAnnotations = optional showSupersededAnnotations: boolean | undefined
+interface-member AnomalyConfig::property::anomalyColor = optional anomalyColor: string | undefined
+interface-member AnomalyConfig::property::anomalyRadius = optional anomalyRadius: number | undefined
+interface-member AnomalyConfig::property::bandColor = optional bandColor: string | undefined
+interface-member AnomalyConfig::property::bandOpacity = optional bandOpacity: number | undefined
+interface-member AnomalyConfig::property::label = optional label: string | undefined
+interface-member AnomalyConfig::property::showBand = optional showBand: boolean | undefined
+interface-member AnomalyConfig::property::threshold = optional threshold: number | undefined
+interface-member AudienceBiasResult::property::appliedReason = optional appliedReason: string | undefined
+interface-member AudienceBiasResult::property::receivabilityReason = optional receivabilityReason: string | undefined
+interface-member AudienceBiasResult::property::rubric = required rubric: ChartRubric
+interface-member AudienceBiasResult::property::score = required score: number
+interface-member AudienceFitDefinition::property::audience = required audience: string
+interface-member AudienceFitDefinition::property::fit = required fit: "avoid" | "moderate" | "strong" | "weak"
+interface-member AudienceFitDefinition::property::rationale = optional rationale: string | undefined
+interface-member AudienceProfile::property::exposureLevel = optional exposureLevel: 0 | 1 | 2 | undefined
+interface-member AudienceProfile::property::familiarity = optional familiarity: Partial<Record<string, number>> | undefined
+interface-member AudienceProfile::property::name = optional name: string | undefined
+interface-member AudienceProfile::property::receptionModality = optional receptionModality: ReceptionModality | undefined
+interface-member AudienceProfile::property::targets = optional targets: Partial<Record<string, AudienceTarget>> | undefined
+interface-member AudienceSetEvent::property::audience = required audience: string
+interface-member AudienceSetEvent::property::previous = optional previous: string | undefined
+interface-member AudienceSetEvent::property::type = required type: "audience-set"
+interface-member AudienceTarget::property::direction = required direction: "decrease" | "increase"
+interface-member AudienceTarget::property::reason = optional reason: string | undefined
+interface-member AudienceTarget::property::weight = optional weight: number | undefined
+interface-member AuditAccessibilityOptions::property::describe = optional describe: boolean | undefined
+interface-member AuditAccessibilityOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
+interface-member AuditAccessibilityOptions::property::navigable = optional navigable: boolean | undefined
+interface-member AuditDataOptions::property::checkOutliers = optional readonly checkOutliers: boolean | undefined
+interface-member AuditDataOptions::property::contracts = optional readonly contracts: NumericContracts | undefined
+interface-member AuditMobileVisualizationOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
+interface-member AuditMobileVisualizationOptions::property::targetSize = optional targetSize: number | undefined
+interface-member AuditMobileVisualizationOptions::property::viewportWidth = optional viewportWidth: number | undefined
+interface-member AuditObservedSceneInput::property::annotations = optional annotations: readonly Datum[] | undefined
+interface-member AuditObservedSceneInput::property::chart = optional chart: undefined | {title?: string; summary?: string; description?: string; accessibleTable?: boolean; navigationTree?: NavTreeNode; selectedIds?: ReadonlyArray<string>;}
+interface-member AuditObservedSceneInput::property::dimensions = required dimensions: {width: number; height: number; plot?: {x?: number; y?: number; width: number; height: number;};}
+interface-member AuditObservedSceneInput::property::inputData = required inputData: readonly Datum[]
+interface-member AuditObservedSceneInput::property::layoutConfig = optional layoutConfig: Record<string, unknown> | undefined
+interface-member AuditObservedSceneInput::property::recipe = required recipe: ChartRecipe<Datum, Record<string, unknown>>
+interface-member AuditObservedSceneInput::property::scene = required scene: null | readonly Record<string, unknown>[] | undefined | {nodes?: ReadonlyArray<Record<string, unknown>>; sceneNodes?: ReadonlyArray<Record<string, unknown>>; sceneEdges?: ReadonlyArray<Record<string, unknown>>;}
+interface-member AuditObservedSceneInput::property::theme = optional theme: undefined | {background?: string; categorical?: string[];}
+interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
+interface-member BrushEndObservation::property::type = required type: "brush-end"
+interface-member BrushObservation::property::extent = required extent: {x: [number, number]; y: [number, number];}
+interface-member BrushObservation::property::type = required type: "brush"
+interface-member BuildNavigationTreeOptions::property::locale = optional locale: string | undefined
+interface-member BuildNavigationTreeOptions::property::maxLeaves = optional maxLeaves: number | undefined
+interface-member BuildNavigationTreeOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member CategoricalFieldSummary::property::distinctCount = required distinctCount: number
+interface-member CategoricalFieldSummary::property::distinctValues = optional distinctValues: readonly string[] | undefined
+interface-member CategoricalFieldSummary::property::topValues = required topValues: readonly {value: string; count: number;}[]
+interface-member CategoricalFieldSummary::property::type = required type: "categorical"
+interface-member CategoryColorProviderProps::property::categories = optional categories: string[] | undefined
+interface-member CategoryColorProviderProps::property::children = required children: React.ReactNode
+interface-member CategoryColorProviderProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member CategoryColorProviderProps::property::colors = optional colors: CategoryColorMap | undefined
+interface-member ChartAbandonedEvent::property::component = optional component: string | undefined
+interface-member ChartAbandonedEvent::property::reason = optional reason: string | undefined
+interface-member ChartAbandonedEvent::property::type = required type: "chart-abandoned"
+interface-member ChartCapability::property::buildProps = required buildProps: (profile: ChartDataProfile, variant?: ChartVariant) => Record<string, unknown>
+interface-member ChartCapability::property::candidateKind = optional candidateKind: ChartCandidateKind | undefined
+interface-member ChartCapability::property::caveats = optional caveats: ((profile: ChartDataProfile) => ReadonlyArray<string>) | undefined
+interface-member ChartCapability::property::component = required component: string
+interface-member ChartCapability::property::displayName = optional displayName: string | undefined
+interface-member ChartCapability::property::family = required family: ChartFamily
+interface-member ChartCapability::property::fits = required fits: (profile: ChartDataProfile) => FitResult
+interface-member ChartCapability::property::importPath = required importPath: ChartImportPath
+interface-member ChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, IntentScorer>>
+interface-member ChartCapability::property::mobile = optional mobile: MobileDesignDefinition | undefined
+interface-member ChartCapability::property::numericContracts = optional numericContracts: NumericContracts | undefined
+interface-member ChartCapability::property::positiveRationale = optional positiveRationale: readonly string[] | undefined
+interface-member ChartCapability::property::qualityFit = optional qualityFit: QualityFitFn | undefined
+interface-member ChartCapability::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member ChartCapability::property::renderingFamily = optional renderingFamily: ChartRecipeFrameFamily | undefined
+interface-member ChartCapability::property::rubric = required rubric: ChartRubric
+interface-member ChartCapability::property::scaleFit = optional scaleFit: ScaleFitFn | undefined
+interface-member ChartCapability::property::variants = optional variants: readonly ChartVariant[] | undefined
+interface-member ChartCapability::property::whyCustom = optional whyCustom: WhyCustomExplanation | undefined
+interface-member ChartConfig::property::component = required component: string
+interface-member ChartConfig::property::createdAt = required createdAt: string
+interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string;}
+interface-member ChartConfig::property::portable = optional portable: boolean | undefined
+interface-member ChartConfig::property::props = required props: Datum
+interface-member ChartConfig::property::reason = optional reason: string | undefined
+interface-member ChartConfig::property::recipeId = optional recipeId: string | undefined
+interface-member ChartConfig::property::selections = optional selections: SerializedSelections | undefined
+interface-member ChartConfig::property::version = required version: string
+interface-member ChartConfig::property::warnings = optional warnings: string[] | undefined
+interface-member ChartContainerHandle::property::copyConfig = required copyConfig: (format?: CopyFormat) => Promise<void>
+interface-member ChartContainerHandle::property::element = required element: HTMLDivElement | null
+interface-member ChartContainerHandle::property::export = required export: (options?: {format?: "png" | "svg"; scale?: number; filename?: string;}) => Promise<void>
+interface-member ChartContainerHandle::property::toggleFullscreen = required toggleFullscreen: () => void
+interface-member ChartContainerMobileOptions::property::allowHorizontalScroll = optional allowHorizontalScroll: boolean | undefined
+interface-member ChartContainerMobileOptions::property::breakpoint = optional breakpoint: number | undefined
+interface-member ChartContainerMobileOptions::property::chartMode = optional chartMode: ChartMode | false | undefined
+interface-member ChartContainerMobileOptions::property::hideToolbar = optional hideToolbar: boolean | undefined
+interface-member ChartContainerMobileOptions::property::mobileInteraction = optional mobileInteraction: MobileInteractionProp | undefined
+interface-member ChartContainerMobileOptions::property::semantics = optional semantics: MobileVisualizationContract | undefined
+interface-member ChartContainerMobileOptions::property::standardControls = optional standardControls: MobileStandardControlsProps | import("./MobileStandardControls").MobileStandardControlsMode | undefined
+interface-member ChartContainerMobileOptions::property::summary = optional summary: React.ReactNode
+interface-member ChartContainerProps::property::actions = optional actions: undefined | {export?: boolean | {format?: "png" | "svg"; scale?: number; filename?: string;}; fullscreen?: boolean; copyConfig?: boolean | {format?: CopyFormat;}; dataSummary?: boolean;}
+interface-member ChartContainerProps::property::banner = optional banner: React.ReactNode
+interface-member ChartContainerProps::property::chartConfig = optional chartConfig: (Omit<ChartConfig, "createdAt" | "version"> & Partial<Pick<ChartConfig, "createdAt" | "version">>) | undefined
+interface-member ChartContainerProps::property::children = required children: React.ReactNode
+interface-member ChartContainerProps::property::className = optional className: string | undefined
+interface-member ChartContainerProps::property::controls = optional controls: React.ReactNode
+interface-member ChartContainerProps::property::dataAudit = optional dataAudit: ChartContainerDataAudit | undefined
+interface-member ChartContainerProps::property::describe = optional describe: boolean | undefined | {levels?: DescribeLevel[]; visible?: boolean;}
+interface-member ChartContainerProps::property::detailsPanel = optional detailsPanel: React.ReactNode
+interface-member ChartContainerProps::property::error = optional error: React.ReactNode
+interface-member ChartContainerProps::property::errorBoundary = optional errorBoundary: boolean | undefined
+interface-member ChartContainerProps::property::height = optional height: number | undefined
+interface-member ChartContainerProps::property::loading = optional loading: boolean | undefined
+interface-member ChartContainerProps::property::mobile = optional mobile: ChartContainerMobileOptions | boolean | undefined
+interface-member ChartContainerProps::property::mobileAudit = optional mobileAudit: ChartContainerMobileAudit | undefined
+interface-member ChartContainerProps::property::navigable = optional navigable: boolean | undefined | {visible?: boolean; maxLeaves?: number;}
+interface-member ChartContainerProps::property::notifications = optional notifications: ChartNotification[] | undefined
+interface-member ChartContainerProps::property::onNotificationDismiss = optional onNotificationDismiss: ((notification: ChartNotification, index: number) => void) | undefined
+interface-member ChartContainerProps::property::status = optional status: "error" | "live" | "paused" | "stale" | "static" | undefined
+interface-member ChartContainerProps::property::style = optional style: React.CSSProperties | undefined
+interface-member ChartContainerProps::property::subtitle = optional subtitle: string | undefined
+interface-member ChartContainerProps::property::title = optional title: React.ReactNode
+interface-member ChartContainerProps::property::width = optional width: number | string | undefined
+interface-member ChartDataProfile::property::candidates = required candidates: {x: FieldCandidate[]; y: FieldCandidate[]; size: FieldCandidate[]; category: FieldCandidate[]; series: FieldCandidate[]; time: FieldCandidate[];}
+interface-member ChartDataProfile::property::categoryCount = optional categoryCount: number | undefined
+interface-member ChartDataProfile::property::data = required data: readonly Datum[]
+interface-member ChartDataProfile::property::geo = optional geo: undefined | {features: ReadonlyArray<Datum>; points?: ReadonlyArray<Datum>; flows?: ReadonlyArray<Datum>;}
+interface-member ChartDataProfile::property::hasGeo = required hasGeo: boolean
+interface-member ChartDataProfile::property::hasHierarchy = required hasHierarchy: boolean
+interface-member ChartDataProfile::property::hasNetwork = required hasNetwork: boolean
+interface-member ChartDataProfile::property::hasRepeatedX = required hasRepeatedX: boolean
+interface-member ChartDataProfile::property::hasTimeAxis = required hasTimeAxis: boolean
+interface-member ChartDataProfile::property::hierarchy = optional hierarchy: Datum | undefined
+interface-member ChartDataProfile::property::monotonicX = required monotonicX: boolean
+interface-member ChartDataProfile::property::network = optional network: undefined | {nodes: ReadonlyArray<Datum>; edges: ReadonlyArray<Datum>;}
+interface-member ChartDataProfile::property::numericFields = optional numericFields: Readonly<Record<string, NumericFieldProfile>> | undefined
+interface-member ChartDataProfile::property::primary = required primary: {x?: string; y?: string; size?: string; category?: string; series?: string; time?: string;}
+interface-member ChartDataProfile::property::seriesCount = optional seriesCount: number | undefined
+interface-member ChartDataProfile::property::stackability = optional stackability: undefined | {seriesPerX: number; multiSeriesFraction: number; xColumns: number;}
+interface-member ChartDataProfile::property::uniqueXCount = optional uniqueXCount: number | undefined
+interface-member ChartDataProfile::property::xProvenance = required xProvenance: "named" | "none" | "scatter" | "time"
+interface-member ChartEditedEvent::property::changedProps = optional changedProps: string[] | undefined
+interface-member ChartEditedEvent::property::chartId = optional chartId: string | undefined
+interface-member ChartEditedEvent::property::component = required component: string
+interface-member ChartEditedEvent::property::type = required type: "chart-edited"
+interface-member ChartExportedEvent::property::component = required component: string
+interface-member ChartExportedEvent::property::format = required format: string
+interface-member ChartExportedEvent::property::type = required type: "chart-exported"
+interface-member ChartGridProps::property::chartDefaults = optional chartDefaults: Record<string, unknown> | undefined
+interface-member ChartGridProps::property::children = required children: React.ReactNode
+interface-member ChartGridProps::property::className = optional className: string | undefined
+interface-member ChartGridProps::property::columns = optional columns: "auto" | number | undefined
+interface-member ChartGridProps::property::gap = optional gap: number | undefined
+interface-member ChartGridProps::property::minCellWidth = optional minCellWidth: number | undefined
+interface-member ChartGridProps::property::mobileBreakpoint = optional mobileBreakpoint: number | undefined
+interface-member ChartGridProps::property::mobileColumns = optional mobileColumns: number | undefined
+interface-member ChartGridProps::property::style = optional style: React.CSSProperties | undefined
+interface-member ChartGridProps::property::tabletBreakpoint = optional tabletBreakpoint: number | undefined
+interface-member ChartGridProps::property::tabletColumns = optional tabletColumns: number | undefined
+interface-member ChartNotification::property::dismissible = optional dismissible: boolean | undefined
+interface-member ChartNotification::property::id = optional id: string | undefined
+interface-member ChartNotification::property::level = optional level: ChartNotificationLevel | undefined
+interface-member ChartNotification::property::message = required message: React.ReactNode
+interface-member ChartNotification::property::source = optional source: string | undefined
+interface-member ChartNotification::property::title = optional title: string | undefined
+interface-member ChartReaderGrounding::property::component = required component: string
+interface-member ChartReaderGrounding::property::description = required description: DescribeChartResult
+interface-member ChartReaderGrounding::property::facts = optional facts: ChartReaderGroundingFacts | undefined
+interface-member ChartReaderGrounding::property::intent = optional intent: ChartReaderGroundingIntent | undefined
+interface-member ChartReaderGrounding::property::physics = optional physics: PhysicsReaderGrounding | undefined
+interface-member ChartReaderGrounding::property::structure = optional structure: NavTreeNode | undefined
+interface-member ChartReaderGrounding::property::text = required text: string
+interface-member ChartReaderGroundingIntent::property::act = required act: CommunicativeAct
+interface-member ChartReaderGroundingIntent::property::family = optional family: ChartFamily | undefined
+interface-member ChartReaderGroundingIntent::property::intentScores = optional intentScores: Partial<Record<IntentId, number>> | undefined
+interface-member ChartReaderGroundingIntent::property::sentence = required sentence: string
+interface-member ChartReaderGroundingOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member ChartReaderGroundingOptions::property::capability = optional capability: ChartCapability | DescribeCapabilityContext | undefined
+interface-member ChartReaderGroundingOptions::property::includeStructure = optional includeStructure: boolean | undefined
+interface-member ChartReaderGroundingOptions::property::levels = optional levels: DescribeLevel[] | undefined
+interface-member ChartReaderGroundingOptions::property::locale = optional locale: string | undefined
+interface-member ChartReaderGroundingOptions::property::maxLeaves = optional maxLeaves: number | undefined
+interface-member ChartReaderGroundingOptions::property::physics = optional physics: PhysicsReaderGroundingInput | boolean | undefined
+interface-member ChartRecipeDefinition::property::accessibility = required accessibility: AccessibilityExpectations
+interface-member ChartRecipeDefinition::property::audience = optional audience: RecipeAudienceDefinition | undefined
+interface-member ChartRecipeDefinition::property::audienceFit = optional audienceFit: AudienceFitDefinition[] | undefined
+interface-member ChartRecipeDefinition::property::audit = optional audit: RecipeAuditExpectations | undefined
+interface-member ChartRecipeDefinition::property::caveats = optional caveats: string[] | undefined
+interface-member ChartRecipeDefinition::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member ChartRecipeDefinition::property::dataRoles = required dataRoles: DataRoleDefinition[]
+interface-member ChartRecipeDefinition::property::description = optional description: DescriptionStrategy<TDatum, TConfig> | undefined
+interface-member ChartRecipeDefinition::property::designContract = required designContract: DesignContractDefinition
+interface-member ChartRecipeDefinition::property::encodings = optional encodings: EncodingDefinition[] | undefined
+interface-member ChartRecipeDefinition::property::examples = optional examples: RecipeExample<TDatum, TConfig>[] | undefined
+interface-member ChartRecipeDefinition::property::frameFamily = required frameFamily: ChartRecipeFrameFamily
+interface-member ChartRecipeDefinition::property::id = required id: string
+interface-member ChartRecipeDefinition::property::intents = required intents: IntentDefinition[]
+interface-member ChartRecipeDefinition::property::layout = optional layout: CustomLayoutFunction<TDatum, TConfig> | RegisteredRecipeLayout | undefined
+interface-member ChartRecipeDefinition::property::layoutConfigSchema = optional layoutConfigSchema: SerializableSchema | undefined
+interface-member ChartRecipeDefinition::property::mobile = optional mobile: MobileDesignDefinition | undefined
+interface-member ChartRecipeDefinition::property::name = required name: string
+interface-member ChartRecipeDefinition::property::navigation = optional navigation: NavigationStrategy<TDatum, TConfig> | PortableNavigationStrategy | undefined
+interface-member ChartRecipeDefinition::property::portability = required portability: ChartRecipePortability
+interface-member ChartRecipeDefinition::property::portabilityConfig = optional portabilityConfig: RecipePortabilityConfig | undefined
+interface-member ChartRecipeDefinition::property::reception = optional reception: ReceptionDefinition | undefined
+interface-member ChartRecipeDefinition::property::version = optional version: string | undefined
+interface-member ChartRecipeProps::property::chartId = optional chartId: string | undefined
+interface-member ChartRecipeProps::property::className = optional className: string | undefined
+interface-member ChartRecipeProps::property::layoutConfig = optional layoutConfig: Record<string, unknown> | undefined
+interface-member ChartRecipeProps::property::recipe = optional recipe: ChartRecipeDefinition<Datum, Record<string, unknown>> | undefined
+interface-member ChartRecipeProps::property::recipeId = optional recipeId: string | undefined
+interface-member ChartRenderedEvent::property::chartId = optional chartId: string | undefined
+interface-member ChartRenderedEvent::property::component = required component: string
+interface-member ChartRenderedEvent::property::type = required type: "chart-rendered"
+interface-member ChartReplacedEvent::property::from = required from: string
+interface-member ChartReplacedEvent::property::reason = optional reason: string | undefined
+interface-member ChartReplacedEvent::property::to = required to: string
+interface-member ChartReplacedEvent::property::type = required type: "chart-replaced"
+interface-member ChartRubric::property::accuracy = required accuracy: number
+interface-member ChartRubric::property::familiarity = required familiarity: number
+interface-member ChartRubric::property::precision = required precision: number
+interface-member ChartScalePreference::property::bias = optional bias: number | undefined
+interface-member ChartScalePreference::property::maxBand = optional maxBand: ScaleBand | undefined
+interface-member ChartScalePreference::property::minBand = optional minBand: ScaleBand | undefined
+interface-member ChartScalePreference::property::reason = optional reason: string | undefined
+interface-member ChartToolDefinition::property::description = required description: string
+interface-member ChartToolDefinition::property::inputSchema = required inputSchema: Record<string, unknown>
+interface-member ChartToolDefinition::property::name = required name: string
+interface-member ChartToolOptions::property::components = optional components: readonly string[] | undefined
+interface-member ChartToolOptions::property::name = optional name: string | undefined
+interface-member ChartVariant::property::caveats = optional caveats: readonly string[] | undefined
+interface-member ChartVariant::property::component = optional component: string | undefined
+interface-member ChartVariant::property::description = optional description: string | undefined
+interface-member ChartVariant::property::intentDeltas = optional intentDeltas: Partial<Record<IntentId, number>> | undefined
+interface-member ChartVariant::property::key = required key: string
+interface-member ChartVariant::property::label = required label: string
+interface-member ChartVariant::property::props = required props: Record<string, unknown>
+interface-member ChartVariant::property::rubricDeltas = optional rubricDeltas: Partial<ChartRubric> | undefined
+interface-member ChartVariant::property::tags = optional tags: readonly string[] | undefined
+interface-member CheckedNumericContract::property::accessor = required readonly accessor: string
+interface-member CheckedNumericContract::property::allowMissing = required readonly allowMissing: boolean
+interface-member CheckedNumericContract::property::dataProp = required readonly dataProp: string
+interface-member CheckedNumericContract::property::domain = required readonly domain: boolean
+interface-member CheckedNumericContract::property::missingValue = optional readonly missingValue: number | undefined
+interface-member CheckedNumericContract::property::requirements = required readonly requirements: readonly NumericRequirement[]
+interface-member CheckedNumericContract::property::role = required readonly role: NumericFieldRole
+interface-member ClickEndObservation::property::type = required type: "click-end"
+interface-member ClickObservation::property::datum = required datum: Datum
+interface-member ClickObservation::property::type = required type: "click"
+interface-member ClickObservation::property::x = required x: number
+interface-member ClickObservation::property::y = required y: number
+interface-member ComputeAnnotationFreshnessOptions::property::dataExtent = optional dataExtent: readonly (Date | number | string)[] | undefined | {min: Date | number | string; max: Date | number | string;}
+interface-member ComputeAnnotationFreshnessOptions::property::now = optional now: Date | number | string | undefined
+interface-member ComputeAnnotationFreshnessOptions::property::thresholds = optional thresholds: LifecycleBandThresholds | undefined
+interface-member ContextLayoutProps::property::children = required children: React.ReactNode
+interface-member ContextLayoutProps::property::className = optional className: string | undefined
+interface-member ContextLayoutProps::property::context = required context: React.ReactNode
+interface-member ContextLayoutProps::property::contextSize = optional contextSize: number | undefined
+interface-member ContextLayoutProps::property::gap = optional gap: number | undefined
+interface-member ContextLayoutProps::property::mobileBreakpoint = optional mobileBreakpoint: number | undefined
+interface-member ContextLayoutProps::property::mobilePosition = optional mobilePosition: "bottom" | "preserve" | "top" | undefined
+interface-member ContextLayoutProps::property::position = optional position: "bottom" | "left" | "right" | "top" | undefined
+interface-member ContextLayoutProps::property::style = optional style: React.CSSProperties | undefined
+interface-member ControlAuditFinding::property::controlId = optional controlId: string | undefined
+interface-member ControlAuditFinding::property::id = required id: string
+interface-member ControlAuditFinding::property::message = required message: string
+interface-member ControlAuditFinding::property::remediation = optional remediation: string | undefined
+interface-member ControlAuditFinding::property::status = required status: ControlAuditStatus
+interface-member ControlAuditResult::property::findings = required findings: ControlAuditFinding[]
+interface-member ControlAuditResult::property::ok = required ok: boolean
+interface-member ConversationArcSink::method::clear = optional clear(): Promise<void> | void
+interface-member ConversationArcSink::method::flush = optional flush(events: readonly ConversationArcEvent[]): Promise<void> | void
+interface-member ConversationArcSink::method::load = optional load(): Promise<readonly ConversationArcEvent[]> | readonly ConversationArcEvent[]
+interface-member ConversationArcSink::method::record = optional record(event: ConversationArcEvent): Promise<void> | void
+interface-member ConversationArcStorageLike::method::getItem = required getItem(key: string): null | string
+interface-member ConversationArcStorageLike::method::removeItem = required removeItem(key: string): void
+interface-member ConversationArcStorageLike::method::setItem = required setItem(key: string, value: string): void
+interface-member ConversationArcStore::method::clear = required clear(): void
+interface-member ConversationArcStore::method::flush = required flush(): ConversationArcEvent[]
+interface-member ConversationArcStore::method::getEvents = required getEvents(): readonly ConversationArcEvent[]
+interface-member ConversationArcStore::method::record = required record(input: (Omit<import("./conversationArcTypes").AnnotationStatusChangedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").AnnotationStatusChangedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").AudienceSetEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").AudienceSetEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ChartAbandonedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ChartAbandonedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ChartEditedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ChartEditedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ChartExportedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ChartExportedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ChartRenderedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ChartRenderedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ChartReplacedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ChartReplacedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").InterrogationAnsweredEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").InterrogationAnsweredEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").InterrogationAskedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").InterrogationAskedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").NavBranchExpandedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").NavBranchExpandedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").NavNodeFocusedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").NavNodeFocusedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").ProposalRefusedEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").ProposalRefusedEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").RenderEvidenceEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").RenderEvidenceEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").SuggestionChosenEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").SuggestionChosenEvent, "sessionId" | "timestamp">>) | (Omit<import("./conversationArcTypes").SuggestionShownEvent, "sessionId" | "timestamp"> & Partial<Pick<import("./conversationArcTypes").SuggestionShownEvent, "sessionId" | "timestamp">>)): ConversationArcEvent | null
+interface-member ConversationArcStore::method::reset = required reset(): void
+interface-member ConversationArcStore::method::subscribe = required subscribe(listener: ConversationArcListener): () => void
+interface-member ConversationArcStore::property::capacity = required readonly capacity: number
+interface-member ConversationArcStore::property::enabled = required readonly enabled: boolean
+interface-member ConversationArcStore::property::sessionId = required readonly sessionId: null | string
+interface-member ConversationArcSummary::property::audiencesSeen = required audiencesSeen: string[]
+interface-member ConversationArcSummary::property::byType = required byType: Partial<Record<ConversationArcEventType, number>>
+interface-member ConversationArcSummary::property::componentsSeen = required componentsSeen: string[]
+interface-member ConversationArcSummary::property::durationMs = required durationMs: number
+interface-member ConversationArcSummary::property::lastAt = required lastAt: null | number
+interface-member ConversationArcSummary::property::latestArcId = optional latestArcId: string | undefined
+interface-member ConversationArcSummary::property::startedAt = required startedAt: null | number
+interface-member ConversationArcSummary::property::total = required total: number
+interface-member DashboardPanel::property::intent = required intent: IntentId
+interface-member DashboardPanel::property::suggestion = required suggestion: Suggestion
+interface-member DashboardSuggestion::property::intentsCovered = required intentsCovered: IntentId[]
+interface-member DashboardSuggestion::property::intentsMissing = required intentsMissing: IntentId[]
+interface-member DashboardSuggestion::property::panels = required panels: DashboardPanel[]
+interface-member DashboardSuggestion::property::profile = required profile: ChartDataProfile
+interface-member DashboardSuggestion::property::stretchPanels = required stretchPanels: StretchSuggestion[]
+interface-member DataAuditChartNotification::property::dismissible = required readonly dismissible: true
+interface-member DataAuditChartNotification::property::id = required readonly id: string
+interface-member DataAuditChartNotification::property::level = required readonly level: "error" | "warning"
+interface-member DataAuditChartNotification::property::message = required readonly message: string
+interface-member DataAuditChartNotification::property::source = required readonly source: "Semiotic data audit"
+interface-member DataAuditChartNotification::property::title = required readonly title: string
+interface-member DataAuditDiagnosis::property::count = optional readonly count: number | undefined
+interface-member DataAuditDiagnosis::property::domain = required readonly domain: "data"
+interface-member DataAuditDiagnosis::property::field = optional readonly field: string | undefined
+interface-member DataAuditDiagnosis::property::role = optional readonly role: NumericFieldRole | undefined
+interface-member DataAuditDiagnosis::property::rows = optional readonly rows: readonly number[] | undefined
+interface-member DataAuditNotificationOptions::property::errorsOnly = optional readonly errorsOnly: boolean | undefined
+interface-member DataAuditNotificationOptions::property::max = optional readonly max: number | undefined
+interface-member DataAuditResult::property::component = required readonly component: string
+interface-member DataAuditResult::property::contracts = required readonly contracts: readonly CheckedNumericContract[]
+interface-member DataAuditResult::property::diagnoses = required readonly diagnoses: readonly DataAuditDiagnosis[]
+interface-member DataAuditResult::property::ok = required readonly ok: boolean
+interface-member DataAuditResult::property::rowCount = required readonly rowCount: number
+interface-member DataAuditResult::property::summary = required readonly summary: {readonly fieldsChecked: number; readonly errors: number; readonly warnings: number;}
+interface-member DataQualityAnnotationOptions::property::anchor = optional anchor: AnnotationAnchor | undefined
+interface-member DataQualityAnnotationOptions::property::failColor = optional failColor: string | undefined
+interface-member DataQualityAnnotationOptions::property::fieldMap = optional fieldMap: Record<string, string> | undefined
+interface-member DataQualityAnnotationOptions::property::includePassed = optional includePassed: boolean | undefined
+interface-member DataQualityAnnotationOptions::property::passColor = optional passColor: string | undefined
+interface-member DataQualityAnnotationOptions::property::status = optional status: AnnotationStatus | undefined
+interface-member DataQualityAnnotationOptions::property::ttlHint = optional ttlHint: number | string | undefined
+interface-member DataQualityAnnotationOptions::property::valueAxis = optional valueAxis: "x" | "y" | undefined
+interface-member DataQualityAnnotationOptions::property::warnColor = optional warnColor: string | undefined
+interface-member DataQualityAnnotationsResult::property::annotations = required annotations: Annotated<Datum>[]
+interface-member DataQualityAnnotationsResult::property::unplaced = required unplaced: UnplacedDataQualityResult[]
+interface-member DataQualityProfile::property::completeness = optional completeness: Partial<Record<string, number>> | number | undefined
+interface-member DataQualityProfile::property::name = optional name: string | undefined
+interface-member DataQualityProfile::property::outliers = optional outliers: Partial<Record<string, number>> | number | undefined
+interface-member DataQualityProfile::property::typeHeterogeneity = optional typeHeterogeneity: Partial<Record<string, number>> | number | undefined
+interface-member DataQualityResult::property::at = optional at: number | string | undefined
+interface-member DataQualityResult::property::basis = optional basis: AnnotationBasis | undefined
+interface-member DataQualityResult::property::column = optional column: string | undefined
+interface-member DataQualityResult::property::confidence = optional confidence: number | undefined
+interface-member DataQualityResult::property::createdAt = optional createdAt: string | undefined
+interface-member DataQualityResult::property::dataVersion = optional dataVersion: string | undefined
+interface-member DataQualityResult::property::id = required id: string
+interface-member DataQualityResult::property::kind = required kind: DataQualityCheckKind
+interface-member DataQualityResult::property::label = optional label: string | undefined
+interface-member DataQualityResult::property::max = optional max: number | undefined
+interface-member DataQualityResult::property::message = optional message: string | undefined
+interface-member DataQualityResult::property::min = optional min: number | undefined
+interface-member DataQualityResult::property::name = optional name: string | undefined
+interface-member DataQualityResult::property::observedCount = optional observedCount: number | undefined
+interface-member DataQualityResult::property::source = optional source: "dbt" | "great-expectations" | (string & {}) | undefined
+interface-member DataQualityResult::property::status = required status: DataQualityStatus
+interface-member DataQualityResult::property::value = optional value: number | undefined
+interface-member DataRoleDefinition::property::accessor = optional accessor: string | undefined
+interface-member DataRoleDefinition::property::description = optional description: string | undefined
+interface-member DataRoleDefinition::property::field = optional field: string | undefined
+interface-member DataRoleDefinition::property::required = optional required: boolean | undefined
+interface-member DataRoleDefinition::property::role = required role: string
+interface-member DataRoleDefinition::property::semanticType = required semanticType: DataSemanticType
+interface-member DataRoleDefinition::property::source = optional source: string | undefined
+interface-member DataScaleProfile::property::cardinality = optional cardinality: Partial<Record<string, CardinalityBand | number>> | undefined
+interface-member DataScaleProfile::property::charts = optional charts: Partial<Record<string, ChartScalePreference>> | undefined
+interface-member DataScaleProfile::property::fields = optional fields: FieldBand | number | undefined
+interface-member DataScaleProfile::property::growth = optional growth: "appending" | "static" | "windowed" | undefined
+interface-member DataScaleProfile::property::name = optional name: string | undefined
+interface-member DataScaleProfile::property::rows = optional rows: ScaleBand | number | undefined
+interface-member DataScaleProfile::property::thresholds = optional thresholds: ScaleThresholds | undefined
+interface-member DataScaleProfile::property::typicalCardinality = optional typicalCardinality: CardinalityBand | number | undefined
+interface-member DataSummary::property::fields = required fields: Record<string, FieldSummary>
+interface-member DataSummary::property::rowCount = required rowCount: number
+interface-member DataSummary::property::sample = required sample: readonly Datum[]
+interface-member DateFieldSummary::property::max = required max: string
+interface-member DateFieldSummary::property::min = required min: string
+interface-member DateFieldSummary::property::type = required type: "date"
+interface-member DbtArtifacts::property::runResults = optional runResults: undefined | {metadata?: DbtMetadata; results?: ReadonlyArray<DbtRunResult>;}
+interface-member DbtArtifacts::property::sources = optional sources: undefined | {metadata?: DbtMetadata; results?: ReadonlyArray<DbtFreshnessResult>;}
+interface-member DeclaredRecipeSemantics::property::accessibilityExpectations = required accessibilityExpectations: string[]
+interface-member DeclaredRecipeSemantics::property::dataRoles = required dataRoles: string[]
+interface-member DeclaredRecipeSemantics::property::designContractDeclared = required designContractDeclared: boolean
+interface-member DeclaredRecipeSemantics::property::fallbackDeclared = required fallbackDeclared: boolean
+interface-member DeclaredRecipeSemantics::property::intents = required intents: string[]
+interface-member DescribeCapabilityContext::property::act = optional act: CommunicativeAct | undefined
+interface-member DescribeCapabilityContext::property::family = optional family: ChartFamily | undefined
+interface-member DescribeCapabilityContext::property::intentScores = optional intentScores: Partial<Record<IntentId, number>> | undefined
+interface-member DescribeChartOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member DescribeChartOptions::property::capability = optional capability: ChartCapability | DescribeCapabilityContext | undefined
+interface-member DescribeChartOptions::property::includeCaveats = optional includeCaveats: boolean | undefined
+interface-member DescribeChartOptions::property::levels = optional levels: DescribeLevel[] | undefined
+interface-member DescribeChartOptions::property::locale = optional locale: string | undefined
+interface-member DescribeChartOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member DescribeChartResult::property::annotations = optional annotations: string | undefined
+interface-member DescribeChartResult::property::caveats = optional caveats: string[] | undefined
+interface-member DescribeChartResult::property::levels = required levels: {l1?: string; l2?: string; l3?: string; l4?: string;}
+interface-member DescribeChartResult::property::text = required text: string
+interface-member DescribeRecipeChartOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member DescribeRecipeChartOptions::property::includeCaveats = optional includeCaveats: boolean | undefined
+interface-member DescribeRecipeChartOptions::property::levels = optional levels: DescribeLevel[] | undefined
+interface-member DescribeRecipeChartOptions::property::locale = optional locale: string | undefined
+interface-member DesignContractDefinition::property::caveats = optional caveats: string[] | undefined
+interface-member DesignContractDefinition::property::defaultAlternative = optional defaultAlternative: string | undefined
+interface-member DesignContractDefinition::property::misuse = optional misuse: string[] | undefined
+interface-member DesignContractDefinition::property::tradeoff = optional tradeoff: string | undefined
+interface-member DesignContractDefinition::property::whyCustom = required whyCustom: string
+interface-member DesignContractDefinition::property::whyNotDefault = optional whyNotDefault: string | undefined
+interface-member DesignContractDefinition::property::whyThisForm = optional whyThisForm: string | undefined
+interface-member DetailsPanelProps::property::chartId = optional chartId: string | undefined
+interface-member DetailsPanelProps::property::children = required children: (datum: Datum, observation: ClickObservation) => React.ReactNode
+interface-member DetailsPanelProps::property::className = optional className: string | undefined
+interface-member DetailsPanelProps::property::dismissOnEmpty = optional dismissOnEmpty: boolean | undefined
+interface-member DetailsPanelProps::property::observation = optional observation: ChartObservation | null | undefined
+interface-member DetailsPanelProps::property::onToggle = optional onToggle: ((open: boolean) => void) | undefined
+interface-member DetailsPanelProps::property::position = optional position: "bottom" | "overlay" | "right" | undefined
+interface-member DetailsPanelProps::property::showClose = optional showClose: boolean | undefined
+interface-member DetailsPanelProps::property::size = optional size: number | undefined
+interface-member DetailsPanelProps::property::style = optional style: React.CSSProperties | undefined
+interface-member DetailsPanelProps::property::trigger = optional trigger: "click" | "hover" | undefined
+interface-member Diagnosis::property::code = required code: string
+interface-member Diagnosis::property::count = optional count: number | undefined
+interface-member Diagnosis::property::domain = optional domain: "accessibility" | "configuration" | "data" | "render" | undefined
+interface-member Diagnosis::property::field = optional field: string | undefined
+interface-member Diagnosis::property::fix = required fix: string
+interface-member Diagnosis::property::message = required message: string
+interface-member Diagnosis::property::role = optional role: string | undefined
+interface-member Diagnosis::property::rows = optional rows: readonly number[] | undefined
+interface-member Diagnosis::property::severity = required severity: "error" | "warning"
+interface-member DiagnosisResult::property::diagnoses = required diagnoses: Diagnosis[]
+interface-member DiagnosisResult::property::ok = required ok: boolean
+interface-member EffectiveScale::property::cardinalityBand = optional cardinalityBand: CardinalityBand | undefined
+interface-member EffectiveScale::property::fieldBand = required fieldBand: FieldBand
+interface-member EffectiveScale::property::fields = required fields: number
+interface-member EffectiveScale::property::growth = required growth: "appending" | "static" | "windowed"
+interface-member EffectiveScale::property::rowBand = required rowBand: ScaleBand
+interface-member EffectiveScale::property::rows = required rows: number
+interface-member EffectiveScale::property::rowsSource = required rowsSource: "declared" | "measured"
+interface-member EffectiveScale::property::typicalCardinality = optional typicalCardinality: number | undefined
+interface-member EnableConversationArcOptions::property::capacity = optional capacity: number | undefined
+interface-member EnableConversationArcOptions::property::sessionId = optional sessionId: string | undefined
+interface-member EncodingDefinition::property::channel = required channel: string
+interface-member EncodingDefinition::property::meaning = required meaning: string
+interface-member EncodingDefinition::property::redundantWith = optional redundantWith: string[] | undefined
+interface-member EncodingDefinition::property::role = required role: string | string[]
+interface-member EvaluateVariantProposalOptions::property::baselineComponent = optional baselineComponent: string | undefined
+interface-member EvaluateVariantProposalOptions::property::intent = optional intent: IntentId | readonly IntentId[] | undefined
+interface-member ExplainCapabilityFitResult::property::fitting = required fitting: Suggestion[]
+interface-member ExplainCapabilityFitResult::property::profile = required profile: ChartDataProfile
+interface-member ExplainCapabilityFitResult::property::rejected = required rejected: RejectedCapability[]
+interface-member FieldCandidate::property::distinctCount = optional distinctCount: number | undefined
+interface-member FieldCandidate::property::field = required field: string
+interface-member FieldCandidate::property::kind = required kind: FieldKind
+interface-member FieldCandidate::property::monotonic = optional monotonic: boolean | undefined
+interface-member FieldCandidate::property::quality = required quality: number
+interface-member FieldTypeChange::property::field = required field: string
+interface-member FieldTypeChange::property::from = required from: FieldKind
+interface-member FieldTypeChange::property::to = required to: FieldKind
+interface-member FocusObservation::property::datum = required datum: Datum
+interface-member FocusObservation::property::inputType = required inputType: "keyboard" | "navigation-tree" | "pointer"
+interface-member FocusObservation::property::type = required type: "focus"
+interface-member ForecastConfig::property::_groupBy = optional _groupBy: string | undefined
+interface-member ForecastConfig::property::anomalyColor = optional anomalyColor: ((datum: Datum) => string) | string | undefined
+interface-member ForecastConfig::property::anomalyRadius = optional anomalyRadius: ((datum: Datum) => number) | number | undefined
+interface-member ForecastConfig::property::anomalyStyle = optional anomalyStyle: ((datum: Datum) => Datum) | Datum | undefined
+interface-member ForecastConfig::property::bandOpacity = optional bandOpacity: number | undefined
+interface-member ForecastConfig::property::bandwidth = optional bandwidth: number | undefined
+interface-member ForecastConfig::property::color = optional color: string | undefined
+interface-member ForecastConfig::property::confidence = optional confidence: number | undefined
+interface-member ForecastConfig::property::confidenceAccessor = optional confidenceAccessor: ((d: Datum) => number) | string | undefined
+interface-member ForecastConfig::property::forecastDasharray = optional forecastDasharray: string | undefined
+interface-member ForecastConfig::property::forecastOpacity = optional forecastOpacity: number | undefined
+interface-member ForecastConfig::property::isAnomaly = optional isAnomaly: ((d: Datum) => boolean) | string | undefined
+interface-member ForecastConfig::property::isForecast = optional isForecast: ((d: Datum) => boolean) | string | undefined
+interface-member ForecastConfig::property::isTraining = optional isTraining: ((d: Datum) => boolean) | string | undefined
+interface-member ForecastConfig::property::label = optional label: string | undefined
+interface-member ForecastConfig::property::lowerBounds = optional lowerBounds: ((d: Datum) => number) | string | undefined
+interface-member ForecastConfig::property::method = optional method: "linear" | "loess" | undefined
+interface-member ForecastConfig::property::steps = optional steps: number | undefined
+interface-member ForecastConfig::property::trainDasharray = optional trainDasharray: string | undefined
+interface-member ForecastConfig::property::trainEnd = optional trainEnd: number | undefined
+interface-member ForecastConfig::property::trainLinecap = optional trainLinecap: string | undefined
+interface-member ForecastConfig::property::trainOpacity = optional trainOpacity: number | undefined
+interface-member ForecastConfig::property::trainStroke = optional trainStroke: string | undefined
+interface-member ForecastConfig::property::trainUnderline = optional trainUnderline: "lighten" | boolean | undefined
+interface-member ForecastConfig::property::uncertaintyOpacity = optional uncertaintyOpacity: boolean | undefined | {min?: number; max?: number;}
+interface-member ForecastConfig::property::upperBounds = optional upperBounds: ((d: Datum) => number) | string | undefined
+interface-member GEValidationResult::property::meta = optional meta: undefined | {[key: string]: unknown; run_id?: string | {run_name?: string; run_time?: string;};}
+interface-member GEValidationResult::property::results = optional results: readonly GEResultEntry[] | undefined
+interface-member GEValidationResult::property::statistics = optional statistics: undefined | {evaluated_expectations?: number; successful_expectations?: number;}
+interface-member GEValidationResult::property::success = optional success: boolean | undefined
+interface-member HoverEndObservation::property::type = required type: "hover-end"
+interface-member HoverObservation::property::datum = required datum: Datum
+interface-member HoverObservation::property::type = required type: "hover"
+interface-member HoverObservation::property::x = required x: number
+interface-member HoverObservation::property::y = required y: number
+interface-member IndexedDBConversationArcSinkOptions::property::dbName = optional dbName: string | undefined
+interface-member IndexedDBConversationArcSinkOptions::property::indexedDB = optional indexedDB: IDBFactory | undefined
+interface-member IndexedDBConversationArcSinkOptions::property::maxEvents = optional maxEvents: number | undefined
+interface-member IndexedDBConversationArcSinkOptions::property::storeName = optional storeName: string | undefined
+interface-member InferIntentResult::property::alternates = required alternates: readonly {intent: IntentId; confidence: number;}[]
+interface-member InferIntentResult::property::confidence = required confidence: number
+interface-member InferIntentResult::property::intent = required intent: IntentId
+interface-member IntentDescriptor::property::description = required description: string
+interface-member IntentDescriptor::property::familyHint = optional familyHint: "categorical" | "distribution" | "flow" | "geo" | "hierarchy" | "network" | "relationship" | "time-series" | undefined
+interface-member IntentDescriptor::property::id = required id: IntentId
+interface-member IntentDescriptor::property::label = required label: string
+interface-member IntentManifest::property::accessibility = optional accessibility: undefined | {description?: string; navigation?: boolean; dataFallback?: boolean; manualChecks?: string[];}
+interface-member IntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
+interface-member IntentManifest::property::author = optional author: string | undefined
+interface-member IntentManifest::property::chartId = required chartId: string
+interface-member IntentManifest::property::createdAt = optional createdAt: string | undefined
+interface-member IntentManifest::property::designContract = optional designContract: undefined | {chartFamily?: string; whyThisForm?: string; whyNotDefault?: string; risks?: string[]; misuse?: string[];}
+interface-member IntentManifest::property::ididVersion = required ididVersion: string
+interface-member IntentManifest::property::intent = required intent: {primary: string; secondary?: string[]; communicativeAct?: string;}
+interface-member IntentManifest::property::lifecycle = optional lifecycle: undefined | {staleAfter?: string; refreshPolicy?: string; annotationStatus?: string;}
+interface-member IntentManifest::property::provenance = optional provenance: undefined | {dataSources?: string[]; code?: string; reviewStatus?: string; generatedBy?: string;}
+interface-member IntentManifest::property::reception = optional reception: undefined | {channels: string[]; strengths?: string[]; risks?: string[]; scaffolds?: string[]; memorableForm?: boolean;}
+interface-member IntentManifest::property::title = optional title: string | undefined
+interface-member IntentManifestFromRecipeOptions::property::chartId = required chartId: string
+interface-member IntentManifestFromRecipeOptions::property::dataSources = optional dataSources: string[] | undefined
+interface-member IntentManifestFromRecipeOptions::property::description = optional description: string | undefined
+interface-member IntentManifestFromRecipeOptions::property::reviewStatus = optional reviewStatus: string | undefined
+interface-member IntentManifestFromRecipeOptions::property::title = optional title: string | undefined
+interface-member IntentMarkProps::property::className = optional className: string | undefined
+interface-member IntentMarkProps::property::label = optional label: string | undefined
+interface-member IntentMarkProps::property::manifest = required manifest: IntentManifest
+interface-member IntentMarkProps::property::showSummary = optional showSummary: boolean | undefined
+interface-member InterrogationAnsweredEvent::property::annotationCount = optional annotationCount: number | undefined
+interface-member InterrogationAnsweredEvent::property::answer = optional answer: string | undefined
+interface-member InterrogationAnsweredEvent::property::component = optional component: string | undefined
+interface-member InterrogationAnsweredEvent::property::error = optional error: boolean | undefined
+interface-member InterrogationAnsweredEvent::property::latencyMs = optional latencyMs: number | undefined
+interface-member InterrogationAnsweredEvent::property::type = required type: "interrogation-answered"
+interface-member InterrogationAskedEvent::property::component = optional component: string | undefined
+interface-member InterrogationAskedEvent::property::contextSize = optional contextSize: number | undefined
+interface-member InterrogationAskedEvent::property::query = required query: string
+interface-member InterrogationAskedEvent::property::type = required type: "interrogation-asked"
+interface-member InterrogationContext::property::componentName = optional componentName: string | undefined
+interface-member InterrogationContext::property::data = required data: readonly Datum[]
+interface-member InterrogationContext::property::focus = optional focus: InterrogationFocus | undefined
+interface-member InterrogationContext::property::grounding = optional grounding: ChartReaderGrounding | undefined
+interface-member InterrogationContext::property::profile = optional profile: ChartDataProfile | undefined
+interface-member InterrogationContext::property::props = optional props: Record<string, unknown> | undefined
+interface-member InterrogationContext::property::suggestions = optional suggestions: readonly Suggestion[] | undefined
+interface-member InterrogationContext::property::summary = required summary: DataSummary
+interface-member InterrogationFocus::property::datum = required datum: Datum
+interface-member InterrogationFocus::property::source = optional source: "click" | "hover" | "manual" | "selection" | undefined
+interface-member InterrogationFocus::property::x = optional x: number | undefined
+interface-member InterrogationFocus::property::y = optional y: number | undefined
+interface-member InterrogationMessage::property::role = required role: "assistant" | "user"
+interface-member InterrogationMessage::property::text = required text: string
+interface-member InterrogationResult::property::annotations = optional annotations: readonly Datum[] | undefined
+interface-member InterrogationResult::property::answer = required answer: string
+interface-member LifecycleBandThresholds::property::aging = optional aging: number | undefined
+interface-member LifecycleBandThresholds::property::fresh = optional fresh: number | undefined
+interface-member LifecycleBandThresholds::property::stale = optional stale: number | undefined
+interface-member LinkedChartsProps::property::children = required children: React.ReactNode
+interface-member LinkedChartsProps::property::legendField = optional legendField: string | undefined
+interface-member LinkedChartsProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member LinkedChartsProps::property::legendPosition = optional legendPosition: "bottom" | "top" | undefined
+interface-member LinkedChartsProps::property::legendSelectionName = optional legendSelectionName: string | undefined
+interface-member LinkedChartsProps::property::selections = optional selections: Record<string, {resolution?: ResolutionMode;}> | undefined
+interface-member LinkedChartsProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LiteracyTargetDefinition::property::concept = required concept: string
+interface-member LiteracyTargetDefinition::property::rationale = required rationale: string
+interface-member LoadConversationArcOptions::property::append = optional append: boolean | undefined
+interface-member LoadConversationArcOptions::property::capacity = optional capacity: number | undefined
+interface-member LoadConversationArcOptions::property::enabled = optional enabled: boolean | undefined
+interface-member LoadConversationArcOptions::property::sessionId = optional sessionId: string | undefined
+interface-member LocalStorageConversationArcSinkOptions::property::key = optional key: string | undefined
+interface-member LocalStorageConversationArcSinkOptions::property::maxEvents = optional maxEvents: number | undefined
+interface-member LocalStorageConversationArcSinkOptions::property::storage = optional storage: ConversationArcStorageLike | undefined
+interface-member MobileAnnotationCalloutListProps::property::className = optional className: string | undefined
+interface-member MobileAnnotationCalloutListProps::property::empty = optional empty: React.ReactNode
+interface-member MobileAnnotationCalloutListProps::property::items = required items: readonly MobileAnnotationCalloutItem[]
+interface-member MobileAnnotationCalloutListProps::property::ordered = optional ordered: boolean | undefined
+interface-member MobileAnnotationCalloutListProps::property::renderItem = optional renderItem: ((item: MobileAnnotationCalloutItem, index: number) => React.ReactNode) | undefined
+interface-member MobileAnnotationCalloutListProps::property::style = optional style: React.CSSProperties | undefined
+interface-member MobileAnnotationCalloutListProps::property::title = optional title: React.ReactNode
+interface-member MobileChartChip::property::description = optional description: React.ReactNode
+interface-member MobileChartChip::property::disabled = optional disabled: boolean | undefined
+interface-member MobileChartChip::property::id = required id: string
+interface-member MobileChartChip::property::label = required label: React.ReactNode
+interface-member MobileChartContainerProps::property::activeChip = optional activeChip: string | undefined
+interface-member MobileChartContainerProps::property::allowHorizontalScroll = optional allowHorizontalScroll: boolean | undefined
+interface-member MobileChartContainerProps::property::breakpoint = optional breakpoint: number | undefined
+interface-member MobileChartContainerProps::property::chartDefaults = optional chartDefaults: Record<string, unknown> | undefined
+interface-member MobileChartContainerProps::property::chartMode = optional chartMode: ChartMode | false | undefined
+interface-member MobileChartContainerProps::property::chips = optional chips: MobileChartChip[] | undefined
+interface-member MobileChartContainerProps::property::detail = optional detail: React.ReactNode
+interface-member MobileChartContainerProps::property::detailMode = optional detailMode: MobileChartDetailMode | undefined
+interface-member MobileChartContainerProps::property::detailTitle = optional detailTitle: React.ReactNode
+interface-member MobileChartContainerProps::property::hideToolbar = optional hideToolbar: boolean | undefined
+interface-member MobileChartContainerProps::property::initialDetailOpen = optional initialDetailOpen: boolean | undefined
+interface-member MobileChartContainerProps::property::mobile = optional mobile: ChartContainerMobileOptions | undefined
+interface-member MobileChartContainerProps::property::mobileInteraction = optional mobileInteraction: MobileInteractionProp | undefined
+interface-member MobileChartContainerProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
+interface-member MobileChartContainerProps::property::mobileSummary = optional mobileSummary: React.ReactNode
+interface-member MobileChartContainerProps::property::onChipChange = optional onChipChange: ((chip: MobileChartChip) => void) | undefined
+interface-member MobileInteractionConfig::property::brushHandleSize = optional brushHandleSize: number | undefined
+interface-member MobileInteractionConfig::property::clearSelection = optional clearSelection: MobileClearSelectionBehavior | undefined
+interface-member MobileInteractionConfig::property::enabled = optional enabled: boolean | undefined
+interface-member MobileInteractionConfig::property::snap = optional snap: MobileSnapBehavior | undefined
+interface-member MobileInteractionConfig::property::standardControls = optional standardControls: MobileStandardControlsMode | undefined
+interface-member MobileInteractionConfig::property::tapToLockTooltip = optional tapToLockTooltip: boolean | undefined
+interface-member MobileInteractionConfig::property::tapToSelect = optional tapToSelect: boolean | undefined
+interface-member MobileInteractionConfig::property::targetSize = optional targetSize: number | undefined
+interface-member MobileStandardBrushControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardBrushControls::property::domain = optional domain: [number, number] | undefined
+interface-member MobileStandardBrushControls::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
+interface-member MobileStandardBrushControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardBrushControls::property::onChange = optional onChange: ((value: [number, number]) => void) | undefined
+interface-member MobileStandardBrushControls::property::onClear = optional onClear: (() => void) | undefined
+interface-member MobileStandardBrushControls::property::step = optional step: number | undefined
+interface-member MobileStandardBrushControls::property::value = optional value: [number, number] | undefined
+interface-member MobileStandardControlLegendItem::property::active = optional active: boolean | undefined
+interface-member MobileStandardControlLegendItem::property::color = optional color: string | undefined
+interface-member MobileStandardControlLegendItem::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardControlLegendItem::property::id = required id: string
+interface-member MobileStandardControlLegendItem::property::label = optional label: React.ReactNode
+interface-member MobileStandardControlsProps::property::ariaLabel = optional ariaLabel: string | undefined
+interface-member MobileStandardControlsProps::property::brush = optional brush: MobileStandardBrushControls | undefined
+interface-member MobileStandardControlsProps::property::className = optional className: string | undefined
+interface-member MobileStandardControlsProps::property::compact = optional compact: boolean | undefined
+interface-member MobileStandardControlsProps::property::controls = optional controls: MobileStandardControlsMode | undefined
+interface-member MobileStandardControlsProps::property::legend = optional legend: MobileStandardLegendControls | undefined
+interface-member MobileStandardControlsProps::property::style = optional style: React.CSSProperties | undefined
+interface-member MobileStandardControlsProps::property::targetSize = optional targetSize: number | undefined
+interface-member MobileStandardControlsProps::property::zoom = optional zoom: MobileStandardZoomControls | undefined
+interface-member MobileStandardLegendControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardLegendControls::property::items = optional items: MobileStandardControlLegendItem[] | undefined
+interface-member MobileStandardLegendControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardLegendControls::property::onHideAll = optional onHideAll: (() => void) | undefined
+interface-member MobileStandardLegendControls::property::onShowAll = optional onShowAll: (() => void) | undefined
+interface-member MobileStandardLegendControls::property::onToggle = optional onToggle: ((id: string, active: boolean) => void) | undefined
+interface-member MobileStandardZoomControls::property::disabled = optional disabled: boolean | undefined
+interface-member MobileStandardZoomControls::property::label = optional label: React.ReactNode
+interface-member MobileStandardZoomControls::property::onReset = optional onReset: (() => void) | undefined
+interface-member MobileStandardZoomControls::property::onZoomIn = optional onZoomIn: (() => void) | undefined
+interface-member MobileStandardZoomControls::property::onZoomOut = optional onZoomOut: (() => void) | undefined
+interface-member MobileVisualizationAuditResult::property::component = required component: string
+interface-member MobileVisualizationAuditResult::property::findings = required findings: MobileVisualizationFinding[]
+interface-member MobileVisualizationAuditResult::property::ok = required ok: boolean
+interface-member MobileVisualizationAuditResult::property::reference = required reference: string
+interface-member MobileVisualizationAuditResult::property::summary = required summary: {highRisk: number; warnings: number; manual: number; passes: number;}
+interface-member MobileVisualizationAuditResult::property::viewportWidth = required viewportWidth: number
+interface-member MobileVisualizationContract::property::breakpoints = optional breakpoints: number[] | undefined
+interface-member MobileVisualizationContract::property::custom = optional custom: MobileVisualizationCustomContract | undefined
+interface-member MobileVisualizationContract::property::interaction = optional interaction: MobileVisualizationInteractionContract | undefined
+interface-member MobileVisualizationContract::property::labels = optional labels: MobileVisualizationLabelContract | undefined
+interface-member MobileVisualizationContract::property::maxAnnotations = optional maxAnnotations: number | undefined
+interface-member MobileVisualizationContract::property::maxMarks = optional maxMarks: number | undefined
+interface-member MobileVisualizationContract::property::minViewportWidth = optional minViewportWidth: number | undefined
+interface-member MobileVisualizationContract::property::minimumHitTarget = optional minimumHitTarget: number | undefined
+interface-member MobileVisualizationContract::property::responsive = optional responsive: boolean | undefined
+interface-member MobileVisualizationContract::property::strategy = optional strategy: string | undefined
+interface-member MobileVisualizationContract::property::summary = optional summary: boolean | string | undefined
+interface-member MobileVisualizationContract::property::supportsResponsiveLayout = optional supportsResponsiveLayout: boolean | undefined
+interface-member MobileVisualizationCustomContract::property::dataBearingSceneNodes = optional dataBearingSceneNodes: boolean | undefined
+interface-member MobileVisualizationCustomContract::property::navigationGranularity = optional navigationGranularity: string | undefined
+interface-member MobileVisualizationCustomContract::property::stableIds = optional stableIds: boolean | undefined
+interface-member MobileVisualizationFinding::property::category = required category: MobileAuditCategory
+interface-member MobileVisualizationFinding::property::fix = optional fix: string | undefined
+interface-member MobileVisualizationFinding::property::id = required id: string
+interface-member MobileVisualizationFinding::property::impact = required impact: MobileAuditImpact
+interface-member MobileVisualizationFinding::property::message = required message: string
+interface-member MobileVisualizationFinding::property::status = required status: MobileAuditStatus
+interface-member MobileVisualizationInteractionContract::property::alternatives = optional alternatives: string[] | undefined
+interface-member MobileVisualizationInteractionContract::property::hoverFallback = optional hoverFallback: string | undefined
+interface-member MobileVisualizationInteractionContract::property::primary = optional primary: string | undefined
+interface-member MobileVisualizationInteractionContract::property::targetSize = optional targetSize: number | undefined
+interface-member MobileVisualizationLabelContract::property::minFontSize = optional minFontSize: number | undefined
+interface-member MobileVisualizationLabelContract::property::strategy = optional strategy: string | undefined
+interface-member NavBranchExpandedEvent::property::chartId = optional chartId: string | undefined
+interface-member NavBranchExpandedEvent::property::expanded = required expanded: boolean
+interface-member NavBranchExpandedEvent::property::level = required level: number
+interface-member NavBranchExpandedEvent::property::nodeId = required nodeId: string
+interface-member NavBranchExpandedEvent::property::role = required role: string
+interface-member NavBranchExpandedEvent::property::type = required type: "nav-branch-expanded"
+interface-member NavNodeFocusedEvent::property::chartId = optional chartId: string | undefined
+interface-member NavNodeFocusedEvent::property::label = optional label: string | undefined
+interface-member NavNodeFocusedEvent::property::level = required level: number
+interface-member NavNodeFocusedEvent::property::nodeId = required nodeId: string
+interface-member NavNodeFocusedEvent::property::role = required role: string
+interface-member NavNodeFocusedEvent::property::type = required type: "nav-node-focused"
+interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
+interface-member NavTreeNode::property::datum = optional datum: Datum | null | undefined
+interface-member NavTreeNode::property::id = required id: string
+interface-member NavTreeNode::property::label = required label: string
+interface-member NavTreeNode::property::level = required level: number
+interface-member NavTreeNode::property::role = required role: NavTreeRole
+interface-member NavTreeNode::property::value = optional value: number | undefined
+interface-member NumericAggregateContract::property::defaultGroupAccessor = optional readonly defaultGroupAccessor: string | undefined
+interface-member NumericAggregateContract::property::groupAccessor = optional readonly groupAccessor: string | undefined
+interface-member NumericAggregateContract::property::kind = required readonly kind: "normalized-total" | "positive-total"
+interface-member NumericAggregateContract::property::role = required readonly role: NumericFieldRole
+interface-member NumericAggregateContract::property::whenProp = optional readonly whenProp: string | undefined
+interface-member NumericContracts::property::aggregates = optional readonly aggregates: readonly NumericAggregateContract[] | undefined
+interface-member NumericContracts::property::fields = required readonly fields: readonly NumericFieldContract[]
+interface-member NumericFieldContract::property::accessor = required readonly accessor: string
+interface-member NumericFieldContract::property::allowMissing = optional readonly allowMissing: boolean | undefined
+interface-member NumericFieldContract::property::dataProp = optional readonly dataProp: string | undefined
+interface-member NumericFieldContract::property::defaultAccessor = optional readonly defaultAccessor: string | undefined
+interface-member NumericFieldContract::property::defaultNestedDataAccessor = optional readonly defaultNestedDataAccessor: string | undefined
+interface-member NumericFieldContract::property::domain = optional readonly domain: boolean | undefined
+interface-member NumericFieldContract::property::missingValue = optional readonly missingValue: number | undefined
+interface-member NumericFieldContract::property::nestedDataAccessorProp = optional readonly nestedDataAccessorProp: string | undefined
+interface-member NumericFieldContract::property::requirements = optional readonly requirements: readonly NumericRequirement[] | undefined
+interface-member NumericFieldContract::property::role = required readonly role: NumericFieldRole
+interface-member NumericFieldContract::property::temporalValues = optional readonly temporalValues: "date" | "date-like" | undefined
+interface-member NumericFieldContract::property::whenProps = optional readonly whenProps: readonly string[] | undefined
+interface-member NumericFieldProfile::property::field = required readonly field: string
+interface-member NumericFieldProfile::property::finiteCount = required readonly finiteCount: number
+interface-member NumericFieldProfile::property::fractionalCount = required readonly fractionalCount: number
+interface-member NumericFieldProfile::property::max = optional readonly max: number | undefined
+interface-member NumericFieldProfile::property::median = optional readonly median: number | undefined
+interface-member NumericFieldProfile::property::min = optional readonly min: number | undefined
+interface-member NumericFieldProfile::property::missingCount = required readonly missingCount: number
+interface-member NumericFieldProfile::property::negativeCount = required readonly negativeCount: number
+interface-member NumericFieldProfile::property::nonFiniteCount = required readonly nonFiniteCount: number
+interface-member NumericFieldProfile::property::nonNumericCount = required readonly nonNumericCount: number
+interface-member NumericFieldProfile::property::observedCount = required readonly observedCount: number
+interface-member NumericFieldProfile::property::q1 = optional readonly q1: number | undefined
+interface-member NumericFieldProfile::property::q3 = optional readonly q3: number | undefined
+interface-member NumericFieldProfile::property::zeroCount = required readonly zeroCount: number
+interface-member NumericFieldSummary::property::max = required max: number
+interface-member NumericFieldSummary::property::mean = required mean: number
+interface-member NumericFieldSummary::property::median = required median: number
+interface-member NumericFieldSummary::property::min = required min: number
+interface-member NumericFieldSummary::property::type = required type: "numeric"
+interface-member ObservationReadoutProps::property::as = optional as: "div" | "output" | "p" | undefined
+interface-member ObservationReadoutProps::property::atomic = optional atomic: boolean | undefined
+interface-member ObservationReadoutProps::property::chartId = optional chartId: string | undefined
+interface-member ObservationReadoutProps::property::children = required children: (datum: TDatum, observation: ChartObservation) => React.ReactNode
+interface-member ObservationReadoutProps::property::className = optional className: string | undefined
+interface-member ObservationReadoutProps::property::fallback = optional fallback: React.ReactNode
+interface-member ObservationReadoutProps::property::live = optional live: "assertive" | "off" | "polite" | undefined
+interface-member ObservationReadoutProps::property::observation = optional observation: ChartObservation | null | undefined
+interface-member ObservationReadoutProps::property::style = optional style: React.CSSProperties | undefined
+interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member ObservedAuditFinding::property::category = required category: "accessibility" | "coverage" | "geometry" | "identity" | "interaction" | "manual-at" | "visual"
+interface-member ObservedAuditFinding::property::evidence = optional evidence: Record<string, unknown> | undefined
+interface-member ObservedAuditFinding::property::id = required id: string
+interface-member ObservedAuditFinding::property::message = required message: string
+interface-member ObservedAuditFinding::property::remediation = optional remediation: string | undefined
+interface-member ObservedAuditFinding::property::status = required status: ObservedAuditStatus
+interface-member ObservedSceneAuditResult::property::declaredSemantics = required declaredSemantics: DeclaredRecipeSemantics
+interface-member ObservedSceneAuditResult::property::manualATChecks = required manualATChecks: ObservedAuditFinding[]
+interface-member ObservedSceneAuditResult::property::observedSceneEvidence = required observedSceneEvidence: ObservedAuditFinding[]
+interface-member ObservedSceneAuditResult::property::ok = required ok: boolean
+interface-member ObservedSceneAuditResult::property::recipeId = required recipeId: string
+interface-member ObservedSceneAuditResult::property::summary = required summary: {marks: number; passes: number; warnings: number; failures: number; manual: number;}
+interface-member OpenAIResponsesTool::property::description = required description: string
+interface-member OpenAIResponsesTool::property::name = required name: string
+interface-member OpenAIResponsesTool::property::parameters = required parameters: Record<string, unknown>
+interface-member OpenAIResponsesTool::property::strict = required strict: boolean
+interface-member OpenAIResponsesTool::property::type = required type: "function"
+interface-member OpenAIResponsesToolOptions::property::strict = optional strict: boolean | undefined
+interface-member PerCapabilityScore::property::averageScore = required averageScore: number
+interface-member PerCapabilityScore::property::caveatCoverage = required caveatCoverage: number
+interface-member PerCapabilityScore::property::component = required component: string
+interface-member PerCapabilityScore::property::expertAgreementCount = required expertAgreementCount: number
+interface-member PerCapabilityScore::property::family = required family: import("./chartCapabilityTypes").ChartFamily
+interface-member PerCapabilityScore::property::fitsOn = required fitsOn: number
+interface-member PerCapabilityScore::property::inTopThreeOn = required inTopThreeOn: number
+interface-member PerCapabilityScore::property::rejectedOn = required rejectedOn: number
+interface-member PerCapabilityScore::property::topPickOn = required topPickOn: number
+interface-member PerCapabilityScore::property::variantUtilization = required variantUtilization: number
+interface-member PerFixtureScore::property::expected = optional expected: readonly string[] | undefined
+interface-member PerFixtureScore::property::expertAgreement = required expertAgreement: boolean | null
+interface-member PerFixtureScore::property::fittingCount = required fittingCount: number
+interface-member PerFixtureScore::property::fixture = required fixture: string
+interface-member PerFixtureScore::property::intent = optional intent: IntentId | undefined
+interface-member PerFixtureScore::property::noFitHonored = required noFitHonored: boolean | null
+interface-member PerFixtureScore::property::rejectedCount = required rejectedCount: number
+interface-member PerFixtureScore::property::shape = optional shape: string | undefined
+interface-member PerFixtureScore::property::topPick = optional topPick: undefined | {component: string; variantKey?: string; score: number;}
+interface-member PerFixtureScore::property::topPickAgreement = required topPickAgreement: boolean | null
+interface-member PerFixtureScore::property::topThree = required topThree: readonly {component: string; variantKey?: string; score: number;}[]
+interface-member PhysicsReaderGrounding::property::aggregates = optional aggregates: PhysicsReaderGroundingAggregates | undefined
+interface-member PhysicsReaderGrounding::property::geometry = optional geometry: PhysicsReaderGroundingGeometry | undefined
+interface-member PhysicsReaderGrounding::property::sediment = optional sediment: PhysicsReaderGroundingSediment | undefined
+interface-member PhysicsReaderGrounding::property::simulation = required simulation: PhysicsReaderGroundingSimulation
+interface-member PhysicsReaderGrounding::property::text = required text: string
+interface-member PhysicsReaderGroundingAggregate::property::count = required count: number
+interface-member PhysicsReaderGroundingAggregate::property::id = optional id: string | undefined
+interface-member PhysicsReaderGroundingAggregate::property::label = required label: string
+interface-member PhysicsReaderGroundingAggregate::property::observed = optional observed: number | undefined
+interface-member PhysicsReaderGroundingAggregate::property::secondary = optional secondary: number | undefined
+interface-member PhysicsReaderGroundingAggregate::property::secondaryLabel = optional secondaryLabel: string | undefined
+interface-member PhysicsReaderGroundingAggregates::property::leader = optional leader: PhysicsReaderGroundingAggregate | undefined
+interface-member PhysicsReaderGroundingAggregates::property::populatedCount = required populatedCount: number
+interface-member PhysicsReaderGroundingAggregates::property::rows = required rows: PhysicsReaderGroundingAggregate[]
+interface-member PhysicsReaderGroundingAggregates::property::totalCount = required totalCount: number
+interface-member PhysicsReaderGroundingGeometry::property::activeSensorPairs = optional activeSensorPairs: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::colliders = optional colliders: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::sensors = optional sensors: number | undefined
+interface-member PhysicsReaderGroundingGeometry::property::springs = optional springs: number | undefined
+interface-member PhysicsReaderGroundingInput::property::aggregates = optional aggregates: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::config = optional config: unknown
+interface-member PhysicsReaderGroundingInput::property::evidence = optional evidence: unknown
+interface-member PhysicsReaderGroundingInput::property::projectionRows = optional projectionRows: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::sediment = optional sediment: readonly unknown[] | undefined
+interface-member PhysicsReaderGroundingInput::property::sedimentTotals = optional sedimentTotals: unknown
+interface-member PhysicsReaderGroundingInput::property::snapshot = optional snapshot: unknown
+interface-member PhysicsReaderGroundingSediment::property::bins = required bins: number
+interface-member PhysicsReaderGroundingSediment::property::count = required count: number
+interface-member PhysicsReaderGroundingSediment::property::leader = optional leader: undefined | {id?: string; label: string; count: number; total?: number;}
+interface-member PhysicsReaderGroundingSediment::property::total = optional total: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::bodyLimit = optional bodyLimit: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::elapsedSeconds = optional elapsedSeconds: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::eviction = optional eviction: string | undefined
+interface-member PhysicsReaderGroundingSimulation::property::fixedDt = optional fixedDt: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::gravity = optional gravity: undefined | {x: number; y: number;}
+interface-member PhysicsReaderGroundingSimulation::property::liveBodies = optional liveBodies: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::maxSubsteps = optional maxSubsteps: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::paused = optional paused: boolean | undefined
+interface-member PhysicsReaderGroundingSimulation::property::queued = optional queued: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::seed = optional seed: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::settled = optional settled: boolean | undefined
+interface-member PhysicsReaderGroundingSimulation::property::sleepingBodies = optional sleepingBodies: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::state = optional state: string | undefined
+interface-member PhysicsReaderGroundingSimulation::property::timeScale = optional timeScale: number | undefined
+interface-member PhysicsReaderGroundingSimulation::property::visible = optional visible: boolean | undefined
+interface-member PortableNavigationStrategy::property::groupBy = optional groupBy: string[] | undefined
+interface-member PortableNavigationStrategy::property::groupByRole = optional groupByRole: string | undefined
+interface-member PortableNavigationStrategy::property::idRole = optional idRole: string | undefined
+interface-member PortableNavigationStrategy::property::itemLabelTemplate = optional itemLabelTemplate: string | undefined
+interface-member PortableNavigationStrategy::property::summaryTemplate = optional summaryTemplate: string | undefined
+interface-member PositionedToken::property::column = required column: number
+interface-member PositionedToken::property::row = required row: number
+interface-member PositionedToken::property::x = required x: number
+interface-member PositionedToken::property::y = required y: number
+interface-member PrepareChartInput::property::component = required component: string
+interface-member PrepareChartInput::property::props = optional props: Datum | undefined
+interface-member PrepareChartOptions::property::data = optional data: readonly Datum[] | undefined
+interface-member PrepareChartOptions::property::diagnose = optional diagnose: boolean | undefined
+interface-member PrepareChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member PrepareChartOptions::property::render = optional render: RenderFn | undefined
+interface-member PrepareChartOptions::property::repair = optional repair: boolean | undefined
+interface-member PrepareChartOptions::property::treatErrorsAsBlocking = optional treatErrorsAsBlocking: boolean | undefined
+interface-member PrepareChartResult::property::component = required component: string
+interface-member PrepareChartResult::property::config = optional config: ChartConfig | undefined
+interface-member PrepareChartResult::property::diagnostics = required diagnostics: Diagnosis[]
+interface-member PrepareChartResult::property::evidence = optional evidence: RenderEvidence | undefined
+interface-member PrepareChartResult::property::jsx = optional jsx: string | undefined
+interface-member PrepareChartResult::property::ok = required ok: boolean
+interface-member PrepareChartResult::property::props = required props: Datum
+interface-member PrepareChartResult::property::reasons = required reasons: string[]
+interface-member PrepareChartResult::property::repair = optional repair: RepairResult | undefined
+interface-member PrepareChartResult::property::svg = optional svg: string | undefined
+interface-member PrepareChartResult::property::validation = required validation: ValidationResult
+interface-member PrimaryRoleChange::property::from = required from: string | undefined
+interface-member PrimaryRoleChange::property::role = required role: PrimaryRole
+interface-member PrimaryRoleChange::property::to = required to: string | undefined
+interface-member ProfileDataOptions::property::rawInput = optional rawInput: unknown
+interface-member ProfileDataOptions::property::seriesField = optional seriesField: string | undefined
+interface-member ProfileDiff::property::added = required added: readonly string[]
+interface-member ProfileDiff::property::becameFit = required becameFit: readonly string[]
+interface-member ProfileDiff::property::becameUnfit = required becameUnfit: readonly string[]
+interface-member ProfileDiff::property::primaryChanges = required primaryChanges: readonly PrimaryRoleChange[]
+interface-member ProfileDiff::property::removed = required removed: readonly string[]
+interface-member ProfileDiff::property::rowCountChange = required rowCountChange: number
+interface-member ProfileDiff::property::typeChanges = required typeChanges: readonly FieldTypeChange[]
+interface-member ProfileDiff::property::unchanged = required unchanged: boolean
+interface-member ProfileNumericFieldsOptions::property::quantiles = optional readonly quantiles: boolean | undefined
+interface-member ProposalRefusedEvent::property::alternatives = optional alternatives: string[] | undefined
+interface-member ProposalRefusedEvent::property::codes = required codes: string[]
+interface-member ProposalRefusedEvent::property::component = optional component: string | undefined
+interface-member ProposalRefusedEvent::property::stage = required stage: "diagnosis" | "fit" | "render" | "validation"
+interface-member ProposalRefusedEvent::property::type = required type: "proposal-refused"
+interface-member ReceivabilitySignal::property::caveats = required caveats: string[]
+interface-member ReceivabilitySignal::property::delta = required delta: number
+interface-member ReceivabilitySignal::property::reason = optional reason: string | undefined
+interface-member ReceptionDefinition::property::channels = required channels: string[]
+interface-member ReceptionDefinition::property::memorableForm = optional memorableForm: boolean | undefined
+interface-member ReceptionDefinition::property::risks = optional risks: string[] | undefined
+interface-member ReceptionDefinition::property::scaffolds = optional scaffolds: string[] | undefined
+interface-member ReceptionDefinition::property::strengths = optional strengths: string[] | undefined
+interface-member RecipeAudienceDefinition::property::familiarity = optional familiarity: Record<string, number | string> | undefined
+interface-member RecipeAudienceDefinition::property::literacyTargets = optional literacyTargets: LiteracyTargetDefinition[] | undefined
+interface-member RecipeAudienceDefinition::property::primary = optional primary: string | undefined
+interface-member RecipeAuditExpectations::property::checks = optional checks: string[] | undefined
+interface-member RecipeAuditExpectations::property::expectedSceneNodeTypes = optional expectedSceneNodeTypes: string[] | undefined
+interface-member RecipeAuditExpectations::property::maxCategories = optional maxCategories: number | undefined
+interface-member RecipeAuditExpectations::property::maxMarks = optional maxMarks: number | undefined
+interface-member RecipeAuditExpectations::property::minimumHitTargetSize = optional minimumHitTargetSize: number | undefined
+interface-member RecipeAuditExpectations::property::requireDatumCoverage = optional requireDatumCoverage: boolean | undefined
+interface-member RecipeAuditExpectations::property::requireStableIds = optional requireStableIds: boolean | undefined
+interface-member RecipeDescription::property::levels = optional levels: undefined | {l1?: string; l2?: string; l3?: string; l4?: string;}
+interface-member RecipeDescription::property::text = required text: string
+interface-member RecipeExample::property::config = optional config: TConfig | undefined
+interface-member RecipeExample::property::data = optional data: readonly TDatum[] | undefined
+interface-member RecipeExample::property::description = optional description: string | undefined
+interface-member RecipeExample::property::name = required name: string
+interface-member RecipeExample::property::path = optional path: string | undefined
+interface-member RecipeNavigationOptions::property::locale = optional locale: string | undefined
+interface-member RecipeNavigationOptions::property::maxLeaves = optional maxLeaves: number | undefined
+interface-member RecipePortabilityConfig::property::schema = required schema: SerializableSchema
+interface-member RecipeStrategyContext::property::config = required config: TConfig
+interface-member RecipeStrategyContext::property::data = required data: readonly TDatum[]
+interface-member RecipeStrategyContext::property::locale = optional locale: string | undefined
+interface-member RegisteredRecipeLayout::property::exportName = optional exportName: string | undefined
+interface-member RegisteredRecipeLayout::property::id = required id: string
+interface-member RegisteredRecipeLayout::property::importPath = optional importPath: string | undefined
+interface-member RejectedCapability::property::component = required component: string
+interface-member RejectedCapability::property::family = required family: import("./chartCapabilityTypes").ChartFamily
+interface-member RejectedCapability::property::importPath = required importPath: import("./chartCapabilityTypes").ChartImportPath
+interface-member RejectedCapability::property::reason = required reason: string
+interface-member RenderEvidenceEvent::property::chartId = optional chartId: string | undefined
+interface-member RenderEvidenceEvent::property::component = required component: string
+interface-member RenderEvidenceEvent::property::empty = required empty: boolean
+interface-member RenderEvidenceEvent::property::markCount = required markCount: number
+interface-member RenderEvidenceEvent::property::type = required type: "render-evidence"
+interface-member RenderEvidenceEvent::property::warnings = required warnings: string[]
+interface-member RepairAlternativeResult::property::alternatives = required alternatives: Suggestion[]
+interface-member RepairAlternativeResult::property::component = required component: string
+interface-member RepairAlternativeResult::property::profile = required profile: ChartDataProfile
+interface-member RepairAlternativeResult::property::reason = required reason: string
+interface-member RepairAlternativeResult::property::repairs = optional repairs: string[] | undefined
+interface-member RepairAlternativeResult::property::status = required status: "alternative"
+interface-member RepairOkResult::property::component = required component: string
+interface-member RepairOkResult::property::profile = required profile: ChartDataProfile
+interface-member RepairOkResult::property::repairs = optional repairs: string[] | undefined
+interface-member RepairOkResult::property::status = required status: "ok"
+interface-member RepairOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member RepairOptions::property::maxAlternatives = optional maxAlternatives: number | undefined
+interface-member RepairOptions::property::observedSceneAudit = optional observedSceneAudit: ObservedSceneAuditResult | undefined
+interface-member RepairOptions::property::profile = optional profile: ChartDataProfile | undefined
+interface-member RepairOptions::property::props = optional props: Datum | undefined
+interface-member RepairOptions::property::rawInput = optional rawInput: unknown
+interface-member RepairUnknownResult::property::alternatives = required alternatives: Suggestion[]
+interface-member RepairUnknownResult::property::component = required component: string
+interface-member RepairUnknownResult::property::profile = required profile: ChartDataProfile
+interface-member RepairUnknownResult::property::repairs = optional repairs: string[] | undefined
+interface-member RepairUnknownResult::property::status = required status: "unknown"
+interface-member ResolvedMobileInteractionConfig::property::brushHandleSize = required brushHandleSize: number
+interface-member ResolvedMobileInteractionConfig::property::clearSelection = required clearSelection: MobileClearSelectionBehavior
+interface-member ResolvedMobileInteractionConfig::property::enabled = required enabled: boolean
+interface-member ResolvedMobileInteractionConfig::property::snap = required snap: MobileSnapBehavior
+interface-member ResolvedMobileInteractionConfig::property::standardControls = required standardControls: MobileStandardControlsMode
+interface-member ResolvedMobileInteractionConfig::property::tapToLockTooltip = required tapToLockTooltip: boolean
+interface-member ResolvedMobileInteractionConfig::property::tapToSelect = required tapToSelect: boolean
+interface-member ResolvedMobileInteractionConfig::property::targetSize = required targetSize: number
+interface-member ResponsiveRule::property::description = optional description: string | undefined
+interface-member ResponsiveRule::property::id = optional id: string | undefined
+interface-member ResponsiveRule::property::priority = optional priority: number | undefined
+interface-member ResponsiveRule::property::transform = required transform: Partial<TProps> & Record<string, unknown>
+interface-member ResponsiveRule::property::when = required when: ResponsiveRuleCondition
+interface-member ResponsiveRuleCondition::property::maxAspectRatio = optional maxAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::minAspectRatio = optional minAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::orientation = optional orientation: ResponsiveOrientation | undefined
+interface-member ResponsiveRuleContext::property::height = optional height: number | undefined
+interface-member ResponsiveRuleContext::property::width = required width: number
+interface-member ResponsiveRuleMatch::property::index = required index: number
+interface-member ResponsiveRuleMatch::property::rule = required rule: ResponsiveRule<TProps>
+interface-member ResponsiveRuleResult::property::matches = required matches: ResponsiveRuleMatch<TProps>[]
+interface-member ResponsiveRuleResult::property::props = required props: TProps
+interface-member ScaleBiasResult::property::caveats = required caveats: string[]
+interface-member ScaleBiasResult::property::delta = required delta: number
+interface-member ScaleBiasResult::property::excluded = required excluded: boolean
+interface-member ScaleBiasResult::property::reasons = required reasons: string[]
+interface-member ScaleFitResult::property::caveats = optional caveats: string[] | undefined
+interface-member ScaleFitResult::property::delta = required delta: number
+interface-member ScaleFitResult::property::reason = optional reason: string | undefined
+interface-member ScaleHintInput::property::cardinality = optional cardinality: undefined | {sweetSpot: [number, number]; caveatAbove?: number;}
+interface-member ScaleHintInput::property::rows = optional rows: undefined | {sweetSpot: [number, number]; caveatAbove?: number; caveatBelow?: number;}
+interface-member ScaleThresholds::property::cardinality = optional cardinality: undefined | {low?: number; medium?: number;}
+interface-member ScaleThresholds::property::fields = optional fields: undefined | {narrow?: number; typical?: number;}
+interface-member ScaleThresholds::property::rows = optional rows: undefined | {tiny?: number; small?: number; medium?: number; large?: number;}
+interface-member ScaledSuggestionGroups::property::effective = required effective: EffectiveScale
+interface-member ScaledSuggestionGroups::property::huge = required huge: Suggestion[]
+interface-member ScaledSuggestionGroups::property::large = required large: Suggestion[]
+interface-member ScaledSuggestionGroups::property::medium = required medium: Suggestion[]
+interface-member ScaledSuggestionGroups::property::small = required small: Suggestion[]
+interface-member ScaledSuggestionGroups::property::tiny = required tiny: Suggestion[]
+interface-member ScorecardFixture::property::data = required data: readonly Datum[]
+interface-member ScorecardFixture::property::expected = optional expected: readonly string[] | undefined
+interface-member ScorecardFixture::property::expectsNoFit = optional expectsNoFit: boolean | undefined
+interface-member ScorecardFixture::property::intent = optional intent: IntentId | undefined
+interface-member ScorecardFixture::property::name = required name: string
+interface-member ScorecardFixture::property::rawInput = optional rawInput: unknown
+interface-member ScorecardFixture::property::shape = optional shape: string | undefined
+interface-member ScorecardReport::property::perCapability = required perCapability: PerCapabilityScore[]
+interface-member ScorecardReport::property::perFixture = required perFixture: PerFixtureScore[]
+interface-member ScorecardReport::property::summary = required summary: {fixtureCount: number; capabilityCount: number; expertAgreementRate: number; top1AgreementRate: number; overallCaveatCoverage: number; overallVariantUtilization: number;}
+interface-member SelectionEndObservation::property::selection = required selection: {name: string;}
+interface-member SelectionEndObservation::property::type = required type: "selection-end"
+interface-member SelectionObservation::property::selection = required selection: {name: string; fields: Datum;}
+interface-member SelectionObservation::property::type = required type: "selection"
+interface-member SerializedSelection::property::clauses = required clauses: {clientId: string; type: "interval" | "point"; fields: Record<string, SerializedFieldSelection>;}[]
+interface-member SerializedSelection::property::name = required name: string
+interface-member SerializedSelection::property::resolution = required resolution: "crossfilter" | "intersect" | "union"
+interface-member SmallMultipleChartProps::property::chartDefaults = optional chartDefaults: Record<string, unknown> | undefined
+interface-member SmallMultipleChartProps::property::chartHeight = optional chartHeight: number | undefined
+interface-member SmallMultipleChartProps::property::children = required children: ((item: TItem, context: SmallMultipleRenderContext<TItem>) => React.ReactNode) | React.ReactNode
+interface-member SmallMultipleChartProps::property::className = optional className: string | undefined
+interface-member SmallMultipleChartProps::property::columns = optional columns: number | undefined
+interface-member SmallMultipleChartProps::property::dataAccessor = optional dataAccessor: ((item: TItem) => readonly unknown[] | undefined) | string | undefined
+interface-member SmallMultipleChartProps::property::extentProps = optional extentProps: string[] | undefined
+interface-member SmallMultipleChartProps::property::gap = optional gap: number | undefined
+interface-member SmallMultipleChartProps::property::items = optional items: readonly TItem[] | undefined
+interface-member SmallMultipleChartProps::property::labelMode = optional labelMode: "direct" | "legend" | "panel" | undefined
+interface-member SmallMultipleChartProps::property::legendField = optional legendField: string | undefined
+interface-member SmallMultipleChartProps::property::legendInteraction = optional legendInteraction: import("./LinkedCharts").LegendInteractionMode | undefined
+interface-member SmallMultipleChartProps::property::legendPosition = optional legendPosition: "bottom" | "top" | undefined
+interface-member SmallMultipleChartProps::property::legendSelectionName = optional legendSelectionName: string | undefined
+interface-member SmallMultipleChartProps::property::linkProvider = optional linkProvider: "auto" | boolean | undefined
+interface-member SmallMultipleChartProps::property::linkedBy = optional linkedBy: string[] | undefined | {name?: string; fields?: string[];}
+interface-member SmallMultipleChartProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
+interface-member SmallMultipleChartProps::property::mobileBreakpoint = optional mobileBreakpoint: number | undefined
+interface-member SmallMultipleChartProps::property::mobileColumns = optional mobileColumns: number | undefined
+interface-member SmallMultipleChartProps::property::mobileInteraction = optional mobileInteraction: MobileInteractionProp | undefined
+interface-member SmallMultipleChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
+interface-member SmallMultipleChartProps::property::mode = optional mode: ChartMode | undefined
+interface-member SmallMultipleChartProps::property::selection = optional selection: SelectionConfig | undefined
+interface-member SmallMultipleChartProps::property::selections = optional selections: Record<string, {resolution?: import("./semiotic").ResolutionMode;}> | undefined
+interface-member SmallMultipleChartProps::property::sharedExtent = optional sharedExtent: SmallMultipleSharedExtent | boolean | undefined
+interface-member SmallMultipleChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member SmallMultipleChartProps::property::style = optional style: React.CSSProperties | undefined
+interface-member SmallMultipleChartProps::property::tabletBreakpoint = optional tabletBreakpoint: number | undefined
+interface-member SmallMultipleChartProps::property::tabletColumns = optional tabletColumns: number | undefined
+interface-member SmallMultipleChartProps::property::valueAccessor = optional valueAccessor: ((datum: unknown) => unknown) | string | undefined
+interface-member SmallMultipleItem::property::data = optional data: readonly TDatum[] | undefined
+interface-member SmallMultipleItem::property::extent = optional extent: SmallMultipleExtent | undefined
+interface-member SmallMultipleItem::property::id = required id: string
+interface-member SmallMultipleItem::property::subtitle = optional subtitle: React.ReactNode
+interface-member SmallMultipleItem::property::summary = optional summary: React.ReactNode
+interface-member SmallMultipleItem::property::title = optional title: React.ReactNode
+interface-member SmallMultipleRenderContext::property::chartProps = required chartProps: Record<string, unknown>
+interface-member SmallMultipleRenderContext::property::count = required count: number
+interface-member SmallMultipleRenderContext::property::index = required index: number
+interface-member SmallMultipleRenderContext::property::item = required item: TItem
+interface-member SmallMultipleRenderContext::property::sharedExtent = required sharedExtent: SmallMultipleSharedExtent
+interface-member SmallMultipleSharedExtent::property::valueExtent = optional valueExtent: SmallMultipleExtent | undefined
+interface-member SmallMultipleSharedExtent::property::xExtent = optional xExtent: SmallMultipleExtent | undefined
+interface-member SmallMultipleSharedExtent::property::yExtent = optional yExtent: SmallMultipleExtent | undefined
+interface-member StreamChartCapability::property::buildProps = required buildProps: (schema: StreamSchema) => Record<string, unknown>
+interface-member StreamChartCapability::property::caveats = optional caveats: ((schema: StreamSchema) => ReadonlyArray<string>) | undefined
+interface-member StreamChartCapability::property::component = required component: string
+interface-member StreamChartCapability::property::fits = required fits: (schema: StreamSchema) => null | string
+interface-member StreamChartCapability::property::importPath = required importPath: "semiotic/realtime"
+interface-member StreamChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, StreamIntentScorer>>
+interface-member StreamChartCapability::property::rubric = required rubric: ChartRubric
+interface-member StreamFieldSchema::property::kind = required kind: StreamFieldKind
+interface-member StreamFieldSchema::property::name = required name: string
+interface-member StreamFieldSchema::property::role = optional role: "category" | "series" | "size" | "value" | "x" | "y" | undefined
+interface-member StreamSchema::property::fields = required fields: readonly StreamFieldSchema[]
+interface-member StreamSchema::property::retention = optional retention: "cumulative" | "windowed" | undefined
+interface-member StreamSchema::property::throughput = optional throughput: "high" | "low" | "medium" | undefined
+interface-member StreamSuggestion::property::caveats = required caveats: readonly string[]
+interface-member StreamSuggestion::property::component = required component: string
+interface-member StreamSuggestion::property::family = required family: "realtime"
+interface-member StreamSuggestion::property::importPath = required importPath: "semiotic/realtime"
+interface-member StreamSuggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
+interface-member StreamSuggestion::property::props = required props: Record<string, unknown>
+interface-member StreamSuggestion::property::reasons = required reasons: readonly string[]
+interface-member StreamSuggestion::property::rubric = required rubric: ChartRubric
+interface-member StreamSuggestion::property::score = required score: number
+interface-member StretchSuggestion::property::familiarity = required familiarity: number
+interface-member StretchSuggestion::property::rationale = required rationale: string
+interface-member StretchSuggestion::property::replacing = optional replacing: string | undefined
+interface-member StretchSuggestion::property::suggestion = required suggestion: Suggestion
+interface-member SuggestChartsOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestChartsOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member SuggestChartsOptions::property::capabilities = optional capabilities: readonly ChartCapability[] | undefined
+interface-member SuggestChartsOptions::property::deny = optional deny: readonly string[] | undefined
+interface-member SuggestChartsOptions::property::includeVariants = optional includeVariants: boolean | undefined
+interface-member SuggestChartsOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member SuggestChartsOptions::property::maxResults = optional maxResults: number | undefined
+interface-member SuggestChartsOptions::property::minScore = optional minScore: number | undefined
+interface-member SuggestChartsOptions::property::portability = optional portability: "local" | "portable" | undefined
+interface-member SuggestChartsOptions::property::profile = optional profile: ChartDataProfile | undefined
+interface-member SuggestChartsOptions::property::quality = optional quality: DataQualityProfile | undefined
+interface-member SuggestChartsOptions::property::receptionChannel = optional receptionChannel: ReceptionModality | undefined
+interface-member SuggestChartsOptions::property::riskTolerance = optional riskTolerance: "high" | "low" | "medium" | undefined
+interface-member SuggestChartsOptions::property::scale = optional scale: DataScaleProfile | undefined
+interface-member SuggestDashboardOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestDashboardOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member SuggestDashboardOptions::property::deny = optional deny: readonly string[] | undefined
+interface-member SuggestDashboardOptions::property::diversifyByFamily = optional diversifyByFamily: boolean | undefined
+interface-member SuggestDashboardOptions::property::intents = optional intents: readonly IntentId[] | undefined
+interface-member SuggestDashboardOptions::property::maxPanels = optional maxPanels: number | undefined
+interface-member SuggestDashboardOptions::property::maxStretchPanels = optional maxStretchPanels: number | undefined
+interface-member SuggestDashboardOptions::property::profile = optional profile: ChartDataProfile | undefined
+interface-member SuggestDashboardOptions::property::rawInput = optional rawInput: unknown
+interface-member SuggestStreamChartsOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestStreamChartsOptions::property::capabilities = optional capabilities: readonly StreamChartCapability[] | undefined
+interface-member SuggestStreamChartsOptions::property::deny = optional deny: readonly string[] | undefined
+interface-member SuggestStreamChartsOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member SuggestStreamChartsOptions::property::maxResults = optional maxResults: number | undefined
+interface-member SuggestStreamChartsOptions::property::minScore = optional minScore: number | undefined
+interface-member SuggestStretchChartsOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestStretchChartsOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member SuggestStretchChartsOptions::property::deny = optional deny: readonly string[] | undefined
+interface-member SuggestStretchChartsOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member SuggestStretchChartsOptions::property::maxResults = optional maxResults: number | undefined
+interface-member SuggestStretchChartsOptions::property::profile = optional profile: ChartDataProfile | undefined
+interface-member SuggestStretchChartsOptions::property::rawInput = optional rawInput: unknown
+interface-member SuggestStretchChartsOptions::property::scoreTolerance = optional scoreTolerance: number | undefined
+interface-member SuggestTokenEncodingInput::property::audience = optional audience: "expert" | "general-public" | "internal" | undefined
+interface-member SuggestTokenEncodingInput::property::availableSpace = optional availableSpace: "large" | "medium" | "small" | undefined
+interface-member SuggestTokenEncodingInput::property::concreteEntity = optional concreteEntity: string | undefined
+interface-member SuggestTokenEncodingInput::property::dataType = optional dataType: "category" | "count" | "distribution" | "measure" | "probability" | "risk" | undefined
+interface-member SuggestTokenEncodingInput::property::precisionNeed = optional precisionNeed: "high" | "low" | "medium" | undefined
+interface-member SuggestTokenEncodingInput::property::taskIntent = required taskIntent: TokenTaskIntent
+interface-member Suggestion::property::candidateKind = required candidateKind: ChartCandidateKind
+interface-member Suggestion::property::caveats = required caveats: readonly string[]
+interface-member Suggestion::property::component = required component: string
+interface-member Suggestion::property::displayName = required displayName: string
+interface-member Suggestion::property::family = required family: ChartFamily
+interface-member Suggestion::property::importPath = required importPath: ChartImportPath
+interface-member Suggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
+interface-member Suggestion::property::props = required props: Record<string, unknown>
+interface-member Suggestion::property::reasons = required reasons: readonly string[]
+interface-member Suggestion::property::recipeId = optional recipeId: string | undefined
+interface-member Suggestion::property::rubric = required rubric: ChartRubric
+interface-member Suggestion::property::scaleRange = optional scaleRange: SuggestionScaleRange | undefined
+interface-member Suggestion::property::score = required score: number
+interface-member Suggestion::property::variant = optional variant: ChartVariant | undefined
+interface-member Suggestion::property::whyCustom = optional whyCustom: WhyCustomExplanation | undefined
+interface-member SuggestionChosenEvent::property::component = required component: string
+interface-member SuggestionChosenEvent::property::rank = optional rank: number | undefined
+interface-member SuggestionChosenEvent::property::source = optional source: "agent" | "auto" | "user" | undefined
+interface-member SuggestionChosenEvent::property::type = required type: "suggestion-chosen"
+interface-member SuggestionScaleRange::property::band = required band: ScaleBand
+interface-member SuggestionScaleRange::property::cardinalityBand = optional cardinalityBand: CardinalityBand | undefined
+interface-member SuggestionScaleRange::property::rows = required rows: number
+interface-member SuggestionScaleRange::property::rowsSource = required rowsSource: "declared" | "measured"
+interface-member SuggestionShownEvent::property::audience = optional audience: string | undefined
+interface-member SuggestionShownEvent::property::components = required components: string[]
+interface-member SuggestionShownEvent::property::intent = optional intent: readonly string[] | string | undefined
+interface-member SuggestionShownEvent::property::topScore = optional topScore: number | undefined
+interface-member SuggestionShownEvent::property::type = required type: "suggestion-shown"
+interface-member SummarizeOptions::property::keyScanRows = optional keyScanRows: number | undefined
+interface-member SummarizeOptions::property::maxDistinct = optional maxDistinct: number | undefined
+interface-member SummarizeOptions::property::sampleSize = optional sampleSize: number | undefined
+interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
+interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
+interface-member TokenDiagnostic::property::code = required code: TokenDiagnosticCode
+interface-member TokenDiagnostic::property::message = required message: string
+interface-member TokenDiagnostic::property::severity = required severity: "info" | "warning"
+interface-member TokenDiagnosticsContext::property::maxRecommendedTokens = optional maxRecommendedTokens: number | undefined
+interface-member TokenDiagnosticsContext::property::visibleTokens = optional visibleTokens: number | undefined
+interface-member TokenEncoding::property::countStrategy = required countStrategy: TokenCountStrategy
+interface-member TokenEncoding::property::denominator = optional denominator: number | undefined
+interface-member TokenEncoding::property::icon = optional icon: string | undefined
+interface-member TokenEncoding::property::labelPolicy = optional labelPolicy: TokenLabelPolicy | undefined
+interface-member TokenEncoding::property::layout = optional layout: TokenLayout | undefined
+interface-member TokenEncoding::property::maxTokens = optional maxTokens: number | undefined
+interface-member TokenEncoding::property::minFraction = optional minFraction: number | undefined
+interface-member TokenEncoding::property::numerator = optional numerator: number | undefined
+interface-member TokenEncoding::property::seed = optional seed: number | undefined
+interface-member TokenEncoding::property::token = optional token: string | undefined
+interface-member TokenEncoding::property::tokenCount = optional tokenCount: number | undefined
+interface-member TokenEncoding::property::tokenSemantics = required tokenSemantics: TokenSemantics
+interface-member TokenEncoding::property::tokenType = required tokenType: TokenType
+interface-member TokenEncoding::property::unit = optional unit: number | undefined
+interface-member TokenEncoding::property::unitMeaning = optional unitMeaning: string | undefined
+interface-member TokenEncoding::property::unitValue = optional unitValue: number | undefined
+interface-member TokenEncodingSuggestion::property::alternatives = required alternatives: string[]
+interface-member TokenEncodingSuggestion::property::rationale = required rationale: string
+interface-member TokenEncodingSuggestion::property::recommendedEncoding = required recommendedEncoding: string
+interface-member TokenEncodingSuggestion::property::tokenEncoding = optional tokenEncoding: TokenEncoding | undefined
+interface-member TokenEncodingSuggestion::property::warnings = required warnings: TokenDiagnostic[]
+interface-member TokenGeneratorInput::property::data = optional data: readonly D[] | undefined
+interface-member TokenGeneratorInput::property::denominator = optional denominator: number | undefined
+interface-member TokenGeneratorInput::property::numerator = optional numerator: number | undefined
+interface-member TokenGeneratorInput::property::rangeValue = optional rangeValue: number | undefined
+interface-member TokenGeneratorInput::property::samples = optional samples: readonly number[] | undefined
+interface-member TokenGeneratorInput::property::value = optional value: number | undefined
+interface-member TokenGeneratorInput::property::valueAccessor = optional valueAccessor: ((d: D) => number) | keyof D | undefined
+interface-member TokenGridOptions::property::anchor = optional anchor: [number, number] | undefined
+interface-member TokenGridOptions::property::cellHeight = optional cellHeight: number | undefined
+interface-member TokenGridOptions::property::cellWidth = optional cellWidth: number | undefined
+interface-member TokenGridOptions::property::columnDirection = optional columnDirection: "left" | "right" | undefined
+interface-member TokenGridOptions::property::columns = optional columns: number | undefined
+interface-member TokenGridOptions::property::flow = optional flow: "column" | "row" | undefined
+interface-member TokenGridOptions::property::gutter = optional gutter: number | undefined
+interface-member TokenGridOptions::property::rowDirection = optional rowDirection: "down" | "up" | undefined
+interface-member TokenGridOptions::property::rows = optional rows: number | undefined
+interface-member TokenGridOptions::property::x = optional x: number | undefined
+interface-member TokenGridOptions::property::y = optional y: number | undefined
+interface-member TokenSet::property::denominator = optional denominator: number | undefined
+interface-member TokenSet::property::diagnostics = required diagnostics: TokenDiagnostic[]
+interface-member TokenSet::property::encoding = required encoding: TokenEncoding
+interface-member TokenSet::property::numerator = optional numerator: number | undefined
+interface-member TokenSet::property::overflow = required overflow: boolean
+interface-member TokenSet::property::rangeTokens = optional rangeTokens: VisualToken<D>[] | undefined
+interface-member TokenSet::property::rangeTotal = optional rangeTotal: number | undefined
+interface-member TokenSet::property::shown = required shown: number
+interface-member TokenSet::property::tokens = required tokens: VisualToken<D>[]
+interface-member TokenSet::property::total = required total: number
+interface-member TokenSet::property::unitValue = optional unitValue: number | undefined
+interface-member UnknownFieldSummary::property::type = required type: "unknown"
+interface-member UnplacedDataQualityResult::property::reason = required reason: string
+interface-member UnplacedDataQualityResult::property::result = required result: DataQualityResult
+interface-member UseChartFocusOptions::property::chartId = optional chartId: string | undefined
+interface-member UseChartFocusOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartInterrogationOptions::property::componentName = optional componentName: string | undefined
+interface-member UseChartInterrogationOptions::property::data = required data: null | readonly Datum[] | undefined
+interface-member UseChartInterrogationOptions::property::focus = optional focus: InterrogationFocus | null | undefined
+interface-member UseChartInterrogationOptions::property::includeGrounding = optional includeGrounding: ChartReaderGroundingOptions | boolean | undefined
+interface-member UseChartInterrogationOptions::property::includeProfile = optional includeProfile: boolean | undefined
+interface-member UseChartInterrogationOptions::property::includeSuggestions = optional includeSuggestions: boolean | undefined
+interface-member UseChartInterrogationOptions::property::initialAnnotations = optional initialAnnotations: readonly Datum[] | undefined
+interface-member UseChartInterrogationOptions::property::onQuery = required onQuery: InterrogationQuery
+interface-member UseChartInterrogationOptions::property::props = optional props: Record<string, unknown> | undefined
+interface-member UseChartInterrogationOptions::property::suggestionsIntent = optional suggestionsIntent: IntentId | IntentId[] | undefined
+interface-member UseChartInterrogationOptions::property::suggestionsMax = optional suggestionsMax: number | undefined
+interface-member UseChartInterrogationResult::property::annotations = required annotations: readonly Datum[]
+interface-member UseChartInterrogationResult::property::announce = required announce: (message: {text: string; annotations?: ReadonlyArray<Datum>;}) => void
+interface-member UseChartInterrogationResult::property::ask = required ask: (query: string) => Promise<void>
+interface-member UseChartInterrogationResult::property::error = required error: Error | null
+interface-member UseChartInterrogationResult::property::history = required history: readonly InterrogationMessage[]
+interface-member UseChartInterrogationResult::property::loading = required loading: boolean
+interface-member UseChartInterrogationResult::property::reset = required reset: () => void
+interface-member UseChartInterrogationResult::property::summary = required summary: DataSummary
+interface-member UseChartObserverOptions::property::chartId = optional chartId: string | undefined
+interface-member UseChartObserverOptions::property::limit = optional limit: number | undefined
+interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartObserverResult::property::clear = required clear: () => void
+interface-member UseChartObserverResult::property::latest = required latest: ChartObservation | null
+interface-member UseChartObserverResult::property::observations = required observations: ChartObservation[]
+interface-member UseChartSuggestionsResult::property::profile = required profile: ChartDataProfile
+interface-member UseChartSuggestionsResult::property::suggestions = required suggestions: readonly Suggestion[]
+interface-member UseConversationArcOptions::property::disableOnUnmount = optional disableOnUnmount: boolean | undefined
+interface-member UseConversationArcOptions::property::enableOnMount = optional enableOnMount: boolean | undefined
+interface-member UseConversationArcResult::property::clear = required clear: () => void
+interface-member UseConversationArcResult::property::enabled = required enabled: boolean
+interface-member UseConversationArcResult::property::history = required history: readonly ConversationArcEvent[]
+interface-member UseConversationArcResult::property::record = required record: (input: ConversationArcEventInput) => ConversationArcEvent | null
+interface-member UseConversationArcResult::property::sessionId = required sessionId: null | string
+interface-member UseConversationArcResult::property::summary = required summary: ConversationArcSummary
+interface-member UseMobileRangeControlsOptions::property::domain = required domain: [number, number]
+interface-member UseMobileRangeControlsOptions::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
+interface-member UseMobileRangeControlsOptions::property::initialValue = optional initialValue: [number, number] | undefined
+interface-member UseMobileRangeControlsOptions::property::label = optional label: React.ReactNode
+interface-member UseMobileRangeControlsOptions::property::minSpan = optional minSpan: number | undefined
+interface-member UseMobileRangeControlsOptions::property::onChange = optional onChange: ((value: [number, number]) => void) | undefined
+interface-member UseMobileRangeControlsOptions::property::step = optional step: number | undefined
+interface-member UseMobileRangeControlsResult::property::brush = required brush: MobileStandardBrushControls
+interface-member UseMobileRangeControlsResult::property::setValue = required setValue: (value: [number, number]) => void
+interface-member UseMobileRangeControlsResult::property::value = required value: [number, number]
+interface-member UseMobileRangeControlsResult::property::xExtent = required xExtent: [number, number]
+interface-member UseMobileRangeControlsResult::property::zoom = required zoom: MobileStandardZoomControls
+interface-member UseNavigationSyncOptions::property::annotations = optional annotations: readonly Datum[] | undefined
+interface-member UseNavigationSyncOptions::property::chartId = optional chartId: string | undefined
+interface-member UseNavigationSyncOptions::property::matchFields = optional matchFields: string[] | undefined
+interface-member UseNavigationSyncOptions::property::observe = optional observe: ("activate" | "click" | "focus" | "hover")[] | undefined
+interface-member UseNavigationSyncOptions::property::selectionName = optional selectionName: string | undefined
+interface-member UseNavigationSyncOptions::property::tree = required tree: NavTreeNode
+interface-member UseNavigationSyncResult::property::activeId = required activeId: string
+interface-member UseNavigationSyncResult::property::annotatedIds = required annotatedIds: Set<string>
+interface-member UseNavigationSyncResult::property::focusAnnotation = required focusAnnotation: (annotation: Datum | number) => boolean
+interface-member UseNavigationSyncResult::property::handleObservation = required handleObservation: (observation: ChartObservation) => void
+interface-member UseNavigationSyncResult::property::onActiveChange = required onActiveChange: (node: NavTreeNode) => void
+interface-member UseNavigationSyncResult::property::onObservation = required onObservation: (observation: ChartObservation) => void
+interface-member UseNavigationSyncResult::property::selection = required selection: {name: string;}
+interface-member ValidationResult::property::errors = required errors: string[]
+interface-member ValidationResult::property::valid = required valid: boolean
+interface-member VariantDiscoveryContext::property::audience = optional audience: AudienceProfile | undefined
+interface-member VariantDiscoveryContext::property::existingVariants = optional existingVariants: readonly ChartVariant[] | undefined
+interface-member VariantDiscoveryContext::property::intent = optional intent: IntentId | readonly IntentId[] | undefined
+interface-member VariantDiscoveryContext::property::profile = required profile: ChartDataProfile
+interface-member VariantProposal::property::baseComponent = required baseComponent: string
+interface-member VariantProposal::property::buildProps = optional buildProps: ((profile: ChartDataProfile, audience?: AudienceProfile) => Record<string, unknown>) | undefined
+interface-member VariantProposal::property::id = required id: string
+interface-member VariantProposal::property::intentDeltas = optional intentDeltas: Partial<Record<IntentId, number>> | undefined
+interface-member VariantProposal::property::label = optional label: string | undefined
+interface-member VariantProposal::property::rationale = optional rationale: string | undefined
+interface-member VariantProposal::property::rubricDeltas = optional rubricDeltas: Partial<ChartRubric> | undefined
+interface-member VariantProposal::property::source = required source: VariantProposalSource
+interface-member VariantProposal::property::tags = optional tags: readonly string[] | undefined
+interface-member VariantProposal::property::variantKey = optional variantKey: string | undefined
+interface-member VariantScore::property::fit = required fit: number
+interface-member VariantScore::property::novelty = required novelty: number
+interface-member VariantScore::property::proposalId = required proposalId: string
+interface-member VariantScore::property::reasons = required reasons: readonly string[]
+interface-member VariantScore::property::risk = required risk: number
+interface-member VegaLiteEncoding::property::aggregate = optional aggregate: string | undefined
+interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}
+interface-member VegaLiteEncoding::property::bin = optional bin: boolean | undefined | {maxbins?: number;}
+interface-member VegaLiteEncoding::property::field = optional field: string | undefined
+interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
+interface-member VegaLiteEncoding::property::stack = optional stack: boolean | null | string | undefined
+interface-member VegaLiteEncoding::property::type = optional type: "nominal" | "ordinal" | "quantitative" | "temporal" | undefined
+interface-member VegaLiteEncoding::property::value = optional value: boolean | null | number | string | undefined
+interface-member VegaLiteSpec::property::concat = optional concat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::data = optional data: undefined | {values?: Datum[]; url?: string;}
+interface-member VegaLiteSpec::property::encoding = optional encoding: Record<string, VegaLiteEncoding> | undefined
+interface-member VegaLiteSpec::property::facet = optional facet: Datum | undefined
+interface-member VegaLiteSpec::property::hconcat = optional hconcat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::height = optional height: number | undefined
+interface-member VegaLiteSpec::property::layer = optional layer: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::mark = required mark: (Datum & {type: string;}) | string
+interface-member VegaLiteSpec::property::params = optional params: Datum[] | undefined
+interface-member VegaLiteSpec::property::repeat = optional repeat: Datum | string[] | undefined
+interface-member VegaLiteSpec::property::selection = optional selection: Datum | undefined
+interface-member VegaLiteSpec::property::title = optional title: string | undefined | {text: string;}
+interface-member VegaLiteSpec::property::transform = optional transform: Datum[] | undefined
+interface-member VegaLiteSpec::property::usermeta = optional usermeta: (Datum & {idid?: Datum;}) | undefined
+interface-member VegaLiteSpec::property::vconcat = optional vconcat: VegaLiteSpec[] | undefined
+interface-member VegaLiteSpec::property::width = optional width: number | undefined
+interface-member VisualToken::property::countStrategy = required countStrategy: TokenCountStrategy
+interface-member VisualToken::property::datum = optional datum: D | undefined
+interface-member VisualToken::property::end = required end: number
+interface-member VisualToken::property::fraction = required fraction: number
+interface-member VisualToken::property::highlighted = optional highlighted: boolean | undefined
+interface-member VisualToken::property::index = required index: number
+interface-member VisualToken::property::quantile = optional quantile: number | undefined
+interface-member VisualToken::property::range = optional range: "scenario" | undefined
+interface-member VisualToken::property::sample = optional sample: number | undefined
+interface-member VisualToken::property::start = required start: number
+interface-member VisualToken::property::startFraction = required startFraction: number
+interface-member VisualToken::property::tokenSemantics = required tokenSemantics: TokenSemantics
+interface-member VisualToken::property::tokenType = required tokenType: TokenType
+interface-member VisualToken::property::unitMeaning = optional unitMeaning: string | undefined
+interface-member VisualToken::property::unitValue = optional unitValue: number | undefined
+interface-member VisualToken::property::value = required value: number
+interface-member VisualizationControlDefinition::property::alternatives = optional alternatives: readonly string[] | undefined
+interface-member VisualizationControlDefinition::property::annotation = optional annotation: undefined | {target?: string; valueText?: string;}
+interface-member VisualizationControlDefinition::property::domain = required domain: readonly [number, number]
+interface-member VisualizationControlDefinition::property::id = required id: string
+interface-member VisualizationControlDefinition::property::keyboard = optional keyboard: "buttons" | "native-range" | "slider" | undefined
+interface-member VisualizationControlDefinition::property::label = required label: string
+interface-member VisualizationControlDefinition::property::minimumTargetSize = optional minimumTargetSize: number | undefined
+interface-member VisualizationControlDefinition::property::observations = optional observations: readonly ControlObservationPhase[] | undefined
+interface-member VisualizationControlDefinition::property::step = optional step: number | undefined
+interface-member VisualizationControlDefinition::property::target = required target: string
+interface-member VisualizationControlDefinition::property::type = required type: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
+interface-member VisualizationControlDefinition::property::valueText = required valueText: string
+interface-member WebhookConversationArcSinkOptions::property::fetch = optional fetch: ConversationArcWebhookFetch | undefined
+interface-member WebhookConversationArcSinkOptions::property::headers = optional headers: Record<string, string> | undefined
+interface-member WebhookConversationArcSinkOptions::property::mapEvent = optional mapEvent: ((event: ConversationArcEvent) => unknown) | undefined
+interface-member WebhookConversationArcSinkOptions::property::method = optional method: "POST" | "PUT" | undefined
+interface-member WebhookConversationArcSinkOptions::property::url = required url: string
+interface-member WhyCustomExplanation::property::defaultAlternative = optional defaultAlternative: string | undefined
+interface-member WhyCustomExplanation::property::reason = required reason: string
+interface-member WhyCustomExplanation::property::tradeoff = optional tradeoff: string | undefined
+type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
+type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
+type Annotated<T> = T & {provenance?: AnnotationProvenance; lifecycle?: AnnotationLifecycle;}
+type AnnotationActorKind = "agent" | "human" | "system" | "watcher" | (string & {})
+type AnnotationAnchor = "fixed" | "latest" | "semantic" | "sticky"
+type AnnotationBasis = "computed" | "external-source" | "human-note" | "llm-inference" | "rule" | "statistical-test" | (string & {})
 type AnnotationFreshness = LifecycleBand
-type AnnotationSource = "user" | "ai" | "agent" | "import" | "computed" | "system" | (string & {})
-type AnnotationStatus = "proposed" | "accepted" | "disputed" | "retracted"
-type ApplyAnnotationLifecycleOptions = ComputeAnnotationFreshnessOptions & AnnotationLifecycleTreatment
-type BuiltInIntentId = "trend" | "compare-series" | "compare-categories" | "rank" | "part-to-whole" | "distribution" | "correlation" | "flow" | "hierarchy" | "geo" | "outlier-detection" | "composition-over-time" | "change-detection"
-type CardinalityBand = "low" | "medium" | "high"
+type AnnotationSource = "agent" | "ai" | "computed" | "import" | "system" | "user" | (string & {})
+type AnnotationStatus = "accepted" | "disputed" | "proposed" | "retracted"
+type ApplyAnnotationLifecycleOptions = AnnotationLifecycleTreatment & ComputeAnnotationFreshnessOptions
+type BuiltInIntentId = "change-detection" | "compare-categories" | "compare-series" | "composition-over-time" | "correlation" | "distribution" | "flow" | "geo" | "hierarchy" | "outlier-detection" | "part-to-whole" | "rank" | "trend"
+type CardinalityBand = "high" | "low" | "medium"
 type CategoryColorMap = Record<string, string>
 type ChartAnnotation = Datum
 type ChartCandidateKind = "built-in" | "recipe"
-type ChartContainerDataAudit = boolean | ChartContainerDataAuditOptions
-type ChartFamily = "time-series" | "categorical" | "distribution" | "relationship" | "flow" | "network" | "hierarchy" | "geo" | "realtime" | "value" | "custom"
-type ChartImportPath = "semiotic/xy" | "semiotic/ordinal" | "semiotic/network" | "semiotic/geo" | "semiotic/realtime" | "semiotic/physics" | "semiotic/value" | "semiotic/ai" | "semiotic"
-type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
-type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | FocusObservation | ActivateObservation | AnnotationActivateObservation | ControlObservation | LateDataObservation
-type ChartRecipeFrameFamily = "XYFrame" | "OrdinalFrame" | "NetworkFrame" | "GeoFrame" | "XYCustomChart" | "NetworkCustomChart" | "OrdinalCustomChart" | "GeoCustomChart" | "Other"
-type ChartRecipePortability = "portable" | "local"
-type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
-type ControlAuditStatus = "pass" | "warn" | "fail"
-type ConversationArcEvent = SuggestionShownEvent | SuggestionChosenEvent | AudienceSetEvent | ProposalRefusedEvent | ChartRenderedEvent | RenderEvidenceEvent | ChartEditedEvent | ChartReplacedEvent | ChartExportedEvent | ChartAbandonedEvent | InterrogationAskedEvent | InterrogationAnsweredEvent | NavNodeFocusedEvent | NavBranchExpandedEvent | AnnotationStatusChangedEvent
-type ConversationArcEventInput = ConversationArcEvent extends infer E ? E extends ConversationArcEvent ? Omit<E, "timestamp" | "sessionId"> & Partial<Pick<E, "timestamp" | "sessionId">> : never : never
-type ConversationArcEventType = "suggestion-shown" | "suggestion-chosen" | "audience-set" | "proposal-refused" | "chart-rendered" | "render-evidence" | "chart-edited" | "chart-replaced" | "chart-exported" | "chart-abandoned" | "interrogation-asked" | "interrogation-answered" | "nav-node-focused" | "nav-branch-expanded" | "annotation-status-changed"
+type ChartContainerDataAudit = ChartContainerDataAuditOptions | boolean
+type ChartFamily = "categorical" | "custom" | "distribution" | "flow" | "geo" | "hierarchy" | "network" | "realtime" | "relationship" | "time-series" | "value"
+type ChartImportPath = "semiotic" | "semiotic/ai" | "semiotic/geo" | "semiotic/network" | "semiotic/ordinal" | "semiotic/physics" | "semiotic/realtime" | "semiotic/value" | "semiotic/xy"
+type ChartNotificationLevel = "error" | "info" | "neutral" | "success" | "warning"
+type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation
+type ChartRecipeFrameFamily = "GeoCustomChart" | "GeoFrame" | "NetworkCustomChart" | "NetworkFrame" | "OrdinalCustomChart" | "OrdinalFrame" | "Other" | "XYCustomChart" | "XYFrame"
+type ChartRecipePortability = "local" | "portable"
+type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "comparing" | "locating" | "nesting" | "presenting" | "ranking" | "relating" | "tracing" | "tracking"
+type ControlAuditStatus = "fail" | "pass" | "warn"
+type ConversationArcEvent = AnnotationStatusChangedEvent | AudienceSetEvent | ChartAbandonedEvent | ChartEditedEvent | ChartExportedEvent | ChartRenderedEvent | ChartReplacedEvent | InterrogationAnsweredEvent | InterrogationAskedEvent | NavBranchExpandedEvent | NavNodeFocusedEvent | ProposalRefusedEvent | RenderEvidenceEvent | SuggestionChosenEvent | SuggestionShownEvent
+type ConversationArcEventInput = ConversationArcEvent extends infer E ? E extends ConversationArcEvent ? Omit<E, "sessionId" | "timestamp"> & Partial<Pick<E, "sessionId" | "timestamp">> : never : never
+type ConversationArcEventType = "annotation-status-changed" | "audience-set" | "chart-abandoned" | "chart-edited" | "chart-exported" | "chart-rendered" | "chart-replaced" | "interrogation-answered" | "interrogation-asked" | "nav-branch-expanded" | "nav-node-focused" | "proposal-refused" | "render-evidence" | "suggestion-chosen" | "suggestion-shown"
 type ConversationArcListener = (event: ConversationArcEvent) => void
 type ConversationArcWebhookFetch = (input: string, init?: RequestInit) => Promise<unknown>
 type CopyFormat = "json" | "jsx"
-type CustomLayoutFunction<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (CustomLayout<TConfig> | OrdinalCustomLayout<TConfig> | NetworkCustomLayout<TConfig> | GeoCustomLayout<TConfig>) & RecipeDatumMarker<TDatum>
-type DataQualityCheckKind = "range" | "min" | "max" | "threshold" | "freshness" | "not-null" | "unique" | "accepted-values" | "row-condition" | "custom"
-type DataQualityStatus = "pass" | "fail" | "warn" | "error"
-type DataSemanticType = "nominal" | "ordinal" | "quantitative" | "temporal" | "identifier" | "boolean" | "geographic" | "unknown"
+type CustomLayoutFunction<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (CustomLayout<TConfig> | GeoCustomLayout<TConfig> | NetworkCustomLayout<TConfig> | OrdinalCustomLayout<TConfig>) & RecipeDatumMarker<TDatum>
+type DataQualityCheckKind = "accepted-values" | "custom" | "freshness" | "max" | "min" | "not-null" | "range" | "row-condition" | "threshold" | "unique"
+type DataQualityStatus = "error" | "fail" | "pass" | "warn"
+type DataSemanticType = "boolean" | "geographic" | "identifier" | "nominal" | "ordinal" | "quantitative" | "temporal" | "unknown"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type DescriptionStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => RecipeDescription
-type EncodingChannel = "position" | "count" | "color" | "size" | "shape" | "length" | "area" | "angle" | "connection" | "order" | "texture" | "motion" | "label" | string
+type EncodingChannel = "angle" | "area" | "color" | "connection" | "count" | "label" | "length" | "motion" | "order" | "position" | "shape" | "size" | "texture" | string
 type EvaluateVariantProposalFn = (proposal: VariantProposal, profile: ChartDataProfile, audience?: AudienceProfile, options?: EvaluateVariantProposalOptions) => VariantScore
 type FieldBand = "narrow" | "typical" | "wide"
-type FieldKind = "numeric" | "categorical" | "date" | "boolean" | "unknown"
-type FieldSummary = NumericFieldSummary | DateFieldSummary | CategoricalFieldSummary | UnknownFieldSummary
-type FieldType = "numeric" | "categorical" | "date" | "unknown"
+type FieldKind = "boolean" | "categorical" | "date" | "numeric" | "unknown"
+type FieldSummary = CategoricalFieldSummary | DateFieldSummary | NumericFieldSummary | UnknownFieldSummary
+type FieldType = "categorical" | "date" | "numeric" | "unknown"
 type FitResult = null | string
-type IntentDefinition = IntentId | {
-    /** Canonical intent id. `name` is accepted as an author-friendly alias. */
-    id?: IntentId;
-    name?: IntentId;
-    strength?: "primary" | "secondary" | "supporting";
-    score?: number;
-    rationale?: string;
-}
-type IntentId = BuiltInIntentId | (string & {})
-type IntentScorer = number | ((profile: ChartDataProfile) => number)
+type IntentDefinition = IntentId | {/** Canonical intent id. `name` is accepted as an author-friendly alias. */ id?: IntentId; name?: IntentId; strength?: "primary" | "secondary" | "supporting"; score?: number; rationale?: string;}
+type IntentId = (string & {}) | BuiltInIntentId
+type IntentScorer = ((profile: ChartDataProfile) => number) | number
 type InterrogationQuery = (query: string, context: InterrogationContext) => Promise<InterrogationResult>
 type LegendInteractionMode = "highlight" | "isolate" | "none"
-type LifecycleBand = "fresh" | "aging" | "stale" | "expired"
-type MobileAuditCategory = "layout" | "density" | "interaction" | "annotation" | "semantics"
-type MobileAuditImpact = "high" | "medium" | "low"
-type MobileAuditStatus = "pass" | "warn" | "manual" | "not-applicable"
-type MobileChartDetailMode = "sheet" | "inline" | "none"
+type LifecycleBand = "aging" | "expired" | "fresh" | "stale"
+type MobileAuditCategory = "annotation" | "density" | "interaction" | "layout" | "semantics"
+type MobileAuditImpact = "high" | "low" | "medium"
+type MobileAuditStatus = "manual" | "not-applicable" | "pass" | "warn"
+type MobileChartDetailMode = "inline" | "none" | "sheet"
 type MobileClearSelectionBehavior = "backgroundTap" | "none"
-type MobileInteractionProp = boolean | MobileInteractionConfig
+type MobileInteractionProp = MobileInteractionConfig | boolean
 type MobileSnapBehavior = "nearestDatum" | "none"
-type MobileStandardControlKind = "brush" | "zoom" | "legend"
+type MobileStandardControlKind = "brush" | "legend" | "zoom"
 type MobileStandardControlRequest = MobileStandardControlsMode
-type MobileStandardControlsMode = boolean | "all" | MobileStandardControlKind | MobileStandardControlKind[]
-type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
+type MobileStandardControlsMode = "all" | MobileStandardControlKind | MobileStandardControlKind[] | boolean
+type NavTreeRole = "annotation" | "axis" | "chart" | "datum" | "series"
 type NavigationStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => NavTreeNode
-type NumericFieldRole = "x" | "y" | "value" | "size" | "count" | "opacity" | "time" | "lower" | "upper" | "open" | "close" | "high" | "low" | (string & {})
-type NumericRequirement = "finite" | "positive" | "non-negative" | "integer" | "unit-interval"
-type ObservationInputType = "keyboard" | "pointer" | "touch" | "navigation-tree"
-type ObservedAuditStatus = "pass" | "warn" | "fail" | "manual" | "not-applicable"
+type NumericFieldRole = "close" | "count" | "high" | "low" | "lower" | "opacity" | "open" | "size" | "time" | "upper" | "value" | "x" | "y" | (string & {})
+type NumericRequirement = "finite" | "integer" | "non-negative" | "positive" | "unit-interval"
+type ObservationInputType = "keyboard" | "navigation-tree" | "pointer" | "touch"
+type ObservedAuditStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
 type OnObservationCallback = (observation: ChartObservation) => void
-type PrimaryRole = "x" | "y" | "size" | "category" | "series" | "time"
+type PrimaryRole = "category" | "series" | "size" | "time" | "x" | "y"
 type ProposeVariantFn = (component: string, capability: ChartCapability, context: VariantDiscoveryContext) => ReadonlyArray<VariantProposal>
 type QualityFitFn = (profile: ChartDataProfile, quality: DataQualityProfile) => ScaleFitResult | null
-type ReceptionModality = "visual" | "screen-reader" | "sonified" | "agent"
-type RenderFn = (component: string, props: Datum) => {
-    svg: string;
-    evidence: RenderEvidence;
-}
-type RepairResult = RepairOkResult | RepairAlternativeResult | RepairUnknownResult
-type ResponsiveOrientation = "portrait" | "landscape"
-type ScaleBand = "tiny" | "small" | "medium" | "large" | "huge"
+type ReceptionModality = "agent" | "screen-reader" | "sonified" | "visual"
+type RenderFn = (component: string, props: Datum) => {svg: string; evidence: RenderEvidence;}
+type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResult
+type ResponsiveOrientation = "landscape" | "portrait"
+type ScaleBand = "huge" | "large" | "medium" | "small" | "tiny"
 type ScaleFitFn = (profile: ChartDataProfile, effective: EffectiveScale, scale: DataScaleProfile | undefined) => ScaleFitResult | null
 type SerializableSchema = Record<string, unknown>
-type SerializedFieldSelection = {
-    type: "point";
-    values: unknown[];
-} | {
-    type: "interval";
-    range: [number, number];
-}
+type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}
 type SerializedSelections = Record<string, SerializedSelection>
 type SmallMultipleExtent = [number, number]
-type StreamFieldKind = "numeric" | "categorical" | "date" | "boolean"
-type StreamIntentScorer = number | ((schema: StreamSchema) => number)
-type TokenCapabilityIntent = "compare-categories" | "distribution" | "part-to-whole" | "rank" | "outlier-detection"
-type TokenCountStrategy = "actual" | "unitized" | "fixed-denominator" | "quantile" | "sample" | "posterior-sample" | "random-sample"
-type TokenDiagnosticCode = "TOKEN_SEMANTICS_UNCLEAR" | "MISSING_COUNT_STRATEGY" | "ICON_ONLY_LABELS" | "TOO_MANY_VISIBLE_TOKENS" | "DECORATIVE_PICTOGRAPHS" | "TOKEN_STRATEGY_MISMATCH" | "MISSING_UNIT_VALUE" | "MISSING_UNIT_MEANING"
-type TokenLabelPolicy = "text-plus-token" | "text-plus-icon" | "text-only" | "token-only" | "icon-only" | "none"
-type TokenLayout = "row" | "column" | "grid" | "stack" | "bar-segment" | "waffle" | "beeswarm" | "dotplot" | "quantile-strip" | "small-multiple"
-type TokenSemantics = "observed-unit" | "unitized-measure" | "possible-outcome" | "posterior-sample" | "hypothetical-case" | "risk-case" | "topic-anchor" | "decorative"
-type TokenTaskIntent = "precise-comparison" | "frequency-reasoning" | "probability-estimation" | "risk-communication" | "memory" | "editorial-engagement" | "public-explanation" | "support-decision" | "measure" | "estimate probability" | "understand risk" | "remember" | "decide"
-type TokenType = "dot" | "icon" | "glyph"
-type VariantProposalSource = "manual" | "heuristic" | "model"
+type StreamFieldKind = "boolean" | "categorical" | "date" | "numeric"
+type StreamIntentScorer = ((schema: StreamSchema) => number) | number
+type TokenCapabilityIntent = "compare-categories" | "distribution" | "outlier-detection" | "part-to-whole" | "rank"
+type TokenCountStrategy = "actual" | "fixed-denominator" | "posterior-sample" | "quantile" | "random-sample" | "sample" | "unitized"
+type TokenDiagnosticCode = "DECORATIVE_PICTOGRAPHS" | "ICON_ONLY_LABELS" | "MISSING_COUNT_STRATEGY" | "MISSING_UNIT_MEANING" | "MISSING_UNIT_VALUE" | "TOKEN_SEMANTICS_UNCLEAR" | "TOKEN_STRATEGY_MISMATCH" | "TOO_MANY_VISIBLE_TOKENS"
+type TokenLabelPolicy = "icon-only" | "none" | "text-only" | "text-plus-icon" | "text-plus-token" | "token-only"
+type TokenLayout = "bar-segment" | "beeswarm" | "column" | "dotplot" | "grid" | "quantile-strip" | "row" | "small-multiple" | "stack" | "waffle"
+type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "possible-outcome" | "posterior-sample" | "risk-case" | "topic-anchor" | "unitized-measure"
+type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
+type TokenType = "dot" | "glyph" | "icon"
+type VariantProposalSource = "heuristic" | "manual" | "model"
 type VariantRejectionReason = string
 ```

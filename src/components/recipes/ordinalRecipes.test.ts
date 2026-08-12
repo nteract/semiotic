@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { scaleBand, scaleLinear } from "d3-scale"
 import { marimekkoLayout } from "./marimekko"
 import { bulletLayout } from "./bullet"
@@ -536,5 +536,62 @@ describe("parallelCoordinatesLayout", () => {
     for (const seg of segs) {
       expect(seg.style.opacity).toBeCloseTo(0.4, 3)
     }
+  })
+
+  it("ignores inherited or malformed domain and tick-formatter entries", () => {
+    const inheritedFormatter = vi.fn(() => "inherited")
+    const domains = Object.create({ mpg: [1000, 2000] }) as Record<
+      string,
+      [number, number]
+    >
+    Object.defineProperty(domains, "hp", {
+      value: ["bad", null],
+      enumerable: true
+    })
+    const tickFormat = Object.create({ mpg: inheritedFormatter }) as Record<
+      string,
+      (value: number) => string
+    >
+    Object.defineProperty(tickFormat, "hp", {
+      value: "not-a-function",
+      enumerable: true
+    })
+
+    const result = parallelCoordinatesLayout(makeCtx({
+      fields: ["mpg", "hp", "weight"],
+      domains,
+      tickFormat,
+    }, data))
+    const segs = result.nodes! as ConnectorSceneNode[]
+
+    expect(inheritedFormatter).not.toHaveBeenCalled()
+    for (const seg of segs) {
+      expect(seg.y1).toBeGreaterThanOrEqual(24)
+      expect(seg.y1).toBeLessThanOrEqual(282)
+      expect(seg.y2).toBeGreaterThanOrEqual(24)
+      expect(seg.y2).toBeLessThanOrEqual(282)
+    }
+  })
+
+  it("honors own prototype-named field domains and tick formatters", () => {
+    const formatter = vi.fn((value: number) => String(value))
+    const specialData = [
+      Object.fromEntries([["__proto__", 1], ["constructor", 2]]),
+      Object.fromEntries([["__proto__", 3], ["constructor", 4]]),
+    ]
+    const result = parallelCoordinatesLayout(makeCtx({
+      fields: ["__proto__", "constructor"],
+      domains: Object.fromEntries([
+        ["__proto__", [0, 5]],
+        ["constructor", [0, 5]],
+      ]),
+      tickFormat: Object.fromEntries([
+        ["__proto__", formatter],
+        ["constructor", formatter],
+      ]),
+    }, specialData))
+
+    expect(result.nodes).toHaveLength(2)
+    expect(formatter).toHaveBeenCalledTimes(10)
   })
 })

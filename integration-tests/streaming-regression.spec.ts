@@ -292,9 +292,13 @@ test.describe("Force Graph Centering Regression", () => {
 // ─── No JS errors during streaming ───────────────────────────────────────────
 
 test.describe("Streaming Error-Free Regression", () => {
-  test("all streaming regression examples render without JS errors", async ({ page }) => {
+  test("all streaming regression examples render without JS errors or reserved-key warnings", async ({ page }) => {
     const errors: string[] = []
+    const consoleErrors: string[] = []
     page.on("pageerror", (err) => errors.push(err.message))
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text())
+    })
 
     await page.goto("/streaming-regression-examples/")
     // Every chart must be visibly rendered before we inspect the error log —
@@ -311,6 +315,7 @@ test.describe("Streaming Error-Free Regression", () => {
     )
 
     expect(realErrors).toHaveLength(0)
+    expect(consoleErrors.filter((message) => /key.*is not a prop/i.test(message))).toHaveLength(0)
   })
 
   test("all streaming charts have visible canvases", async ({ page }) => {

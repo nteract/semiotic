@@ -82,6 +82,79 @@ describe("networkAnalysis", () => {
     expect(res.problemIds.has("A")).toBe(true)
     expect(res.problemIds.has("E")).toBe(true)
   })
+
+  it("treats prototype-named node ids as ordinary own keys across algorithms", () => {
+    const nodes = ["__proto__", "constructor", "toString", "leaf"].map((id) => ({ id }))
+    const edges = [
+      { source: "__proto__", target: "constructor" },
+      { source: "constructor", target: "toString" },
+      { source: "toString", target: "leaf" },
+    ]
+
+    const degrees = degree(nodes, edges)
+    expect(Object.getPrototypeOf(degrees)).toBe(Object.prototype)
+    expect(Object.keys(degrees)).toEqual(nodes.map((node) => node.id))
+    expect(degrees["__proto__"]).toBe(1)
+    expect(degrees.constructor).toBe(2)
+    expect(degrees.toString).toBe(2)
+
+    const distances = bfsDistances(buildAdjacency(nodes, edges), "__proto__")
+    expect(distances.leaf).toBe(3)
+    expect(shortestPath(nodes, edges, "__proto__", "leaf")).toEqual([
+      "__proto__",
+      "constructor",
+      "toString",
+      "leaf",
+    ])
+    expect([...egoNetwork(nodes, edges, "constructor", 1)].sort()).toEqual([
+      "__proto__",
+      "constructor",
+      "toString",
+    ].sort())
+
+    const between = betweenness(nodes, edges)
+    expect(between["__proto__"]).toBe(0)
+    expect(between.constructor).toBeGreaterThan(0)
+    expect(between.toString).toBeGreaterThan(0)
+    expect(closeness(nodes, edges).constructor).toBeGreaterThan(
+      closeness(nodes, edges)["__proto__"]
+    )
+    expect(clustering(nodes, edges)["__proto__"]).toBe(0)
+
+    const scores = Object.fromEntries([
+      ["__proto__", 2],
+      ["constructor", 4],
+      ["toString", 1],
+    ])
+    const normalized = normalizeScores(scores)
+    expect(Object.getPrototypeOf(normalized)).toBe(Object.prototype)
+    expect(normalized["__proto__"]).toBe(0.5)
+    expect(normalized.constructor).toBe(1)
+
+    const positions = Object.fromEntries([
+      ["__proto__", { x: 0.5, y: 0.5 }],
+      ["constructor", { x: 0.1, y: 0.1 }],
+      ["toString", { x: 0.9, y: 0.9 }],
+      ["leaf", { x: 0.51, y: 0.5 }],
+    ])
+    const proximity = proximityProblem(nodes, edges, positions, { minHops: 3 })
+    expect(proximity.problemIds.has("__proto__")).toBe(true)
+    expect(proximity.problemIds.has("leaf")).toBe(true)
+
+    const force = forceLayout(nodes, edges, { seed: 2, iterations: 10 })
+    expect(Object.getPrototypeOf(force)).toBe(Object.prototype)
+    expect(Object.keys(force)).toEqual(nodes.map((node) => node.id))
+    for (const { id } of nodes) expect(force[id]).toBeDefined()
+
+    for (const positions of [
+      arcLayout(nodes.map((node) => node.id)),
+      circularLayout(nodes.map((node) => node.id)),
+    ]) {
+      expect(Object.getPrototypeOf(positions)).toBe(Object.prototype)
+      expect(Object.keys(positions)).toEqual(nodes.map((node) => node.id))
+      expect(positions["__proto__"]).toBeDefined()
+    }
+  })
 })
 
 describe("forceLayout", () => {

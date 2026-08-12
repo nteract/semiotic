@@ -7,6 +7,7 @@
  *   node scripts/smoke-hosted-mcp.mjs \
  *     --endpoint https://service.example.com \
  *     --expected-channel nightly \
+ *     --expected-package-version 3.9.0 \
  *     --expected-sha "$COMMIT_SHA" \
  *     --expected-build-id "$BUILD_ID"
  *
@@ -65,6 +66,7 @@ function usage() {
     "Options:",
     "  --endpoint URL                 Hosted MCP base URL (or MCP_SMOKE_ENDPOINT)",
     "  --expected-channel CHANNEL     Expected deployment channel (default: nightly)",
+    "  --expected-package-version VER Expected packageVersion from /health",
     "  --expected-sha SHA             Expected full Git commit SHA (or COMMIT_SHA)",
     "  --expected-build-id ID         Expected Cloud Build ID (or BUILD_ID)",
     `  --timeout-ms MS                Overall readiness timeout (default: ${DEFAULT_TIMEOUT_MS})`,
@@ -112,7 +114,7 @@ function parseArgs(argv, env = process.env) {
     const match = /^(--[a-z-]+)=(.*)$/.exec(argument)
     const option = match?.[1] ?? argument
     const inlineValue = match?.[2]
-    if (!["--endpoint", "--expected-channel", "--expected-sha", "--expected-build-id", "--timeout-ms", "--retry-interval-ms"].includes(option)) {
+    if (!["--endpoint", "--expected-channel", "--expected-package-version", "--expected-sha", "--expected-build-id", "--timeout-ms", "--retry-interval-ms"].includes(option)) {
       throw new SmokeFailure("arguments", `unknown option ${argument}`)
     }
     const value = inlineValue ?? readOptionValue(argv, index, option)
@@ -152,6 +154,7 @@ function parseArgs(argv, env = process.env) {
   return {
     endpoint: endpointUrl,
     expectedChannel: stringValue(values["--expected-channel"] ?? env.SEMIOTIC_DEPLOYMENT_CHANNEL) ?? "nightly",
+    expectedPackageVersion: stringValue(values["--expected-package-version"] ?? env.SEMIOTIC_EXPECTED_PACKAGE_VERSION),
     expectedSha: normalizeSha(values["--expected-sha"] ?? env.SEMIOTIC_GIT_SHA ?? env.COMMIT_SHA),
     expectedBuildId: stringValue(values["--expected-build-id"] ?? env.SEMIOTIC_BUILD_ID ?? env.BUILD_ID),
     timeoutMs,
@@ -288,6 +291,14 @@ function assertBuildIdentity(step, value, options, { requireShortSha = false, re
   }
   if (options.expectedSha) {
     requireExactString(step, commitSha, options.expectedSha, "commitSha", (item) => item.toLowerCase())
+  }
+  if (options.expectedPackageVersion) {
+    requireExactString(
+      step,
+      packageVersion,
+      options.expectedPackageVersion,
+      "packageVersion",
+    )
   }
   if (options.expectedBuildId) {
     requireExactString(step, buildId, options.expectedBuildId, "buildId")

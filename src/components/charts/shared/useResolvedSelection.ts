@@ -17,7 +17,7 @@
 
 import { useMemo } from "react"
 import { useThemeSelector } from "../../store/ThemeStore"
-import type { SemioticTheme } from "../../store/ThemeStore"
+import type { SemioticTheme } from "../../store/themeCore"
 import type { SelectionConfig } from "./types"
 
 export function useResolvedSelection(

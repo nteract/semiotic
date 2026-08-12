@@ -10,6 +10,7 @@ export {
   projectionRowsToSemanticItems,
   physicsChartArea,
   hashStringColor,
+  composePhysicsBodyStyle,
   styleFromColorAccessor
 } from "./physicsChartShared"
 

@@ -392,6 +392,12 @@ export interface StreamPhysicsFrameProps {
   title?: string | React.ReactNode
   tooltipContent?: (hover: PhysicsHoverData) => React.ReactNode
   workerBodyThreshold?: number
+  /**
+   * Custom canvas body painter. Authored `bodyStyle.cursor` still works, but
+   * arbitrary painted pixels cannot be inferred: browser cursor hit testing
+   * uses the body's collision shape. Keep custom output within that shape (or
+   * choose matching collision geometry) when exact visual/hit parity matters.
+   */
   renderBody?: (
     ctx: CanvasRenderingContext2D,
     body: PhysicsBodyState,

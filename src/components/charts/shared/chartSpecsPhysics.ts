@@ -5,6 +5,8 @@ import {
   CRUCIBLE_PHASES_SCHEMA,
   CRUCIBLE_PRODUCTS_SCHEMA
 } from "./crucibleWireSchema"
+import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
+import { CHAIN_REACTION_ACCESSOR_PROPS } from "./chainReactionChartSpec"
 
 export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
   GaltonBoardChart: {
@@ -17,12 +19,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["valueAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: {
-        type: "array",
-        omitFromSchema: true,
-        description:
-          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
-      },
+      styleRules: STYLE_RULES_PROP_SPEC,
       valueAccessor: {
         type: ["string", "function"],
         default: "value",
@@ -40,10 +37,16 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       },
       mode: {
         type: "string",
-        enum: ["sample", "mechanical"] as const,
+        enum: ["primary", "context", "sparkline", "mobile", "sample", "mechanical"] as const,
         default: "sample",
         description:
-          "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied."
+          "Chart display mode, or the legacy sample/mechanical simulation alias. Prefer simulationMode for simulation behavior."
+      },
+      simulationMode: {
+        type: "string",
+        enum: ["sample", "mechanical"] as const,
+        default: "sample",
+        description: "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied."
       },
       pegRows: {
         type: "number",
@@ -102,12 +105,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["timeAccessor", "arrivalAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: {
-        type: "array",
-        omitFromSchema: true,
-        description:
-          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
-      },
+      styleRules: STYLE_RULES_PROP_SPEC,
       timeAccessor: {
         type: ["string", "function"],
         default: "time",
@@ -137,6 +135,14 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         default: 1,
         description:
           "Playback speed for event-arrival pacing; higher is faster (1 = real event-time)."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description: "Replay the seeded simulation after it settles; null disables looping."
+      },
+      showProjection: {
+        type: "boolean",
+        description: "Show the settled event-time projection."
       }
     },
     capabilities: {
@@ -168,12 +174,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["categoryAccessor", "valueAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: {
-        type: "array",
-        omitFromSchema: true,
-        description:
-          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
-      },
+      styleRules: STYLE_RULES_PROP_SPEC,
       categoryAccessor: {
         type: ["string", "function"],
         default: "category",
@@ -186,10 +187,16 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       },
       mode: {
         type: "string",
-        enum: ["sample", "mechanical"] as const,
+        enum: ["primary", "context", "sparkline", "mobile", "sample", "mechanical"] as const,
         default: "sample",
         description:
-          "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches."
+          "Chart display mode, or the legacy sample/mechanical simulation alias. Prefer simulationMode for simulation behavior."
+      },
+      simulationMode: {
+        type: "string",
+        enum: ["sample", "mechanical"] as const,
+        default: "sample",
+        description: "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches."
       },
       mechanicalCount: {
         type: "number",
@@ -213,6 +220,10 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       sediment: {
         type: "boolean",
         description: "Reserved for future sediment/aggregation mode."
+      },
+      rerunMS: {
+        type: ["number", "null"],
+        description: "Replay the seeded simulation after it settles; null disables looping."
       }
     },
     capabilities: {
@@ -238,12 +249,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "groupAccessor", "radiusAccessor"],
     propBags: ["physics"],
     ownProps: {
-      styleRules: {
-        type: "array",
-        omitFromSchema: true,
-        description:
-          "Declarative threshold-aware styling: ordered { when, style } rules, last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor."
-      },
+      styleRules: STYLE_RULES_PROP_SPEC,
       xAccessor: {
         type: ["string", "function"],
         default: "x",
@@ -323,6 +329,12 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     ],
     propBags: ["physics"],
     ownProps: {
+      idAccessor: { type: ["string", "function"], default: "id" },
+      labelAccessor: { type: ["string", "function"] },
+      positiveAccessor: { type: ["string", "function"] },
+      negativeAccessor: { type: ["string", "function"] },
+      metricsAccessor: { type: ["string", "function"] },
+      initialViability: { type: ["string", "function"] },
       positiveProperties: {
         type: "array",
         default: [],
@@ -344,6 +356,9 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         description:
           "Timed gate effects that add/pop properties and set outcomes."
       },
+      bodyGroups: { type: ["array", "function"], description: "Authored compound body groups or a React group factory." },
+      crashOffset: { type: "number", default: 30 },
+      initialSpawnPacing: { type: "object", description: "Presentation-only initial spawn pacing." },
       startTimeAccessor: {
         type: ["string", "function"],
         description:
@@ -679,6 +694,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         default: 6,
         description: "Fallback body radius."
       },
+      route: { type: "string", enum: ["horizontal"] as const, default: "horizontal" },
       groupCompletion: {
         type: "string",
         enum: ["allAbsorbed", "none"] as const,
@@ -699,10 +715,20 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         default: true,
         description: "Draw stage labels, capacity notes, and group anchors."
       },
+      chromeOptions: { type: "object", description: "Options for stage bays, badges, and sockets." },
       settle: {
         type: "boolean",
         description: "Start bodies at stage targets for a calmer first paint."
       },
+      gravityX: { type: "number" },
+      gravityY: { type: "number" },
+      springStiffness: { type: "number" },
+      springDamping: { type: "number" },
+      rerunMS: { type: ["number", "null"], description: "Replay after settling; null disables looping." },
+      initialSpawnPacing: { type: "object" },
+      liveCapacity: { type: "boolean", default: true },
+      bodyLimit: { type: "number", description: "Soft cap on live simulated bodies." },
+      bodyMark: { type: "string", enum: ["circle", "halo", "faceted", "pill", "diamond", "square"] as const },
       seed: {
         type: "number",
         default: 1,
@@ -747,6 +773,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["common"],
     ownProps: {
       size: { type: "array", description: "[width, height] in pixels" },
+      background: { type: "string" },
+      legendLayout: { type: "object" },
       nodes: {
         type: "array",
         description:
@@ -802,6 +830,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         default: "path",
         description: "Optional link path as [{x,y}, ...] or [[x,y], ...]."
       },
+      styleRules: STYLE_RULES_PROP_SPEC,
       coordinateMode: {
         type: "string",
         enum: ["auto", "normalized", "pixels"] as const,
@@ -862,6 +891,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         default: false,
         description: "Pause the physics simulation."
       },
+      rerunMS: { type: ["number", "null"], description: "Replay after settling; null disables looping." },
       seed: {
         type: "number",
         default: 1,
@@ -915,56 +945,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     ],
     propBags: ["physics"],
     ownProps: {
-      taskIDAccessor: {
-        type: ["string", "function"],
-        description:
-          "Stable task id. Dependency arrays reference these resolved ids."
-      },
-      labelAccessor: {
-        type: ["string", "function"],
-        description: "Human-readable task name used in labels and the data table."
-      },
-      laneAccessor: {
-        type: ["string", "function"],
-        description:
-          "Workstream the task belongs to. Lanes become the chart's columns."
-      },
-      dependencyAccessor: {
-        type: ["string", "function"],
-        description:
-          "Array of prerequisite task ids. Edges are never inferred; a task with the wrong prerequisites reads as a different claim."
-      },
-      startAccessor: {
-        type: ["string", "function"],
-        description: "Planned start time (number or Date)."
-      },
-      endAccessor: {
-        type: ["string", "function"],
-        description: "Planned end time (number or Date)."
-      },
-      progressAccessor: {
-        type: ["string", "function"],
-        description: "Fractional completion 0–1, shown on the task body."
-      },
-      statusAccessor: {
-        type: ["string", "function"],
-        description:
-          "Authored task status (done / blocked / waiting / active). Completion is an explicit data event, never something the simulation discovers."
-      },
-      completionTimeAccessor: {
-        type: ["string", "function"],
-        description:
-          "When the task actually completed. Drives replay ordering against currentTime."
-      },
-      blockerAccessor: {
-        type: ["string", "function"],
-        description:
-          "Reason this task is blocked. A blocked task never arms its downstream dependents."
-      },
-      milestoneAccessor: {
-        type: ["string", "function"],
-        description: "Marks a task as a milestone for emphasis."
-      },
+      ...CHAIN_REACTION_ACCESSOR_PROPS,
       mode: {
         type: "string",
         enum: ["snapshot", "replay", "mechanical"] as const,
@@ -1007,6 +988,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         description:
           "Force the settled reading instead of a replay. The frame also honors prefers-reduced-motion automatically."
       },
+      enableHover: { type: "boolean", default: true },
       seed: {
         type: "number",
         default: 31,

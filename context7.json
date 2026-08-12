@@ -26,6 +26,7 @@
     "Push-mode charts: omit the `data` prop entirely. Never pass `data={[]}` — that is static empty data and clears the frame on every render. Use a ref and call `ref.current.push(datum)` / `pushMany(rows)` / `clear()`.",
     "`remove(id)` and `update(id, updater)` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts, `nodeIDAccessor`/`edgeIdAccessor` for network operations.",
     "Categorical color precedence with `colorBy`: `CategoryColorProvider`/`LinkedCharts` map > explicit `colorScheme` > `ThemeProvider` categorical > fallback. Wrap charts in `CategoryColorProvider` for cross-chart color consistency.",
+    "`cursor` in retained mark styles, `styleRules`, custom hit targets, or realtime props is presentation only. It never installs click, observation, or keyboard behavior; pair actionable cursors with explicit interaction and accessible activation.",
     "Geo imports must come from `semiotic/geo`, never bare `semiotic`, to avoid pulling d3-geo into non-geo bundles.",
     "Required prop combos: `StackedAreaChart` needs `areaBy`; `BubbleChart` `sizeBy`; `StackedBarChart` `stackBy`; `GroupedBarChart` `groupBy`; `SwimlaneChart` `subcategoryAccessor`; `ForceDirectedGraph` `nodes`+`edges`. Push mode preserves these.",
     "`semiotic/server` (`renderChart`, `renderToImage`, `renderToAnimatedGif`) produces static SVG/PNG snapshots and cannot ingest pushed data. For live/streaming behavior return React HOC code with a ref instead.",

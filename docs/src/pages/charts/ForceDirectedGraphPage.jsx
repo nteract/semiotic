@@ -405,26 +405,26 @@ export default function ForceDirectedGraphPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { StreamNetworkFrame } from "semiotic"
+            code={`import { StreamNetworkFrame } from "semiotic/network"
 
 <StreamNetworkFrame
+  chartType="force"
   nodes={networkNodes}
   edges={networkEdges}
   nodeIDAccessor="id"
   sourceAccessor="source"
   targetAccessor="target"
-  networkType={{
-    type: "force",
-    iterations: 300,
-    edgeStrength: 0.1
-  }}
+  iterations={300}
+  forceStrength={0.1}
+  nodeSize={d => sizeScale(d.connections)}
   nodeStyle={d => ({
     fill: colorScale(d.group),
-    r: sizeScale(d.connections)
+    cursor: "pointer"
   })}
-  edgeStyle={{ stroke: "#999", opacity: 0.6 }}
-  nodeLabels={d => d.id}
-  hoverAnnotation={true}
+  edgeStyle={() => ({ stroke: "#999", opacity: 0.6 })}
+  nodeLabel={d => d.id}
+  enableHover={true}
+  customClickBehavior={d => openNodeDetails(d)}
   size={[600, 600]}
 />`}
             language="jsx"

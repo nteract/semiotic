@@ -29,7 +29,13 @@ describe("ForceDirectedGraph", () => {
     { id: "C", label: "Node C" }
   ]
 
-  const sampleEdges = [
+  interface SampleEdge {
+    source: string
+    target: string
+    weight?: number
+  }
+
+  const sampleEdges: SampleEdge[] = [
     { source: "A", target: "B" },
     { source: "B", target: "C" },
     { source: "C", target: "A" }
@@ -226,7 +232,7 @@ describe("ForceDirectedGraph", () => {
         <ForceDirectedGraph
           nodes={sampleNodes}
           edges={sampleEdges}
-          edgeWidth={(e: { weight?: number }) => (e.weight ?? 1) * 2}
+          edgeWidth={(e: SampleEdge) => (e.weight ?? 1) * 2}
         />
       </TooltipProvider>
     )

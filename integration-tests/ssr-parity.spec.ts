@@ -150,6 +150,11 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("stroke-dasharray")
     expect(svg).toContain("M-7 -5 L5 0 L-7 5")
   }
+  if (id === "orbit") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:circle"]).toBeGreaterThanOrEqual(4)
+    expect(evidence.markCountByType["edge:line"]).toBeGreaterThan(0)
+  }
   if (id === "geo-custom-isotype-glyphs") {
     expect(evidence.frameType).toBe("geo")
     expect(evidence.markCountByType.glyph).toBeGreaterThanOrEqual(4)

@@ -42,9 +42,10 @@ export function geoCanvasRenderer(
     }
 
     // Stroke
-    if (node.style.stroke && node.style.stroke !== "none") {
+    const strokeWidth = node.style.strokeWidth ?? 0.5
+    if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-      ctx.lineWidth = node.style.strokeWidth || 0.5
+      ctx.lineWidth = strokeWidth
       ctx.globalAlpha = node._decayOpacity ?? 1
       if (node.style.strokeDasharray) {
         const dashes = node.style.strokeDasharray.split(",").map(Number)

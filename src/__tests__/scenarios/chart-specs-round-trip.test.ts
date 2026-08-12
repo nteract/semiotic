@@ -118,6 +118,15 @@ describe("Chart Spec Registry round-trip", () => {
     expect(metadataNames, "componentMetadata.cjs names").toEqual(registryNames)
   })
 
+  it("keeps mutable validation descriptors independent between charts", () => {
+    expect(VALIDATION_MAP.BarChart.props.margin.type).not.toBe(
+      VALIDATION_MAP.StackedBarChart.props.margin.type
+    )
+    expect(VALIDATION_MAP.BarChart.props.mode.enum).not.toBe(
+      VALIDATION_MAP.StackedBarChart.props.mode.enum
+    )
+  })
+
   // Iterate over every chart registered in CHART_SPECS so a new entry
   // automatically gets the same equivalence checks. The bigger the
   // registry grows, the more ground this matrix covers without test edits.

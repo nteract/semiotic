@@ -233,6 +233,14 @@ describe("buildBarScene", () => {
     expect(node.group).toBeUndefined()
   })
 
+  it("preserves barStyle cursor on emitted bars", () => {
+    const ctx = makeCtx({
+      config: { binSize: 10, barStyle: { cursor: "pointer" } },
+    })
+    const result = buildBarScene(ctx, [{ x: 5, y: 3 }])
+    expect(result.nodes[0]?.style.cursor).toBe("pointer")
+  })
+
   it("handles data exactly at bin boundaries", () => {
     // x=10 with binSize=10: floor(10/10)*10 = 10, so bin is [10, 20)
     // x=20 => bin [20, 30)

@@ -25,9 +25,10 @@ export const violinCanvasRenderer = (
     ctx.fill(path)
 
     ctx.globalAlpha = 1
-    if (node.style.stroke && node.style.stroke !== "none") {
+    const strokeWidth = node.style.strokeWidth ?? 1
+    if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-      ctx.lineWidth = node.style.strokeWidth || 1
+      ctx.lineWidth = strokeWidth
       ctx.stroke(path)
     }
 

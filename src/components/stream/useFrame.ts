@@ -41,7 +41,7 @@ import * as React from "react"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
@@ -273,6 +273,15 @@ export interface UseFrameResult {
   /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
    *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
   onPointerLeave: () => void
+  /** Last pointer position over the frame. Frames use this to refresh
+   *  geometry-derived presentation while marks animate under a stationary
+   *  pointer; reading/writing the ref never schedules work by itself. */
+  pointerStateRef: React.MutableRefObject<{
+    inside: boolean
+    clientX: number
+    clientY: number
+    pointerType?: string
+  }>
 }
 
 /**
@@ -433,6 +442,12 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // ── Pointer event coalescing (hover handler) ──────────────────────────
   const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
   const hoverLeaveRef = useRef<() => void>(() => {})
+  const pointerStateRef = useRef({
+    inside: false,
+    clientX: 0,
+    clientY: 0,
+    pointerType: undefined as string | undefined
+  })
   const pendingMoveCoordsRef = useRef<HoverPointerCoords | null>(null)
   const moveRafRef = useRef<number | null>(null)
   const pendingMoveSchedulerRef = useRef<FrameScheduler | null>(null)
@@ -442,6 +457,11 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     if (coords) hoverHandlerRef.current(coords)
   }, [])
   const onPointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string }) => {
+    const pointer = pointerStateRef.current
+    pointer.inside = true
+    pointer.clientX = e.clientX
+    pointer.clientY = e.clientY
+    pointer.pointerType = e.pointerType
     pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType }
     if (moveRafRef.current === null) {
       const scheduler = frameSchedulerRef.current
@@ -459,6 +479,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     }
   }, [flushPendingMove])
   const onPointerLeave = useCallback(() => {
+    pointerStateRef.current.inside = false
     pendingMoveCoordsRef.current = null
     if (moveRafRef.current !== null) {
       const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
@@ -543,5 +564,6 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     hoverLeaveRef,
     onPointerMove,
     onPointerLeave,
+    pointerStateRef,
   }
 }

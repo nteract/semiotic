@@ -4,7 +4,7 @@ import * as React from "react"
 import { useMemo, useCallback, useState, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
-import { getColor } from "../shared/colorUtils"
+import { getColor, resolveExplicitColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
 import type { BaseChartProps, ChartAccessor, ResolvedMobileInteractionConfig } from "../shared/types"
 import {
@@ -22,6 +22,12 @@ import {
   type ScatterplotMatrixHoverInfo,
 } from "./scatterplotMatrixInteractionTypes"
 import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
+import {
+  AccessibleDataTable,
+  ScreenReaderSummary,
+  SkipToTableLink,
+} from "../../stream/AccessibleDataTable"
+import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"
@@ -244,6 +250,8 @@ function ScatterplotCell({
         showAxes={false}
         maxDevicePixelRatio={maxDevicePixelRatio}
         enableHover={mode === "hover"}
+        accessibleTable={false}
+        description={`${resolveExplicitColor(_fieldLabels, xField) ?? xField} versus ${resolveExplicitColor(_fieldLabels, yField) ?? yField} scatterplot`}
         {...buildCustomBehaviorProps({
           forceHoverBehavior: mode === "hover",
           forceClickBehavior: !!onPointClick,
@@ -530,6 +538,10 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     width: _width,
     height: _height,
     className,
+    title,
+    description,
+    summary,
+    accessibleTable = true,
     onObservation,
     onClick,
     chartId
@@ -565,6 +577,11 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   }, [data])
 
   const colorScale = useColorScale(indexedData, colorBy, colorScheme)
+  const tableId = `${React.useId().replace(/:/g, "")}-data-table`
+  const accessibleScene = useMemo<AccessibleSceneNode[]>(
+    () => (data || []).map((datum) => ({ type: "point", datum })),
+    [data],
+  )
 
   // ScatterplotMatrix owns one grid-level tooltip instead of six or more
   // competing frame tooltips. Normalize the public HOC prop once so custom
@@ -615,7 +632,19 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   )
 
   return (
-    <div className={className} style={{ position: "relative" }}>
+    <div
+      className={className}
+      style={{ position: "relative" }}
+      role="group"
+      aria-label={description || title || `Scatterplot matrix comparing ${fields.length} fields`}
+    >
+      {title && (
+        <div className="semiotic-chart-title" style={{ fontWeight: 600, marginBottom: 8 }}>
+          {title}
+        </div>
+      )}
+      {accessibleTable && <SkipToTableLink tableId={tableId} />}
+      <ScreenReaderSummary summary={summary} />
       {legend && (
         <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
           {legend.map((item) => (
@@ -651,7 +680,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                 color: "#333"
               }}
             >
-              {fieldLabels[rowField] || rowField}
+              {resolveExplicitColor(fieldLabels, rowField) ?? rowField}
             </div>
 
             {/* Cells for this row */}
@@ -662,7 +691,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   return (
                     <LabelCell
                       key={`diag-${rowField}`}
-                      label={fieldLabels[rowField] || rowField}
+                      label={resolveExplicitColor(fieldLabels, rowField) ?? rowField}
                       cellSize={cellSize}
                     />
                   )
@@ -672,10 +701,10 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                     key={`diag-${rowField}`}
                     data={indexedData}
                     field={rowField}
-                    label={fieldLabels[rowField] || rowField}
+                    label={resolveExplicitColor(fieldLabels, rowField) ?? rowField}
                     cellSize={cellSize}
                     bins={histogramBins}
-                    colorBy={colorBy}
+                    colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
                     colorScale={colorScale}
                     brushSelectionName={brushSelectionName}
                     hoverSelectionName={hoverSelectionName}
@@ -695,7 +724,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   cellSize={cellSize}
                   pointRadius={pointRadius}
                   pointOpacity={pointOpacity}
-                  colorBy={colorBy}
+                  colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
                   colorScale={colorScale}
                   brushSelectionName={brushSelectionName}
                   hoverSelectionName={hoverSelectionName}
@@ -758,15 +787,15 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
               color: "#333"
             }}
           >
-            {fieldLabels[field] || field}
+            {resolveExplicitColor(fieldLabels, field) ?? field}
           </div>
         ))}
       </div>
       {/* Single tooltip for the entire matrix — positioned above the hovered point. */}
       {hoveredInfo && cellMode === "hover" && tooltip !== false && (() => {
         const d = hoveredInfo.datum
-        const xFieldLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
-        const yFieldLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
+        const xFieldLabel = resolveExplicitColor(fieldLabels, hoveredInfo.xField) ?? hoveredInfo.xField
+        const yFieldLabel = resolveExplicitColor(fieldLabels, hoveredInfo.yField) ?? hoveredInfo.yField
         const colorLabel = colorBy
           ? typeof colorBy === "function" ? colorBy(d as TDatum) : d[colorBy]
           : null
@@ -821,6 +850,14 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
         )
       })()}
       </div>
+      {accessibleTable && (
+        <AccessibleDataTable
+          scene={accessibleScene}
+          chartType="scatterplot matrix"
+          tableId={tableId}
+          chartTitle={title}
+        />
+      )}
     </div>
   )
 }

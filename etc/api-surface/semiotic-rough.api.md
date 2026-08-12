@@ -6,8 +6,36 @@ _Edit dist/semiotic-rough.d.ts's sources, then re-run `npm run docs:api-surface`
 ```
 function createRoughRenderMode(options?: RoughRenderModeOptions | undefined): RoughRenderMode
 function stableRoughSeed(value: unknown): number
-interface RoughRenderMode
+interface RoughRenderMode extends SceneRenderBackend<RoughSceneNode>
 interface RoughRenderModeOptions
 interface SceneRenderBackend<Node = unknown>
-type SceneRenderMode<Node = unknown> = "sketchy" | SceneRenderBackend<Node> | ((datum: SceneRenderDatum<Node>, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined)
+interface-member RoughRenderMode::method::clearCache = required clearCache(): void
+interface-member RoughRenderMode::property::cacheEntries = required readonly cacheEntries: number
+interface-member RoughRenderMode::property::id = required readonly id: "roughjs"
+interface-member RoughRenderMode::property::seed = required readonly seed: number
+interface-member RoughRenderModeOptions::property::bowing = optional bowing: number | undefined
+interface-member RoughRenderModeOptions::property::cacheSize = optional cacheSize: number | undefined
+interface-member RoughRenderModeOptions::property::curveFitting = optional curveFitting: number | undefined
+interface-member RoughRenderModeOptions::property::curveStepCount = optional curveStepCount: number | undefined
+interface-member RoughRenderModeOptions::property::curveTightness = optional curveTightness: number | undefined
+interface-member RoughRenderModeOptions::property::dashGap = optional dashGap: number | undefined
+interface-member RoughRenderModeOptions::property::dashOffset = optional dashOffset: number | undefined
+interface-member RoughRenderModeOptions::property::disableMultiStroke = optional disableMultiStroke: boolean | undefined
+interface-member RoughRenderModeOptions::property::disableMultiStrokeFill = optional disableMultiStrokeFill: boolean | undefined
+interface-member RoughRenderModeOptions::property::fillStyle = optional fillStyle: "cross-hatch" | "dashed" | "dots" | "hachure" | "solid" | "zigzag" | "zigzag-line" | undefined
+interface-member RoughRenderModeOptions::property::fillWeight = optional fillWeight: number | undefined
+interface-member RoughRenderModeOptions::property::fixedDecimalPlaceDigits = optional fixedDecimalPlaceDigits: number | undefined
+interface-member RoughRenderModeOptions::property::hachureAngle = optional hachureAngle: number | undefined
+interface-member RoughRenderModeOptions::property::hachureGap = optional hachureGap: number | undefined
+interface-member RoughRenderModeOptions::property::maxRandomnessOffset = optional maxRandomnessOffset: number | undefined
+interface-member RoughRenderModeOptions::property::preserveVertices = optional preserveVertices: boolean | undefined
+interface-member RoughRenderModeOptions::property::roughness = optional roughness: number | undefined
+interface-member RoughRenderModeOptions::property::seed = optional seed: number | undefined
+interface-member RoughRenderModeOptions::property::simplification = optional simplification: number | undefined
+interface-member RoughRenderModeOptions::property::zigzagOffset = optional zigzagOffset: number | undefined
+interface-member SceneRenderBackend::method::cacheKey = required cacheKey(node: Node, style: Style): string
+interface-member SceneRenderBackend::method::drawCanvas = required drawCanvas(args: {context: CanvasRenderingContext2D; node: Node; style: Style; pixelRatio: number;}): boolean
+interface-member SceneRenderBackend::method::renderStaticSVG = required renderStaticSVG(args: {node: Node; style: Style; key: string;}): ReactNode
+interface-member SceneRenderBackend::property::id = required readonly id: string
+type SceneRenderMode<Node = unknown> = "sketchy" | ((datum: SceneRenderDatum<Node>, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined) | SceneRenderBackend<Node>
 ```

@@ -1,12 +1,31 @@
 "use client"
 import * as React from "react"
-import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback
+} from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
-import type { ResolutionMode, Selection, SelectionStoreState } from "./store/SelectionStore"
+import type {
+  ResolutionMode,
+  Selection,
+  SelectionStoreState
+} from "./store/SelectionStore"
 import { ObservationProvider } from "./store/ObservationStore"
 import { useSelection } from "./store/useSelection"
+import { useThemeSelector } from "./store/ThemeStore"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
-import { DEFAULT_COLORS } from "./charts/shared/colorUtils"
+import {
+  DEFAULT_COLORS,
+  resolveExplicitColor
+} from "./charts/shared/colorUtils"
+import { resolveBoundedCategoryIndex } from "./charts/shared/boundedCategoryRegistry"
 import Legend from "./Legend"
 import type { LegendGroup } from "./types/legendTypes"
 import { useResponsiveSize } from "./stream/useResponsiveSize"
@@ -14,7 +33,13 @@ import { useResponsiveSize } from "./stream/useResponsiveSize"
 export type LegendInteractionMode = "highlight" | "isolate" | "none"
 
 // Re-export hooks for convenience
-export { useSelection, useSelectionActions, useLinkedHover, useBrushSelection, useFilteredData } from "./store/useSelection"
+export {
+  useSelection,
+  useSelectionActions,
+  useLinkedHover,
+  useBrushSelection,
+  useFilteredData
+} from "./store/useSelection"
 export type {
   UseSelectionOptions,
   UseSelectionResult,
@@ -27,7 +52,10 @@ export type {
 
 // Re-export observation hook
 export { useChartObserver } from "./store/useObservation"
-export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
+export type {
+  UseChartObserverOptions,
+  UseChartObserverResult
+} from "./store/useObservation"
 
 // ── Linked legend context ──────────────────────────────────────────────────
 
@@ -53,8 +81,10 @@ interface LinkedCategoryRegistry {
   unregisterCategories: (id: string) => void
 }
 
-const LinkedCategoryRegistryContext = createContext<LinkedCategoryRegistry | null>(null)
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+const LinkedCategoryRegistryContext =
+  createContext<LinkedCategoryRegistry | null>(null)
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect
 
 function uniqueCategories(categories: string[]): string[] {
   const seen = new Set<string>()
@@ -156,7 +186,7 @@ function LinkedLegend({
   categoryColors,
   interaction,
   selectionName,
-  field,
+  field
 }: {
   categoryColors: Record<string, string>
   interaction: LegendInteractionMode
@@ -173,12 +203,14 @@ function LinkedLegend({
   const entries = Object.entries(categoryColors)
   const allCategories = entries.map(([label]) => label)
   const items = entries.map(([label, color]) => ({ label, color }))
-  const legendGroups: LegendGroup[] = [{
-    styleFn: (d) => ({ fill: d.color || "#333", stroke: d.color || "#333" }),
-    type: "fill" as const,
-    items,
-    label: ""
-  }]
+  const legendGroups: LegendGroup[] = [
+    {
+      styleFn: (d) => ({ fill: d.color || "#333", stroke: d.color || "#333" }),
+      type: "fill" as const,
+      items,
+      label: ""
+    }
+  ]
 
   // The selection store is the single source of truth for both the
   // highlight (hover) and isolate (click) interactions. Each writes its
@@ -190,21 +222,23 @@ function LinkedLegend({
   const { selectPoints: selectIsolate, clear: clearIsolate } = useSelection({
     name: selectionName,
     fields: [field],
-    clientId: ISOLATE_CLIENT,
+    clientId: ISOLATE_CLIENT
   })
   // Highlight mode: hover produces a transient point selection.
-  const { selectPoints: selectHighlight, clear: clearHighlight } = useSelection({
-    name: selectionName,
-    fields: [field],
-    clientId: HIGHLIGHT_CLIENT,
-  })
+  const { selectPoints: selectHighlight, clear: clearHighlight } = useSelection(
+    {
+      name: selectionName,
+      fields: [field],
+      clientId: HIGHLIGHT_CLIENT
+    }
+  )
 
   // Read the legend's emphasis straight back from the store rather than
   // keeping a parallel React-state copy. `selections.get` returns a stable
   // reference until *this* selection changes, so the subscription only
   // re-renders the legend on its own updates.
-  const selection = useSelectionSelector(
-    (state: SelectionStoreState) => state.selections.get(selectionName)
+  const selection = useSelectionSelector((state: SelectionStoreState) =>
+    state.selections.get(selectionName)
   )
   const { isolatedCategories, highlightedCategory } = useMemo(() => {
     const isolated = new Set<string>()
@@ -213,7 +247,8 @@ function LinkedLegend({
     if (isolateField?.type === "point") {
       for (const v of isolateField.values) isolated.add(String(v))
     }
-    const highlightField = selection?.clauses.get(HIGHLIGHT_CLIENT)?.fields[field]
+    const highlightField =
+      selection?.clauses.get(HIGHLIGHT_CLIENT)?.fields[field]
     if (highlightField?.type === "point") {
       const first = highlightField.values.values().next().value
       if (first != null) highlighted = String(first)
@@ -250,7 +285,14 @@ function LinkedLegend({
         selectIsolate({ [field]: Array.from(next) })
       }
     },
-    [interaction, field, isolatedCategories, allCategories.length, selectIsolate, clearIsolate]
+    [
+      interaction,
+      field,
+      isolatedCategories,
+      allCategories.length,
+      selectIsolate,
+      clearIsolate
+    ]
   )
 
   // Measure the container's actual laid-out width so we can tell <Legend>
@@ -270,7 +312,11 @@ function LinkedLegend({
   // needs to wrap, we grow the SVG height so nothing clips.
   const [containerRef, [measuredWidth]] = useResponsiveSize([0, 0], true, false)
   const rowCount = useMemo(
-    () => estimateLegendRowCount(entries.map(([label]) => label), measuredWidth),
+    () =>
+      estimateLegendRowCount(
+        entries.map(([label]) => label),
+        measuredWidth
+      ),
     [entries, measuredWidth]
   )
   const svgHeight = Math.max(30, rowCount * 22 + 8)
@@ -293,8 +339,12 @@ function LinkedLegend({
           orientation="horizontal"
           width={measuredWidth}
           height={20}
-          customHoverBehavior={interaction === "highlight" ? handleHover : undefined}
-          customClickBehavior={interaction === "isolate" ? handleClick : undefined}
+          customHoverBehavior={
+            interaction === "highlight" ? handleHover : undefined
+          }
+          customClickBehavior={
+            interaction === "isolate" ? handleClick : undefined
+          }
           highlightedCategory={highlightedCategory}
           isolatedCategories={isolatedCategories}
         />
@@ -310,7 +360,10 @@ function LinkedLegend({
  * authoritative layout still happens inside <Legend>. When width is
  * unknown (e.g. first paint, SSR), return 1 so we don't pre-grow.
  */
-export function estimateLegendRowCount(labels: string[], width: number): number {
+export function estimateLegendRowCount(
+  labels: string[],
+  width: number
+): number {
   if (!width || labels.length === 0) return 1
   let offset = 0
   let rows = 1
@@ -364,7 +417,7 @@ export function LinkedCharts({
   legendPosition = "top",
   legendInteraction = "none",
   legendSelectionName = "legend",
-  legendField = "category",
+  legendField = "category"
 }: LinkedChartsProps) {
   // Seed configured resolution modes at store construction rather than
   // mirroring them in with a mount effect — the resolution is initial
@@ -376,33 +429,47 @@ export function LinkedCharts({
     const seeded = new Map<string, Selection>()
     for (const [name, config] of Object.entries(selections)) {
       if (config.resolution) {
-        seeded.set(name, { name, resolution: config.resolution, clauses: new Map() })
+        seeded.set(name, {
+          name,
+          resolution: config.resolution,
+          clauses: new Map()
+        })
       }
     }
     return seeded.size > 0 ? { selections: seeded } : undefined
   }, [selections])
 
   const parentCategoryColors = useCategoryColors()
-  const [registeredCategories, setRegisteredCategories] = useState<Record<string, string[]>>({})
-  const generatedCategoryColorsRef = useRef<Record<string, string>>({})
+  const themeCategorical = useThemeSelector(
+    (state) => state.theme.colors.categorical
+  )
+  const linkedCategoricalPalette =
+    themeCategorical.length > 0 ? themeCategorical : DEFAULT_COLORS
+  const [registeredCategories, setRegisteredCategories] = useState<
+    Record<string, string[]>
+  >({})
+  const committedCategoryIndexesRef = useRef(new Map<string, number>())
 
-  const registry = useMemo<LinkedCategoryRegistry>(() => ({
-    registerCategories: (id, categories) => {
-      const nextCategories = uniqueCategories(categories)
-      setRegisteredCategories(prev => {
-        if (sameCategories(prev[id] ?? [], nextCategories)) return prev
-        return { ...prev, [id]: nextCategories }
-      })
-    },
-    unregisterCategories: (id) => {
-      setRegisteredCategories(prev => {
-        if (!(id in prev)) return prev
-        const next = { ...prev }
-        delete next[id]
-        return next
-      })
-    }
-  }), [])
+  const registry = useMemo<LinkedCategoryRegistry>(
+    () => ({
+      registerCategories: (id, categories) => {
+        const nextCategories = uniqueCategories(categories)
+        setRegisteredCategories((prev) => {
+          if (sameCategories(prev[id] ?? [], nextCategories)) return prev
+          return { ...prev, [id]: nextCategories }
+        })
+      },
+      unregisterCategories: (id) => {
+        setRegisteredCategories((prev) => {
+          if (!Object.prototype.hasOwnProperty.call(prev, id)) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+      }
+    }),
+    []
+  )
 
   const dynamicCategories = useMemo(() => {
     const merged: string[] = []
@@ -412,28 +479,42 @@ export function LinkedCharts({
     return uniqueCategories(merged)
   }, [registeredCategories])
 
-  const categoryColors = useMemo(() => {
+  const categoryResolution = useMemo(() => {
     const parentMap = parentCategoryColors ?? {}
-    const generatedMap = generatedCategoryColorsRef.current
-    let paletteIndex = Object.keys(parentMap).length + Object.keys(generatedMap).length
-
-    for (const category of dynamicCategories) {
-      if (parentMap[category] || generatedMap[category]) continue
-      generatedMap[category] = DEFAULT_COLORS[paletteIndex % DEFAULT_COLORS.length]
-      paletteIndex++
+    // Resolve against a render-local clone. A child can suspend after this
+    // component renders; speculative categories from that abandoned tree must
+    // never consume palette indexes in the next committed tree.
+    const generatedIndexes = new Map(committedCategoryIndexesRef.current)
+    const parentEntries = Object.entries(parentMap).filter(
+      (entry): entry is [string, string] =>
+        typeof entry[1] === "string" && entry[1].length > 0
+    )
+    const dynamicEntries = dynamicCategories.map(
+      (category): [string, string] => {
+        // Reserve every active category, including explicitly mapped ones, so
+        // the central registry follows the same discovery order as child
+        // charts. Map storage avoids prototype-key hazards and is capped by
+        // the shared resolver for long-running, high-cardinality streams.
+        const index = resolveBoundedCategoryIndex(generatedIndexes, category)
+        return [
+          category,
+          resolveExplicitColor(parentMap, category) ??
+            linkedCategoricalPalette[index % linkedCategoricalPalette.length]
+        ]
+      }
+    )
+    return {
+      categoryIndexes: generatedIndexes,
+      colors: Object.fromEntries([...parentEntries, ...dynamicEntries])
     }
-
-    const map: Record<string, string> = { ...parentMap }
-    for (const category of dynamicCategories) {
-      map[category] = parentMap[category] ?? generatedMap[category]
-    }
-    return map
-  }, [parentCategoryColors, dynamicCategories])
+  }, [parentCategoryColors, dynamicCategories, linkedCategoricalPalette])
+  useIsomorphicLayoutEffect(() => {
+    committedCategoryIndexesRef.current = categoryResolution.categoryIndexes
+  }, [categoryResolution])
+  const categoryColors = categoryResolution.colors
 
   // Determine if we should show a unified legend
-  const shouldShowLegend = showLegend !== undefined
-    ? showLegend
-    : true
+  const shouldShowLegend = showLegend !== undefined ? showLegend : true
 
   // Only suppress child-chart legends once the unified legend actually has
   // categories to render. Setting LinkedLegendContext = true on first render

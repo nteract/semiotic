@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { renderHook, act } from "@testing-library/react"
-import { useChartLegendAndMargin, useLegendInteraction } from "./hooks"
+import {
+  useChartLegendAndMargin,
+  useGradientLegendInteraction,
+  useLegendInteraction
+} from "./hooks"
 import { isLegendConfig } from "../../types/legendTypes"
 
 /**
@@ -16,7 +20,7 @@ describe("useChartLegendAndMargin", () => {
   const data = [
     { cat: "A", val: 1 },
     { cat: "B", val: 2 },
-    { cat: "C", val: 3 },
+    { cat: "C", val: 3 }
   ]
 
   it("returns no legend and default margins when colorBy is absent", () => {
@@ -26,12 +30,15 @@ describe("useChartLegendAndMargin", () => {
         colorBy: undefined,
         colorScale: undefined,
         showLegend: undefined,
-        userMargin: undefined,
+        userMargin: undefined
       })
     )
     expect(result.current.legend).toBeUndefined()
     expect(result.current.margin).toEqual({
-      top: 50, bottom: 60, left: 70, right: 40,
+      top: 50,
+      bottom: 60,
+      left: 70,
+      right: 40
     })
   })
 
@@ -45,7 +52,7 @@ describe("useChartLegendAndMargin", () => {
     // actually observable in the resolved margin.
     const withPosition = (
       legendPosition: "top" | "bottom",
-      axisChrome?: { hasAxis?: boolean; hasAxisLabel?: boolean },
+      axisChrome?: { hasAxis?: boolean; hasAxisLabel?: boolean }
     ) =>
       renderHook(() =>
         useChartLegendAndMargin({
@@ -56,7 +63,7 @@ describe("useChartLegendAndMargin", () => {
           legendPosition,
           userMargin: undefined,
           chartWidth: 150,
-          axisChrome,
+          axisChrome
         })
       ).result.current.margin
 
@@ -80,7 +87,7 @@ describe("useChartLegendAndMargin", () => {
           showLegend: true,
           legendPosition: "top",
           userMargin: undefined,
-          legendLayout: axisGutter == null ? undefined : { axisGutter },
+          legendLayout: axisGutter == null ? undefined : { axisGutter }
         })
       ).result.current.margin.top
 
@@ -95,23 +102,26 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: undefined,
-        userMargin: undefined,
+        userMargin: undefined
       })
     )
     const legend = result.current.legend
-    if (!isLegendConfig(legend)) throw new Error("Expected a categorical legend")
+    if (!isLegendConfig(legend))
+      throw new Error("Expected a categorical legend")
     expect(legend.legendGroups).toHaveLength(1)
     expect(legend.legendGroups[0].items).toHaveLength(3)
   })
 
   it("appends caller categorical groups after the inferred legend", () => {
     const additionalLegend = {
-      legendGroups: [{
-        label: "Context",
-        type: "line" as const,
-        styleFn: () => ({ stroke: "#111" }),
-        items: [{ label: "Threshold" }],
-      }],
+      legendGroups: [
+        {
+          label: "Context",
+          type: "line" as const,
+          styleFn: () => ({ stroke: "#111" }),
+          items: [{ label: "Threshold" }]
+        }
+      ]
     }
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
@@ -120,15 +130,16 @@ describe("useChartLegendAndMargin", () => {
         colorScale: () => "#ccc",
         showLegend: undefined,
         userMargin: undefined,
-        additionalLegend,
+        additionalLegend
       })
     )
 
     const legend = result.current.legend
-    if (!isLegendConfig(legend)) throw new Error("Expected composed categorical legends")
+    if (!isLegendConfig(legend))
+      throw new Error("Expected composed categorical legends")
     const groups = legend.legendGroups
     expect(groups).toHaveLength(2)
-    expect(groups[0].items.map(item => item.label)).toEqual(["A", "B", "C"])
+    expect(groups[0].items.map((item) => item.label)).toEqual(["A", "B", "C"])
     expect(groups[1].items[0].label).toBe("Threshold")
     expect(result.current.margin.right).toBe(110)
   })
@@ -141,12 +152,13 @@ describe("useChartLegendAndMargin", () => {
         colorScale: () => "#ccc",
         showLegend: true,
         userMargin: { right: "auto" },
-        additionalLegend: { legendGroups: [], legendDistance: 24 },
+        additionalLegend: { legendGroups: [], legendDistance: 24 }
       })
     )
 
     const legend = result.current.legend
-    if (!isLegendConfig(legend)) throw new Error("Expected a categorical legend")
+    if (!isLegendConfig(legend))
+      throw new Error("Expected a categorical legend")
     expect(legend.legendDistance).toBe(24)
     expect(result.current.margin.right).toBe(124)
   })
@@ -158,7 +170,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale: undefined,
         showLegend: false,
-        userMargin: undefined,
+        userMargin: undefined
       })
     )
     expect(result.current.legend).toBeUndefined()
@@ -171,7 +183,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: undefined,
         colorScale: undefined,
         showLegend: true,
-        userMargin: undefined,
+        userMargin: undefined
       })
     )
     // showLegend is true but colorBy is undefined, so legend creation is skipped
@@ -186,7 +198,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: true,
-        userMargin: undefined,
+        userMargin: undefined
       })
     )
     expect(result.current.margin.right).toBe(110)
@@ -200,7 +212,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: true,
-        userMargin: { right: 200 },
+        userMargin: { right: 200 }
       })
     )
     expect(result.current.margin.right).toBe(200)
@@ -214,7 +226,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: true,
-        userMargin: { right: undefined },
+        userMargin: { right: undefined }
       })
     )
     expect(result.current.margin.right).toBe(110)
@@ -228,7 +240,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: true,
-        userMargin: { right: "auto" },
+        userMargin: { right: "auto" }
       })
     )
     expect(rightAuto.result.current.margin.right).toBe(110)
@@ -239,7 +251,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale,
         showLegend: true,
-        userMargin: { right: null },
+        userMargin: { right: null }
       })
     )
     expect(rightNull.result.current.margin.right).toBe(110)
@@ -248,7 +260,7 @@ describe("useChartLegendAndMargin", () => {
   it("sizes automatic side margins from the longest legend label", () => {
     const longLabelData = [
       { cat: "Catch-and-shoot attempts", val: 1 },
-      { cat: "At rim", val: 2 },
+      { cat: "At rim", val: 2 }
     ]
     const right = renderHook(() =>
       useChartLegendAndMargin({
@@ -256,7 +268,7 @@ describe("useChartLegendAndMargin", () => {
         colorBy: "cat",
         colorScale: () => "#ccc",
         showLegend: true,
-        userMargin: { right: "auto" },
+        userMargin: { right: "auto" }
       })
     )
     const left = renderHook(() =>
@@ -266,12 +278,14 @@ describe("useChartLegendAndMargin", () => {
         colorScale: () => "#ccc",
         showLegend: true,
         legendPosition: "left",
-        userMargin: { left: "auto" },
+        userMargin: { left: "auto" }
       })
     )
 
     expect(right.result.current.margin.right).toBeGreaterThan(110)
-    expect(left.result.current.margin.left).toBe(right.result.current.margin.right)
+    expect(left.result.current.margin.left).toBe(
+      right.result.current.margin.right
+    )
   })
 
   it("adds a side gutter for axes or other plot-adjacent chrome", () => {
@@ -282,7 +296,7 @@ describe("useChartLegendAndMargin", () => {
         colorScale: () => "#ccc",
         showLegend: true,
         userMargin: { right: "auto" },
-        legendLayout: { sideGutter: 70 },
+        legendLayout: { sideGutter: 70 }
       })
     )
 
@@ -303,18 +317,18 @@ describe("useChartLegendAndMargin", () => {
           gradient: {
             domain: [0, 1],
             colorFn: () => "#ccc",
-            label: "Probability",
+            label: "Probability"
           },
-          legendDistance: 70,
-        },
+          legendDistance: 70
+        }
       })
     )
 
-    // 34px gradient legend + 70px legendDistance + the 46px bottom-axis
+    // 46px gradient legend + 70px legendDistance + the 46px bottom-axis
     // chrome gutter. This caller does not describe its axis, so the gutter
     // falls back to the widest ordinary band: under-reserving would let the
     // renderer clamp the legend back up onto the tick labels.
-    expect(result.current.margin.bottom).toBe(150)
+    expect(result.current.margin.bottom).toBe(162)
   })
 
   it("does not add the gutter for a caller that declares no bottom axis", () => {
@@ -332,14 +346,14 @@ describe("useChartLegendAndMargin", () => {
           gradient: {
             domain: [0, 1],
             colorFn: () => "#ccc",
-            label: "Probability",
+            label: "Probability"
           },
-          legendDistance: 70,
-        },
+          legendDistance: 70
+        }
       })
     )
 
-    expect(result.current.margin.bottom).toBe(104)
+    expect(result.current.margin.bottom).toBe(116)
   })
 
   it("keeps a titled top legend below the title band", () => {
@@ -352,7 +366,7 @@ describe("useChartLegendAndMargin", () => {
         legendPosition: "top",
         userMargin: { top: "auto" },
         chartWidth: 600,
-        hasTitle: true,
+        hasTitle: true
       })
     )
 
@@ -366,11 +380,14 @@ describe("useChartLegendAndMargin", () => {
         colorBy: undefined,
         colorScale: undefined,
         showLegend: false,
-        userMargin: { top: 10, left: 30 },
+        userMargin: { top: 10, left: 30 }
       })
     )
     expect(result.current.margin).toEqual({
-      top: 10, bottom: 60, left: 30, right: 40,
+      top: 10,
+      bottom: 60,
+      left: 30,
+      right: 40
     })
   })
 
@@ -382,10 +399,15 @@ describe("useChartLegendAndMargin", () => {
         colorScale: undefined,
         showLegend: false,
         userMargin: undefined,
-        defaults: { top: 5, bottom: 5, left: 5, right: 5 },
+        defaults: { top: 5, bottom: 5, left: 5, right: 5 }
       })
     )
-    expect(result.current.margin).toEqual({ top: 5, bottom: 5, left: 5, right: 5 })
+    expect(result.current.margin).toEqual({
+      top: 5,
+      bottom: 5,
+      left: 5,
+      right: 5
+    })
   })
 })
 
@@ -553,6 +575,87 @@ describe("useLegendInteraction", () => {
 
     // highlightedCategory should remain null, no state change
     expect(result.current.highlightedCategory).toBeNull()
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("prunes isolated categories that leave the live domain", () => {
+    const { result, rerender } = renderHook(
+      ({ categories }) => useLegendInteraction("isolate", "cat", categories),
+      { initialProps: { categories: ["A", "B"] } }
+    )
+    act(() => result.current.onLegendClick({ label: "A" }))
+    expect(result.current.isolatedCategories).toEqual(new Set(["A"]))
+
+    rerender({ categories: ["B"] })
+    expect(result.current.isolatedCategories.size).toBe(0)
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("resets interaction when disabled and ignores untagged authored items", () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }) =>
+        useLegendInteraction("isolate", "cat", ["A", "B"], enabled, true),
+      { initialProps: { enabled: true } }
+    )
+    act(() => result.current.onLegendClick({ label: "A" }))
+    expect(result.current.isolatedCategories.size).toBe(0)
+
+    act(() =>
+      result.current.onLegendClick({
+        label: "A",
+        __semioticCategory: true
+      })
+    )
+    expect(result.current.isolatedCategories).toEqual(new Set(["A"]))
+
+    rerender({ enabled: false })
+    expect(result.current.isolatedCategories.size).toBe(0)
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+})
+
+describe("useGradientLegendInteraction", () => {
+  it("keys equal formatted labels by their numeric ranges", () => {
+    const { result } = renderHook(() =>
+      useGradientLegendInteraction("isolate", (d) => Number(d.value), [0, 10])
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "same", valueRange: [0, 2] })
+      result.current.onLegendClick({ label: "same", valueRange: [2, 4] })
+    })
+
+    expect(result.current.isolatedCategories.size).toBe(2)
+    expect(result.current.legendSelectionHook?.predicate({ value: 1 })).toBe(
+      true
+    )
+    expect(result.current.legendSelectionHook?.predicate({ value: 3 })).toBe(
+      true
+    )
+    expect(result.current.legendSelectionHook?.predicate({ value: 8 })).toBe(
+      false
+    )
+  })
+
+  it("clears interaction state when the mode changes", () => {
+    const { result, rerender } = renderHook(
+      ({ mode }: { mode: "isolate" | "none" }) =>
+        useGradientLegendInteraction(mode, (d) => Number(d.value), [0, 10]),
+      {
+        initialProps: {
+          mode: "isolate"
+        } as { mode: "isolate" | "none" }
+      }
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "low", valueRange: [0, 2] })
+    })
+    expect(result.current.isolatedCategories.size).toBe(1)
+
+    rerender({ mode: "none" })
+    rerender({ mode: "isolate" })
+    expect(result.current.isolatedCategories.size).toBe(0)
     expect(result.current.legendSelectionHook).toBeNull()
   })
 })

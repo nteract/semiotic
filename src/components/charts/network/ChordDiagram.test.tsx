@@ -11,9 +11,16 @@ let lastNetworkFrameProps = {} as CapturedNetworkFrameProps
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef<Partial<StreamNetworkFrameHandle>, CapturedNetworkFrameProps>((props, _ref) => {
+    default: React.forwardRef<
+      Partial<StreamNetworkFrameHandle>,
+      CapturedNetworkFrameProps
+    >((props, _ref) => {
       lastNetworkFrameProps = props
-      return <div className="stream-network-frame"><svg /></div>
+      return (
+        <div className="stream-network-frame">
+          <svg />
+        </div>
+      )
     })
   }
 })
@@ -210,11 +217,40 @@ describe("ChordDiagram", () => {
   it("applies color encoding via colorBy", () => {
     render(
       <TooltipProvider>
-        <ChordDiagram edges={sampleEdges} nodes={sampleNodes} colorBy="category" />
+        <ChordDiagram
+          edges={sampleEdges}
+          nodes={sampleNodes}
+          colorBy="category"
+        />
       </TooltipProvider>
     )
     expect(lastNetworkFrameProps.colorBy).toBe("category")
     expect(typeof lastNetworkFrameProps.nodeStyle).toBe("function")
+  })
+
+  it("applies style rules over its generated color palette", () => {
+    render(
+      <TooltipProvider>
+        <ChordDiagram
+          edges={sampleEdges}
+          nodes={sampleNodes}
+          colorBy="category"
+          styleRules={[
+            {
+              when: { field: "category", eq: "Group1" },
+              style: { fill: "#010203" }
+            }
+          ]}
+        />
+      </TooltipProvider>
+    )
+
+    expect(
+      lastNetworkFrameProps.nodeStyle?.({
+        id: "A",
+        data: sampleNodes[0]
+      })
+    ).toMatchObject({ fill: "#010203" })
   })
 
   it("does not pass nodeStyle/edgeStyle when colorBy is set but no data (push API mode)", () => {
@@ -233,7 +269,11 @@ describe("ChordDiagram", () => {
   it("passes nodeStyle/edgeStyle when colorBy is set with bounded data", () => {
     render(
       <TooltipProvider>
-        <ChordDiagram edges={sampleEdges} nodes={sampleNodes} colorBy="category" />
+        <ChordDiagram
+          edges={sampleEdges}
+          nodes={sampleNodes}
+          colorBy="category"
+        />
       </TooltipProvider>
     )
     expect(typeof lastNetworkFrameProps.nodeStyle).toBe("function")
@@ -257,5 +297,4 @@ describe("ChordDiagram", () => {
     )
     expect(lastNetworkFrameProps.enableHover).toBe(false)
   })
-
 })

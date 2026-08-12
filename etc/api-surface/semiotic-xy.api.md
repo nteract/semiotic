@@ -5,55 +5,55 @@ _Edit dist/semiotic-xy.d.ts's sources, then re-run `npm run docs:api-surface` to
 
 ```
 const DEFAULT_HIT_RADIUS: 8
-function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
-function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
-function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
-function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function StreamXYFrame(: import("../../../dist/semiotic-realtime-core").StreamXYFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-realtime-core").StreamXYFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
+function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StreamXYFrame(: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function hatchFillId(prefix: string, h: HatchFill): string
-function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
 function isHatchFill(fill: unknown): boolean
-function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
-function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function makeRuleValueResolver(accessor: ((d: Datum) => unknown) | string | undefined): (d: Datum) => number | undefined
+function makeXYRuleContext(xAccessor: ((d: Datum) => unknown) | string | undefined, yAccessor: ((d: Datum) => unknown) | string | undefined): (d: Datum, category?: string) => StyleRuleContext
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
-function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
+function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function useCustomLayoutSelection(): CustomLayoutSelection
-interface AreaChartProps<TDatum extends Datum = Datum>
-interface BubbleChartProps<TDatum extends Datum = Datum>
-interface BumpChartProps<TDatum extends Datum = Datum>
-interface CandlestickChartProps<TDatum extends Datum = Datum>
+interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface CategoricalLegendConfig
 interface CenterlineStyle
-interface ConnectedScatterplotProps<TDatum extends Datum = Datum>
+interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
-interface DifferenceChartProps<TDatum extends Datum = Datum>
+interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
@@ -62,7 +62,7 @@ interface GradientLegendConfig
 interface GradientLegendValue
 interface GradientStop
 interface HatchFill
-interface HeatmapProps<TDatum extends Datum = Datum>
+interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface HitTargetPointProps
 interface HitTargetRectProps
 interface LayoutContext<C extends object = Record<string, unknown>>
@@ -70,45 +70,709 @@ interface LayoutResult
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
-interface LineChartProps<TDatum extends Datum = Datum>
-interface MultiAxisLineChartProps<TDatum extends Datum = Datum>
-interface MultiLineTooltipConfig
+interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
-interface QuadrantChartProps<TDatum extends Datum = Datum>
+interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface QuadrantConfig
 interface QuadrantsConfig
 interface RankBumpDataOptions<TDatum extends Datum = Datum>
 interface RankedBumpData<TDatum extends Datum = Datum>
-interface RankedBumpDatum<TDatum extends Datum = Datum>
+interface RankedBumpDatum<TDatum extends Datum = Datum> extends Datum
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
 interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
-interface ScatterplotProps<TDatum extends Datum = Datum>
+interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface SceneAccessibilityMetadata
-interface StackedAreaChartProps<TDatum extends Datum = Datum>
+interface StackedAreaChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface StreamXYFrameHandle<T = Datum>
-interface StreamXYFrameProps<T = Datum>
+interface StreamXYFrameProps<T = Datum> extends StreamSemanticInteractionProps<HoverData>
+interface Style
 interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface TooltipConfig
 interface TooltipField
-interface TooltipRootProps
-interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps, AxisConfig
+interface-member AreaChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member AreaChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
+interface-member AreaChartProps::property::areaBy = optional areaBy: ChartAccessor<TDatum, string> | undefined
+interface-member AreaChartProps::property::areaOpacity = optional areaOpacity: number | undefined
+interface-member AreaChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
+interface-member AreaChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member AreaChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member AreaChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
+interface-member AreaChartProps::property::data = optional data: TDatum[] | undefined
+interface-member AreaChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member AreaChartProps::property::forecast = optional forecast: ForecastConfig | undefined
+interface-member AreaChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member AreaChartProps::property::gradientFill = optional gradientFill: GradientInput | undefined
+interface-member AreaChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member AreaChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member AreaChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
+interface-member AreaChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
+interface-member AreaChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member AreaChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member AreaChartProps::property::semanticGradient = optional semanticGradient: SemanticGradientInput | undefined
+interface-member AreaChartProps::property::semanticLine = optional semanticLine: boolean | undefined
+interface-member AreaChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member AreaChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member AreaChartProps::property::showLine = optional showLine: boolean | undefined
+interface-member AreaChartProps::property::showPoints = optional showPoints: boolean | undefined
+interface-member AreaChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member AreaChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member AreaChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member AreaChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member AreaChartProps::property::y0Accessor = optional y0Accessor: ChartAccessor<TDatum, number> | undefined
+interface-member AreaChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member AreaChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member BubbleChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member BubbleChartProps::property::bubbleOpacity = optional bubbleOpacity: number | undefined
+interface-member BubbleChartProps::property::bubbleStrokeColor = optional bubbleStrokeColor: string | undefined
+interface-member BubbleChartProps::property::bubbleStrokeWidth = optional bubbleStrokeWidth: number | undefined
+interface-member BubbleChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member BubbleChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member BubbleChartProps::property::data = optional data: TDatum[] | undefined
+interface-member BubbleChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member BubbleChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member BubbleChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member BubbleChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member BubbleChartProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
+interface-member BubbleChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member BubbleChartProps::property::regression = optional regression: RegressionProp | undefined
+interface-member BubbleChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member BubbleChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member BubbleChartProps::property::sizeBy = required sizeBy: ChartAccessor<TDatum, number>
+interface-member BubbleChartProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member BubbleChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member BubbleChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member BubbleChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member BubbleChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member BubbleChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member BubbleChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member BumpChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member BumpChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member BumpChartProps::property::curve = optional curve: "linear" | "smooth" | undefined
+interface-member BumpChartProps::property::data = required data: TDatum[]
+interface-member BumpChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member BumpChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "customLayout" | "data" | "layoutConfig" | "size">> | undefined
+interface-member BumpChartProps::property::highlightTop = optional highlightTop: number | undefined
+interface-member BumpChartProps::property::hoverHighlight = optional hoverHighlight: "series" | boolean | undefined
+interface-member BumpChartProps::property::labelStyle = optional labelStyle: ((datum: TDatum) => React.CSSProperties) | React.CSSProperties | undefined
+interface-member BumpChartProps::property::legend = optional legend: LegendValue
+interface-member BumpChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member BumpChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member BumpChartProps::property::lineBy = optional lineBy: ChartAccessor<TDatum, string> | undefined
+interface-member BumpChartProps::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member BumpChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member BumpChartProps::property::neutralColor = optional neutralColor: string | undefined
+interface-member BumpChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member BumpChartProps::property::rankDirection = optional rankDirection: "ascending" | "descending" | undefined
+interface-member BumpChartProps::property::ribbon = optional ribbon: boolean | undefined
+interface-member BumpChartProps::property::ribbonOpacity = optional ribbonOpacity: number | undefined
+interface-member BumpChartProps::property::ribbonSizeRange = optional ribbonSizeRange: [number, number] | undefined
+interface-member BumpChartProps::property::samplesPerSegment = optional samplesPerSegment: number | undefined
+interface-member BumpChartProps::property::showAxes = optional showAxes: boolean | undefined
+interface-member BumpChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member BumpChartProps::property::showLabels = optional showLabels: "both" | "end" | "start" | boolean | undefined
+interface-member BumpChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member BumpChartProps::property::showPoints = optional showPoints: boolean | undefined
+interface-member BumpChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member BumpChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member BumpChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member BumpChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member CandlestickChartProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
+interface-member CandlestickChartProps::property::closeAccessor = optional closeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::data = optional data: TDatum[] | undefined
+interface-member CandlestickChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member CandlestickChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member CandlestickChartProps::property::highAccessor = optional highAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::lowAccessor = optional lowAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::openAccessor = optional openAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member CandlestickChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member CandlestickChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member CandlestickChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member CandlestickChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
+interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
+interface-member CenterlineStyle::property::stroke = optional stroke: string | undefined
+interface-member CenterlineStyle::property::strokeDasharray = optional strokeDasharray: number[] | undefined
+interface-member CenterlineStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member ConnectedScatterplotProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member ConnectedScatterplotProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
+interface-member ConnectedScatterplotProps::property::data = optional data: TDatum[] | undefined
+interface-member ConnectedScatterplotProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ConnectedScatterplotProps::property::forecast = optional forecast: ForecastConfig | undefined
+interface-member ConnectedScatterplotProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member ConnectedScatterplotProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ConnectedScatterplotProps::property::orderAccessor = optional orderAccessor: ((d: TDatum) => number | Date) | string | undefined
+interface-member ConnectedScatterplotProps::property::orderLabel = optional orderLabel: string | undefined
+interface-member ConnectedScatterplotProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ConnectedScatterplotProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member ConnectedScatterplotProps::property::regression = optional regression: RegressionProp | undefined
+interface-member ConnectedScatterplotProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member ConnectedScatterplotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ConnectedScatterplotProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ConnectedScatterplotProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ConnectedScatterplotProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member ConnectedScatterplotProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ConnectedScatterplotProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
+interface-member CustomLayoutFailureDiagnostic::property::code = required code: "CUSTOM_LAYOUT_ERROR"
+interface-member CustomLayoutFailureDiagnostic::property::component = required component: CustomLayoutFamily
+interface-member CustomLayoutFailureDiagnostic::property::error = required error: {name: string; message: string;}
+interface-member CustomLayoutFailureDiagnostic::property::message = required message: string
+interface-member CustomLayoutFailureDiagnostic::property::phase = required phase: "layout"
+interface-member CustomLayoutFailureDiagnostic::property::preservedLastGoodScene = required preservedLastGoodScene: boolean
+interface-member CustomLayoutFailureDiagnostic::property::recovery = required recovery: CustomLayoutFailureRecovery
+interface-member CustomLayoutFailureDiagnostic::property::severity = required severity: "error"
+interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
+interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
+interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member DifferenceChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member DifferenceChartProps::property::areaOpacity = optional areaOpacity: number | undefined
+interface-member DifferenceChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
+interface-member DifferenceChartProps::property::data = optional data: TDatum[] | undefined
+interface-member DifferenceChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member DifferenceChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member DifferenceChartProps::property::gradientFill = optional gradientFill: GradientInput | undefined
+interface-member DifferenceChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member DifferenceChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member DifferenceChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member DifferenceChartProps::property::pointIdAccessor = optional pointIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member DifferenceChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member DifferenceChartProps::property::seriesAAccessor = optional seriesAAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DifferenceChartProps::property::seriesAColor = optional seriesAColor: string | undefined
+interface-member DifferenceChartProps::property::seriesALabel = optional seriesALabel: string | undefined
+interface-member DifferenceChartProps::property::seriesBAccessor = optional seriesBAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DifferenceChartProps::property::seriesBColor = optional seriesBColor: string | undefined
+interface-member DifferenceChartProps::property::seriesBLabel = optional seriesBLabel: string | undefined
+interface-member DifferenceChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member DifferenceChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member DifferenceChartProps::property::showLines = optional showLines: boolean | undefined
+interface-member DifferenceChartProps::property::showPoints = optional showPoints: boolean | undefined
+interface-member DifferenceChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member DifferenceChartProps::property::windowSize = optional windowSize: number | undefined
+interface-member DifferenceChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DifferenceChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member DifferenceChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
+interface-member GlyphDef::property::parts = required parts: GlyphPart[]
+interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
+interface-member GlyphPart::property::d = required d: string
+interface-member GlyphPart::property::fill = optional fill: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::opacity = optional opacity: number | undefined
+interface-member GlyphPart::property::stroke = optional stroke: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member GlyphPart::property::strokeLinejoin = optional strokeLinejoin: "bevel" | "miter" | "round" | undefined
+interface-member GlyphPart::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GlyphSceneNode::property::_decayOpacity = optional _decayOpacity: number | undefined
+interface-member GlyphSceneNode::property::_pulseColor = optional _pulseColor: string | undefined
+interface-member GlyphSceneNode::property::_pulseGlowRadius = optional _pulseGlowRadius: number | undefined
+interface-member GlyphSceneNode::property::_pulseIntensity = optional _pulseIntensity: number | undefined
+interface-member GlyphSceneNode::property::_targetOpacity = optional _targetOpacity: number | undefined
+interface-member GlyphSceneNode::property::_targetR = optional _targetR: number | undefined
+interface-member GlyphSceneNode::property::_targetX = optional _targetX: number | undefined
+interface-member GlyphSceneNode::property::_targetY = optional _targetY: number | undefined
+interface-member GlyphSceneNode::property::_transitionKey = optional _transitionKey: string | undefined
+interface-member GlyphSceneNode::property::accent = optional accent: string | undefined
+interface-member GlyphSceneNode::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member GlyphSceneNode::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member GlyphSceneNode::property::color = optional color: string | undefined
+interface-member GlyphSceneNode::property::datum = required datum: SceneDatum
+interface-member GlyphSceneNode::property::fraction = optional fraction: number | undefined
+interface-member GlyphSceneNode::property::fractionDirection = optional fractionDirection: "horizontal" | "vertical" | undefined
+interface-member GlyphSceneNode::property::fractionStart = optional fractionStart: number | undefined
+interface-member GlyphSceneNode::property::ghostColor = optional ghostColor: string | undefined
+interface-member GlyphSceneNode::property::glyph = required glyph: GlyphDef
+interface-member GlyphSceneNode::property::pointId = optional pointId: string | undefined
+interface-member GlyphSceneNode::property::rotation = optional rotation: number | undefined
+interface-member GlyphSceneNode::property::size = required size: number
+interface-member GlyphSceneNode::property::style = required style: Style
+interface-member GlyphSceneNode::property::type = required type: "glyph"
+interface-member GlyphSceneNode::property::x = required x: number
+interface-member GlyphSceneNode::property::y = required y: number
+interface-member GradientConfig::property::stops = required stops: GradientStop[]
+interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
+interface-member GradientLegendConfig::property::domain = required domain: [number, number]
+interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
+interface-member GradientLegendConfig::property::label = optional label: string | undefined
+interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
+interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member GradientStop::property::color = optional color: string | undefined
+interface-member GradientStop::property::offset = required offset: number
+interface-member GradientStop::property::opacity = optional opacity: number | undefined
+interface-member HatchFill::property::angle = optional angle: number | undefined
+interface-member HatchFill::property::background = optional background: string | undefined
+interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member HatchFill::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchFill::property::spacing = optional spacing: number | undefined
+interface-member HatchFill::property::stroke = optional stroke: string | undefined
+interface-member HatchFill::property::type = required type: "hatch"
+interface-member HeatmapProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member HeatmapProps::property::cellBorderColor = optional cellBorderColor: string | undefined
+interface-member HeatmapProps::property::cellBorderWidth = optional cellBorderWidth: number | undefined
+interface-member HeatmapProps::property::colorScheme = optional colorScheme: "blues" | "cividis" | "custom" | "greens" | "greys" | "inferno" | "magma" | "oranges" | "plasma" | "purples" | "reds" | "turbo" | "viridis" | (string & {}) | undefined
+interface-member HeatmapProps::property::customColorScale = optional customColorScale: ((value: number) => string) | undefined
+interface-member HeatmapProps::property::data = optional data: TDatum[] | undefined
+interface-member HeatmapProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member HeatmapProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member HeatmapProps::property::legend = optional legend: Pick<GradientLegendValue, "legendDistance"> | undefined
+interface-member HeatmapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member HeatmapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member HeatmapProps::property::showValues = optional showValues: boolean | undefined
+interface-member HeatmapProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member HeatmapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member HeatmapProps::property::valueFormat = optional valueFormat: ((d: number) => string) | undefined
+interface-member HeatmapProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member HeatmapProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member HeatmapProps::property::xFormat = optional xFormat: ((Date | d: string | number, index?: number, allTicks?: number[]) => string) | undefined
+interface-member HeatmapProps::property::xLabel = optional xLabel: string | undefined
+interface-member HeatmapProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member HeatmapProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member HeatmapProps::property::yFormat = optional yFormat: ((Date | d: number | string) => string) | undefined
+interface-member HeatmapProps::property::yLabel = optional yLabel: string | undefined
+interface-member HitTargetPointProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member HitTargetPointProps::property::datum = required datum: SceneDatum
+interface-member HitTargetPointProps::property::id = optional id: number | string | undefined
+interface-member HitTargetPointProps::property::r = optional r: number | undefined
+interface-member HitTargetPointProps::property::x = required x: number
+interface-member HitTargetPointProps::property::y = required y: number
+interface-member HitTargetRectProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member HitTargetRectProps::property::datum = required datum: SceneDatum
+interface-member HitTargetRectProps::property::group = optional group: string | undefined
+interface-member HitTargetRectProps::property::height = required height: number
+interface-member HitTargetRectProps::property::id = optional id: number | string | undefined
+interface-member HitTargetRectProps::property::width = required width: number
+interface-member HitTargetRectProps::property::x = required x: number
+interface-member HitTargetRectProps::property::y = required y: number
+interface-member LayoutContext::property::config = required config: C
+interface-member LayoutContext::property::data = required data: Datum[]
+interface-member LayoutContext::property::dimensions = required dimensions: {width: number; height: number; margin: MarginType; plot: {x: number; y: number; width: number; height: number;};}
+interface-member LayoutContext::property::resolveColor = required resolveColor: (group: string, datum?: Datum) => string
+interface-member LayoutContext::property::scales = required scales: StreamScales
+interface-member LayoutContext::property::selection = optional selection: CustomLayoutSelection | null | undefined
+interface-member LayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member LayoutResult::property::nodes = optional nodes: SceneNode[] | undefined
+interface-member LayoutResult::property::overlays = optional overlays: ReactNode
+interface-member LayoutResult::property::restyle = optional restyle: ((node: SceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member LegendGroup::property::items = required items: LegendItem[]
+interface-member LegendGroup::property::label = required label: string
+interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
+interface-member LegendGroup::property::type = optional type: ItemType | undefined
+interface-member LegendItem::index::%24index = required (key: string): unknown
+interface-member LegendItem::property::color = optional color: string | undefined
+interface-member LegendItem::property::label = required label: string
+interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
+interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
+interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
+interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined
+interface-member LegendLayout::property::rowHeight = optional rowHeight: number | undefined
+interface-member LegendLayout::property::sideGutter = optional sideGutter: number | undefined
+interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
+interface-member LineChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
+interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined
+interface-member LineChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
+interface-member LineChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member LineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member LineChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
+interface-member LineChartProps::property::data = optional data: TDatum[] | undefined
+interface-member LineChartProps::property::directLabel = optional directLabel: boolean | undefined | {position?: "end" | "start"; fontSize?: number;}
+interface-member LineChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member LineChartProps::property::fillArea = optional fillArea: boolean | string[] | undefined
+interface-member LineChartProps::property::forecast = optional forecast: ForecastConfig | undefined
+interface-member LineChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member LineChartProps::property::gapStrategy = optional gapStrategy: "break" | "interpolate" | "zero" | undefined
+interface-member LineChartProps::property::legend = optional legend: LegendValue
+interface-member LineChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member LineChartProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member LineChartProps::property::lineBy = optional lineBy: ChartAccessor<TDatum, string> | undefined
+interface-member LineChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
+interface-member LineChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
+interface-member LineChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member LineChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member LineChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member LineChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member LineChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LineChartProps::property::showPoints = optional showPoints: boolean | undefined
+interface-member LineChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member LineChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member LineChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member LineChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member LineChartProps::property::xScaleType = optional xScaleType: "linear" | "log" | "time" | undefined
+interface-member LineChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member LineChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member LineChartProps::property::yScaleType = optional yScaleType: "linear" | "log" | "symlog" | undefined
+interface-member MultiAxisLineChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member MultiAxisLineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member MultiAxisLineChartProps::property::curve = optional curve: CurveType | undefined
+interface-member MultiAxisLineChartProps::property::data = optional data: TDatum[] | undefined
+interface-member MultiAxisLineChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member MultiAxisLineChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member MultiAxisLineChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member MultiAxisLineChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member MultiAxisLineChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member MultiAxisLineChartProps::property::series = required series: MultiAxisSeriesConfig<TDatum>[]
+interface-member MultiAxisLineChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member MultiAxisLineChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member MultiAxisLineChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member MultiAxisLineChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
+interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
+interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member QuadrantChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member QuadrantChartProps::property::centerlineStyle = optional centerlineStyle: CenterlineStyle | undefined
+interface-member QuadrantChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member QuadrantChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member QuadrantChartProps::property::data = optional data: TDatum[] | undefined
+interface-member QuadrantChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member QuadrantChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member QuadrantChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member QuadrantChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member QuadrantChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member QuadrantChartProps::property::pointOpacity = optional pointOpacity: number | undefined
+interface-member QuadrantChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member QuadrantChartProps::property::quadrantLabelSize = optional quadrantLabelSize: number | undefined
+interface-member QuadrantChartProps::property::quadrants = optional quadrants: QuadrantsConfigOverride | undefined
+interface-member QuadrantChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member QuadrantChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member QuadrantChartProps::property::showQuadrantLabels = optional showQuadrantLabels: boolean | undefined
+interface-member QuadrantChartProps::property::sizeBy = optional sizeBy: ChartAccessor<TDatum, number> | undefined
+interface-member QuadrantChartProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member QuadrantChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member QuadrantChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member QuadrantChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member QuadrantChartProps::property::xCenter = optional xCenter: number | undefined
+interface-member QuadrantChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member QuadrantChartProps::property::yCenter = optional yCenter: number | undefined
+interface-member QuadrantConfig::property::color = required color: string
+interface-member QuadrantConfig::property::label = required label: string
+interface-member QuadrantConfig::property::opacity = optional opacity: number | undefined
+interface-member QuadrantsConfig::property::bottomLeft = required bottomLeft: QuadrantConfig
+interface-member QuadrantsConfig::property::bottomRight = required bottomRight: QuadrantConfig
+interface-member QuadrantsConfig::property::topLeft = required topLeft: QuadrantConfig
+interface-member QuadrantsConfig::property::topRight = required topRight: QuadrantConfig
+interface-member RankBumpDataOptions::property::highlightTop = optional highlightTop: number | undefined
+interface-member RankBumpDataOptions::property::lineBy = optional lineBy: ChartAccessor<TDatum, string> | undefined
+interface-member RankBumpDataOptions::property::rankDirection = optional rankDirection: "ascending" | "descending" | undefined
+interface-member RankBumpDataOptions::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member RankBumpDataOptions::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RankedBumpData::property::data = required data: RankedBumpDatum<TDatum>[]
+interface-member RankedBumpData::property::overallOrder = required overallOrder: string[]
+interface-member RankedBumpData::property::seriesOrder = required seriesOrder: string[]
+interface-member RankedBumpData::property::valueExtent = required valueExtent: [number, number]
+interface-member RankedBumpData::property::xValues = required xValues: unknown[]
+interface-member RankedBumpDatum::property::__bumpColorGroup = required __bumpColorGroup: string
+interface-member RankedBumpDatum::property::__bumpHighlighted = required __bumpHighlighted: boolean
+interface-member RankedBumpDatum::property::__bumpRank = required __bumpRank: number
+interface-member RankedBumpDatum::property::__bumpRaw = required __bumpRaw: TDatum
+interface-member RankedBumpDatum::property::__bumpSeries = required __bumpSeries: string
+interface-member RankedBumpDatum::property::__bumpValue = required __bumpValue: number
+interface-member RankedBumpDatum::property::__bumpXValue = required __bumpXValue: unknown
+interface-member RankedBumpDatum::property::x = required x: number
+interface-member RankedBumpDatum::property::y = required y: number
+interface-member ResponsiveRule::property::description = optional description: string | undefined
+interface-member ResponsiveRule::property::id = optional id: string | undefined
+interface-member ResponsiveRule::property::priority = optional priority: number | undefined
+interface-member ResponsiveRule::property::transform = required transform: Partial<TProps> & Record<string, unknown>
+interface-member ResponsiveRule::property::when = required when: ResponsiveRuleCondition
+interface-member ResponsiveRuleCondition::property::maxAspectRatio = optional maxAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::minAspectRatio = optional minAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::orientation = optional orientation: ResponsiveOrientation | undefined
+interface-member ResponsiveRuleContext::property::height = optional height: number | undefined
+interface-member ResponsiveRuleContext::property::width = required width: number
+interface-member ResponsiveRuleMatch::property::index = required index: number
+interface-member ResponsiveRuleMatch::property::rule = required rule: ResponsiveRule<TProps>
+interface-member ResponsiveRuleResult::property::matches = required matches: ResponsiveRuleMatch<TProps>[]
+interface-member ResponsiveRuleResult::property::props = required props: TProps
+interface-member ScatterplotProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member ScatterplotProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
+interface-member ScatterplotProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member ScatterplotProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ScatterplotProps::property::data = optional data: TDatum[] | undefined
+interface-member ScatterplotProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ScatterplotProps::property::forecast = optional forecast: ForecastConfig | undefined
+interface-member ScatterplotProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member ScatterplotProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ScatterplotProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member ScatterplotProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
+interface-member ScatterplotProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member ScatterplotProps::property::pointOpacity = optional pointOpacity: number | undefined
+interface-member ScatterplotProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member ScatterplotProps::property::regression = optional regression: RegressionProp | undefined
+interface-member ScatterplotProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member ScatterplotProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ScatterplotProps::property::sizeBy = optional sizeBy: ChartAccessor<TDatum, number> | undefined
+interface-member ScatterplotProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member ScatterplotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ScatterplotProps::property::symbolBy = optional symbolBy: ChartAccessor<TDatum, string> | undefined
+interface-member ScatterplotProps::property::symbolMap = optional symbolMap: Record<string, import("../../semiotic-recipes-core").NetworkSymbolName> | undefined
+interface-member ScatterplotProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ScatterplotProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member ScatterplotProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member ScatterplotProps::property::xScaleType = optional xScaleType: "linear" | "log" | "time" | undefined
+interface-member ScatterplotProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member ScatterplotProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member ScatterplotProps::property::yScaleType = optional yScaleType: "linear" | "log" | "symlog" | undefined
+interface-member SceneAccessibilityMetadata::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member SceneAccessibilityMetadata::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member StackedAreaChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member StackedAreaChartProps::property::areaBy = optional areaBy: ChartAccessor<TDatum, string> | undefined
+interface-member StackedAreaChartProps::property::areaOpacity = optional areaOpacity: number | undefined
+interface-member StackedAreaChartProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StackedAreaChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member StackedAreaChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member StackedAreaChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
+interface-member StackedAreaChartProps::property::data = optional data: TDatum[] | undefined
+interface-member StackedAreaChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member StackedAreaChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member StackedAreaChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member StackedAreaChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member StackedAreaChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
+interface-member StackedAreaChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member StackedAreaChartProps::property::normalize = optional normalize: boolean | undefined
+interface-member StackedAreaChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member StackedAreaChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member StackedAreaChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member StackedAreaChartProps::property::showLine = optional showLine: boolean | undefined
+interface-member StackedAreaChartProps::property::showPoints = optional showPoints: boolean | undefined
+interface-member StackedAreaChartProps::property::stackOrder = optional stackOrder: "asc" | "desc" | "input" | "insideOut" | "key" | undefined
+interface-member StackedAreaChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member StackedAreaChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member StackedAreaChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member StackedAreaChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member StackedAreaChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member StackedAreaChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member StreamXYFrameHandle::method::clear = required clear(): void
+interface-member StreamXYFrameHandle::method::getCustomLayout = required getCustomLayout(): import("./customLayout").LayoutResult | null
+interface-member StreamXYFrameHandle::method::getData = required getData(): T[]
+interface-member StreamXYFrameHandle::method::getExtents = required getExtents(): null | {x: [number, number]; y: [number, number];}
+interface-member StreamXYFrameHandle::method::getLayoutFailure = required getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
+interface-member StreamXYFrameHandle::method::getScales = required getScales(): StreamScales | null
+interface-member StreamXYFrameHandle::method::push = required push(datum: T): void
+interface-member StreamXYFrameHandle::method::pushMany = required pushMany(data: T[]): void
+interface-member StreamXYFrameHandle::method::remove = required remove(id: string | string[]): T[]
+interface-member StreamXYFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
+interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamXYFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
+interface-member StreamXYFrameProps::property::animate = optional animate: AnimateProp | undefined
+interface-member StreamXYFrameProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member StreamXYFrameProps::property::areaGroups = optional areaGroups: string[] | undefined
+interface-member StreamXYFrameProps::property::areaStyle = optional areaStyle: ((d: T) => Style) | undefined
+interface-member StreamXYFrameProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
+interface-member StreamXYFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
+interface-member StreamXYFrameProps::property::axes = optional axes: XYFrameAxisConfig[] | undefined
+interface-member StreamXYFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
+interface-member StreamXYFrameProps::property::background = optional background: string | undefined
+interface-member StreamXYFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<StreamScales>
+interface-member StreamXYFrameProps::property::band = optional band: BandConfig<T> | BandConfig<T>[] | undefined
+interface-member StreamXYFrameProps::property::barColors = optional barColors: Record<string, string> | undefined
+interface-member StreamXYFrameProps::property::barStyle = optional barStyle: BarStyle | undefined
+interface-member StreamXYFrameProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StreamXYFrameProps::property::binSize = optional binSize: number | undefined
+interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
+interface-member StreamXYFrameProps::property::brush = optional brush: undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
+interface-member StreamXYFrameProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
+interface-member StreamXYFrameProps::property::canvasPreRenderers = optional canvasPreRenderers: CanvasRendererFn[] | undefined
+interface-member StreamXYFrameProps::property::categoryAccessor = optional categoryAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::chartType = required chartType: StreamChartType
+interface-member StreamXYFrameProps::property::chunkSize = optional chunkSize: number | undefined
+interface-member StreamXYFrameProps::property::chunkThreshold = optional chunkThreshold: number | undefined
+interface-member StreamXYFrameProps::property::className = optional className: string | undefined
+interface-member StreamXYFrameProps::property::clock = optional clock: import("./FrameRuntime").FrameClock | undefined
+interface-member StreamXYFrameProps::property::closeAccessor = optional closeAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::colorAccessor = optional colorAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member StreamXYFrameProps::property::curve = optional curve: CurveType | undefined
+interface-member StreamXYFrameProps::property::customLayout = optional customLayout: import("./customLayout").CustomLayout<Record<string, unknown>> | undefined
+interface-member StreamXYFrameProps::property::data = optional data: T[] | undefined
+interface-member StreamXYFrameProps::property::decay = optional decay: DecayConfig | undefined
+interface-member StreamXYFrameProps::property::description = optional description: string | undefined
+interface-member StreamXYFrameProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member StreamXYFrameProps::property::extentPadding = optional extentPadding: number | undefined
+interface-member StreamXYFrameProps::property::foregroundGraphics = optional foregroundGraphics: FrameGraphicsProp<StreamScales>
+interface-member StreamXYFrameProps::property::frameScheduler = optional frameScheduler: import("./useFrame").FrameScheduler | undefined
+interface-member StreamXYFrameProps::property::gradientFill = optional gradientFill: GradientInput | undefined
+interface-member StreamXYFrameProps::property::groupAccessor = optional groupAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::heatmapAggregation = optional heatmapAggregation: "count" | "mean" | "sum" | undefined
+interface-member StreamXYFrameProps::property::heatmapColorScale = optional heatmapColorScale: ((value: number) => string) | undefined
+interface-member StreamXYFrameProps::property::heatmapValueFormat = optional heatmapValueFormat: ((v: number) => string) | undefined
+interface-member StreamXYFrameProps::property::heatmapXBins = optional heatmapXBins: number | undefined
+interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYBins: number | undefined
+interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
+interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
+interface-member StreamXYFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
+interface-member StreamXYFrameProps::property::legend = optional legend: LegendValue
+interface-member StreamXYFrameProps::property::legendCategoryAccessor = optional legendCategoryAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::legendClickBehavior = optional legendClickBehavior: ((item: LegendItem) => void) | undefined
+interface-member StreamXYFrameProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
+interface-member StreamXYFrameProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: LegendItem | null) => void) | undefined
+interface-member StreamXYFrameProps::property::legendIsolatedCategories = optional legendIsolatedCategories: Set<string> | undefined
+interface-member StreamXYFrameProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
+interface-member StreamXYFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member StreamXYFrameProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
+interface-member StreamXYFrameProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
+interface-member StreamXYFrameProps::property::lineStyle = optional lineStyle: ((d: T, group?: string) => Style) | LineStyle | undefined
+interface-member StreamXYFrameProps::property::linkedCrosshairName = optional linkedCrosshairName: string | undefined
+interface-member StreamXYFrameProps::property::linkedCrosshairSourceId = optional linkedCrosshairSourceId: string | undefined
+interface-member StreamXYFrameProps::property::lowAccessor = optional lowAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
+interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
+interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StreamXYFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
+interface-member StreamXYFrameProps::property::onColorDomainChange = optional onColorDomainChange: ((domain: [number, number] | null) => void) | undefined
+interface-member StreamXYFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member StreamXYFrameProps::property::openAccessor = optional openAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamXYFrameProps::property::pointIdAccessor = optional pointIdAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::pointStyle = optional pointStyle: ((d: T) => Style & {r?: number;}) | undefined
+interface-member StreamXYFrameProps::property::pulse = optional pulse: PulseConfig | undefined
+interface-member StreamXYFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
+interface-member StreamXYFrameProps::property::renderMode = optional renderMode: SceneRenderMode<SceneNode> | undefined
+interface-member StreamXYFrameProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member StreamXYFrameProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member StreamXYFrameProps::property::runtimeMode = optional runtimeMode: RuntimeMode | undefined
+interface-member StreamXYFrameProps::property::scalePadding = optional scalePadding: number | undefined
+interface-member StreamXYFrameProps::property::seed = optional seed: number | undefined
+interface-member StreamXYFrameProps::property::semanticLineStops = optional semanticLineStops: undefined | {offset: number; color: string;}[]
+interface-member StreamXYFrameProps::property::showAxes = optional showAxes: boolean | undefined
+interface-member StreamXYFrameProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member StreamXYFrameProps::property::showValues = optional showValues: boolean | undefined
+interface-member StreamXYFrameProps::property::size = optional size: [number, number] | undefined
+interface-member StreamXYFrameProps::property::sizeAccessor = optional sizeAccessor: ((d: T) => CoercibleNumber) | string | undefined
+interface-member StreamXYFrameProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member StreamXYFrameProps::property::stackOrder = optional stackOrder: "asc" | "desc" | "input" | "insideOut" | "key" | undefined
+interface-member StreamXYFrameProps::property::staleness = optional staleness: StalenessConfig | undefined
+interface-member StreamXYFrameProps::property::summary = optional summary: string | undefined
+interface-member StreamXYFrameProps::property::suspendWhenHidden = optional suspendWhenHidden: boolean | undefined
+interface-member StreamXYFrameProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
+interface-member StreamXYFrameProps::property::svgPreRenderers = optional svgPreRenderers: SVGPreRendererFn[] | undefined
+interface-member StreamXYFrameProps::property::swarmStyle = optional swarmStyle: SwarmStyle | undefined
+interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolAccessor: ((d: T) => string) | string | undefined
+interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
+interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
+interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
+interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::title = optional title: ReactNode
+interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
+interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined
+interface-member StreamXYFrameProps::property::transition = optional transition: TransitionConfig | undefined
+interface-member StreamXYFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::waterfallStyle = optional waterfallStyle: WaterfallStyle | undefined
+interface-member StreamXYFrameProps::property::windowMode = optional windowMode: WindowMode | undefined
+interface-member StreamXYFrameProps::property::windowSize = optional windowSize: number | undefined
+interface-member StreamXYFrameProps::property::xAccessor = optional xAccessor: ((d: T) => CoercibleNumber) | string | undefined
+interface-member StreamXYFrameProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member StreamXYFrameProps::property::xFormat = optional xFormat: ((Date | d: number | string, index?: number, allTicks?: number[]) => string | ReactNode) | undefined
+interface-member StreamXYFrameProps::property::xLabel = optional xLabel: string | undefined
+interface-member StreamXYFrameProps::property::xScaleType = optional xScaleType: "linear" | "log" | "time" | undefined
+interface-member StreamXYFrameProps::property::y0Accessor = optional y0Accessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::yAccessor = optional yAccessor: ((d: T) => CoercibleNumber) | string | undefined
+interface-member StreamXYFrameProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member StreamXYFrameProps::property::yFormat = optional yFormat: ((Date | d: number | string) => string | ReactNode) | undefined
+interface-member StreamXYFrameProps::property::yLabel = optional yLabel: string | undefined
+interface-member StreamXYFrameProps::property::yLabelRight = optional yLabelRight: string | undefined
+interface-member StreamXYFrameProps::property::yScaleType = optional yScaleType: "linear" | "log" | "symlog" | undefined
+interface-member Style::property::_edgeFade = optional _edgeFade: boolean | undefined
+interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
+interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
+interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::opacity = optional opacity: number | undefined
+interface-member Style::property::r = optional r: number | undefined
+interface-member Style::property::stroke = optional stroke: string | undefined
+interface-member Style::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member Style::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member Style::property::strokeOpacity = optional strokeOpacity: number | undefined
+interface-member Style::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRule::property::id = optional id: string | undefined
+interface-member StyleRule::property::label = optional label: string | undefined
+interface-member StyleRule::property::style = required style: ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle) | StyleRuleStyle
+interface-member StyleRule::property::when = optional when: StyleRulePredicate | StyleRuleThreshold | boolean | undefined
+interface-member StyleRuleContext::property::category = optional category: string | undefined
+interface-member StyleRuleContext::property::index = optional index: number | undefined
+interface-member StyleRuleContext::property::size = optional size: number | undefined
+interface-member StyleRuleContext::property::value = required value: number | undefined
+interface-member StyleRuleContext::property::x = optional x: number | undefined
+interface-member StyleRuleContext::property::y = optional y: number | undefined
+interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
+interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
+interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
+interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member StyleRuleStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRuleThreshold::property::axis = optional axis: "value" | "x" | "y" | undefined
+interface-member StyleRuleThreshold::property::eq = optional eq: number | string | undefined
+interface-member StyleRuleThreshold::property::field = optional field: string | undefined
+interface-member StyleRuleThreshold::property::gt = optional gt: number | undefined
+interface-member StyleRuleThreshold::property::gte = optional gte: number | undefined
+interface-member StyleRuleThreshold::property::in = optional in: (number | string)[] | undefined
+interface-member StyleRuleThreshold::property::lt = optional lt: number | undefined
+interface-member StyleRuleThreshold::property::lte = optional lte: number | undefined
+interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
+interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
+interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::className = optional className: string | undefined
+interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
+interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipConfig::property::style = optional style: React.CSSProperties | undefined
+interface-member TooltipConfig::property::title = optional title: Accessor<string> | undefined
+interface-member TooltipField::property::accessor = optional accessor: Accessor | undefined
+interface-member TooltipField::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipField::property::key = optional key: Accessor | undefined
+interface-member TooltipField::property::label = optional label: string | undefined
+interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member XYCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member XYCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member XYCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member XYCustomChartProps::property::data = optional data: TDatum[] | undefined
+interface-member XYCustomChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member XYCustomChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "customLayout" | "data" | "layoutConfig" | "size">> | undefined
+interface-member XYCustomChartProps::property::layout = required layout: CustomLayout<TConfig>
+interface-member XYCustomChartProps::property::layoutConfig = optional layoutConfig: TConfig | undefined
+interface-member XYCustomChartProps::property::legend = optional legend: LegendValue
+interface-member XYCustomChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member XYCustomChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member XYCustomChartProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("../../semiotic-geo").CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member XYCustomChartProps::property::recipe = optional recipe: ChartRecipe<TDatum, TConfig> | undefined
+interface-member XYCustomChartProps::property::recipeId = optional recipeId: string | undefined
+interface-member XYCustomChartProps::property::showAxes = optional showAxes: boolean | undefined
+interface-member XYCustomChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member XYCustomChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member XYCustomChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member XYCustomChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | undefined
+interface-member XYCustomChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | undefined
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
-type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
-type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
-type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
-type QuadrantsConfigOverride = {
-    [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;
-}
-type ResponsiveOrientation = "portrait" | "landscape"
+type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
+type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type QuadrantsConfigOverride = {[TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;}
+type ResponsiveOrientation = "landscape" | "portrait"
 type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 type SemanticGradientStop = SemanticGradientStopInput
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "default" | "css"
-type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type TooltipChromeMode = "css" | "default"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
+set -eu
 
-BUMP_TYPE=$1
-
-git checkout main
-git pull
-npm install
-
+BUMP_TYPE="${1:-}"
+PUBLIC_NPM_REGISTRY="${SEMIOTIC_NPM_REGISTRY:-https://registry.npmjs.org}"
 CURRENT_BRANCH="$(git symbolic-ref --short -q HEAD)"
 
 success() {
@@ -28,26 +24,38 @@ if [ -z "$BUMP_TYPE" ]; then
   exit 1
 fi
 
-echo "==> Bumping version"
-VERSION="$(npm version --no-git-tag-version $BUMP_TYPE | sed 's/v//g')"
+case "$BUMP_TYPE" in
+  major|minor|patch) ;;
+  *)
+    error "Invalid bump type '$BUMP_TYPE'. Use major, minor, or patch."
+    exit 1
+    ;;
+esac
 
-echo "==> Syncing ai/schema.json version → $VERSION"
-# `ai/schema.json` is bundled in the npm package and read by the MCP server
-# (ai/mcp-server.ts uses `schema.version` as its advertised version). Keeping
-# it pinned to the package version means MCP doesn't lie about what's running
-# the moment we ship.
-node -e "
-  const fs = require('fs');
-  const path = 'ai/schema.json';
-  const schema = JSON.parse(fs.readFileSync(path, 'utf8'));
-  if (schema.version === '$VERSION') {
-    console.log('  ai/schema.json already at $VERSION');
-  } else {
-    schema.version = '$VERSION';
-    fs.writeFileSync(path, JSON.stringify(schema, null, 2) + '\n');
-    console.log('  ai/schema.json: bumped to $VERSION');
-  }
-"
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  error "Release branches must be created from main. Current branch: $CURRENT_BRANCH"
+  exit 1
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+  error "Working tree is not clean. Commit or stash changes before creating a release branch."
+  exit 1
+fi
+
+git pull --ff-only
+
+CURRENT_VERSION="$(node -p "require('./package.json').version")"
+VERSION="$(node -e '
+  const current = process.argv[1]
+  const bump = process.argv[2]
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/.exec(current)
+  if (!match) throw new Error(`Unsupported current version: ${current}`)
+  let [, major, minor, patch] = match.map(Number)
+  if (bump === "major") { major += 1; minor = 0; patch = 0 }
+  if (bump === "minor") { minor += 1; patch = 0 }
+  if (bump === "patch") patch += 1
+  process.stdout.write(`${major}.${minor}.${patch}`)
+' "$CURRENT_VERSION" "$BUMP_TYPE")"
 
 echo "==> Verifying CHANGELOG.md has an entry for $VERSION"
 # Catches the "shipped without a changelog" mistake — npm page would otherwise
@@ -66,29 +74,78 @@ if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
 fi
 success "  CHANGELOG.md has an entry for $VERSION"
 
-echo "==> Running npm audit (moderate gate)"
-# Block the release on any moderate/high/critical vulnerability. Low-severity
-# findings are surfaced but don't block — most are transitive dev-only crypto
-# libs reachable via the build chain that can only be cleared with `npm audit
-# fix --force` and a breaking change. To clear those intentionally, edit this
-# line or override the floor with AUDIT_LEVEL=low/high/critical.
-AUDIT_LEVEL="${AUDIT_LEVEL:-moderate}"
-if ! npm audit --audit-level="$AUDIT_LEVEL" >/dev/null 2>&1; then
-  error "npm audit reports vulnerabilities at >= $AUDIT_LEVEL severity. Run 'npm audit' to inspect, then 'npm audit fix' (or 'npm audit fix --force' if a breaking bump is intended) before releasing."
-  npm audit --audit-level="$AUDIT_LEVEL"
+echo "==> Verifying README.md identifies $VERSION as the current release"
+if ! grep -qF "## What's New in $VERSION" README.md; then
+  error "README.md must contain the exact heading: ## What's New in $VERSION"
   exit 1
 fi
-success "  npm audit clean at >= $AUDIT_LEVEL"
+success "  README.md What's New heading identifies $VERSION"
 
-echo "==> Cleaning Build directory"
-rm -rf ./dist
+echo "==> Running npm audit (moderate gate)"
+# Block the release on any moderate/high/critical vulnerability. Low-severity
+# findings are surfaced but do not block unless AUDIT_LEVEL=low is requested.
+AUDIT_LEVEL="${AUDIT_LEVEL:-moderate}"
+npm ci --registry="$PUBLIC_NPM_REGISTRY"
 
-echo "==> Creating build files"
-npm run build
+if ! npm audit --registry="$PUBLIC_NPM_REGISTRY" --audit-level="$AUDIT_LEVEL" >/dev/null 2>&1; then
+  error "npm audit reports vulnerabilities at >= $AUDIT_LEVEL severity. Run 'npm audit' to inspect, then 'npm audit fix' (or 'npm audit fix --force' if a breaking bump is intended) before releasing."
+  npm audit --registry="$PUBLIC_NPM_REGISTRY" --audit-level="$AUDIT_LEVEL"
+  exit 1
+fi
+success "  npm audit clean at >= $AUDIT_LEVEL via $PUBLIC_NPM_REGISTRY"
+
+if git show-ref --verify --quiet "refs/heads/release-$VERSION"; then
+  error "Local branch release-$VERSION already exists."
+  exit 1
+fi
+git checkout -b "release-$VERSION"
+
+echo "==> Bumping package version to $VERSION"
+ACTUAL_VERSION="$(npm version --no-git-tag-version "$BUMP_TYPE" | sed 's/^v//')"
+if [ "$ACTUAL_VERSION" != "$VERSION" ]; then
+  error "npm calculated $ACTUAL_VERSION, expected $VERSION"
+  exit 1
+fi
+
+echo "==> Synchronizing versioned metadata and production artifacts"
+node scripts/sync-release-version.mjs "$VERSION"
+
+echo "==> Comparing visual contracts and bootstrapping missing Linux snapshots"
+# The missing-only helper writes genuinely new baselines but still fails on a
+# diff against every existing image. The tag workflow reruns the full suite
+# with updates disabled in the same pinned Linux rendering environment.
+npm run test:visual:bootstrap:docker -- \
+  integration-tests/ssr-parity.spec.ts \
+  --update-snapshots=missing
+
+npm run check:website-build
+npm run build:mcp
+npm run docs:ai-surface
+npm run docs:package-surface
+npm run docs:bundle-sizes
+npm run docs:cold-consumer
+npm run docs:readme-dashboard
+npm run docs:api-surface
+
+# The dashboard generator writes a public docs asset after the first site
+# build. Rebuild now so docs/build is fresh before the machine baseline reads
+# it; otherwise the baseline collector correctly refuses stale output.
+npm run check:website-build
+
+echo "==> Comparing candidate performance before recording exact release baselines"
+# The --write commands compare p50 timings against the prior committed
+# baselines first and refuse to overwrite them on a measured regression. Static
+# artifact drift is printed for review, then the new exact snapshots are
+# committed with the release branch for the tag workflow to verify byte-for-byte.
+npx playwright install chromium
+npm run baseline:machine
+npm run baseline:browser
+
+echo "==> Validating the complete release branch before commit/push"
+npm run release:check
+git diff --check
 
 echo "==> Committing changes"
-
-git checkout -b "release-$VERSION"
 git add --all
 git commit --message "chore(release): adding $VERSION"
 git push --set-upstream origin "release-$VERSION"

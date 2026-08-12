@@ -39,7 +39,7 @@ export function writeCompactStrategyModule({
   outputPath,
   exportName,
   buildCompact,
-  builderName = "compactStrategyJson",
+  builderName = "compactProjectionJson",
 }) {
   const source = JSON.parse(readFileSync(sourcePath, "utf8"))
   const compact = buildCompact(source)
@@ -51,3 +51,4 @@ export function writeCompactStrategyModule({
   writeFileSync(outputPath, output)
   stdout.write(`Wrote ${outputPath}\n`)
 }
+

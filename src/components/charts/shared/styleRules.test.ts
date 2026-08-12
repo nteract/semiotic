@@ -110,6 +110,15 @@ describe("resolveStyleRules — last-applicable-rule-wins merge", () => {
     const out = resolveStyleRules({}, [{ when: { gt: 10 }, style: { fill: hatch } }], { value: 12 })
     expect(isHatchFill(out.fill)).toBe(true)
   })
+
+  it("retains cursor as presentation metadata", () => {
+    const out = resolveStyleRules(
+      {},
+      [{ when: { gt: 10 }, style: { cursor: "pointer" } }],
+      { value: 12 }
+    )
+    expect(out).toEqual({ cursor: "pointer" })
+  })
 })
 
 describe("makeRuleValueResolver", () => {

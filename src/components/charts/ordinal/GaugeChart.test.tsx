@@ -33,6 +33,44 @@ describe("GaugeChart", () => {
     expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
   })
 
+  it("renders loading and non-finite empty states before mounting the frame", () => {
+    const loading = render(
+      <TooltipProvider>
+        <GaugeChart value={50} loading />
+      </TooltipProvider>
+    )
+    expect(loading.container.querySelector(".semiotic-loading-bar")).toBeTruthy()
+    expect(loading.container.querySelector(".stream-ordinal-frame")).toBeFalsy()
+    loading.unmount()
+
+    const empty = render(
+      <TooltipProvider>
+        <GaugeChart value={Number.NaN} emptyContent={<span>No gauge value</span>} />
+      </TooltipProvider>
+    )
+    expect(empty.getByText("No gauge value")).toBeTruthy()
+    expect(empty.container.querySelector(".stream-ordinal-frame")).toBeFalsy()
+  })
+
+  it("forwards hover radius and interaction callbacks through the shared selection contract", () => {
+    const onClick = vi.fn()
+    const onObservation = vi.fn()
+    render(
+      <TooltipProvider>
+        <GaugeChart
+          value={50}
+          hoverRadius={32}
+          onClick={onClick}
+          onObservation={onObservation}
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastOrdinalFrameProps.hoverRadius).toBe(32)
+    expect(lastOrdinalFrameProps.customClickBehavior).toBeTypeOf("function")
+    expect(lastOrdinalFrameProps.customHoverBehavior).toBeTypeOf("function")
+  })
+
   it("uses radial projection with pie chart type", () => {
     render(
       <TooltipProvider>

@@ -60,7 +60,8 @@ export function createLegend({
 
     return {
       label: String(value),
-      color
+      color,
+      __semioticCategory: true
     }
   })
 

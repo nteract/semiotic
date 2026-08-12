@@ -130,6 +130,7 @@ function valueAtPath(source: unknown, path: string): unknown {
   let current = source
   for (const part of path.split(".")) {
     if (current == null || typeof current !== "object") return undefined
+    if (!Object.prototype.hasOwnProperty.call(current, part)) return undefined
     current = (current as Record<string, unknown>)[part]
   }
   return current

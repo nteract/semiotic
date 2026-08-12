@@ -61,7 +61,11 @@ export type { HitTargetPointProps, HitTargetRectProps } from "./stream/hitTarget
 // glyph — the composite-pictogram scene node for custom layouts.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
-export type { GlyphSceneNode, SceneAccessibilityMetadata } from "./stream/types"
+export type {
+  GlyphSceneNode,
+  SceneAccessibilityMetadata,
+  Style
+} from "./stream/types"
 export type {
   CategoricalLegendConfig,
   GradientLegendConfig,

@@ -459,8 +459,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         },
       },
       provenance: {
-        source:
-          "Purpose-written synthetic clause specimens and explicitly labeled editorial annotations derived from docs/strategy/parataxis.md",
+        source: "Bundled public example fixture",
         capturedAt: "2026-08-09",
         freshnessOwner: "Semiotic maintainers",
         reviewCadence: "narrative, annotation, or interaction revision",
@@ -602,8 +601,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         },
       },
       provenance: {
-        source:
-          "Deterministic fictional Zorkcorp fixtures derived from docs/strategy/example-cyoa.md",
+        source: "Bundled public example fixture",
         capturedAt: "2026-07-13",
         freshnessOwner: "Semiotic maintainers",
         reviewCadence: "release",
@@ -664,7 +662,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         },
       },
       provenance: {
-        source: "Curated deterministic fixtures derived from docs/strategy/example-sentence.md",
+        source: "Bundled public example fixture",
         capturedAt: "2026-07-14",
         freshnessOwner: "Semiotic maintainers",
         reviewCadence: "release",

@@ -358,6 +358,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin: setup.margin,
     enableHover: resolved.enableHover,

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
-import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
+import {
+  paintCanvasBackground,
+  resolveCanvasBackground,
+  resolveFrameSurfaceBackground
+} from "./canvasBackground"
 
 function mockCtx(overrides: Partial<CanvasRenderingContext2D> = {}) {
   return {
@@ -73,6 +77,32 @@ describe("paintCanvasBackground", () => {
       })
     ).toBe(false)
   })
+
+  it("skips a CSS-variable surface that resolves to transparent", () => {
+    const ctx = mockCtx()
+    expect(
+      paintCanvasBackground(ctx, {
+        themeBackground: "var(--missing-frame-bg, transparent)",
+        width: 10,
+        height: 10
+      })
+    ).toBe(false)
+    expect(ctx.fillRect).not.toHaveBeenCalled()
+  })
+
+  it("still paints a scoped CSS-variable surface over a transparent fallback", () => {
+    const ctx = mockCtx()
+    ctx.canvas.style.setProperty("--semiotic-bg", "#fafafa")
+    expect(
+      paintCanvasBackground(ctx, {
+        themeBackground: "var(--semiotic-bg, transparent)",
+        width: 10,
+        height: 10
+      })
+    ).toBe(true)
+    expect(ctx.fillStyle).toBe("#fafafa")
+    expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 10, 10)
+  })
 })
 
 describe("resolveCanvasBackground", () => {
@@ -96,6 +126,40 @@ describe("resolveCanvasBackground", () => {
       background: "#112233",
       hasBackgroundGraphics: true,
       themeBackground: "#fafafa",
+    })).toBeNull()
+  })
+})
+
+describe("resolveFrameSurfaceBackground", () => {
+  it("uses the explicit background before the theme surface", () => {
+    expect(resolveFrameSurfaceBackground({
+      background: "#112233",
+      themeBackground: "#fafafa"
+    })).toBe("#112233")
+  })
+
+  it("uses the theme surface when no explicit background is set", () => {
+    expect(resolveFrameSurfaceBackground({
+      themeBackground: "#fafafa"
+    })).toBe("#fafafa")
+  })
+
+  it("keeps only an explicit backdrop beneath custom background graphics", () => {
+    expect(resolveFrameSurfaceBackground({
+      background: "#112233",
+      hasBackgroundGraphics: true,
+      themeBackground: "#fafafa"
+    })).toBe("#112233")
+    expect(resolveFrameSurfaceBackground({
+      hasBackgroundGraphics: true,
+      themeBackground: "#fafafa"
+    })).toBeNull()
+  })
+
+  it("honors the transparent surface opt-out", () => {
+    expect(resolveFrameSurfaceBackground({
+      background: "transparent",
+      themeBackground: "#fafafa"
     })).toBeNull()
   })
 })

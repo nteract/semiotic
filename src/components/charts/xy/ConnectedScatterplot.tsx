@@ -463,6 +463,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

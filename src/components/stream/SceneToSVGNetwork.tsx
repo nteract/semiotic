@@ -26,8 +26,17 @@ import type {
 import { symbolPathString } from "./symbolPath"
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
 import { ARC_NOOP, svgFill, glyphNodeToSVG } from "./sceneToSVGShared"
+import { withSceneMarkCursor } from "./sceneCursor"
 
 export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.ReactNode {
+  return withSceneMarkCursor(
+    networkSceneNodeToSVGMark(node, i),
+    node,
+    `network-node-cursor-${i}`
+  )
+}
+
+function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.ReactNode {
   switch (node.type) {
     case "circle": {
       const n = node as NetworkCircleNode
@@ -122,6 +131,14 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
 }
 
 export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.ReactNode {
+  return withSceneMarkCursor(
+    networkSceneEdgeToSVGMark(edge, i),
+    edge,
+    `network-edge-cursor-${i}`
+  )
+}
+
+function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.ReactNode {
   switch (edge.type) {
     case "line": {
       const e = edge as NetworkLineEdge
@@ -130,7 +147,7 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
           key={`net-edge-${i}`}
           x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
           stroke={e.style.stroke || "#999"}
-          strokeWidth={e.style.strokeWidth || 1}
+          strokeWidth={e.style.strokeWidth ?? 1}
           opacity={e.style.opacity}
         />
       )
@@ -179,7 +196,7 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
           d={e.pathD}
           fill={svgFill(e.style.fill, "none")}
           stroke={e.style.stroke || "#999"}
-          strokeWidth={e.style.strokeWidth || 1}
+          strokeWidth={e.style.strokeWidth ?? 1}
           opacity={e.style.opacity}
         />
       )

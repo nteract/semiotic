@@ -2,6 +2,7 @@ import * as React from "react"
 import { renderToString } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
+import { DARK_THEME } from "../../store/ThemeStore"
 import ChainReactionChart from "./ChainReactionChart"
 import type { PhysicsCustomLayoutContext } from "./PhysicsCustomChart"
 
@@ -82,7 +83,6 @@ describe("physics chart server rendering", () => {
     expect(evidence.markCount).toBeGreaterThan(0)
   })
 
-
   it("server-renders PacketFlowChart as settled packet SVG", () => {
     const { svg, evidence } = renderChartWithEvidence("PacketFlowChart", {
       nodes: [
@@ -103,29 +103,44 @@ describe("physics chart server rendering", () => {
   })
 
   it("server-renders PhysicsCustomChart by running the user layout once", () => {
-    const layout = (ctx: PhysicsCustomLayoutContext) => ({
-      bodies: ctx.data.map((datum, index) => ({
-        id: String(datum.id),
-        x: 40 + index * 30,
-        y: 20,
-        mass: 1,
-        shape: { type: "circle" as const, radius: 6 },
-        datum
-      })),
-      colliders: [
-        {
-          id: "floor",
-          shape: { type: "aabb" as const, x: 100, y: 150, width: 200, height: 12 }
-        }
-      ]
-    })
+    let capturedContext: PhysicsCustomLayoutContext | undefined
+    const layout = (ctx: PhysicsCustomLayoutContext) => {
+      capturedContext = ctx
+      return {
+        bodies: ctx.data.map((datum, index) => ({
+          id: String(datum.id),
+          x: 40 + index * 30,
+          y: 20,
+          mass: 1,
+          shape: { type: "circle" as const, radius: 6 },
+          datum
+        })),
+        colliders: [
+          {
+            id: "floor",
+            shape: {
+              type: "aabb" as const,
+              x: 100,
+              y: 150,
+              width: 200,
+              height: 12
+            }
+          }
+        ],
+        backgroundOverlays: <g data-testid="layout-background" />,
+        overlays: <g data-testid="layout-foreground" />
+      }
+    }
 
     const { svg, evidence } = renderChartWithEvidence("PhysicsCustomChart", {
       data: [{ id: "a" }, { id: "b" }, { id: "c" }],
       layout,
+      theme: "dark",
       width: 240,
       height: 160,
-      title: "Custom physics"
+      title: "Custom physics",
+      backgroundGraphics: <g data-testid="supplied-background" />,
+      foregroundGraphics: <g data-testid="supplied-foreground" />
     })
 
     expect(svg).toContain("<svg")
@@ -133,6 +148,23 @@ describe("physics chart server rendering", () => {
     expect(evidence.frameType).toBe("physics")
     expect(evidence.empty).toBe(false)
     expect(evidence.markCount).toBe(3)
+    expect(capturedContext?.theme.semantic.primary).toBe(
+      DARK_THEME.colors.primary
+    )
+    expect(capturedContext?.theme.categorical).toEqual(
+      DARK_THEME.colors.categorical
+    )
+
+    const suppliedBackground = svg.indexOf('data-testid="supplied-background"')
+    const layoutBackground = svg.indexOf('data-testid="layout-background"')
+    const dataArea = svg.indexOf('id="physics-data-area"')
+    const suppliedForeground = svg.indexOf('data-testid="supplied-foreground"')
+    const layoutForeground = svg.indexOf('data-testid="layout-foreground"')
+    expect(suppliedBackground).toBeGreaterThan(-1)
+    expect(layoutBackground).toBeGreaterThan(suppliedBackground)
+    expect(dataArea).toBeGreaterThan(layoutBackground)
+    expect(suppliedForeground).toBeGreaterThan(dataArea)
+    expect(layoutForeground).toBeGreaterThan(suppliedForeground)
   })
 
   // ChainReactionChart is a documented serverChartConfigs exclusion (its settled
@@ -141,11 +173,49 @@ describe("physics chart server rendering", () => {
   // not the authored start — no simulation runs on the server.
   it("server-renders ChainReactionChart's derived settled state via the HOC path", () => {
     const tasks = [
-      { id: "brief", title: "Brief", lane: "Product", dependsOn: [], status: "done", completed: 1, progress: 1 },
-      { id: "spec", title: "Spec", lane: "Product", dependsOn: ["brief"], status: "done", completed: 3, progress: 1 },
-      { id: "privacy", title: "Privacy", lane: "Product", dependsOn: ["brief"], status: "blocked", blocker: "Legal review", progress: 0.9 },
-      { id: "schema", title: "Schema", lane: "Data", dependsOn: ["privacy", "spec"], status: "waiting", progress: 0.25 },
-      { id: "ingest", title: "Ingest", lane: "Data", dependsOn: ["schema"], status: "waiting", progress: 0 }
+      {
+        id: "brief",
+        title: "Brief",
+        lane: "Product",
+        dependsOn: [],
+        status: "done",
+        completed: 1,
+        progress: 1
+      },
+      {
+        id: "spec",
+        title: "Spec",
+        lane: "Product",
+        dependsOn: ["brief"],
+        status: "done",
+        completed: 3,
+        progress: 1
+      },
+      {
+        id: "privacy",
+        title: "Privacy",
+        lane: "Product",
+        dependsOn: ["brief"],
+        status: "blocked",
+        blocker: "Legal review",
+        progress: 0.9
+      },
+      {
+        id: "schema",
+        title: "Schema",
+        lane: "Data",
+        dependsOn: ["privacy", "spec"],
+        status: "waiting",
+        progress: 0.25
+      },
+      {
+        id: "ingest",
+        title: "Ingest",
+        lane: "Data",
+        dependsOn: ["schema"],
+        status: "waiting",
+        progress: 0
+      }
     ]
 
     const html = renderToString(

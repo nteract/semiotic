@@ -6,11 +6,16 @@ import { useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizePartialMargin } from "../../types/marginType"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
+import {
+  useChartLegendAndMargin,
+  useChartMode,
+  useChartSelection,
+  useGradientLegendInteraction,
+  useThemeSequential,
+} from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
@@ -22,6 +27,7 @@ import { getSequentialInterpolator } from "../shared/colorPalettes"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import type { GradientLegendConfig } from "../../types/legendTypes"
 
 /**
  * ChoroplethMap component props
@@ -74,6 +80,8 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
   showLegend?: boolean
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** Legend position @default "right" */
+  legendPosition?: LegendPosition
   /**
    * Finite projection-fit fraction in `[0, 0.5)`. `0.1` = 10% inset;
    * nullish values use 0 and invalid values throw. An explicit
@@ -216,6 +224,8 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     tooltip,
     areaOpacity = 1,
     annotations,
+    legendInteraction,
+    legendPosition: legendPositionProp,
     margin: userMargin,
     className,
     selection,
@@ -274,9 +284,23 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
       Number.isFinite(max) ? max : 1
     ])
   }, [resolvedAreas, valAcc, colorScheme])
+  const valueDomain = useMemo<[number, number]>(() => {
+    const domain = colorScale.domain()
+    return [domain[0] ?? 0, domain[1] ?? 1]
+  }, [colorScale])
+  const gradientLegendState = useGradientLegendInteraction(
+    legendInteraction,
+    valAcc,
+    valueDomain,
+  )
 
   // Selection
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior,
+    customClickBehavior,
+  } = useChartSelection({
     selection,
     linkedHover,
     onObservation,
@@ -287,6 +311,8 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   })
 
   const resolvedSelection = useResolvedSelection(selection)
+  const effectiveSelectionHook = hoverSelectionHook ||
+    gradientLegendState.legendSelectionHook || activeSelectionHook
 
   // Area style
   const areaStyleFn = useMemo(() => {
@@ -310,11 +336,11 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     // Overlay top-level primitive props before selection wrap so they apply
     // to every region regardless of selection state.
     const withPrimitives = mergeShapeStyle(ruled, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
-    if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style
+    if (effectiveSelectionHook) {
+      return wrapStyleWithSelection(withPrimitives, effectiveSelectionHook, resolvedSelection) as (d: Datum) => Style
     }
     return withPrimitives
-  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity, styleRules])
+  }, [valAcc, colorScale, effectiveSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity, styleRules])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)
@@ -337,10 +363,31 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   }, [valAcc])
 
   const marginDefaults = resolveAxisFreeMarginDefaults(resolved)
-  const margin = useMemo(() => ({
-    ...marginDefaults,
-    ...normalizePartialMargin(userMargin)
-  }), [marginDefaults, userMargin])
+  const gradientLegend = useMemo(() => {
+    if (resolved.showLegend === false) return undefined
+    const config: GradientLegendConfig = {
+      colorFn: (value: number) => colorScale(value),
+      domain: valueDomain,
+      label: typeof valueAccessor === "string" ? valueAccessor : "value",
+    }
+    return { gradient: config }
+  }, [colorScale, resolved.showLegend, valueAccessor, valueDomain])
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+    data: [],
+    colorBy: undefined,
+    colorScale: undefined,
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    userMargin,
+    defaults: marginDefaults,
+    additionalLegend: gradientLegend,
+    chartWidth: resolved.width,
+    legendLayout: frameProps.legendLayout,
+    hasTitle: !!resolved.title,
+    // Geo frames draw no horizontal axis, so a bottom legend only needs its
+    // own content box and plot-edge distance.
+    axisChrome: { hasAxis: false },
+  })
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   // The secondary fallback fires while `areas` is still resolving (e.g.
@@ -366,9 +413,18 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     areas: resolvedAreas!,
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     maxDevicePixelRatio: props.maxDevicePixelRatio,
     margin,
     enableHover: resolved.enableHover,
+    ...(legend && { legend, legendPosition }),
+    legendHoverBehavior: gradientLegendState.onLegendHover,
+    legendClickBehavior: gradientLegendState.onLegendClick,
+    legendHighlightedCategory: gradientLegendState.highlightedCategory,
+    legendIsolatedCategories: legendInteraction === "isolate"
+      ? gradientLegendState.isolatedCategories
+      : undefined,
     tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),

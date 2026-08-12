@@ -7,10 +7,8 @@ import {
   type ChartObservation,
   type OnObservationCallback
 } from "./store/ObservationStore"
-import {
-  annotationStableId,
-  type OnAnnotationActivateCallback
-} from "./charts/shared/annotationActivation"
+import { annotationStableId } from "./charts/shared/annotationIdentity"
+import type { OnAnnotationActivateCallback } from "./charts/shared/annotationActivation"
 
 /**
  * AccessibleNavTree — renders a `buildNavigationTree()` structure as a WAI-ARIA

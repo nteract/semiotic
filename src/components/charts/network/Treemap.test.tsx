@@ -101,7 +101,12 @@ describe("Treemap", () => {
   })
 
   it("accepts custom accessors", () => {
-    const customData = {
+    interface CustomTreemapDatum {
+      id: string
+      size?: number
+      items?: CustomTreemapDatum[]
+    }
+    const customData: CustomTreemapDatum = {
       id: "root",
       items: [
         { id: "A", size: 100 },
@@ -111,10 +116,10 @@ describe("Treemap", () => {
 
     render(
       <TooltipProvider>
-        <Treemap
+        <Treemap<CustomTreemapDatum>
           data={customData}
           childrenAccessor="items"
-          valueAccessor={(d) => d.size as number}
+          valueAccessor={(d) => d.size ?? 0}
           nodeIdAccessor="id"
         />
       </TooltipProvider>

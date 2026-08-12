@@ -1,6 +1,7 @@
 import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { HoverData } from "../realtime/types"
 import { normalizeHoverDatum } from "../stream/hoverUtils"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import {
@@ -429,6 +430,14 @@ export type TooltipProp =
   | TooltipConfig
 
 /**
+ * Backward-compatible tooltip input for charts that historically supplied the
+ * complete HoverData wrapper to a plain callback.
+ */
+export type TooltipPropWithHoverCallback =
+  | TooltipProp
+  | ((data: HoverData) => React.ReactNode)
+
+/**
  * The function signature that Stream Frames expect for tooltipContent.
  * Compatible with HoverData and any Record-based hover object.
  */
@@ -465,7 +474,7 @@ export function isMultiTooltipConfig(
  * spread onto Stream frame props.
  */
 export function resolveMultiCapableTooltip(input: {
-  tooltip: TooltipProp | undefined
+  tooltip: TooltipPropWithHoverCallback | undefined
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultTooltipContent: (d: any) => React.ReactNode
   /** Used when multi mode is on and no custom content was provided. */
@@ -489,15 +498,16 @@ export function resolveMultiCapableTooltip(input: {
     multiDefaultContent = MultiPointTooltip(),
     customFunctionContext = "datum",
   } = input
+  const sharedTooltip = tooltip as TooltipProp | undefined
 
   if (tooltip === false) {
     return { tooltipContent: () => null }
   }
 
-  if (isMultiTooltip(tooltip)) {
+  if (isMultiTooltip(sharedTooltip)) {
     const custom =
-      isMultiTooltipConfig(tooltip) && typeof tooltip.content === "function"
-        ? normalizeTooltip(tooltip.content)
+      isMultiTooltipConfig(sharedTooltip) && typeof sharedTooltip.content === "function"
+        ? normalizeTooltip(sharedTooltip.content)
         : undefined
     return {
       tooltipContent: (custom as false | undefined) || multiDefaultContent,
@@ -509,7 +519,7 @@ export function resolveMultiCapableTooltip(input: {
     return { tooltipContent: tooltip }
   }
 
-  const normalized = normalizeTooltip(tooltip)
+  const normalized = normalizeTooltip(sharedTooltip)
   return {
     tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
   }
@@ -522,7 +532,7 @@ export function resolveMultiCapableTooltip(input: {
  * raw HoverData callback while also accepting the shared config/boolean API.
  */
 export function resolveTooltipContent(input: {
-  tooltip: TooltipProp | undefined
+  tooltip: TooltipPropWithHoverCallback | undefined
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultTooltipContent: (d: any) => React.ReactNode
   /** @default "datum" */
@@ -536,12 +546,13 @@ export function resolveTooltipContent(input: {
     defaultTooltipContent,
     customFunctionContext = "datum",
   } = input
+  const sharedTooltip = tooltip as TooltipProp | undefined
 
   if (tooltip === false) return { tooltipContent: () => null }
   if (customFunctionContext === "hover" && typeof tooltip === "function") {
     return { tooltipContent: tooltip }
   }
-  const normalized = normalizeTooltip(tooltip)
+  const normalized = normalizeTooltip(sharedTooltip)
   return {
     tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
   }
@@ -728,7 +739,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       )
     }
     const singleFallback = MultiLineTooltip()
-    return normalizeTooltip((datum) => singleFallback(datum))
+    return normalizeTooltip((datum: Datum) => singleFallback(datum))
   }
 
   // Config object with fields/title — convert to a tooltip function
@@ -739,7 +750,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     // tooltips. Reuse the function normalizer so Stream Frame HoverData is
     // unwrapped consistently across XY, ordinal, network, geo, physics, and
     // realtime wrappers.
-    return normalizeTooltip((datum) => configuredTooltip(datum))
+    return normalizeTooltip((datum: Datum) => configuredTooltip(datum))
   }
 
   // `tooltip="multi"` is only wired when the HOC sets tooltipMode:"multi"
@@ -754,7 +765,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       )
     }
     const singleFallback = MultiLineTooltip()
-    return normalizeTooltip((datum) => singleFallback(datum))
+    return normalizeTooltip((datum: Datum) => singleFallback(datum))
   }
 
   // Should not reach here but return a generic tooltip

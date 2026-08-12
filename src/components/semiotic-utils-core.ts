@@ -8,13 +8,13 @@
  */
 
 // ── Theme ────────────────────────────────────────────────────────────────
-export type { SemioticTheme } from "./store/ThemeStore"
+export type { SemioticTheme } from "./store/themeCore"
 export {
   LIGHT_THEME,
   DARK_THEME,
   HIGH_CONTRAST_THEME,
   COLOR_BLIND_SAFE_CATEGORICAL,
-} from "./store/ThemeStore"
+} from "./store/themeCore"
 export {
   themeToCSS,
   themeToCSSVariables,
@@ -24,7 +24,10 @@ export {
   CARBON_CATEGORICAL_14,
   CARBON_ALERT,
 } from "./semiotic-themes-core"
-export type { ThemePresetName } from "./semiotic-themes-core"
+export type {
+  KnownThemePresetName,
+  ThemePresetName
+} from "./semiotic-themes-core"
 
 // ── Format utilities ─────────────────────────────────────────────────────
 export { adaptiveTimeTicks, smartTickFormat } from "./charts/shared/formatUtils"

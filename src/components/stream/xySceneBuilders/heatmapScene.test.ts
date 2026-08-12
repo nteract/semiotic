@@ -637,6 +637,34 @@ describe("buildStreamingHeatmapScene", () => {
     expect(nodesA[1].fill).toBe(nodesB[1].fill)
   })
 
+  it.each(["__proto__", "constructor", "toString"])(
+    "uses the shared Blues LUT for prototype-like scheme %s",
+    (colorScheme) => {
+      const data = [
+        { x: 5, y: 5, value: 2 },
+        { x: 95, y: 95, value: 7 }
+      ]
+      const build = (scheme: string) =>
+        buildHeatmapScene(
+          makeCtx({
+            config: {
+              heatmapAggregation: "sum",
+              heatmapXBins: 5,
+              heatmapYBins: 5,
+              colorScheme: scheme,
+              valueAccessor: "value"
+            },
+            getX: (datum) => datum.x,
+            getY: (datum) => datum.y
+          }),
+          data,
+          defaultLayout
+        ).map((node) => node.fill)
+
+      expect(build(colorScheme)).toEqual(build("blues"))
+    }
+  )
+
   it("uses a custom color scale with aggregated streaming values", () => {
     const data = [
       { x: 5, y: 5, value: 2 },

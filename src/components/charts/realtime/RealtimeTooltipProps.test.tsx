@@ -3,7 +3,7 @@ import { render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { HoverData } from "../../realtime/types"
 import type { StreamXYFrameProps } from "../../stream/types"
-import type { TooltipProp } from "../../Tooltip/Tooltip"
+import type { RealtimeTooltipProp } from "./realtimeChartTypes"
 import { RealtimeHeatmap } from "./RealtimeHeatmap"
 import { RealtimeHistogram } from "./RealtimeHistogram"
 import { RealtimeLineChart } from "./RealtimeLineChart"
@@ -19,7 +19,7 @@ vi.mock("../../stream/StreamXYFrame", () => ({
   }),
 }))
 
-function cases(tooltip: TooltipProp) {
+function cases(tooltip: RealtimeTooltipProp) {
   const data = [{ time: 1, value: 2, label: "Sample" }]
   return [
     ["line", <RealtimeLineChart key="line" data={data} tooltip={tooltip} />],
@@ -65,7 +65,7 @@ describe("realtime tooltip prop consistency", () => {
     }
   })
 
-  it("passes the authored raw datum to top-level callbacks across every realtime chart", () => {
+  it("preserves the published full HoverData callback across every realtime chart", () => {
     const custom = vi.fn(() => <div>custom</div>)
     for (const [name, element] of cases(custom)) {
       capturedFrames.length = 0
@@ -73,7 +73,7 @@ describe("realtime tooltip prop consistency", () => {
       const view = render(element)
       const frame = capturedFrames.at(-1)
       frame?.tooltipContent?.(hover)
-      expect(custom, name).toHaveBeenCalledWith(hover.data)
+      expect(custom, name).toHaveBeenCalledWith(hover)
       view.unmount()
     }
   })

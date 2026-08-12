@@ -178,7 +178,7 @@ export function forceLayout(
   const spanY = maxY - minY
   const out: Record<string, Point> = {}
   for (const node of list) {
-    out[node.id] = {
+    const point = {
       x:
         spanX === 0
           ? 0.5
@@ -188,6 +188,12 @@ export function forceLayout(
           ? 0.5
           : inset + (((node.y ?? center) - minY) / spanY) * (1 - 2 * inset),
     }
+    Object.defineProperty(out, node.id, {
+      value: point,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    })
   }
   return out
 }

@@ -241,6 +241,18 @@ describe("buildWaterfallScene", () => {
     expect(nodes[0].style.strokeWidth).toBe(2)
   })
 
+  it("preserves waterfallStyle cursor on emitted bars", () => {
+    const ctx = makeCtx({
+      config: { waterfallStyle: { gap: 0, cursor: "pointer" } },
+    })
+    const nodes = buildWaterfallScene(
+      ctx,
+      [{ x: 0, y: 10 }, { x: 10, y: 5 }],
+      defaultLayout
+    )
+    expect(nodes[0]?.style.cursor).toBe("pointer")
+  })
+
   it("stores connector metadata on datum for downstream rendering", () => {
     const data = [{ x: 0, y: 10 }, { x: 10, y: 5 }]
     const ctx = makeCtx({

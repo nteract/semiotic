@@ -17,6 +17,7 @@ import type { StyleRule } from "../shared/styleRules"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildPhysicalFlowPhysics,
+  composePhysicsBodyStyle,
   physicsChartArea,
   styleFromColorAccessor,
   type PhysicalFlowCoordinateMode,
@@ -24,12 +25,11 @@ import {
   type PhysicalFlowProjectionMetadata,
   type PhysicalFlowRawPath
 } from "./physicsChartUtils"
+import { physicalFlowSemanticItems } from "./packetFlowSemantics"
 import {
-  formatPhysicalFlowThroughput,
-  physicalFlowPathD,
-  physicalFlowSemanticItems
-} from "./packetFlowSemantics"
-import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
+  usePhysicsHocHandle,
+  type PhysicsFrameHandle
+} from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -44,11 +44,14 @@ import {
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
+import { physicalFlowOverlay } from "./packetFlowOverlay"
 
 export interface PacketFlowChartProps<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
-> extends Omit<BaseChartProps, "margin" | "selection">,
+>
+  extends
+    Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   nodes?: TNode[]
   links?: TLink[]
@@ -91,8 +94,10 @@ export interface PacketFlowChartProps<
 }
 
 /** @deprecated Renamed to {@link PacketFlowChartProps} in 3.9.0. */
-export type PhysicalFlowChartProps<TNode extends Datum = Datum, TLink extends Datum = Datum> =
-  PacketFlowChartProps<TNode, TLink>
+export type PhysicalFlowChartProps<
+  TNode extends Datum = Datum,
+  TLink extends Datum = Datum
+> = PacketFlowChartProps<TNode, TLink>
 
 type FlowPathPoint = { x: number; y: number }
 
@@ -186,7 +191,10 @@ function pointAtProgress(
   for (let index = 1; index < path.length; index += 1) {
     const previous = path[index - 1]
     const current = path[index]
-    const segmentLength = Math.hypot(current.x - previous.x, current.y - previous.y)
+    const segmentLength = Math.hypot(
+      current.x - previous.x,
+      current.y - previous.y
+    )
     if (segmentLength <= 0) continue
     if (traveled + segmentLength >= target) {
       const local = (target - traveled) / segmentLength
@@ -269,9 +277,8 @@ function steerPhysicalFlowBodies(
     if (!projection) continue
     const datum = body.datum as Record<string, unknown> | undefined
     const speedValue = Number(datum?.flowSpeed)
-    const speed = Number.isFinite(speedValue) && speedValue > 0
-      ? speedValue
-      : fallbackSpeed
+    const speed =
+      Number.isFinite(speedValue) && speedValue > 0 ? speedValue : fallbackSpeed
 
     if (
       projection.progress >= 0.985 ||
@@ -284,7 +291,8 @@ function steerPhysicalFlowBodies(
 
     const lookaheadProgress = Math.min(
       1,
-      projection.progress + Math.max(0.035, Math.min(0.12, speed / projection.totalLength * 0.16))
+      projection.progress +
+        Math.max(0.035, Math.min(0.12, (speed / projection.totalLength) * 0.16))
     )
     const lookahead = pointAtProgress(
       path,
@@ -308,127 +316,6 @@ function steerPhysicalFlowBodies(
 
   if (removeIds.length) controls.remove(removeIds)
   if (respawns.length) controls.pushMany(respawns)
-}
-
-function physicalFlowOverlay(
-  metadata: PhysicalFlowProjectionMetadata | undefined,
-  options: {
-    showNodeLabels: boolean
-    showSensors: boolean
-    showStaticFlow: boolean
-  }
-): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  const { showNodeLabels, showSensors, showStaticFlow } = options
-  if (!metadata || (!showStaticFlow && !showSensors)) return undefined
-
-  return ({ size }) => {
-    const resolvedSize: [number, number] = [
-      Number(size[0]) || 760,
-      Number(size[1]) || 420
-    ]
-    const maxThroughput = Math.max(
-      1,
-      ...metadata.links.map((link) => link.throughput)
-    )
-    const sensorById = new Set(metadata.nodes.map((node) => node.sensorId))
-
-    return (
-      <svg
-        aria-hidden="true"
-        data-testid="physical-flow-static-flow-overlay"
-        width={resolvedSize[0]}
-        height={resolvedSize[1]}
-        viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none"
-        }}
-      >
-        {showStaticFlow
-          ? metadata.links.map((link) => {
-              const strokeWidth = 3 + (link.throughput / maxThroughput) * 16
-              const mid = link.path[Math.floor(link.path.length / 2)]
-              return (
-                <g key={link.id}>
-                  <path
-                    d={physicalFlowPathD(link.path)}
-                    fill="none"
-                    stroke="var(--semiotic-border, #d1d5db)"
-                    strokeWidth={strokeWidth + 5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={0.26}
-                  />
-                  <path
-                    d={physicalFlowPathD(link.path)}
-                    fill="none"
-                    stroke="var(--semiotic-primary, #4e79a7)"
-                    strokeWidth={strokeWidth}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={0.16}
-                  />
-                  {mid ? (
-                    <text
-                      x={mid.x}
-                      y={mid.y - strokeWidth / 2 - 5}
-                      textAnchor="middle"
-                      fill="var(--semiotic-text-secondary, #555)"
-                      fontSize={10}
-                      fontWeight={700}
-                    >
-                      {formatPhysicalFlowThroughput(link.throughput)}
-                    </text>
-                  ) : null}
-                </g>
-              )
-            })
-          : null}
-        {metadata.nodes.map((node) => (
-          <g key={node.id}>
-            {showSensors && sensorById.has(node.sensorId) ? (
-              <rect
-                data-testid="physical-flow-sensor-overlay"
-                x={node.x - 12}
-                y={node.y - 12}
-                width={24}
-                height={24}
-                rx={4}
-                fill="none"
-                stroke="var(--semiotic-warning, #f59e0b)"
-                strokeDasharray="3 3"
-                strokeWidth={1.5}
-                opacity={0.88}
-              />
-            ) : null}
-            {showStaticFlow ? (
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={6}
-                fill="var(--semiotic-bg, #fff)"
-                stroke="var(--semiotic-text-secondary, #555)"
-                strokeWidth={1.2}
-              />
-            ) : null}
-            {showNodeLabels ? (
-              <text
-                x={node.x}
-                y={node.y - 14}
-                textAnchor="middle"
-                fill="var(--semiotic-text, #111827)"
-                fontSize={11}
-                fontWeight={800}
-              >
-                {node.label}
-              </text>
-            ) : null}
-          </g>
-        ))}
-      </svg>
-    )
-  }
 }
 
 function withPhysicalFlowObservation(
@@ -500,13 +387,14 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
     onObservation,
     particleRadius = 4,
     particleRate = 0.16,
-    pathAccessor = "path" as ChartAccessor<TLink, PhysicalFlowRawPath | undefined>,
+    pathAccessor = "path" as ChartAccessor<
+      TLink,
+      PhysicalFlowRawPath | undefined
+    >,
     pathConstraint = "path",
     paused,
     reducedMotion = false,
     rerunMS,
-    responsiveHeight,
-    responsiveWidth,
     seed = 1,
     showNodeLabels = true,
     showSensors = false,
@@ -649,7 +537,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
   const resolvedColorBy =
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
     ("source" as ChartAccessor<Datum, string>)
-  const bodyStyle = useMemo(
+  const generatedBodyStyle = useMemo(
     () =>
       styleFromColorAccessor(resolvedColorBy, "#2563eb", {
         styleRules,
@@ -658,6 +546,10 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
       }),
     [resolvedColorBy, styleRules, throughputAccessor]
   )
+  const bodyStyle = useMemo(
+    () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
+    [generatedBodyStyle, frameProps?.bodyStyle]
+  )
   const observedConfig = useMemo(
     () => withPhysicalFlowObservation(layout.config, chartId, onObservation),
     [chartId, layout.config, onObservation]
@@ -665,7 +557,9 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
   const rerun = usePhysicsRerun(observedConfig, rerunMS, paused)
   const userOnTickRef = useRef(frameProps?.onTick)
   userOnTickRef.current = frameProps?.onTick
-  const flowOnTick = useCallback<NonNullable<StreamPhysicsFrameProps["onTick"]>>(
+  const flowOnTick = useCallback<
+    NonNullable<StreamPhysicsFrameProps["onTick"]>
+  >(
     (result, controls) => {
       if (!reducedMotion && pathConstraint !== "none") {
         steerPhysicalFlowBodies(controls, flowSpeed)
@@ -690,9 +584,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
 
   const stateEl = renderPhysicsChartState({
     data:
-      links == null && edges == null && data == null
-        ? undefined
-        : chartLinks,
+      links == null && edges == null && data == null ? undefined : chartLinks,
     emptyContent,
     loading,
     loadingContent,
@@ -732,7 +624,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
-      key={rerun.rerunKey}
+      key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
       ref={frameRef}
       onBodyHover={onBodyHover}
       config={rerun.config}
@@ -744,17 +636,18 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
       initialSpawns={layout.initialSpawns}
       onTick={flowOnTick}
       paused={paused || reducedMotion}
-      responsiveHeight={responsiveHeight}
-      responsiveWidth={responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       simulationExecution={
-        pathConstraint === "none"
-          ? frameProps?.simulationExecution
-          : "sync"
+        pathConstraint === "none" ? frameProps?.simulationExecution : "sync"
       }
       size={chartSize}
       bodyStyle={bodyStyle}
-      workerBodyThreshold={frameProps?.workerBodyThreshold ?? Number.POSITIVE_INFINITY}
-    />
+      workerBodyThreshold={
+        frameProps?.workerBodyThreshold ?? Number.POSITIVE_INFINITY
+      }
+    />,
+    layoutMode
   )
 }) as unknown as {
   <TNode extends Datum = Datum, TLink extends Datum = Datum>(

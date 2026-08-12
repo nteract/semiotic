@@ -28,6 +28,62 @@ test.describe("Themed charts — visual matrix", () => {
     await page.goto("/themed-examples/")
   })
 
+  test("network and geo frames resolve their dark theme surfaces", async ({
+    page
+  }) => {
+    const cases = [
+      {
+        frameClass: ".stream-network-frame",
+        testId: "themed-sankey-dark"
+      },
+      {
+        frameClass: ".stream-geo-frame",
+        testId: "themed-choropleth-bi-tool-dark"
+      }
+    ]
+
+    for (const { frameClass, testId } of cases) {
+      await waitForChartReady(page, testId)
+      const surface = page.locator(
+        `[data-testid="${testId}"] ${frameClass} .stream-frame-background__backdrop`
+      ).first()
+      await expect(surface).toHaveAttribute("fill", /--semiotic-bg/)
+      const resolved = await surface.evaluate((element) => {
+        const themeBackground = getComputedStyle(element)
+          .getPropertyValue("--semiotic-bg")
+          .trim()
+        const probe = document.createElement("span")
+        probe.style.color = themeBackground
+        element.parentElement?.appendChild(probe)
+        const expected = getComputedStyle(probe).color
+        probe.remove()
+        const expectedCanvas = document.createElement("canvas")
+        expectedCanvas.width = 1
+        expectedCanvas.height = 1
+        const expectedContext = expectedCanvas.getContext("2d")!
+        expectedContext.fillStyle = themeBackground
+        expectedContext.fillRect(0, 0, 1, 1)
+        const expectedPixel = Array.from(
+          expectedContext.getImageData(0, 0, 1, 1).data
+        )
+        const frame = element.closest(".stream-network-frame, .stream-geo-frame")
+        const dataCanvas = frame?.querySelector("canvas")
+        const dataContext = dataCanvas?.getContext("2d")
+        const surfacePixel = dataContext
+          ? Array.from(dataContext.getImageData(1, 1, 1, 1).data)
+          : null
+        return {
+          expected,
+          expectedPixel,
+          surfacePixel,
+          surface: getComputedStyle(element).fill
+        }
+      })
+      expect(resolved.surface).toBe(resolved.expected)
+      expect(resolved.surfacePixel).toEqual(resolved.expectedPixel)
+    }
+  })
+
   for (const theme of THEMES) {
     for (const chart of CHARTS) {
       const testId = `themed-${chart}-${theme}`

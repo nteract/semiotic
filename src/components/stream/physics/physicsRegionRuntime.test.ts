@@ -5,6 +5,7 @@ import {
 } from "./PhysicsControllers"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import {
+  cloneRegionStateSnapshot,
   runPhysicsPostTick,
   type InternalStreamPhysicsBodyRegionState
 } from "./physicsRegionRuntime"
@@ -13,6 +14,16 @@ import type { StreamPhysicsRegionEffect } from "./StreamPhysicsTypes"
 const BODY_ID = "body"
 const REGION_ID = "field"
 const FIXED_DT = 1 / 60
+
+function emptyRegionState(): InternalStreamPhysicsBodyRegionState {
+  return {
+    activeRegionIds: new Set(),
+    regionIds: new Set(),
+    charges: {},
+    attributes: {},
+    energy: 0
+  }
+}
 
 function makeRuntime(work = 1) {
   const store = new PhysicsPipelineStore({
@@ -160,5 +171,23 @@ describe("runPhysicsPostTick simulated time", () => {
     }
     expect(oneSnapshot.remainingWork).toBeCloseTo(0.8, 8)
     expect(twoSnapshot.remainingWork).toBeCloseTo(oneSnapshot.remainingWork, 8)
+  })
+})
+
+describe("cloneRegionStateSnapshot", () => {
+  it("retains special body ids as own keys without replacing the prototype", () => {
+    const snapshot = cloneRegionStateSnapshot(new Map([
+      ["__proto__", emptyRegionState()],
+      ["constructor", emptyRegionState()],
+      ["toString", emptyRegionState()]
+    ]))
+
+    expect(Object.keys(snapshot)).toEqual([
+      "__proto__",
+      "constructor",
+      "toString"
+    ])
+    expect(snapshot["__proto__"].energy).toBe(0)
+    expect(Object.getPrototypeOf(snapshot)).toBe(Object.prototype)
   })
 })

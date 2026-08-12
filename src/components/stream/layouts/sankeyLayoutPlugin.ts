@@ -319,7 +319,8 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         fill: userStyle.fill || nodeColorMap.get(node.id) || "#4d430c",
         stroke: userStyle.stroke,
         strokeWidth: userStyle.strokeWidth,
-        opacity: userStyle.opacity
+        opacity: userStyle.opacity,
+        cursor: userStyle.cursor
       }
 
       // Track the resolved fill per node so edges can inherit the actual rendered color
@@ -402,6 +403,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
             fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
             stroke: "none",
             opacity: userStyle.opacity,
+            cursor: userStyle.cursor,
           },
           datum: edge,
           _gradient: { direction: "right", from: 1, to: 0, x0: cpd.sourceX, x1: cpd.sourceX + stubLen }
@@ -417,6 +419,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
             fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
             stroke: "none",
             opacity: userStyle.opacity,
+            cursor: userStyle.cursor,
           },
           datum: edge,
           _gradient: { direction: "left", from: 0, to: 1, x0: cpd.targetX - stubLenT, x1: cpd.targetX }
@@ -440,6 +443,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         stroke: userStyle.stroke || "none",
         strokeWidth: userStyle.strokeWidth,
         opacity: userStyle.opacity,
+        cursor: userStyle.cursor,
       }
 
       sceneEdges.push({
@@ -500,4 +504,3 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     return { sceneNodes, sceneEdges, labels }
   }
 }
-

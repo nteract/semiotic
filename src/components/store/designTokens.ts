@@ -1,6 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import type { SemioticTheme } from "./ThemeStore"
-import { DARK_THEME, LIGHT_THEME } from "./ThemeStore"
+import type { SemioticTheme } from "./themeCore"
+import { DARK_THEME, LIGHT_THEME } from "./themeCore"
 
 /**
  * W3C Design Tokens (DTCG) → Semiotic theme.

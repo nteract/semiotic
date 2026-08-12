@@ -175,7 +175,10 @@ export function buildOrdinalColumns(
     getO,
     getR
   } = input
-  const columns: Record<string, OrdinalColumn> = {}
+  // Category names are author data and may legitimately be keys such as
+  // `__proto__` or `constructor`. A plain object would route the former
+  // through Object.prototype's legacy setter and silently lose the column.
+  const columns = Object.create(null) as Record<string, OrdinalColumn>
 
   // Group data by category
   const grouped = new Map<string, Datum[]>()

@@ -8,6 +8,7 @@ import {
   renderLoadingState
 } from "../shared/withChartWrapper"
 import type { FrameGraphicsProp } from "../../stream/useFrame"
+import { useResponsiveSize } from "../../stream/useResponsiveSize"
 import type {
   PhysicsBodySelection,
   PhysicsSemanticItem,
@@ -31,6 +32,9 @@ import {
   useChartSelection,
   type ChartModeResult
 } from "../shared/hooks"
+import { physicsMarginForMode } from "./physicsChartLayout"
+
+export { physicsMarginForMode } from "./physicsChartLayout"
 
 export type PhysicsHocFrameProps<
   TOmitted extends keyof StreamPhysicsFrameProps = never
@@ -72,9 +76,7 @@ export type PhysicsSharedChartProps = {
  * direct escape hatch for hosts that resolve a body predicate themselves.
  */
 export type PhysicsChartSelection =
-  | SelectionConfig
-  | PhysicsBodySelection
-  | null
+  SelectionConfig | PhysicsBodySelection | null
 
 function isSelectionConfig(
   value: PhysicsChartSelection | undefined
@@ -181,12 +183,7 @@ export function usePhysicsSelection(
         data: datum
       } as unknown as Datum)
     }
-  }, [
-    customHoverBehavior,
-    frameOnBodyHover,
-    linkedHover,
-    unwrapSourceDatum
-  ])
+  }, [customHoverBehavior, frameOnBodyHover, linkedHover, unwrapSourceDatum])
 
   return useMemo(
     () => ({ selection: resolvedSelection, onBodyHover }),
@@ -202,7 +199,9 @@ export type PhysicsRerunMS = number | null
 
 const SIM_MODES = new Set<string>(["sample", "mechanical"])
 
-function normalizedRerunDelay(rerunMS: PhysicsRerunMS | undefined): number | null {
+function normalizedRerunDelay(
+  rerunMS: PhysicsRerunMS | undefined
+): number | null {
   return typeof rerunMS === "number" && Number.isFinite(rerunMS) && rerunMS >= 0
     ? rerunMS
     : null
@@ -327,13 +326,6 @@ export function resolvePhysicsModes(options: {
   }
 }
 
-/** Physics fills its box; only compact ChartModes get non-zero chrome padding. */
-export function physicsMarginForMode(compactMode: boolean, mode?: ChartMode) {
-  if (!compactMode) return { top: 0, right: 0, bottom: 0, left: 0 }
-  if (mode === "sparkline") return { top: 2, right: 2, bottom: 2, left: 2 }
-  return { top: 8, right: 8, bottom: 8, left: 8 }
-}
-
 export function resolvePhysicsChartSize(
   size: [number, number] | undefined,
   width: number | undefined,
@@ -358,6 +350,8 @@ export type PhysicsChartModeProps = {
   mode?: ChartMode | PhysicsSimulationMode
   simulationMode?: PhysicsSimulationMode
   size?: [number, number]
+  responsiveWidth?: boolean
+  responsiveHeight?: boolean
   showProjection?: boolean
   showChrome?: boolean
   tooltip?: TooltipProp
@@ -369,6 +363,9 @@ export interface PhysicsChartModeResult {
   simulationMode: PhysicsSimulationMode
   resolved: ChartModeResult
   chartSize: [number, number]
+  responsiveContainerRef: React.RefObject<HTMLDivElement | null>
+  responsiveWidth: boolean
+  responsiveHeight: boolean
   margin: { top: number; right: number; bottom: number; left: number }
   showProjection: boolean
   showChrome: boolean
@@ -428,7 +425,7 @@ export function usePhysicsChartMode(
   const sizeH = props.size?.[1]
   const fallbackW = primaryFallback[0]
   const fallbackH = primaryFallback[1]
-  const chartSize = useMemo(
+  const baseChartSize = useMemo(
     () =>
       resolvePhysicsChartSize(
         sizeW != null && sizeH != null ? [sizeW, sizeH] : undefined,
@@ -438,6 +435,12 @@ export function usePhysicsChartMode(
       ),
     [fallbackH, fallbackW, resolved.height, resolved.width, sizeH, sizeW]
   )
+  const responsiveLayout = usePhysicsResponsiveSize(
+    baseChartSize,
+    props.responsiveWidth,
+    props.responsiveHeight
+  )
+  const chartSize = responsiveLayout.size
 
   const margin = physicsMarginForMode(resolved.compactMode, modes.chartMode)
   const showProjection = props.showProjection ?? !resolved.compactMode
@@ -457,13 +460,17 @@ export function usePhysicsChartMode(
     modes.chartMode && modes.chartMode !== "primary"
       ? `semiotic-physics--${modes.chartMode}`
       : null
-  const className = [props.className, modeClass].filter(Boolean).join(" ") || undefined
+  const className =
+    [props.className, modeClass].filter(Boolean).join(" ") || undefined
 
   return {
     chartMode: modes.chartMode,
     simulationMode: modes.simulationMode,
     resolved,
     chartSize,
+    responsiveContainerRef: responsiveLayout.containerRef,
+    responsiveWidth: responsiveLayout.responsiveWidth,
+    responsiveHeight: responsiveLayout.responsiveHeight,
     margin,
     showProjection,
     showChrome,
@@ -476,6 +483,40 @@ export function usePhysicsChartMode(
     compactMode: resolved.compactMode,
     mobileInteraction: resolved.mobileInteraction,
     mobileSemantics: resolved.mobileSemantics
+  }
+}
+
+export interface PhysicsResponsiveSizeResult {
+  containerRef: React.RefObject<HTMLDivElement | null>
+  size: [number, number]
+  responsiveWidth: boolean
+  responsiveHeight: boolean
+}
+
+/**
+ * Measure the host that owns a physics layout. Stock Physics HOCs use the
+ * resolved dimensions to rebuild bodies, colliders, projections, and chrome
+ * together instead of resizing only the child canvas.
+ */
+export function usePhysicsResponsiveSize(
+  baseSize: [number, number],
+  responsiveWidth?: boolean,
+  responsiveHeight?: boolean
+): PhysicsResponsiveSizeResult {
+  const [containerRef, measuredSize] = useResponsiveSize(
+    baseSize,
+    responsiveWidth,
+    responsiveHeight
+  )
+  const width = Math.max(1, measuredSize[0])
+  const height = Math.max(1, measuredSize[1])
+  const size = useMemo<[number, number]>(() => [width, height], [height, width])
+
+  return {
+    containerRef,
+    size,
+    responsiveWidth: Boolean(responsiveWidth),
+    responsiveHeight: Boolean(responsiveHeight)
   }
 }
 
@@ -500,11 +541,31 @@ export function renderPhysicsChartState<TDatum extends Datum>(options: {
 export function renderPhysicsFrame(
   componentName: string,
   size: [number, number],
-  children: React.ReactNode
+  children: React.ReactNode,
+  responsiveLayout?: Pick<
+    PhysicsChartModeResult,
+    "responsiveContainerRef" | "responsiveHeight" | "responsiveWidth"
+  >
 ): React.ReactElement {
+  const content =
+    responsiveLayout?.responsiveWidth || responsiveLayout?.responsiveHeight ? (
+      <div
+        ref={responsiveLayout.responsiveContainerRef}
+        data-semiotic-physics-responsive-host="true"
+        style={{
+          position: "relative",
+          width: responsiveLayout.responsiveWidth ? "100%" : size[0],
+          height: responsiveLayout.responsiveHeight ? "100%" : size[1]
+        }}
+      >
+        {children}
+      </div>
+    ) : (
+      children
+    )
   return (
     <SafeRender componentName={componentName} width={size[0]} height={size[1]}>
-      {children}
+      {content}
     </SafeRender>
   )
 }
@@ -540,22 +601,23 @@ export function resolvePhysicsTooltipProps(
       ? "multi"
       : tooltip
   const normalized = normalizeTooltip(normalizedInput)
-  const tooltipContent = typeof normalized === "function"
-    ? options.unwrapSourceDatum
-      ? ((hover) => {
-          const frameDatum = hover.data as Datum | undefined
-          const sourceDatum = frameDatum?.sourceDatum
-          return normalized({
-            ...hover,
-            data:
-              sourceDatum && typeof sourceDatum === "object"
-                ? sourceDatum
-                : hover.data,
-            __semioticHoverData: true
-          })
-        }) satisfies NonNullable<StreamPhysicsFrameProps["tooltipContent"]>
-      : normalized as StreamPhysicsFrameProps["tooltipContent"]
-    : frameProps?.tooltipContent
+  const tooltipContent =
+    typeof normalized === "function"
+      ? options.unwrapSourceDatum
+        ? (((hover) => {
+            const frameDatum = hover.data as Datum | undefined
+            const sourceDatum = frameDatum?.sourceDatum
+            return normalized({
+              ...hover,
+              data:
+                sourceDatum && typeof sourceDatum === "object"
+                  ? sourceDatum
+                  : hover.data,
+              __semioticHoverData: true
+            })
+          }) satisfies NonNullable<StreamPhysicsFrameProps["tooltipContent"]>)
+        : (normalized as StreamPhysicsFrameProps["tooltipContent"])
+      : frameProps?.tooltipContent
   return {
     enableHover: frameProps?.enableHover,
     tooltipContent
@@ -620,12 +682,11 @@ export function resolvePhysicsFrameSharedProps(
     background: props.background ?? frameProps?.background,
     chartId: props.chartId ?? frameProps?.chartId,
     chartMode: modeExtras?.chartMode ?? frameProps?.chartMode,
-    className: modeExtras?.className ?? props.className ?? frameProps?.className,
+    className:
+      modeExtras?.className ?? props.className ?? frameProps?.className,
     color: props.color ?? frameProps?.color,
     description:
-      modeExtras?.description ??
-      props.description ??
-      frameProps?.description,
+      modeExtras?.description ?? props.description ?? frameProps?.description,
     emphasis: props.emphasis ?? frameProps?.emphasis,
     enableHover: modeExtras?.enableHover ?? frameProps?.enableHover,
     hoverRadius: props.hoverRadius ?? frameProps?.hoverRadius,

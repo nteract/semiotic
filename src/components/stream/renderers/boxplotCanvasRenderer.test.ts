@@ -3,6 +3,9 @@ import { boxplotCanvasRenderer } from "./boxplotCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
 import type { BoxplotSceneNode, OrdinalScales, OrdinalLayout, PointSceneNode } from "../ordinalTypes"
 import type { Mock } from "vitest"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { ordinalSceneNodeToSVG } from "../SceneToSVGOrdinal"
 
 function createMockCtx() {
   return {
@@ -77,9 +80,11 @@ describe("boxplotCanvasRenderer", () => {
     expect(ctx.strokeRect).toHaveBeenCalledWith(80, 100, 40, 100)
   })
 
-  it("draws median line in white", () => {
+  it("uses the authored stroke for the median in both canvas and SVG", () => {
     const ctx = createMockCtx()
-    const node = makeBoxplot()
+    const node = makeBoxplot({
+      style: { fill: "#4e79a7", stroke: "#c71585", strokeWidth: 3 }
+    })
     boxplotCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
     // Median line at medianPos=150
@@ -88,6 +93,14 @@ describe("boxplotCanvasRenderer", () => {
     // Should have a moveTo at (80, 150) and lineTo at (120, 150) for median
     expect(moveToArgs).toContainEqual([80, 150])
     expect(lineToArgs).toContainEqual([120, 150])
+    expect(ctx.strokeStyle).toBe("#c71585")
+    expect(ctx.lineWidth).toBe(6)
+
+    const svg = renderToStaticMarkup(
+      createElement("svg", null, ordinalSceneNodeToSVG(node, 0))
+    )
+    expect(svg).toContain('stroke="#c71585"')
+    expect(svg).toContain('stroke-width="6"')
   })
 
   it("applies fill opacity from style", () => {
@@ -97,6 +110,21 @@ describe("boxplotCanvasRenderer", () => {
 
     // globalAlpha should be set to fillOpacity before fillRect
     expect(ctx.globalAlpha).toBe(1) // restored after rendering
+  })
+
+  it("suppresses canvas outlines for stroke=none like SVG", () => {
+    const ctx = createMockCtx()
+    const node = makeBoxplot({ style: { fill: "#4e79a7", stroke: "none" } })
+
+    boxplotCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.fillRect).toHaveBeenCalledOnce()
+    expect(ctx.stroke).not.toHaveBeenCalled()
+    expect(ctx.strokeRect).not.toHaveBeenCalled()
+    const svg = renderToStaticMarkup(
+      createElement("svg", null, ordinalSceneNodeToSVG(node, 0))
+    )
+    expect(svg).toContain('stroke="none"')
   })
 
   it("renders horizontal projection", () => {

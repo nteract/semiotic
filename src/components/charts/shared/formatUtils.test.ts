@@ -1,5 +1,59 @@
-import { describe, expect, it } from "vitest"
-import { adaptiveTimeTicks, resolveAdaptiveTimeZone } from "./formatUtils"
+import { renderToStaticMarkup } from "react-dom/server"
+import { describe, expect, it, vi } from "vitest"
+import {
+  adaptiveTimeTicks,
+  createTooltip,
+  resolveAdaptiveTimeZone
+} from "./formatUtils"
+
+describe("createTooltip", () => {
+  it("ignores inherited and malformed formatter or label-map entries", () => {
+    const inheritedFormatter = vi.fn(() => "inherited")
+    const formatters = Object.create({ constructor: inheritedFormatter }) as Record<
+      string,
+      (value: string | number | Date) => string
+    >
+    Object.defineProperty(formatters, "malformed", {
+      value: "not-a-function",
+      enumerable: true
+    })
+    const labels = Object.create({ constructor: "Inherited label" }) as Record<
+      string,
+      string
+    >
+    Object.defineProperty(labels, "malformed", {
+      value: 42,
+      enumerable: true
+    })
+
+    const markup = renderToStaticMarkup(
+      createTooltip(
+        ["constructor", "malformed"],
+        formatters,
+        labels
+      )({ constructor: "raw", malformed: "plain" })
+    )
+
+    expect(markup).toContain("constructor: ")
+    expect(markup).toContain("raw")
+    expect(markup).toContain("malformed: ")
+    expect(markup).toContain("plain")
+    expect(inheritedFormatter).not.toHaveBeenCalled()
+  })
+
+  it("honors own prototype-named formatter and label entries", () => {
+    const formatters = Object.fromEntries([
+      ["constructor", (value: string | number | Date) => `own-${String(value)}`]
+    ])
+    const labels = Object.fromEntries([["constructor", "Own label"]])
+    const markup = renderToStaticMarkup(
+      createTooltip(["constructor"], formatters, labels)({ constructor: "value" })
+    )
+
+    expect(markup).toContain("Own label: ")
+    expect(markup).toContain("own-value")
+  })
+})
 
 describe("adaptiveTimeTicks", () => {
   it("keeps UTC as the backwards-compatible default", () => {

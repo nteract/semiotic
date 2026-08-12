@@ -650,6 +650,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       onObservation,
       onClick,
       hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

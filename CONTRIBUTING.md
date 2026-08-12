@@ -101,6 +101,7 @@ npm run check:context7
 npm run check:llms
 npm run check:mcp-registry
 npm run check:surface
+npm run check:typedoc
 
 # Release-oriented checks
 npm run check:ssr
@@ -110,6 +111,13 @@ npm run size
 npm run check:pack
 npm run release:check
 ```
+
+TypeDoc treats warnings as errors. Its validation intentionally skips only the
+"referenced but not exported" category: Semiotic's entry-point declarations
+use structural types from internal modules, while the checked-in API snapshots
+and clean packed-consumer compilation are the authoritative export-resolution
+gates. Invalid links, paths, and all non-validation warnings remain fatal;
+third-party React lifecycle links are mapped explicitly in `typedoc.json`.
 
 ## Architecture
 
@@ -181,6 +189,23 @@ Add `npm run website:build` when routes, examples, generated API docs, or public
 ## Publishing Releases
 
 Releases are automated through GitHub Actions and npm credentials configured in the repository. Release PRs should update `package.json`, `CHANGELOG.md`, and any generated artifacts required by the release checks before tagging.
+
+Use `npm run create-release-branch -- <major|minor|patch>` for the maintained
+release flow. It builds the package, MCP server, and docs before refreshing the
+machine and browser baselines. Baseline writes first compare p50 measurements
+with the previous committed evidence and refuse to overwrite it on a measured
+regression; static snapshot drift is printed and committed for PR review. Use
+`compare:machine-baseline` or `compare:browser-baseline` for a read-only preview,
+and never hand-edit the JSON snapshots. The release-branch command also runs a
+missing-only visual bootstrap in the pinned Linux Playwright container: new
+images are written for review, while any difference against an existing image
+still fails.
+
+After the release PR is merged, `npm run publish-release` creates the version
+tag from a clean, validated `main`. The tag workflow independently proves the
+tagged commit is merged into `origin/main`, reruns every visual baseline with
+updates disabled, installs Chromium for the local browser contract, runs the
+complete `release:check`, and only then freezes the immutable npm artifact.
 
 ## Community
 

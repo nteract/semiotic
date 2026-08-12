@@ -7,10 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-08-11
+
+### Added
+
+- **Renderer-independent cursor styling** — retained mark styles now accept a typed `cursor` value. For example, `StreamNetworkFrame` node icons can use `nodeStyle={(node) => ({ cursor: node.url ? "pointer" : "default" })}`; the same contract applies to XY, ordinal, network, geographic, and physics marks across canvas, SVG, and static rendering. Realtime chart HOCs also expose a top-level cursor default, inherited by the static `TemporalHistogram` sibling. Cursor styling is presentation only and composes with the existing click, observation, and keyboard interaction APIs.
+- **Bounded event-time streaming** — `RealtimeLineChart` can reorder out-of-order input with `eventTime`, reduce high-rate streams into retained windows with `aggregate`, and expose a chart-specific `RealtimeLineChartHandle.flush()` for explicit end-of-stream boundaries. Live policy/accessor changes drain the prior tail; structural aggregate changes replay controlled data or begin a documented new push-only epoch.
+- **Observation and tooltip composition APIs** — `ObservationReadout`, `observedDatum`, `TooltipRoot`, tooltip chrome helpers, and the multi-line / multi-point tooltip builders make coordinated readouts and application-owned tooltip shells first-class public surfaces.
+- **Reusable data, interaction, theme, and responsive helpers** — `balanceSnapshotsToFlows`, `networkEdgeHitTarget`, `themeToCSSVariables`, `resolveResponsiveDimension`, `useResponsiveSize`, and the public physics canvas paint context cover recurring application-level work without requiring internal imports.
+- **Evidence-led documentation examples** — new long-form examples include The Last Scarcity, Hellhole Changed Addresses, The Parataxis Machine, and How a Hit Travels, with checked data projections and browser contracts. Repository agent guidance was split into compact always-on instructions and on-demand references, and the shared blog-authoring workflow is now reusable.
+
+### Changed
+
+- **Typed chart accessors preserve caller datum inference** — generic string and function accessors now retain concrete datum fields through high-level and realtime chart APIs while remaining compatible with the erased Stream Frame boundary. Named callbacks and misspelled-field failures have compile-time regression coverage.
+- **Realtime charts use the shared chart contract** — controlled data and push mode are both generically typed; title, description, summary, accessible tables, legends, legend interaction, loading/empty chrome, selection, linked hover, and observation metadata now flow consistently through all five realtime wrappers.
+- **Continuous and compound chart semantics are complete** — ChoroplethMap has an interactive gradient legend in client and static output, GaugeChart participates in loading/empty and selection behavior, and ScatterplotMatrix / MinimapChart expose one chart-level accessible table instead of duplicating one per internal frame.
+- **ProcessSankey layout quality and example stability improved** — boundary-fan centering, pool highlighting, ledger assertions, ordering heuristics, deterministic documentation layouts, and history-river integration coverage were tightened.
+- **Physics layouts now reflow as one system** — `responsiveWidth` / `responsiveHeight` measure the HOC-owned container and rebuild bodies, colliders, projections, chrome, and semantic geometry together. This applies to the stock Physics charts, Crucible, and ChainReaction instead of stretching a child canvas over stale coordinates; direct `StreamPhysicsFrame` bounds also follow the measured frame.
+- **Package entry graphs preserve runtime identity with less duplication** — ESM and CommonJS consumers share canonical client contexts across family subpaths, pure `themes/core`, `recipes/core`, and `utils/core` imports remain React-free, and mixed facades retain explicit client boundaries without fragmenting providers.
+
 ### Fixed
 
 - **Heatmap color-scale plumbing** — `Heatmap` now routes `colorScheme="custom"` and `customColorScale(value)` into the shared heatcell scene graph instead of falling back to Blues in CSR and SSR. It also preserves `frameProps.colorScheme` precedence and the theme's sequential scheme in SSR. `RealtimeHeatmap` now honors its documented named sequential schemes, theme fallback, and custom value-to-color functions. String fills returned by `frameProps.areaStyle` also override individual bounded Heatmap cells in both render paths.
 - **`customColorScale` must be callable** — the `Heatmap` and `RealtimeHeatmap` chart specs declared `customColorScale` as `["object", "function"]`, so a non-callable object scale passed validation, was silently dropped by the server path, and threw on the client when the scene builder invoked it. The spec now declares `"function"` (matching the TypeScript type, which never allowed anything else), so `validateProps` / `--doctor` report it up front, and both client paths degrade to the named scheme instead of throwing. d3 scales such as `scaleSequential` are callable and unaffected.
+- **Client, direct-SSR, and static-renderer parity** — OrbitDiagram now renders deterministically on the server; grouped XY inputs, custom layouts, geo flow configuration, zero-valued network edges, theme scales, radial backgrounds, empty-scene graphics, solid-plus-graphics background ordering, and nested SVG gauge overlays follow the same contract in every renderer.
+- **Interaction geometry matches visible marks** — canvas and quadtree hit testing agree for large points, glyphs, symbols, areas, lines, network marks, and geographic marks; BumpChart respects device pixel ratio; XY hover radius reaches every wrapper; gradient legends provide visible, roving keyboard focus; and stale cursor state is cleared when a mark is no longer hit.
+- **Authored frame styling remains authoritative** — physics chart HOCs now compose `frameProps.bodyStyle` over their generated defaults instead of silently replacing it, including cursor values; DistanceCartogram foreground rings and the north indicator also use the correct plot-relative coordinates with nonzero margins.
+- **Physics settled rendering matches the live chart** — static Physics HOCs use the same mode-specific margins as their client siblings, include chart-owned chrome and projections, settle paced runs deterministically, and inject theme tokens only when a server theme is explicit. Crucible terminal snapshots now have effectively pixel-identical SSR/CSR geometry and color across all three browser engines.
+- **Prototype-shaped identifiers are ordinary data** — ProcessSankey layout, packing, ordering, and cache records; Crucible components, products, relations, and metrics; and realtime palette/registry state now safely accept keys such as `__proto__`, `constructor`, and `toString` without mutation, omission, or inherited-value collisions.
+- **Streaming resources terminate and invalidate correctly** — superseded force-layout work can stop without rejecting another chart's request, tile cache identities include provider / URL / device pixel ratio and recover from failed loads, progressive ingestion normalizes invalid chunk options, staleness uses the injected frame clock, and CSS color observers are installed only while subscribers exist.
+- **Theme and canvas color behavior is stable** — dynamic theme preset lookup remains a supported string-keyed API, Heatmap canvas colors resolve CSS variables with readable label contrast, CSS cache invalidation no longer leaks global observers, and explicit zero stroke widths are preserved.
+- **Release artifacts and CI are fail-closed** — package-surface generation is deterministic across dev/prod builds, internal/test declarations are pruned, mixed React facades carry the correct client boundary, API compatibility is checked against the previous tag, TypeDoc and docs-asset warnings are enforced, browser/machine baselines are release gates, benchmarks compare on one runner, and npm / Cloud Run / MCP Registry publication now verify the same exact version and package integrity in order.
+- **Package and repository housekeeping** — aligned Size Limit plugins, updated the MCP SDK and audited transitive graph, removed stale generated archives/pages from the tracked root, and added guards for release-version, README, package-surface, and deployment metadata drift.
 
 ## [3.8.9] - 2026-08-04
 
@@ -282,20 +310,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   revision. The published evidence therefore supports an abstention benefit
   for Sol, not the stronger expected claim that the payload closes an
   answerable chart-reading gap.
-- **Offline conference-demo hardening packet.** `docs/strategy/talk-demos.md`
-  now inventories the selected Stage C path, fused reader-grounding beat, and
-  Stage B fallback with inputs, interactions, dependency class, timing, and a
-  recovery cue for every beat. Four committed fixtures drive the trust-loop
-  proposals, BoxPlot → RidgelinePlot bimodal discovery, deterministic
-  stale-note stream, and a hand-authored Stage C recovery replay. The recovery
-  artifact replaces the unrelated synthetic revenue arc and includes
-  suggestion, refusal, repair, audience, scale, variant, render evidence,
-  grounding, and export; it remains explicitly distinct from an arc recorded
-  from the future composed stage app. A browser contract prevents external
-  network access, locally neutralizes the optional font stylesheet, and
-  exercises the newly hardened fixture-backed beats; the stale-note stream can
-  also advance one committed tick at a time through
-  `fresh → aging → stale → expired`.
 - **Typed refusal and render-proof conversation events.**
   `proposal-refused` records the deterministic gate, reason codes, and repair
   alternatives; `render-evidence` records mark count, emptiness, and render

@@ -83,7 +83,7 @@ interface PageInfo {
 
 function analyzePage(source: string): PageInfo {
   const ast = parseSync(source, {
-    parserOpts: { plugins: ["jsx"], sourceType: "module" },
+    parserOpts: { plugins: ["jsx", "typescript"], sourceType: "module" },
     babelrc: false,
     configFile: false,
   })
@@ -125,7 +125,7 @@ function analyzePage(source: string): PageInfo {
 // ── Run ────────────────────────────────────────────────────────────────────
 
 const files = existsSync(playgroundDir)
-  ? readdirSync(playgroundDir).filter((f) => f.endsWith("Playground.js"))
+  ? readdirSync(playgroundDir).filter((f) => /Playground\.(?:js|jsx|ts|tsx)$/.test(f))
   : []
 
 let checkedPages = 0
@@ -159,6 +159,17 @@ for (const file of files) {
 
 for (const m of info) console.log(`ℹ ${m}`)
 if (info.length) console.log("")
+
+if (files.length === 0) {
+  errors.push(
+    "No playground source files were discovered; expected *Playground.{js,jsx,ts,tsx}",
+  )
+} else if (checkedPages === 0 || checkedControls === 0) {
+  errors.push(
+    `Playground analysis was vacuous (${files.length} file(s), ${checkedPages} enum-bearing page(s), ` +
+      `${checkedControls} enum-bound select control(s)); update the analyzer before accepting this gate`,
+  )
+}
 
 if (errors.length) {
   console.error("✗ playground control drift detected:\n")

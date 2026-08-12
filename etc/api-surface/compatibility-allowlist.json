@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "changes": [
+    {
+      "against": "v3.8.9",
+      "entry": "semiotic",
+      "symbol": "ChartAccessor",
+      "previous": [
+        "type ChartAccessor<TDatum, T> = ((d: Datum, i?: number) => T) | (keyof TDatum & string)"
+      ],
+      "current": [
+        "type ChartAccessor<TDatum, T> = (keyof TDatum & string) | ChartAccessorFunction<TDatum, T>"
+      ],
+      "reason": "Backward-compatible type correction: the callback now respects TDatum; callbacks accepting the former broader Datum remain assignable while typed callbacks gain safe field inference."
+    }
+  ]
+}

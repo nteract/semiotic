@@ -35,65 +35,59 @@ interface FieldStats {
 
 /** Compute per-field statistics from extracted rows. Defensive against weird values. */
 export function computeFieldStats(rows: DataRow[]): FieldStats[] {
-  if (!rows || rows.length === 0) return []
-
-  const fieldNames = new Set<string>()
-  for (const row of rows) {
-    if (!row || !row.values) continue
-    for (const key of Object.keys(row.values)) fieldNames.add(key)
+  type Accumulator = {
+    count: number
+    min: number
+    max: number
+    sum: number
+    strings: Set<string>
   }
-
-  const stats: FieldStats[] = []
-  for (const name of fieldNames) {
-    const numbers: number[] = []
-    const strings = new Set<string>()
-
-    for (const row of rows) {
-      if (!row || !row.values) continue
-      const value = row.values[name]
+  const fields = new Map<string, Accumulator>()
+  for (const row of rows ?? []) {
+    for (const [name, value] of Object.entries(row?.values ?? {})) {
       if (value == null || value === "") continue
-      if (
-        typeof value === "number" &&
-        !Number.isNaN(value) &&
-        Number.isFinite(value)
-      ) {
-        numbers.push(value)
-      } else if (typeof value === "number") {
-        // NaN/Infinity — skip rather than corrupt stats.
+      let field = fields.get(name)
+      if (!field) {
+        field = {
+          count: 0,
+          min: Infinity,
+          max: -Infinity,
+          sum: 0,
+          strings: new Set(),
+        }
+        fields.set(name, field)
+      }
+      if (typeof value === "number") {
+        if (!Number.isFinite(value)) continue
+        field.count++
+        field.sum += value
+        if (value < field.min) field.min = value
+        if (value > field.max) field.max = value
       } else if (typeof value !== "object" && typeof value !== "function") {
-        strings.add(String(value))
+        field.strings.add(String(value))
       }
-    }
-
-    if (numbers.length > 0) {
-      let min = numbers[0]
-      let max = numbers[0]
-      let sum = 0
-      for (const value of numbers) {
-        if (value < min) min = value
-        if (value > max) max = value
-        sum += value
-      }
-      stats.push({
-        name,
-        count: numbers.length,
-        numeric: true,
-        min,
-        max,
-        mean: sum / numbers.length,
-      })
-    } else if (strings.size > 0) {
-      const unique = Array.from(strings)
-      stats.push({
-        name,
-        count: unique.length,
-        numeric: false,
-        uniqueValues: unique.slice(0, 5),
-      })
     }
   }
 
-  return stats
+  return Array.from(fields, ([name, field]) => {
+    if (field.count) {
+      return {
+        name,
+        count: field.count,
+        numeric: true,
+        min: field.min,
+        max: field.max,
+        mean: field.sum / field.count,
+      }
+    }
+    const uniqueValues = Array.from(field.strings)
+    return {
+      name,
+      count: uniqueValues.length,
+      numeric: false,
+      uniqueValues: uniqueValues.slice(0, 5),
+    }
+  }).filter((field) => field.count > 0)
 }
 
 /** Format a summary string from field stats. */
@@ -170,44 +164,53 @@ export function buildNetworkTableModel(
   nodes: NetworkTableElement[],
   edges: NetworkTableElement[],
 ): NetworkTableModel {
-  const inDegree = new Map<string, number>()
-  const outDegree = new Map<string, number>()
-  const weightedInDegree = new Map<string, number>()
-  const weightedOutDegree = new Map<string, number>()
+  // [incoming, outgoing, weighted incoming, weighted outgoing]
+  const degrees = new Map<string, [number, number, number, number]>()
+  const edgeRows: DataRow[] = []
+  let hasWeights = false
 
-  for (const edge of edges) {
+  for (let index = 0; index < edges.length; index++) {
+    const edge = edges[index]
     if (!edge || typeof edge !== "object") continue
     const raw = datumRecord(edge.datum)
     const { source, target } = edgeEndpoints(edge)
-    const value =
-      typeof raw.value === "number" && Number.isFinite(raw.value)
-        ? raw.value
-        : 0
-    if (source != null && source !== "") {
-      const id = String(source)
-      outDegree.set(id, (outDegree.get(id) ?? 0) + 1)
-      weightedOutDegree.set(id, (weightedOutDegree.get(id) ?? 0) + value)
+    const weighted = typeof raw.value === "number" && Number.isFinite(raw.value)
+    const value = weighted ? (raw.value as number) : 0
+    hasWeights ||= weighted
+    for (const [endpoint, degreeIndex, weightIndex] of [
+      [source, 1, 3],
+      [target, 0, 2],
+    ] as const) {
+      if (endpoint == null || endpoint === "") continue
+      const id = String(endpoint)
+      const values = degrees.get(id) ?? [0, 0, 0, 0]
+      values[degreeIndex]++
+      values[weightIndex] += value
+      degrees.set(id, values)
     }
-    if (target != null && target !== "") {
-      const id = String(target)
-      inDegree.set(id, (inDegree.get(id) ?? 0) + 1)
-      weightedInDegree.set(id, (weightedInDegree.get(id) ?? 0) + value)
-    }
+    const fallbackLabel =
+      source != null || target != null
+        ? `${source == null ? "?" : String(source)} → ${target == null ? "?" : String(target)}`
+        : `Edge ${index + 1}`
+    edgeRows.push(extractNetworkDataRow(edge, fallbackLabel))
   }
 
   const nodeRows: NetworkNodeTableRow[] = []
+  let degreeSum = 0
+  let maxDegree = 0
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index]
     if (!node || typeof node !== "object") continue
     const rawId = datumRecord(node.datum).id ?? node.id
     const id = rawId != null ? String(rawId) : `node-${index}`
-    const incoming = inDegree.get(id) ?? 0
-    const outgoing = outDegree.get(id) ?? 0
-    const weightedIncoming = weightedInDegree.get(id) ?? 0
-    const weightedOutgoing = weightedOutDegree.get(id) ?? 0
+    const [incoming, outgoing, weightedIncoming, weightedOutgoing] =
+      degrees.get(id) ?? [0, 0, 0, 0]
+    const degree = incoming + outgoing
+    degreeSum += degree
+    if (degree > maxDegree) maxDegree = degree
     nodeRows.push({
       id,
-      degree: incoming + outgoing,
+      degree,
       inDeg: incoming,
       outDeg: outgoing,
       wDegree: weightedIncoming + weightedOutgoing,
@@ -218,38 +221,12 @@ export function buildNetworkTableModel(
   }
   nodeRows.sort((a, b) => b.degree - a.degree)
 
-  let averageDegree = 0
-  let maxDegree = 0
-  if (nodeRows.length > 0) {
-    let sum = 0
-    for (const row of nodeRows) {
-      sum += row.degree
-      if (row.degree > maxDegree) maxDegree = row.degree
-    }
-    averageDegree = sum / nodeRows.length
-  }
-
-  const hasWeights = edges.some((edge) => {
-    const raw = datumRecord(edge?.datum)
-    return typeof raw.value === "number" && Number.isFinite(raw.value)
-  })
-
   const summaryParts = [`${nodeRows.length} nodes, ${edges.length} edges.`]
   if (nodeRows.length > 0) {
     summaryParts.push(
-      `Mean degree: ${fmt(averageDegree)}, max degree: ${maxDegree}.`,
+      `Mean degree: ${fmt(degreeSum / nodeRows.length)}, max degree: ${maxDegree}.`,
     )
   }
-
-  const edgeRows = edges.flatMap((edge, index) => {
-    if (!edge || typeof edge !== "object") return []
-    const { source, target } = edgeEndpoints(edge)
-    const fallbackLabel =
-      source != null || target != null
-        ? `${source == null ? "?" : String(source)} → ${target == null ? "?" : String(target)}`
-        : `Edge ${index + 1}`
-    return [extractNetworkDataRow(edge, fallbackLabel)]
-  })
 
   return {
     nodeRows,

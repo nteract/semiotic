@@ -5,9 +5,11 @@ _Edit dist/semiotic-physics-matter.d.ts's sources, then re-run `npm run docs:api
 
 ```
 class PhysicsOptionalEngineDependencyError extends Error
+class-member PhysicsOptionalEngineDependencyError::construct::%24construct = required new (details: PhysicsOptionalEngineInstallDetails, cause?: unknown): PhysicsOptionalEngineDependencyError
+class-member PhysicsOptionalEngineDependencyError::property::details = required readonly details: PhysicsOptionalEngineInstallDetails
 const MATTER_PHYSICS_CAPABILITIES: PhysicsEngineCapabilities
 const MATTER_PHYSICS_IMPORT_PATH: "semiotic/physics/matter"
-const MATTER_PHYSICS_INSTALL: { readonly engine: "Matter.js"; readonly importPath: "semiotic/physics/matter"; readonly packageName: "matter-js"; readonly installCommand: "npm install matter-js"; }
+const MATTER_PHYSICS_INSTALL: {readonly engine: "Matter.js"; readonly importPath: "semiotic/physics/matter"; readonly packageName: "matter-js"; readonly installCommand: "npm install matter-js";}
 const MATTER_PHYSICS_PACKAGE: "matter-js"
 function loadMatterPhysicsPeer(): Promise<unknown>
 function loadOptionalPhysicsPeer(details: PhysicsOptionalEngineInstallDetails): Promise<unknown>
@@ -22,4 +24,25 @@ interface MatterBoundsLike
 interface MatterMigrationOptions
 interface MatterVectorLike
 interface PhysicsOptionalEngineInstallDetails
+interface-member MatterBodyLike::property::angle = optional angle: number | undefined
+interface-member MatterBodyLike::property::bounds = optional bounds: MatterBoundsLike | undefined
+interface-member MatterBodyLike::property::circleRadius = optional circleRadius: number | undefined
+interface-member MatterBodyLike::property::id = optional id: number | string | undefined
+interface-member MatterBodyLike::property::isSensor = optional isSensor: boolean | undefined
+interface-member MatterBodyLike::property::label = optional label: string | undefined
+interface-member MatterBodyLike::property::mass = optional mass: number | undefined
+interface-member MatterBodyLike::property::plugin = optional plugin: Record<string, unknown> | undefined
+interface-member MatterBodyLike::property::position = optional position: MatterVectorLike | undefined
+interface-member MatterBodyLike::property::velocity = optional velocity: MatterVectorLike | undefined
+interface-member MatterBoundsLike::property::max = required max: MatterVectorLike
+interface-member MatterBoundsLike::property::min = required min: MatterVectorLike
+interface-member MatterMigrationOptions::property::datumFromPlugin = optional datumFromPlugin: string | undefined
+interface-member MatterMigrationOptions::property::fallbackRadius = optional fallbackRadius: number | undefined
+interface-member MatterMigrationOptions::property::idPrefix = optional idPrefix: string | undefined
+interface-member MatterVectorLike::property::x = required x: number
+interface-member MatterVectorLike::property::y = required y: number
+interface-member PhysicsOptionalEngineInstallDetails::property::engine = required engine: string
+interface-member PhysicsOptionalEngineInstallDetails::property::importPath = required importPath: string
+interface-member PhysicsOptionalEngineInstallDetails::property::installCommand = required installCommand: string
+interface-member PhysicsOptionalEngineInstallDetails::property::packageName = required packageName: string
 ```

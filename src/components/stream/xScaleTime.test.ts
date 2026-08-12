@@ -3,9 +3,32 @@
  * produces Date-instance ticks from scaleTime, NOT scaleLinear number ticks.
  */
 import { describe, it, expect } from "vitest"
-import { PipelineStore } from "./PipelineStore"
+import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { buildPipelineScales } from "./pipelineDomainResolution"
 
 describe("PipelineStore xScaleType=time integration", () => {
+  it.each(["up", "down"] as const)(
+    "keeps legacy arrowOfTime=%s source-compatible without vertical geometry",
+    (arrowOfTime) => {
+      const scales = buildPipelineScales({
+        config: {
+          chartType: "line",
+          runtimeMode: "streaming",
+          windowSize: 200,
+          windowMode: "sliding",
+          arrowOfTime,
+          extentPadding: 0.05,
+        } as PipelineConfig,
+        layout: { width: 600, height: 300 },
+        xDomain: [0, 10],
+        yDomain: [0, 100],
+      })
+
+      expect(scales.x.range()).toEqual([0, 600])
+      expect(scales.y.range()).toEqual([300, 0])
+    }
+  )
+
   it("produces Date ticks when xScaleType is time", () => {
     // Create 90 days of data with millisecond timestamps
     const data = Array.from({ length: 90 }, (_, i) => {

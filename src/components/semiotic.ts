@@ -8,7 +8,50 @@ import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 // package entry does not ship the physics frame + kernel into every
 // `import { LineChart } from "semiotic"` consumer. Prefer:
 //   import { GaltonBoardChart } from "semiotic/physics"
-import { Scatterplot, ConnectedScatterplot, LineChart, BumpChart, rankBumpData, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
+import { Scatterplot } from "./charts/xy/Scatterplot"
+import { ConnectedScatterplot } from "./charts/xy/ConnectedScatterplot"
+import { LineChart } from "./charts/xy/LineChart"
+import { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
+import { AreaChart } from "./charts/xy/AreaChart"
+import { DifferenceChart } from "./charts/xy/DifferenceChart"
+import { StackedAreaChart } from "./charts/xy/StackedAreaChart"
+import { Heatmap } from "./charts/xy/Heatmap"
+import { BubbleChart } from "./charts/xy/BubbleChart"
+import { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
+import { MinimapChart } from "./charts/xy/MinimapChart"
+import { QuadrantChart } from "./charts/xy/QuadrantChart"
+import { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
+import { CandlestickChart } from "./charts/xy/CandlestickChart"
+import { BarChart } from "./charts/ordinal/BarChart"
+import { StackedBarChart } from "./charts/ordinal/StackedBarChart"
+import { LikertChart } from "./charts/ordinal/LikertChart"
+import { SwarmPlot } from "./charts/ordinal/SwarmPlot"
+import { BoxPlot } from "./charts/ordinal/BoxPlot"
+import { Histogram } from "./charts/ordinal/Histogram"
+import { ViolinPlot } from "./charts/ordinal/ViolinPlot"
+import { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
+import { DotPlot } from "./charts/ordinal/DotPlot"
+import { PieChart } from "./charts/ordinal/PieChart"
+import { DonutChart } from "./charts/ordinal/DonutChart"
+import { GaugeChart } from "./charts/ordinal/GaugeChart"
+import { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
+import { FunnelChart } from "./charts/ordinal/FunnelChart"
+import { SwimlaneChart } from "./charts/ordinal/SwimlaneChart"
+import { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
+import { ChordDiagram } from "./charts/network/ChordDiagram"
+import { SankeyDiagram } from "./charts/network/SankeyDiagram"
+import { ProcessSankey } from "./charts/network/ProcessSankey"
+import { TreeDiagram } from "./charts/network/TreeDiagram"
+import { Treemap } from "./charts/network/Treemap"
+import { CirclePack } from "./charts/network/CirclePack"
+import { OrbitDiagram } from "./charts/network/OrbitDiagram"
+import { XYCustomChart } from "./charts/custom/XYCustomChart"
+import { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
+import { OrdinalCustomChart } from "./charts/custom/OrdinalCustomChart"
+import {
+  responsiveRuleMatches,
+  resolveResponsiveRules
+} from "./charts/shared/responsiveRules"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -23,8 +66,18 @@ import { exportChart } from "./export/exportChart"
 import { createHatchPattern } from "./charts/shared/hatchPattern"
 
 // ── Chart state serialization ─────────────────────────────────────────
-import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
-import { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+import {
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX
+} from "./export/chartConfig"
+import {
+  serializeSelections,
+  deserializeSelections
+} from "./export/selectionSerializer"
 import { fromVegaLite } from "./data/fromVegaLite"
 
 // ── Error boundary ─────────────────────────────────────────────────────
@@ -38,13 +91,16 @@ import {
   MobileStandardControls,
   clampMobileRange,
   useMobileRangeControls,
-  zoomMobileRange,
+  zoomMobileRange
 } from "./MobileStandardControls"
 import { ChartGrid } from "./ChartGrid"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { ContextLayout } from "./ContextLayout"
 import { CircularBrush } from "./CircularBrush"
-import { DirectManipulationControl, VISUALIZATION_CONTROL_TYPES } from "./DirectManipulationControl"
+import {
+  DirectManipulationControl,
+  VISUALIZATION_CONTROL_TYPES
+} from "./DirectManipulationControl"
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
@@ -61,7 +117,7 @@ import {
   resolveMultiCapableTooltip,
   isMultiTooltip,
   hasOwnTooltipChrome,
-  markTooltipChrome,
+  markTooltipChrome
 } from "./Tooltip/Tooltip"
 
 // ── Data structures ────────────────────────────────────────────────────
@@ -70,7 +126,11 @@ import { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // ── Realtime chart HOCs ────────────────────────────────────────────────
 import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
-import { RealtimeTemporalHistogram, RealtimeHistogram, TemporalHistogram } from "./charts/realtime/RealtimeHistogram"
+import {
+  RealtimeTemporalHistogram,
+  RealtimeHistogram,
+  TemporalHistogram
+} from "./charts/realtime/RealtimeHistogram"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
@@ -202,12 +262,13 @@ export type {
   LegendGroup,
   LegendItem,
   LegendLayout,
-  LegendValue,
+  LegendValue
 } from "./types/legendTypes"
-export type { DirectManipulationControlProps, VisualizationControlType } from "./DirectManipulationControl"
-export {
-  createControlObservationAdapter,
-} from "./controls/controlContract"
+export type {
+  DirectManipulationControlProps,
+  VisualizationControlType
+} from "./DirectManipulationControl"
+export { createControlObservationAdapter } from "./controls/controlContract"
 export { auditVisualizationControls } from "./controls/controlAudit"
 export type {
   ControlInputSource,
@@ -216,13 +277,13 @@ export type {
   ControlObservationCallback,
   ControlObservationPhase,
   VisualizationControlDefinition,
-  VisualizationControlValue,
+  VisualizationControlValue
 } from "./controls/controlContract"
 export type {
   AuditVisualizationControlsOptions,
   ControlAuditFinding,
   ControlAuditResult,
-  ControlAuditStatus,
+  ControlAuditStatus
 } from "./controls/controlAudit"
 
 export type {
@@ -305,6 +366,7 @@ export type {
   StreamXYFrameHandle,
   StreamChartType,
   RuntimeMode,
+  Style,
   SceneNode,
   SceneAccessibilityMetadata,
   Changeset,
@@ -336,6 +398,7 @@ export type {
   NetworkChartType,
   NetworkSceneNode,
   NetworkSceneEdge,
+  NetworkMarkStyle,
   NetworkLabel,
   ThresholdAlertConfig
 } from "./stream/networkTypes"
@@ -376,13 +439,13 @@ export {
   formatProcessSankeyIssue,
   diagnoseProcessSankeyLayout,
   diagnoseProcessSankeyProps,
-  explainProcessSankeyLayout,
+  explainProcessSankeyLayout
 } from "./charts/network/processSankey/algorithm"
 export type {
   InventoryEdge,
   InventoryAtTimeOptions,
   ProcessSankeyTimeLike,
-  ProcessSankeyIssue,
+  ProcessSankeyIssue
 } from "./charts/network/processSankey/algorithm"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 export type {
@@ -401,9 +464,7 @@ export type {
   UseBrushSelectionResult
 } from "./LinkedCharts"
 
-export {
-  useChartObserver
-} from "./LinkedCharts"
+export { useChartObserver } from "./LinkedCharts"
 
 export type {
   UseChartObserverOptions,
@@ -436,9 +497,20 @@ export type {
 
 export type { SemioticTheme } from "./ThemeProvider"
 export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeProvider"
-export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/ThemeStore"
-export { themeToCSS, themeToCSSVariables, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes-core"
-export type { ThemePresetName } from "./semiotic-themes-core"
+export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/themeCore"
+export {
+  themeToCSS,
+  themeToCSSVariables,
+  themeToTokens,
+  resolveThemePreset,
+  THEME_PRESETS,
+  CARBON_CATEGORICAL_14,
+  CARBON_ALERT
+} from "./semiotic-themes-core"
+export type {
+  KnownThemePresetName,
+  ThemePresetName
+} from "./semiotic-themes-core"
 
 // ── Error boundary types ───────────────────────────────────────────────
 
@@ -449,13 +521,26 @@ export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 export { AccessibleNavTree } from "./AccessibleNavTree"
 export type { AccessibleNavTreeProps } from "./AccessibleNavTree"
 export { buildNavigationTree } from "./ai/navigationTree"
-export type { NavTreeNode, NavTreeRole, BuildNavigationTreeOptions } from "./ai/navigationTree"
+export type {
+  NavTreeNode,
+  NavTreeRole,
+  BuildNavigationTreeOptions
+} from "./ai/navigationTree"
 export { IntentMark } from "./ai/IntentMark"
 export type { IntentMarkProps } from "./ai/IntentMark"
-export { intentManifestFromRecipe, summarizeIntentManifest } from "./ai/intentManifest"
-export type { IntentManifest, IntentManifestFromRecipeOptions } from "./ai/intentManifest"
+export {
+  intentManifestFromRecipe,
+  summarizeIntentManifest
+} from "./ai/intentManifest"
+export type {
+  IntentManifest,
+  IntentManifestFromRecipeOptions
+} from "./ai/intentManifest"
 export { useNavigationSync } from "./ai/useNavigationSync"
-export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/useNavigationSync"
+export type {
+  UseNavigationSyncOptions,
+  UseNavigationSyncResult
+} from "./ai/useNavigationSync"
 
 // ── Chart container types ─────────────────────────────────────────────
 
@@ -466,12 +551,12 @@ export type {
   ChartContainerDataAuditOptions,
   ChartContainerMobileOptions,
   ChartNotification,
-  ChartNotificationLevel,
+  ChartNotificationLevel
 } from "./ChartContainer"
 export type {
   MobileChartChip,
   MobileChartContainerProps,
-  MobileChartDetailMode,
+  MobileChartDetailMode
 } from "./MobileChartContainer"
 export type {
   MobileStandardBrushControls,
@@ -483,7 +568,7 @@ export type {
   MobileStandardLegendControls,
   MobileStandardZoomControls,
   UseMobileRangeControlsOptions,
-  UseMobileRangeControlsResult,
+  UseMobileRangeControlsResult
 } from "./MobileStandardControls"
 export type { MobileVisualizationContract } from "./charts/shared/auditMobileVisualization"
 export type {
@@ -491,52 +576,83 @@ export type {
   SmallMultipleExtent,
   SmallMultipleItem,
   SmallMultipleRenderContext,
-  SmallMultipleSharedExtent,
+  SmallMultipleSharedExtent
 } from "./SmallMultipleChart"
 export type { ChartGridProps } from "./ChartGrid"
-export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
+export type {
+  CategoryColorMap,
+  CategoryColorProviderProps
+} from "./CategoryColors"
 export type { ContextLayoutProps } from "./ContextLayout"
 export type { DetailsPanelProps } from "./DetailsPanel"
 export type { ObservationReadoutProps } from "./ObservationReadout"
 
 // ── Chart state serialization types ───────────────────────────────────
 
-export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export type {
+  ChartConfig,
+  ToConfigOptions,
+  CopyFormat
+} from "./export/chartConfig"
 export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
-export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+export type {
+  SerializedSelections,
+  SerializedSelection,
+  SerializedFieldSelection
+} from "./export/selectionSerializer"
 
 // ── Pattern fill types ────────────────────────────────────────────────
 
 export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
 // ── Declarative hatch fill (canvas + SVG) ──────────────────────────────
-export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
+export {
+  isHatchFill,
+  hatchPatternDef,
+  resolveSvgFill,
+  hatchFillId
+} from "./charts/shared/hatchFill"
 export type { HatchFill } from "./charts/shared/hatchFill"
 
 // ── Threshold-aware style rules (all families' `styleRules`) ───────────
 export {
-  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
-  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
-  styleRulesToPieceStyle, styleRulesToXYStyle, styleRulesToNodeStyle,
+  resolveStyleRules,
+  matchesThreshold,
+  ruleMatches,
+  makeRuleValueResolver,
+  makeXYRuleContext,
+  makeNodeRuleContext,
+  composeStyleRules,
+  makeStyleRuleStyleFn,
+  styleRulesToPieceStyle,
+  styleRulesToXYStyle,
+  styleRulesToNodeStyle
 } from "./charts/shared/styleRules"
 export type {
   StyleRule,
   StyleRuleStyle,
   StyleRuleThreshold,
   StyleRuleContext,
-  StyleRulePredicate,
+  StyleRulePredicate
 } from "./charts/shared/styleRules"
 
 // ── Shared annotation-label renderer (halo / box backdrops) ────────────
-export { AnnotationLabel, estimateLabelWidth } from "./charts/shared/AnnotationLabel"
-export type { AnnotationLabelBackground, AnnotationLabelBackgroundConfig, AnnotationLabelProps } from "./charts/shared/AnnotationLabel"
+export {
+  AnnotationLabel,
+  estimateLabelWidth
+} from "./charts/shared/AnnotationLabel"
+export type {
+  AnnotationLabelBackground,
+  AnnotationLabelBackgroundConfig,
+  AnnotationLabelProps
+} from "./charts/shared/AnnotationLabel"
 
 // ── Format utilities ───────────────────────────────────────────────────
 
 export { smartTickFormat, adaptiveTimeTicks } from "./charts/shared/formatUtils"
 export type {
   AdaptiveTimeTickOptions,
-  TimeGranularity,
+  TimeGranularity
 } from "./charts/shared/formatUtils"
 
 // Color manipulation utilities
@@ -551,13 +667,16 @@ export type {
   MultiLineTooltipConfig,
   MultiTooltipConfig,
   TooltipRootProps,
-  TooltipChromeMode,
+  TooltipChromeMode
 } from "./Tooltip/Tooltip"
 
 // Smart default-tooltip field selection — reusable by custom-chart authors
 // building their own tooltip content from an arbitrary datum.
 export { smartTooltipEntries } from "./charts/shared/tooltipUtils"
-export type { SmartTooltipEntry, SmartTooltipResult } from "./charts/shared/tooltipUtils"
+export type {
+  SmartTooltipEntry,
+  SmartTooltipResult
+} from "./charts/shared/tooltipUtils"
 
 // ── Streaming types ────────────────────────────────────────────────────
 
@@ -578,8 +697,15 @@ export type {
 
 // ── Realtime chart HOC types ───────────────────────────────────────────
 
-export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
-export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps, TemporalHistogramProps } from "./charts/realtime/RealtimeHistogram"
+export type {
+  RealtimeLineChartHandle,
+  RealtimeLineChartProps
+} from "./charts/realtime/RealtimeLineChart"
+export type {
+  RealtimeTemporalHistogramProps,
+  RealtimeHistogramProps,
+  TemporalHistogramProps
+} from "./charts/realtime/RealtimeHistogram"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
@@ -587,11 +713,14 @@ export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
 // Mirror a controlled React array into any push-API chart's buffer. Lives in
 // the realtime barrel too; re-exported here since the push HOCs it drives
 // (realtime + ordinal + XY) are all importable from the root entry.
-export { useSyncedPushData, syncPushBuffer } from "./charts/shared/useSyncedPushData"
+export {
+  useSyncedPushData,
+  syncPushBuffer
+} from "./charts/shared/useSyncedPushData"
 export type {
   SyncedPushHandle,
   SyncedPushDataOptions,
-  PushIdAccessor,
+  PushIdAccessor
 } from "./charts/shared/useSyncedPushData"
 
 // ── Annotation provenance + lifecycle (talk-readiness M1) ──────────────
@@ -607,7 +736,7 @@ export type {
   AnnotationFreshness,
   AnnotationStatus,
   AnnotationAnchor,
-  Annotated,
+  Annotated
 } from "./ai/annotationProvenance"
 
 export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"

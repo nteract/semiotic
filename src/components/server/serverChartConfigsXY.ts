@@ -2,10 +2,9 @@ import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
 import { filterSparseArray } from "../charts/shared/sparseArray"
-import { createColorScale, DEFAULT_COLOR, getColor, getSize } from "../charts/shared/colorUtils"
-import { getMinMax } from "../charts/shared/minMax"
+import { createColorScale, DEFAULT_COLOR, getColor } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
-import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, styleRulesToXYStyle, type StyleRule } from "../charts/shared/styleRules"
+import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
@@ -33,6 +32,10 @@ import {
   resolveBumpColorScheme,
   type BumpLayoutConfig,
 } from "../charts/xy/BumpChart"
+import { buildScatterPointStyle } from "./serverChartConfigsXYScatter"
+
+export { bubbleChart } from "./serverChartConfigsXYBubble"
+export { scatterplot } from "./serverChartConfigsXYScatter"
 
 // ── XY Charts ──────────────────────────────────────────────────────────
 
@@ -117,105 +120,6 @@ function buildAreaLineStyle(
     if (rest.opacity !== undefined) style.opacity = rest.opacity
     return style
   }
-}
-
-function buildBubblePointStyle(
-  data: unknown,
-  colorBy: string | ((d: Datum) => unknown) | undefined,
-  colorScheme: unknown,
-  common: Datum,
-  rest: Datum,
-): (d: Datum) => Datum {
-  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
-  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
-  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrBubbleColorBy"
-  const colorRows = typeof colorBy === "function"
-    ? rows.map(d => ({ ...d, __ssrBubbleColorBy: colorBy(d) }))
-    : rows
-  const colorScale = colorBy
-    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
-    : undefined
-  const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
-  const sizeRange = Array.isArray(rest.sizeRange) ? rest.sizeRange as [number, number] : [5, 40] as [number, number]
-  const sizeValues = sizeBy
-    ? rows.map(d => typeof sizeBy === "function" ? sizeBy(d) : Number(d[sizeBy])).filter(Number.isFinite)
-    : []
-  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
-
-  return (d) => ({
-    fill: colorBy && colorScale
-      ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
-      : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR,
-    fillOpacity: typeof rest.bubbleOpacity === "number" ? rest.bubbleOpacity : 0.6,
-    r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : sizeRange[0],
-    stroke: rest.stroke ?? rest.bubbleStrokeColor ?? "white",
-    strokeWidth: rest.strokeWidth ?? rest.bubbleStrokeWidth ?? 1,
-    ...(rest.opacity !== undefined && { opacity: rest.opacity }),
-  })
-}
-
-/** Resolve Scatterplot/QuadrantChart's HOC-level point encoding for SSR. */
-function buildScatterPointStyle(
-  data: unknown,
-  colorBy: string | ((d: Datum) => unknown) | undefined,
-  colorScheme: unknown,
-  common: Datum,
-  rest: Datum,
-): (d: Datum) => Datum {
-  const rows = Array.isArray(data) ? data.filter((d): d is Datum => !!d && typeof d === "object") : []
-  const themeCategorical = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0]).colors.categorical
-  const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
-  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrScatterColorBy"
-  const colorRows = typeof colorBy === "function"
-    ? rows.map(d => ({ ...d, __ssrScatterColorBy: colorBy(d) }))
-    : rows
-  const colorScale = colorBy
-    ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
-    : undefined
-  const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
-  const sizeRange = Array.isArray(rest.sizeRange) ? rest.sizeRange as [number, number] : [3, 15] as [number, number]
-  const sizeValues = sizeBy
-    ? rows.map(d => typeof sizeBy === "function" ? sizeBy(d) : Number(d[sizeBy])).filter(Number.isFinite)
-    : []
-  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
-  const ruleContext = makeXYRuleContext(
-    rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
-    rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
-  )
-  const rules = rest.styleRules as StyleRule[] | undefined
-
-  return (d) => {
-    const style: Datum = {
-      fill: colorBy && colorScale
-        ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
-        : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR,
-      fillOpacity: typeof rest.pointOpacity === "number" ? rest.pointOpacity : 0.8,
-      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : (typeof rest.pointRadius === "number" ? rest.pointRadius : 5),
-    }
-    if (rules?.length) Object.assign(style, resolveStyleRules(d, rules, ruleContext(d)))
-    if (rest.stroke !== undefined) style.stroke = rest.stroke
-    if (rest.strokeWidth !== undefined) style.strokeWidth = rest.strokeWidth
-    if (rest.opacity !== undefined) style.opacity = rest.opacity
-    return style
-  }
-}
-
-export const bubbleChart: ChartConfig = {
-  frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "scatter",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    colorAccessor: colorBy,
-    sizeAccessor: rest.sizeBy,
-    sizeRange: rest.sizeRange || [5, 40],
-    colorScheme,
-    ...common,
-    pointStyle: common.pointStyle || buildBubblePointStyle(data, colorBy, colorScheme, common, rest),
-    showLegend: common.showLegend ?? Boolean(colorBy),
-  }),
 }
 
 export const sparkline: ChartConfig = {
@@ -487,6 +391,7 @@ export const temporalHistogram: ChartConfig = {
       ...(rest.stroke !== undefined && { stroke: rest.stroke }),
       ...(rest.strokeWidth !== undefined && { strokeWidth: rest.strokeWidth }),
       ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+      ...(rest.cursor !== undefined && { cursor: rest.cursor }),
       ...(rest.gap !== undefined && { gap: rest.gap }),
     }
     return {
@@ -738,38 +643,6 @@ export const candlestickChart: ChartConfig = {
   },
 }
 
-export const scatterplot: ChartConfig = {
-  frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const basePointStyle = common.pointStyle || buildScatterPointStyle(data, colorBy, colorScheme, common, rest)
-    const ruleStyle = styleRulesToXYStyle(rest.styleRules, rest.xAccessor || "x", rest.yAccessor || "y")
-    const pointStyle = ruleStyle
-      ? (d: Datum) => ({
-          ...(typeof basePointStyle === "function" ? basePointStyle(d) : basePointStyle),
-          ...ruleStyle(d),
-        })
-      : basePointStyle
-    return {
-    chartType: "scatter",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    colorAccessor: colorBy,
-    sizeAccessor: rest.sizeBy,
-    // symbolBy → symbolAccessor is the HOC-level rename (mirrors Scatterplot.tsx):
-    // the categorical field whose values become d3-shape glyphs. Without this
-    // the SSR path drops symbolBy and every mark renders as a circle.
-    ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
-    ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
-    colorScheme,
-    ...common,
-    sizeRange: rest.sizeRange || [3, 15],
-    pointStyle,
-    showLegend: common.showLegend ?? Boolean(colorBy),
-    }
-  },
-}
-
 export const quadrantChart: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
@@ -849,6 +722,11 @@ export const connectedScatterplot: ChartConfig = {
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const prepared = prepareConnectedScatterplotData(data, rest)
     const pointRadius = rest.pointRadius ?? 4
+    const ruleContext = makeXYRuleContext(
+      rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
+      rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
+    )
+    const rules = rest.styleRules as StyleRule[] | undefined
     const svgPreRenderers = [
       (nodes: Array<{ type?: string; x?: number; y?: number }>) => {
         const points = nodes.filter((n): n is { type: "point"; x: number; y: number } =>
@@ -888,13 +766,15 @@ export const connectedScatterplot: ChartConfig = {
         const order = prepared.orderMap.get(d)
         const i = order?.idx ?? 0
         const n = order?.total ?? 1
-        return {
+        const style: Datum = {
           fill: n > 0 ? viridisColor(i, n) : "#6366f1",
           stroke: "white",
           strokeWidth: 1,
           r: pointRadius,
           fillOpacity: 1,
         }
+        if (rules?.length) Object.assign(style, resolveStyleRules(d, rules, ruleContext(d)))
+        return style
       }, primitiveStyleOverrides(rest)),
       ...common,
       svgPreRenderers,

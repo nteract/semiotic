@@ -6,9 +6,14 @@
  * No CSS custom properties — everything is concrete for inline SVG.
  */
 
-import type { SemioticTheme } from "../store/ThemeStore"
-import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, applyThemeAccessibility } from "../store/ThemeStore"
-import { resolveThemePreset } from "../semiotic-themes-core"
+import type { SemioticTheme } from "../store/themeCore"
+import {
+  LIGHT_THEME,
+  DARK_THEME,
+  HIGH_CONTRAST_THEME,
+  applyThemeAccessibility
+} from "../store/themeCore"
+import { resolveThemePreset } from "../store/themePresets"
 
 type PartialThemeObject = Omit<Partial<SemioticTheme>, "colors" | "typography" | "tooltip"> & {
   colors?: Partial<SemioticTheme["colors"]>

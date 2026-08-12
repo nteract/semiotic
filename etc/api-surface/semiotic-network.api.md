@@ -5,53 +5,53 @@ _Edit dist/semiotic-network.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 const DEFAULT_HIT_RADIUS: 8
-function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
-function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
-function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
-function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNetworkFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-network").StreamNetworkFrameHandle>): React.ReactNode
+function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StreamNetworkFrame(: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
-function diagnoseProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter"> | null | undefined): Diagnosis[]
+function diagnoseProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "compressedPadding" | "crossingsAfter" | "layoutQuality" | "layoutQualityBefore"> | null | undefined): Diagnosis[]
 function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diagnosis[]
-function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "layoutQuality" | "layoutQualityBefore" | "compressedPadding" | "crossingsAfter" | "slots"> | null | undefined): string | null
+function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "compressedPadding" | "crossingsAfter" | "layoutQuality" | "layoutQualityBefore" | "slots"> | null | undefined): null | string
 function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function hatchFillId(prefix: string, h: HatchFill): string
-function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function inventoryAtTime(nodeId: string, time: number, edges: readonly InventoryEdge[], options?: InventoryAtTimeOptions | undefined): number
 function isHatchFill(fill: unknown): boolean
-function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
-function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeNodeRuleContext(colorBy: ((d: Datum) => unknown) | string | undefined, valueAccessor?: ((d: Datum) => unknown) | string | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: ((d: Datum) => unknown) | string | undefined): (d: Datum) => number | undefined
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
-function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
+function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkCurvedEdge | NetworkRibbonEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
-function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
+function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
-function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: { usageMode?: ProcessSankeyUsageMode; } | undefined): ProcessSankeyIssue[]
+function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: undefined | {usageMode?: ProcessSankeyUsageMode;}): ProcessSankeyIssue[]
 interface CategoricalLegendConfig
-interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
-interface CirclePackProps<TNode extends Datum = Datum>
+interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
+interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartProps
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
-interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
+interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
 interface GlyphDef
 interface GlyphPart
 interface GradientLegendConfig
@@ -62,9 +62,9 @@ interface InventoryEdge
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
-interface MultiLineTooltipConfig
+interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
-interface NetworkCustomChartProps<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>
+interface NetworkCustomChartProps<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps
 interface NetworkEdgeHitTargetBaseProps
 interface NetworkGlyphNode
 interface NetworkHitTargetCircleProps
@@ -73,11 +73,11 @@ interface NetworkHtmlMark
 interface NetworkLabel
 interface NetworkLayoutContext<C extends object = Record<string, unknown>>
 interface NetworkLayoutResult
-interface NetworkLineEdgeHitTargetProps
-interface NetworkPathEdgeHitTargetProps
-interface OrbitDiagramProps<TDatum extends Datum = Datum>
+interface NetworkLineEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
+interface NetworkPathEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
+interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface ProcessSankeyIssue
-interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
+interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
 interface ProcessSankeyTick
 interface ProcessSankeyValidatorEdge
 interface ProcessSankeyValidatorNode
@@ -86,10 +86,11 @@ interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
 interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
-interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
+interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
 interface SceneAccessibilityMetadata
 interface StreamNetworkFrameHandle
-interface StreamNetworkFrameProps<T = Datum>
+interface StreamNetworkFrameProps<T = Datum> extends StreamNetworkInteractionProps<RealtimeNode, RealtimeEdge>
+interface Style
 interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
@@ -97,21 +98,586 @@ interface StyleRuleThreshold
 interface ThresholdAlertConfig
 interface TooltipConfig
 interface TooltipField
-interface TooltipRootProps
-interface TreeDiagramProps<TNode extends Datum = Datum>
-interface TreemapProps<TNode extends Datum = Datum>
+interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChartProps
+interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProps
 interface UseForceLayoutResult
-type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
-type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
-type ForceLayoutStatus = "pending" | "ready" | "error"
-type LegendValue = ReactNode | CategoricalLegendConfig | GradientLegendValue
-type NetworkChartType = "force" | "sankey" | "chord" | "tree" | "cluster" | "treemap" | "circlepack" | "orbit" | "partition"
+interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
+interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
+interface-member ChordDiagramProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
+interface-member ChordDiagramProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ChordDiagramProps::property::edgeColorBy = optional edgeColorBy: "source" | "target" | ((d: Datum) => string) | undefined
+interface-member ChordDiagramProps::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member ChordDiagramProps::property::edges = optional edges: TEdge[] | undefined
+interface-member ChordDiagramProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ChordDiagramProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "size">> | undefined
+interface-member ChordDiagramProps::property::groupWidth = optional groupWidth: number | undefined
+interface-member ChordDiagramProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ChordDiagramProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member ChordDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member ChordDiagramProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member ChordDiagramProps::property::padAngle = optional padAngle: number | undefined
+interface-member ChordDiagramProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member ChordDiagramProps::property::sortGroups = optional sortGroups: ((a: number, b: number) => number) | undefined
+interface-member ChordDiagramProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ChordDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ChordDiagramProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ChordDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ChordDiagramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TEdge, number> | undefined
+interface-member CirclePackProps::property::childrenAccessor = optional childrenAccessor: ChartAccessor<TNode, TNode[]> | undefined
+interface-member CirclePackProps::property::circleOpacity = optional circleOpacity: number | undefined
+interface-member CirclePackProps::property::colorBy = optional colorBy: ChartAccessor<TNode, number | string> | undefined
+interface-member CirclePackProps::property::colorByDepth = optional colorByDepth: boolean | undefined
+interface-member CirclePackProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member CirclePackProps::property::data = required data: TNode
+interface-member CirclePackProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member CirclePackProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "size">> | undefined
+interface-member CirclePackProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member CirclePackProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member CirclePackProps::property::padding = optional padding: number | undefined
+interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member CirclePackProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member CirclePackProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
+interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
+interface-member CustomLayoutFailureDiagnostic::property::code = required code: "CUSTOM_LAYOUT_ERROR"
+interface-member CustomLayoutFailureDiagnostic::property::component = required component: CustomLayoutFamily
+interface-member CustomLayoutFailureDiagnostic::property::error = required error: {name: string; message: string;}
+interface-member CustomLayoutFailureDiagnostic::property::message = required message: string
+interface-member CustomLayoutFailureDiagnostic::property::phase = required phase: "layout"
+interface-member CustomLayoutFailureDiagnostic::property::preservedLastGoodScene = required preservedLastGoodScene: boolean
+interface-member CustomLayoutFailureDiagnostic::property::recovery = required recovery: CustomLayoutFailureRecovery
+interface-member CustomLayoutFailureDiagnostic::property::severity = required severity: "error"
+interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
+interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
+interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member ForceDirectedGraphProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
+interface-member ForceDirectedGraphProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ForceDirectedGraphProps::property::edgeColor = optional edgeColor: string | undefined
+interface-member ForceDirectedGraphProps::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member ForceDirectedGraphProps::property::edgeWidth = optional edgeWidth: ChartAccessor<TEdge, number> | number | undefined
+interface-member ForceDirectedGraphProps::property::edges = optional edges: TEdge[] | undefined
+interface-member ForceDirectedGraphProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ForceDirectedGraphProps::property::forceStrength = optional forceStrength: number | undefined
+interface-member ForceDirectedGraphProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "nodes" | "size">> | undefined
+interface-member ForceDirectedGraphProps::property::iterations = optional iterations: number | undefined
+interface-member ForceDirectedGraphProps::property::layoutExecution = optional layoutExecution: "auto" | "sync" | "worker" | undefined
+interface-member ForceDirectedGraphProps::property::layoutLoadingContent = optional layoutLoadingContent: React.ReactNode
+interface-member ForceDirectedGraphProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member ForceDirectedGraphProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member ForceDirectedGraphProps::property::nodeIDAccessor = optional nodeIDAccessor: ChartAccessor<TNode, string> | undefined
+interface-member ForceDirectedGraphProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member ForceDirectedGraphProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member ForceDirectedGraphProps::property::nodeSize = optional nodeSize: ChartAccessor<TNode, number> | number | undefined
+interface-member ForceDirectedGraphProps::property::nodeSizeRange = optional nodeSizeRange: [number, number] | undefined
+interface-member ForceDirectedGraphProps::property::nodeStroke = optional nodeStroke: string | undefined
+interface-member ForceDirectedGraphProps::property::nodeStrokeWidth = optional nodeStrokeWidth: number | undefined
+interface-member ForceDirectedGraphProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member ForceDirectedGraphProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
+interface-member ForceDirectedGraphProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member ForceDirectedGraphProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ForceDirectedGraphProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ForceDirectedGraphProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ForceDirectedGraphProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ForceDirectedGraphProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
+interface-member GlyphDef::property::parts = required parts: GlyphPart[]
+interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
+interface-member GlyphPart::property::d = required d: string
+interface-member GlyphPart::property::fill = optional fill: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::opacity = optional opacity: number | undefined
+interface-member GlyphPart::property::stroke = optional stroke: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member GlyphPart::property::strokeLinejoin = optional strokeLinejoin: "bevel" | "miter" | "round" | undefined
+interface-member GlyphPart::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
+interface-member GradientLegendConfig::property::domain = required domain: [number, number]
+interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
+interface-member GradientLegendConfig::property::label = optional label: string | undefined
+interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
+interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member HatchFill::property::angle = optional angle: number | undefined
+interface-member HatchFill::property::background = optional background: string | undefined
+interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
+interface-member HatchFill::property::lineWidth = optional lineWidth: number | undefined
+interface-member HatchFill::property::spacing = optional spacing: number | undefined
+interface-member HatchFill::property::stroke = optional stroke: string | undefined
+interface-member HatchFill::property::type = required type: "hatch"
+interface-member InventoryAtTimeOptions::property::inferOpeningStock = optional inferOpeningStock: boolean | undefined
+interface-member InventoryEdge::property::endTime = required endTime: number
+interface-member InventoryEdge::property::source = required source: string
+interface-member InventoryEdge::property::startTime = required startTime: number
+interface-member InventoryEdge::property::systemOutTime = optional systemOutTime: null | number | undefined
+interface-member InventoryEdge::property::target = required target: string
+interface-member InventoryEdge::property::value = required value: number
+interface-member LegendGroup::property::items = required items: LegendItem[]
+interface-member LegendGroup::property::label = required label: string
+interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
+interface-member LegendGroup::property::type = optional type: ItemType | undefined
+interface-member LegendItem::index::%24index = required (key: string): unknown
+interface-member LegendItem::property::color = optional color: string | undefined
+interface-member LegendItem::property::label = required label: string
+interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
+interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
+interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
+interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined
+interface-member LegendLayout::property::rowHeight = optional rowHeight: number | undefined
+interface-member LegendLayout::property::sideGutter = optional sideGutter: number | undefined
+interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
+interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
+interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
+interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member NetworkCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member NetworkCustomChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: import("../../semiotic-recipes-core").AutoPlaceAnnotations | undefined
+interface-member NetworkCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TNode, number | string> | undefined
+interface-member NetworkCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member NetworkCustomChartProps::property::edges = optional edges: TEdge[] | undefined
+interface-member NetworkCustomChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member NetworkCustomChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "chartType" | "customNetworkLayout" | "edges" | "layoutConfig" | "layoutSelection" | "nodes" | "size">> | undefined
+interface-member NetworkCustomChartProps::property::layout = required layout: NetworkCustomLayout<TConfig>
+interface-member NetworkCustomChartProps::property::layoutConfig = optional layoutConfig: TConfig | undefined
+interface-member NetworkCustomChartProps::property::nodeIDAccessor = optional nodeIDAccessor: ((d: Datum) => string) | string | undefined
+interface-member NetworkCustomChartProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member NetworkCustomChartProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("../../semiotic-geo").CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member NetworkCustomChartProps::property::recipe = optional recipe: ChartRecipe<TNode, TConfig> | undefined
+interface-member NetworkCustomChartProps::property::recipeId = optional recipeId: string | undefined
+interface-member NetworkCustomChartProps::property::sourceAccessor = optional sourceAccessor: ((d: Datum) => string) | string | undefined
+interface-member NetworkCustomChartProps::property::targetAccessor = optional targetAccessor: ((d: Datum) => string) | string | undefined
+interface-member NetworkCustomChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkEdgeHitTargetBaseProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::datum = required datum: SceneDatum
+interface-member NetworkEdgeHitTargetBaseProps::property::id = optional id: number | string | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::interactive = optional interactive: boolean | undefined
+interface-member NetworkEdgeHitTargetBaseProps::property::label = optional label: string | undefined
+interface-member NetworkGlyphNode::property::_pulseColor = optional _pulseColor: string | undefined
+interface-member NetworkGlyphNode::property::_pulseGlowRadius = optional _pulseGlowRadius: number | undefined
+interface-member NetworkGlyphNode::property::_pulseIntensity = optional _pulseIntensity: number | undefined
+interface-member NetworkGlyphNode::property::accent = optional accent: string | undefined
+interface-member NetworkGlyphNode::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member NetworkGlyphNode::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member NetworkGlyphNode::property::color = optional color: string | undefined
+interface-member NetworkGlyphNode::property::cx = required cx: number
+interface-member NetworkGlyphNode::property::cy = required cy: number
+interface-member NetworkGlyphNode::property::datum = required datum: SceneDatum
+interface-member NetworkGlyphNode::property::depth = optional depth: number | undefined
+interface-member NetworkGlyphNode::property::fraction = optional fraction: number | undefined
+interface-member NetworkGlyphNode::property::fractionDirection = optional fractionDirection: "horizontal" | "vertical" | undefined
+interface-member NetworkGlyphNode::property::fractionStart = optional fractionStart: number | undefined
+interface-member NetworkGlyphNode::property::ghostColor = optional ghostColor: string | undefined
+interface-member NetworkGlyphNode::property::glyph = required glyph: GlyphDef
+interface-member NetworkGlyphNode::property::id = optional id: string | undefined
+interface-member NetworkGlyphNode::property::label = optional label: string | undefined
+interface-member NetworkGlyphNode::property::rotation = optional rotation: number | undefined
+interface-member NetworkGlyphNode::property::size = required size: number
+interface-member NetworkGlyphNode::property::style = required style: Style
+interface-member NetworkGlyphNode::property::type = required type: "glyph"
+interface-member NetworkHitTargetCircleProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkHitTargetCircleProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkHitTargetCircleProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkHitTargetCircleProps::property::datum = required datum: SceneDatum
+interface-member NetworkHitTargetCircleProps::property::id = optional id: number | string | undefined
+interface-member NetworkHitTargetCircleProps::property::label = optional label: string | undefined
+interface-member NetworkHitTargetCircleProps::property::r = optional r: number | undefined
+interface-member NetworkHitTargetCircleProps::property::x = required x: number
+interface-member NetworkHitTargetCircleProps::property::y = required y: number
+interface-member NetworkHitTargetRectProps::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: SceneDatum | import("./networkColorAccessors").Datum[];}
+interface-member NetworkHitTargetRectProps::property::accessibleDatum = optional accessibleDatum: SceneDatum | import("./networkColorAccessors").Datum[] | undefined
+interface-member NetworkHitTargetRectProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member NetworkHitTargetRectProps::property::datum = required datum: SceneDatum
+interface-member NetworkHitTargetRectProps::property::height = required height: number
+interface-member NetworkHitTargetRectProps::property::id = optional id: number | string | undefined
+interface-member NetworkHitTargetRectProps::property::label = optional label: string | undefined
+interface-member NetworkHitTargetRectProps::property::width = required width: number
+interface-member NetworkHitTargetRectProps::property::x = required x: number
+interface-member NetworkHitTargetRectProps::property::y = required y: number
+interface-member NetworkHtmlMark::property::content = required content: ReactNode
+interface-member NetworkHtmlMark::property::height = required height: number
+interface-member NetworkHtmlMark::property::id = required id: string
+interface-member NetworkHtmlMark::property::width = required width: number
+interface-member NetworkHtmlMark::property::x = required x: number
+interface-member NetworkHtmlMark::property::y = required y: number
+interface-member NetworkLabel::property::anchor = optional anchor: "end" | "middle" | "start" | undefined
+interface-member NetworkLabel::property::baseline = optional baseline: string | undefined
+interface-member NetworkLabel::property::fill = optional fill: string | undefined
+interface-member NetworkLabel::property::fontSize = optional fontSize: number | undefined
+interface-member NetworkLabel::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member NetworkLabel::property::paintOrder = optional paintOrder: string | undefined
+interface-member NetworkLabel::property::stroke = optional stroke: string | undefined
+interface-member NetworkLabel::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member NetworkLabel::property::text = required text: string
+interface-member NetworkLabel::property::x = required x: number
+interface-member NetworkLabel::property::y = required y: number
+interface-member NetworkLayoutContext::property::config = required config: C
+interface-member NetworkLayoutContext::property::dimensions = required dimensions: {width: number; height: number; plot: {x: number; y: number; width: number; height: number;};}
+interface-member NetworkLayoutContext::property::edges = required edges: RealtimeEdge[]
+interface-member NetworkLayoutContext::property::nodes = required nodes: RealtimeNode[]
+interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
+interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
+interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
+interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
+interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode
+interface-member NetworkLayoutResult::property::restyle = optional restyle: ((node: NetworkSceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member NetworkLayoutResult::property::restyleEdge = optional restyleEdge: ((edge: NetworkSceneEdge, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
+interface-member NetworkLayoutResult::property::sceneEdges = optional sceneEdges: NetworkSceneEdge[] | undefined
+interface-member NetworkLayoutResult::property::sceneNodes = optional sceneNodes: NetworkSceneNode[] | undefined
+interface-member NetworkLineEdgeHitTargetProps::property::type = optional type: "line" | undefined
+interface-member NetworkLineEdgeHitTargetProps::property::x1 = required x1: number
+interface-member NetworkLineEdgeHitTargetProps::property::x2 = required x2: number
+interface-member NetworkLineEdgeHitTargetProps::property::y1 = required y1: number
+interface-member NetworkLineEdgeHitTargetProps::property::y2 = required y2: number
+interface-member NetworkPathEdgeHitTargetProps::property::pathD = required pathD: string
+interface-member NetworkPathEdgeHitTargetProps::property::type = optional type: "bezier" | "curved" | "ribbon" | undefined
+interface-member OrbitDiagramProps::property::animated = optional animated: boolean | undefined
+interface-member OrbitDiagramProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member OrbitDiagramProps::property::childrenAccessor = optional childrenAccessor: ((d: TDatum) => TDatum[] | null | undefined) | string | undefined
+interface-member OrbitDiagramProps::property::colorBy = optional colorBy: ((d: Datum) => string) | string | undefined
+interface-member OrbitDiagramProps::property::colorByDepth = optional colorByDepth: boolean | undefined
+interface-member OrbitDiagramProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member OrbitDiagramProps::property::data = required data: TDatum
+interface-member OrbitDiagramProps::property::eccentricity = optional eccentricity: ((node: Datum) => number) | number | undefined
+interface-member OrbitDiagramProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member OrbitDiagramProps::property::foregroundGraphics = optional foregroundGraphics: React.ReactNode
+interface-member OrbitDiagramProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "data" | "size">> | undefined
+interface-member OrbitDiagramProps::property::nodeIdAccessor = optional nodeIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member OrbitDiagramProps::property::nodeRadius = optional nodeRadius: ((node: Datum) => number) | number | undefined
+interface-member OrbitDiagramProps::property::orbitMode = optional orbitMode: OrbitMode | undefined
+interface-member OrbitDiagramProps::property::orbitSize = optional orbitSize: ((node: Datum) => number) | number | undefined
+interface-member OrbitDiagramProps::property::revolution = optional revolution: ((node: Datum) => number) | undefined
+interface-member OrbitDiagramProps::property::revolutionStyle = optional revolutionStyle: "alternate" | "decay" | "locked" | undefined
+interface-member OrbitDiagramProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member OrbitDiagramProps::property::showRings = optional showRings: boolean | undefined
+interface-member OrbitDiagramProps::property::speed = optional speed: number | undefined
+interface-member OrbitDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ProcessSankeyIssue::property::endpoint = optional endpoint: string | undefined
+interface-member ProcessSankeyIssue::property::id = optional id: string | undefined
+interface-member ProcessSankeyIssue::property::kind = required kind: string
+interface-member ProcessSankeyIssue::property::nodeId = optional nodeId: string | undefined
+interface-member ProcessSankeyIssue::property::severity = optional severity: ProcessSankeyIssueSeverity | undefined
+interface-member ProcessSankeyIssue::property::source = optional source: string | undefined
+interface-member ProcessSankeyIssue::property::target = optional target: string | undefined
+interface-member ProcessSankeyProps::property::axisTicks = optional axisTicks: ProcessSankeyTick[] | undefined
+interface-member ProcessSankeyProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
+interface-member ProcessSankeyProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ProcessSankeyProps::property::domain = required domain: [ProcessSankeyTimeLike, ProcessSankeyTimeLike]
+interface-member ProcessSankeyProps::property::edgeIdAccessor = optional edgeIdAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ProcessSankeyProps::property::edgeOpacity = optional edgeOpacity: ((edge: TEdge) => number) | number | undefined
+interface-member ProcessSankeyProps::property::edges = optional edges: TEdge[] | undefined
+interface-member ProcessSankeyProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member ProcessSankeyProps::property::endTimeAccessor = optional endTimeAccessor: ChartAccessor<TEdge, ProcessSankeyTimeLike> | undefined
+interface-member ProcessSankeyProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "chartType" | "customNetworkLayout" | "edges" | "layoutConfig" | "nodes" | "size">> | undefined
+interface-member ProcessSankeyProps::property::groupBy = optional groupBy: ChartAccessor<TNode, number | string> | undefined
+interface-member ProcessSankeyProps::property::groupPadding = optional groupPadding: number | undefined
+interface-member ProcessSankeyProps::property::labelPriorityAccessor = optional labelPriorityAccessor: ((d: TNode) => number) | string | undefined
+interface-member ProcessSankeyProps::property::laneOrder = optional laneOrder: "crossing-min" | "crossing-min+inside-out" | "insertion" | "inside-out" | undefined
+interface-member ProcessSankeyProps::property::lanePlacement = optional lanePlacement: "hug" | "stack" | undefined
+interface-member ProcessSankeyProps::property::layoutExecution = optional layoutExecution: ProcessSankeyLayoutExecution | undefined
+interface-member ProcessSankeyProps::property::layoutLoadingContent = optional layoutLoadingContent: React.ReactNode
+interface-member ProcessSankeyProps::property::layoutWorkerThreshold = optional layoutWorkerThreshold: number | undefined
+interface-member ProcessSankeyProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member ProcessSankeyProps::property::lifetimeMode = optional lifetimeMode: "full" | "half" | undefined
+interface-member ProcessSankeyProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
+interface-member ProcessSankeyProps::property::maxLabels = optional maxLabels: number | undefined
+interface-member ProcessSankeyProps::property::maxValueScale = optional maxValueScale: number | undefined
+interface-member ProcessSankeyProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member ProcessSankeyProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member ProcessSankeyProps::property::nodeSizing = optional nodeSizing: "max" | "temporal" | undefined
+interface-member ProcessSankeyProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member ProcessSankeyProps::property::onClick = optional onClick: ((datum: Datum, position?: {x: number; y: number;}) => void) | undefined
+interface-member ProcessSankeyProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
+interface-member ProcessSankeyProps::property::orientation = optional orientation: ProcessSankeyOrientation | undefined
+interface-member ProcessSankeyProps::property::packing = optional packing: "off" | "reuse" | undefined
+interface-member ProcessSankeyProps::property::pairing = optional pairing: "temporal" | "value" | undefined
+interface-member ProcessSankeyProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
+interface-member ProcessSankeyProps::property::ribbonLane = optional ribbonLane: "both" | "source" | "target" | undefined
+interface-member ProcessSankeyProps::property::ribbonMinRun = optional ribbonMinRun: "auto" | number | undefined
+interface-member ProcessSankeyProps::property::selection = optional selection: SelectionConfig | undefined
+interface-member ProcessSankeyProps::property::selectionDatum = optional selectionDatum: "raw" | "scene" | undefined
+interface-member ProcessSankeyProps::property::showLabels = optional showLabels: "auto" | boolean | undefined
+interface-member ProcessSankeyProps::property::showLaneRails = optional showLaneRails: boolean | undefined
+interface-member ProcessSankeyProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ProcessSankeyProps::property::showParticles = optional showParticles: boolean | undefined
+interface-member ProcessSankeyProps::property::showQualityReadout = optional showQualityReadout: boolean | undefined
+interface-member ProcessSankeyProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ProcessSankeyProps::property::startTimeAccessor = optional startTimeAccessor: ChartAccessor<TEdge, ProcessSankeyTimeLike> | undefined
+interface-member ProcessSankeyProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member ProcessSankeyProps::property::systemInTimeAccessor = optional systemInTimeAccessor: ChartAccessor<TEdge, ProcessSankeyTimeLike> | undefined
+interface-member ProcessSankeyProps::property::systemOutTimeAccessor = optional systemOutTimeAccessor: ChartAccessor<TEdge, ProcessSankeyTimeLike> | undefined
+interface-member ProcessSankeyProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member ProcessSankeyProps::property::timeFormat = optional timeFormat: ((Date | d: number) => string | React.ReactNode) | undefined
+interface-member ProcessSankeyProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member ProcessSankeyProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TEdge, number> | undefined
+interface-member ProcessSankeyProps::property::valueFormat = optional valueFormat: ((d: number) => string | React.ReactNode) | undefined
+interface-member ProcessSankeyProps::property::xExtentAccessor = optional xExtentAccessor: ChartAccessor<TNode, [ProcessSankeyTimeLike, ProcessSankeyTimeLike]> | undefined
+interface-member ProcessSankeyTick::property::date = required date: ProcessSankeyTimeLike
+interface-member ProcessSankeyTick::property::label = required label: string
+interface-member ProcessSankeyValidatorEdge::property::endTime = required endTime: number
+interface-member ProcessSankeyValidatorEdge::property::id = required id: string
+interface-member ProcessSankeyValidatorEdge::property::source = required source: string
+interface-member ProcessSankeyValidatorEdge::property::startTime = required startTime: number
+interface-member ProcessSankeyValidatorEdge::property::systemInTime = optional systemInTime: number | undefined
+interface-member ProcessSankeyValidatorEdge::property::systemOutTime = optional systemOutTime: number | undefined
+interface-member ProcessSankeyValidatorEdge::property::target = required target: string
+interface-member ProcessSankeyValidatorEdge::property::value = required value: number
+interface-member ProcessSankeyValidatorNode::property::group = optional group: string | undefined
+interface-member ProcessSankeyValidatorNode::property::id = required id: string
+interface-member ProcessSankeyValidatorNode::property::xExtent = optional xExtent: [number, number] | undefined
+interface-member ResponsiveRule::property::description = optional description: string | undefined
+interface-member ResponsiveRule::property::id = optional id: string | undefined
+interface-member ResponsiveRule::property::priority = optional priority: number | undefined
+interface-member ResponsiveRule::property::transform = required transform: Partial<TProps> & Record<string, unknown>
+interface-member ResponsiveRule::property::when = required when: ResponsiveRuleCondition
+interface-member ResponsiveRuleCondition::property::maxAspectRatio = optional maxAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::maxHeight = optional maxHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::maxWidth = optional maxWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::minAspectRatio = optional minAspectRatio: number | undefined
+interface-member ResponsiveRuleCondition::property::minHeight = optional minHeight: number | undefined
+interface-member ResponsiveRuleCondition::property::minWidth = optional minWidth: number | undefined
+interface-member ResponsiveRuleCondition::property::orientation = optional orientation: ResponsiveOrientation | undefined
+interface-member ResponsiveRuleContext::property::height = optional height: number | undefined
+interface-member ResponsiveRuleContext::property::width = required width: number
+interface-member ResponsiveRuleMatch::property::index = required index: number
+interface-member ResponsiveRuleMatch::property::rule = required rule: ResponsiveRule<TProps>
+interface-member ResponsiveRuleResult::property::matches = required matches: ResponsiveRuleMatch<TProps>[]
+interface-member ResponsiveRuleResult::property::props = required props: TProps
+interface-member SankeyDiagramProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
+interface-member SankeyDiagramProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member SankeyDiagramProps::property::edgeColorBy = optional edgeColorBy: "gradient" | "source" | "target" | ((d: Datum) => string) | undefined
+interface-member SankeyDiagramProps::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member SankeyDiagramProps::property::edgeSort = optional edgeSort: ((a: TEdge, b: TEdge) => number) | undefined
+interface-member SankeyDiagramProps::property::edges = optional edges: TEdge[] | undefined
+interface-member SankeyDiagramProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member SankeyDiagramProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "size">> | undefined
+interface-member SankeyDiagramProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member SankeyDiagramProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member SankeyDiagramProps::property::nodeAlign = optional nodeAlign: "center" | "justify" | "left" | "right" | undefined
+interface-member SankeyDiagramProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member SankeyDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member SankeyDiagramProps::property::nodePaddingRatio = optional nodePaddingRatio: number | undefined
+interface-member SankeyDiagramProps::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member SankeyDiagramProps::property::nodes = optional nodes: TNode[] | undefined
+interface-member SankeyDiagramProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member SankeyDiagramProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member SankeyDiagramProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member SankeyDiagramProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member SankeyDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
+interface-member SankeyDiagramProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
+interface-member SankeyDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member SankeyDiagramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TEdge, number> | undefined
+interface-member SceneAccessibilityMetadata::property::accessibility = optional accessibility: undefined | {label?: string; tableFields?: Datum[] | SceneDatum;}
+interface-member SceneAccessibilityMetadata::property::accessibleDatum = optional accessibleDatum: Datum[] | SceneDatum | undefined
+interface-member StreamNetworkFrameHandle::method::clear = required clear(): void
+interface-member StreamNetworkFrameHandle::method::getCustomLayout = required getCustomLayout(): NetworkLayoutResult | null
+interface-member StreamNetworkFrameHandle::method::getLayoutFailure = required getLayoutFailure(): CustomLayoutFailureDiagnostic | null
+interface-member StreamNetworkFrameHandle::method::getTension = required getTension(): number
+interface-member StreamNetworkFrameHandle::method::getTopology = required getTopology(): {nodes: RealtimeNode[]; edges: RealtimeEdge[];}
+interface-member StreamNetworkFrameHandle::method::getTopologyDiff = required getTopologyDiff(): {addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[];}
+interface-member StreamNetworkFrameHandle::method::push = required push(edge: EdgePush): void
+interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(edges: EdgePush[]): void
+interface-member StreamNetworkFrameHandle::method::relayout = required relayout(): void
+interface-member StreamNetworkFrameHandle::method::removeEdge = required removeEdge(sourceIdOrEdgeId: string, targetId?: string | undefined): boolean
+interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
+interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
+interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
+interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamNetworkFrameProps::property::animate = optional animate: AnimateProp | undefined
+interface-member StreamNetworkFrameProps::property::background = optional background: string | undefined
+interface-member StreamNetworkFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<null>
+interface-member StreamNetworkFrameProps::property::chartType = required chartType: NetworkChartType
+interface-member StreamNetworkFrameProps::property::childrenAccessor = optional childrenAccessor: ((d: T) => T[]) | string | undefined
+interface-member StreamNetworkFrameProps::property::className = optional className: string | undefined
+interface-member StreamNetworkFrameProps::property::clock = optional clock: import("./FrameRuntime").FrameClock | undefined
+interface-member StreamNetworkFrameProps::property::colorBy = optional colorBy: ((d: Datum) => string | number) | string | undefined
+interface-member StreamNetworkFrameProps::property::colorByDepth = optional colorByDepth: boolean | undefined
+interface-member StreamNetworkFrameProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member StreamNetworkFrameProps::property::customNetworkLayout = optional customNetworkLayout: import("./networkCustomLayout").NetworkCustomLayout<Record<string, unknown>> | undefined
+interface-member StreamNetworkFrameProps::property::data = optional data: T | undefined
+interface-member StreamNetworkFrameProps::property::decay = optional decay: DecayConfig | undefined
+interface-member StreamNetworkFrameProps::property::description = optional description: string | undefined
+interface-member StreamNetworkFrameProps::property::edgeColorBy = optional edgeColorBy: "gradient" | "source" | "target" | ((d: Datum) => string) | undefined
+interface-member StreamNetworkFrameProps::property::edgeIdAccessor = optional edgeIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::edgeOpacity = optional edgeOpacity: number | undefined
+interface-member StreamNetworkFrameProps::property::edgeSort = optional edgeSort: ((a: Datum, b: Datum) => number) | undefined
+interface-member StreamNetworkFrameProps::property::edgeStyle = optional edgeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
+interface-member StreamNetworkFrameProps::property::edgeType = optional edgeType: "curve" | "line" | undefined
+interface-member StreamNetworkFrameProps::property::edges = optional edges: T | T[] | undefined
+interface-member StreamNetworkFrameProps::property::forceStrength = optional forceStrength: number | undefined
+interface-member StreamNetworkFrameProps::property::foregroundGraphics = optional foregroundGraphics: FrameGraphicsProp<null>
+interface-member StreamNetworkFrameProps::property::frameScheduler = optional frameScheduler: import("./useFrame").FrameScheduler | undefined
+interface-member StreamNetworkFrameProps::property::groupWidth = optional groupWidth: number | undefined
+interface-member StreamNetworkFrameProps::property::hierarchySum = optional hierarchySum: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: EdgePush[] | undefined
+interface-member StreamNetworkFrameProps::property::iterations = optional iterations: number | undefined
+interface-member StreamNetworkFrameProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
+interface-member StreamNetworkFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
+interface-member StreamNetworkFrameProps::property::layoutExecution = optional layoutExecution: "auto" | "sync" | "worker" | undefined
+interface-member StreamNetworkFrameProps::property::layoutLoadingContent = optional layoutLoadingContent: ReactNode
+interface-member StreamNetworkFrameProps::property::layoutSelection = optional layoutSelection: import("./networkCustomLayout").NetworkLayoutSelection | null | undefined
+interface-member StreamNetworkFrameProps::property::legend = optional legend: LegendValue
+interface-member StreamNetworkFrameProps::property::legendClickBehavior = optional legendClickBehavior: ((item: {label: string;}) => void) | undefined
+interface-member StreamNetworkFrameProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
+interface-member StreamNetworkFrameProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: {label: string;} | null) => void) | undefined
+interface-member StreamNetworkFrameProps::property::legendIsolatedCategories = optional legendIsolatedCategories: Set<string> | undefined
+interface-member StreamNetworkFrameProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
+interface-member StreamNetworkFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member StreamNetworkFrameProps::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member StreamNetworkFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamNetworkFrameProps::property::nodeAlign = optional nodeAlign: "center" | "justify" | "left" | "right" | undefined
+interface-member StreamNetworkFrameProps::property::nodeIDAccessor = optional nodeIDAccessor: ((d: T) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::nodeLabel = optional nodeLabel: ((d: Datum) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::nodePaddingRatio = optional nodePaddingRatio: number | undefined
+interface-member StreamNetworkFrameProps::property::nodeSize = optional nodeSize: ((d: Datum) => number) | number | string | undefined
+interface-member StreamNetworkFrameProps::property::nodeSizeRange = optional nodeSizeRange: [number, number] | undefined
+interface-member StreamNetworkFrameProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
+interface-member StreamNetworkFrameProps::property::nodeWidth = optional nodeWidth: number | undefined
+interface-member StreamNetworkFrameProps::property::nodes = optional nodes: T[] | undefined
+interface-member StreamNetworkFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
+interface-member StreamNetworkFrameProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
+interface-member StreamNetworkFrameProps::property::orbitAnimated = optional orbitAnimated: boolean | undefined
+interface-member StreamNetworkFrameProps::property::orbitEccentricity = optional orbitEccentricity: ((node: Datum) => number) | number | undefined
+interface-member StreamNetworkFrameProps::property::orbitMode = optional orbitMode: "atomic" | "flat" | "solar" | number[] | undefined
+interface-member StreamNetworkFrameProps::property::orbitRevolution = optional orbitRevolution: ((node: Datum) => number) | undefined
+interface-member StreamNetworkFrameProps::property::orbitRevolutionStyle = optional orbitRevolutionStyle: "alternate" | "decay" | "locked" | undefined
+interface-member StreamNetworkFrameProps::property::orbitShowRings = optional orbitShowRings: boolean | undefined
+interface-member StreamNetworkFrameProps::property::orbitSize = optional orbitSize: ((node: Datum) => number) | number | undefined
+interface-member StreamNetworkFrameProps::property::orbitSpeed = optional orbitSpeed: number | undefined
+interface-member StreamNetworkFrameProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member StreamNetworkFrameProps::property::padAngle = optional padAngle: number | undefined
+interface-member StreamNetworkFrameProps::property::padding = optional padding: number | undefined
+interface-member StreamNetworkFrameProps::property::paddingTop = optional paddingTop: number | undefined
+interface-member StreamNetworkFrameProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
+interface-member StreamNetworkFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamNetworkFrameProps::property::pulse = optional pulse: PulseConfig | undefined
+interface-member StreamNetworkFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
+interface-member StreamNetworkFrameProps::property::renderMode = optional renderMode: SceneRenderMode<NetworkSceneEdge | NetworkSceneNode> | undefined
+interface-member StreamNetworkFrameProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member StreamNetworkFrameProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member StreamNetworkFrameProps::property::seed = optional seed: number | undefined
+interface-member StreamNetworkFrameProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member StreamNetworkFrameProps::property::showParticles = optional showParticles: boolean | undefined
+interface-member StreamNetworkFrameProps::property::size = optional size: [number, number] | undefined
+interface-member StreamNetworkFrameProps::property::sortGroups = optional sortGroups: NetworkGroupComparator | undefined
+interface-member StreamNetworkFrameProps::property::sourceAccessor = optional sourceAccessor: ((d: T) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::staleness = optional staleness: StalenessConfig | undefined
+interface-member StreamNetworkFrameProps::property::summary = optional summary: string | undefined
+interface-member StreamNetworkFrameProps::property::suspendWhenHidden = optional suspendWhenHidden: boolean | undefined
+interface-member StreamNetworkFrameProps::property::targetAccessor = optional targetAccessor: ((d: T) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::tensionConfig = optional tensionConfig: Partial<TensionConfig> | undefined
+interface-member StreamNetworkFrameProps::property::thresholds = optional thresholds: ThresholdAlertConfig | undefined
+interface-member StreamNetworkFrameProps::property::title = optional title: ReactNode
+interface-member StreamNetworkFrameProps::property::transition = optional transition: TransitionConfig | undefined
+interface-member StreamNetworkFrameProps::property::treeOrientation = optional treeOrientation: "horizontal" | "radial" | "vertical" | undefined
+interface-member StreamNetworkFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member Style::property::_edgeFade = optional _edgeFade: boolean | undefined
+interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
+interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
+interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::opacity = optional opacity: number | undefined
+interface-member Style::property::r = optional r: number | undefined
+interface-member Style::property::stroke = optional stroke: string | undefined
+interface-member Style::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member Style::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member Style::property::strokeOpacity = optional strokeOpacity: number | undefined
+interface-member Style::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRule::property::id = optional id: string | undefined
+interface-member StyleRule::property::label = optional label: string | undefined
+interface-member StyleRule::property::style = required style: ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle) | StyleRuleStyle
+interface-member StyleRule::property::when = optional when: StyleRulePredicate | StyleRuleThreshold | boolean | undefined
+interface-member StyleRuleContext::property::category = optional category: string | undefined
+interface-member StyleRuleContext::property::index = optional index: number | undefined
+interface-member StyleRuleContext::property::size = optional size: number | undefined
+interface-member StyleRuleContext::property::value = required value: number | undefined
+interface-member StyleRuleContext::property::x = optional x: number | undefined
+interface-member StyleRuleContext::property::y = optional y: number | undefined
+interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
+interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
+interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
+interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
+interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
+interface-member StyleRuleStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member StyleRuleThreshold::property::axis = optional axis: "value" | "x" | "y" | undefined
+interface-member StyleRuleThreshold::property::eq = optional eq: number | string | undefined
+interface-member StyleRuleThreshold::property::field = optional field: string | undefined
+interface-member StyleRuleThreshold::property::gt = optional gt: number | undefined
+interface-member StyleRuleThreshold::property::gte = optional gte: number | undefined
+interface-member StyleRuleThreshold::property::in = optional in: (number | string)[] | undefined
+interface-member StyleRuleThreshold::property::lt = optional lt: number | undefined
+interface-member StyleRuleThreshold::property::lte = optional lte: number | undefined
+interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
+interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
+interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member ThresholdAlertConfig::property::critical = optional critical: number | undefined
+interface-member ThresholdAlertConfig::property::criticalColor = optional criticalColor: string | undefined
+interface-member ThresholdAlertConfig::property::metric = required metric: (node: RealtimeNode) => number
+interface-member ThresholdAlertConfig::property::pulse = optional pulse: boolean | undefined
+interface-member ThresholdAlertConfig::property::warning = optional warning: number | undefined
+interface-member ThresholdAlertConfig::property::warningColor = optional warningColor: string | undefined
+interface-member TooltipConfig::property::className = optional className: string | undefined
+interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
+interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipConfig::property::style = optional style: React.CSSProperties | undefined
+interface-member TooltipConfig::property::title = optional title: Accessor<string> | undefined
+interface-member TooltipField::property::accessor = optional accessor: Accessor | undefined
+interface-member TooltipField::property::format = optional format: ((value: unknown) => string) | undefined
+interface-member TooltipField::property::key = optional key: Accessor | undefined
+interface-member TooltipField::property::label = optional label: string | undefined
+interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member TreeDiagramProps::property::childrenAccessor = optional childrenAccessor: ChartAccessor<TNode, TNode[]> | undefined
+interface-member TreeDiagramProps::property::colorBy = optional colorBy: ChartAccessor<TNode, number | string> | undefined
+interface-member TreeDiagramProps::property::colorByDepth = optional colorByDepth: boolean | undefined
+interface-member TreeDiagramProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member TreeDiagramProps::property::data = required data: TNode
+interface-member TreeDiagramProps::property::edgeStyle = optional edgeStyle: "curve" | "line" | undefined
+interface-member TreeDiagramProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member TreeDiagramProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "size">> | undefined
+interface-member TreeDiagramProps::property::layout = optional layout: "circlepack" | "cluster" | "partition" | "tree" | "treemap" | undefined
+interface-member TreeDiagramProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member TreeDiagramProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member TreeDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: number | undefined
+interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
+interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member TreeDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member TreeDiagramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
+interface-member TreemapProps::property::childrenAccessor = optional childrenAccessor: ChartAccessor<TNode, TNode[]> | undefined
+interface-member TreemapProps::property::colorBy = optional colorBy: ChartAccessor<TNode, number | string> | undefined
+interface-member TreemapProps::property::colorByDepth = optional colorByDepth: boolean | undefined
+interface-member TreemapProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member TreemapProps::property::data = required data: TNode
+interface-member TreemapProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member TreemapProps::property::frameProps = optional frameProps: Partial<Omit<StreamNetworkFrameProps<Datum>, "edges" | "size">> | undefined
+interface-member TreemapProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
+interface-member TreemapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member TreemapProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
+interface-member TreemapProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
+interface-member TreemapProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
+interface-member TreemapProps::property::padding = optional padding: number | undefined
+interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
+interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
+interface-member TreemapProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member TreemapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
+interface-member UseForceLayoutResult::property::error = required error: Error | null
+interface-member UseForceLayoutResult::property::positions = required positions: Record<string, Point> | null
+interface-member UseForceLayoutResult::property::status = required status: ForceLayoutStatus
+type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
+type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type ForceLayoutStatus = "error" | "pending" | "ready"
+type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type NetworkChartType = "chord" | "circlepack" | "cluster" | "force" | "orbit" | "partition" | "sankey" | "tree" | "treemap"
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
-type NetworkSceneEdge = NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
-type NetworkSceneNode = NetworkCircleNode | NetworkRectNode | NetworkArcNode | NetworkSymbolNode | NetworkGlyphNode
-type ProcessSankeyTimeLike = number | Date | string
-type ResponsiveOrientation = "portrait" | "landscape"
+type NetworkMarkStyle = (Datum & Pick<Style, "cursor">) | Style
+type NetworkSceneEdge = NetworkBezierEdge | NetworkCurvedEdge | NetworkLineEdge | NetworkRibbonEdge
+type NetworkSceneNode = NetworkArcNode | NetworkCircleNode | NetworkGlyphNode | NetworkRectNode | NetworkSymbolNode
+type ProcessSankeyTimeLike = Date | number | string
+type ResponsiveOrientation = "landscape" | "portrait"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "default" | "css"
-type TooltipProp = boolean | "multi" | MultiTooltipConfig | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type TooltipChromeMode = "css" | "default"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

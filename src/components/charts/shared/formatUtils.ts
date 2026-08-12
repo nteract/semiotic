@@ -107,9 +107,23 @@ export function createTooltip(
       "div",
       { className: "tooltip-content", style: { padding: "8px" } },
       fields.map((field) => {
-        const label = labels?.[field] || field
+        const configuredLabel =
+          labels && Object.prototype.hasOwnProperty.call(labels, field)
+            ? labels[field]
+            : undefined
+        const label =
+          typeof configuredLabel === "string" && configuredLabel
+            ? configuredLabel
+            : field
         const value = d[field]
-        const formatter = formatters?.[field]
+        const configuredFormatter =
+          formatters && Object.prototype.hasOwnProperty.call(formatters, field)
+            ? formatters[field]
+            : undefined
+        const formatter =
+          typeof configuredFormatter === "function"
+            ? configuredFormatter
+            : undefined
         const displayValue = formatter ? formatter(value) : String(value)
 
         return React.createElement(

@@ -5,6 +5,7 @@ import {
   LEGEND_POSITION_ENUM
 } from "./chartSpecCore"
 import { DEFAULT_LIKERT_LEVELS } from "../ordinal/LikertChart.defaults"
+import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
   BarChart: {
@@ -24,8 +25,9 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
       valueExtent: { type: "array", omitFromSchema: true },
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules, last-applicable rule wins per property. A rule's fill may be a color or a HatchFill descriptor." },
-      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
+      styleRules: STYLE_RULES_PROP_SPEC,
+      gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
+      baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
       regression: {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale.",
@@ -59,8 +61,9 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
       valueExtent: { type: "array", omitFromSchema: true },
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware segment styling: ordered { when, style } rules (ctx.category is the stack key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
+      styleRules: STYLE_RULES_PROP_SPEC,
+      gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
+      baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
@@ -91,8 +94,9 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       barPadding: { type: "number", default: 60 },
       roundedTop: { type: "number", omitFromSchema: true },
       valueExtent: { type: "array", omitFromSchema: true },
-      styleRules: { type: "array", omitFromSchema: true, description: "Declarative, threshold-aware bar styling: ordered { when, style } rules (ctx.category is the group key), last-applicable rule wins. A rule's fill may be a color or a HatchFill descriptor." },
-      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
+      styleRules: STYLE_RULES_PROP_SPEC,
+      gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
+      baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
@@ -237,6 +241,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["common", "ordinalAxis"],
     ownProps: {
       data: { type: "array", description: "Array of data objects" },
+      orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       categoryAccessor: { type: ["string", "function"], description: "Key for category grouping" },
       valueAccessor: { type: ["string", "function"], description: "Key for numeric values to build distributions from" },
       bins: { type: "number", description: "Number of bins for density estimation" },
@@ -305,6 +310,8 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // matches the canonical (pre-corrected) text to keep Phase 2 byte-stable.
       startAngle: { type: "number", default: 0, description: "Starting angle in radians" },
       cornerRadius: { type: "number", omitFromSchema: true },
+      showCategoryTicks: { type: "boolean", description: "Show radial category labels." },
+      dataIdAccessor: { type: ["string", "function"], description: "Stable slice datum id used by push-mode remove() and update()." },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -328,9 +335,11 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       categoryAccessor: { type: ["string", "function"], default: "category" },
       valueAccessor: { type: ["string", "function"], default: "value" },
       innerRadius: { type: "number", default: 60, description: "Inner radius of the donut hole in pixels" },
-      centerContent: { type: ["object", "string", "number"], description: "React node to render in the center of the donut (accepts string key or JSX)" },
+      centerContent: { type: ["boolean", "object", "string", "number"], description: "React node to render in the center of the donut; false suppresses it." },
       startAngle: { type: "number", default: 0 },
       cornerRadius: { type: "number", omitFromSchema: true },
+      showCategoryTicks: { type: "boolean", description: "Show radial category labels." },
+      dataIdAccessor: { type: ["string", "function"], description: "Stable slice datum id used by push-mode remove() and update()." },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -415,6 +424,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       categoryAccessor: { type: ["string", "function"], description: "Key to split each step into mirrored categories (optional)" },
       orientation: { type: "string", enum: HORIZONTAL_VERTICAL_ENUM, default: "horizontal", description: "Horizontal (default): centered bars top-to-bottom with trapezoid connectors. Vertical: vertical bars with hatched dropoff stacking — solid = retained, hatched = dropoff from previous step. Multi-category renders grouped bars in vertical mode." },
       connectorOpacity: { type: "number", default: 0.3, description: "Opacity of trapezoid connectors between steps (0-1). Horizontal orientation only." },
+      showLabels: { type: "boolean", default: true },
       showCategoryTicks: { type: "boolean", default: false, description: "Show category tick labels on ordinal axis" },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
@@ -446,11 +456,13 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       roundedTop: { type: "number", description: "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
       valueExtent: { type: "array", omitFromSchema: true },
       trackFill: { type: ["string", "object"], omitFromSchema: true, description: "Lane background fill painted behind each swimlane. A color string, or { color, opacity? } for a translucent track." },
-      gradientFill: { type: "object", description: "Tip-to-base gradient: { stops: [{ offset: 0-1, color?, opacity? }] }." },
+      gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
       brush: { type: "boolean", description: "Enable value-axis brush selection" },
       onBrush: { type: "function", description: "Callback with { r: [min, max] } or null when brush clears" },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush integration name" },
       showCategoryTicks: { type: "boolean", description: "Show lane labels on the category axis" },
+      rTickValues: { type: "array", description: "Explicit numeric tick values on the quantitative axis." },
+      tickLabelEdgeAlign: { type: "boolean", description: "Align endpoint tick labels inward to avoid clipping." },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
     },

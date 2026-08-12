@@ -372,4 +372,16 @@ describe("Range / dumbbell mode", () => {
     const node = asCandlestick(nodes[0])
     expect(node.isRange).toBe(true)
   })
+
+  it("preserves candlestickStyle cursor on emitted marks", () => {
+    const ctx = makeCtx({
+      config: { candlestickStyle: { cursor: "pointer" } },
+    })
+    const nodes = buildCandlestickScene(
+      ctx,
+      [{ x: 0, open: 10, high: 15, low: 5, close: 12 }],
+      defaultLayout
+    )
+    expect(nodes[0]?.style?.cursor).toBe("pointer")
+  })
 })

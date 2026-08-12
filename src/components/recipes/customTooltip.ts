@@ -110,7 +110,10 @@ export function formatTooltipValue(value: unknown): string {
 
 function tooltipLabel(key: string, labels?: CustomTooltipEntryOptions["labels"]): string {
   if (typeof labels === "function") return labels(key)
-  if (labels && labels[key]) return labels[key]
+  if (labels && Object.prototype.hasOwnProperty.call(labels, key)) {
+    const label = labels[key]
+    if (typeof label === "string" && label.length > 0) return label
+  }
   return key
 }
 

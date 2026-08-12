@@ -38,11 +38,11 @@ export function findNearestGeoNode(
     // points don't miss hits (quadtree.find's nearest-only behavior would
     // shadow a farther, larger point that still contains the cursor).
     const hit = findHitPointInQuadtree(pointQuadtree, mouseX, mouseY, maxDistance, maxPointRadius)
-    if (hit) return hit
+    if (hit && hit.node.interactive !== false) return hit
   } else {
     // Linear scan when no spatial index is available
     let bestPoint: PointSceneNode | null = null
-    let bestPointDist = maxDistance
+    let bestPointDist = Infinity
 
     for (const node of nodes) {
       if (node.type !== "point") continue
@@ -65,7 +65,7 @@ export function findNearestGeoNode(
   // ── 1b. Glyph nodes (projected pictograms — above areas, like points) ──
 
   let bestGlyph: GlyphSceneNode | null = null
-  let bestGlyphDist = maxDistance
+  let bestGlyphDist = Infinity
 
   for (const node of nodes) {
     if (node.type !== "glyph") continue
@@ -109,13 +109,13 @@ export function findNearestGeoNode(
   // ── 3. Line nodes ──────────────────────────────────────────────
 
   let bestLine: GeoLineSceneNode | null = null
-  let bestLineDist = lineMaxDistance
+  let bestLineDist = Infinity
 
   for (const node of nodes) {
     if (node.type !== "line") continue
     const line = node as GeoLineSceneNode
     const { path } = line
-    const hitWidth = Math.max((line.style.strokeWidth || 2) + 4, 5, lineMaxDistance)
+    const hitWidth = Math.max((line.style.strokeWidth ?? 2) + 4, 5, lineMaxDistance)
     for (let j = 0; j < path.length - 1; j++) {
       const [ax, ay] = path[j]
       const [bx, by] = path[j + 1]

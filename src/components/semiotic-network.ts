@@ -68,7 +68,7 @@ export type {
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
 export type { NetworkGlyphNode } from "./stream/networkTypes"
-export type { SceneAccessibilityMetadata } from "./stream/types"
+export type { SceneAccessibilityMetadata, Style } from "./stream/types"
 export type {
   CategoricalLegendConfig,
   GradientLegendConfig,
@@ -86,6 +86,7 @@ export type {
   NetworkChartType,
   NetworkSceneNode,
   NetworkSceneEdge,
+  NetworkMarkStyle,
   NetworkLabel,
   ThresholdAlertConfig
 } from "./stream/networkTypes"

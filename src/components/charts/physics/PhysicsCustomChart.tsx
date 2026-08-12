@@ -25,11 +25,8 @@ import type {
   PhysicsColliderSpec,
   PhysicsSpringSpec
 } from "../../stream/physics/PhysicsKernel"
-import {
-  LIGHT_THEME,
-  resolveThemeSemanticColors,
-  useThemeSelector
-} from "../../store/ThemeStore"
+import { useThemeSelector } from "../../store/ThemeStore"
+import { LIGHT_THEME, resolveThemeSemanticColors } from "../../store/themeCore"
 import { filterSparseArray } from "../shared/sparseArray"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -121,14 +118,14 @@ export type PhysicsCustomLayout<
 ) => PhysicsCustomLayoutResult
 
 export type PhysicsCustomSpawnDatumResult =
-  | PhysicsDatumSpawnResult
-  | PhysicsQueuedSpawn
-  | PhysicsQueuedSpawn[]
+  PhysicsDatumSpawnResult | PhysicsQueuedSpawn | PhysicsQueuedSpawn[]
 
 export interface PhysicsCustomChartProps<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
-> extends Omit<BaseChartProps, "margin" | "selection">,
+>
+  extends
+    Omit<BaseChartProps, "margin" | "selection">,
     PhysicsSharedChartProps {
   data?: TDatum[]
   layout: PhysicsCustomLayout<TDatum, TConfig>
@@ -266,7 +263,8 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     () => resolveThemeSemanticColors(theme) ?? {},
     [theme]
   )
-  const themeCategorical = theme?.colors?.categorical ?? LIGHT_THEME.colors.categorical
+  const themeCategorical =
+    theme?.colors?.categorical ?? LIGHT_THEME.colors.categorical
 
   // layoutConfig may replace live geometry, but never re-enqueues initial bodies.
   const topologyKey = useMemo(
@@ -275,9 +273,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
         chartSize[0],
         chartSize[1],
         safeData.length,
-        safeData
-          .map((row, index) => String(row.id ?? index))
-          .join("|"),
+        safeData.map((row, index) => String(row.id ?? index)).join("|"),
         xExtent?.join(",") ?? "",
         yExtent?.join(",") ?? ""
       ].join("::"),
@@ -318,7 +314,10 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     ]
   )
 
-  if (topologyKeyRef.current !== topologyKey || topologySpawnsRef.current == null) {
+  if (
+    topologyKeyRef.current !== topologyKey ||
+    topologySpawnsRef.current == null
+  ) {
     topologyKeyRef.current = topologyKey
     topologySpawnsRef.current = resolved.initialSpawns
   }
@@ -343,9 +342,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     (body) => {
       const datum = body.datum as TDatum | undefined
       const key =
-        datum && colorBy
-          ? String(readAccessor(datum, 0, colorBy))
-          : body.id
+        datum && colorBy ? String(readAccessor(datum, 0, colorBy)) : body.id
       return {
         fill: color ?? resolved.context.resolveColor(key, datum),
         stroke: stroke ?? "#111827",
@@ -382,7 +379,9 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       })
       const fallback: PhysicsQueuedSpawn = {
         id: String(datum.id ?? `physics-custom-${index}`),
-        x: single.context.dimensions.plot.x + single.context.dimensions.plot.width / 2,
+        x:
+          single.context.dimensions.plot.x +
+          single.context.dimensions.plot.width / 2,
         y: single.context.dimensions.plot.y + 12,
         mass: 1,
         shape: { type: "circle", radius: 5 },
@@ -456,6 +455,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       {...frameProps}
       {...tooltipProps}
       {...sharedFrameProps}
+      key={`${chartSize[0]}x${chartSize[1]}`}
       ref={frameRef}
       onBodyHover={onBodyHover}
       backgroundGraphics={composePhysicsFrameGraphics(
@@ -463,7 +463,9 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
         resolved.result.backgroundOverlays
       )}
       bodyForces={resolved.result.bodyForces ?? frameProps.bodyForces}
-      bodyStyle={resolved.result.bodyStyle ?? frameProps.bodyStyle ?? fallbackBodyStyle}
+      bodyStyle={
+        resolved.result.bodyStyle ?? frameProps.bodyStyle ?? fallbackBodyStyle
+      }
       config={resolved.config}
       controllers={controllers}
       foregroundGraphics={composePhysicsFrameGraphics(
@@ -475,13 +477,14 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       onBodyPointerDown={handlePointerDown}
       paused={paused}
       regionEffects={regionEffects}
-      responsiveHeight={props.responsiveHeight}
-      responsiveWidth={props.responsiveWidth}
+      responsiveHeight={false}
+      responsiveWidth={false}
       selectedBodyStyle={
         resolved.result.selectedBodyStyle ?? frameProps.selectedBodyStyle
       }
       size={chartSize}
-    />
+    />,
+    layoutMode
   )
 }) as unknown as {
   <

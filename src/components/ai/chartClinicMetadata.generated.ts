@@ -50,7 +50,7 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "TreeDiagram": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
   "Treemap": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
   "CirclePack": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
-  "OrbitDiagram": {"category":"network","recommendedImport":"semiotic/network"},
+  "OrbitDiagram": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
   "ChoroplethMap": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server"},
   "ProportionalSymbolMap": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server"},
   "FlowMap": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server","docsRoute":"/charts/flow-map","pilot":true},

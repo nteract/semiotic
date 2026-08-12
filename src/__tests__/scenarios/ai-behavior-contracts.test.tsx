@@ -50,6 +50,7 @@ describe("AI behavior contract metadata", () => {
     expect(ids).toEqual(expect.arrayContaining([
       "props.data-required-by-usage-mode",
       "color.category-precedence",
+      "interaction.cursor-is-presentation-only",
       "props.required-combinations",
       "streaming.push-mode-data",
       "streaming.ref-mutations-require-id-accessors",
@@ -74,6 +75,31 @@ describe("AI behavior contract metadata", () => {
 
     expect(colorRules).toContain("color.category-precedence")
     expect(colorRules).toContain("streaming.push-mode-data")
+  })
+
+  it("treats authored cursors as presentation rather than activation", () => {
+    for (const props of [
+      { cursor: "pointer" },
+      { styleRules: [{ when: true, style: { cursor: "pointer" } }] },
+    ]) {
+      const ids = behaviorContractsFor({
+        component: "RealtimeLineChart",
+        props,
+      }).map((rule) => rule.id)
+      expect(ids).toContain("interaction.cursor-is-presentation-only")
+    }
+
+    const nonCursorStyleRules = behaviorContractsFor({
+      component: "BarChart",
+      props: { styleRules: [{ when: true, style: { fill: "#d7263d" } }] },
+    }).map((rule) => rule.id)
+    expect(nonCursorStyleRules).not.toContain("interaction.cursor-is-presentation-only")
+
+    const contract = BEHAVIOR_CONTRACTS.find(
+      ({ id }) => id === "interaction.cursor-is-presentation-only"
+    )
+    expect(contract?.summary).toContain("change pointer presentation only")
+    expect(contract?.agentAction).toContain("accessible activation path")
   })
 
   it("keeps value components outside the common chart-HOC prop boundary", () => {

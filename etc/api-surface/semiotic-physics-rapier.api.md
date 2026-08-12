@@ -5,14 +5,20 @@ _Edit dist/semiotic-physics-rapier.d.ts's sources, then re-run `npm run docs:api
 
 ```
 class PhysicsOptionalEngineDependencyError extends Error
+class-member PhysicsOptionalEngineDependencyError::construct::%24construct = required new (details: PhysicsOptionalEngineInstallDetails, cause?: unknown): PhysicsOptionalEngineDependencyError
+class-member PhysicsOptionalEngineDependencyError::property::details = required readonly details: PhysicsOptionalEngineInstallDetails
 const RAPIER_PHYSICS_CAPABILITIES: PhysicsEngineCapabilities
-const RAPIER_PHYSICS_ENGINE_DECISION: { readonly selectedPackage: "@dimforge/rapier2d-compat"; readonly rejectedPackage: "@dimforge/rapier2d-deterministic"; readonly determinism: "tolerance"; readonly reason: "Use @dimforge/rapier2d-compat for the optional browser adapter path because it is the maintained npm/WASM package with standard bundler behavior. Treat Rapier visual/position conformance as tolerance-classed; keep the built-in kernel as the strict deterministic default."; }
+const RAPIER_PHYSICS_ENGINE_DECISION: {readonly selectedPackage: "@dimforge/rapier2d-compat"; readonly rejectedPackage: "@dimforge/rapier2d-deterministic"; readonly determinism: "tolerance"; readonly reason: "Use @dimforge/rapier2d-compat for the optional browser adapter path because it is the maintained npm/WASM package with standard bundler behavior. Treat Rapier visual/position conformance as tolerance-classed; keep the built-in kernel as the strict deterministic default.";}
 const RAPIER_PHYSICS_IMPORT_PATH: "semiotic/physics/rapier"
-const RAPIER_PHYSICS_INSTALL: { readonly engine: "Rapier 2D"; readonly importPath: "semiotic/physics/rapier"; readonly packageName: "@dimforge/rapier2d-compat"; readonly installCommand: "npm install @dimforge/rapier2d-compat"; }
+const RAPIER_PHYSICS_INSTALL: {readonly engine: "Rapier 2D"; readonly importPath: "semiotic/physics/rapier"; readonly packageName: "@dimforge/rapier2d-compat"; readonly installCommand: "npm install @dimforge/rapier2d-compat";}
 const RAPIER_PHYSICS_PACKAGE: "@dimforge/rapier2d-compat"
 function loadOptionalPhysicsPeer(details: PhysicsOptionalEngineInstallDetails): Promise<unknown>
 function loadRapierPhysicsPeer(): Promise<unknown>
 function optionalEngineDependencyError(details: PhysicsOptionalEngineInstallDetails, cause?: unknown): PhysicsOptionalEngineDependencyError
 function rapierPhysicsDependencyError(cause?: unknown): Error
 interface PhysicsOptionalEngineInstallDetails
+interface-member PhysicsOptionalEngineInstallDetails::property::engine = required engine: string
+interface-member PhysicsOptionalEngineInstallDetails::property::importPath = required importPath: string
+interface-member PhysicsOptionalEngineInstallDetails::property::installCommand = required installCommand: string
+interface-member PhysicsOptionalEngineInstallDetails::property::packageName = required packageName: string
 ```

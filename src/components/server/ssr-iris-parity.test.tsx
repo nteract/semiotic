@@ -39,6 +39,18 @@ function uniqueFills(svg: string): Set<string> {
   return new Set([...svg.matchAll(/fill="([^"]+)"/g)].map((m) => m[1]))
 }
 
+/** Data-mark fills only. The live frame owns a full-frame CSS-token backdrop
+ * so an enclosing ThemeProvider can paint the canvas surface; renderChart
+ * resolves its server theme independently. That chrome is not a Treemap mark
+ * and must not participate in the categorical-fill parity assertion. */
+function uniqueDataFills(svg: string): Set<string> {
+  const withoutFrameBackdrop = svg.replace(
+    /<rect\b(?=[^>]*\bclass="stream-frame-background__backdrop")[^>]*>/g,
+    ""
+  )
+  return uniqueFills(withoutFrameBackdrop)
+}
+
 // ── ComposedChart analog: LineChart mixed line + area ─────────────────────
 // A wrapper draws an "area" series and a "line" series on one LineChart by
 // passing `fillArea` as the array of area-series names plus `gradientFill`
@@ -272,7 +284,9 @@ describe("Treemap — colorBy + hierarchy labels SSR parity", () => {
   it("fills + parent labels agree with the live HOC's in-frame SSR", () => {
     const ssr = renderChart("Treemap", props)
     const inFrame = renderToString(<Treemap {...props} />)
-    expect([...uniqueFills(ssr)].sort()).toEqual([...uniqueFills(inFrame)].sort())
+    expect([...uniqueDataFills(ssr)].sort()).toEqual(
+      [...uniqueDataFills(inFrame)].sort()
+    )
     expect(inFrame.includes(">Group A<")).toBe(true)
   })
 

@@ -68,13 +68,12 @@ describe("auditAccessibility — title/description criticals", () => {
     expect(status(r, "perceivable.low-contrast")).toBe("pass")
   })
 
-  it("does not credit unsupported direct summary text", () => {
+  it("credits the shared direct summary contract on realtime charts", () => {
     const r = auditAccessibility("RealtimeLineChart", {
-      summary: "A useful trend summary that this chart API does not support directly.",
+      summary: "A useful trend summary that explains how to read the live series.",
     })
-    expect(status(r, "understandable.unsupported-description-prop")).toBe("warn")
-    expect(status(r, "understandable.title-summary-caption")).toBe("fail")
-    expect(status(r, "understandable.explain-purpose")).toBe("fail")
+    expect(status(r, "understandable.title-summary-caption")).toBe("pass")
+    expect(status(r, "understandable.explain-purpose")).toBe("pass")
   })
 })
 

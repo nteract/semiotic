@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   # Run freshness, size, and packed-consumer gates independently from coverage
   # and the broader contract suite so regressions appear within the first CI
@@ -16,16 +19,16 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run freshness and size gates
         run: npm run check:fast
@@ -39,16 +42,18 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build library
         run: npm run dist
@@ -69,6 +74,12 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage
+
+      - name: Test protected documentation boundary detection
+        run: npm run test:protected-doc-boundaries
+
+      - name: Test release infrastructure helpers
+        run: npm run test:release-infrastructure
 
       - name: Run type check
         run: npm run typescript
@@ -125,7 +136,12 @@ jobs:
         run: npm run check:ssr
 
       - name: Check public API surface (no breaking changes)
-        run: npm run check:api-surface
+        run: |
+          npm run check:api-surface
+          npm run check:api-compat
+
+      - name: Check TypeDoc validation policy
+        run: npm run check:typedoc
 
       - name: Check HOC JSDoc coverage (≥2 @example blocks per HOC)
         run: npm run check:jsdoc-coverage
@@ -135,6 +151,11 @@ jobs:
 
       - name: Build docs site and smoke-check generated routes
         run: npm run check:website-build
+
+      - name: Check production package surface and machine baseline
+        run: |
+          npm run check:package-surface
+          npm run check:machine-baseline
 
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
@@ -197,16 +218,16 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build library
         run: npm run dist
@@ -226,22 +247,23 @@ jobs:
   testing:
     name: testing
     runs-on: ubuntu-latest
-    needs: [fast-contracts, testing-full, testing-matrix]
+    needs: [fast-contracts, testing-full, testing-matrix, e2e]
     if: always()
     steps:
       - name: Aggregate matrix result
         run: |
-          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" ]]; then
+          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" ]]; then
             {
               echo "## Testing failed"
               echo ""
               echo "Fast feedback gates result: \`${{ needs['fast-contracts'].result }}\`"
               echo "Full checks result: \`${{ needs['testing-full'].result }}\`"
               echo "Smoke matrix result: \`${{ needs['testing-matrix'].result }}\`"
+              echo "E2E result: \`${{ needs['e2e'].result }}\`"
               echo ""
               echo "Open the failed job above for the concrete error."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}"
+            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}"
             exit 1
           fi
 
@@ -257,7 +279,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # `bench:pr-vs-main` worktrees `origin/main` to capture a
           # CI-native baseline. Default checkout is shallow to the
@@ -266,20 +288,20 @@ jobs:
           fetch-depth: 0
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Compare PR vs main on identical hardware
         run: npm run bench:pr-vs-main
 
   e2e:
     runs-on: ubuntu-latest
-    needs: testing
+    needs: fast-contracts
     # Pin the rendering environment. `ubuntu-latest` is a moving image whose
     # font/freetype stack drifts from committed baselines, causing sub-pixel
     # text-AA diffs across the whole visual suite. Running inside the same
@@ -296,22 +318,25 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build library
         run: npm run dist
+
+      - name: Check browser baseline
+        run: npm run check:browser-baseline
 
       - name: Run E2E tests
         # CI is the visual regression gate: a missing baseline is an
@@ -330,7 +355,7 @@ jobs:
       # claiming policy-specific animation, performance, or cross-browser parity.
       - name: Upload local docs example contract evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docs-example-local-contract-evidence
           path: test-results/**/docs-example-local-contract-evidence.v2.json
@@ -339,7 +364,7 @@ jobs:
 
       - name: Upload snapshot baselines
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-snapshots
           path: integration-tests/*.spec.ts-snapshots/
@@ -347,7 +372,7 @@ jobs:
 
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: |

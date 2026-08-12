@@ -188,6 +188,7 @@ const FAMILY_CONFIG_SOURCES = [
   "serverChartConfigsXY.ts",
   "serverChartConfigsOrdinal.ts",
   "serverChartConfigsNetwork.ts",
+  "serverChartConfigsNetworkHierarchy.ts",
   "serverChartConfigsGeo.ts",
   "serverChartConfigsPhysics.ts",
   "serverChartConfigsCustom.ts",
@@ -342,14 +343,14 @@ function extractUnionMembers(source, unionName) {
   return m[1].match(/\w+(?:Node|Edge)/g) || []
 }
 
-/** Extract every `case "X":` literal inside a named function body. */
-function extractCaseLabels(source, functionName) {
+/** Return a named function body, including its outer braces. */
+function extractFunctionBody(source, functionName) {
   const declRe = new RegExp(`(?:export\\s+)?function\\s+${functionName}\\b`, "g")
   const declMatch = declRe.exec(source)
-  if (!declMatch) return new Set()
+  if (!declMatch) return null
   // Brace-balance walk from the start of the function body.
   let i = source.indexOf("{", declMatch.index)
-  if (i < 0) return new Set()
+  if (i < 0) return null
   let depth = 0
   const start = i
   for (; i < source.length; i++) {
@@ -359,11 +360,27 @@ function extractCaseLabels(source, functionName) {
       if (depth === 0) break
     }
   }
-  const body = source.slice(start, i + 1)
+  return source.slice(start, i + 1)
+}
+
+/**
+ * Extract every `case "X":` literal in a converter.
+ *
+ * Cursor-preserving wrappers keep the public converter small and delegate its
+ * switch to a `${functionName}Mark` helper. Scan both bodies explicitly so the
+ * parity gate continues to inspect the actual conversion logic instead of
+ * reporting every scene type missing merely because presentation was wrapped.
+ * If that helper is renamed or removed, the empty handled set fails closed.
+ */
+function extractCaseLabels(source, functionName) {
   const cases = new Set()
   const caseRe = /\bcase\s+"(\w+)":/g
-  let cm
-  while ((cm = caseRe.exec(body))) cases.add(cm[1])
+  for (const candidate of [functionName, `${functionName}Mark`]) {
+    const body = extractFunctionBody(source, candidate)
+    if (!body) continue
+    let cm
+    while ((cm = caseRe.exec(body))) cases.add(cm[1])
+  }
   return cases
 }
 

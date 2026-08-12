@@ -19,13 +19,23 @@ import type {
 export interface PhysicsSettledSceneOptions {
   maxSteps?: number
   projectionRows?: PhysicsSettledProjectionRow[]
-  bodyStyle?: Style | ((body: PhysicsBodyState) => Style)
+  bodyStyle?:
+    | Style
+    | ((
+        body: PhysicsBodyState,
+        context: PhysicsSettledBodyStyleContext
+      ) => Style)
   getBodyLabel?: (body: PhysicsBodyState) => string | undefined
   /**
    * Total bodies the chart claims entered. Enables the settled ledger check
    * (see {@link PhysicsSettledEvidence.ledger}); omitted means no ledger.
    */
   charge?: number
+}
+
+export interface PhysicsSettledBodyStyleContext {
+  index: number
+  simulationState: PhysicsPipelineSnapshot["simulationState"]
 }
 
 export interface PhysicsSettledScene {
@@ -61,22 +71,27 @@ function bodyLabel(body: PhysicsBodyState): string {
 
 function resolveBodyStyle(
   body: PhysicsBodyState,
-  style: PhysicsSettledSceneOptions["bodyStyle"]
+  style: PhysicsSettledSceneOptions["bodyStyle"],
+  context: PhysicsSettledBodyStyleContext
 ): Style {
-  const nextStyle = typeof style === "function" ? style(body) : style
+  const nextStyle = typeof style === "function" ? style(body, context) : style
   return { ...DEFAULT_BODY_STYLE, ...(nextStyle ?? {}) }
 }
 
 export function physicsBodyToXYSceneNode(
   body: PhysicsBodyState,
-  options: Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel"> = {}
+  options: Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel"> = {},
+  context: PhysicsSettledBodyStyleContext = {
+    index: 0,
+    simulationState: "settled"
+  }
 ): SceneNode {
   const datum = bodyDatum(body)
   const accessibility = {
     label: options.getBodyLabel?.(body) ?? bodyLabel(body)
   }
   const common = {
-    style: resolveBodyStyle(body, options.bodyStyle),
+    style: resolveBodyStyle(body, options.bodyStyle, context),
     datum,
     accessibleDatum: datum,
     accessibility,
@@ -106,9 +121,12 @@ export function physicsBodyToXYSceneNode(
 
 export function physicsBodiesToXYSceneNodes(
   bodies: PhysicsBodyState[],
-  options: Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel"> = {}
+  options: Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel"> = {},
+  simulationState: PhysicsPipelineSnapshot["simulationState"] = "settled"
 ): SceneNode[] {
-  return bodies.map((body) => physicsBodyToXYSceneNode(body, options))
+  return bodies.map((body, index) =>
+    physicsBodyToXYSceneNode(body, options, { index, simulationState })
+  )
 }
 
 export function buildPhysicsSettledScene(
@@ -118,7 +136,11 @@ export function buildPhysicsSettledScene(
   const stepsRun = store.settle(options.maxSteps)
   const bodies = store.readBodies()
   const snapshot = store.snapshot()
-  const sceneNodes = physicsBodiesToXYSceneNodes(bodies, options)
+  const sceneNodes = physicsBodiesToXYSceneNodes(
+    bodies,
+    options,
+    snapshot.simulationState
+  )
   const evidence = buildPhysicsSettledEvidence(snapshot, {
     bodies,
     projectionRows: options.projectionRows,

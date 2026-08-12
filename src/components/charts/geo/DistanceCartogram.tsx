@@ -21,6 +21,11 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import {
+  DistanceCartogramOverlay,
+  type DistanceCartogramOverlayLayout,
+  type DistanceCartogramRingStyle
+} from "./cartogramOverlay"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -101,7 +106,7 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   /** Show numeric labels on distance rings. Defaults to false in context and sparkline modes. */
   showRingLabels?: boolean
   /** Ring / strip-tick style overrides */
-  ringStyle?: { stroke?: string; strokeWidth?: number; strokeDasharray?: string; labelColor?: string; labelSize?: number }
+  ringStyle?: DistanceCartogramRingStyle
   /** Show north indicator arrow. Defaults to true, or false in sparkline mode. */
   showNorth?: boolean
   /** Label for cost units shown on rings (e.g. "hrs", "km") */
@@ -373,13 +378,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   const geoRef = useRef<StreamGeoFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "geo-points", frameRef: geoRef })
 
-  const [cartogramLayout, setCartogramLayout] = useState<{
-    cx: number
-    cy: number
-    maxCost: number
-    availableRadius: number
-    layout: "radial" | "strip"
-  } | null>(null)
+  const [cartogramLayout, setCartogramLayout] =
+    useState<DistanceCartogramOverlayLayout | null>(null)
 
   // Read layout after each render cycle (store computes it synchronously in computeScene)
   const readLayout = useCallback(() => {
@@ -437,147 +437,25 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   }, [showRings, cartogramLayout])
 
   // ── Foreground SVG overlay ──────────────────────────────────────
-  const overlayGraphics = useMemo(() => {
+  const overlayGraphics = useMemo<StreamGeoFrameProps["foregroundGraphics"]>(() => {
     if (!cartogramLayout) return frameProps.foregroundGraphics || null
-    const { cx, cy, maxCost, availableRadius, layout: layoutKind } = cartogramLayout
-    const isStrip = layoutKind === "strip"
-    const rs = {
-      stroke: isStrip ? "var(--semiotic-border, #999)" : "#999",
-      strokeWidth: isStrip ? 1 : 0.8,
-      strokeDasharray: isStrip ? "none" : "4,3",
-      labelColor: "var(--semiotic-text-secondary, #777)",
-      labelSize: isStrip ? 8 : 10,
-      ...ringStyle
-    }
-
-    // Adjust positions for margin
-    const mx = setup.margin.left ?? 10
-    const my = setup.margin.top ?? 10
-    const ox = cx + mx
-    const oy = cy + my
-
-    return (
-      <g>
-        {isStrip ? (
-          <>
-            {/* Langren baseline: cost axis from origin → max */}
-            <line
-              x1={ox}
-              y1={oy}
-              x2={ox + availableRadius}
-              y2={oy}
-              stroke={rs.stroke}
-              strokeWidth={rs.strokeWidth}
-              strokeLinecap="round"
-              opacity={0.85}
-            />
-            {/* Origin tick (slightly taller) */}
-            <line
-              x1={ox}
-              y1={oy - 3.5}
-              x2={ox}
-              y2={oy + 3.5}
-              stroke={rs.stroke}
-              strokeWidth={rs.strokeWidth}
-              opacity={0.9}
-            />
-            {/* Cost ticks along the strip */}
-            {showRings &&
-              ringValues.map((cost) => {
-                const x = ox + (maxCost > 0 ? (cost / maxCost) * availableRadius : 0)
-                return (
-                  <g key={cost}>
-                    <line
-                      x1={x}
-                      y1={oy - 2.5}
-                      x2={x}
-                      y2={oy + 2.5}
-                      stroke={rs.stroke}
-                      strokeWidth={0.9}
-                      opacity={0.65}
-                    />
-                    {showRingLabels && (
-                      <text
-                        x={x}
-                        y={oy + Math.min(10, (setup.margin.bottom ?? 2) + 8)}
-                        textAnchor="middle"
-                        fontSize={rs.labelSize}
-                        fill={rs.labelColor}
-                        fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
-                      >
-                        {cost}
-                        {costLabel ? ` ${costLabel}` : ""}
-                      </text>
-                    )}
-                  </g>
-                )
-              })}
-          </>
-        ) : (
-          <>
-            {/* Concentric distance rings */}
-            {ringValues.map((cost) => {
-              const r = (cost / maxCost) * availableRadius
-              return (
-                <g key={cost}>
-                  <circle
-                    cx={ox}
-                    cy={oy}
-                    r={r}
-                    fill="none"
-                    stroke={rs.stroke}
-                    strokeWidth={rs.strokeWidth}
-                    strokeDasharray={rs.strokeDasharray}
-                    opacity={0.5}
-                  />
-                  {showRingLabels && (
-                    <text
-                      x={ox + r + 3}
-                      y={oy - 2}
-                      fontSize={rs.labelSize}
-                      fill={rs.labelColor}
-                      fontFamily="system-ui, sans-serif"
-                    >
-                      {cost}
-                      {costLabel ? ` ${costLabel}` : ""}
-                    </text>
-                  )}
-                </g>
-              )
-            })}
-
-            {/* North indicator */}
-            {showNorth && (
-              <g transform={`translate(${mx + 24}, ${my + 24})`}>
-                <circle r={16} fill="white" fillOpacity={0.85} stroke="#bbb" strokeWidth={0.8} />
-                <path
-                  d="M0,-11 L3,-3 L1,-4 L1,7 L-1,7 L-1,-4 L-3,-3 Z"
-                  fill="#555"
-                  stroke="none"
-                />
-                <text
-                  y={-12}
-                  textAnchor="middle"
-                  fontSize={7}
-                  fontWeight={700}
-                  fill="#555"
-                  fontFamily="system-ui, sans-serif"
-                >
-                  N
-                </text>
-                <line x1={11} y1={0} x2={13} y2={0} stroke="#bbb" strokeWidth={0.8} />
-                <line x1={-11} y1={0} x2={-13} y2={0} stroke="#bbb" strokeWidth={0.8} />
-                <line x1={0} y1={11} x2={0} y2={13} stroke="#bbb" strokeWidth={0.8} />
-              </g>
-            )}
-          </>
-        )}
-
-        {/* Pass through any user foregroundGraphics */}
-        {frameProps.foregroundGraphics}
-      </g>
+    const cartogramOverlay = (
+      <DistanceCartogramOverlay
+        bottomMargin={setup.margin.bottom}
+        costLabel={costLabel}
+        layout={cartogramLayout}
+        ringStyle={ringStyle}
+        ringValues={ringValues}
+        showNorth={showNorth}
+        showRingLabels={showRingLabels}
+        showRings={showRings}
+      />
     )
-  }, [cartogramLayout, ringValues, showRings, showRingLabels, showNorth, costLabel, ringStyle, setup.margin, frameProps.foregroundGraphics])
+    const userForeground = frameProps.foregroundGraphics
+    return typeof userForeground === "function"
+      ? (context) => <>{cartogramOverlay}{userForeground(context)}</>
+      : <>{cartogramOverlay}{userForeground}</>
+  }, [cartogramLayout, ringValues, showRings, showRingLabels, showNorth, costLabel, ringStyle, setup.margin.bottom, frameProps.foregroundGraphics])
 
   // Loading / empty state — returned only after every hook above has run, so
   // the hook count is identical whether or not data is present. Mounting empty

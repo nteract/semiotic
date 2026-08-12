@@ -595,6 +595,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     ...(tooltipMode === "multi" && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

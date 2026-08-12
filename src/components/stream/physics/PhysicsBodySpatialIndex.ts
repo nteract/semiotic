@@ -7,6 +7,19 @@ import {
   type PhysicsQuadtreeLeaf
 } from "./physicsPipelineHelpers"
 
+export interface PhysicsBodyHitTestOptions {
+  /** Skip bodies that cannot satisfy this hit-test channel. */
+  include?: (body: PhysicsBodyState) => boolean
+  /** Maximum center-to-pointer extent for the custom geometry. */
+  searchRadius?: number
+  /** Return a sortable distance for a hit, or null for a miss. */
+  distanceSquared?: (
+    body: PhysicsBodyState,
+    x: number,
+    y: number
+  ) => number | null
+}
+
 /** Revision-keyed body index used by PhysicsPipelineStore hit testing. */
 export class PhysicsBodySpatialIndex {
   private maxSearchRadius = 0
@@ -19,14 +32,18 @@ export class PhysicsBodySpatialIndex {
     liveBodyOrder: readonly string[],
     x: number,
     y: number,
-    radius = 0
+    radius = 0,
+    options?: PhysicsBodyHitTestOptions
   ): PhysicsBodyState | null {
     const tree = this.ensure(world, revision)
     if (!tree) return null
 
     let best: PhysicsBodyState | null = null
     let bestDistanceSquared = Number.POSITIVE_INFINITY
-    const searchRadius = Math.max(0, radius) + this.maxSearchRadius
+    const searchRadius = Math.max(
+      0,
+      options?.searchRadius ?? Math.max(0, radius) + this.maxSearchRadius
+    )
     const minX = x - searchRadius
     const maxX = x + searchRadius
     const minY = y - searchRadius
@@ -38,8 +55,10 @@ export class PhysicsBodySpatialIndex {
       let leaf: PhysicsQuadtreeLeaf | undefined = node as PhysicsQuadtreeLeaf
       while (leaf) {
         const body = leaf.data
-        if (body) {
-          const distanceSquared = bodyHitDistanceSquared(body, x, y, Math.max(0, radius))
+        if (body && (!options?.include || options.include(body))) {
+          const distanceSquared = options?.distanceSquared
+            ? options.distanceSquared(body, x, y)
+            : bodyHitDistanceSquared(body, x, y, Math.max(0, radius))
           if (
             distanceSquared != null &&
             (distanceSquared < bestDistanceSquared ||

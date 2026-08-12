@@ -14,17 +14,17 @@ import {
   numericDomain,
   type EvidenceSink
 } from "./renderEvidence"
-import { ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
-import { renderSceneListWithBackend } from "../stream/renderBackend"
+import { renderOrdinalSceneListWithBackend } from "../stream/ordinalSceneSVG"
+import { resolveFrameGraphics } from "../stream/frameGraphics"
 import { resolveTheme, themeStyles } from "./themeResolver"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import {
   extractCategories
 } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
   chartUID,
@@ -250,7 +250,24 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
 
   store.computeScene({ width, height })
 
-  if (!store.scales || store.scene.length === 0) {
+  // Resolve function-valued graphics exactly once against the same geometry
+  // and scales used by the retained ordinal scene. This mirrors the live
+  // frame contract and avoids passing callback functions through to ReactDOM
+  // as children during static rendering.
+  const resolvedBackgroundGraphics = resolveFrameGraphics(
+    props.backgroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
+  const resolvedForegroundGraphics = resolveFrameGraphics(
+    props.foregroundGraphics,
+    size,
+    margin,
+    store.scales
+  )
+
+  if (!store.scales) {
     if (sink) {
       sink.evidence = buildEvidence({
         frameType: "ordinal",
@@ -262,8 +279,28 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         margin,
       })
     }
+    const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
+      ? (
+        <>
+          {resolvedBackgroundGraphics}
+          {props.annotations ? renderStaticAnnotations({
+            annotations: props.annotations,
+            autoPlaceAnnotations: props.autoPlaceAnnotations,
+            svgAnnotationRules: props.svgAnnotationRules,
+            annotationData: data,
+            scales: {},
+            layout: { width, height },
+            theme,
+            projection: projection as "vertical" | "horizontal" | "radial",
+            idPrefix: props._idPrefix,
+          }) : null}
+          {resolvedForegroundGraphics}
+          {store.customLayoutOverlays}
+        </>
+      )
+      : null
     return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(null, {
+      wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
         title: props.title, description: props.description, background: props.background,
@@ -313,10 +350,10 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     }
   }
 
-  const renderedScene = renderSceneListWithBackend({
+  const renderedScene = renderOrdinalSceneListWithBackend({
     nodes: store.scene,
     renderMode: props.renderMode,
-    fallback: (node, index) => ordinalSceneNodeToSVG(node, index, idPfx),
+    idPrefix: idPfx,
   })
   const dataMarks = renderedScene.map(entry => entry.element)
 
@@ -369,9 +406,6 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     hasTitle: hasVisibleTitle,
   })
 
-  const translateX = isRadial ? margin.left + width / 2 : margin.left
-  const translateY = isRadial ? margin.top + height / 2 : margin.top
-
   // StreamOrdinalFrame places donut center content as an HTML overlay. A
   // standalone SVG has no surrounding positioned container, so preserve the
   // same slot with a foreignObject centered over the radial plot area.
@@ -385,15 +419,35 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     </foreignObject>
   ) : null
 
-  const content = (
+  const plotContent = (
     <>
-      {props.backgroundGraphics}
       {grid}
       {dataMarks}
       {axes}
       {annotationNodes}
-      {props.foregroundGraphics}
+      {resolvedForegroundGraphics}
       {store.customLayoutOverlays}
+    </>
+  )
+
+  // Preserve the established absolute radial-center transform (used by SSR
+  // consumers for stable geometry) while counter-translating only the
+  // background graphics back to the plot origin. Marks/axes/annotations stay
+  // centered; background graphics use the same margin-relative coordinates as
+  // cartesian ordinal frames.
+  const content = isRadial ? (
+    <>
+      {resolvedBackgroundGraphics ? (
+        <g transform={`translate(${-width / 2},${-height / 2})`}>
+          {resolvedBackgroundGraphics}
+        </g>
+      ) : null}
+      {plotContent}
+    </>
+  ) : (
+    <>
+      {resolvedBackgroundGraphics}
+      {plotContent}
     </>
   )
 
@@ -402,7 +456,10 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       width: size[0], height: size[1],
       className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
       title: props.title, description: props.description, background: props.background,
-      theme, innerTransform: `translate(${translateX},${translateY})`,
+      theme,
+      innerTransform: isRadial
+        ? `translate(${margin.left + width / 2},${margin.top + height / 2})`
+        : `translate(${margin.left},${margin.top})`,
       innerWidth: width, innerHeight: height,
       legend,
       defs: hatchDefs,

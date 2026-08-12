@@ -239,6 +239,43 @@ describe("packedClusterMatrix", () => {
     expect(icons).toHaveLength(SAMPLE.filter((s) => s.klass === "Civil").length)
   })
 
+  it("treats inherited object keys as unmapped colors and icons", () => {
+    const row: Sat = {
+      id: "prototype-key",
+      region: "US",
+      orbit: "LEO",
+      mass: 200,
+      category: "constructor",
+      klass: "toString",
+      launch: "2019-01-01"
+    }
+    const result = packedClusterMatrix(
+      makeCtx(
+        {
+          columnAccessor: "region",
+          rowAccessor: "orbit",
+          sizeAccessor: "mass",
+          colorAccessor: "category",
+          colorMap: {},
+          iconAccessor: "klass",
+          iconMap: {}
+        },
+        nodesFrom([row])
+      )
+    )
+    const symbol = result.sceneNodes?.find(
+      (node): node is NetworkSymbolNode => node.type === "symbol"
+    )
+    expect(typeof symbol?.style?.fill).toBe("string")
+    expect(
+      findElements(
+        result.overlays,
+        (element) =>
+          element.type === "path" && element.props?.fill === "none"
+      )
+    ).toHaveLength(0)
+  })
+
   it("banded mode draws one enclosure per row-band; stacked draws one per cell", () => {
     const enclosureCount = (cfg: PackedClusterMatrixConfig) => {
       const r = packedClusterMatrix(makeCtx(cfg, nodesFrom(SAMPLE)))

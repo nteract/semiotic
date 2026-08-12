@@ -1,5 +1,5 @@
 import { vi } from "vitest"
-import { render } from "@testing-library/react"
+import { fireEvent, render } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -121,6 +121,24 @@ describe("ScatterplotMatrix", () => {
     expect(container.textContent).toContain("Beta")
   })
 
+  it("treats inherited fieldLabels keys as unmapped", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <ScatterplotMatrix
+          data={[
+            { constructor: 1, a: 2 },
+            { constructor: 3, a: 4 }
+          ]}
+          fields={["constructor", "a"]}
+          fieldLabels={{}}
+          diagonal="label"
+        />
+      </TooltipProvider>
+    )
+
+    expect(container.textContent).toContain("constructor")
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
@@ -197,5 +215,42 @@ describe("ScatterplotMatrix", () => {
     // 1 field = only diagonal, no scatterplot cells
     const streamFrames = container.querySelectorAll(".stream-xy-frame")
     expect(streamFrames.length).toBe(0)
+  })
+
+  it("owns one semantic description and one accessible table for the whole matrix", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <ScatterplotMatrix
+          data={sampleData}
+          fields={["a", "b", "c"]}
+          title="Measurements"
+          description="Pairwise comparison of measurements"
+          summary="A and B rise together."
+        />
+      </TooltipProvider>
+    )
+
+    expect(container.querySelector("[role='group']")?.getAttribute("aria-label"))
+      .toBe("Pairwise comparison of measurements")
+    expect(container.querySelectorAll(".semiotic-chart-title")).toHaveLength(1)
+    expect(container.querySelectorAll(".semiotic-accessible-data-table")).toHaveLength(1)
+    expect(container.querySelectorAll("a[href*='data-table']")).toHaveLength(1)
+    expect(container.textContent).toContain("A and B rise together.")
+    fireEvent.click(container.querySelector(".semiotic-accessible-data-table button")!)
+    expect(container.querySelectorAll("table")).toHaveLength(1)
+  })
+
+  it("can suppress the matrix-level accessible table without creating child tables", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <ScatterplotMatrix
+          data={sampleData}
+          fields={["a", "b"]}
+          accessibleTable={false}
+        />
+      </TooltipProvider>
+    )
+
+    expect(container.querySelectorAll(".semiotic-accessible-data-table")).toHaveLength(0)
   })
 })

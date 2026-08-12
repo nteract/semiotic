@@ -1022,23 +1022,22 @@ export async function prerender() {
   const sitemapPaths = [...routeUrls, ...blogUrls].join("\n")
   writeFileSync(resolve(BUILD_DIR, "sitemap.txt"), `${SITE_URL}/\n${sitemapPaths}\n`)
 
-  // XML sitemap with per-URL lastmod. Crawlers prefer XML over text
-  // because lastmod lets them prioritize crawling fresh content \u2014
-  // especially useful for the blog where entries.date drives staleness.
-  const today = new Date().toISOString().slice(0, 10)
+  // Only emit lastmod when the source has an authoritative content date.
+  // Build time is not a content change and makes otherwise identical docs
+  // builds vary from day to day.
   const xmlEntries = [
-    { loc: `${SITE_URL}/`, lastmod: today },
-    ...routeUrls.map((url) => ({ loc: url, lastmod: today })),
+    { loc: `${SITE_URL}/` },
+    ...routeUrls.map((url) => ({ loc: url })),
     ...blogEntries.map((e) => ({
       loc: `${SITE_URL}/blog/${e.slug}`,
-      lastmod: e.date || today,
+      lastmod: e.date,
     })),
   ]
   const sitemapXml = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
-    ...xmlEntries.map(
-      ({ loc, lastmod }) => `  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod></url>`
+    ...xmlEntries.map(({ loc, lastmod }) =>
+      `  <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`
     ),
     `</urlset>`,
     "",
@@ -1063,7 +1062,6 @@ export async function prerender() {
   writeFileSync(
     resolve(BUILD_DIR, ROUTE_DOCS_MANIFEST),
     JSON.stringify({
-      generatedAt: new Date().toISOString(),
       site: SITE_URL,
       routes: routeDocs,
     }, null, 2) + "\n",

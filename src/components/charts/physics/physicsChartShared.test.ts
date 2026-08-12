@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { physicsChartArea, styleFromColorAccessor } from "./physicsChartShared"
+import {
+  composePhysicsBodyStyle,
+  physicsChartArea,
+  styleFromColorAccessor
+} from "./physicsChartShared"
 
 describe("physicsChartArea", () => {
   it("preserves the full chart plot geometry", () => {
@@ -47,6 +51,28 @@ describe("styleFromColorAccessor", () => {
       fill: "#57c7b7",
       stroke: "#f0e7cf",
       strokeWidth: 2
+    })
+  })
+
+  it("preserves generated defaults while authored frame style wins", () => {
+    const generated = styleFromColorAccessor(undefined, "#generated")
+    const composed = composePhysicsBodyStyle(generated, {
+      fill: "#authored",
+      cursor: "pointer"
+    })
+    const style = typeof composed === "function"
+      ? composed(
+          { datum: { id: "body" } } as never,
+          { selected: false, simulationState: "idle" } as never
+        )
+      : composed
+
+    expect(style).toMatchObject({
+      fill: "#authored",
+      cursor: "pointer",
+      stroke: "#111827",
+      strokeWidth: 1,
+      opacity: 0.9
     })
   })
 })

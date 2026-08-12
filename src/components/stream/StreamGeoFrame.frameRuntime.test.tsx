@@ -1,10 +1,11 @@
 import * as React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, render } from "@testing-library/react"
+import { act, fireEvent, render } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { GeoParticlePool } from "./GeoParticlePool"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
+import type { StreamGeoFrameHandle } from "./geoTypes"
 
 const flowLines = [{
   id: "route",
@@ -138,5 +139,101 @@ describe("StreamGeoFrame frame runtime", () => {
         Reflect.deleteProperty(document, "hidden")
       }
     }
+  })
+
+  it("uses an authored point cursor with hover disabled and resets it on leave", () => {
+    const scheduler = createFrameScheduler(0)
+    const ref = React.createRef<StreamGeoFrameHandle>()
+    const { container } = render(
+      <StreamGeoFrame
+        ref={ref}
+        projection="mercator"
+        xAccessor="lon"
+        yAccessor="lat"
+        points={[
+          { lon: 0, lat: 0 },
+          { lon: 20, lat: 10 }
+        ]}
+        pointStyle={() => ({ r: 8, cursor: "pointer" })}
+        enableHover={false}
+        animate={false}
+        size={[300, 200]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    act(() => scheduler.flush())
+    const projected = ref.current!.getProjection()!([0, 0])!
+    expect(projected.every(Number.isFinite)).toBe(true)
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+    const canvas = container.querySelector("canvas")!
+
+    fireEvent.pointerMove(image, {
+      clientX: 10 + projected[0],
+      clientY: 10 + projected[1]
+    })
+    act(() => scheduler.flush())
+    expect(canvas.style.cursor).toBe("pointer")
+
+    const requestsBeforeLeave = scheduler.requestedHandles.length
+    fireEvent.pointerLeave(image)
+    expect(canvas.style.cursor).toBe("")
+    expect(scheduler.requestedHandles).toHaveLength(requestsBeforeLeave)
+  })
+
+  it("does not schedule pointer work with hover disabled and no authored cursor", () => {
+    const scheduler = createFrameScheduler(0)
+    const { container } = render(
+      <StreamGeoFrame
+        projection="mercator"
+        xAccessor="lon"
+        yAccessor="lat"
+        points={[{ lon: 0, lat: 0 }]}
+        enableHover={false}
+        animate={false}
+        size={[300, 200]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    act(() => scheduler.flush())
+    expect(scheduler.pendingCount).toBe(0)
+    const requestsBeforeMove = scheduler.requestedHandles.length
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+
+    fireEvent.pointerMove(image, { clientX: 150, clientY: 100 })
+    fireEvent.pointerLeave(image)
+
+    expect(scheduler.pendingCount).toBe(0)
+    expect(scheduler.requestedHandles).toHaveLength(requestsBeforeMove)
+  })
+
+  it("does not schedule authored-cursor-only work for direct touch input", () => {
+    const scheduler = createFrameScheduler(0)
+    const { container } = render(
+      <StreamGeoFrame
+        projection="mercator"
+        xAccessor="lon"
+        yAccessor="lat"
+        points={[{ lon: 0, lat: 0 }]}
+        pointStyle={() => ({ r: 8, cursor: "pointer" })}
+        enableHover={false}
+        animate={false}
+        size={[300, 200]}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+
+    act(() => scheduler.flush())
+    const requestsBeforeTouch = scheduler.requestedHandles.length
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+    fireEvent.pointerMove(image, {
+      clientX: 150,
+      clientY: 100,
+      pointerType: "touch"
+    })
+
+    expect(container.querySelector("canvas")!.style.cursor).toBe("")
+    expect(scheduler.requestedHandles).toHaveLength(requestsBeforeTouch)
   })
 })

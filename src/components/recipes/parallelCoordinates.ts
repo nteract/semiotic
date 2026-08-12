@@ -110,10 +110,21 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
   if (ctx.data.length === 0) return { nodes: [] }
 
   // Compute per-field domain — either user-supplied or inferred from data.
-  const domains: Record<string, [number, number]> = {}
+  const domains = Object.create(null) as Record<string, [number, number]>
   for (const f of fields) {
-    if (cfg.domains?.[f]) {
-      domains[f] = cfg.domains[f]
+    const configuredDomain =
+      cfg.domains && Object.prototype.hasOwnProperty.call(cfg.domains, f)
+        ? cfg.domains[f]
+        : undefined
+    if (
+      Array.isArray(configuredDomain) &&
+      configuredDomain.length >= 2 &&
+      typeof configuredDomain[0] === "number" &&
+      Number.isFinite(configuredDomain[0]) &&
+      typeof configuredDomain[1] === "number" &&
+      Number.isFinite(configuredDomain[1])
+    ) {
+      domains[f] = [configuredDomain[0], configuredDomain[1]]
       continue
     }
     let lo = Infinity
@@ -242,7 +253,14 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
       const x = axisX[i]
-      const fmt = cfg.tickFormat?.[f] ?? ((v: number) => v.toLocaleString())
+      const configuredTickFormat =
+        cfg.tickFormat && Object.prototype.hasOwnProperty.call(cfg.tickFormat, f)
+          ? cfg.tickFormat[f]
+          : undefined
+      const fmt =
+        typeof configuredTickFormat === "function"
+          ? configuredTickFormat
+          : (v: number) => v.toLocaleString()
 
       // Vertical axis line.
       elements.push(

@@ -176,7 +176,7 @@ export function createDefaultAnnotationRules(
               x2={px}
               y2={context.height || 0}
               stroke={color}
-              strokeWidth={ann.strokeWidth || 1.5}
+              strokeWidth={ann.strokeWidth ?? 1.5}
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (
@@ -228,7 +228,7 @@ export function createDefaultAnnotationRules(
               x2={context.width || 0}
               y2={py}
               stroke={color}
-              strokeWidth={ann.strokeWidth || 1.5}
+              strokeWidth={ann.strokeWidth ?? 1.5}
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (
@@ -547,7 +547,7 @@ export function createDefaultAnnotationRules(
               points={linePoints}
               fill="none"
               stroke={color}
-              strokeWidth={ann.strokeWidth || 2}
+              strokeWidth={ann.strokeWidth ?? 2}
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (

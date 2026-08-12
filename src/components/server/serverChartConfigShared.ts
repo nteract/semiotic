@@ -1,7 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ChartMode } from "../charts/shared/types"
 import type { ChartModeInput, ChartModeResult } from "../charts/shared/chartMode"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import type { ReactNode } from "react"
 /**
  * Shared helpers + ChartConfig type for serverChartConfigs family modules.

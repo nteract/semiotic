@@ -1,8 +1,28 @@
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
-import type { WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
+import { quadtree } from "d3-quadtree"
+import type {
+  WedgeSceneNode,
+  BoxplotSceneNode,
+  ViolinSceneNode,
+  ConnectorSceneNode,
+  TrapezoidSceneNode
+} from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode } from "./types"
+import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
 
 describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
+  it("keeps large-point hit geometry identical with and without a quadtree", () => {
+    const point: PointSceneNode = {
+      type: "point", x: 90, y: 0, r: 80,
+      style: { fill: "green" }, datum: { id: "big" }
+    }
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .add(point)
+    expect(findNearestOrdinalNode([point], 50, 0, 30)?.datum?.id).toBe("big")
+    expect(findNearestOrdinalNode([point], 50, 0, 30, qt, 80)?.datum?.id).toBe("big")
+  })
   // ── Rect hit testing (bar chart bars) ────────────────────────────────
 
   describe("rect hit testing", () => {
@@ -93,6 +113,42 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
     it("misses outside point radius and maxDistance", () => {
       const result = findNearestOrdinalNode([point], 300, 300, 10)
       expect(result).toBeNull()
+    })
+
+    it("skips interactive:false points in linear and indexed hit paths", () => {
+      const decorative: PointSceneNode = {
+        ...point,
+        style: { fill: "red", cursor: "pointer" },
+        interactive: false
+      }
+      const qt = quadtree<PointSceneNode>()
+        .x((node) => node.x)
+        .y((node) => node.y)
+        .add(decorative)
+
+      expect(findNearestOrdinalNode([decorative], 200, 100)).toBeNull()
+      expect(
+        findNearestOrdinalNode([decorative], 200, 100, 30, qt, 8)
+      ).toBeNull()
+    })
+
+    it("excludes interactive:false points from the retained ordinal index", () => {
+      const decorative = Array.from({ length: 501 }, (_, index): PointSceneNode => ({
+        type: "point",
+        x: index,
+        y: 0,
+        r: 100,
+        style: {},
+        datum: { index },
+        interactive: false
+      }))
+      const active: PointSceneNode = {
+        type: "point", x: 0, y: 0, r: 4, style: {}, datum: { id: "active" }
+      }
+      const index = buildOrdinalPointSpatialIndex([...decorative, active])
+
+      expect(index.quadtree).toBeNull()
+      expect(index.maxRadius).toBe(4)
     })
   })
 
@@ -297,6 +353,91 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       }
       const result = findNearestOrdinalNode([noBounds], 120, 200)
       expect(result).toBeNull()
+    })
+  })
+
+  describe("connector hit testing", () => {
+    const connector: ConnectorSceneNode = {
+      type: "connector",
+      x1: 20,
+      y1: 40,
+      x2: 100,
+      y2: 80,
+      style: { stroke: "#999", strokeWidth: 4 },
+      datum: { id: "connector" },
+      group: "series-a"
+    }
+
+    it("hits the nearest point on a sloped connector using hover tolerance", () => {
+      const result = findNearestOrdinalNode([connector], 62, 56, 6)
+      expect(result).not.toBeNull()
+      expect(result!.datum!.id).toBe("connector")
+      expect(result!.category).toBe("series-a")
+      expect(result!.x).toBeCloseTo(60)
+      expect(result!.y).toBeCloseTo(60)
+      expect(result!.distance).toBeCloseTo(Math.sqrt(20))
+    })
+
+    it("honors visible stroke width and misses beyond the requested radius", () => {
+      const wide = { ...connector, style: { stroke: "#999", strokeWidth: 20 } }
+      expect(findNearestOrdinalNode([wide], 60, 69, 0)).not.toBeNull()
+      expect(findNearestOrdinalNode([connector], 60, 70, 5)).toBeNull()
+      expect(
+        findNearestOrdinalNode([{ ...connector, style: { strokeWidth: 0 } }], 60, 60)
+      ).toBeNull()
+    })
+
+    it("hits the painted interior of a filled connector group behind pieces", () => {
+      const segments: ConnectorSceneNode[] = [
+        {
+          type: "connector", x1: 20, y1: 20, x2: 100, y2: 20,
+          style: { fill: "#999", cursor: "pointer" }, datum: { id: "a" }, group: "radar"
+        },
+        {
+          type: "connector", x1: 100, y1: 20, x2: 60, y2: 90,
+          style: { fill: "#999", cursor: "pointer" }, datum: { id: "b" }, group: "radar"
+        }
+      ]
+      expect(findNearestOrdinalNode(segments, 60, 45, 0)?.datum?.id).toBe("a")
+
+      const piece: RectSceneNode = {
+        type: "rect", x: 50, y: 35, w: 20, h: 20,
+        style: { fill: "red" }, datum: { id: "piece" }
+      }
+      expect(findNearestOrdinalNode([...segments, piece], 60, 45, 0)?.datum?.id)
+        .toBe("piece")
+      const pieceOnStroke = { ...piece, x: 50, y: 10, h: 20 }
+      expect(findNearestOrdinalNode([...segments, pieceOnStroke], 60, 10, 0)?.datum?.id)
+        .toBe("piece")
+    })
+  })
+
+  describe("trapezoid hit testing", () => {
+    const trapezoid: TrapezoidSceneNode = {
+      type: "trapezoid",
+      points: [[20, 20], [100, 20], [80, 80], [40, 80]],
+      style: { fill: "#999" },
+      datum: { id: "trapezoid" },
+      category: "stage-two"
+    }
+
+    it("uses polygon geometry rather than the trapezoid bounding box", () => {
+      const result = findNearestOrdinalNode([trapezoid], 60, 50)
+      expect(result).not.toBeNull()
+      expect(result!.datum!.id).toBe("trapezoid")
+      expect(result!.category).toBe("stage-two")
+      expect(result!.x).toBe(60)
+      expect(result!.y).toBe(50)
+      expect(findNearestOrdinalNode([trapezoid], 25, 75)).toBeNull()
+    })
+
+    it("includes the painted stroke outside the filled polygon", () => {
+      const stroked = {
+        ...trapezoid,
+        style: { fill: "#999", stroke: "#000", strokeWidth: 8 }
+      }
+      expect(findNearestOrdinalNode([stroked], 60, 16)).not.toBeNull()
+      expect(findNearestOrdinalNode([trapezoid], 60, 16)).toBeNull()
     })
   })
 })

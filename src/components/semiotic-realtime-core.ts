@@ -1,6 +1,10 @@
 /**
- * Realtime entry point — for streaming/realtime canvas-first visualizations.
- * Import from "semiotic/realtime" instead of the full bundle to reduce bundle size.
+ * Established primary realtime runtime surface.
+ *
+ * Despite the historical `/core` name, this entry includes React Stream
+ * Frames, chart HOCs, and tooltips alongside buffer/aggregation helpers. It is
+ * a client entry. Use narrower data utilities from `semiotic/utils/core` when
+ * a React-free server surface is required.
  */
 
 import StreamXYFrame from "./stream/StreamXYFrame"
@@ -80,7 +84,10 @@ export type {
 export type { EventTimeConfig } from "./charts/realtime/eventTime"
 
 // Types
-export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
+export type {
+  RealtimeLineChartHandle,
+  RealtimeLineChartProps
+} from "./charts/realtime/RealtimeLineChart"
 export type { RealtimeHistogramProps, TemporalHistogramProps } from "./charts/realtime/RealtimeHistogram"
 export type {
   CategoricalLegendConfig,
@@ -110,6 +117,7 @@ export type {
 } from "./realtime/types"
 
 export type {
+  Style,
   StreamXYFrameProps,
   StreamXYFrameHandle,
   StreamChartType

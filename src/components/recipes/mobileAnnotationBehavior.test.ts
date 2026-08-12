@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mobileAnnotationStrategy } from "./mobileAnnotationStrategy"
+import { mobileAnnotationStrategy } from "./mobileAnnotationBehavior"
 import type { Datum } from "../charts/shared/datumTypes"
 
 describe("mobileAnnotationStrategy", () => {

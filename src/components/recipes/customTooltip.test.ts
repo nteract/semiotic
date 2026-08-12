@@ -46,6 +46,15 @@ describe("custom tooltip helpers", () => {
     ])
   })
 
+  it("does not inherit display labels from Object.prototype", () => {
+    expect(
+      buildTooltipEntries(
+        { constructor: "value", toString: "another" },
+        { labels: {} }
+      ).map((entry) => entry.label)
+    ).toEqual(["constructor", "toString"])
+  })
+
   it("formats common tooltip values", () => {
     expect(formatTooltipValue(7)).toBe("7")
     expect(formatTooltipValue(false)).toBe("false")

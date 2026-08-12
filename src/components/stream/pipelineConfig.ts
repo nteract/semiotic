@@ -15,6 +15,8 @@ import type {
   ThemeSemanticColors,
   BandConfig,
   CandlestickStyle,
+  SwarmStyle,
+  WaterfallStyle,
   Style
 } from "./types"
 import type { SymbolName } from "./symbolPath"
@@ -127,8 +129,8 @@ export interface PipelineConfig {
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   areaStyle?: (d: Datum) => Style
-  swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
-  waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
+  swarmStyle?: SwarmStyle
+  waterfallStyle?: WaterfallStyle
   colorScheme?: string | string[] | Record<string, string>
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]

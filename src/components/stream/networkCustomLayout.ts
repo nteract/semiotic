@@ -92,8 +92,8 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
    * Shared-selection projection. Present when the chart is wired to a
    * `LinkedCharts` / selection store; `null` otherwise. Use
    * `selection.isActive` + `selection.predicate(node.data ?? node)` to
-   * dim/highlight marks by the cross-chart selection. See
-   * {@link NetworkLayoutSelection}.
+   * dim/highlight marks by the cross-chart selection. See the
+   * `NetworkLayoutSelection` type.
    */
   selection?: NetworkLayoutSelection | null
 }

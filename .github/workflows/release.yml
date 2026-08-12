@@ -5,21 +5,59 @@ on:
     tags: ["v*"]
 
 jobs:
-  publish:
+  visual-contracts:
     runs-on: ubuntu-latest
+    # Match the exact font/browser environment used to author and verify the
+    # committed Linux snapshots. A release tag must not bypass the PR visual
+    # gate merely because npm publication uses a separate job.
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    env:
+      HOME: /root
+
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install pinned browser engines
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Build browser artifacts
+        run: npm run dist
+
+      - name: Verify every committed visual baseline without updates
+        run: npx playwright test --update-snapshots=none
+
+  publish:
+    needs: visual-contracts
+    runs-on: ubuntu-latest
+    outputs:
+      dist_tag: ${{ steps.dist-tag.outputs.tag }}
     permissions:
-      # `contents: write` is required for `gh release create` to publish
-      # the GitHub Release at the end of the workflow. `id-token: write`
-      # stays for npm provenance.
-      contents: write
+      contents: read
+      # Required only for npm provenance in this job. GitHub Release writes
+      # happen in a separate least-privilege job below.
       id-token: write
+    env:
+      MCP_PUBLISHER_VERSION: v1.7.9
+      MCP_PUBLISHER_LINUX_AMD64_SHA256: ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
           cache: "npm"
@@ -35,54 +73,51 @@ jobs:
           fi
           echo "Verified release tag $EXPECTED_TAG"
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Check AI instruction mirror freshness
-        run: npm run check:ai-instructions
-
-      - name: Build library
-        run: npm run dist:prod
-
-      - name: Check public API surface
-        run: npm run check:api-surface
-
-      - name: Build MCP server
-        run: npm run build:mcp
-
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Run type check
-        run: npm run typescript
-
-      - name: Run test type check
-        run: npm run typescript:tests
-
-      - name: Check chart spec registry round-trip
-        run: npm run check:chart-specs
-
-      - name: Check capability matrix freshness
-        run: npm run check:capabilities
-
-      - name: Check generated AI surface manifest freshness
-        run: npm run check:ai-surface
-
-      - name: Check blog metadata registry freshness
-        run: npm run check:blog-entries
-
-      - name: Build docs site and smoke-check generated routes
-        run: npm run check:website-build
-
-      - name: Verify TypeScript declarations
+      - name: Verify tagged commit is merged into main
         run: |
-          for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts dist/semiotic-ai.d.ts dist/semiotic-data.d.ts dist/semiotic-server.d.ts dist/semiotic-themes.d.ts; do
-            if [ ! -f "$f" ]; then
-              echo "MISSING: $f — aborting release"
-              exit 1
-            fi
-          done
-          echo "All declaration files present"
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not merged into origin/main"
+            exit 1
+          fi
+          echo "Verified $GITHUB_SHA is an ancestor of origin/main"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit the release dependency graph
+        run: npm audit --registry=https://registry.npmjs.org --audit-level=moderate
+
+      - name: Check MCP Registry metadata and current live release
+        run: |
+          npm run check:mcp-registry
+          npm run check:mcp-registry-live -- --allow-stale-remote
+
+      - name: Install the official mcp-publisher validator
+        run: |
+          ARCHIVE="$RUNNER_TEMP/mcp-publisher_linux_amd64.tar.gz"
+          BIN_DIR="$RUNNER_TEMP/mcp-publisher-bin"
+          curl --fail --location --silent --show-error \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
+            --output "$ARCHIVE"
+          echo "${MCP_PUBLISHER_LINUX_AMD64_SHA256}  ${ARCHIVE}" | sha256sum --check --strict
+          mkdir -p "$BIN_DIR"
+          tar -xzf "$ARCHIVE" -C "$BIN_DIR" mcp-publisher
+          chmod 0755 "$BIN_DIR/mcp-publisher"
+          echo "$BIN_DIR" >> "$GITHUB_PATH"
+          "$BIN_DIR/mcp-publisher" --help
+
+      - name: Validate MCP Registry metadata before npm publication
+        run: mcp-publisher validate
+
+      - name: Install the release browser runtime
+        run: npx playwright install --with-deps chromium
+
+      # This is the canonical fail-closed release gate. Keep it before the
+      # immutable artifact: website/declaration builds and every generator must
+      # finish before the bytes that will be published are frozen.
+      - name: Run the complete release gate
+        run: npm run release:check
 
       - name: Determine npm dist-tag
         id: dist-tag
@@ -111,7 +146,7 @@ jobs:
           echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
 
       - name: Upload immutable release evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: semiotic-${{ github.ref_name }}-release-artifact
           path: ${{ steps.release-artifact.outputs.directory }}
@@ -122,6 +157,9 @@ jobs:
 
       - name: Check packed cold-consumer baseline (exact tarball)
         run: npm run check:cold-consumer -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+
+      - name: Check packed machine baseline (exact tarball)
+        run: npm run check:machine-baseline -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
 
       - name: Reverify immutable release artifact before publication
         run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
@@ -138,9 +176,8 @@ jobs:
         run: npm run check:cloud-run-lock
         continue-on-error: true
 
-      - name: "Release diagnostics: benchmark comparison"
-        run: npm run bench:compare
-        continue-on-error: true
+      - name: Compare release benchmarks with the previous tag on this runner
+        run: npm run bench:release-vs-previous
 
       - name: Check whether this exact version is already published
         id: published-artifact
@@ -202,10 +239,11 @@ jobs:
           echo "Published npm integrity matches the immutable release artifact"
 
           # Install in a temp project and verify imports
-          TMPDIR=$(mktemp -d)
-          cd "$TMPDIR"
+          CONSUMER_DIR=$(mktemp -d)
+          cd "$CONSUMER_DIR"
           npm init -y > /dev/null 2>&1
-          npm install semiotic@${VERSION} react react-dom > /dev/null 2>&1
+          npm install --ignore-scripts --registry=https://registry.npmjs.org \
+            semiotic@${VERSION} react@19.2.0 react-dom@19.2.0 > /dev/null 2>&1
 
           node -e "
             const assert = require('assert');
@@ -231,7 +269,7 @@ jobs:
             assert(utils.validateProps, 'validateProps not exported from semiotic/utils');
             console.log('All smoke tests passed — 8 entry points verified');
           "
-          rm -rf "$TMPDIR"
+          rm -rf "$CONSUMER_DIR"
 
       - name: Verify published package registry provenance metadata
         env:
@@ -268,20 +306,44 @@ jobs:
             console.log(`Verified registry provenance for ${packageName}@${version}: ${signatures.length} signature(s), ${attestations.length} attestation(s)`)
           NODE
 
+      - name: Prepare exact stable Cloud Run source
+        if: steps.dist-tag.outputs.tag == 'latest'
+        id: cloud-run-source
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          OUT_DIR="$RUNNER_TEMP/semiotic-${VERSION}-cloud-run-source"
+          npm run prepare:cloud-run-release -- \
+            --version "$VERSION" \
+            --expected-integrity "${{ steps.release-artifact.outputs.integrity }}" \
+            --output-dir "$OUT_DIR"
+          echo "directory=$OUT_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload exact stable Cloud Run source
+        if: steps.dist-tag.outputs.tag == 'latest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: semiotic-${{ github.ref_name }}-cloud-run-source
+          path: ${{ steps.cloud-run-source.outputs.directory }}
+          if-no-files-found: error
+          retention-days: 30
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download immutable release evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: semiotic-${{ github.ref_name }}-release-artifact
+          path: release-artifact
+
       - name: Create or update GitHub Release
-        # Pulls the matching CHANGELOG section so the GH release page
-        # mirrors the version's entry. Falls back to `--generate-notes`
-        # (auto-built from PR titles) if the section is missing or empty
-        # so a release page is still created either way. Without this
-        # step a successful npm publish leaves the GitHub Releases page
-        # stuck on the previous version (the v3.2.3 → v3.4.2 backfill
-        # in 2026-04-28 fixed exactly that gap).
-        #
-        # Idempotent on workflow re-runs: if the release for this tag
-        # already exists, `gh release edit` updates the title/notes in
-        # place rather than failing on the conflict. Without that, a
-        # re-run for any reason (transient infra failure, manually
-        # re-triggered after a fix) would error out at this step.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -301,32 +363,160 @@ jobs:
                 --title "Semiotic $GITHUB_REF_NAME" \
                 --notes-file "$NOTES_FILE"
             else
-              echo "No CHANGELOG section for $VERSION; leaving existing notes unchanged"
-              gh release edit "$GITHUB_REF_NAME" \
-                --title "Semiotic $GITHUB_REF_NAME"
+              gh release edit "$GITHUB_REF_NAME" --title "Semiotic $GITHUB_REF_NAME"
             fi
+          elif [ -s "$NOTES_FILE" ]; then
+            gh release create "$GITHUB_REF_NAME" \
+              --title "Semiotic $GITHUB_REF_NAME" \
+              --notes-file "$NOTES_FILE" \
+              --verify-tag
           else
-            if [ -s "$NOTES_FILE" ]; then
-              gh release create "$GITHUB_REF_NAME" \
-                --title "Semiotic $GITHUB_REF_NAME" \
-                --notes-file "$NOTES_FILE" \
-                --verify-tag
-            else
-              echo "No CHANGELOG section for $VERSION; falling back to --generate-notes"
-              gh release create "$GITHUB_REF_NAME" \
-                --title "Semiotic $GITHUB_REF_NAME" \
-                --generate-notes \
-                --verify-tag
-            fi
+            gh release create "$GITHUB_REF_NAME" \
+              --title "Semiotic $GITHUB_REF_NAME" \
+              --generate-notes \
+              --verify-tag
           fi
-          gh release upload "$GITHUB_REF_NAME" \
-            "${{ steps.release-artifact.outputs.directory }}"/* \
-            --clobber
+          gh release upload "$GITHUB_REF_NAME" release-artifact/* --clobber
           rm -f "$NOTES_FILE"
+
+  deploy-stable-mcp:
+    name: Deploy exact package to stable MCP
+    needs: publish
+    if: needs.publish.outputs.dist_tag == 'latest'
+    runs-on: ubuntu-latest
+    environment:
+      name: stable-mcp
+      url: https://semiotic-mcp-server-481507046413.us-west1.run.app
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      CLOUD_RUN_PROJECT: semiotic-mcp
+      CLOUD_RUN_REGION: us-west1
+      CLOUD_RUN_SERVICE: semiotic-mcp-server
+      CLOUD_RUN_HOST: semiotic-mcp-server-481507046413.us-west1.run.app
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Download exact Cloud Run source
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: semiotic-${{ github.ref_name }}-cloud-run-source
+          path: ${{ runner.temp }}/semiotic-cloud-run-source
+
+      - name: Require stable deployment identity configuration
+        env:
+          WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          RELEASE_SERVICE_ACCOUNT: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT }}
+        run: |
+          test -n "$WORKLOAD_IDENTITY_PROVIDER" || {
+            echo "stable-mcp environment secret GCP_WORKLOAD_IDENTITY_PROVIDER is required"
+            exit 1
+          }
+          test -n "$RELEASE_SERVICE_ACCOUNT" || {
+            echo "stable-mcp environment secret GCP_RELEASE_SERVICE_ACCOUNT is required"
+            exit 1
+          }
+
+      - name: Authenticate to Google Cloud with GitHub OIDC
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT }}
+          project_id: semiotic-mcp
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+
+      - name: Verify downloaded lock and deployment identity
+        id: deployment
+        env:
+          SOURCE_DIR: ${{ runner.temp }}/semiotic-cloud-run-source
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          LOCKED_VERSION=$(node -p "require(process.env.SOURCE_DIR + '/package-lock.json').packages['node_modules/semiotic'].version")
+          test "$LOCKED_VERSION" = "$VERSION" || {
+            echo "Cloud Run source locks semiotic@$LOCKED_VERSION, expected $VERSION"
+            exit 1
+          }
+          npm ci --ignore-scripts --prefix "$SOURCE_DIR"
+          INSTALLED_VERSION=$(node -p "require(process.env.SOURCE_DIR + '/node_modules/semiotic/package.json').version")
+          test "$INSTALLED_VERSION" = "$VERSION" || {
+            echo "Cloud Run source installed semiotic@$INSTALLED_VERSION, expected $VERSION"
+            exit 1
+          }
+          RELEASE_SHA=$(git rev-parse HEAD)
+          RELEASE_BUILT_AT=$(node -e 'process.stdout.write(new Date(process.argv[1]).toISOString())' "$(git show -s --format=%cI HEAD)")
+          RELEASE_LABEL=$(node -e 'process.stdout.write(process.argv[1].toLowerCase().replace(/[^a-z0-9_-]/g, "-"))' "$VERSION")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "built-at=$RELEASE_BUILT_AT" >> "$GITHUB_OUTPUT"
+          echo "release-label=$RELEASE_LABEL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy stable Cloud Run revision from exact source
+        env:
+          SOURCE_DIR: ${{ runner.temp }}/semiotic-cloud-run-source
+          VERSION: ${{ steps.deployment.outputs.version }}
+          RELEASE_SHA: ${{ steps.deployment.outputs.sha }}
+          RELEASE_BUILT_AT: ${{ steps.deployment.outputs.built-at }}
+          RELEASE_LABEL: ${{ steps.deployment.outputs.release-label }}
+        run: |
+          gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --source "$SOURCE_DIR" \
+            --project "$CLOUD_RUN_PROJECT" \
+            --region "$CLOUD_RUN_REGION" \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --quiet \
+            --update-labels "commit-sha=${RELEASE_SHA},managed-by=github-release,release-version=${RELEASE_LABEL}" \
+            --remove-labels "gcb-build-id,gcb-trigger-id,gcb-trigger-region" \
+            --update-env-vars "MCP_ALLOWED_HOSTS=${CLOUD_RUN_HOST},SEMIOTIC_DEPLOYMENT_CHANNEL=stable,SEMIOTIC_GIT_SHA=${RELEASE_SHA},SEMIOTIC_BUILD_ID=release-v${VERSION},SEMIOTIC_BUILD_TIME=${RELEASE_BUILT_AT}"
+
+          DEPLOYED_URL=$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --project "$CLOUD_RUN_PROJECT" \
+            --region "$CLOUD_RUN_REGION" \
+            --format='value(status.url)')
+          test "$DEPLOYED_URL" = "https://${CLOUD_RUN_HOST}" || {
+            echo "Cloud Run returned unexpected stable URL: $DEPLOYED_URL"
+            exit 1
+          }
+
+  verify-stable-mcp:
+    name: Verify stable MCP release identity
+    needs: [publish, deploy-stable-mcp]
+    if: needs.publish.outputs.dist_tag == 'latest'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+
+      - name: Require live stable health and MCP identity to match the release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_SHA=$(git rev-parse HEAD)
+          node scripts/smoke-hosted-mcp.mjs \
+            --endpoint https://semiotic-mcp-server-481507046413.us-west1.run.app \
+            --expected-channel stable \
+            --expected-package-version "$VERSION" \
+            --expected-sha "$RELEASE_SHA" \
+            --expected-build-id "release-v${VERSION}" \
+            --timeout-ms 300000
 
   publish-mcp-registry:
     name: Publish exact MCP Registry metadata
-    needs: publish
+    needs: [publish, verify-stable-mcp]
+    if: needs.publish.outputs.dist_tag == 'latest'
     permissions:
       contents: read
       id-token: write

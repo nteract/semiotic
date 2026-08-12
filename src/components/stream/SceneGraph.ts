@@ -418,9 +418,9 @@ export function buildHeatcellNode(
   options?: { value?: number; showValues?: boolean; valueFormat?: (v: number) => string }
 ): HeatcellSceneNode {
   const node: HeatcellSceneNode = { type: "heatcell", x, y, w, h, fill, datum }
+  if (options?.value !== undefined) node.value = options.value
   if (options?.showValues) {
     node.showValues = true
-    node.value = options.value
     if (options.valueFormat) node.valueFormat = options.valueFormat
   }
   return node

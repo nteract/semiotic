@@ -5,6 +5,7 @@ import type {
   Style
 } from "./types"
 import type { SceneRenderDatum } from "./sceneRenderBackendTypes"
+import { withSceneMarkCursor } from "./sceneCursor"
 
 type SceneLike = {
   type?: string
@@ -96,6 +97,41 @@ export function paintSceneWithBackend<Node extends SceneLike>(args: {
   flushFallback()
 }
 
+interface RenderedSceneResult {
+  element: React.ReactNode
+  renderedByBackend: boolean
+}
+
+function renderSceneWithBackendResult<Node extends SceneLike>(args: {
+  node: Node
+  index: number
+  renderMode: SceneRenderMode<Node> | undefined
+  fallback: () => React.ReactNode
+}): RenderedSceneResult {
+  const { node, index, renderMode, fallback } = args
+  const backend = resolveSceneRenderBackend(renderMode, node)
+  if (!backend) return { element: fallback(), renderedByBackend: false }
+
+  const rendered = backend.renderStaticSVG({
+    node,
+    style: node.style ?? {},
+    key: `${backend.id}-${index}`
+  })
+  if (rendered != null) {
+    return {
+      element: withSceneMarkCursor(
+        rendered,
+        node,
+        `${backend.id}-${index}-cursor`
+      ),
+      renderedByBackend: true
+    }
+  }
+
+  warnFallback(backend.id, node.type ?? "unknown")
+  return { element: fallback(), renderedByBackend: false }
+}
+
 /** Try a backend for SSR/static SVG, then invoke the existing converter. */
 export function renderSceneWithBackend<Node extends SceneLike>(args: {
   node: Node
@@ -103,24 +139,14 @@ export function renderSceneWithBackend<Node extends SceneLike>(args: {
   renderMode: SceneRenderMode<Node> | undefined
   fallback: () => React.ReactNode
 }): React.ReactNode {
-  const { node, index, renderMode, fallback } = args
-  const backend = resolveSceneRenderBackend(renderMode, node)
-  if (!backend) return fallback()
-
-  const rendered = backend.renderStaticSVG({
-    node,
-    style: node.style ?? {},
-    key: `${backend.id}-${index}`
-  })
-  if (rendered != null) return rendered
-
-  warnFallback(backend.id, node.type ?? "unknown")
-  return fallback()
+  return renderSceneWithBackendResult(args).element
 }
 
 export interface RenderedSceneEntry<Node> {
   node: Node
   element: React.ReactNode
+  index: number
+  renderedByBackend: boolean
 }
 
 /**
@@ -135,14 +161,14 @@ export function renderSceneListWithBackend<Node extends SceneLike>(args: {
 }): RenderedSceneEntry<Node>[] {
   const entries: RenderedSceneEntry<Node>[] = []
   args.nodes.forEach((node, index) => {
-    const element = renderSceneWithBackend({
+    const result = renderSceneWithBackendResult({
       node,
       index,
       renderMode: args.renderMode,
       fallback: () => args.fallback(node, index),
     })
-    if (element !== null && element !== undefined && element !== false) {
-      entries.push({ node, element })
+    if (result.element !== null && result.element !== undefined && result.element !== false) {
+      entries.push({ node, index, ...result })
     }
   })
   return entries

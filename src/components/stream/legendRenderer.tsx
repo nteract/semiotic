@@ -105,6 +105,11 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
             config={legend.gradient}
             orientation={isHorizontal ? "horizontal" : "vertical"}
             width={legendWidth}
+            customHoverBehavior={legendHoverBehavior}
+            customClickBehavior={legendClickBehavior}
+            highlightedCategory={legendHighlightedCategory}
+            isolatedCategories={legendIsolatedCategories}
+            legendInteraction={legendInteraction}
           />
         : isLegendConfig(legend)
         ? <Legend

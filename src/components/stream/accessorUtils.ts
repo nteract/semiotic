@@ -61,7 +61,7 @@ export function resolveStringAccessor<T extends Record<string, unknown>>(
   accessor: string | ((d: T) => string) | undefined,
   fallback?: string
 ): ((d: T) => string) | undefined {
-  if (typeof accessor === "function") return accessor
+  if (typeof accessor === "function") return (d: T) => String(accessor(d))
   if (accessor) return (d: T) => String(d[accessor])
   if (fallback) return (d: T) => String(d[fallback])
   return undefined

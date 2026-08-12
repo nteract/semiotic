@@ -83,9 +83,9 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function computeExtent(
-  data: Datum[],
-  accessor: ChartAccessor<Datum, number>
+function computeExtent<TDatum extends Datum>(
+  data: TDatum[],
+  accessor: ChartAccessor<TDatum, number>
 ): [number, number] {
   let min = Infinity
   let max = -Infinity
@@ -627,6 +627,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       onObservation,
       onClick,
       hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,

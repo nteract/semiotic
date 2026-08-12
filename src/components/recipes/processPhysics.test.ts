@@ -10,9 +10,9 @@ import {
   processLaneWalls,
   processStageLayout,
   processStageRegions,
-  routeSurfaceRegion,
-  stageTargetInVolume
+  routeSurfaceRegion
 } from "./processPhysics"
+import { stageTargetInVolume } from "./processVolumeGeometry"
 
 describe("processStageLayout", () => {
   it("builds equal stage bands for a lane volume", () => {

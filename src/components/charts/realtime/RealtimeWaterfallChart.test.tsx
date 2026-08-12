@@ -70,4 +70,18 @@ describe("RealtimeWaterfallChart", () => {
     )
     expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
+
+  it("renders the positive/negative legend when requested", () => {
+    const { getByText } = render(
+      <TooltipProvider>
+        <RealtimeWaterfallChart
+          data={[{ time: 1, value: 50 }, { time: 2, value: -30 }]}
+          showLegend
+          legendInteraction="isolate"
+        />
+      </TooltipProvider>
+    )
+    expect(getByText("Positive")).toBeTruthy()
+    expect(getByText("Negative")).toBeTruthy()
+  })
 })

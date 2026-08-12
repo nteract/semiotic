@@ -12,8 +12,17 @@ import type { PointSceneNode, GlyphSceneNode } from "./types"
 import type { GeoSceneNode, GeoAreaSceneNode } from "./geoTypes"
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
 import { svgFill, glyphNodeToSVG } from "./sceneToSVGShared"
+import { withSceneMarkCursor } from "./sceneCursor"
 
 export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNode {
+  return withSceneMarkCursor(
+    geoSceneNodeToSVGMark(node, i),
+    node,
+    `geo-cursor-${i}`
+  )
+}
+
+function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
   switch (node.type) {
     case "geoarea": {
       const n = node as GeoAreaSceneNode
@@ -29,7 +38,7 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
             fill={hatch ? `url(#geoarea-${i}-hatch)` : svgFill(n.style.fill, "#e0e0e0")}
             fillOpacity={n.style.fillOpacity ?? 1}
             stroke={n.style.stroke || "none"}
-            strokeWidth={n.style.strokeWidth || 0.5}
+            strokeWidth={n.style.strokeWidth ?? 0.5}
             strokeDasharray={n.style.strokeDasharray}
             opacity={n._decayOpacity ?? 1}
           />
@@ -65,7 +74,7 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
           d={d}
           fill="none"
           stroke={n.style.stroke || "#4e79a7"}
-          strokeWidth={n.style.strokeWidth || 1.5}
+          strokeWidth={n.style.strokeWidth ?? 1.5}
           strokeDasharray={n.style.strokeDasharray}
           opacity={n.style.opacity ?? 1}
         />

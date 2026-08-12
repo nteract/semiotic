@@ -14,11 +14,10 @@
  *      outside chartSpecs must appear in the explicit server-only
  *      allowlist below.
  *
- *   2. `supportsPush: true` ↔ HOC source imports
- *      `useFrameImperativeHandle` (or a documented exemption tag in
- *      `specialFeatures`). The shared imperative-handle hook is the
- *      standardized push-API surface; charts claiming push support
- *      without it would expose an inconsistent ref API.
+ *   2. `supportsPush: true` ↔ HOC source invokes a recognized imperative
+ *      handle bridge. This includes the canonical shared realtime helper;
+ *      charts claiming push support without a real invocation would expose
+ *      an inconsistent ref API.
  *
  *   3. Physics `supportsSelection` ↔ a direct `usePhysicsSelection` call.
  *
@@ -38,6 +37,10 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { parseCapabilityMatrix } from "./lib/capabilityMatrix.mjs"
+import {
+  PUSH_HANDLE_CALLEES,
+  sourceWiresPushHandle,
+} from "./lib/capabilitySourceChecks.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -124,9 +127,9 @@ const SERVER_CONFIG_ONLY = new Map([
 
 // ── Index HOC source files for the push-API gate ───────────────────
 //
-// `supportsPush: true` charts must import the shared
-// `useFrameImperativeHandle` hook. Read each HOC's source and grep
-// for the import; charts claiming push without the hook fail.
+// `supportsPush: true` charts must invoke one of the narrowly recognized
+// imperative-handle bridges. Read each HOC's source and check for the call;
+// importing a helper without invoking it does not satisfy the gate.
 const HOC_DIRS = ["xy", "ordinal", "network", "geo", "realtime", "physics"]
 const hocSources = new Map()
 for (const dir of HOC_DIRS) {
@@ -198,6 +201,8 @@ for (const e of specEntries) {
   //   - `useProcessSankeyPush` — ProcessSankey's edge/node push buffer
   //     (extracts useFrameImperativeHandle into a co-located hook so
   //     the HOC source stays under the file-size budget).
+  //   - `useRealtimeFrameHandle` — the canonical ref bridge shared by
+  //     realtime HOCs that do not need a chart-specific handle extension.
   // The shared hooks are preferred; the raw call is the fallback for
   // charts whose ref API legitimately needs custom plumbing. All
   // signal that the chart exposes a working `ref.current.push`.
@@ -226,16 +231,10 @@ for (const e of specEntries) {
       // Couldn't find the HOC source — skip rather than false-positive.
       continue
     }
-    const importsPushHook =
-      /\buseFrameImperativeHandle\b/.test(source) ||
-      /\buseOrdinalStreaming\b/.test(source) ||
-      /\busePhysicsHocHandle\b/.test(source) ||
-      /\buseProcessSankeyPush\b/.test(source) ||
-      /\buseImperativeHandle\(/.test(source)
-    if (!importsPushHook) {
+    if (!sourceWiresPushHandle(source)) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsPush=true but does not wire a push handle ` +
-        `(useFrameImperativeHandle, useOrdinalStreaming, useProcessSankeyPush, or a raw useImperativeHandle call). ` +
+        `(${PUSH_HANDLE_CALLEES.join(", ")}). ` +
         `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`,
       )
     }

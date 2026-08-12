@@ -73,6 +73,86 @@ describe("isometricLandmarkLayout", () => {
     expect(result.restyle).toBeTypeOf("function")
   })
 
+  it("ignores inherited and malformed terrain, sprite, and enum values", () => {
+    const terrainByCell = Object.create({
+      "tile-0-0": { kind: "ocean" }
+    }) as Record<string, unknown>
+    terrainByCell["tile-0-1"] = "constructor"
+    terrainByCell["tile-0-2"] = {
+      kind: "forest",
+      coverage: 2,
+      fill: { malformed: true }
+    }
+    const terrainPalette = Object.create({
+      forest: "#inherited-forest"
+    }) as Record<string, unknown>
+    terrainPalette.forest = 42
+    const sprites = Object.create({
+      city: "https://example.com/inherited-city.png"
+    }) as Record<string, unknown>
+    sprites.monument = { malformed: true }
+
+    const result = isometricLandmarkLayout({
+      areas: [],
+      points,
+      lines: [],
+      scales: {
+        projection: geoEquirectangular(),
+        geoPath: geoPath(geoEquirectangular()),
+        projectedPoint: () => [0, 0],
+        invertedPoint: () => [0, 0]
+      },
+      dimensions: {
+        width: 500,
+        height: 320,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        plot: { x: 0, y: 0, width: 500, height: 320 }
+      },
+      theme: { semantic: {}, categorical: [] },
+      resolveColor: () => "#000",
+      config: {
+        ...config,
+        gridSize: 3,
+        terrainByCell: terrainByCell as IsometricLandmarkConfig["terrainByCell"],
+        terrainPalette: terrainPalette as IsometricLandmarkConfig["terrainPalette"],
+        sprites: sprites as IsometricLandmarkConfig["sprites"]
+      },
+      selection: null
+    })
+
+    const nodeFor = (cellId: string) =>
+      result.nodes?.find(
+        (node) => node.type === "geoarea" && node.datum?.cellId === cellId
+      )
+    expect(nodeFor("tile-0-0")?.datum?.terrainKind).toBe("land")
+    expect(nodeFor("tile-0-1")?.datum?.terrainKind).toBe("land")
+    expect(nodeFor("tile-0-2")?.datum).toMatchObject({
+      terrainKind: "forest",
+      terrainCoverage: 1
+    })
+    expect(nodeFor("tile-0-2")?.style.fill).toBe("#4f7c4b")
+
+    const overlay = renderToStaticMarkup(<>{result.overlays}</>)
+    expect(overlay).not.toContain("inherited-city.png")
+    expect(overlay).not.toContain("#inherited-forest")
+    expect(overlay).not.toContain("<image")
+
+    const malformedKind = selectIsometricLandmarks(
+      [
+        {
+          id: "special",
+          name: "Special",
+          kind: "__proto__",
+          ...center
+        }
+      ],
+      { ...config, centerId: "special", gridSize: 3 }
+    )
+    expect(malformedKind.find((tile) => tile.landmark)?.landmark?.kind).toBe(
+      "monument"
+    )
+  })
+
   it("retains every feature in a cell and renders an additional-count badge", () => {
     const crowdedPoints = [
       points[0],

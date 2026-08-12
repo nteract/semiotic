@@ -21,7 +21,10 @@ import StreamPhysicsFrame, {
   type StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsFrame"
 import { TooltipRoot } from "../../Tooltip/Tooltip"
-import { resolvePhysicsTooltipProps } from "./physicsHocUtils"
+import {
+  resolvePhysicsTooltipProps,
+  usePhysicsResponsiveSize
+} from "./physicsHocUtils"
 import {
   calculateBlockerAmplification,
   compileDependencyMachine,
@@ -50,21 +53,9 @@ import {
   type RuntimeState
 } from "./chainReactionRuntime"
 import { ChainReactionOverlay } from "./chainReactionOverlay"
+import { ChainReactionAccessibleTable } from "./chainReactionAccessibleTable"
 
 export type * from "./chainReactionTypes"
-
-const hiddenTableStyle: React.CSSProperties = {
-  border: 0,
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
-  height: 1,
-  margin: -1,
-  overflow: "hidden",
-  padding: 0,
-  position: "absolute",
-  whiteSpace: "nowrap",
-  width: 1
-}
 
 /**
  * Physics-backed dependency chart whose settled reading exposes task state and each blocker's downstream reach.
@@ -123,8 +114,8 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     onObservation,
     reducedMotion,
     seed = 31,
-    width = 920,
-    height = 620,
+    width: widthProp = 920,
+    height: heightProp = 620,
     responsiveWidth,
     responsiveHeight,
     title = "Dependency chain reaction",
@@ -133,6 +124,16 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     accessibleTable = true,
     enableHover = true
   } = props
+  const baseSize = useMemo<[number, number]>(
+    () => [widthProp, heightProp],
+    [heightProp, widthProp]
+  )
+  const responsiveLayout = usePhysicsResponsiveSize(
+    baseSize,
+    responsiveWidth,
+    responsiveHeight
+  )
+  const [width, height] = responsiveLayout.size
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const [internalSelection, setInternalSelection] = useState<string[]>([])
   const selectedTaskIDs = controlledSelection
@@ -143,20 +144,21 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
   const reduced = reducedMotion === "settle"
 
   const machine = useMemo(
-    () => compileDependencyMachine({
-      data,
-      taskIDAccessor,
-      labelAccessor,
-      laneAccessor,
-      dependencyAccessor,
-      startAccessor,
-      endAccessor,
-      progressAccessor,
-      statusAccessor,
-      completionTimeAccessor,
-      blockerAccessor,
-      milestoneAccessor
-    }),
+    () =>
+      compileDependencyMachine({
+        data,
+        taskIDAccessor,
+        labelAccessor,
+        laneAccessor,
+        dependencyAccessor,
+        startAccessor,
+        endAccessor,
+        progressAccessor,
+        statusAccessor,
+        completionTimeAccessor,
+        blockerAccessor,
+        milestoneAccessor
+      }),
     [
       data,
       taskIDAccessor,
@@ -195,99 +197,119 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     frameRef.current?.clear()
     runtimeRef.current = next
     setRuntime(next)
-  }, [machine, mode, now, reduced])
+  }, [layout, machine, mode, now, reduced])
 
-  const selectTask = useCallback((taskID: string) => {
-    const next = selectedSet.has(taskID)
-      ? selectedTaskIDs.filter((id) => id !== taskID)
-      : [taskID]
-    if (!controlledSelection) setInternalSelection(next)
-    onSelectionChange?.(next)
-  }, [controlledSelection, onSelectionChange, selectedSet, selectedTaskIDs])
+  const selectTask = useCallback(
+    (taskID: string) => {
+      const next = selectedSet.has(taskID)
+        ? selectedTaskIDs.filter((id) => id !== taskID)
+        : [taskID]
+      if (!controlledSelection) setInternalSelection(next)
+      onSelectionChange?.(next)
+    },
+    [controlledSelection, onSelectionChange, selectedSet, selectedTaskIDs]
+  )
 
-  const releaseOutgoing = useCallback((taskID: string) => {
-    if (reduced) return
-    const current = copyRuntime(runtimeRef.current)
-    const spawns: PhysicsQueuedSpawn[] = []
-    for (const edge of machine.outgoing.get(taskID) ?? []) {
-      if (current.delivered.has(edge.id) || current.inFlight.has(edge.id)) continue
-      const route = layout.routeByEdgeID.get(edge.id)
-      if (!route) continue
-      current.inFlight.add(edge.id)
-      spawns.push(ballSpawn(edge, route, machine.byID.get(edge.sourceID)?.datum))
-    }
-    if (spawns.length) {
-      commitRuntime(current)
-      frameRef.current?.pushMany(spawns, { pacing: { ratePerSec: 8 } })
-    }
-  }, [commitRuntime, layout, machine, reduced])
-
-  const performComplete = useCallback((taskID: string, completedAt?: number) => {
-    const node = machine.byID.get(taskID)
-    const current = runtimeRef.current
-    if (!node || current.completed.has(taskID)) return
-    const next = copyRuntime(current)
-    next.completed.add(taskID)
-    next.blockers.delete(taskID)
-    next.armed.add(taskID)
-    if (completedAt != null) next.currentTime = completedAt
-    commitRuntime(next)
-    emit({ type: "task-completed", taskID, datum: node.datum })
-    releaseOutgoing(taskID)
-  }, [commitRuntime, emit, machine, releaseOutgoing])
-
-  const deliverEdges = useCallback((edgeIDs: readonly string[]) => {
-    const current = runtimeRef.current
-    const next = copyRuntime(current)
-    const newlyDelivered: DependencyMachineEdge[] = []
-    const newlyArmed: string[] = []
-    for (const edgeID of edgeIDs) {
-      if (next.delivered.has(edgeID)) continue
-      const edge = machine.edges.find((candidate) => candidate.id === edgeID)
-      if (!edge) continue
-      next.delivered.add(edgeID)
-      next.inFlight.delete(edgeID)
-      newlyDelivered.push(edge)
-    }
-    for (const edge of newlyDelivered) {
-      const target = machine.byID.get(edge.targetID)
-      if (!target || next.blockers.has(target.id) || next.armed.has(target.id)) continue
-      const incoming = machine.incoming.get(target.id) ?? []
-      if (incoming.every((candidate) => next.delivered.has(candidate.id))) {
-        next.armed.add(target.id)
-        newlyArmed.push(target.id)
+  const releaseOutgoing = useCallback(
+    (taskID: string) => {
+      if (reduced) return
+      const current = copyRuntime(runtimeRef.current)
+      const spawns: PhysicsQueuedSpawn[] = []
+      for (const edge of machine.outgoing.get(taskID) ?? []) {
+        if (current.delivered.has(edge.id) || current.inFlight.has(edge.id))
+          continue
+        const route = layout.routeByEdgeID.get(edge.id)
+        if (!route) continue
+        current.inFlight.add(edge.id)
+        spawns.push(
+          ballSpawn(edge, route, machine.byID.get(edge.sourceID)?.datum)
+        )
       }
-    }
-    if (!newlyDelivered.length) return
-    commitRuntime(next)
-    for (const edge of newlyDelivered) {
-      emit({
-        type: "dependency-delivered",
-        sourceID: edge.sourceID,
-        targetID: edge.targetID
-      })
-    }
-    for (const taskID of newlyArmed) emit({ type: "task-armed", taskID })
-  }, [commitRuntime, emit, machine])
-
-  const handleTick = useCallback((
-    _result: unknown,
-    controlsSurface: PhysicsPipelineControlSurface
-  ) => {
-    const arrived: string[] = []
-    const removeIDs: string[] = []
-    for (const body of controlsSurface.readBodies()) {
-      const datum = dependencyBallDatum(body)
-      if (!datum || runtimeRef.current.delivered.has(datum.edgeID)) continue
-      const end = datum.route[datum.route.length - 1]
-      if (end && Math.hypot(body.x - end.x, body.y - end.y) <= 9) {
-        arrived.push(datum.edgeID)
-        removeIDs.push(body.id)
+      if (spawns.length) {
+        commitRuntime(current)
+        frameRef.current?.pushMany(spawns, { pacing: { ratePerSec: 8 } })
       }
-    }
-    if (removeIDs.length) controlsSurface.remove(removeIDs)
-    if (arrived.length) deliverEdges(arrived)
-  }, [deliverEdges])
+    },
+    [commitRuntime, layout, machine, reduced]
+  )
+
+  const performComplete = useCallback(
+    (taskID: string, completedAt?: number) => {
+      const node = machine.byID.get(taskID)
+      const current = runtimeRef.current
+      if (!node || current.completed.has(taskID)) return
+      const next = copyRuntime(current)
+      next.completed.add(taskID)
+      next.blockers.delete(taskID)
+      next.armed.add(taskID)
+      if (completedAt != null) next.currentTime = completedAt
+      commitRuntime(next)
+      emit({ type: "task-completed", taskID, datum: node.datum })
+      releaseOutgoing(taskID)
+    },
+    [commitRuntime, emit, machine, releaseOutgoing]
+  )
+
+  const deliverEdges = useCallback(
+    (edgeIDs: readonly string[]) => {
+      const current = runtimeRef.current
+      const next = copyRuntime(current)
+      const newlyDelivered: DependencyMachineEdge[] = []
+      const newlyArmed: string[] = []
+      for (const edgeID of edgeIDs) {
+        if (next.delivered.has(edgeID)) continue
+        const edge = machine.edges.find((candidate) => candidate.id === edgeID)
+        if (!edge) continue
+        next.delivered.add(edgeID)
+        next.inFlight.delete(edgeID)
+        newlyDelivered.push(edge)
+      }
+      for (const edge of newlyDelivered) {
+        const target = machine.byID.get(edge.targetID)
+        if (
+          !target ||
+          next.blockers.has(target.id) ||
+          next.armed.has(target.id)
+        )
+          continue
+        const incoming = machine.incoming.get(target.id) ?? []
+        if (incoming.every((candidate) => next.delivered.has(candidate.id))) {
+          next.armed.add(target.id)
+          newlyArmed.push(target.id)
+        }
+      }
+      if (!newlyDelivered.length) return
+      commitRuntime(next)
+      for (const edge of newlyDelivered) {
+        emit({
+          type: "dependency-delivered",
+          sourceID: edge.sourceID,
+          targetID: edge.targetID
+        })
+      }
+      for (const taskID of newlyArmed) emit({ type: "task-armed", taskID })
+    },
+    [commitRuntime, emit, machine]
+  )
+
+  const handleTick = useCallback(
+    (_result: unknown, controlsSurface: PhysicsPipelineControlSurface) => {
+      const arrived: string[] = []
+      const removeIDs: string[] = []
+      for (const body of controlsSurface.readBodies()) {
+        const datum = dependencyBallDatum(body)
+        if (!datum || runtimeRef.current.delivered.has(datum.edgeID)) continue
+        const end = datum.route[datum.route.length - 1]
+        if (end && Math.hypot(body.x - end.x, body.y - end.y) <= 9) {
+          arrived.push(datum.edgeID)
+          removeIDs.push(body.id)
+        }
+      }
+      if (removeIDs.length) controlsSurface.remove(removeIDs)
+      if (arrived.length) deliverEdges(arrived)
+    },
+    [deliverEdges]
+  )
 
   const settle = useCallback(() => {
     const next = copyRuntime(runtimeRef.current)
@@ -295,7 +317,12 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
       if (next.completed.has(edge.sourceID)) next.delivered.add(edge.id)
     }
     next.inFlight.clear()
-    next.armed = resolvedArmed(machine, next.delivered, next.blockers, next.completed)
+    next.armed = resolvedArmed(
+      machine,
+      next.delivered,
+      next.blockers,
+      next.completed
+    )
     next.playing = false
     frameRef.current?.settle()
     commitRuntime(next)
@@ -325,9 +352,11 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     }
     pause()
     const blockers = [...current.blockers.keys()]
-      .map((taskID) => calculateBlockerAmplification(machine, taskID, {
-        completedTaskIDs: current.completed
-      }))
+      .map((taskID) =>
+        calculateBlockerAmplification(machine, taskID, {
+          completedTaskIDs: current.completed
+        })
+      )
       .sort(
         (a, b) =>
           b.affectedLaneCount - a.affectedLaneCount ||
@@ -364,20 +393,23 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     commitRuntime(initialRuntime(machine, mode, now, reduced))
   }, [commitRuntime, machine, mode, now, reduced])
 
-  const previewResolve = useCallback((taskID: string) => {
-    if (!machine.byID.has(taskID)) return
-    const next = copyRuntime(runtimeRef.current)
-    next.previewTaskID = taskID
-    commitRuntime(next)
-    const amplification = calculateBlockerAmplification(machine, taskID, {
-      completedTaskIDs: next.completed
-    })
-    emit({
-      type: "blocker-previewed",
-      blockerID: taskID,
-      downstreamTaskIDs: amplification.downstreamTaskIDs
-    })
-  }, [commitRuntime, emit, machine])
+  const previewResolve = useCallback(
+    (taskID: string) => {
+      if (!machine.byID.has(taskID)) return
+      const next = copyRuntime(runtimeRef.current)
+      next.previewTaskID = taskID
+      commitRuntime(next)
+      const amplification = calculateBlockerAmplification(machine, taskID, {
+        completedTaskIDs: next.completed
+      })
+      emit({
+        type: "blocker-previewed",
+        blockerID: taskID,
+        downstreamTaskIDs: amplification.downstreamTaskIDs
+      })
+    },
+    [commitRuntime, emit, machine]
+  )
 
   const clearPreview = useCallback(() => {
     const next = copyRuntime(runtimeRef.current)
@@ -385,29 +417,38 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     commitRuntime(next)
   }, [commitRuntime])
 
-  const blockTask = useCallback((taskID: string, reason: string) => {
-    if (!machine.byID.has(taskID)) return
-    const next = copyRuntime(runtimeRef.current)
-    next.blockers.set(taskID, reason)
-    next.armed.delete(taskID)
-    commitRuntime(next)
-  }, [commitRuntime, machine])
+  const blockTask = useCallback(
+    (taskID: string, reason: string) => {
+      if (!machine.byID.has(taskID)) return
+      const next = copyRuntime(runtimeRef.current)
+      next.blockers.set(taskID, reason)
+      next.armed.delete(taskID)
+      commitRuntime(next)
+    },
+    [commitRuntime, machine]
+  )
 
-  const unblockTask = useCallback((taskID: string) => {
-    if (!machine.byID.has(taskID)) return
-    const next = copyRuntime(runtimeRef.current)
-    next.blockers.delete(taskID)
-    const incoming = machine.incoming.get(taskID) ?? []
-    if (incoming.every((edge) => next.delivered.has(edge.id))) {
-      next.armed.add(taskID)
-    }
-    commitRuntime(next)
-  }, [commitRuntime, machine])
+  const unblockTask = useCallback(
+    (taskID: string) => {
+      if (!machine.byID.has(taskID)) return
+      const next = copyRuntime(runtimeRef.current)
+      next.blockers.delete(taskID)
+      const incoming = machine.incoming.get(taskID) ?? []
+      if (incoming.every((edge) => next.delivered.has(edge.id))) {
+        next.armed.add(taskID)
+      }
+      commitRuntime(next)
+    },
+    [commitRuntime, machine]
+  )
 
-  const getAmplification = useCallback((taskID: string) =>
-    calculateBlockerAmplification(machine, taskID, {
-      completedTaskIDs: runtimeRef.current.completed
-    }), [machine])
+  const getAmplification = useCallback(
+    (taskID: string) =>
+      calculateBlockerAmplification(machine, taskID, {
+        completedTaskIDs: runtimeRef.current.completed
+      }),
+    [machine]
+  )
 
   const getMachineState = useCallback((): ChainReactionMachineState => {
     const current = runtimeRef.current
@@ -436,33 +477,37 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     }
   }, [machine, selectedTaskIDs])
 
-  useImperativeHandle(ref, () => ({
-    play,
-    pause,
-    step,
-    reset,
-    settle,
-    previewResolve,
-    clearPreview,
-    completeTask: performComplete,
-    blockTask,
-    unblockTask,
-    getAmplification,
-    getMachineState
-  }), [
-    blockTask,
-    clearPreview,
-    getAmplification,
-    getMachineState,
-    pause,
-    performComplete,
-    play,
-    previewResolve,
-    reset,
-    settle,
-    step,
-    unblockTask
-  ])
+  useImperativeHandle(
+    ref,
+    () => ({
+      play,
+      pause,
+      step,
+      reset,
+      settle,
+      previewResolve,
+      clearPreview,
+      completeTask: performComplete,
+      blockTask,
+      unblockTask,
+      getAmplification,
+      getMachineState
+    }),
+    [
+      blockTask,
+      clearPreview,
+      getAmplification,
+      getMachineState,
+      pause,
+      performComplete,
+      play,
+      previewResolve,
+      reset,
+      settle,
+      step,
+      unblockTask
+    ]
+  )
 
   const selectedInsightID = runtime.previewTaskID ?? selectedTaskIDs[0] ?? null
   const amplification = selectedInsightID
@@ -510,9 +555,11 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
 
   const blockerSummary = useMemo(() => {
     const blockerInsights = [...runtime.blockers.keys()]
-      .map((taskID) => calculateBlockerAmplification(machine, taskID, {
-        completedTaskIDs: runtime.completed
-      }))
+      .map((taskID) =>
+        calculateBlockerAmplification(machine, taskID, {
+          completedTaskIDs: runtime.completed
+        })
+      )
       .sort(
         (a, b) =>
           b.affectedLaneCount - a.affectedLaneCount ||
@@ -527,43 +574,89 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
       .join(" ")
   }, [machine, runtime.blockers, runtime.completed])
 
-  const colliders = useMemo<PhysicsColliderSpec[]>(() => [
-    { id: "chain-left", shape: { type: "segment", x1: 2, y1: 0, x2: 2, y2: height, thickness: 4 } },
-    { id: "chain-right", shape: { type: "segment", x1: width - 2, y1: 0, x2: width - 2, y2: height, thickness: 4 } },
-    { id: "chain-top", shape: { type: "segment", x1: 0, y1: 2, x2: width, y2: 2, thickness: 4 } },
-    { id: "chain-bottom", shape: { type: "segment", x1: 0, y1: height - 2, x2: width, y2: height - 2, thickness: 4 } }
-  ], [height, width])
+  const colliders = useMemo<PhysicsColliderSpec[]>(
+    () => [
+      {
+        id: "chain-left",
+        shape: {
+          type: "segment",
+          x1: 2,
+          y1: 0,
+          x2: 2,
+          y2: height,
+          thickness: 4
+        }
+      },
+      {
+        id: "chain-right",
+        shape: {
+          type: "segment",
+          x1: width - 2,
+          y1: 0,
+          x2: width - 2,
+          y2: height,
+          thickness: 4
+        }
+      },
+      {
+        id: "chain-top",
+        shape: { type: "segment", x1: 0, y1: 2, x2: width, y2: 2, thickness: 4 }
+      },
+      {
+        id: "chain-bottom",
+        shape: {
+          type: "segment",
+          x1: 0,
+          y1: height - 2,
+          x2: width,
+          y2: height - 2,
+          thickness: 4
+        }
+      }
+    ],
+    [height, width]
+  )
 
-  const controlList: readonly ChainReactionControl[] = controls === true
-    ? ["play", "pause", "step", "reset", "settle"]
-    : controls || []
+  const controlList: readonly ChainReactionControl[] =
+    controls === true
+      ? ["play", "pause", "step", "reset", "settle"]
+      : controls || []
 
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, undefined, {
     unwrapSourceDatum: true
   })
   const defaultTooltipContent = useCallback<
     NonNullable<StreamPhysicsFrameProps["tooltipContent"]>
-  >((hover) => {
-    const datum = hover.data as Datum
-    const sourceID = String(datum.sourceID ?? "")
-    const targetID = String(datum.targetID ?? "")
-    const source = machine.byID.get(sourceID)
-    const target = machine.byID.get(targetID)
-    return (
-      <TooltipRoot>
-        <div style={{ fontWeight: 700 }}>
-          {source?.label ?? sourceID} → {target?.label ?? targetID}
-        </div>
-        <div>Dependency in flight</div>
-        {target?.lane ? <div>Target lane: {target.lane}</div> : null}
-      </TooltipRoot>
-    )
-  }, [machine])
+  >(
+    (hover) => {
+      const datum = hover.data as Datum
+      const sourceID = String(datum.sourceID ?? "")
+      const targetID = String(datum.targetID ?? "")
+      const source = machine.byID.get(sourceID)
+      const target = machine.byID.get(targetID)
+      return (
+        <TooltipRoot>
+          <div style={{ fontWeight: 700 }}>
+            {source?.label ?? sourceID} → {target?.label ?? targetID}
+          </div>
+          <div>Dependency in flight</div>
+          {target?.lane ? <div>Target lane: {target.lane}</div> : null}
+        </TooltipRoot>
+      )
+    },
+    [machine]
+  )
 
   if (!machine.valid) {
     return (
-      <div className={className} role="alert" style={{ width, maxWidth: "100%" }}>
-        <strong>ChainReactionChart could not compile this dependency graph.</strong>
+      <div
+        className={className}
+        role="alert"
+        style={{ width, maxWidth: "100%" }}
+      >
+        <strong>
+          ChainReactionChart could not compile this dependency graph.
+        </strong>
         <ul>
           {machine.diagnostics.map((diagnostic, index) => (
             <li key={`${diagnostic.code}-${index}`}>{diagnostic.message}</li>
@@ -574,7 +667,14 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
   }
 
   return (
-    <div className={className} style={{ width, maxWidth: "100%", position: "relative" }}>
+    <div
+      className={className}
+      style={{
+        width: responsiveWidth ? "100%" : width,
+        maxWidth: "100%",
+        position: "relative"
+      }}
+    >
       {controlList.length > 0 && (
         <div
           aria-label="Chain reaction replay controls"
@@ -584,15 +684,17 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
             <button
               key={control}
               type="button"
-              onClick={control === "play"
-                ? play
-                : control === "pause"
-                  ? pause
-                  : control === "step"
-                    ? step
-                    : control === "reset"
-                      ? reset
-                      : settle}
+              onClick={
+                control === "play"
+                  ? play
+                  : control === "pause"
+                    ? pause
+                    : control === "step"
+                      ? step
+                      : control === "reset"
+                        ? reset
+                        : settle
+              }
               aria-pressed={control === "play" ? runtime.playing : undefined}
             >
               {control[0].toUpperCase() + control.slice(1)}
@@ -600,95 +702,85 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
           ))}
         </div>
       )}
-      <StreamPhysicsFrame
-        ref={frameRef}
-        size={[width, height]}
-        responsiveWidth={responsiveWidth}
-        responsiveHeight={responsiveHeight}
-        maxDevicePixelRatio={props.maxDevicePixelRatio}
-        title={title}
-        description={description ?? "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."}
-        summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}
-        accessibleTable={false}
-        enableHover={tooltipProps.enableHover ?? enableHover}
-        initialSpawns={EMPTY_SPAWNS}
-        bodyForces={dependencyBodyForce}
-        bodyStyle={{
-          fill: "var(--semiotic-primary, #f0a329)",
-          stroke: "var(--semiotic-text, #243039)",
-          strokeWidth: 1.25
+      <div
+        ref={responsiveLayout.containerRef}
+        data-semiotic-physics-responsive-host="true"
+        style={{
+          position: "relative",
+          width: responsiveWidth ? "100%" : width,
+          height: responsiveHeight ? "100%" : height
         }}
-        bodySemanticItems={false}
-        semanticItems={semanticItems}
-        onSemanticItemActivate={(item) => item.id && selectTask(item.id)}
-        foregroundGraphics={() => overlay}
-        paused={reduced}
-        continuous={runtime.inFlight.size > 0}
-        onTick={handleTick as never}
-        tooltipContent={
-          props.tooltip === false
-            ? undefined
-            : tooltipProps.tooltipContent ?? defaultTooltipContent
-        }
-        config={{
-          bodyLimit: Math.max(16, machine.edges.length + 4),
-          colliders,
-          settleStepLimit: 2200,
-          kernel: {
-            seed,
-            gravity: { x: 0, y: 7 },
-            fixedDt: 1 / 60,
-            cellSize: 28,
-            collisionIterations: 2,
-            velocityDamping: 0.992,
-            restitution: 0.02,
-            friction: 0.12,
-            maxVelocity: 150,
-            sleepSpeed: 1.1,
-            sleepAfter: 0.8
-          },
-          observation: {
-            chartType: "ChainReactionChart"
+      >
+        <StreamPhysicsFrame
+          key={`${width}x${height}`}
+          ref={frameRef}
+          size={[width, height]}
+          responsiveWidth={false}
+          responsiveHeight={false}
+          maxDevicePixelRatio={props.maxDevicePixelRatio}
+          title={title}
+          description={
+            description ??
+            "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."
           }
-        }}
-      />
+          summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}
+          accessibleTable={false}
+          enableHover={tooltipProps.enableHover ?? enableHover}
+          initialSpawns={EMPTY_SPAWNS}
+          bodyForces={dependencyBodyForce}
+          bodyStyle={{
+            fill: "var(--semiotic-primary, #f0a329)",
+            stroke: "var(--semiotic-text, #243039)",
+            strokeWidth: 1.25
+          }}
+          bodySemanticItems={false}
+          semanticItems={semanticItems}
+          onSemanticItemActivate={(item) => item.id && selectTask(item.id)}
+          foregroundGraphics={() => overlay}
+          paused={reduced}
+          continuous={runtime.inFlight.size > 0}
+          onTick={handleTick as never}
+          tooltipContent={
+            props.tooltip === false
+              ? undefined
+              : (tooltipProps.tooltipContent ?? defaultTooltipContent)
+          }
+          config={{
+            bodyLimit: Math.max(16, machine.edges.length + 4),
+            colliders,
+            settleStepLimit: 2200,
+            kernel: {
+              seed,
+              gravity: { x: 0, y: 7 },
+              fixedDt: 1 / 60,
+              cellSize: 28,
+              collisionIterations: 2,
+              velocityDamping: 0.992,
+              restitution: 0.02,
+              friction: 0.12,
+              maxVelocity: 150,
+              sleepSpeed: 1.1,
+              sleepAfter: 0.8
+            },
+            observation: {
+              chartType: "ChainReactionChart"
+            }
+          }}
+        />
+      </div>
       {accessibleTable && (
-        <table style={hiddenTableStyle}>
-          <caption>{blockerSummary}</caption>
-          <thead>
-            <tr>
-              <th>Task</th>
-              <th>Lane</th>
-              <th>Progress</th>
-              <th>State</th>
-              <th>Waiting on</th>
-              <th>Downstream reach</th>
-            </tr>
-          </thead>
-          <tbody>
-            {machine.nodes.map((node) => {
-              const nodeAmplification = calculateBlockerAmplification(machine, node.id, {
-                completedTaskIDs: runtime.completed
-              })
-              return (
-                <tr key={node.id}>
-                  <th scope="row">{node.label}</th>
-                  <td>{node.lane}</td>
-                  <td>{Math.round(node.progress * 100)}%</td>
-                  <td>{runtime.completed.has(node.id) ? "Completed" : runtime.blockers.has(node.id) ? "Blocked" : runtime.armed.has(node.id) ? "Armed" : "Waiting"}</td>
-                  <td>{runtime.blockers.get(node.id) ?? (node.dependencyIDs.filter((id) => !runtime.completed.has(id)).join(", ") || "None")}</td>
-                  <td>{nodeAmplification.downstreamTaskCount} tasks / {nodeAmplification.affectedLaneCount} lanes</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <ChainReactionAccessibleTable
+          blockerSummary={blockerSummary}
+          machine={machine}
+          runtime={runtime}
+        />
       )}
     </div>
   )
 }) as unknown as {
   <TDatum extends Datum = Datum>(
-    props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>
+    props: ChainReactionChartProps<TDatum> &
+      React.RefAttributes<ChainReactionChartHandle>
   ): React.ReactElement | null
   displayName?: string
 }

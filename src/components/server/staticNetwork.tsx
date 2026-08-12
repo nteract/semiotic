@@ -40,6 +40,7 @@ import {
   wrapSVG,
   edgeEndpointId
 } from "./staticSVGChrome"
+import { resolveFrameGraphics } from "../stream/frameGraphics"
 
 export function resolveAccessor(
   accessor: string | ((d: Datum) => DatumValue) | undefined,
@@ -71,18 +72,21 @@ export function buildRealtimeEdges(
   const sourceFn = resolveAccessor(config.sourceAccessor, "source")
   const targetFn = resolveAccessor(config.targetAccessor, "target")
   const valueFn = resolveAccessor(config.valueAccessor, "value")
-  return propsEdges.map((d) => ({
-    source: String(sourceFn(d)),
-    target: String(targetFn(d)),
-    value: Number(valueFn(d)) || 1,
-    y0: 0, y1: 0, sankeyWidth: 0, data: d
-  }))
+  return propsEdges.map((d) => {
+    const numericValue = Number(valueFn(d))
+    return {
+      source: String(sourceFn(d)),
+      target: String(targetFn(d)),
+      value: Number.isFinite(numericValue) ? numericValue : 1,
+      y0: 0, y1: 0, sankeyWidth: 0, data: d
+    }
+  })
 }
 
 // ── Network SSR ─────────────────────────────────────────────────────────
 
 const HIERARCHICAL_TYPES: Set<string> = new Set([
-  "tree", "cluster", "treemap", "circlepack", "partition"
+  "tree", "cluster", "treemap", "circlepack", "partition", "orbit"
 ])
 
 export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
@@ -136,12 +140,55 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   })
   const innerWidth = size[0] - margin.left - margin.right
   const innerHeight = size[1] - margin.top - margin.bottom
+  const resolvedBackgroundGraphics = resolveFrameGraphics(
+    props.backgroundGraphics,
+    size,
+    margin,
+    null
+  )
+  const resolvedForegroundGraphics = resolveFrameGraphics(
+    props.foregroundGraphics,
+    size,
+    margin,
+    null
+  )
+
+  const renderEmptyNetwork = () => {
+    if (sink) sink.evidence = emptyNetworkEvidence()
+    const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
+      ? (
+        <>
+          {resolvedBackgroundGraphics}
+          {props.annotations ? renderStaticAnnotations({
+            annotations: props.annotations,
+            autoPlaceAnnotations: props.autoPlaceAnnotations,
+            svgAnnotationRules: props.svgAnnotationRules,
+            scales: {},
+            layout: { width: innerWidth, height: innerHeight },
+            theme,
+            idPrefix: props._idPrefix,
+          }) : null}
+          {resolvedForegroundGraphics}
+        </>
+      )
+      : null
+    return ReactDOMServer.renderToStaticMarkup(
+      wrapSVG(emptyContent, {
+        width: size[0], height: size[1],
+        className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
+        title: props.title, description: props.description, background: props.background,
+        theme, innerTransform: `translate(${margin.left},${margin.top})`,
+        innerWidth, innerHeight,
+        idPrefix: props._idPrefix,
+      })
+    )
+  }
 
   const plugin = getLayoutPlugin(chartType)
   if (!plugin && !props.customNetworkLayout) {
     throw new Error(
       `No layout plugin found for chart type: "${chartType}". ` +
-      `Supported types: force, sankey, chord, tree, cluster, treemap, circlepack, partition.`
+      `Supported types: force, sankey, chord, tree, cluster, treemap, circlepack, partition, orbit.`
     )
   }
 
@@ -183,6 +230,14 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     colorByDepth: props.colorByDepth,
     nodeSize: props.nodeSize,
     nodeSizeRange: props.nodeSizeRange,
+    orbitMode: props.orbitMode,
+    orbitSize: props.orbitSize,
+    orbitSpeed: props.orbitSpeed,
+    orbitRevolution: props.orbitRevolution,
+    orbitRevolutionStyle: props.orbitRevolutionStyle,
+    orbitEccentricity: props.orbitEccentricity,
+    orbitShowRings: props.orbitShowRings,
+    orbitAnimated: false,
     // Forward the customLayout escape hatch + its layoutConfig so the
     // SSR path can dispatch through the same custom-layout shim the
     // CSR pipeline uses (consumed below in the customNetworkLayout
@@ -197,17 +252,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   if (HIERARCHICAL_TYPES.has(chartType)) {
     const hierarchyRoot = props.data || props.edges
     if (!hierarchyRoot || Array.isArray(hierarchyRoot)) {
-      if (sink) sink.evidence = emptyNetworkEvidence()
-      return ReactDOMServer.renderToStaticMarkup(
-        wrapSVG(null, {
-          width: size[0], height: size[1],
-          className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-          title: props.title, description: props.description, background: props.background,
-          theme, innerTransform: `translate(${margin.left},${margin.top})`,
-          innerWidth, innerHeight,
-        idPrefix: props._idPrefix,
-        })
-      )
+      return renderEmptyNetwork()
     }
     config.__hierarchyRoot = hierarchyRoot
     nodes = []
@@ -217,17 +262,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
 
     if (propsNodes.length === 0 && propsEdges.length === 0) {
-      if (sink) sink.evidence = emptyNetworkEvidence()
-      return ReactDOMServer.renderToStaticMarkup(
-        wrapSVG(null, {
-          width: size[0], height: size[1],
-          className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-          title: props.title, description: props.description, background: props.background,
-          theme, innerTransform: `translate(${margin.left},${margin.top})`,
-          innerWidth, innerHeight,
-        idPrefix: props._idPrefix,
-        })
-      )
+      return renderEmptyNetwork()
     }
 
     edges = buildRealtimeEdges(propsEdges, config)
@@ -397,12 +432,12 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
 
   const content = (
     <>
-      {props.backgroundGraphics}
+      {resolvedBackgroundGraphics}
       {edgeElements}
       {nodeElements}
       {labelElements}
       {annotationNodes}
-      {props.foregroundGraphics}
+      {resolvedForegroundGraphics}
       {/* customLayout-emitted overlays paint above the data layer,
           matching `NetworkSVGOverlay`'s `composeOverlays(foreground,
           customLayoutOverlays)` ordering on CSR. Without this, SSR

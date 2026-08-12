@@ -96,6 +96,18 @@ import {
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useNetworkObservationBehaviors } from "./networkFrameObservations"
 import { shouldContinueNetworkAnimation } from "./networkFrameAnimation"
+import { resolveFrameLayers } from "./frameGraphics"
+import {
+  sceneMarkCursor,
+  setCanvasMarkCursor,
+  useCanvasMarkCursorCleanup
+} from "./sceneCursor"
+import { shouldHandleFramePointer } from "./frameCursorInteraction"
+import {
+  refreshNetworkCursorInventory,
+  rehitNetworkFrameCursor,
+  type NetworkCursorInventory
+} from "./networkFrameCursorInteraction"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -233,8 +245,6 @@ const StreamNetworkFrame = memo(forwardRef<
     title,
     legend,
     legendPosition,
-    foregroundGraphics,
-    backgroundGraphics,
     animate,
     transitionProp,
     frameScheduler,
@@ -252,14 +262,13 @@ const StreamNetworkFrame = memo(forwardRef<
     margin,
     adjustedWidth,
     adjustedHeight,
-    resolvedForeground,
-    resolvedBackground,
     transition,
     introEnabled,
     tableId,
     rafRef, renderFnRef, scheduleRender, frameRuntime,
     currentTheme
   } = frame
+  const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: null, background, themeBackgroundColor: currentTheme.colors.background })
 
   // ── Hydration boundary ─────────────────────────────────────────────────
   // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
@@ -449,6 +458,10 @@ const StreamNetworkFrame = memo(forwardRef<
   pipelineConfigRef.current = stablePipelineConfig
 
   const hoverRef = useRef<typeof hoverData>(null)
+  const sceneCursorInventoryRef = useRef<NetworkCursorInventory>({
+    nodes: false,
+    edges: false
+  })
 
   // ── Color functions ──────────────────────────────────────────────────
 
@@ -499,6 +512,11 @@ const StreamNetworkFrame = memo(forwardRef<
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
       syncColorMap(store)
+      refreshNetworkCursorInventory(
+        sceneCursorInventoryRef.current,
+        store.sceneNodes,
+        store.sceneEdges
+      )
       dirtyRef.current = false
       store.markStylePaintPending()
     },
@@ -507,6 +525,22 @@ const StreamNetworkFrame = memo(forwardRef<
   const invalidateCanvasPaint = useCallback(() => {
     storeRef.current?.markStylePaintPending()
   }, [])
+  const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
+    hydrated,
+    wasHydratingFromSSR,
+    storeRef,
+    dirtyRef,
+    // The ingest/layout/theme effects build the scene synchronously and hand
+    // the paint loop a repaint-only signal (`rebuildSceneNow`). The default
+    // mount-time canvas invalidation would re-set `dirtyRef`, forcing the
+    // paint loop to rebuild the identical scene a second time (the duplicate
+    // `SceneRevisionDiagnostics` flagged). Later dependency changes still
+    // repaint, but geometry/dimensions have already rebuilt synchronously.
+    skipInitialCanvasPaintInvalidation: true,
+    canvasPaintInvalidator: invalidateCanvasPaint,
+    maxDevicePixelRatio,
+    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender]
+  })
 
   // Fallback color for edges/particles when no source or target is resolvable.
   // Chain mirrors the secondary→primary fallback used when building
@@ -1052,8 +1086,13 @@ const StreamNetworkFrame = memo(forwardRef<
   // ── Hover handlers ───────────────────────────────────────────────────
   // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
   // come from useFrame above; frame still owns the closure bodies.
-  const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } =
-    frame
+  const {
+    hoverHandlerRef,
+    hoverLeaveRef,
+    onPointerMove,
+    onPointerLeave,
+    pointerStateRef
+  } = frame
 
   // A custom layout with no restyle handler paints its hover state off-canvas
   // (React overlays / HTML marks), so the canvas needs no redraw on pointer move.
@@ -1065,12 +1104,14 @@ const StreamNetworkFrame = memo(forwardRef<
     !customNetworkLayout || (storeRef.current?.hasCustomRestyle ?? false)
 
   hoverHandlerRef.current = (e: HoverPointerCoords) => {
-    if (!enableHover) return
     const paintsCanvas = hoverPaintsCanvas()
     const canvas = canvasRef.current
     if (!canvas) return
     const store = storeRef.current
-    if (!store) return
+    if (!store) {
+      setCanvasMarkCursor(canvas)
+      return
+    }
 
     const result = resolveNetworkPointerHit({
       clientX: e.clientX,
@@ -1082,8 +1123,14 @@ const StreamNetworkFrame = memo(forwardRef<
       sceneNodes: store.sceneNodes,
       sceneEdges: store.sceneEdges,
       nodeQuadtree: store.nodeQuadtree,
-      maxNodeRadius: store.maxNodeRadius
+      maxNodeRadius: store.maxNodeRadius,
+      includeEdges: enableHover || sceneCursorInventoryRef.current.edges
     })
+    setCanvasMarkCursor(
+      canvas,
+      result.kind === "hit" ? sceneMarkCursor(result.mark) : undefined
+    )
+    if (!enableHover) return
 
     if (result.kind !== "hit") {
       if (hoverRef.current) {
@@ -1104,6 +1151,7 @@ const StreamNetworkFrame = memo(forwardRef<
   }
 
   hoverLeaveRef.current = () => {
+    setCanvasMarkCursor(canvasRef.current)
     if (hoverRef.current) {
       const paintsCanvas = hoverPaintsCanvas()
       hoverRef.current = null
@@ -1286,11 +1334,16 @@ const StreamNetworkFrame = memo(forwardRef<
 
   const onMouseMoveWrapped = useCallback(
     (e: React.MouseEvent) => {
+      if (!shouldHandleFramePointer(
+        pointerStateRef, e, enableHover,
+        sceneCursorInventoryRef.current.nodes || sceneCursorInventoryRef.current.edges,
+        canvasRef.current, "mouse"
+      )) return
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
     },
-    [onPointerMove]
+    [canvasRef, enableHover, onPointerMove, pointerStateRef]
   )
 
   // ── Render function ──────────────────────────────────────────────────
@@ -1316,6 +1369,7 @@ const StreamNetworkFrame = memo(forwardRef<
       adjustedWidth,
       adjustedHeight,
       background,
+      themeBackground,
       maxDevicePixelRatio,
       renderMode,
       hasBackgroundGraphics: Boolean(backgroundGraphics),
@@ -1340,26 +1394,31 @@ const StreamNetworkFrame = memo(forwardRef<
       scheduleNextFrame: () => {
         scheduleRender()
       },
-      syncColorMap: () => syncColorMap(store)
+      syncColorMap: () => syncColorMap(store),
+      onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
+        if (inventoryChanged) {
+          if (!refreshNetworkCursorInventory(
+            sceneCursorInventoryRef.current,
+            store.sceneNodes,
+            store.sceneEdges
+          )) setCanvasMarkCursor(canvas)
+        }
+        if (
+          (sceneCursorInventoryRef.current.nodes || sceneCursorInventoryRef.current.edges) &&
+          (inventoryChanged || geometryChanged)
+        ) {
+          rehitNetworkFrameCursor({
+            canvas, pointer: pointerStateRef.current, store, margin,
+            width: adjustedWidth, height: adjustedHeight,
+            geometryMoved: geometryChanged,
+            cursorInventory: sceneCursorInventoryRef.current
+          })
+        }
+      }
     })
   }
 
-  const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
-    hydrated,
-    wasHydratingFromSSR,
-    storeRef,
-    dirtyRef,
-    // The ingest/layout/theme effects build the scene synchronously and hand
-    // the paint loop a repaint-only signal (`rebuildSceneNow`). The default
-    // mount-time canvas invalidation would re-set `dirtyRef`, forcing the
-    // paint loop to rebuild the identical scene a second time (the duplicate
-    // `SceneRevisionDiagnostics` flagged). Later dependency changes still
-    // repaint, but geometry/dimensions have already rebuilt synchronously.
-    skipInitialCanvasPaintInvalidation: true,
-    canvasPaintInvalidator: invalidateCanvasPaint,
-    maxDevicePixelRatio,
-    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
-  })
+  useCanvasMarkCursorCleanup(canvasRef)
 
   // ── Staleness timer ─────────────────────────────────────────────────
 
@@ -1368,6 +1427,7 @@ const StreamNetworkFrame = memo(forwardRef<
     storeRef,
     dirtyRef,
     scheduleRender,
+    frameRuntime.now,
     isStale,
     setIsStale
   )
@@ -1398,7 +1458,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
+    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
   }
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -1449,8 +1509,8 @@ const StreamNetworkFrame = memo(forwardRef<
           description || (typeof title === "string" ? title : "Network chart")
         }
         style={{ position: "relative", width: "100%", height: "100%" }}
-        onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
-        onMouseLeave={enableHover ? onPointerLeave : undefined}
+        onMouseMove={onMouseMoveWrapped}
+        onMouseLeave={onPointerLeave}
         onClick={customClickBehaviorProp || onObservation ? onClick : undefined}
       >
         {layoutPending && layoutLoadingContent !== false && (
@@ -1470,7 +1530,12 @@ const StreamNetworkFrame = memo(forwardRef<
             )}
           </div>
         )}
-        <CanvasFrameBackground size={size} margin={margin} overflowVisible>
+        <CanvasFrameBackground
+          size={size}
+          margin={margin}
+          backdropFill={surfaceBackground ?? undefined}
+          overflowVisible
+        >
           {resolvedBackground}
         </CanvasFrameBackground>
 

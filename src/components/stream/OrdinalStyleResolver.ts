@@ -1,5 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
+import {
+  STREAMING_PALETTE,
+  resolveExplicitColor
+} from "../charts/shared/colorUtils"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
 import type { Style } from "./types"
 
@@ -29,7 +32,9 @@ export class OrdinalStyleResolver {
       return config.pieceStyle as Style
     }
     if (config.barColors && category) {
-      return { fill: config.barColors[category] || "#007bff" }
+      return {
+        fill: resolveExplicitColor(config.barColors, category) ?? "#007bff"
+      }
     }
     return { fill: category ? this.getColorFromScheme(config, category) : "#007bff" }
   }

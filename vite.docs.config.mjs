@@ -93,5 +93,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir,
     emptyOutDir: true,
+    // Large Natural Earth and authored-example datasets are route-lazy and
+    // compress well. The post-build docs asset gate enforces both raw and gzip
+    // transfer budgets, so keep Vite's raw-only warning aligned with that
+    // explicit 900 kB ceiling instead of emitting unactionable 500 kB noise.
+    chunkSizeWarningLimit: 900,
   },
 }))

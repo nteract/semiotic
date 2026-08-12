@@ -34,28 +34,65 @@ import type { FrameGraphicsProp } from "../stream/useFrame"
 import type { PhysicsBodyState } from "../stream/physics/PhysicsKernel"
 import { buildPhysicsSettledProjection } from "../stream/physics/PhysicsAccessibility"
 import { type ChartConfig } from "./serverChartConfigShared"
-import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
+import { resolveThemeSemanticColors } from "../store/themeCore"
 import type { PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineTypes"
+import { resolveTheme } from "./themeResolver"
+import {
+  collisionSwarmProjectionOverlay,
+  eventDropOverlay,
+  galtonBoardOverlay,
+  pileProjectionOverlay
+} from "../charts/physics/physicsProjectionOverlays"
+import {
+  processFlowChrome,
+  processFlowProjectionOverlay
+} from "../charts/physics/processFlowOverlays"
+import { physicalFlowOverlay } from "../charts/physics/packetFlowOverlay"
+import {
+  GauntletChrome,
+  GauntletProjectionOverlay
+} from "../charts/physics/gauntletChrome"
+import { physicsMarginForMode } from "../charts/physics/physicsChartLayout"
+import type { ChartMode } from "../charts/shared/types"
 
 // ── Physics Charts ─────────────────────────────────────────────────────
+
+const PHYSICS_CHART_LAYOUT: NonNullable<ChartConfig["layout"]> = {
+  margin: (props, resolved) =>
+    physicsMarginForMode(
+      resolved.compactMode,
+      props.mode as ChartMode | undefined
+    )
+}
 
 function allAtOnce(spawns: PhysicsQueuedSpawn[]): PhysicsQueuedSpawn[] {
   return spawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
 }
 
 function composePhysicsGraphics(
-  owned: React.ReactNode,
-  supplied: FrameGraphicsProp | undefined
+  first: FrameGraphicsProp | undefined,
+  second: FrameGraphicsProp | undefined
 ): FrameGraphicsProp | undefined {
-  if (!owned) return supplied
-  if (!supplied) return owned
+  if (!first) return second
+  if (!second) return first
   return (context) =>
     React.createElement(
       React.Fragment,
       null,
-      owned,
-      typeof supplied === "function" ? supplied(context) : supplied
+      typeof first === "function" ? first(context) : first,
+      typeof second === "function" ? second(context) : second
     )
+}
+
+function physicsChromeEnabled(
+  common: Datum,
+  rest: Datum,
+  prop: "showChrome" | "showProjection"
+): boolean {
+  const authored = rest[prop]
+  return typeof authored === "boolean"
+    ? authored
+    : common.__compactMode !== true
 }
 
 const CRUCIBLE_PALETTE = [
@@ -132,6 +169,7 @@ function crucibleBodyLabel(
 
 export const galtonBoardChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 400]
     const bins = rest.bins ?? 21
@@ -163,6 +201,16 @@ export const galtonBoardChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
+      foregroundGraphics: composePhysicsGraphics(
+        galtonBoardOverlay(
+          layout.projectionRows,
+          bins,
+          physicsChromeEnabled(common, rest, "showProjection"),
+          layout.metadata as Parameters<typeof galtonBoardOverlay>[3],
+          rest.referenceLines as Parameters<typeof galtonBoardOverlay>[4]
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(
         colorBy || rest.colorBy || (isMechanical ? "side" : undefined),
         "#4e79a7",
@@ -177,6 +225,7 @@ export const galtonBoardChart: ChartConfig = {
 
 export const eventDropChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 400]
     const layout = buildEventDropPhysics({
@@ -196,6 +245,14 @@ export const eventDropChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
+      foregroundGraphics: composePhysicsGraphics(
+        eventDropOverlay(
+          layout.projectionRows,
+          layout.metadata as Parameters<typeof eventDropOverlay>[1],
+          physicsChromeEnabled(common, rest, "showProjection")
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy, "#4e79a7", {
         styleRules: rest.styleRules,
         valueAccessor: rest.valueAccessor || rest.timeAccessor || "time"
@@ -206,6 +263,7 @@ export const eventDropChart: ChartConfig = {
 
 export const unitPileChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 400]
     const isMechanical = rest.mode === "mechanical"
@@ -233,6 +291,14 @@ export const unitPileChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
+      foregroundGraphics: composePhysicsGraphics(
+        pileProjectionOverlay(
+          layout.projectionRows,
+          rest.ballRadius ?? 5,
+          physicsChromeEnabled(common, rest, "showProjection")
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(
         colorBy || rest.colorBy || (isMechanical ? "category" : undefined),
         "#4e79a7",
@@ -247,6 +313,7 @@ export const unitPileChart: ChartConfig = {
 
 export const collisionSwarmChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 360]
     const layout = buildCollisionSwarmPhysics({
@@ -266,6 +333,15 @@ export const collisionSwarmChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
+      foregroundGraphics: composePhysicsGraphics(
+        collisionSwarmProjectionOverlay(
+          layout.metadata as Parameters<
+            typeof collisionSwarmProjectionOverlay
+          >[0],
+          physicsChromeEnabled(common, rest, "showProjection")
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(
         colorBy || rest.colorBy || rest.groupAccessor,
         "#4e79a7",
@@ -277,6 +353,7 @@ export const collisionSwarmChart: ChartConfig = {
 
 export const processFlowChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [900, 420]
     const stages = Array.isArray(rest.stages) ? rest.stages : []
@@ -306,6 +383,23 @@ export const processFlowChart: ChartConfig = {
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
       regionEffects: metadata?.regionEffects,
+      backgroundGraphics: composePhysicsGraphics(
+        processFlowChrome(
+          layout.metadata as Parameters<typeof processFlowChrome>[0],
+          physicsChromeEnabled(common, rest, "showChrome"),
+          {},
+          rest.chromeOptions as Parameters<typeof processFlowChrome>[3]
+        ),
+        common.backgroundGraphics as FrameGraphicsProp | undefined
+      ),
+      foregroundGraphics: composePhysicsGraphics(
+        processFlowProjectionOverlay(
+          layout.projectionRows,
+          layout.metadata as Parameters<typeof processFlowProjectionOverlay>[1],
+          physicsChromeEnabled(common, rest, "showProjection")
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(
         colorBy || rest.colorBy || rest.groupBy,
         "#4e79a7",
@@ -320,6 +414,7 @@ export const processFlowChart: ChartConfig = {
 
 export const gauntletChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [900, 520]
     const built = buildGauntletPhysics({
@@ -343,6 +438,25 @@ export const gauntletChart: ChartConfig = {
       config: built.config,
       initialSpawns: allAtOnce(built.initialSpawns),
       projectionRows: [],
+      backgroundGraphics: composePhysicsGraphics(
+        physicsChromeEnabled(common, rest, "showChrome")
+          ? React.createElement(GauntletChrome, {
+              layout: built.layout,
+              states: built.states,
+              compact: common.__compactMode === true
+            })
+          : undefined,
+        common.backgroundGraphics as FrameGraphicsProp | undefined
+      ),
+      foregroundGraphics: composePhysicsGraphics(
+        physicsChromeEnabled(common, rest, "showProjection")
+          ? React.createElement(GauntletProjectionOverlay, {
+              layout: built.layout,
+              states: built.states
+            })
+          : undefined,
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy)
     }
   }
@@ -358,6 +472,7 @@ export const gauntletChart: ChartConfig = {
  */
 export const crucibleChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [900, 520]
     const plan = compileCruciblePlan({
@@ -468,6 +583,7 @@ export const crucibleChart: ChartConfig = {
 
 export const packetFlowChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [760, 420]
     const layout = buildPhysicalFlowPhysics({
@@ -501,6 +617,17 @@ export const packetFlowChart: ChartConfig = {
       config: layout.config,
       initialSpawns: allAtOnce(layout.initialSpawns),
       projectionRows: layout.projectionRows,
+      foregroundGraphics: composePhysicsGraphics(
+        physicalFlowOverlay(
+          layout.metadata as Parameters<typeof physicalFlowOverlay>[0],
+          {
+            showNodeLabels: rest.showNodeLabels !== false,
+            showSensors: rest.showSensors !== false,
+            showStaticFlow: rest.showStaticFlow !== false
+          }
+        ),
+        common.foregroundGraphics as FrameGraphicsProp | undefined
+      ),
       bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy || "source")
     }
   }
@@ -509,17 +636,18 @@ export const packetFlowChart: ChartConfig = {
 // PhysicsCustomChart's `layout(ctx)` is a pure function of a synchronous
 // context (same contract the XY/ordinal/network/geo customLayout escape
 // hatches use), so it can run once here exactly like the client HOC does via
-// the shared `resolveCustomLayout`. There is no live theme in static
-// rendering, so the context falls back to `LIGHT_THEME` — the same default
-// the component uses before a ThemeProvider resolves. Note this bridges only
-// bodies/colliders/config through the settled-scene renderer; unlike the
-// SceneNode-based custom charts, `renderPhysicsSettledSVG` has no overlay
-// slot yet, so a layout's `overlays`/`backgroundOverlays` render on canvas
-// but are silently absent from SSR output.
+// the shared `resolveCustomLayout`. Resolve the supplied static theme before
+// constructing that context so semantic colors and categorical fallbacks
+// match the client. Layout-owned layers compose after caller-supplied frame
+// graphics in the same order as the React HOC.
 export const physicsCustomChart: ChartConfig = {
   frameType: "physics",
+  layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [700, 380]
+    const theme = resolveTheme(
+      common.theme as Parameters<typeof resolveTheme>[0]
+    )
     const resolved = resolveCustomLayout({
       chartId: rest.chartId,
       colorScheme,
@@ -527,9 +655,9 @@ export const physicsCustomChart: ChartConfig = {
       data: Array.isArray(data) ? data : [],
       layout: rest.layout,
       layoutConfig: rest.layoutConfig,
-      semantic: resolveThemeSemanticColors(LIGHT_THEME) ?? {},
+      semantic: resolveThemeSemanticColors(theme) ?? {},
       size,
-      themeCategorical: LIGHT_THEME.colors.categorical,
+      themeCategorical: theme.colors.categorical,
       xExtent: rest.xExtent,
       yExtent: rest.yExtent
     })
@@ -540,7 +668,15 @@ export const physicsCustomChart: ChartConfig = {
       projectionRows: [],
       bodyStyle:
         resolved.result.bodyStyle ??
-        styleFromColorAccessor(colorBy || rest.colorBy)
+        styleFromColorAccessor(colorBy || rest.colorBy),
+      backgroundGraphics: composePhysicsGraphics(
+        common.backgroundGraphics as FrameGraphicsProp | undefined,
+        resolved.result.backgroundOverlays
+      ),
+      foregroundGraphics: composePhysicsGraphics(
+        common.foregroundGraphics as FrameGraphicsProp | undefined,
+        resolved.result.overlays
+      )
     }
   }
 }

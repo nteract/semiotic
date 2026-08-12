@@ -47,6 +47,17 @@ const D3_SYMBOLS: Record<string, SymbolType> = {
   wye: symbolWye,
 }
 
+const SYMBOL_NAMES = new Set<NetworkSymbolName>([
+  "circle",
+  "square",
+  "triangle",
+  "diamond",
+  "star",
+  "cross",
+  "wye",
+  "chevron",
+])
+
 /** Default shape assignment order when a recipe auto-maps distinct categories. */
 export const SYMBOL_SEQUENCE: NetworkSymbolName[] = [
   "circle",
@@ -73,7 +84,9 @@ export function symbolPathString(
   if (customPath) return customPath
   const name = symbolType ?? "circle"
   if (name === "chevron") return chevronPath(size)
-  const type = D3_SYMBOLS[name] ?? symbolCircle
+  const type = Object.prototype.hasOwnProperty.call(D3_SYMBOLS, name)
+    ? D3_SYMBOLS[name]
+    : symbolCircle
   return d3Symbol(type, Math.max(1, size))() ?? ""
 }
 
@@ -131,8 +144,11 @@ export function makeSymbolResolver(
   let seq = 0
   return (d: Datum) => {
     const cat = String(getSymbol(d))
-    const explicit = symbolMap?.[cat]
-    if (explicit) return explicit
+    const explicit =
+      symbolMap && Object.prototype.hasOwnProperty.call(symbolMap, cat)
+        ? symbolMap[cat]
+        : undefined
+    if (explicit && SYMBOL_NAMES.has(explicit)) return explicit
     let s = assign.get(cat)
     if (!s) {
       s = SYMBOL_SEQUENCE[seq % SYMBOL_SEQUENCE.length]

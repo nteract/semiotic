@@ -38,9 +38,19 @@ describe("resolveCSSColor", () => {
     expect(resolveCSSColor(ctx, "var(--my-color)")).toBe("#ff0000")
   })
 
+  it("does not install global listeners for resolution without a subscriber", () => {
+    const observe = vi.spyOn(MutationObserver.prototype, "observe")
+    const ctx = makeCtx("--my-color", "#ff0000")
+
+    expect(resolveCSSColor(ctx, "var(--my-color)")).toBe("#ff0000")
+    expect(observe).not.toHaveBeenCalled()
+  })
+
   it("uses fallback when var is not defined", () => {
     const ctx = makeCtx()
-    expect(resolveCSSColor(ctx, "var(--undefined-var, #00ff00)")).toBe("#00ff00")
+    expect(resolveCSSColor(ctx, "var(--undefined-var, #00ff00)")).toBe(
+      "#00ff00"
+    )
   })
 
   it("caches resolved values across repeat calls within the same version", () => {
@@ -98,10 +108,7 @@ describe("resolveCSSColor", () => {
     wrapper.appendChild(canvas)
     document.body.append(wrapper, unrelated)
     const listener = vi.fn()
-    const unsubscribe = subscribeToCSSColorInvalidation(
-      () => canvas,
-      listener
-    )
+    const unsubscribe = subscribeToCSSColorInvalidation(() => canvas, listener)
 
     try {
       const beforeUnrelatedMutation = getCSSColorCacheVersion()
@@ -118,6 +125,87 @@ describe("resolveCSSColor", () => {
     } finally {
       unsubscribe()
     }
+  })
+
+  it("ignores descendant presentation churn while observing self and ancestors", async () => {
+    const ancestor = document.createElement("section")
+    const chartRoot = document.createElement("div")
+    const tooltip = document.createElement("div")
+    const canvas = document.createElement("canvas")
+    chartRoot.append(canvas, tooltip)
+    ancestor.appendChild(chartRoot)
+    document.body.appendChild(ancestor)
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(
+      () => chartRoot,
+      listener
+    )
+
+    try {
+      const beforeDescendantMutations = getCSSColorCacheVersion()
+      tooltip.style.left = "12px"
+      tooltip.className = "semiotic-tooltip visible"
+      canvas.style.cursor = "pointer"
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(listener).not.toHaveBeenCalled()
+      expect(getCSSColorCacheVersion()).toBe(beforeDescendantMutations)
+
+      canvas.style.setProperty("--semiotic-primary", "#abcdef")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).toHaveBeenCalledTimes(1)
+
+      chartRoot.style.setProperty("--semiotic-primary", "#123456")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).toHaveBeenCalledTimes(2)
+
+      ancestor.classList.add("dark-theme")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).toHaveBeenCalledTimes(3)
+      expect(getCSSColorCacheVersion()).toBe(beforeDescendantMutations + 3)
+    } finally {
+      unsubscribe()
+    }
+  })
+
+  it("observes a scoped wrapper inside the frame when it contains the painted canvas", async () => {
+    const chartRoot = document.createElement("div")
+    const scopedWrapper = document.createElement("div")
+    const canvas = document.createElement("canvas")
+    scopedWrapper.appendChild(canvas)
+    chartRoot.appendChild(scopedWrapper)
+    document.body.appendChild(chartRoot)
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(
+      () => chartRoot,
+      listener
+    )
+
+    try {
+      scopedWrapper.style.setProperty("--semiotic-primary", "#123456")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(listener).toHaveBeenCalledTimes(1)
+    } finally {
+      unsubscribe()
+    }
+  })
+
+  it("disconnects the global observer after the last subscriber leaves", () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, "disconnect")
+    const canvas = document.createElement("canvas")
+    document.body.appendChild(canvas)
+    const unsubscribeA = subscribeToCSSColorInvalidation(() => canvas, vi.fn())
+    const unsubscribeB = subscribeToCSSColorInvalidation(() => canvas, vi.fn())
+
+    unsubscribeA()
+    expect(disconnect).not.toHaveBeenCalled()
+    unsubscribeB()
+    expect(disconnect).toHaveBeenCalledTimes(1)
+
+    // A later frame can install a fresh observer after the teardown.
+    const unsubscribeC = subscribeToCSSColorInvalidation(() => canvas, vi.fn())
+    unsubscribeC()
+    expect(disconnect).toHaveBeenCalledTimes(2)
   })
 
   it("isolates caches between canvases", () => {
@@ -170,7 +258,9 @@ describe("resolveCSSColor", () => {
   })
 
   it("falls back to fallback color when ctx.canvas is missing", () => {
-    const ctx = { canvas: null as unknown as HTMLCanvasElement } as CanvasRenderingContext2D
+    const ctx = {
+      canvas: null as unknown as HTMLCanvasElement
+    } as CanvasRenderingContext2D
     expect(resolveCSSColor(ctx, "var(--missing, #defabc)")).toBe("#defabc")
   })
 
@@ -179,16 +269,28 @@ describe("resolveCSSColor", () => {
     // regex truncated the fallback at the first ")", handing the canvas an
     // unparseable string that painted black instead.
     const ctx = makeCtx()
-    expect(resolveCSSColor(ctx, "var(--semiotic-cell-border, var(--semiotic-border, #fff))")).toBe("#fff")
+    expect(
+      resolveCSSColor(
+        ctx,
+        "var(--semiotic-cell-border, var(--semiotic-border, #fff))"
+      )
+    ).toBe("#fff")
   })
 
   it("uses the inner var when the outer is unset but the inner is defined", () => {
     const ctx = makeCtx("--semiotic-border", "#cccccc")
-    expect(resolveCSSColor(ctx, "var(--semiotic-cell-border, var(--semiotic-border, #fff))")).toBe("#cccccc")
+    expect(
+      resolveCSSColor(
+        ctx,
+        "var(--semiotic-cell-border, var(--semiotic-border, #fff))"
+      )
+    ).toBe("#cccccc")
   })
 
   it("resolves a nested var() fallback with ctx.canvas missing", () => {
-    const ctx = { canvas: null as unknown as HTMLCanvasElement } as CanvasRenderingContext2D
+    const ctx = {
+      canvas: null as unknown as HTMLCanvasElement
+    } as CanvasRenderingContext2D
     expect(resolveCSSColor(ctx, "var(--a, var(--b, #fff))")).toBe("#fff")
   })
 })

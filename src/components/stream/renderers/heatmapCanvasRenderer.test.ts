@@ -81,6 +81,37 @@ describe("heatmapCanvasRenderer", () => {
     expect(ctx.strokeRect).not.toHaveBeenCalled()
   })
 
+  it("resolves CSS-variable fills before painting and computing label contrast", () => {
+    const ctx = createMockCanvasContext()
+    const canvas = document.createElement("canvas")
+    canvas.style.setProperty("--heat-cell", "#ffffff")
+    Object.defineProperty(ctx, "canvas", { value: canvas })
+
+    const fillStyles: string[] = []
+    ;(ctx.fillRect as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      fillStyles.push(ctx.fillStyle as string)
+    })
+    ;(ctx.fillText as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      fillStyles.push(ctx.fillStyle as string)
+    })
+
+    heatmapCanvasRenderer(
+      ctx,
+      [makeHeatcellNode({
+        fill: "var(--heat-cell)",
+        w: 30,
+        h: 30,
+        value: 7,
+        showValues: true,
+      })],
+      makeScales(),
+      makeLayout(),
+    )
+
+    expect(fillStyles).toEqual(["#ffffff", "#000"])
+    expect(ctx.fillText).toHaveBeenCalledWith("7", 25, 35)
+  })
+
   it("sets globalAlpha from style.opacity (decay)", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []

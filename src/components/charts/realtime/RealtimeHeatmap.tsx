@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, forwardRef, useCallback, useMemo, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -13,22 +13,51 @@ import type {
   StalenessConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { ReactNode } from "react"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  useChartLegendAndMargin,
+  useChartSelection,
+  useGradientLegendInteraction
+} from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
+import type {
+  ChartMode,
+  ChartAccessor,
+  SelectionConfig,
+  MobileInteractionProp
+} from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildHeatmapTooltip } from "./defaultRealtimeTooltip"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import {
+  renderLoadingState,
+  renderEmptyState
+} from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
 import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { resolveTooltipContent, type TooltipProp } from "../../Tooltip/Tooltip"
+import { resolveTooltipContent } from "../../Tooltip/Tooltip"
+import type {
+  RealtimeAccessibilityProps,
+  RealtimeData,
+  RealtimePointIdAccessor,
+  RealtimeTooltipProp
+} from "./realtimeChartTypes"
+import type { GradientLegendConfig } from "../../types/legendTypes"
+import { getSequentialInterpolator } from "../shared/colorPalettes"
+import type { PartialMargin } from "../../types/marginType"
+import {
+  buildRealtimeFrameChromeProps,
+  useRealtimeChartMode,
+  useRealtimeFrameHandle,
+  useRealtimeSelectionStyle
+} from "./realtimeChartRuntime"
 
-export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
+export interface RealtimeHeatmapProps<
+  TDatum extends Datum = Datum
+> extends RealtimeAccessibilityProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -46,7 +75,7 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   /** Chart margins */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  margin?: PartialMargin
   /** CSS class name */
   className?: string
   onObservation?: OnObservationCallback
@@ -58,7 +87,7 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Datum[]
+  data?: RealtimeData<TDatum>
   /** Time/x value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value/y accessor */
@@ -78,9 +107,25 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Aggregation mode: "count", "sum", or "mean" (default: "count") */
   aggregation?: "count" | "sum" | "mean"
   /** Sequential color scheme for aggregated cell values. */
-  colorScheme?: "blues" | "reds" | "greens" | "viridis" | "oranges" | "purples" | "greys" | "plasma" | "inferno" | "magma" | "cividis" | "turbo" | "custom" | (string & {})
+  colorScheme?:
+    | "blues"
+    | "reds"
+    | "greens"
+    | "viridis"
+    | "oranges"
+    | "purples"
+    | "greys"
+    | "plasma"
+    | "inferno"
+    | "magma"
+    | "cividis"
+    | "turbo"
+    | "custom"
+    | (string & {})
   /** Custom value-to-color function used when colorScheme is "custom". */
   customColorScale?: (value: number) => string
+  /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
+  cursor?: CSSProperties["cursor"]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -96,7 +141,11 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Opt into automatic placement for note-like annotations without manual offsets. */
   autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
@@ -107,8 +156,8 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   pulse?: PulseConfig
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
-  /** Standard tooltip config or raw-datum renderer. Use `tooltipContent` when the full HoverData wrapper is required. */
-  tooltip?: TooltipProp
+  /** Declarative tooltip config or the legacy full-HoverData callback. */
+  tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
   /** Consume a named selection — dims unselected elements */
@@ -128,7 +177,7 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: Datum) => string)
+  pointIdAccessor?: RealtimePointIdAccessor<TDatum>
 }
 
 /**
@@ -170,166 +219,247 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
  * />
  * ```
  */
-export const RealtimeHeatmap = forwardRef(
-  function RealtimeHeatmap<TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-    const resolved = useChartMode(props.mode, {
-      width: props.size?.[0] ?? props.width,
-      height: props.size?.[1] ?? props.height,
-      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-          mobileInteraction: props.mobileInteraction,
-      mobileSemantics: props.mobileSemantics,
-      responsiveRules: props.responsiveRules,
-})
+export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
+  TDatum extends Datum = Datum
+>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  const resolved = useRealtimeChartMode(props)
 
-    const {
-      size,
-      margin: userMargin,
-      className,
-      arrowOfTime = "right",
-      windowMode = "sliding",
-      windowSize: windowSizeProp,
-      data,
-      timeAccessor,
-      valueAccessor,
-      categoryAccessor,
-      timeExtent,
-      valueExtent,
-      extentPadding,
-      heatmapXBins = 20,
-      heatmapYBins = 20,
-      aggregation = "count",
-      colorScheme,
-      customColorScale,
-      background,
-      tooltipContent,
-      tooltip,
-      onHover,
-      annotations,
-      autoPlaceAnnotations,
-      svgAnnotationRules,
-      tickFormatTime,
-      tickFormatValue,
-      decay,
-      pulse,
-      staleness,
-      linkedHover,
-      selection,
-      onObservation,
-      chartId,
-      loading,
-      loadingContent,
-      emptyContent,
-      emphasis,
-      legendPosition: legendPositionProp,
-    } = props
+  const {
+    size,
+    margin: userMargin,
+    className,
+    arrowOfTime = "right",
+    windowMode = "sliding",
+    windowSize: windowSizeProp,
+    data,
+    timeAccessor,
+    valueAccessor,
+    categoryAccessor,
+    timeExtent,
+    valueExtent,
+    extentPadding,
+    heatmapXBins = 20,
+    heatmapYBins = 20,
+    aggregation = "count",
+    colorScheme,
+    customColorScale,
+    cursor,
+    background,
+    tooltipContent,
+    tooltip,
+    onHover,
+    annotations,
+    autoPlaceAnnotations,
+    svgAnnotationRules,
+    tickFormatTime,
+    tickFormatValue,
+    decay,
+    pulse,
+    staleness,
+    linkedHover,
+    selection,
+    onObservation,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
+    emphasis,
+    legendPosition: legendPositionProp
+  } = props
 
-    const showAxes = resolved.showAxes
-    const enableHover = resolved.enableHover
-    const margin = userMargin ?? resolved.marginDefaults
-    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    // Heatcell datums are aggregated bins, not the user's raw rows — the
-    // generic `x:/y:` tooltip would read undefined off `timeAccessor`/
-    // `valueAccessor` since the cell datum is `{xi, yi, value, count, sum,
-    // xCenter, yCenter, agg}`. The heatmap-specific helper reads the
-    // enriched bin-center coords + aggregation type so users see real
-    // data-space values and the cell's count/sum/mean.
-    const resolvedTooltip = tooltipContent ?? resolveTooltipContent({
+  const showAxes = resolved.showAxes
+  const enableHover = resolved.enableHover
+  const resolvedSize: [number, number] = size ?? [
+    resolved.width,
+    resolved.height
+  ]
+  const [colorDomain, setColorDomain] = useState<[number, number] | null>(null)
+  const valueDomain = useMemo<[number, number]>(
+    () => colorDomain ?? [0, 1],
+    [colorDomain]
+  )
+  const legendColorFn = useMemo(() => {
+    if (colorScheme === "custom" && customColorScale) return customColorScale
+    const interpolator = getSequentialInterpolator(colorScheme || "blues")
+    return (value: number) => {
+      const range = valueDomain[1] - valueDomain[0] || 1
+      return interpolator(
+        Math.max(0, Math.min(1, (value - valueDomain[0]) / range))
+      )
+    }
+  }, [colorScheme, customColorScale, valueDomain])
+  const gradientLegendState = useGradientLegendInteraction(
+    props.legendInteraction,
+    (datum) => Number(datum.value),
+    valueDomain
+  )
+  const gradientLegend = useMemo(() => {
+    if (!resolved.showLegend) return undefined
+    const config: GradientLegendConfig = {
+      colorFn: legendColorFn,
+      domain: valueDomain,
+      label: aggregation
+    }
+    return { gradient: config }
+  }, [aggregation, legendColorFn, resolved.showLegend, valueDomain])
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+    data: [],
+    colorBy: undefined,
+    colorScale: undefined,
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    userMargin,
+    defaults: resolved.marginDefaults,
+    additionalLegend: gradientLegend,
+    chartWidth: resolvedSize[0],
+    axisChrome: { hasAxis: resolved.showAxes !== false }
+  })
+  // Heatcell datums are aggregated bins, not the user's raw rows — the
+  // generic `x:/y:` tooltip would read undefined off `timeAccessor`/
+  // `valueAccessor` since the cell datum is `{xi, yi, value, count, sum,
+  // xCenter, yCenter, agg}`. The heatmap-specific helper reads the
+  // enriched bin-center coords + aggregation type so users see real
+  // data-space values and the cell's count/sum/mean.
+  const resolvedTooltip =
+    tooltipContent ??
+    resolveTooltipContent({
       tooltip,
-      defaultTooltipContent: buildHeatmapTooltip({ timeAccessor, valueAccessor }),
+      defaultTooltipContent: buildHeatmapTooltip({
+        timeAccessor,
+        valueAccessor
+      }),
+      customFunctionContext: "hover"
     }).tooltipContent
 
-    const frameRef = useRef<StreamXYFrameHandle>(null)
+  const frameRef = useRef<StreamXYFrameHandle>(null)
 
-    // ── Linked hover via shared hook ──
-    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeHeatmap", chartId
-    })
+  // ── Linked hover via shared hook ──
+  const {
+    activeSelectionHook,
+    hoverSelectionHook,
+    customHoverBehavior: linkedHoverBehavior,
+    customClickBehavior
+  } = useChartSelection({
+    selection,
+    linkedHover,
+    unwrapData: true,
+    onObservation,
+    chartType: "RealtimeHeatmap",
+    chartId,
+    mobileInteraction: resolved.mobileInteraction
+  })
 
-    const combinedHoverBehavior = useCallback(
-      (d: HoverData | null) => {
-        if (onHover) onHover(d)
-        linkedHoverBehavior(d)
-      },
-      [onHover, linkedHoverBehavior]
-    )
+  const combinedHoverBehavior = useCallback(
+    (d: HoverData | null) => {
+      if (onHover) onHover(d)
+      linkedHoverBehavior(d)
+    },
+    [onHover, linkedHoverBehavior]
+  )
 
-    // `[]` deps so the handle stays stable — see useFrameImperativeHandle.
-    useImperativeHandle(ref, () => ({
-      push: (point) => frameRef.current?.push(point),
-      pushMany: (points) => frameRef.current?.pushMany(points),
-      remove: (id) => frameRef.current?.remove(id) ?? [],
-      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-      clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? [],
-      getScales: () => frameRef.current?.getScales() ?? null
-    }), [])
+  useRealtimeFrameHandle(ref, frameRef)
 
-    // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
-    const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  const loadingEl = renderLoadingState(
+    loading,
+    resolvedSize[0],
+    resolvedSize[1],
+    loadingContent
+  )
+  const emptyEl = !loadingEl
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    : null
 
-    const resolvedClassName = emphasis
-      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
-      : className
+  const resolvedClassName = emphasis
+    ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+    : className
 
-    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const cursorCellStyle = useMemo(() => {
+    if (cursor == null) return undefined
+    const style = { cursor }
+    return () => style
+  }, [cursor])
+  const interactiveCellStyle = useRealtimeSelectionStyle(
+    cursorCellStyle,
+    [
+      hoverSelectionHook,
+      gradientLegendState.legendSelectionHook,
+      activeSelectionHook
+    ],
+    selection
+  )
 
-    // ── Loading / empty guards (deferred to after all hooks) ───────────────
-    if (loadingEl) return loadingEl
-    if (emptyEl) return emptyEl
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
-    return (
-      <StreamXYFrame
-        ref={frameRef}
-        chartType="heatmap"
-        runtimeMode="streaming"
-        size={resolvedSize}
-        maxDevicePixelRatio={props.maxDevicePixelRatio}
-        margin={margin}
-        className={resolvedClassName}
-        arrowOfTime={arrowOfTime}
-        windowMode={windowMode}
-        windowSize={windowSize}
-        data={data}
-        timeAccessor={timeAccessor}
-        valueAccessor={valueAccessor}
-        categoryAccessor={categoryAccessor}
-        xExtent={timeExtent}
-        yExtent={valueExtent}
-        extentPadding={extentPadding}
-        heatmapXBins={heatmapXBins}
-        heatmapYBins={heatmapYBins}
-        heatmapAggregation={aggregation}
-        colorScheme={colorScheme !== "custom" ? colorScheme : undefined}
-        heatmapColorScale={colorScheme === "custom" && typeof customColorScale === "function" ? customColorScale : undefined}
-        showAxes={showAxes}
-        background={background}
-        hoverAnnotation={enableHover}
-        tooltipContent={resolvedTooltip}
-        {...buildCustomBehaviorProps({
-          linkedHover,
-          selection,
-          onObservation,
-          forceHoverBehavior: true,
-          mobileInteraction: resolved.mobileInteraction,
-          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
-        })}
-        annotations={annotations}
-        autoPlaceAnnotations={autoPlaceAnnotations}
-        svgAnnotationRules={svgAnnotationRules}
-        tickFormatTime={tickFormatTime}
-        tickFormatValue={tickFormatValue}
-        decay={decay}
-        pulse={pulse}
-        staleness={staleness}
-        legendPosition={legendPositionProp}
-        pointIdAccessor={props.pointIdAccessor}
-      />
-    )
-  }
-) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  return (
+    <StreamXYFrame
+      ref={frameRef}
+      chartType="heatmap"
+      runtimeMode="streaming"
+      size={resolvedSize}
+      maxDevicePixelRatio={props.maxDevicePixelRatio}
+      margin={margin}
+      className={resolvedClassName}
+      {...buildRealtimeFrameChromeProps(
+        resolved,
+        gradientLegendState,
+        props.legendInteraction
+      )}
+      arrowOfTime={arrowOfTime}
+      windowMode={windowMode}
+      windowSize={windowSize}
+      data={data}
+      timeAccessor={timeAccessor}
+      valueAccessor={valueAccessor}
+      categoryAccessor={categoryAccessor}
+      xExtent={timeExtent}
+      yExtent={valueExtent}
+      extentPadding={extentPadding}
+      heatmapXBins={heatmapXBins}
+      heatmapYBins={heatmapYBins}
+      heatmapAggregation={aggregation}
+      colorScheme={colorScheme !== "custom" ? colorScheme : undefined}
+      heatmapColorScale={
+        colorScheme === "custom" && typeof customColorScale === "function"
+          ? customColorScale
+          : undefined
+      }
+      onColorDomainChange={setColorDomain}
+      areaStyle={interactiveCellStyle}
+      showAxes={showAxes}
+      background={background}
+      hoverAnnotation={enableHover}
+      tooltipContent={resolvedTooltip}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        forceHoverBehavior: true,
+        mobileInteraction: resolved.mobileInteraction,
+        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customClickBehavior
+      })}
+      annotations={annotations}
+      autoPlaceAnnotations={autoPlaceAnnotations}
+      svgAnnotationRules={svgAnnotationRules}
+      tickFormatTime={tickFormatTime}
+      tickFormatValue={tickFormatValue}
+      decay={decay}
+      pulse={pulse}
+      staleness={staleness}
+      legend={legend}
+      legendPosition={legendPosition}
+      pointIdAccessor={props.pointIdAccessor}
+    />
+  )
+}) as unknown as {
+  <TDatum extends Datum = Datum>(
+    props: RealtimeHeatmapProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 RealtimeHeatmap.displayName = "RealtimeHeatmap"

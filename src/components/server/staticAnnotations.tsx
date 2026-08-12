@@ -8,7 +8,7 @@ import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 
 import * as React from "react"
 import Annotation from "../Annotation"
-import type { SemioticTheme } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/themeCore"
 import { renderAnnotationPass } from "../charts/shared/annotationRules"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"

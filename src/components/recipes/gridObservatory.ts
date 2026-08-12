@@ -22,7 +22,7 @@ export const GRID_FUEL_KEYS = [
   "hydro",
   "wind",
   "solar",
-  "other",
+  "other"
 ] as const
 
 export type GridFuelKey = (typeof GRID_FUEL_KEYS)[number]
@@ -35,12 +35,12 @@ export const GRID_FUEL_LABELS: Record<GridFuelKey, string> = {
   hydro: "Hydro",
   wind: "Wind",
   solar: "Solar",
-  other: "Other",
+  other: "Other"
 }
 
 /**
  * One hour (or finest grain) in one balancing authority.
- * Compatible with the strategy schema in docs/strategy/examples-thegrid.md.
+ * Fields are source-agnostic so callers can provide any compatible dataset.
  */
 export type GridHour = {
   t: number
@@ -124,7 +124,7 @@ export type GridEventWindow = {
 const DEFAULT_LEVELS: Required<ReserveLevels> = {
   tight: 5,
   watch: 12,
-  comfortable: 20,
+  comfortable: 20
 }
 
 function finite(n: unknown, fallback = 0): number {
@@ -137,7 +137,7 @@ function finite(n: unknown, fallback = 0): number {
  */
 export function stackFuelSeries(
   hours: readonly GridHour[],
-  options: { fuels?: readonly GridFuelKey[]; includeZero?: boolean } = {},
+  options: { fuels?: readonly GridFuelKey[]; includeZero?: boolean } = {}
 ): FuelStackRow[] {
   const fuels = options.fuels ?? GRID_FUEL_KEYS
   const includeZero = options.includeZero === true
@@ -152,7 +152,7 @@ export function stackFuelSeries(
         fuel,
         fuelLabel: GRID_FUEL_LABELS[fuel],
         mw,
-        ba: hour.ba,
+        ba: hour.ba
       })
     }
   }
@@ -163,7 +163,9 @@ export function stackFuelSeries(
  * DifferenceChart rows: series A = demand, series B = forecast.
  * Hours without a finite forecast are skipped.
  */
-export function demandForecastRows(hours: readonly GridHour[]): DemandForecastRow[] {
+export function demandForecastRows(
+  hours: readonly GridHour[]
+): DemandForecastRow[] {
   const out: DemandForecastRow[] = []
   for (const hour of hours) {
     if (!hour || typeof hour.t !== "number") continue
@@ -177,7 +179,7 @@ export function demandForecastRows(hours: readonly GridHour[]): DemandForecastRo
       demandMw: demand,
       forecastMw: forecast,
       errorMw: demand - forecast,
-      ba: hour.ba,
+      ba: hour.ba
     })
   }
   return out
@@ -221,7 +223,7 @@ export function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[] {
       const margin = reserveMarginPct({
         demand: demandMw,
         capacityOrNetGen: netGenMw,
-        interchange: hour.interchangeMw,
+        interchange: hour.interchangeMw
       })
       return {
         t: hour.t,
@@ -229,7 +231,7 @@ export function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[] {
         reserveMarginPct: margin,
         netLoadMw: demandMw,
         demandMw,
-        netGenMw,
+        netGenMw
       }
     })
 }
@@ -250,7 +252,7 @@ export function thresholdBandsForReserve(
     tightFill?: string
     watchFill?: string
     comfortableFill?: string
-  } = {},
+  } = {}
 ): StyleRule[] {
   const { watch, comfortable } = { ...DEFAULT_LEVELS, ...levels }
   const field = options.field
@@ -265,7 +267,7 @@ export function thresholdBandsForReserve(
       spacing: 5,
       angle: -35,
       lineWidth: 1.25,
-      lineOpacity: 0.9,
+      lineOpacity: 0.9
     } as HatchFill)
 
   return [
@@ -275,8 +277,8 @@ export function thresholdBandsForReserve(
       when: { ...whenField, gte: comfortable },
       style: {
         fill: options.comfortableFill ?? "var(--semiotic-success, #16a34a)",
-        fillOpacity: 0.85,
-      },
+        fillOpacity: 0.85
+      }
     },
     {
       id: "reserve-watch",
@@ -284,8 +286,8 @@ export function thresholdBandsForReserve(
       when: { ...whenField, lt: comfortable, gte: watch },
       style: {
         fill: options.watchFill ?? "var(--semiotic-warning, #d97706)",
-        fillOpacity: 0.9,
-      },
+        fillOpacity: 0.9
+      }
     },
     {
       id: "reserve-tight",
@@ -295,9 +297,9 @@ export function thresholdBandsForReserve(
         fill: tightHatch,
         stroke: options.tightFill ?? "var(--semiotic-danger, #c2410c)",
         strokeWidth: 1,
-        fillOpacity: 1,
-      },
-    },
+        fillOpacity: 1
+      }
+    }
   ]
 }
 
@@ -305,9 +307,7 @@ export function thresholdBandsForReserve(
  * Annotation band descriptors for reserve threshold strips (y-band style).
  * Pair with chart `annotations` — not the same object as styleRules.
  */
-export function reserveAnnotationBands(
-  levels: ReserveLevels = {},
-): Array<{
+export function reserveAnnotationBands(levels: ReserveLevels = {}): Array<{
   type: "band"
   y0: number
   y1: number
@@ -325,7 +325,7 @@ export function reserveAnnotationBands(
       label: "Tight",
       color: "var(--semiotic-danger, #c2410c)",
       fillOpacity: 0.12,
-      emphasis: "secondary",
+      emphasis: "secondary"
     },
     {
       type: "band",
@@ -334,7 +334,7 @@ export function reserveAnnotationBands(
       label: "Watch",
       color: "var(--semiotic-warning, #d97706)",
       fillOpacity: 0.1,
-      emphasis: "secondary",
+      emphasis: "secondary"
     },
     {
       type: "band",
@@ -343,18 +343,20 @@ export function reserveAnnotationBands(
       label: "Headroom",
       color: "var(--semiotic-success, #16a34a)",
       fillOpacity: 0.06,
-      emphasis: "secondary",
-    },
+      emphasis: "secondary"
+    }
   ]
 }
 
 /** Summarize the operating point at `now` (or the last hour ≤ now). */
 export function summarizeOperatingPoint(
   hours: readonly GridHour[],
-  now?: number,
+  now?: number
 ): OperatingPointSummary | null {
   if (!hours.length) return null
-  const sorted = [...hours].filter((h) => h && typeof h.t === "number").sort((a, b) => a.t - b.t)
+  const sorted = [...hours]
+    .filter((h) => h && typeof h.t === "number")
+    .sort((a, b) => a.t - b.t)
   if (!sorted.length) return null
 
   let hour = sorted[sorted.length - 1]
@@ -372,7 +374,7 @@ export function summarizeOperatingPoint(
   const margin = reserveMarginPct({
     demand: demandMw,
     capacityOrNetGen: netGenMw,
-    interchange: hour.interchangeMw,
+    interchange: hour.interchangeMw
   })
 
   const fuelShares: Partial<Record<GridFuelKey, number>> = {}
@@ -407,7 +409,7 @@ export function summarizeOperatingPoint(
     topFuel,
     topFuelShare: totalFuel > 0 ? topFuelMw / totalFuel : 0,
     topFuelMw,
-    fuelShares,
+    fuelShares
   }
 }
 
@@ -424,7 +426,7 @@ export function gridEventAnnotations(
     now?: number
     author?: string
     source?: string
-  } = {},
+  } = {}
 ): Array<Record<string, unknown>> {
   const now = options.now ?? Date.now()
   const author = options.author ?? "system"
@@ -437,7 +439,10 @@ export function gridEventAnnotations(
       x0: event.start,
       x1: event.end,
       label: event.label,
-      color: event.kind === "outage" ? "var(--semiotic-danger)" : "var(--semiotic-warning)",
+      color:
+        event.kind === "outage"
+          ? "var(--semiotic-danger)"
+          : "var(--semiotic-warning)",
       fillOpacity: 0.12,
       emphasis: "secondary",
       // Anchor mid-window for callout-style notes if consumers re-map type.
@@ -452,17 +457,17 @@ export function gridEventAnnotations(
         confidence: 0.85,
         createdAt,
         stableId: event.id,
-        dataVersion: String(event.start),
+        dataVersion: String(event.start)
       },
       lifecycle: {
         status: "accepted",
         ttlHint: event.ttlHint ?? "P14D",
-        anchor: "fixed",
+        anchor: "fixed"
       },
       // Stamped so applyAnnotationLifecycle can age relative to scenario "now".
       _eventKind: event.kind,
       _createdAtMs: event.start,
-      _nowMs: now,
+      _nowMs: now
     }
   })
 }
@@ -470,7 +475,7 @@ export function gridEventAnnotations(
 /** Pick the top N tightest-margin hours for a ranked risk strip. */
 export function tightestHours(
   reserves: readonly ReserveSnapshot[],
-  n = 12,
+  n = 12
 ): ReserveSnapshot[] {
   return [...reserves]
     .filter((r) => Number.isFinite(r.reserveMarginPct))
@@ -483,7 +488,7 @@ export function formatMw(value: number, digits = 0): string {
   if (!Number.isFinite(value)) return "—"
   return `${value.toLocaleString(undefined, {
     maximumFractionDigits: digits,
-    minimumFractionDigits: digits,
+    minimumFractionDigits: digits
   })} MW`
 }
 

@@ -460,6 +460,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,
+      hoverRadius: props.hoverRadius,
       mobileInteraction: resolved.mobileInteraction,
       customHoverBehavior, customClickBehavior,
     }),

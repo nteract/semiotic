@@ -4,7 +4,10 @@
  */
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
-import type { PhysicsPipelineConfig, PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
+import type {
+  PhysicsPipelineConfig,
+  PhysicsQueuedSpawn
+} from "../../stream/physics/PhysicsPipelineStore"
 import {
   CORE_KIND,
   NEGATIVE_KIND,
@@ -21,11 +24,7 @@ import {
   type GauntletViabilityFn
 } from "./gauntletTypes"
 
-export {
-  CORE_KIND,
-  POSITIVE_KIND,
-  NEGATIVE_KIND
-} from "./gauntletTypes"
+export { CORE_KIND, POSITIVE_KIND, NEGATIVE_KIND } from "./gauntletTypes"
 export type {
   GauntletAccessors,
   GauntletBodyDatum,
@@ -52,7 +51,8 @@ export const DEFAULT_WIDTH = 900
 export const DEFAULT_HEIGHT = 520
 
 export function gauntletWallColliders(
-  layout: Pick<GauntletLayout, "width" | "floorY"> & Partial<Pick<GauntletLayout, "height">>
+  layout: Pick<GauntletLayout, "width" | "floorY"> &
+    Partial<Pick<GauntletLayout, "height">>
 ): NonNullable<PhysicsPipelineConfig["colliders"]> {
   const wall = resolveGauntletWall(layout)
   return [
@@ -111,7 +111,6 @@ export function gauntletWallColliders(
   ]
 }
 
-
 export function readAccessor<TDatum extends Datum, TValue>(
   datum: TDatum,
   index: number,
@@ -121,10 +120,12 @@ export function readAccessor<TDatum extends Datum, TValue>(
   if (!accessor) return fallback
   return typeof accessor === "function"
     ? accessor(datum, index)
-    : (datum[accessor] as TValue) ?? fallback
+    : ((datum[accessor] as TValue) ?? fallback)
 }
 
-export function propertyLabel(property: GauntletPropertyDefinition | undefined): string {
+export function propertyLabel(
+  property: GauntletPropertyDefinition | undefined
+): string {
   return property?.label ?? property?.id ?? "property"
 }
 
@@ -132,11 +133,18 @@ export function projectCoreId(projectId: string): string {
   return `gauntlet:${projectId}:core`
 }
 
-export function projectPositiveId(projectId: string, propertyId: string): string {
+export function projectPositiveId(
+  projectId: string,
+  propertyId: string
+): string {
   return `gauntlet:${projectId}:positive:${propertyId}`
 }
 
-export function projectNegativeId(projectId: string, propertyId: string, index: number): string {
+export function projectNegativeId(
+  projectId: string,
+  propertyId: string,
+  index: number
+): string {
   return `gauntlet:${projectId}:negative:${propertyId}:${index}`
 }
 
@@ -197,7 +205,11 @@ export function clampGauntletPoint(
   }
 }
 
-export function buildLayout(size: [number, number], gates: readonly GauntletGate[] | undefined, crashOffset: number): GauntletLayout {
+export function buildLayout(
+  size: [number, number],
+  gates: readonly GauntletGate[] | undefined,
+  crashOffset: number
+): GauntletLayout {
   const [width, height] = size
   const compact = width < 220 || height < 160
   const routeY = Math.round(height * 0.48)
@@ -224,9 +236,11 @@ export function buildLayout(size: [number, number], gates: readonly GauntletGate
       ...gate,
       id: gate.id,
       x: gate.x ?? Math.round(gateStart + index * gateStep),
-      width: gate.width ?? (compact
-        ? Math.max(8, Math.round(width * 0.07))
-        : Math.max(54, Math.round(width * 0.07)))
+      width:
+        gate.width ??
+        (compact
+          ? Math.max(8, Math.round(width * 0.07))
+          : Math.max(54, Math.round(width * 0.07)))
     })),
     graveyardX: Math.round(width * (compact ? 0.72 : 0.84)),
     graveyardY: floorY - 4,
@@ -238,7 +252,9 @@ export function buildLayout(size: [number, number], gates: readonly GauntletGate
   }
 }
 
-export function defaultPlacement(layout: GauntletLayout): Required<GauntletProjectPlacement> {
+export function defaultPlacement(
+  layout: GauntletLayout
+): Required<GauntletProjectPlacement> {
   return {
     graveyardX: layout.graveyardX,
     graveyardY: layout.graveyardY,
@@ -293,12 +309,16 @@ export function defaultViability<TDatum extends Datum>(
     (sum, id) => sum + (positiveProperties.get(id)?.value ?? 1),
     0
   )
-  const missing = project.missingPositiveIds.length + project.poppedPositiveIds.length
+  const missing =
+    project.missingPositiveIds.length + project.poppedPositiveIds.length
   const load = project.negativeIds.reduce(
     (sum, id) => sum + (negativeProperties.get(id)?.load ?? 1),
     0
   )
-  return Math.max(0, Math.min(100, 75 + lift * 3 - load * 8 - project.delay * 1.2 - missing * 5))
+  return Math.max(
+    0,
+    Math.min(100, 75 + lift * 3 - load * 8 - project.delay * 1.2 - missing * 5)
+  )
 }
 
 export function createInitialState<TDatum extends Datum>(
@@ -308,12 +328,21 @@ export function createInitialState<TDatum extends Datum>(
   positiveProperties: readonly GauntletPropertyDefinition[],
   negativeProperties: Map<string, GauntletPropertyDefinition>
 ): GauntletProjectState<TDatum> {
-  const id = String(readAccessor(datum, index, props.idAccessor, datum.id != null ? String(datum.id) : `project-${index}`))
-  const allPositiveIds = positiveProperties.map((property) => property.id)
-  const activePositiveIds = [...readAccessor(datum, index, props.positiveAccessor, allPositiveIds)]
-  const negativeIds = [...readAccessor(datum, index, props.negativeAccessor, [])].filter((id) =>
-    negativeProperties.has(id)
+  const id = String(
+    readAccessor(
+      datum,
+      index,
+      props.idAccessor,
+      datum.id != null ? String(datum.id) : `project-${index}`
+    )
   )
+  const allPositiveIds = positiveProperties.map((property) => property.id)
+  const activePositiveIds = [
+    ...readAccessor(datum, index, props.positiveAccessor, allPositiveIds)
+  ]
+  const negativeIds = [
+    ...readAccessor(datum, index, props.negativeAccessor, [])
+  ].filter((id) => negativeProperties.has(id))
   const state: GauntletProjectState<TDatum> = {
     id,
     activePositiveIds,
@@ -323,7 +352,9 @@ export function createInitialState<TDatum extends Datum>(
     eventHistory: [],
     killed: false,
     metrics: { ...readAccessor(datum, index, props.metricsAccessor, {}) },
-    missingPositiveIds: allPositiveIds.filter((propertyId) => !activePositiveIds.includes(propertyId)),
+    missingPositiveIds: allPositiveIds.filter(
+      (propertyId) => !activePositiveIds.includes(propertyId)
+    ),
     negativeIds,
     outcome: "in_process",
     poppedPositiveIds: [],
@@ -350,9 +381,9 @@ export function buildProjectSpawns<TDatum extends Datum>(
   const spatialScale = gauntletSpatialScale(layout)
   const defaultCoreRadius = Math.max(3, 28 * spatialScale)
   const coreX = placement.startX
-  const coreY = placement.startY + (
-    placement.startY === layout.routeY ? projectIndex * 38 * spatialScale : 0
-  )
+  const coreY =
+    placement.startY +
+    (placement.startY === layout.routeY ? projectIndex * 38 * spatialScale : 0)
   const corePatch = coreBody?.(project, projectIndex, layout, placement) ?? {}
   const authoredCoreX = corePatch.x ?? coreX
   const authoredCoreY = corePatch.y ?? coreY
@@ -393,7 +424,11 @@ export function buildProjectSpawns<TDatum extends Datum>(
   for (const propertyId of project.activePositiveIds) {
     const property = positiveProperties.get(propertyId)
     if (!property) continue
-    const slot = featureSlot(project.activePositiveIds, propertyId, spatialScale)
+    const slot = featureSlot(
+      project.activePositiveIds,
+      propertyId,
+      spatialScale
+    )
     const radius = property.radius ?? Math.max(2, 10 * spatialScale)
     const rawX = clampedCore.x + Math.cos(slot.angle) * slot.radius
     const rawY = clampedCore.y + Math.sin(slot.angle) * slot.radius
@@ -415,15 +450,21 @@ export function buildProjectSpawns<TDatum extends Datum>(
         property,
         sourceDatum: project.datum
       } satisfies GauntletBodyDatum<TDatum>,
-      springs: property.spring === false ? [] : [
-        {
-          target: { type: "body", bodyId: projectCoreId(project.id) },
-          stiffness: 0.56,
-          damping: 0.9,
-          restLength: Math.max(6, (52 + (slot.index % 2) * 4) * spatialScale),
-          ...(property.spring ?? {})
-        }
-      ]
+      springs:
+        property.spring === false
+          ? []
+          : [
+              {
+                target: { type: "body", bodyId: projectCoreId(project.id) },
+                stiffness: 0.56,
+                damping: 0.9,
+                restLength: Math.max(
+                  6,
+                  (52 + (slot.index % 2) * 4) * spatialScale
+                ),
+                ...(property.spring ?? {})
+              }
+            ]
     })
   }
   project.negativeIds.forEach((propertyId, index) => {
@@ -465,9 +506,12 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
   coreBody?: GauntletCoreBodyFn<TDatum>
   viability?: GauntletViabilityFn<TDatum>
 }): {
-  config: NonNullable<import("../../stream/physics/PhysicsPipelineStore").PhysicsPipelineConfig>
+  config: NonNullable<
+    import("../../stream/physics/PhysicsPipelineStore").PhysicsPipelineConfig
+  >
   initialSpawns: PhysicsQueuedSpawn[]
   layout: GauntletLayout
+  states: GauntletProjectState<TDatum>[]
 } {
   const size = options.size ?? [900, 520]
   const layout = buildLayout(size, options.gates, options.crashOffset ?? 30)
@@ -521,6 +565,7 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
   })
   return {
     layout,
+    states,
     initialSpawns,
     config: {
       fixedDt: 1 / 60,
@@ -573,14 +618,17 @@ export function buildNegativeSpawn<TDatum extends Datum>(
       property,
       sourceDatum: project.datum
     } satisfies GauntletBodyDatum<TDatum>,
-    springs: property.spring === false ? [] : [
-      {
-        target: { type: "body", bodyId: projectCoreId(project.id) },
-        stiffness: 0.62,
-        damping: 0.92,
-        restLength: Math.max(6, (52 + (index % 4) * 3) * spatialScale),
-        ...(property.spring ?? {})
-      }
-    ]
+    springs:
+      property.spring === false
+        ? []
+        : [
+            {
+              target: { type: "body", bodyId: projectCoreId(project.id) },
+              stiffness: 0.62,
+              damping: 0.92,
+              restLength: Math.max(6, (52 + (index % 4) * 3) * spatialScale),
+              ...(property.spring ?? {})
+            }
+          ]
   }
 }
