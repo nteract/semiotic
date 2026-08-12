@@ -213,8 +213,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22.x is covered by testing-full; matrix is the other engines only.
-        node-version: ["20.19.0", "24.x", "26.x"]
+        # 22.x is covered by testing-full; matrix is the other supported
+        # engines only. Node 20 is intentionally no longer supported because
+        # the test dependency graph requires Node >=22.
+        node-version: ["24.x", "26.x"]
 
     steps:
       - name: Checkout source code

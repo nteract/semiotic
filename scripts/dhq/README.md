@@ -14,7 +14,7 @@ enter cold-path library entry graphs (`semiotic`, `semiotic/network`,
 
 ## Commands
 
-From the repo root (Node 20+):
+From the repo root (Node 22+):
 
 ```bash
 # Full rebuild of example data (writes dhqThunderdome.generated.js)
