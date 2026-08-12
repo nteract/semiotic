@@ -17,7 +17,7 @@ function collectDeclarations(root) {
 
 function resolveAlias(symbol, checker) {
   let current = symbol
-  for (let hops = 0; current && (current.flags & ts.SymbolFlags.Alias) && hops < 32; hops += 1) {
+  for (let hops = 0; (current.flags & ts.SymbolFlags.Alias) && hops < 32; hops += 1) {
     const resolved = checker.getAliasedSymbol(current)
     if (!resolved || resolved === current) break
     current = resolved
