@@ -247,7 +247,7 @@ export interface ChartCapability {
    */
   variants?: ReadonlyArray<ChartVariant>
   /** Caveats independent of variants (e.g. "log scale skipped for negative values"). */
-  caveats?: (profile: ChartDataProfile) => ReadonlyArray<string>
+  caveats?: (profile: ChartDataProfile, variant?: ChartVariant) => ReadonlyArray<string>
   /**
    * Build the props you'd pass to this chart for this dataset. Should produce
    * a runnable config (accessor names, etc.) so consumers can `<Component {...props}>`.

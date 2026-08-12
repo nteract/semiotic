@@ -30,6 +30,13 @@ const PHYSICS_TABLE_PAGE_SIZE = 25
 const DATA_TABLE_CLASS = "semiotic-accessible-data-table"
 const DATA_TABLE_HIDDEN_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-hidden`
 const DATA_TABLE_VISIBLE_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-visible`
+const HIDDEN_TRIGGER_STYLE: React.CSSProperties = {
+  boxSizing: "border-box",
+  maxWidth: "100%",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis"
+}
 
 const TABLE_PANEL_STYLE: React.CSSProperties = {
   position: "absolute",
@@ -374,7 +381,11 @@ function PhysicsSemanticDataTable(props: {
         style={SR_ONLY_STYLE}
         onFocus={handleFocus}
       >
-        <button type="button" onClick={() => setSrExpanded(true)}>
+        <button
+          type="button"
+          onClick={() => setSrExpanded(true)}
+          style={HIDDEN_TRIGGER_STYLE}
+        >
           View data summary ({items.length} semantic items)
         </button>
       </div>

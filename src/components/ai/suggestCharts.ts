@@ -283,7 +283,6 @@ export function suggestCharts(
       baseScores[intent] = score(scorer, scaledProfile)
     }
 
-    const baseCaveats = capability.caveats ? Array.from(capability.caveats(scaledProfile)) : []
     const variants: ReadonlyArray<ChartVariant | undefined> =
       includeVariants && capability.variants && capability.variants.length > 0
         ? capability.variants
@@ -294,6 +293,9 @@ export function suggestCharts(
       const baseComposite = compositeScore(intentScores, rankingIntents)
       const variantRubric = applyVariantToRubric(capability.rubric, variant)
       const props = capability.buildProps(profile, variant)
+      const baseCaveats = capability.caveats
+        ? Array.from(capability.caveats(scaledProfile, variant))
+        : []
 
       // Receivability (non-visual audiences only) — audit the candidate and
       // derive the signal ONCE here; it feeds both the score bias and the
@@ -515,7 +517,7 @@ export function scoreChart(
   if (recipeBias.excluded) return { reason: recipeBias.excluded }
   reasons.push(...recipeBias.reasons)
   const caveats = [
-    ...(capability.caveats ? capability.caveats(profile) : []),
+    ...(capability.caveats ? capability.caveats(profile, variant) : []),
     ...(variant?.caveats ?? []),
     ...recipeBias.caveats,
   ]

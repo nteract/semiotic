@@ -283,7 +283,57 @@ export interface BumpLayoutConfig {
   labelStyle?: React.CSSProperties | ((datum: Datum) => React.CSSProperties)
   showPoints: boolean
   pointRadius: number
-  showLabels: boolean | "start" | "end" | "both"
+  showLabels: boolean | "start" | "end" | "both" | "auto"
+  labelPriorityAccessor?: string | ((datum: Datum) => number)
+  maxLabels?: number
+}
+
+export interface BumpLabelSelectionCandidate {
+  id: string
+  side: "start" | "end"
+  y: number
+  rank: number
+  highlighted: boolean
+  priority?: number
+}
+
+/**
+ * Keep endpoint labels readable when several trajectories share a rank. The
+ * selection is deterministic for CSR and SSR: explicit priority wins, then
+ * highlighted status, then rank, then source order. Collision checks are
+ * side-local because start and end labels occupy different horizontal bands.
+ */
+export function selectBumpLabelCandidates(
+  candidates: readonly BumpLabelSelectionCandidate[],
+  plotHeight: number,
+  mode: boolean | "auto",
+  maxLabels?: number,
+): Set<string> {
+  const autoBudget = mode === "auto"
+    ? (Number.isFinite(maxLabels) && (maxLabels ?? 0) >= 0
+      ? Math.floor(maxLabels as number)
+      : Math.max(1, Math.floor(plotHeight / 18)))
+    : Infinity
+  const ranked = candidates
+    .map((candidate, index) => ({ candidate, index }))
+    .sort((a, b) => {
+      const priorityA = a.candidate.priority ?? 0
+      const priorityB = b.candidate.priority ?? 0
+      return priorityB - priorityA
+        || Number(b.candidate.highlighted) - Number(a.candidate.highlighted)
+        || a.candidate.rank - b.candidate.rank
+        || a.index - b.index
+    })
+
+  const selected: BumpLabelSelectionCandidate[] = []
+  for (const { candidate } of ranked) {
+    if (selected.length >= autoBudget) break
+    if (selected.some((other) =>
+      other.side === candidate.side && Math.abs(other.y - candidate.y) < 14
+    )) continue
+    selected.push(candidate)
+  }
+  return new Set(selected.map((candidate) => candidate.id))
 }
 
 interface BumpLabelProps {
@@ -387,6 +437,11 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
 
   const nodes: Array<AreaSceneNode | PointSceneNode> = []
   const labels: React.ReactNode[] = []
+  const labelCandidates: Array<BumpLabelSelectionCandidate & {
+    datum: RankedBumpDatum
+    x: number
+    color: string
+  }> = []
 
   for (const series of orderedSeries) {
     const rows = (bySeries.get(series) ?? []).sort((a, b) => a.x - b.x)
@@ -489,21 +544,50 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
 
     const labelMode = config.showLabels === true ? "end" : config.showLabels
     const addLabel = (row: RankedBumpDatum, index: number, side: "start" | "end") => {
-      labels.push(
-        <BumpLabel
-          key={`${series}-${side}`}
-          datum={row}
-          x={centers[index].x}
-          y={centers[index].y}
-          side={side}
-          color={typeof areaStyle.fill === "string" ? areaStyle.fill : color}
-          highlighted={isHighlighted}
-          labelStyle={config.labelStyle}
-        />,
-      )
+      const priorityValue = config.labelPriorityAccessor == null
+        ? undefined
+        : typeof config.labelPriorityAccessor === "function"
+          ? config.labelPriorityAccessor(row.__bumpRaw)
+          : Number(row.__bumpRaw[config.labelPriorityAccessor])
+      labelCandidates.push({
+        id: `${series}\u0000${side}`,
+        datum: row,
+        x: centers[index].x,
+        y: centers[index].y,
+        side,
+        rank: row.__bumpRank,
+        highlighted: isHighlighted,
+        priority: Number.isFinite(priorityValue) ? priorityValue : undefined,
+        color: typeof areaStyle.fill === "string" ? areaStyle.fill : color,
+      })
     }
     if (labelMode === "start" || labelMode === "both") addLabel(rows[0], 0, "start")
-    if (labelMode === "end" || labelMode === "both") addLabel(rows.at(-1)!, rows.length - 1, "end")
+    if (labelMode === "end" || labelMode === "both" || labelMode === "auto") {
+      addLabel(rows.at(-1)!, rows.length - 1, "end")
+    }
+  }
+
+  const labelMode = config.showLabels === true ? "end" : config.showLabels
+  const visibleLabelIds = selectBumpLabelCandidates(
+    labelCandidates,
+    ctx.dimensions.plot.height,
+    labelMode === "auto" ? "auto" : true,
+    config.maxLabels,
+  )
+  for (const candidate of labelCandidates) {
+    if (!visibleLabelIds.has(candidate.id)) continue
+    labels.push(
+      <BumpLabel
+        key={candidate.id}
+        datum={candidate.datum}
+        x={candidate.x}
+        y={candidate.y}
+        side={candidate.side}
+        color={candidate.color}
+        highlighted={candidate.highlighted}
+        labelStyle={config.labelStyle}
+      />,
+    )
   }
 
   return {
@@ -552,8 +636,12 @@ export interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartP
   lineOpacity?: number
   showPoints?: boolean
   pointRadius?: number
-  /** Endpoint labels. `true` is equivalent to `"end"`. Default `true`. */
-  showLabels?: boolean | "start" | "end" | "both"
+  /** Endpoint labels. `true` is equivalent to `"end"`; `"auto"` sheds labels by plot density. Default `true`. */
+  showLabels?: boolean | "start" | "end" | "both" | "auto"
+  /** Numeric field or accessor used to keep higher-priority labels when labels collide. */
+  labelPriorityAccessor?: ChartAccessor<TDatum, number>
+  /** Optional hard cap on visible labels when `showLabels="auto"`. */
+  maxLabels?: number
   showAxes?: boolean
   showGrid?: boolean
   showLegend?: boolean
@@ -629,6 +717,8 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showPoints = false,
     pointRadius = 3,
     showLabels = true,
+    labelPriorityAccessor,
+    maxLabels,
     showAxes = true,
     showGrid = true,
     showLegend = false,
@@ -698,11 +788,14 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showPoints,
     pointRadius,
     showLabels,
+    labelPriorityAccessor: labelPriorityAccessor as BumpLayoutConfig["labelPriorityAccessor"],
+    maxLabels,
   }), [
     ribbon, curve, samplesPerSegment, ribbonSizeRange, ranked.valueExtent,
     ranked.seriesOrder, lineWidth, ribbonOpacity, lineOpacity, neutralColor,
     props.color, props.stroke, props.strokeWidth, props.opacity, styleRules,
     frameAreaStyle, framePointStyle, labelStyle, showPoints, pointRadius, showLabels,
+    labelPriorityAccessor, maxLabels,
   ])
 
   const { tooltip: resolvedTooltip, formatX } = useBumpTooltip<TDatum>({

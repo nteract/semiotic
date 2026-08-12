@@ -142,6 +142,7 @@ const KIND_PHRASE: Record<string, string> = {
   QuadrantChart: "quadrant chart",
   MultiAxisLineChart: "dual-axis line chart",
   CandlestickChart: "candlestick chart",
+  BumpChart: "bump chart",
   Heatmap: "heatmap",
   MinimapChart: "line chart",
   BarChart: "bar chart",
@@ -489,6 +490,7 @@ function dominantIntent(
 
 /** Act implied by the component's own family classification (no descriptor needed). */
 function componentAct(component: string): CommunicativeAct | undefined {
+  if (component === "BumpChart") return "ranking"
   if (PART_TO_WHOLE.has(component) || component === "StackedAreaChart")
     return "apportioning"
   if (SCATTER.has(component)) return "relating"
@@ -881,7 +883,9 @@ export function describeChart(
 
   // ── L1: encoding ───────────────────────────────────────────────────────
   if (want.has("l1") && !PHYSICS.has(component)) {
-    if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
+    if (component === "BumpChart") {
+      levels.l1 = `A ${kind} of ${measureName} ranked by ${series ?? "series"} across ${dimensionName}.`
+    } else if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
       levels.l1 =
         `A ${kind} of ${measureName} by ${dimensionName}` +
         (series ? `, split by ${series}.` : ".")
@@ -910,6 +914,7 @@ export function describeChart(
   // Families where a quantitative measure makes L2/L3 meaningful.
   const statsFamily =
     XY_FAMILY.has(component) ||
+    component === "BumpChart" ||
     BAR_FAMILY.has(component) ||
     PART_TO_WHOLE.has(component) ||
     DISTRIBUTION.has(component)

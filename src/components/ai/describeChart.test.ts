@@ -36,6 +36,23 @@ describe("describeChart — L1 encoding", () => {
     expect(r.levels.l1).toContain("split by region")
   })
 
+  it("describes BumpChart's ranking and encoding channels", () => {
+    const r = describeChart(
+      "BumpChart",
+      {
+        data: [{ createTime: "2025-01-01", partitionsCount: 12, compressionType: "GZIP" }],
+        xAccessor: "createTime",
+        yAccessor: "partitionsCount",
+        lineBy: "compressionType",
+      },
+      { levels: ["l1"] },
+    )
+    expect(r.levels.l1).toBe(
+      "A bump chart of partitionsCount ranked by compressionType across createTime.",
+    )
+    expect(r.levels.l1).not.toContain("chart chart")
+  })
+
   it("does not invent a pooled trend across multiple series", () => {
     // `stats` pools every series end-to-end; a "rises from first to last"
     // sentence would describe the concatenation, not a real trend.

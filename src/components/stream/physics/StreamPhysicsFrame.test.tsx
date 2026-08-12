@@ -638,7 +638,15 @@ describe("StreamPhysicsFrame", () => {
       />
     )
 
-    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+    const trigger = screen.getByRole("button", { name: /view data summary/i })
+    expect(trigger).toHaveStyle({
+      boxSizing: "border-box",
+      maxWidth: "100%",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis"
+    })
+    fireEvent.click(trigger)
 
     const region = screen.getByRole("region", {
       name: /data summary for semantic physics/i
