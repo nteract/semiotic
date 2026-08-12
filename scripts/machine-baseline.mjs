@@ -67,7 +67,9 @@ if (!existsSync(MACHINE_BASELINE_PATH)) {
 const baseline = readRecordedBaseline()
 
 const comparison = compareMachineBaselines(baseline, current, { enforceStatic: !compare })
-reportComparison(comparison, { snapshotDriftIsError: !compare })
+reportComparison(comparison, {
+  snapshotDriftIsError: !compare && comparison.timingEnvironment.compatible,
+})
 
 if (!comparison.ok) {
   if (compare) {
@@ -83,7 +85,11 @@ if (compare) {
   process.stdout.write("✓ machine candidate has no measured regression; the recorded baseline was not changed\n")
 } else {
   process.stdout.write("✓ machine baseline is current")
-  process.stdout.write(comparison.timingEnvironment.compatible ? " (static metrics and p50 timing checked)\n" : " (static metrics checked; timing reported only)\n")
+  process.stdout.write(
+    comparison.staticComparisonEnforced
+      ? " (static metrics and p50 timing checked)\n"
+      : " (cross-host static snapshot skipped; timing reported only)\n",
+  )
 }
 
 function readRecordedBaseline() {

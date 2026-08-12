@@ -840,6 +840,11 @@ export function compareMachineBaselines(baseline, current, options = {}) {
   }
 
   const environment = timingEnvironmentMatch(baseline.referenceEnvironment, current.referenceEnvironment)
+  // Packed archive hashes and aggregate docs payloads are host-produced
+  // artifacts. Keep exact static enforcement for the recorded environment,
+  // while allowing other hosts to report their measurements without turning
+  // a Darwin-vs-Linux comparison into a false release failure.
+  const enforceStaticForEnvironment = enforceStatic && environment.compatible
   const timingRegressions = []
   const timingWarnings = []
   const contractDifferences = []
@@ -883,6 +888,7 @@ export function compareMachineBaselines(baseline, current, options = {}) {
   return {
     structuralDifferences,
     snapshotDifferences,
+    staticComparisonEnforced: enforceStaticForEnvironment,
     blockingStructuralDifferences: [...validationDifferences, ...contractDifferences],
     timingEnvironment: environment,
     timingRegressions,
@@ -890,7 +896,7 @@ export function compareMachineBaselines(baseline, current, options = {}) {
     ok:
       validationDifferences.length === 0 &&
       contractDifferences.length === 0 &&
-      (!enforceStatic || snapshotDifferences.length === 0) &&
+      (!enforceStaticForEnvironment || snapshotDifferences.length === 0) &&
       timingRegressions.length === 0,
   }
 }
