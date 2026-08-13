@@ -85,6 +85,23 @@ describe("selectBumpLabelCandidates", () => {
 
     expect(selected).toEqual(new Set(["high", "start"]))
   })
+
+  it("keeps the density budget when maxLabels is larger than it", () => {
+    const selected = selectBumpLabelCandidates(
+      Array.from({ length: 15 }, (_, index) => ({
+        id: `series-${index}`,
+        side: "end" as const,
+        y: index * 20,
+        rank: index + 1,
+        highlighted: false,
+      })),
+      180,
+      "auto",
+      20,
+    )
+
+    expect(selected).toHaveLength(10)
+  })
 })
 
 describe("resolveBumpColorScheme", () => {

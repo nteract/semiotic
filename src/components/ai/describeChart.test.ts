@@ -45,12 +45,13 @@ describe("describeChart — L1 encoding", () => {
         yAccessor: "partitionsCount",
         lineBy: "compressionType",
       },
-      { levels: ["l1"] },
+      { levels: ["l1", "l4"] },
     )
     expect(r.levels.l1).toBe(
-      "A bump chart of partitionsCount ranked by compressionType across createTime.",
+      "A bump chart ranking compressionType by partitionsCount across createTime.",
     )
     expect(r.levels.l1).not.toContain("chart chart")
+    expect(r.levels.l4).toContain("ranking chart")
   })
 
   it("does not invent a pooled trend across multiple series", () => {

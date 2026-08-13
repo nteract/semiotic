@@ -884,7 +884,7 @@ export function describeChart(
   // ── L1: encoding ───────────────────────────────────────────────────────
   if (want.has("l1") && !PHYSICS.has(component)) {
     if (component === "BumpChart") {
-      levels.l1 = `A ${kind} of ${measureName} ranked by ${series ?? "series"} across ${dimensionName}.`
+      levels.l1 = `A ${kind} ranking ${series ?? "series"} by ${measureName} across ${dimensionName}.`
     } else if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
       levels.l1 =
         `A ${kind} of ${measureName} by ${dimensionName}` +
@@ -913,10 +913,8 @@ export function describeChart(
 
   // Families where a quantitative measure makes L2/L3 meaningful.
   const statsFamily =
-    XY_FAMILY.has(component) ||
-    component === "BumpChart" ||
-    BAR_FAMILY.has(component) ||
-    PART_TO_WHOLE.has(component) ||
+    XY_FAMILY.has(component) || component === "BumpChart" ||
+    BAR_FAMILY.has(component) || PART_TO_WHOLE.has(component) ||
     DISTRIBUTION.has(component)
 
   // Stats power L2, L3, and the L4 directive; compute once if we have data + a measure.
@@ -946,12 +944,9 @@ export function describeChart(
   }
 
   // ── L3: trend (only meaningful over an ordered dimension) ────────────────
-  // Skip directional/extremal claims when the data is split into multiple
-  // series: `stats` pools every series end-to-end (row order), so a "rises
-  // from first to last" sentence would describe the concatenation, not any
-  // real trend — actively misleading next to, say, several rising lines.
-  // L1 still reports the split and L2 the pooled range; richer per-series
-  // trend narration is a future enhancement.
+  // Split-series stats pool rows end-to-end, so directional claims would
+  // describe the concatenation rather than any real trend. L1 reports the
+  // split and L2 the pooled range; per-series narration is future work.
   if (want.has("l3") && stats && !series && XY_FAMILY.has(component)) {
     levels.l3 = trendSentence(stats, measureName, fmtNum)
   } else if (want.has("l3") && stats && !series && BAR_FAMILY.has(component)) {

@@ -23,13 +23,15 @@ export function rankColumnOccupancy(
     ? profile.primary.x ?? profile.primary.time
     : profile.primary.category
   const seriesField = profile.primary.series
-  if (!columnField || !seriesField) return undefined
+  const valueField = profile.primary.y
+  if (!columnField || !seriesField || !valueField) return undefined
 
   const seriesByColumn = new Map<string, Set<string>>()
   for (const datum of profile.data) {
     const column = datum[columnField]
     const series = datum[seriesField]
-    if (column == null || series == null) continue
+    const value = Number(datum[valueField])
+    if (column == null || series == null || !Number.isFinite(value)) continue
     const key = String(column)
     const values = seriesByColumn.get(key) ?? new Set<string>()
     values.add(String(series))

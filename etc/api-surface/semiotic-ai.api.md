@@ -658,7 +658,7 @@ interface-member ChartAbandonedEvent::property::reason = optional reason: string
 interface-member ChartAbandonedEvent::property::type = required type: "chart-abandoned"
 interface-member ChartCapability::property::buildProps = required buildProps: (profile: ChartDataProfile, variant?: ChartVariant) => Record<string, unknown>
 interface-member ChartCapability::property::candidateKind = optional candidateKind: ChartCandidateKind | undefined
-interface-member ChartCapability::property::caveats = optional caveats: ((profile: ChartDataProfile) => ReadonlyArray<string>) | undefined
+interface-member ChartCapability::property::caveats = optional caveats: ((profile: ChartDataProfile, variant?: ChartVariant) => ReadonlyArray<string>) | undefined
 interface-member ChartCapability::property::component = required component: string
 interface-member ChartCapability::property::displayName = optional displayName: string | undefined
 interface-member ChartCapability::property::family = required family: ChartFamily

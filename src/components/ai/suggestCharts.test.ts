@@ -80,6 +80,22 @@ describe("suggestCharts", () => {
     expect("score" in result).toBe(true)
   })
 
+  it("does not count non-finite values as competing ranking series", () => {
+    const invalidSeriesRows = Array.from({ length: 4 }, (_, year) => [
+      { year, team: "Alpha", score: 10 + year },
+      { year, team: "Bravo", score: Number.NaN },
+    ]).flat()
+    const result = suggestCharts(invalidSeriesRows, {
+      allow: ["BumpChart"],
+      includeVariants: false,
+    })
+
+    expect(result).toHaveLength(0)
+    const explanation = explainCapabilityFit(invalidSeriesRows, { allow: ["BumpChart"] })
+    expect(explanation.rejected.find((candidate) => candidate.component === "BumpChart")?.reason)
+      .toMatch(/compete within the same x column/i)
+  })
+
   it("ranks LineChart highly for temporal multi-series with intent=trend", () => {
     const suggestions = suggestCharts(temporalMultiSeries, { intent: "trend", includeVariants: false })
     expect(suggestions.length).toBeGreaterThan(0)
