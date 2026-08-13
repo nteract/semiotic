@@ -1,6 +1,59 @@
-import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import type { ChartCapability, ChartDataProfile, ChartVariant } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
+
+export interface RankColumnOccupancy {
+  columns: number
+  min: number
+  median: number
+  max: number
+  contestedColumns: number
+}
+
+/**
+ * Count the distinct ranking series competing in each ranking column. A
+ * distinct x count alone is not enough for a bump chart: a resource list with
+ * one timestamp per row has plenty of columns but no rank competition.
+ */
+export function rankColumnOccupancy(
+  profile: Pick<ChartDataProfile, "data" | "primary">,
+): RankColumnOccupancy | undefined {
+  const orderedX = !!(profile.primary.x || profile.primary.time)
+  const columnField = orderedX
+    ? profile.primary.x ?? profile.primary.time
+    : profile.primary.category
+  const seriesField = profile.primary.series
+  const valueField = profile.primary.y
+  if (!columnField || !seriesField || !valueField) return undefined
+
+  const seriesByColumn = new Map<string, Set<string>>()
+  for (const datum of profile.data) {
+    const column = datum[columnField]
+    const series = datum[seriesField]
+    const value = Number(datum[valueField])
+    if (column == null || series == null || !Number.isFinite(value)) continue
+    const key = String(column)
+    const values = seriesByColumn.get(key) ?? new Set<string>()
+    values.add(String(series))
+    seriesByColumn.set(key, values)
+  }
+
+  const counts = Array.from(seriesByColumn.values(), (values) => values.size)
+  if (counts.length === 0) return undefined
+  counts.sort((a, b) => a - b)
+  const middle = Math.floor(counts.length / 2)
+  const median = counts.length % 2 === 0
+    ? (counts[middle - 1] + counts[middle]) / 2
+    : counts[middle]
+
+  return {
+    columns: counts.length,
+    min: counts[0],
+    median,
+    max: counts[counts.length - 1],
+    contestedColumns: counts.filter((count) => count >= 2).length,
+  }
+}
 
 /**
  * BumpChart capability — the ranking-over-x chart. Its canonical job is the
@@ -33,6 +86,15 @@ export const BumpChartCapability: ChartCapability = {
     }
     const columns = orderedX ? (profile.uniqueXCount ?? 0) : (profile.categoryCount ?? 0)
     if (columns < 2) return "needs at least 2 ranking columns to show rank movement"
+    const occupancy = rankColumnOccupancy(profile)
+    if (!occupancy || occupancy.median < 2 || occupancy.contestedColumns < 2) {
+      const columnLabel = occupancy?.columns ?? columns
+      const median = occupancy?.median ?? 0
+      const consequence = occupancy?.max === 1
+        ? "so every trajectory would sit at rank 1"
+        : "so rank movement would be poorly supported"
+      return `needs series that compete within the same x column; ${columnLabel} columns hold a median of ${median} series, ${consequence}`
+    }
     return null
   },
 
@@ -70,7 +132,7 @@ export const BumpChartCapability: ChartCapability = {
     },
   },
 
-  caveats: (p) => {
+  caveats: (p, variant?: ChartVariant) => {
     const out: string[] = []
     if (p.seriesCount && p.seriesCount > 12) {
       out.push(
@@ -78,7 +140,9 @@ export const BumpChartCapability: ChartCapability = {
       )
     }
     // Inherent to the encoding: order is shown, absolute magnitude is not.
-    out.push("rank position hides absolute magnitude — use ribbon to also encode value, or pair with a value chart")
+    if (variant?.props.ribbon !== true) {
+      out.push("rank position hides absolute magnitude — use ribbon to also encode value, or pair with a value chart")
+    }
     return out
   },
 

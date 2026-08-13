@@ -306,7 +306,7 @@ const data = [
 />
 ```
 
-Ranks every series within each x-column and connects each series' rank across columns — the classic "who's leading over time" chart. `yAccessor` is the magnitude used to rank (highest value = rank 1 by default; use `rankDirection="ascending"` when lower is better). `highlightTop` colors only the N best series by mean rank and greys the rest via `neutralColor`. Set `ribbon={true}` to encode the raw magnitude as true perpendicular-offset ribbon width instead of fixed-width lines — line and ribbon share the same centerline geometry, so `animate` tweens only the width. Endpoint labels show by default (`showLabels`).
+Ranks every series within each x-column and connects each series' rank across columns — the classic "who's leading over time" chart. `yAccessor` is the magnitude used to rank (highest value = rank 1 by default; use `rankDirection="ascending"` when lower is better). `highlightTop` colors only the N best series by mean rank and greys the rest via `neutralColor`. Set `ribbon={true}` to encode the raw magnitude as true perpendicular-offset ribbon width instead of fixed-width lines — line and ribbon share the same centerline geometry, so `animate` tweens only the width. Endpoint labels show by default (`showLabels`); use `showLabels="auto"` with `labelPriorityAccessor` and `maxLabels` for dense endpoints.
 
 ### StackedAreaChart
 

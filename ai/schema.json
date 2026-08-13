@@ -22311,9 +22311,19 @@
               "enum": [
                 "start",
                 "end",
-                "both"
+                "both",
+                "auto"
               ],
+              "description": "Endpoint labels; auto keeps a deterministic, density-budgeted subset.",
               "default": true
+            },
+            "labelPriorityAccessor": {
+              "type": "string",
+              "description": "Field (or React accessor function) whose higher values keep labels first when endpoints collide."
+            },
+            "maxLabels": {
+              "type": "number",
+              "description": "Optional hard cap on visible labels when showLabels is auto."
             },
             "showAxes": {
               "type": "boolean",

@@ -17,250 +17,23 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 import { resolveStyleRules, type StyleRule } from "../shared/styleRules"
-import { resolveDefaultFill, useThemeCategorical } from "../shared/hooks"
+import { useThemeCategorical } from "../shared/hooks"
 import { buildBumpRibbonGeometry } from "../../geometry/bumpRibbonGeometry"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 import { useTheme } from "../../ThemeProvider"
 import { useBumpTooltip } from "./bumpTooltip"
+import {
+  mapBumpAnnotations,
+  rankBumpData,
+  resolveBumpColorScheme,
+} from "./bumpData"
+import type {
+  RankedBumpDatum,
+} from "./bumpData"
 
-const OTHER_COLOR_GROUP = "Other"
-
-export interface RankedBumpDatum<TDatum extends Datum = Datum> extends Datum {
-  x: number
-  y: number
-  __bumpRaw: TDatum
-  __bumpSeries: string
-  __bumpColorGroup: string
-  __bumpValue: number
-  __bumpRank: number
-  __bumpXValue: unknown
-  __bumpHighlighted: boolean
-}
-
-export interface RankedBumpData<TDatum extends Datum = Datum> {
-  data: RankedBumpDatum<TDatum>[]
-  xValues: unknown[]
-  seriesOrder: string[]
-  overallOrder: string[]
-  valueExtent: [number, number]
-}
-
-export interface RankBumpDataOptions<TDatum extends Datum = Datum> {
-  xAccessor?: ChartAccessor<TDatum, number | Date | string>
-  yAccessor?: ChartAccessor<TDatum, number>
-  lineBy?: ChartAccessor<TDatum, string>
-  rankDirection?: "descending" | "ascending"
-  highlightTop?: number
-}
-
-function accessorValue<TDatum extends Datum, TValue>(
-  accessor: ChartAccessor<TDatum, TValue>,
-  datum: TDatum,
-  index: number,
-): TValue {
-  return typeof accessor === "function"
-    ? accessor(datum, index)
-    : datum[accessor] as TValue
-}
-
-function xIdentity(value: unknown): string {
-  if (value instanceof Date) return `date:${value.getTime()}`
-  return `${typeof value}:${String(value)}`
-}
-
-export function mapBumpAnnotations(
-  annotations: Datum[] | undefined,
-  xValues: unknown[],
-): Datum[] | undefined {
-  if (!annotations?.length) return undefined
-  const xIndexByKey = new Map(
-    xValues.map((value, index) => [xIdentity(value), index]),
-  )
-  return annotations.map(annotation => {
-    const mapped = { ...annotation }
-    const mapField = (field: "x" | "x0" | "x1" | "value") => {
-      if (!(field in annotation)) return
-      const index = xIndexByKey.get(xIdentity(annotation[field]))
-      if (index !== undefined) mapped[field] = index
-    }
-    mapField("x")
-    mapField("x0")
-    mapField("x1")
-    if (
-      typeof annotation.type === "string"
-      && (annotation.type === "x-threshold" || annotation.type === "x")
-    ) {
-      mapField("value")
-    }
-    return mapped
-  })
-}
-
-export function resolveBumpColorScheme(options: {
-  seriesOrder: string[]
-  overallOrder: string[]
-  highlightTop?: number
-  color?: string
-  colorScheme?: string | string[] | Record<string, string>
-  neutralColor?: string
-  themeCategorical?: string[]
-  themeNeutral?: string
-}): string | string[] | Record<string, string> | undefined {
-  const {
-    seriesOrder,
-    overallOrder,
-    highlightTop,
-    color,
-    colorScheme,
-    neutralColor,
-    themeCategorical,
-    themeNeutral,
-  } = options
-  if (highlightTop == null && color == null) return colorScheme
-
-  const topCount = highlightTop == null
-    ? overallOrder.length
-    : Math.max(0, Math.floor(highlightTop))
-  const highlighted = new Set(overallOrder.slice(0, topCount))
-  const categoryIndexMap = new Map<string, number>()
-  const resolved: Record<string, string> = {}
-  for (const series of seriesOrder) {
-    Object.defineProperty(resolved, series, {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: color ?? (highlighted.has(series)
-        ? resolveDefaultFill(undefined, themeCategorical, colorScheme, series, categoryIndexMap)
-        : neutralColor ?? themeNeutral ?? "#b8bec8"),
-    })
-  }
-  return resolved
-}
-
-/**
- * Rank every x-column and return the flattened, frame-ready rows used by
- * BumpChart. Ranking is ordinal and deterministic: equal values retain series
- * first-appearance order.
- */
-export function rankBumpData<TDatum extends Datum = Datum>(
-  input: TDatum[],
-  options: RankBumpDataOptions<TDatum> = {},
-): RankedBumpData<TDatum> {
-  const xAccessor = options.xAccessor ?? ("x" as ChartAccessor<TDatum, number | Date | string>)
-  const yAccessor = options.yAccessor ?? ("y" as ChartAccessor<TDatum, number>)
-  const lineBy = options.lineBy ?? ("series" as ChartAccessor<TDatum, string>)
-  const rankDirection = options.rankDirection ?? "descending"
-
-  const xValues: unknown[] = []
-  const xIndexByKey = new Map<string, number>()
-  const rowsByX = new Map<number, Array<{ datum: TDatum; inputIndex: number; series: string; value: number }>>()
-  const seriesOrder: string[] = []
-  const seriesIndex = new Map<string, number>()
-
-  let valueMin = Infinity
-  let valueMax = -Infinity
-
-  input.forEach((datum, inputIndex) => {
-    const xValue = accessorValue(xAccessor, datum, inputIndex)
-    const key = xIdentity(xValue)
-    let xIndex = xIndexByKey.get(key)
-    if (xIndex == null) {
-      xIndex = xValues.length
-      xIndexByKey.set(key, xIndex)
-      xValues.push(xValue)
-      rowsByX.set(xIndex, [])
-    }
-
-    const series = String(accessorValue(lineBy, datum, inputIndex))
-    if (!seriesIndex.has(series)) {
-      seriesIndex.set(series, seriesOrder.length)
-      seriesOrder.push(series)
-    }
-
-    const value = Number(accessorValue(yAccessor, datum, inputIndex))
-    if (!Number.isFinite(value)) return
-    valueMin = Math.min(valueMin, value)
-    valueMax = Math.max(valueMax, value)
-    rowsByX.get(xIndex)?.push({ datum, inputIndex, series, value })
-  })
-
-  const rankedRows: Array<{
-    datum: TDatum
-    xIndex: number
-    xValue: unknown
-    series: string
-    value: number
-    rank: number
-  }> = []
-  const rankTotals = new Map<string, number>()
-  const rankCounts = new Map<string, number>()
-
-  for (let xIndex = 0; xIndex < xValues.length; xIndex++) {
-    const rows = rowsByX.get(xIndex) ?? []
-    rows.sort((a, b) => {
-      const valueOrder = rankDirection === "descending"
-        ? b.value - a.value
-        : a.value - b.value
-      return valueOrder || (seriesIndex.get(a.series) ?? 0) - (seriesIndex.get(b.series) ?? 0)
-    })
-
-    rows.forEach((row, rankIndex) => {
-      const rank = rankIndex + 1
-      rankedRows.push({
-        datum: row.datum,
-        xIndex,
-        xValue: xValues[xIndex],
-        series: row.series,
-        value: row.value,
-        rank,
-      })
-      rankTotals.set(row.series, (rankTotals.get(row.series) ?? 0) + rank)
-      rankCounts.set(row.series, (rankCounts.get(row.series) ?? 0) + 1)
-    })
-  }
-
-  const missingRank = seriesOrder.length + 1
-  const overallOrder = [...seriesOrder].sort((a, b) => {
-    const aCount = rankCounts.get(a) ?? 0
-    const bCount = rankCounts.get(b) ?? 0
-    const aAverage = ((rankTotals.get(a) ?? 0) + (xValues.length - aCount) * missingRank)
-      / Math.max(1, xValues.length)
-    const bAverage = ((rankTotals.get(b) ?? 0) + (xValues.length - bCount) * missingRank)
-      / Math.max(1, xValues.length)
-    return aAverage - bAverage
-      || (seriesIndex.get(a) ?? 0) - (seriesIndex.get(b) ?? 0)
-  })
-
-  const topCount = options.highlightTop == null
-    ? overallOrder.length
-    : Math.max(0, Math.floor(options.highlightTop))
-  const highlighted = new Set(overallOrder.slice(0, topCount))
-
-  const data = rankedRows.map((row): RankedBumpDatum<TDatum> => {
-    const isHighlighted = highlighted.has(row.series)
-    return {
-      ...row.datum,
-      x: row.xIndex,
-      y: row.rank,
-      __bumpRaw: row.datum,
-      __bumpSeries: row.series,
-      __bumpColorGroup: isHighlighted ? row.series : OTHER_COLOR_GROUP,
-      __bumpValue: row.value,
-      __bumpRank: row.rank,
-      __bumpXValue: row.xValue,
-      __bumpHighlighted: isHighlighted,
-    }
-  })
-
-  return {
-    data,
-    xValues,
-    seriesOrder,
-    overallOrder,
-    valueExtent: valueMin === Infinity ? [0, 0] : [valueMin, valueMax],
-  }
-}
+export { mapBumpAnnotations, rankBumpData, resolveBumpColorScheme } from "./bumpData"
+export type { RankBumpDataOptions, RankedBumpData, RankedBumpDatum } from "./bumpData"
 
 export interface BumpLayoutConfig {
   ribbon: boolean
@@ -283,7 +56,58 @@ export interface BumpLayoutConfig {
   labelStyle?: React.CSSProperties | ((datum: Datum) => React.CSSProperties)
   showPoints: boolean
   pointRadius: number
-  showLabels: boolean | "start" | "end" | "both"
+  showLabels: boolean | "start" | "end" | "both" | "auto"
+  labelPriorityAccessor?: string | ((datum: Datum) => number)
+  maxLabels?: number
+}
+
+export interface BumpLabelSelectionCandidate {
+  id: string
+  side: "start" | "end"
+  y: number
+  rank: number
+  highlighted: boolean
+  priority?: number
+}
+
+/**
+ * Keep endpoint labels readable when several trajectories share a rank. The
+ * selection is deterministic for CSR and SSR: explicit priority wins, then
+ * highlighted status, then rank, then source order. Collision checks are
+ * side-local because start and end labels occupy different horizontal bands.
+ */
+export function selectBumpLabelCandidates(
+  candidates: readonly BumpLabelSelectionCandidate[],
+  plotHeight: number,
+  mode: boolean | "auto",
+  maxLabels?: number,
+): Set<string> {
+  const densityBudget = Math.max(1, Math.floor(plotHeight / 18))
+  const autoBudget = mode === "auto"
+    ? (Number.isFinite(maxLabels) && (maxLabels ?? 0) >= 0
+      ? Math.min(densityBudget, Math.floor(maxLabels as number))
+      : densityBudget)
+    : Infinity
+  const ranked = candidates
+    .map((candidate, index) => ({ candidate, index }))
+    .sort((a, b) => {
+      const priorityA = a.candidate.priority ?? 0
+      const priorityB = b.candidate.priority ?? 0
+      return priorityB - priorityA
+        || Number(b.candidate.highlighted) - Number(a.candidate.highlighted)
+        || a.candidate.rank - b.candidate.rank
+        || a.index - b.index
+    })
+
+  const selected: BumpLabelSelectionCandidate[] = []
+  for (const { candidate } of ranked) {
+    if (selected.length >= autoBudget) break
+    if (selected.some((other) =>
+      other.side === candidate.side && Math.abs(other.y - candidate.y) < 14
+    )) continue
+    selected.push(candidate)
+  }
+  return new Set(selected.map((candidate) => candidate.id))
 }
 
 interface BumpLabelProps {
@@ -387,6 +211,11 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
 
   const nodes: Array<AreaSceneNode | PointSceneNode> = []
   const labels: React.ReactNode[] = []
+  const labelCandidates: Array<BumpLabelSelectionCandidate & {
+    datum: RankedBumpDatum
+    x: number
+    color: string
+  }> = []
 
   for (const series of orderedSeries) {
     const rows = (bySeries.get(series) ?? []).sort((a, b) => a.x - b.x)
@@ -489,21 +318,50 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
 
     const labelMode = config.showLabels === true ? "end" : config.showLabels
     const addLabel = (row: RankedBumpDatum, index: number, side: "start" | "end") => {
-      labels.push(
-        <BumpLabel
-          key={`${series}-${side}`}
-          datum={row}
-          x={centers[index].x}
-          y={centers[index].y}
-          side={side}
-          color={typeof areaStyle.fill === "string" ? areaStyle.fill : color}
-          highlighted={isHighlighted}
-          labelStyle={config.labelStyle}
-        />,
-      )
+      const priorityValue = config.labelPriorityAccessor == null
+        ? undefined
+        : typeof config.labelPriorityAccessor === "function"
+          ? config.labelPriorityAccessor(row.__bumpRaw)
+          : Number(row.__bumpRaw[config.labelPriorityAccessor])
+      labelCandidates.push({
+        id: `${series}\u0000${side}`,
+        datum: row,
+        x: centers[index].x,
+        y: centers[index].y,
+        side,
+        rank: row.__bumpRank,
+        highlighted: isHighlighted,
+        priority: Number.isFinite(priorityValue) ? priorityValue : undefined,
+        color: typeof areaStyle.fill === "string" ? areaStyle.fill : color,
+      })
     }
     if (labelMode === "start" || labelMode === "both") addLabel(rows[0], 0, "start")
-    if (labelMode === "end" || labelMode === "both") addLabel(rows.at(-1)!, rows.length - 1, "end")
+    if (labelMode === "end" || labelMode === "both" || labelMode === "auto") {
+      addLabel(rows.at(-1)!, rows.length - 1, "end")
+    }
+  }
+
+  const labelMode = config.showLabels === true ? "end" : config.showLabels
+  const visibleLabelIds = selectBumpLabelCandidates(
+    labelCandidates,
+    ctx.dimensions.plot.height,
+    labelMode === "auto" ? "auto" : true,
+    config.maxLabels,
+  )
+  for (const candidate of labelCandidates) {
+    if (!visibleLabelIds.has(candidate.id)) continue
+    labels.push(
+      <BumpLabel
+        key={candidate.id}
+        datum={candidate.datum}
+        x={candidate.x}
+        y={candidate.y}
+        side={candidate.side}
+        color={candidate.color}
+        highlighted={candidate.highlighted}
+        labelStyle={config.labelStyle}
+      />,
+    )
   }
 
   return {
@@ -552,8 +410,12 @@ export interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartP
   lineOpacity?: number
   showPoints?: boolean
   pointRadius?: number
-  /** Endpoint labels. `true` is equivalent to `"end"`. Default `true`. */
-  showLabels?: boolean | "start" | "end" | "both"
+  /** Endpoint labels. `true` is equivalent to `"end"`; `"auto"` sheds labels by plot density. Default `true`. */
+  showLabels?: boolean | "start" | "end" | "both" | "auto"
+  /** Numeric field or accessor used to keep higher-priority labels when labels collide. */
+  labelPriorityAccessor?: ChartAccessor<TDatum, number>
+  /** Optional hard cap on visible labels when `showLabels="auto"`. */
+  maxLabels?: number
   showAxes?: boolean
   showGrid?: boolean
   showLegend?: boolean
@@ -629,6 +491,8 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showPoints = false,
     pointRadius = 3,
     showLabels = true,
+    labelPriorityAccessor,
+    maxLabels,
     showAxes = true,
     showGrid = true,
     showLegend = false,
@@ -698,11 +562,14 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showPoints,
     pointRadius,
     showLabels,
+    labelPriorityAccessor: labelPriorityAccessor as BumpLayoutConfig["labelPriorityAccessor"],
+    maxLabels,
   }), [
     ribbon, curve, samplesPerSegment, ribbonSizeRange, ranked.valueExtent,
     ranked.seriesOrder, lineWidth, ribbonOpacity, lineOpacity, neutralColor,
     props.color, props.stroke, props.strokeWidth, props.opacity, styleRules,
     frameAreaStyle, framePointStyle, labelStyle, showPoints, pointRadius, showLabels,
+    labelPriorityAccessor, maxLabels,
   ])
 
   const { tooltip: resolvedTooltip, formatX } = useBumpTooltip<TDatum>({

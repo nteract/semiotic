@@ -27,7 +27,75 @@ const distributionData = Array.from({ length: 100 }, (_, i) => ({
   observation: 50 + Math.sin(i / 7) * 20 + (i % 3 === 0 ? 30 : 0),
 }))
 
+const bumpResourceRows = Array.from({ length: 24 }, (_, i) => ({
+  name: `topic-${i + 1}`,
+  createTime: new Date(Date.UTC(2025, 0, 1 + i * 15)).toISOString().slice(0, 10),
+  compressionType: ["PRODUCER", "GZIP", "SNAPPY", "LZ4", "ZSTD", "UNCOMPRESSED", "NONE"][i % 7],
+  partitionsCount: 6 + ((i * 5) % 40),
+}))
+
+const viableBumpRows = Array.from({ length: 4 }, (_, year) =>
+  [
+    { team: "Alpha", score: 90 - year * 3 },
+    { team: "Bravo", score: 70 + year * 4 },
+    { team: "Cinder", score: 50 + year * 8 },
+  ].map((row) => ({ year: 2022 + year, ...row })),
+).flat()
+
+const categoricalBumpRows = Array.from({ length: 4 }, (_, quarter) =>
+  ["GZIP", "LZ4", "SNAPPY"].map((compressionType, index) => ({
+    quarter: `Q${quarter + 1}`,
+    compressionType,
+    partitionsCount: 10 + quarter * 3 + index,
+  })),
+).flat()
+
 describe("suggestCharts", () => {
+  it("rejects BumpChart when series never compete within x columns", () => {
+    const result = suggestCharts(bumpResourceRows, {
+      allow: ["BumpChart"],
+      includeVariants: true,
+      maxResults: 20,
+    })
+    expect(result).toHaveLength(0)
+
+    const explanation = explainCapabilityFit(bumpResourceRows, { allow: ["BumpChart"] })
+    expect(explanation.rejected.find((candidate) => candidate.component === "BumpChart")?.reason)
+      .toMatch(/compete within the same x column/i)
+  })
+
+  it("keeps the ribbon caveat only on the non-ribbon BumpChart suggestion", () => {
+    const base = scoreChart("BumpChart", viableBumpRows)
+    const ribbon = scoreChart("BumpChart", viableBumpRows, { variantKey: "ribbon" })
+    expect("score" in base).toBe(true)
+    expect("score" in ribbon).toBe(true)
+    if ("score" in base && "score" in ribbon) {
+      expect(base.caveats.some((caveat) => /use ribbon/i.test(caveat))).toBe(true)
+      expect(ribbon.caveats.some((caveat) => /use ribbon/i.test(caveat))).toBe(false)
+    }
+  })
+
+  it("accepts categorical ranking columns when multiple series share them", () => {
+    const result = scoreChart("BumpChart", categoricalBumpRows)
+    expect("score" in result).toBe(true)
+  })
+
+  it("does not count non-finite values as competing ranking series", () => {
+    const invalidSeriesRows = Array.from({ length: 4 }, (_, year) => [
+      { year, team: "Alpha", score: 10 + year },
+      { year, team: "Bravo", score: Number.NaN },
+    ]).flat()
+    const result = suggestCharts(invalidSeriesRows, {
+      allow: ["BumpChart"],
+      includeVariants: false,
+    })
+
+    expect(result).toHaveLength(0)
+    const explanation = explainCapabilityFit(invalidSeriesRows, { allow: ["BumpChart"] })
+    expect(explanation.rejected.find((candidate) => candidate.component === "BumpChart")?.reason)
+      .toMatch(/compete within the same x column/i)
+  })
+
   it("ranks LineChart highly for temporal multi-series with intent=trend", () => {
     const suggestions = suggestCharts(temporalMultiSeries, { intent: "trend", includeVariants: false })
     expect(suggestions.length).toBeGreaterThan(0)

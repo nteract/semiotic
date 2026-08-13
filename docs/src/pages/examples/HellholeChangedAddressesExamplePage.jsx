@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react"
+import React, { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useReducedMotion } from "semiotic/utils"
 import ChartMethodDisclosure from "../../components/ChartMethodDisclosure"
@@ -119,10 +119,6 @@ function boundedYear(value, fallback) {
 
 function useExampleState() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsRef = useRef(new URLSearchParams(searchParams))
-  useEffect(() => {
-    searchParamsRef.current = new URLSearchParams(searchParams)
-  }, [searchParams])
   const lens = allowed(searchParams.get("lens"), LENSES, DEFAULTS.lens)
   const cut = allowed(searchParams.get("cut"), COMPARISON_CUTS, DEFAULTS.cut)
   const metric = allowed(searchParams.get("metric"), METRICS, DEFAULTS.metric)
@@ -139,12 +135,14 @@ function useExampleState() {
 
   const update = useCallback(
     (patch) => {
-      const next = new URLSearchParams(searchParamsRef.current)
+      // Read the live URL rather than a render-synchronized snapshot. Rapid
+      // control updates can otherwise let an older effect overwrite a newer
+      // query string between navigations and silently drop an earlier choice.
+      const next = new URLSearchParams(window.location.search)
       Object.entries(patch).forEach(([key, value]) => {
         if (value == null || value === "") next.delete(key)
         else next.set(key, String(value))
       })
-      searchParamsRef.current = next
       setSearchParams(next, { replace: true })
     },
     [setSearchParams],

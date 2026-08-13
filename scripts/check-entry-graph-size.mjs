@@ -95,7 +95,10 @@ const ENTRY_GRAPHS = [
   // Bumped 504→505: production CI graph measures 504.3 KiB gzip after the
   // release hardening pass. Keep one KiB of explicit headroom so the AI
   // endpoint does not fail on a sub-KiB boundary fluctuation.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 505 },
+  // Bumped 505→506: BumpChart's validated ranking capability, collision-safe
+  // label controls, and AI description/caveat handling add 0.1 KiB to the
+  // reachable graph. Retain one KiB of explicit headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 506 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

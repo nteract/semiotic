@@ -90,11 +90,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/charts/xy/BumpChart.tsx",
-      "maxLines": 831,
-      "reason": "New in 3.8.6: cohesive ranking-chart HOC \u2014 the pure rankBumpData transform, the bumpLayout scene builder, color/annotation resolution, and the XYCustomChart wiring share one series-identity contract (ribbon geometry is already factored into bumpRibbonGeometry.ts). Split plan on meaningful touch: extract rankBumpData + resolveBumpColorScheme into a bumpData.ts helper to drop back under 800. Do not grow past this reviewed ceiling."
-    },
-    {
       "path": "src/components/recipes/packedClusterMatrix.tsx",
       "maxLines": 1031,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."

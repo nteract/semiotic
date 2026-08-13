@@ -4,7 +4,12 @@ import { scaleLinear } from "d3-scale"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { XYCustomChartProps } from "../custom/XYCustomChart"
 import type { Datum } from "../shared/datumTypes"
-import { BumpChart, rankBumpData, resolveBumpColorScheme } from "./BumpChart"
+import {
+  BumpChart,
+  rankBumpData,
+  resolveBumpColorScheme,
+  selectBumpLabelCandidates,
+} from "./BumpChart"
 import { LIGHT_THEME, ThemeProvider } from "../../ThemeProvider"
 import { isMultiTooltipConfig } from "../../Tooltip/Tooltip"
 
@@ -65,6 +70,40 @@ describe("rankBumpData", () => {
   })
 })
 
+describe("selectBumpLabelCandidates", () => {
+  it("sheds colliding endpoint labels while keeping the highest-priority series", () => {
+    const selected = selectBumpLabelCandidates(
+      [
+        { id: "low", side: "end", y: 40, rank: 1, highlighted: false, priority: 1 },
+        { id: "high", side: "end", y: 40, rank: 2, highlighted: false, priority: 9 },
+        { id: "start", side: "start", y: 40, rank: 1, highlighted: false, priority: 0 },
+      ],
+      120,
+      "auto",
+      3,
+    )
+
+    expect(selected).toEqual(new Set(["high", "start"]))
+  })
+
+  it("keeps the density budget when maxLabels is larger than it", () => {
+    const selected = selectBumpLabelCandidates(
+      Array.from({ length: 15 }, (_, index) => ({
+        id: `series-${index}`,
+        side: "end" as const,
+        y: index * 20,
+        rank: index + 1,
+        highlighted: false,
+      })),
+      180,
+      "auto",
+      20,
+    )
+
+    expect(selected).toHaveLength(10)
+  })
+})
+
 describe("resolveBumpColorScheme", () => {
   it("retains special series names as own color-map keys", () => {
     const colors = resolveBumpColorScheme({
@@ -114,6 +153,64 @@ describe("BumpChart", () => {
     expect(capturedProps?.layoutConfig).toMatchObject({
       ribbon: true,
       seriesOrder: ["Alpha", "Bravo", "Cinder"],
+    })
+  })
+
+  it("keeps default endpoint labels readable when all series share a rank", () => {
+    const sparseColumns = [
+      { x: 0, series: "Alpha", value: 10 },
+      { x: 1, series: "Bravo", value: 20 },
+      { x: 2, series: "Cinder", value: 30 },
+      { x: 3, series: "Alpha", value: 40 },
+      { x: 4, series: "Bravo", value: 50 },
+      { x: 5, series: "Cinder", value: 60 },
+    ]
+    render(
+      <BumpChart
+        data={sparseColumns}
+        xAccessor="x"
+        yAccessor="value"
+        lineBy="series"
+      />,
+    )
+
+    const result = capturedProps?.layout?.({
+      data: capturedProps?.data as Datum[],
+      scales: {
+        x: scaleLinear().domain([0, 5]).range([0, 300]),
+        y: scaleLinear().domain([3.5, 0.5]).range([240, 0]),
+      },
+      dimensions: {
+        width: 300,
+        height: 240,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        plot: { x: 0, y: 0, width: 300, height: 240 },
+      },
+      theme: { semantic: {}, categorical: [] },
+      resolveColor: () => "#f00",
+      config: capturedProps?.layoutConfig ?? {},
+    })
+    const overlay = result?.overlays as React.ReactElement<{ children?: React.ReactNode }> | undefined
+    expect(React.Children.count(overlay?.props.children)).toBe(1)
+  })
+
+  it("passes auto label density controls to the custom layout", () => {
+    render(
+      <BumpChart
+        data={data}
+        xAccessor="year"
+        yAccessor="score"
+        lineBy="team"
+        showLabels="auto"
+        labelPriorityAccessor="score"
+        maxLabels={2}
+      />,
+    )
+
+    expect(capturedProps?.layoutConfig).toMatchObject({
+      showLabels: "auto",
+      labelPriorityAccessor: "score",
+      maxLabels: 2,
     })
   })
 
