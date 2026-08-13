@@ -283,9 +283,10 @@ function SyncedChart({ data }) {
 //       └ A callout labeled "Dip is contested" (disputed).`}
       />
       <p>
-        It works on every family — even network, hierarchy, and geo charts that
-        otherwise return a root-only node get their annotations branch, so the
-        author's intent is always reachable.
+        It works on every built-in family — network and flow charts expose
+        node/link branches, hierarchy charts descend parent/leaf structure, and
+        geo charts expose regions, locations, and routes. Annotations are added
+        alongside those branches, so the author's intent is always reachable.
       </p>
 
       <h2 id="annotation-anchors">Reaching an annotation's anchor</h2>

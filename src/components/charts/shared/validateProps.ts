@@ -107,6 +107,96 @@ function validateGaugeThresholds(props: Datum): string[] {
   return errors
 }
 
+const LEGEND_LAYOUT_ALIGNMENTS = new Set([
+  "start",
+  "center",
+  "end",
+  "left",
+  "right",
+])
+
+const LEGEND_LAYOUT_NUMERIC_RULES: Record<
+  string,
+  { minimum: number; label: string }
+> = {
+  swatchSize: { minimum: 1, label: "a positive number" },
+  labelGap: { minimum: 0, label: "a non-negative number" },
+  itemGap: { minimum: 0, label: "a non-negative number" },
+  rowHeight: { minimum: 1, label: "a positive number" },
+  maxWidth: { minimum: 1, label: "a positive number" },
+  edgeGutter: { minimum: 0, label: "a non-negative number" },
+  sideGutter: { minimum: 0, label: "a non-negative number" },
+  axisGutter: { minimum: 0, label: "a non-negative number" },
+}
+
+function validateFrameProps(props: Datum): string[] {
+  const frameProps = props.frameProps
+  if (
+    frameProps == null ||
+    typeof frameProps !== "object" ||
+    Array.isArray(frameProps)
+  ) {
+    return []
+  }
+
+  const legendLayout = (frameProps as Datum).legendLayout
+  if (
+    legendLayout == null ||
+    typeof legendLayout !== "object" ||
+    Array.isArray(legendLayout)
+  ) {
+    return legendLayout == null
+      ? []
+      : ['"frameProps.legendLayout" should be object, got ' +
+          (Array.isArray(legendLayout) ? "array" : typeof legendLayout) + "."]
+  }
+
+  const errors: string[] = []
+  const layout = legendLayout as Datum
+  const knownKeys = new Set(["align", ...Object.keys(LEGEND_LAYOUT_NUMERIC_RULES)])
+
+  for (const key of Object.keys(layout)) {
+    if (!knownKeys.has(key)) {
+      errors.push(
+        `Unknown "frameProps.legendLayout" key "${key}". Valid keys: ${[
+          ...knownKeys,
+        ].join(", ")}.`,
+      )
+    }
+  }
+
+  if (layout.align !== undefined && typeof layout.align !== "string") {
+    errors.push(
+      `"frameProps.legendLayout.align" should be string, got ${Array.isArray(layout.align) ? "array" : typeof layout.align}.`,
+    )
+  } else if (
+    typeof layout.align === "string" &&
+    !LEGEND_LAYOUT_ALIGNMENTS.has(layout.align)
+  ) {
+    errors.push(
+      `"frameProps.legendLayout.align" value "${layout.align}" is not valid. Expected one of: ${[
+        ...LEGEND_LAYOUT_ALIGNMENTS,
+      ].join(", ")}.`,
+    )
+  }
+
+  for (const [key, rule] of Object.entries(LEGEND_LAYOUT_NUMERIC_RULES)) {
+    const value = layout[key]
+    if (value === undefined) continue
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      errors.push(
+        `"frameProps.legendLayout.${key}" should be ${rule.label}, got ${Array.isArray(value) ? "array" : typeof value}.`,
+      )
+    } else if (value < rule.minimum) {
+      errors.push(
+        `"frameProps.legendLayout.${key}" should be ${rule.label} (minimum ${rule.minimum}), got ${value}.`,
+      )
+    }
+  }
+
+  return errors
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -257,6 +347,14 @@ export function validateProps(
   if (componentName === "GaugeChart") {
     errors.push(...validateGaugeThresholds(props))
   }
+
+  if (componentName === "ScatterplotMatrix" && props.frameProps != null) {
+    errors.push(
+      '"frameProps" is not supported for ScatterplotMatrix; configure its matrix props directly.',
+    )
+  }
+
+  errors.push(...validateFrameProps(props))
 
   return { valid: errors.length === 0, errors }
 }

@@ -214,9 +214,10 @@ const treated = applyAnnotationStatus(
 //       ├ An AI-suggested threshold line labeled "Target".
 //       └ A callout labeled "Spike contested" (disputed).`}</pre>
       <p>
-        It works on every chart family, including network, hierarchy, and geo charts that otherwise
-        return a root-only node. They still get their annotations branch, so the author's intent is
-        always reachable.
+        It works on every built-in chart family. Network and flow charts expose node/link branches,
+        hierarchy charts descend parent/leaf structure, and geo charts expose regions, locations,
+        and routes. Annotations sit alongside those branches, so the author's intent is always
+        reachable.
       </p>
 
       <h2 id="why">Contested, and heard</h2>

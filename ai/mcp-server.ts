@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes eighteen tools, eight resources, and two prompts:
+ * Exposes nineteen tools, eight resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -15,11 +15,12 @@
  *   11. groundChart — agent-reader grounding payload (description + intent + structure)
  *   12. diagnoseConfig — anti-pattern detector for chart configurations
  *   13. auditAccessibility — Chartability accessibility audit
- *   14. auditMobileVisualization — mobile visualization audit
- *   15. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   16. applyTheme — returns usage guidance for theme presets
- *   17. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
- *   18. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
+ *   14. evaluateChart — unified data, deception, and accessibility evaluation
+ *   15. auditMobileVisualization — mobile visualization audit
+ *   16. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
+ *   17. applyTheme — returns usage guidance for theme presets
+ *   18. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
+ *   19. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -80,6 +81,8 @@ import {
   diagnoseConfig,
   auditAccessibility,
   formatAccessibilityAudit,
+  evaluateChart,
+  formatEvaluateChart,
   auditMobileVisualization,
   formatMobileVisualizationAudit,
   summarizeData,
@@ -1473,6 +1476,29 @@ async function auditAccessibilityHandler(args: { component?: string; props?: Rec
   }
 }
 
+async function evaluateChartHandler(args: { component?: string; props?: Record<string, any>; data?: Array<Record<string, unknown>>; inChartContainer?: boolean; describe?: boolean; navigable?: boolean }): Promise<ToolResult> {
+  const component = args.component
+  const props: Record<string, any> = args.props ?? {}
+
+  if (!component) {
+    return {
+      content: [{ type: "text" as const, text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... }, data?: [...] }." }],
+      isError: true,
+    }
+  }
+
+  const result = evaluateChart(component, props, args.data, {
+    inChartContainer: args.inChartContainer === true,
+    describe: args.describe === true,
+    navigable: args.navigable === true,
+  })
+  return {
+    content: [{ type: "text" as const, text: formatEvaluateChart(result) }],
+    structuredContent: result as unknown as Record<string, unknown>,
+    isError: !result.ok,
+  }
+}
+
 async function auditMobileVisualizationHandler(args: { component?: string; props?: Record<string, any>; viewportWidth?: number; targetSize?: number; inChartContainer?: boolean }): Promise<ToolResult> {
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
@@ -2592,6 +2618,21 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     auditAccessibilityHandler
+  )
+
+  srv.tool(
+    "evaluateChart",
+    "Evaluate a Semiotic chart through one deterministic quality pass: numeric data contracts, configuration and representation/deception checks, and static Chartability accessibility heuristics. Returns the independent audit reports plus a severity-ranked findings list and notification feed. Pass data separately when it should override props.data; use inChartContainer, describe, or navigable to describe the intended accessibility wrapper. This is static analysis and does not replace manual assistive-technology testing or render evidence.",
+    {
+      component: z.string().describe("Chart component name, e.g. 'LineChart'."),
+      props: z.record(z.string(), z.unknown()).optional().describe("Chart props/config, including accessors and optional data."),
+      data: z.array(z.record(z.string(), z.unknown())).optional().describe("Optional explicit dataset. When supplied, this is used as the effective props.data for evaluation."),
+      inChartContainer: z.boolean().optional().describe("Whether the chart will be wrapped in ChartContainer or an equivalent control surface."),
+      describe: z.boolean().optional().describe("Whether ChartContainer's generated description is enabled."),
+      navigable: z.boolean().optional().describe("Whether ChartContainer's structured navigation tree is enabled."),
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    evaluateChartHandler
   )
 
   srv.tool(

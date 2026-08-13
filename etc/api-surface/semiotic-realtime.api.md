@@ -217,6 +217,7 @@ interface-member LegendItem::property::color = optional color: string | undefine
 interface-member LegendItem::property::label = required label: string
 interface-member LegendLayout::property::align = optional align: "center" | "end" | "left" | "right" | "start" | undefined
 interface-member LegendLayout::property::axisGutter = optional axisGutter: number | undefined
+interface-member LegendLayout::property::edgeGutter = optional edgeGutter: number | undefined
 interface-member LegendLayout::property::itemGap = optional itemGap: number | undefined
 interface-member LegendLayout::property::labelGap = optional labelGap: number | undefined
 interface-member LegendLayout::property::maxWidth = optional maxWidth: number | undefined

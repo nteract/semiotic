@@ -86,6 +86,20 @@ export type {
   NumericRequirement,
 } from "./data/numericContracts"
 export {
+  evaluateChart,
+  formatEvaluateChart,
+  toEvaluateChartNotifications,
+} from "./ai/evaluateChart"
+export type {
+  EvaluateChartFinding,
+  EvaluateChartNotification,
+  EvaluateChartOptions,
+  EvaluateChartResult,
+  EvaluateChartSeverity,
+  EvaluateChartStage,
+  EvaluateChartSummary,
+} from "./ai/evaluateChart"
+export {
   auditAccessibility,
   formatAccessibilityAudit,
   accessibilityCaveats

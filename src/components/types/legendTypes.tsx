@@ -105,6 +105,12 @@ export interface LegendLayout {
   /** Override the alignment width used for top/bottom legends */
   maxWidth?: number
   /**
+   * Space between a left/right legend and the outer SVG edge. The default is
+   * sized for the interactive swatch focus ring; set to 0 to preserve the
+   * historical flush placement.
+   */
+  edgeGutter?: number
+  /**
    * Space between the plot and a left/right legend reserved for adjacent
    * chart chrome such as axis ticks and an axis title. Ignored for top/bottom
    * legends — see `axisGutter`. The legend is placed outside this gutter.

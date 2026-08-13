@@ -56,6 +56,76 @@ describe("validateProps — required props", () => {
   })
 })
 
+describe("validateProps — nested frameProps legendLayout", () => {
+  const validChartProps = {
+    data: [{ x: 1, y: 2 }],
+    xAccessor: "x",
+    yAccessor: "y",
+  }
+
+  it("accepts the structured legendLayout contract while preserving frame overrides", () => {
+    const result = validateProps("LineChart", {
+      ...validChartProps,
+      frameProps: {
+        legendLayout: {
+          align: "end",
+          edgeGutter: 0,
+          sideGutter: 60,
+        },
+        pieceStyle: { fill: "#abc" },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it("reports nested types, ranges, enums, and unknown keys", () => {
+    const result = validateProps("LineChart", {
+      ...validChartProps,
+      frameProps: {
+        legendLayout: {
+          align: "middle",
+          edgeGutter: -1,
+          swatchSize: "large",
+          typo: true,
+        },
+      },
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('"frameProps.legendLayout.align" value "middle"'),
+        expect.stringContaining('"frameProps.legendLayout.edgeGutter"'),
+        expect.stringContaining('"frameProps.legendLayout.swatchSize"'),
+        expect.stringContaining('Unknown "frameProps.legendLayout" key "typo"'),
+      ]),
+    )
+  })
+
+  it("reports a malformed nested legendLayout object", () => {
+    const result = validateProps("LineChart", {
+      ...validChartProps,
+      frameProps: { legendLayout: [] },
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain(
+      '"frameProps.legendLayout" should be object, got array.',
+    )
+  })
+
+  it("rejects frameProps for ScatterplotMatrix, which does not forward a Stream Frame", () => {
+    const result = validateProps("ScatterplotMatrix", {
+      data: [{ x: 1, y: 2 }],
+      fields: ["x", "y"],
+      frameProps: { legendLayout: { edgeGutter: 0 } },
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain(
+      '"frameProps" is not supported for ScatterplotMatrix; configure its matrix props directly.',
+    )
+  })
+})
+
 describe("validateProps — network component validation", () => {
   it("validates ForceDirectedGraph requires both nodes and edges", () => {
     const result = validateProps("ForceDirectedGraph", {})

@@ -437,6 +437,45 @@ function checkCjsClientContextIdentity(proj, failures) {
 }
 
 /**
+ * The CJS recipes entry must keep d3-geo lazy. ESM already has shared chunks,
+ * but a monolithic CommonJS namespace can otherwise make every non-geo
+ * recipe pay for the geographic-dot-grid implementation at require time.
+ */
+function checkCjsRecipeGeoIsolation(proj, failures) {
+  const code = `
+    const Module = require("node:module")
+    const originalLoad = Module._load
+    let loaded = false
+    Module._load = function(request, ...args) {
+      if (request === "d3-geo") loaded = true
+      return originalLoad.call(this, request, ...args)
+    }
+    const nonGeoEntries = [
+      "semiotic/recipes",
+      "semiotic/recipes/core",
+      "semiotic/recipes/react",
+    ]
+    for (const entry of nonGeoEntries) require(entry)
+    if (loaded) throw new Error("a non-geo CJS entry eagerly loaded d3-geo")
+    const recipes = require("semiotic/recipes")
+    if (typeof recipes.dagreLayout !== "function") {
+      throw new Error("semiotic/recipes lost its non-geo dagreLayout export")
+    }
+    const dotGrid = recipes.geographicDotGridLayout
+    if (typeof dotGrid !== "function" || !loaded) {
+      throw new Error("geographic dot-grid export was not lazy-loadable")
+    }
+    console.log("non-geo entries stayed d3-geo-free; geo recipe loaded on demand")
+  `
+  try {
+    const out = runNodeEval(code, { cwd: proj, inputType: "commonjs" })
+    console.log(`  ✓ CommonJS recipe geo isolation: ${out.trim()}`)
+  } catch (err) {
+    failures.push(`CommonJS recipe geo isolation: ${firstLine(err)}`)
+  }
+}
+
+/**
  * The experimental ESM entry is assembled from canonical stable graphs plus a
  * stateless auxiliary projection. Guard both its complete runtime surface and
  * the constructor/component identities that must match `semiotic/physics`.
@@ -1007,6 +1046,7 @@ try {
   }
 
   checkCjsClientContextIdentity(proj, failures)
+  checkCjsRecipeGeoIsolation(proj, failures)
   checkExperimentalFacadeParity(proj, failures)
 
   checkTypeScriptConsumer(proj, packageRoot, failures)

@@ -150,7 +150,7 @@
     ]
   },
   "mcp": {
-    "toolCount": 23,
+    "toolCount": 24,
     "tools": [
       "applyTheme",
       "auditAccessibility",
@@ -158,6 +158,7 @@
       "auditMobileVisualization",
       "createChart",
       "diagnoseConfig",
+      "evaluateChart",
       "explainChart",
       "getChartSchema",
       "getSchema",

@@ -128,14 +128,15 @@ const note = withProvenance(
 ## Tooling
 
 - **MCP server:** `npx semiotic-mcp` — tools for `renderChart` (SVG + render
-  evidence), `suggestCharts`, `groundChart`, `diagnoseConfig`, `repairChartConfig`,
+  evidence), `suggestCharts`, `groundChart`, `diagnoseConfig`, `evaluateChart`, `repairChartConfig`,
   `proposeChartVariants`, and more. Prefer these over guessing.
 - **Public app profile:** `npx semiotic-mcp --profile public` exposes the five
   task-oriented tools `createChart`, `improveChart`, `explainChart`,
   `auditChart`, and `getChartSchema`; use it when tool discovery matters more
   than expert-level control.
 - **CLI gate:** `npx semiotic-ai --doctor` validates a `{ component, props }` JSON
-  (`--audit-a11y` for an accessibility audit). Run it before shipping generated code.
+  (`--audit-a11y` for an accessibility audit, `--evaluate` for the unified
+  data/deception/accessibility pass). Run it before shipping generated code.
 - **Machine-readable docs:** the published `llms.txt` is the chart catalog with
   per-chart communicative-act labels; read it for the full surface rather than
   guessing component names.

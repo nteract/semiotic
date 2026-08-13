@@ -7,6 +7,9 @@ export const DEFAULT_LEGEND_ITEM_GAP = 10
 export const DEFAULT_LEGEND_ROW_HEIGHT = 22
 export const DEFAULT_SIDE_LEGEND_WIDTH = 100
 export const DEFAULT_LEGEND_DISTANCE = 10
+// Legend focus rings are drawn at x/y=-2 with a 2px stroke. Three pixels keep
+// the outer stroke inside the SVG when a side legend is placed at an edge.
+export const DEFAULT_LEGEND_EDGE_GUTTER = 3
 
 /**
  * Labeled gradient legends use one shared, non-negative vertical layout in
@@ -75,6 +78,11 @@ export function resolveLegendDistance(legend: LegendValue | null | undefined): n
 /** Resolve plot-adjacent chrome reserved before a left/right legend. */
 export function resolveLegendSideGutter(layout?: LegendLayout): number {
   return Math.max(0, layout?.sideGutter ?? 0)
+}
+
+/** Resolve the outer edge clearance for a left/right legend. */
+export function resolveLegendEdgeGutter(layout?: LegendLayout): number {
+  return Math.max(0, layout?.edgeGutter ?? DEFAULT_LEGEND_EDGE_GUTTER)
 }
 
 /**
@@ -207,7 +215,8 @@ export function resolveSideLegendMargin(
   return (
     resolveSideLegendWidth(legend, layout) +
     resolveLegendDistance(legend) +
-    resolveLegendSideGutter(layout)
+    resolveLegendSideGutter(layout) +
+    resolveLegendEdgeGutter(layout)
   )
 }
 

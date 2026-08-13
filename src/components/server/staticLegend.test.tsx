@@ -109,18 +109,18 @@ describe("renderStaticLegend", () => {
   it("matches client placement when side chrome separates plot and legend", () => {
     const right = renderLegendString({
       ...baseConfig,
-      margin: { ...baseConfig.margin, right: 180 },
-      legendLayout: { sideGutter: 70 },
+      margin: { ...baseConfig.margin, right: 183 },
+      legendLayout: { sideGutter: 70, edgeGutter: 3 },
     })
     const left = renderLegendString({
       ...baseConfig,
       position: "left",
-      margin: { ...baseConfig.margin, left: 180 },
-      legendLayout: { sideGutter: 70 },
+      margin: { ...baseConfig.margin, left: 183 },
+      legendLayout: { sideGutter: 70, edgeGutter: 3 },
     })
 
-    expect(right).toContain("translate(500,")
-    expect(left).toContain("translate(0,")
+    expect(right).toContain("translate(497,")
+    expect(left).toContain("translate(3,")
   })
 
   it("uses legendSize when estimating label width", () => {
