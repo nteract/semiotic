@@ -212,6 +212,40 @@ function externalizeExperimentalBridgeStoresPlugin() {
   }
 }
 
+/**
+ * Geo remains a lazy CommonJS implementation so importing an ordinary chart
+ * does not eagerly load d3-geo. Its React contexts and module-scoped stores,
+ * however, must be the same instances used by the shared client namespaces.
+ */
+function externalizeSharedClientModulesForCjsPlugin() {
+  const sharedModules = [
+    "CategoryColors",
+    "ThemeProvider",
+    "store/ThemeStore",
+    "store/SelectionStore",
+    "store/useSelection",
+    "store/ObservationStore",
+    "store/LinkedCrosshairStore",
+    "store/TooltipStore",
+    "stream/customLayoutSelection",
+  ]
+  return {
+    name: "externalize-shared-client-modules-for-cjs",
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, (args) => {
+        const request = args.path.replace(/\\/g, "/")
+        if (!sharedModules.some((module) => request.endsWith(module))) {
+          return null
+        }
+        return {
+          path: "./semiotic-client-cjs-shared.min.js",
+          external: true,
+        }
+      })
+    },
+  }
+}
+
 async function createCjsBundlesWithConcurrency(bundles, concurrency) {
   const workers = Array.from(
     { length: Math.min(concurrency, bundles.length) },
@@ -242,6 +276,7 @@ const clientCjsNamespaces = {
   "semiotic-themes-react": "themesReact",
   "semiotic-utils": "utils",
   "semiotic-utils-react": "utilsReact",
+  "semiotic-recipes-react": "recipesReact",
   "semiotic-experimental": "experimental",
   "semiotic-value": "value"
 }
@@ -1179,7 +1214,6 @@ async function build() {
     "geo",
     "semiotic-recipes",
     "semiotic-recipes-core",
-    "semiotic-recipes-react",
   ])
   const clientCjsBundles = bundledEntries.filter(
     (bundle) => bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name),
@@ -1197,15 +1231,13 @@ async function build() {
   const recipesCoreBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-recipes-core",
   )
-  const recipesReactBundle = bundledEntries.find(
-    (bundle) => bundle.name === "semiotic-recipes-react",
-  )
-  if (!geoBundle || !recipesCoreBundle || !recipesReactBundle) {
+  if (!geoBundle || !recipesCoreBundle) {
     throw new Error("Missing isolated CommonJS geo/recipe build entries")
   }
   await createCjsBundle({
     ...geoBundle,
     name: "geo",
+    esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
   })
   await createCjsBundle({
     input: "src/components/recipes/geographicDotGrid.tsx",
@@ -1217,10 +1249,6 @@ async function build() {
     name: "semiotic-recipes-core-cjs-base",
     clientOnly: false,
     esbuildPlugins: [stubRecipeGeoForCjsPlugin()],
-  })
-  await createCjsBundle({
-    ...recipesReactBundle,
-    name: "semiotic-recipes-react",
   })
   writeRecipesCjsFacades()
   console.log(

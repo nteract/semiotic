@@ -72,4 +72,23 @@ describe("renderLegendFromConfig sideGutter", () => {
     )
     expect(html).toContain('transform="translate(0, 60)"')
   })
+
+  it("keeps focus-ring clearance when the side margin is explicitly owned", () => {
+    const renderWithExplicitMargin = (legendPosition: "right" | "left") =>
+      ReactDOMServer.renderToStaticMarkup(
+        <svg>
+          {renderLegendFromConfig({
+            legend,
+            legendPosition,
+            legendLayout: { edgeGutter: 3 },
+            totalWidth: 500,
+            totalHeight: 300,
+            margin: { top: 60, right: 120, bottom: 70, left: 120 },
+          })}
+        </svg>,
+      )
+
+    expect(renderWithExplicitMargin("right")).toContain('transform="translate(397, 60)"')
+    expect(renderWithExplicitMargin("left")).toContain('transform="translate(3, 60)"')
+  })
 })

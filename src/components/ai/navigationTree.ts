@@ -197,9 +197,9 @@ function buildNetworkNavigationTree(
     if (bucket) bucket.push(node)
     else nodeGroups.set(group, [node])
   }
-  const nodeBranches = [...nodeGroups].map(([group, groupNodes]) => {
+  const nodeBranches = [...nodeGroups].map(([group, groupNodes], groupIndex) => {
     const children: NavTreeNode[] = []
-    for (const node of groupNodes) {
+    for (const [nodeIndex, node] of groupNodes.entries()) {
       if (emitted >= maxLeaves) break
       emitted += 1
       const id = nodeId(node)
@@ -207,7 +207,7 @@ function buildNetworkNavigationTree(
       const valueLabel =
         stats.value > 0 ? `, ${fmtNum(stats.value)} total flow` : ""
       children.push({
-        id: `node-${slug(id)}`,
+        id: `node-${groupIndex}-${nodeIndex}-${slug(id)}`,
         role: "datum",
         level: 3,
         label: `${id}: ${stats.links} ${stats.links === 1 ? "link" : "links"}${valueLabel}.`,
@@ -216,7 +216,7 @@ function buildNetworkNavigationTree(
       })
     }
     return {
-      id: `nodes-${slug(group)}`,
+      id: `nodes-${groupIndex}-${slug(group)}`,
       role: "series" as const,
       level: 2,
       label: `${group}: ${groupNodes.length} ${groupNodes.length === 1 ? "node" : "nodes"}.`,
@@ -403,12 +403,17 @@ function buildGeoNavigationTree(
   fmtNum: (n: number) => string
 ): NavTreeNode {
   const areaData = geoFeatures(props.areas)
-  const points = Array.isArray(props.points) ? (props.points as Datum[]) : []
+  const points =
+    component === "FlowMap" && Array.isArray(props.nodes)
+      ? (props.nodes as Datum[])
+      : Array.isArray(props.points)
+        ? (props.points as Datum[])
+        : []
   const flows = Array.isArray(props.flows) ? (props.flows as Datum[]) : []
   const lines = Array.isArray(props.lines) ? (props.lines as Datum[]) : []
   const valueAccessor =
     props.valueAccessor ?? props.sizeBy ?? props.costAccessor ?? "value"
-  const pointId = props.nodeIdAccessor ?? "id"
+  const pointId = props.pointIdAccessor ?? props.nodeIdAccessor ?? "id"
   const title =
     component === "ChoroplethMap"
       ? `A choropleth map with ${areaData.length} regions.`

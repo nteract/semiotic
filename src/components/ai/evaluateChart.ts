@@ -167,9 +167,9 @@ function sortFindings(
       const severity =
         severityWeight[a.finding.severity] - severityWeight[b.finding.severity]
       if (severity !== 0) return severity
-      if (a.finding.critical !== b.finding.critical) {
-        return a.finding.critical ? -1 : 1
-      }
+      const aCritical = a.finding.critical === true
+      const bCritical = b.finding.critical === true
+      if (aCritical !== bCritical) return aCritical ? -1 : 1
       const stage = stageWeight[a.finding.stage] - stageWeight[b.finding.stage]
       return stage !== 0 ? stage : a.index - b.index
     })

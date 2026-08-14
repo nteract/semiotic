@@ -8,6 +8,7 @@ import {
   resolveAxisChromeGutter,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
+  resolveLegendEdgeGutter,
   resolveLegendSideGutter,
   resolveSideLegendWidth,
   type AxisChromeInput,
@@ -66,6 +67,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
   )
   const legendDistance = resolveLegendDistance(legend)
   const sideGutter = resolveLegendSideGutter(legendLayout)
+  const edgeGutter = resolveLegendEdgeGutter(legendLayout)
   // Auto-measured chrome describes the bottom axis, which XY/ordinal frames
   // draw by default. A top axis is opt-in (`frameProps.axes` with
   // `orient: "top"`), so a top legend only gets a gutter when one is set
@@ -79,7 +81,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
   const legendHeight = resolveHorizontalLegendHeight(legend, plotWidth, legendLayout)
   let tx: number, ty: number
   if (legendPosition === "left") {
-    tx = margin.left - sideGutter - legendWidth - legendDistance; ty = margin.top
+    tx = Math.max(edgeGutter, margin.left - sideGutter - legendWidth - legendDistance); ty = margin.top
   } else if (legendPosition === "top") {
     tx = margin.left; ty = margin.top - topAxisGutter - legendDistance - legendHeight
   } else if (legendPosition === "bottom") {
@@ -95,7 +97,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
     )
   } else {
     // right (default)
-    tx = totalWidth - margin.right + sideGutter + legendDistance; ty = margin.top
+    tx = Math.min(totalWidth - legendWidth - edgeGutter, totalWidth - margin.right + sideGutter + legendDistance); ty = margin.top
   }
 
   return (

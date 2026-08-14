@@ -21,6 +21,7 @@ import {
   layoutVerticalLegendGroups,
   resolveAxisChromeGutter,
   resolveLegendDistance,
+  resolveLegendEdgeGutter,
   resolveLegendMetrics,
   resolveLegendSideGutter,
   resolveSideLegendWidth,
@@ -413,6 +414,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
     ? Math.max(0, config.legendDistance)
     : resolveLegendDistance(categoricalLegend)
   const sideGutter = resolveLegendSideGutter(config.legendLayout)
+  const edgeGutter = resolveLegendEdgeGutter(config.legendLayout)
   // Bottom axis is auto-measured; a top axis is opt-in, so a top legend only
   // shifts when `legendLayout.axisGutter` is set. Mirrors legendRenderer.
   const bottomAxisGutter = resolveAxisChromeGutter(config.axisChrome, config.legendLayout)
@@ -423,7 +425,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   // the client allows that layout for externally managed legends as well.
   let tx: number, ty: number
   if (position === "left") {
-    tx = margin.left - sideGutter - sideLegendWidth - legendDistance; ty = margin.top
+    tx = Math.max(edgeGutter, margin.left - sideGutter - sideLegendWidth - legendDistance); ty = margin.top
   } else if (position === "top") {
     tx = margin.left; ty = margin.top - topAxisGutter - legendDistance - metrics.height
   } else if (position === "bottom") {
@@ -433,7 +435,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
       Math.min(totalHeight - margin.bottom + bottomAxisGutter + legendDistance, totalHeight - metrics.height),
     )
   } else {
-    tx = totalWidth - margin.right + sideGutter + legendDistance; ty = margin.top
+    tx = Math.min(totalWidth - sideLegendWidth - edgeGutter, totalWidth - margin.right + sideGutter + legendDistance); ty = margin.top
   }
 
   if (isHorizontal) {
@@ -493,6 +495,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(legendConfig, config.legendLayout)
   const legendDistance = resolveLegendDistance(legendConfig)
   const sideGutter = resolveLegendSideGutter(config.legendLayout)
+  const edgeGutter = resolveLegendEdgeGutter(config.legendLayout)
   // Bottom axis is auto-measured; a top axis is opt-in, so a top legend only
   // shifts when `legendLayout.axisGutter` is set. Mirrors legendRenderer.
   const bottomAxisGutter = resolveAxisChromeGutter(config.axisChrome, config.legendLayout)
@@ -500,7 +503,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = config.margin.left - sideGutter - sideLegendWidth - legendDistance; ty = config.margin.top
+    tx = Math.max(edgeGutter, config.margin.left - sideGutter - sideLegendWidth - legendDistance); ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.margin.top - topAxisGutter - legendDistance - metrics.height
   } else if (config.position === "bottom") {
@@ -510,7 +513,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
       Math.min(config.totalHeight - config.margin.bottom + bottomAxisGutter + legendDistance, config.totalHeight - metrics.height),
     )
   } else {
-    tx = config.totalWidth - config.margin.right + sideGutter + legendDistance; ty = config.margin.top
+    tx = Math.min(config.totalWidth - sideLegendWidth - edgeGutter, config.totalWidth - config.margin.right + sideGutter + legendDistance); ty = config.margin.top
   }
 
   if (!isHorizontal) {
@@ -682,6 +685,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   const sideLegendWidth = resolveSideLegendWidth(legendConfig)
   const legendDistance = resolveLegendDistance(legendConfig)
   const sideGutter = resolveLegendSideGutter(config.legendLayout)
+  const edgeGutter = resolveLegendEdgeGutter(config.legendLayout)
   // Bottom axis is auto-measured; a top axis is opt-in, so a top legend only
   // shifts when `legendLayout.axisGutter` is set. Mirrors legendRenderer.
   const bottomAxisGutter = resolveAxisChromeGutter(config.axisChrome, config.legendLayout)
@@ -690,7 +694,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
   let tx: number, ty: number
   if (config.position === "left") {
-    tx = config.margin.left - sideGutter - sideLegendWidth - legendDistance; ty = config.margin.top
+    tx = Math.max(edgeGutter, config.margin.left - sideGutter - sideLegendWidth - legendDistance); ty = config.margin.top
   } else if (config.position === "top") {
     tx = config.margin.left; ty = config.margin.top - topAxisGutter - legendDistance - metrics.height
   } else if (config.position === "bottom") {
@@ -700,7 +704,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
       Math.min(config.totalHeight - config.margin.bottom + bottomAxisGutter + legendDistance, config.totalHeight - metrics.height),
     )
   } else {
-    tx = config.totalWidth - config.margin.right + sideGutter + legendDistance; ty = config.margin.top
+    tx = Math.min(config.totalWidth - sideLegendWidth - edgeGutter, config.totalWidth - config.margin.right + sideGutter + legendDistance); ty = config.margin.top
   }
 
   const stops = Array.from({ length: 17 }, (_, i) => {

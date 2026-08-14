@@ -18,5 +18,23 @@ export * as controls from "../semiotic-controls"
 export * as themesReact from "../semiotic-themes-react"
 export * as utils from "../semiotic-utils"
 export * as utilsReact from "../semiotic-utils-react"
+export * as recipesReact from "../semiotic-recipes-react"
 export * as experimental from "../semiotic-experimental"
 export * as value from "../semiotic-value"
+
+// Context-bearing modules consumed by the lazy geo CommonJS implementation.
+// Keep these top-level exports aligned with externalizeSharedClientModulesForCjsPlugin.
+export * from "../CategoryColors"
+export { ThemeProvider, useTheme } from "../ThemeProvider"
+export {
+  LIGHT_THEME,
+  DARK_THEME,
+  HIGH_CONTRAST_THEME,
+  useThemeSelector
+} from "../store/ThemeStore"
+export * from "../store/SelectionStore"
+export * from "../store/useSelection"
+export * from "../store/ObservationStore"
+export * from "../store/LinkedCrosshairStore"
+export * from "../store/TooltipStore"
+export * from "../stream/customLayoutSelection"

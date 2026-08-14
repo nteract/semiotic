@@ -116,6 +116,37 @@ describe("evaluateChart", () => {
     expect(result.ok).toBe(false)
   })
 
+  it("orders non-critical and unspecified warning findings by stage", () => {
+    const evidence: RenderEvidence = {
+      component: "Scatterplot",
+      frameType: "xy",
+      status: "ok",
+      empty: false,
+      markCount: 2,
+      markCountByType: { point: 2 },
+      width: 640,
+      height: 400,
+      annotationCount: 0,
+      ariaLabel: "Sales over time",
+      warnings: ["NO_SCALES"]
+    }
+    const result = evaluateChart(
+      "Scatterplot",
+      { ...baseProps, pointRadius: 3 },
+      data,
+      { render: () => ({ svg: "<svg />", evidence }) }
+    )
+    const targetSize = result.findings.findIndex(
+      (finding) => finding.code === "operable.target-size"
+    )
+    const renderWarning = result.findings.findIndex(
+      (finding) => finding.code === "NO_SCALES"
+    )
+
+    expect(targetSize).toBeGreaterThanOrEqual(0)
+    expect(renderWarning).toBeGreaterThan(targetSize)
+  })
+
   it("formats the ranked report and caps notifications without losing findings", () => {
     const result = evaluateChart(
       "LineChart",

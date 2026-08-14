@@ -197,6 +197,45 @@ describe("buildNavigationTree — network, hierarchy, and geo families", () => {
       "South: 3."
     ])
   })
+
+  it("uses FlowMap nodes and ProportionalSymbolMap point IDs for locations", () => {
+    const flows = buildNavigationTree("FlowMap", {
+      nodes: [{ city: "Alpha" }, { city: "Beta" }],
+      flows: [{ source: "Alpha", target: "Beta", value: 3 }],
+      nodeIdAccessor: "city"
+    })
+    const symbols = buildNavigationTree("ProportionalSymbolMap", {
+      points: [{ place: "North", value: 4 }],
+      pointIdAccessor: "place",
+      sizeBy: "value"
+    })
+
+    expect(flows.label).toContain("2 locations")
+    expect(flows.children?.[0]).toMatchObject({
+      label: "Locations: 2 marks.",
+      children: expect.arrayContaining([
+        expect.objectContaining({ label: "Alpha." })
+      ])
+    })
+    expect(symbols.children?.[0]?.children?.[0]?.label).toBe("North: 4.")
+  })
+
+  it("keeps slug-colliding network group and node IDs unique", () => {
+    const tree = buildNavigationTree("ForceDirectedGraph", {
+      nodes: [
+        { id: "A B", group: "A B" },
+        { id: "A-B", group: "A-B" }
+      ],
+      edges: []
+    })
+    const expanded = new Set([
+      "root",
+      ...(tree.children?.map((node) => node.id) ?? [])
+    ])
+    const ids = flattenVisible(tree, expanded).map((node) => node.id)
+
+    expect(new Set(ids).size).toBe(ids.length)
+  })
 })
 
 describe("buildNavigationTree — annotations branch (M8)", () => {
