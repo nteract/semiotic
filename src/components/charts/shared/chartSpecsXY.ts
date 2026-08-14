@@ -17,6 +17,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      frameProps: { type: "object", omitFromSchema: true },
       styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x", description: "Key or accessor function for x-axis values. Functions can derive a value, e.g. `d => d.timestamp`." },

@@ -236,62 +236,6 @@
             "opacity": {
               "type": "number"
             },
-            "frameProps": {
-              "type": "object",
-              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
-              "additionalProperties": true,
-              "properties": {
-                "legendLayout": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "align": {
-                      "type": "string",
-                      "enum": [
-                        "start",
-                        "center",
-                        "end",
-                        "left",
-                        "right"
-                      ]
-                    },
-                    "swatchSize": {
-                      "type": "number",
-                      "minimum": 1
-                    },
-                    "labelGap": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "itemGap": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "rowHeight": {
-                      "type": "number",
-                      "minimum": 1
-                    },
-                    "maxWidth": {
-                      "type": "number",
-                      "minimum": 1
-                    },
-                    "edgeGutter": {
-                      "type": "number",
-                      "minimum": 0,
-                      "default": 3
-                    },
-                    "sideGutter": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "axisGutter": {
-                      "type": "number",
-                      "minimum": 0
-                    }
-                  }
-                }
-              }
-            },
             "xLabel": {
               "type": "string"
             },

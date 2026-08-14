@@ -371,8 +371,8 @@ describe("Heatmap", () => {
     const gradient = container.querySelector("[aria-label='value']")
     const transform = gradient?.parentElement?.getAttribute("transform") ?? ""
     const x = Number(transform.match(/translate\(([-\d.]+)/)?.[1])
-    // Plot edge + requested distance; the measured gradient itself determines
-    // the automatic right margin rather than a synthetic categorical legend.
-    expect(x).toBe(500)
+    // The measured gradient determines the automatic right margin. Its 3px
+    // edge gutter keeps the interactive focus ring inside the SVG.
+    expect(x).toBe(497)
   })
 })

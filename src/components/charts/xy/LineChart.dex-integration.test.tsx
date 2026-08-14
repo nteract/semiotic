@@ -202,7 +202,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     expect(capturedProps.yAccessor).toBe("__ma_unitized")
     expect(capturedProps.groupAccessor).toBe("__ma_series")
     expect(capturedProps.yExtent).toEqual([0, 1])
-    expect(capturedProps.margin.right).toBe(180)
+    expect(capturedProps.margin.right).toBe(183)
     expect(capturedProps.legendLayout).toMatchObject({ sideGutter: 70 })
 
     // Data should be unitized — all __ma_unitized values in [0,1]
@@ -266,7 +266,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
       })
     )
 
-    expect(capturedProps.margin.left).toBe(180)
+    expect(capturedProps.margin.left).toBe(183)
     expect(capturedProps.legendPosition).toBe("left")
     expect(capturedProps.legendLayout).toMatchObject({ sideGutter: 70 })
   })
