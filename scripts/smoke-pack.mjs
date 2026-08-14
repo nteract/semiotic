@@ -539,7 +539,7 @@ function checkExperimentalBridgeStoreAnchor(packageRoot, failures) {
   const code = readFileSync(bridgePath, "utf8")
   const anchorImports = Array.from(
     code.matchAll(
-      /import\{([^}]*)\}from["']\.\/semiotic-client-shared\.module\.min\.js["']/g
+      /import\s*\{([^}]*)\}\s*from\s*["']\.\/semiotic-client-shared\.module\.min\.js["']/g
     ),
     (match) => match[1]
   ).join(",")

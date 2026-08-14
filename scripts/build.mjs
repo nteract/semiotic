@@ -234,11 +234,39 @@ function externalizeSharedClientModulesForCjsPlugin() {
     setup(build) {
       build.onResolve({ filter: /^\.\.?\// }, (args) => {
         const request = args.path.replace(/\\/g, "/")
+        if (request.endsWith("stream/customLayoutSelection")) {
+          return {
+            path: "./semiotic-custom-layout-selection-cjs-shared.min.js",
+            external: true,
+          }
+        }
         if (!sharedModules.some((module) => request.endsWith(module))) {
           return null
         }
         return {
           path: "./semiotic-client-cjs-shared.min.js",
+          external: true,
+        }
+      })
+    },
+  }
+}
+
+/**
+ * `semiotic/recipes/react` must share this context with Stream Frames, but
+ * routing the small recipe entry through the complete client namespace makes
+ * a recipes-only `require()` load the AI/geo graph. Keep this bridge small
+ * and use it from both bundles instead.
+ */
+function externalizeCustomLayoutSelectionForCjsPlugin() {
+  return {
+    name: "externalize-custom-layout-selection-for-cjs",
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, (args) => {
+        const request = args.path.replace(/\\/g, "/")
+        if (!request.endsWith("stream/customLayoutSelection")) return null
+        return {
+          path: "./semiotic-custom-layout-selection-cjs-shared.min.js",
           external: true,
         }
       })
@@ -276,7 +304,6 @@ const clientCjsNamespaces = {
   "semiotic-themes-react": "themesReact",
   "semiotic-utils": "utils",
   "semiotic-utils-react": "utilsReact",
-  "semiotic-recipes-react": "recipesReact",
   "semiotic-experimental": "experimental",
   "semiotic-value": "value"
 }
@@ -1214,6 +1241,7 @@ async function build() {
     "geo",
     "semiotic-recipes",
     "semiotic-recipes-core",
+    "semiotic-recipes-react",
   ])
   const clientCjsBundles = bundledEntries.filter(
     (bundle) => bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name),
@@ -1222,16 +1250,26 @@ async function build() {
     (bundle) => !bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name)
   )
   await createCjsBundle({
+    input: "src/components/stream/customLayoutSelection.tsx",
+    name: "semiotic-custom-layout-selection-cjs-shared",
+    minify,
+    clientOnly: true,
+  })
+  await createCjsBundle({
     input: "src/components/internal/semioticClientCjsShared.ts",
     name: "semiotic-client-cjs-shared",
-    minify
+    minify,
+    esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
   })
   writeClientCjsFacades(clientCjsBundles)
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
   const recipesCoreBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-recipes-core",
   )
-  if (!geoBundle || !recipesCoreBundle) {
+  const recipesReactBundle = bundledEntries.find(
+    (bundle) => bundle.name === "semiotic-recipes-react",
+  )
+  if (!geoBundle || !recipesCoreBundle || !recipesReactBundle) {
     throw new Error("Missing isolated CommonJS geo/recipe build entries")
   }
   await createCjsBundle({
@@ -1249,6 +1287,10 @@ async function build() {
     name: "semiotic-recipes-core-cjs-base",
     clientOnly: false,
     esbuildPlugins: [stubRecipeGeoForCjsPlugin()],
+  })
+  await createCjsBundle({
+    ...recipesReactBundle,
+    esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
   })
   writeRecipesCjsFacades()
   console.log(

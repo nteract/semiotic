@@ -18,7 +18,6 @@ export * as controls from "../semiotic-controls"
 export * as themesReact from "../semiotic-themes-react"
 export * as utils from "../semiotic-utils"
 export * as utilsReact from "../semiotic-utils-react"
-export * as recipesReact from "../semiotic-recipes-react"
 export * as experimental from "../semiotic-experimental"
 export * as value from "../semiotic-value"
 
