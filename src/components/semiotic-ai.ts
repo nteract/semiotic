@@ -211,6 +211,7 @@ export type {
   AccessibilityAuditResult,
   AuditAccessibilityOptions
 } from "./charts/shared/auditAccessibility"
+export * from "./ai/evaluateChart"
 export type {
   MobileAuditStatus,
   MobileAuditCategory,

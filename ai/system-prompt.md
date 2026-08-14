@@ -19,7 +19,7 @@ request.
    the selected component's exact schema instead of guessing props.
 3. Produce a serializable `{ component, props }` proposal before translating it
    to JSX; import chart components from their family subpath in production code.
-4. Validate with `prepareChart`, `diagnoseConfig`, or
+4. Validate with `prepareChart`, `diagnoseConfig`, or `evaluateChart`, or
    `npx semiotic-ai --doctor`; repair reported contract failures.
 5. When a renderer is available, require non-empty render evidence and run the
    accessibility audit before presenting the result.

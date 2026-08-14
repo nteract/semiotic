@@ -73,8 +73,7 @@ describe("renderStaticLegend", () => {
       ...baseConfig,
       margin: { ...baseConfig.margin, right: 100 },
     })
-    // Right position aligns 10px after chart content: totalWidth - margin.right + 10 = 510
-    expect(svg).toContain("translate(510,")
+    expect(svg).toContain("translate(497,")
   })
 
   it("positions legend at top", () => {
@@ -94,7 +93,7 @@ describe("renderStaticLegend", () => {
       position: "left",
       margin: { ...baseConfig.margin, left: 100 },
     })
-    expect(svg).toContain("translate(-10,")
+    expect(svg).toContain("translate(3,")
   })
 
   it("uses legendDistance as the plot-to-legend gap", () => {
@@ -109,18 +108,35 @@ describe("renderStaticLegend", () => {
   it("matches client placement when side chrome separates plot and legend", () => {
     const right = renderLegendString({
       ...baseConfig,
-      margin: { ...baseConfig.margin, right: 180 },
-      legendLayout: { sideGutter: 70 },
+      margin: { ...baseConfig.margin, right: 183 },
+      legendLayout: { sideGutter: 70, edgeGutter: 3 },
     })
     const left = renderLegendString({
       ...baseConfig,
       position: "left",
-      margin: { ...baseConfig.margin, left: 180 },
-      legendLayout: { sideGutter: 70 },
+      margin: { ...baseConfig.margin, left: 183 },
+      legendLayout: { sideGutter: 70, edgeGutter: 3 },
     })
 
-    expect(right).toContain("translate(500,")
-    expect(left).toContain("translate(0,")
+    expect(right).toContain("translate(497,")
+    expect(left).toContain("translate(3,")
+  })
+
+  it("preserves the focus-ring edge gutter for explicitly owned side margins", () => {
+    const right = renderLegendString({
+      ...baseConfig,
+      margin: { ...baseConfig.margin, right: 110 },
+      legendLayout: { edgeGutter: 3 },
+    })
+    const left = renderLegendString({
+      ...baseConfig,
+      position: "left",
+      margin: { ...baseConfig.margin, left: 110 },
+      legendLayout: { edgeGutter: 3 },
+    })
+
+    expect(right).toContain("translate(497,")
+    expect(left).toContain("translate(3,")
   })
 
   it("uses legendSize when estimating label width", () => {

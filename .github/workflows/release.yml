@@ -7,6 +7,10 @@ on:
 jobs:
   visual-contracts:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
     # Match the exact font/browser environment used to author and verify the
     # committed Linux snapshots. A release tag must not bypass the PR visual
     # gate merely because npm publication uses a separate job.
@@ -34,7 +38,7 @@ jobs:
         run: npm run dist
 
       - name: Verify every committed visual baseline without updates
-        run: npx playwright test --update-snapshots=none
+        run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
 
   publish:
     needs: visual-contracts

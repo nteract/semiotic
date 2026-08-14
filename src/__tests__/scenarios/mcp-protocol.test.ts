@@ -435,6 +435,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "auditAccessibility",
       "auditMobileVisualization",
       "diagnoseConfig",
+      "evaluateChart",
       "getSchema",
       "groundChart",
       "interrogateChart",

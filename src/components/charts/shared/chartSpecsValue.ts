@@ -4,7 +4,7 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
   BigNumber: {
     name: "BigNumber",
     category: "value",
-    description: "Focal-value display: one number, optionally with comparison / target / threshold zones (mapped to semantic theme roles) / four layout modes (tile / presentation / inline / thumbnail). Ships with NO chart-family dependency — embed your own Semiotic chart via two slots: `trendSlot` for wide / rectangular charts (LineChart, AreaChart) under the value, and `chartSlot` for square charts (DonutChart, PieChart, Scatterplot, Treemap) beside the value. The slot context exposes the resolved threshold colour + sentiment + push buffer so embedded charts can theme-link. Forward-looking POC for a future SingleValueFrame.",
+    description: "Value component, not a chart HOC: render one focal number with optional comparison / target / threshold zones and four layout modes (tile / presentation / inline / thumbnail). Do not add chart-only props such as `title` or `accessibleTable`; use `label`, `description`, and `summary` for accessible text. Ships with NO chart-family dependency — embed your own Semiotic chart via two slots: `trendSlot` for wide / rectangular charts (LineChart, AreaChart) under the value, and `chartSlot` for square charts (DonutChart, PieChart, Scatterplot, Treemap) beside the value. The slot context exposes the resolved threshold colour + sentiment + push buffer so embedded charts can theme-link. Forward-looking POC for a future SingleValueFrame.",
     // `value` is intentionally NOT in `required` — null / undefined route
     // the card into its documented empty state. Marking required would
     // make validateProps reject legitimate optional-data usages like

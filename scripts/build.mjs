@@ -1,3 +1,5 @@
+/* global console, process */
+
 import { execSync } from "child_process"
 import {
   existsSync,
@@ -109,7 +111,8 @@ async function createCjsBundle(options = {}) {
     name = "semiotic",
     minify = false,
     serverOnly = false,
-    clientOnly = false
+    clientOnly = false,
+    esbuildPlugins = []
   } = options
 
   await tsupBuild({
@@ -118,6 +121,8 @@ async function createCjsBundle(options = {}) {
     name: `${name}:cjs`,
     format: "cjs",
     splitting: false,
+    esbuildPlugins,
+    noExternal: esbuildPlugins.length > 0 ? ["d3-geo"] : undefined,
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
       esbuildOptions.conditions = ["module", "import", "default"]
@@ -207,6 +212,68 @@ function externalizeExperimentalBridgeStoresPlugin() {
   }
 }
 
+/**
+ * Geo remains a lazy CommonJS implementation so importing an ordinary chart
+ * does not eagerly load d3-geo. Its React contexts and module-scoped stores,
+ * however, must be the same instances used by the shared client namespaces.
+ */
+function externalizeSharedClientModulesForCjsPlugin() {
+  const sharedModules = [
+    "CategoryColors",
+    "ThemeProvider",
+    "store/ThemeStore",
+    "store/SelectionStore",
+    "store/useSelection",
+    "store/ObservationStore",
+    "store/LinkedCrosshairStore",
+    "store/TooltipStore",
+    "stream/customLayoutSelection",
+  ]
+  return {
+    name: "externalize-shared-client-modules-for-cjs",
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, (args) => {
+        const request = args.path.replace(/\\/g, "/")
+        if (request.endsWith("stream/customLayoutSelection")) {
+          return {
+            path: "./semiotic-custom-layout-selection-cjs-shared.min.js",
+            external: true,
+          }
+        }
+        if (!sharedModules.some((module) => request.endsWith(module))) {
+          return null
+        }
+        return {
+          path: "./semiotic-client-cjs-shared.min.js",
+          external: true,
+        }
+      })
+    },
+  }
+}
+
+/**
+ * `semiotic/recipes/react` must share this context with Stream Frames, but
+ * routing the small recipe entry through the complete client namespace makes
+ * a recipes-only `require()` load the AI/geo graph. Keep this bridge small
+ * and use it from both bundles instead.
+ */
+function externalizeCustomLayoutSelectionForCjsPlugin() {
+  return {
+    name: "externalize-custom-layout-selection-for-cjs",
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, (args) => {
+        const request = args.path.replace(/\\/g, "/")
+        if (!request.endsWith("stream/customLayoutSelection")) return null
+        return {
+          path: "./semiotic-custom-layout-selection-cjs-shared.min.js",
+          external: true,
+        }
+      })
+    },
+  }
+}
+
 async function createCjsBundlesWithConcurrency(bundles, concurrency) {
   const workers = Array.from(
     { length: Math.min(concurrency, bundles.length) },
@@ -233,13 +300,10 @@ const clientCjsNamespaces = {
   "semiotic-realtime-react": "realtimeReact",
   physics: "physics",
   "semiotic-ai": "ai",
-  geo: "geo",
   controls: "controls",
   "semiotic-themes-react": "themesReact",
   "semiotic-utils": "utils",
   "semiotic-utils-react": "utilsReact",
-  "semiotic-recipes": "recipes",
-  "semiotic-recipes-react": "recipesReact",
   "semiotic-experimental": "experimental",
   "semiotic-value": "value"
 }
@@ -258,6 +322,69 @@ function writeClientCjsFacades(clientBundles) {
   console.log(
     `✅ ${clientBundles.length} shared CommonJS client facades created`
   )
+}
+
+/**
+ * The geographic dot-grid recipe is the only recipe that imports d3-geo.
+ * The normal ESM graph already keeps that module in a separate chunk, but a
+ * CJS bundle cannot split synchronously. Build the recipe core against a
+ * tiny placeholder and expose the two geographic-dot exports through lazy
+ * getters below; requiring a non-geographic recipe then remains d3-geo-free.
+ */
+function stubRecipeGeoForCjsPlugin() {
+  return {
+    name: "stub-recipe-geo-for-cjs",
+    setup(build) {
+      build.onResolve({ filter: /^d3-geo$/ }, () => {
+        return {
+          path: "semiotic-recipes-cjs-d3-geo-stub",
+          namespace: "semiotic-recipes-cjs-stub",
+        }
+      })
+      build.onLoad(
+        { filter: /.*/, namespace: "semiotic-recipes-cjs-stub" },
+        () => ({
+          contents: `
+            export function geoBounds() {
+              throw new Error("geographicDotGrid requires the geo recipe bundle")
+            }
+            export function geoContains() {
+              throw new Error("geographicDotGrid requires the geo recipe bundle")
+            }
+          `,
+          loader: "js",
+        }),
+      )
+    },
+  }
+}
+
+function writeRecipesCjsFacades() {
+  writeFileSync(
+    "dist/semiotic-recipes-core.min.js",
+    `const base=require("./semiotic-recipes-core-cjs-base.min.js");
+const geo=()=>require("./semiotic-recipes-geo-cjs.min.js");
+const out={};
+const descriptors=Object.getOwnPropertyDescriptors(base);
+delete descriptors.geographicDotGridLayout;
+delete descriptors.sampleGeographicDotGrid;
+Object.defineProperties(out,descriptors);
+for(const name of ["geographicDotGridLayout","sampleGeographicDotGrid"]){Object.defineProperty(out,name,{enumerable:true,configurable:true,get:()=>geo()[name]})}
+module.exports=out;
+`,
+  )
+  writeFileSync(
+    "dist/semiotic-recipes.min.js",
+    `"use client";
+const core=require("./semiotic-recipes-core.min.js");
+const react=require("./semiotic-recipes-react.min.js");
+const out={};
+Object.defineProperties(out,Object.getOwnPropertyDescriptors(core));
+Object.defineProperties(out,Object.getOwnPropertyDescriptors(react));
+module.exports=out;
+`,
+  )
+  console.log("✅ lazy CommonJS recipe facades created")
 }
 
 const generatedBundleMetadata = {
@@ -1110,16 +1237,62 @@ async function build() {
   // duplicates module-scoped React contexts, so a provider from one `require`
   // path cannot reach a chart from another. Bundle all client namespaces once
   // and emit tiny public facades that select the requested namespace.
-  const clientCjsBundles = bundledEntries.filter((bundle) => bundle.clientOnly)
-  const standaloneCjsBundles = bundledEntries.filter(
-    (bundle) => !bundle.clientOnly
+  const isolatedClientCjsNames = new Set([
+    "geo",
+    "semiotic-recipes",
+    "semiotic-recipes-core",
+    "semiotic-recipes-react",
+  ])
+  const clientCjsBundles = bundledEntries.filter(
+    (bundle) => bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name),
   )
+  const standaloneCjsBundles = bundledEntries.filter(
+    (bundle) => !bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name)
+  )
+  await createCjsBundle({
+    input: "src/components/stream/customLayoutSelection.tsx",
+    name: "semiotic-custom-layout-selection-cjs-shared",
+    minify,
+    clientOnly: true,
+  })
   await createCjsBundle({
     input: "src/components/internal/semioticClientCjsShared.ts",
     name: "semiotic-client-cjs-shared",
-    minify
+    minify,
+    esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
   })
   writeClientCjsFacades(clientCjsBundles)
+  const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
+  const recipesCoreBundle = bundledEntries.find(
+    (bundle) => bundle.name === "semiotic-recipes-core",
+  )
+  const recipesReactBundle = bundledEntries.find(
+    (bundle) => bundle.name === "semiotic-recipes-react",
+  )
+  if (!geoBundle || !recipesCoreBundle || !recipesReactBundle) {
+    throw new Error("Missing isolated CommonJS geo/recipe build entries")
+  }
+  await createCjsBundle({
+    ...geoBundle,
+    name: "geo",
+    esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
+  })
+  await createCjsBundle({
+    input: "src/components/recipes/geographicDotGrid.tsx",
+    name: "semiotic-recipes-geo-cjs",
+    minify,
+  })
+  await createCjsBundle({
+    ...recipesCoreBundle,
+    name: "semiotic-recipes-core-cjs-base",
+    clientOnly: false,
+    esbuildPlugins: [stubRecipeGeoForCjsPlugin()],
+  })
+  await createCjsBundle({
+    ...recipesReactBundle,
+    esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
+  })
+  writeRecipesCjsFacades()
   console.log(
     `Bundling ${standaloneCjsBundles.length} standalone CJS entry points with concurrency ${bundleConcurrency}`
   )

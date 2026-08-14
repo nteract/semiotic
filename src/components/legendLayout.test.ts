@@ -5,6 +5,7 @@ import {
   resolveAxisChromeGutter,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
+  resolveLegendEdgeGutter,
   resolveSideLegendMargin,
   resolveSideLegendWidth,
 } from "./legendLayout"
@@ -24,7 +25,7 @@ describe("side legend measurement", () => {
     }
 
     expect(resolveSideLegendWidth(legend)).toBe(100)
-    expect(resolveSideLegendMargin(legend)).toBe(110)
+    expect(resolveSideLegendMargin(legend)).toBe(113)
   })
 
   it("grows to fit categorical item and group labels", () => {
@@ -72,7 +73,7 @@ describe("side legend measurement", () => {
       legendDistance: 24,
     }
 
-    expect(resolveSideLegendMargin(legend)).toBe(124)
+    expect(resolveSideLegendMargin(legend)).toBe(127)
   })
 
   it("reserves plot-adjacent chrome before a side legend", () => {
@@ -80,7 +81,7 @@ describe("side legend measurement", () => {
       legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],
     }
 
-    expect(resolveSideLegendMargin(legend, { sideGutter: 70 })).toBe(180)
+    expect(resolveSideLegendMargin(legend, { sideGutter: 70 })).toBe(183)
   })
 
   it("uses the same custom swatch and label metrics as the renderer", () => {
@@ -92,7 +93,15 @@ describe("side legend measurement", () => {
     expect(resolveSideLegendMargin(
       legend,
       { swatchSize: 80, labelGap: 30 },
-    )).toBe(127)
+    )).toBe(130)
+  })
+})
+
+describe("side legend edge gutter", () => {
+  it("defaults to focus-ring clearance and supports an explicit flush opt-out", () => {
+    expect(resolveLegendEdgeGutter()).toBe(3)
+    expect(resolveLegendEdgeGutter({ edgeGutter: 0 })).toBe(0)
+    expect(resolveLegendEdgeGutter({ edgeGutter: -10 })).toBe(0)
   })
 })
 

@@ -25,7 +25,10 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP } from "./validateProps"
-import { assessAccessibilityText, isNonEmptyString } from "./auditAccessibilityText"
+import {
+  assessAccessibilityText,
+  isNonEmptyString
+} from "./auditAccessibilityText"
 import {
   hasDeclaredHatchFill,
   usesCvdSafePalette
@@ -47,7 +50,7 @@ import {
   POINT_TARGET_RADIUS_PROP,
   REALTIME_CHARTS as REALTIME,
   VALUE_CHARTS as VALUE,
-  XY_WITH_AXES_CHARTS as XY_WITH_AXES,
+  XY_WITH_AXES_CHARTS as XY_WITH_AXES
 } from "./chartFamilySets"
 import { getChartRecipe } from "../../ai/chartRecipeRegistry"
 
@@ -329,7 +332,8 @@ export function auditAccessibility(
   // is excluded). Pause control is not yet baked in and stays author-declared.
   const framePhysics = isPhysics
   const settledProjection =
-    hasSettledProjection(props) || (PHYSICS_SETTLED.has(component) && tableEnabled)
+    hasSettledProjection(props) ||
+    (PHYSICS_SETTLED.has(component) && tableEnabled)
   const reducedMotionSettle = hasReducedMotionSettle(props) || framePhysics
   const annotations = Array.isArray(props.annotations)
     ? (props.annotations as Datum[]).filter(
@@ -905,17 +909,15 @@ export function auditAccessibility(
     ...(navigable
       ? isHierarchy
         ? {
-            // buildNavigationTree is root-only for hierarchy/network — don't
-            // claim a full chart→series→datum tree when the widget is enabled.
             status: "pass" as A11yStatus,
             message:
-              "ChartContainer's navigable option mounts a structured navigation tree. For hierarchical/network charts the tree is currently shallow (root/topology summary + annotations branch), not a full descent of every node.",
+              "ChartContainer's navigable option mounts a structured navigation tree, including hierarchy/network branches and their data items."
           }
         : {
-          status: "pass" as A11yStatus,
-          message:
-            "ChartContainer's navigable option mounts a structured tree (chart → axes/series → data points) that screen readers can traverse."
-        }
+            status: "pass" as A11yStatus,
+            message:
+              "ChartContainer's navigable option mounts a structured tree (chart → axes/series → data points) that screen readers can traverse."
+          }
       : isHierarchy
         ? {
             status: "warn" as A11yStatus,

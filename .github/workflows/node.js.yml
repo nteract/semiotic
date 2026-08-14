@@ -304,6 +304,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: fast-contracts
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
     # Pin the rendering environment. `ubuntu-latest` is a moving image whose
     # font/freetype stack drifts from committed baselines, causing sub-pixel
     # text-AA diffs across the whole visual suite. Running inside the same
@@ -345,9 +349,10 @@ jobs:
         # unreviewed visual contract, not a reason to create one during a
         # pull request. Maintainers can use `test:visual:bootstrap` locally
         # to generate a proposed baseline, then commit it with review.
-        run: npx playwright test --update-snapshots=none
+        run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
 
       - name: Capture docs example source and local Chromium contract evidence
+        if: matrix.project == 'chromium'
         run: npm run test:examples:source
 
       # The contract test validates this complete local-only capture before it
@@ -356,7 +361,7 @@ jobs:
       # It records reduced-motion and browser-emitted visibility behavior without
       # claiming policy-specific animation, performance, or cross-browser parity.
       - name: Upload local docs example contract evidence
-        if: always()
+        if: always() && matrix.project == 'chromium'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docs-example-local-contract-evidence
@@ -365,7 +370,7 @@ jobs:
           retention-days: 14
 
       - name: Upload snapshot baselines
-        if: always()
+        if: always() && matrix.project == 'chromium'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-snapshots
@@ -376,7 +381,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: |
             test-results/
             integration-tests/test-results/

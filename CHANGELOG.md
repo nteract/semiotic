@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Unified chart evaluation** — `evaluateChart` now composes data-contract, representation/deception, accessibility, and optional render-evidence checks into ranked findings and notifications, with `semiotic-ai --evaluate` and an MCP `evaluateChart` tool.
+- **Side legends reserve their focus-ring edge clearance** — left/right legend auto-margins now include a measured 3px outer gutter, keeping swatches and keyboard focus rings inside the SVG in CSR and SSR. `legendLayout.edgeGutter` is the explicit override; `0` restores flush legacy placement. `frameProps.legendLayout` is now a typed, nested AI/schema contract across chart families.
+- **BigNumber's value-component boundary is explicit in the chart registry** — generated AI descriptions now distinguish it from chart HOCs and direct agents away from unsupported `title` / `accessibleTable` props toward `label`, `description`, and `summary`.
+- **CommonJS recipes keep geo dependencies lazy** — the CJS `recipes` facade no longer eagerly loads `d3-geo`; geographic dot-grid exports load their dedicated bundle on demand, and the built/package smoke path now guards the non-geo import graph.
+
 ## [3.9.0] - 2026-08-11
 
 ### Added

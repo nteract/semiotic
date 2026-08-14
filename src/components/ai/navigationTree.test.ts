@@ -1,16 +1,26 @@
 import { describe, it, expect } from "vitest"
-import { buildNavigationTree, flattenVisible, countNodes, type NavTreeNode } from "./navigationTree"
+import {
+  buildNavigationTree,
+  flattenVisible,
+  countNodes,
+  type NavTreeNode
+} from "./navigationTree"
 
 const childrenRoles = (n: NavTreeNode) => (n.children ?? []).map((c) => c.role)
-const childrenLabels = (n: NavTreeNode) => (n.children ?? []).map((c) => c.label)
+const childrenLabels = (n: NavTreeNode) =>
+  (n.children ?? []).map((c) => c.label)
 
 describe("buildNavigationTree — single-series XY", () => {
   const data = [
     { month: "Jan", sales: 100 },
     { month: "Feb", sales: 250 },
-    { month: "Mar", sales: 180 },
+    { month: "Mar", sales: 180 }
   ]
-  const tree = buildNavigationTree("LineChart", { data, xAccessor: "month", yAccessor: "sales" })
+  const tree = buildNavigationTree("LineChart", {
+    data,
+    xAccessor: "month",
+    yAccessor: "sales"
+  })
 
   it("roots at the chart with an L1–L3 label", () => {
     expect(tree.role).toBe("chart")
@@ -28,7 +38,11 @@ describe("buildNavigationTree — single-series XY", () => {
 
   it("labels each leaf as 'dimension: value' and carries the datum + value", () => {
     const leaves = tree.children!.filter((c) => c.role === "datum")
-    expect(leaves.map((l) => l.label)).toEqual(["Jan: 100", "Feb: 250", "Mar: 180"])
+    expect(leaves.map((l) => l.label)).toEqual([
+      "Jan: 100",
+      "Feb: 250",
+      "Mar: 180"
+    ])
     expect(leaves[1].value).toBe(250)
     expect(leaves[1].datum).toEqual({ month: "Feb", sales: 250 })
     expect(leaves[1].level).toBe(2)
@@ -40,9 +54,14 @@ describe("buildNavigationTree — multi-series", () => {
     { month: "Jan", sales: 100, region: "West" },
     { month: "Feb", sales: 200, region: "West" },
     { month: "Jan", sales: 50, region: "East" },
-    { month: "Feb", sales: 80, region: "East" },
+    { month: "Feb", sales: 80, region: "East" }
   ]
-  const tree = buildNavigationTree("LineChart", { data, xAccessor: "month", yAccessor: "sales", lineBy: "region" })
+  const tree = buildNavigationTree("LineChart", {
+    data,
+    xAccessor: "month",
+    yAccessor: "sales",
+    lineBy: "region"
+  })
 
   it("reports distinct dimension values on the axis (not raw-array first/last)", () => {
     // x repeats across series (Jan/Feb per region) — axis must read Jan to Feb.
@@ -63,8 +82,12 @@ describe("buildNavigationTree — multi-series", () => {
 describe("buildNavigationTree — part-to-whole & caps & degradation", () => {
   it("lists pie segments as leaves with no axis nodes", () => {
     const tree = buildNavigationTree("PieChart", {
-      data: [{ category: "A", value: 10 }, { category: "B", value: 30 }],
-      categoryAccessor: "category", valueAccessor: "value",
+      data: [
+        { category: "A", value: 10 },
+        { category: "B", value: 30 }
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value"
     })
     expect(childrenRoles(tree)).toEqual(["datum", "datum"])
     expect(childrenLabels(tree)).toEqual(["A: 10", "B: 30"])
@@ -72,22 +95,146 @@ describe("buildNavigationTree — part-to-whole & caps & degradation", () => {
 
   it("caps leaves per branch and notes the elision", () => {
     const data = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i * 10 }))
-    const tree = buildNavigationTree("LineChart", { data, xAccessor: "x", yAccessor: "y" }, { maxLeaves: 3 })
+    const tree = buildNavigationTree(
+      "LineChart",
+      { data, xAccessor: "x", yAccessor: "y" },
+      { maxLeaves: 3 }
+    )
     const leaves = tree.children!.filter((c) => c.role === "datum")
     expect(leaves).toHaveLength(4) // 3 + elision note
     expect(leaves[3].label).toBe("…and 7 more points")
   })
 
-  it("degrades to a root-only node for families without a measure-over-dimension", () => {
-    const tree = buildNavigationTree("ForceDirectedGraph", { nodes: [{ id: "a" }, { id: "b" }], edges: [] })
+  it("builds a node and link structure for network charts", () => {
+    const tree = buildNavigationTree("ForceDirectedGraph", {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: []
+    })
     expect(tree.role).toBe("chart")
-    expect(tree.children).toEqual([])
+    expect(tree.children?.map((child) => child.role)).toEqual(["series"])
+    expect(tree.children?.[0].children?.map((child) => child.label)).toEqual([
+      "a: 0 links.",
+      "b: 0 links."
+    ])
     expect(tree.label).toContain("network graph")
   })
 
   it("degrades when data is absent (push mode)", () => {
-    const tree = buildNavigationTree("LineChart", { xAccessor: "x", yAccessor: "y" })
+    const tree = buildNavigationTree("LineChart", {
+      xAccessor: "x",
+      yAccessor: "y"
+    })
     expect(tree.children).toEqual([])
+  })
+})
+
+describe("buildNavigationTree — network, hierarchy, and geo families", () => {
+  it("groups network nodes and exposes links as traversable leaves", () => {
+    const tree = buildNavigationTree("SankeyDiagram", {
+      nodes: [
+        { id: "Visit", group: "entry" },
+        { id: "Signup", group: "conversion" }
+      ],
+      edges: [{ source: "Visit", target: "Signup", value: 12 }],
+      valueAccessor: "value",
+      enableHover: true
+    })
+    expect(tree.label).toContain("Hover or focus a mark for its details.")
+    expect(tree.children?.map((child) => child.label)).toEqual([
+      "entry: 1 node.",
+      "conversion: 1 node.",
+      "Links: 1 connection."
+    ])
+    expect(tree.children?.[2].children?.[0].label).toBe("Visit to Signup: 12.")
+    expect(tree.children?.[2].children?.[0].datum).toEqual({
+      source: "Visit",
+      target: "Signup",
+      value: 12
+    })
+  })
+
+  it("descends hierarchy branches and keeps leaf data attached", () => {
+    const tree = buildNavigationTree("Treemap", {
+      data: {
+        name: "Total",
+        children: [
+          { name: "Engineering", children: [{ name: "Platform", value: 4 }] },
+          { name: "Sales", value: 2 }
+        ]
+      },
+      valueAccessor: "value",
+      childrenAccessor: "children"
+    })
+    expect(tree.label).toContain("2 leaves across 3 hierarchy levels")
+    const rootBranch = tree.children?.[0]
+    expect(rootBranch?.label).toBe("Total: 2 descendants, total 6.")
+    expect(rootBranch?.children?.[0].label).toBe(
+      "Engineering: 1 descendant, total 4."
+    )
+    expect(rootBranch?.children?.[0].children?.[0]).toMatchObject({
+      role: "datum",
+      label: "Platform: 4.",
+      datum: { name: "Platform", value: 4 }
+    })
+  })
+
+  it("turns geographic areas and routes into labeled branches", () => {
+    const tree = buildNavigationTree("ChoroplethMap", {
+      areas: [
+        { type: "Feature", properties: { name: "North", value: 8 } },
+        { type: "Feature", properties: { name: "South", value: 3 } }
+      ],
+      valueAccessor: "value",
+      linkedHover: { name: "regions", fields: ["name"] }
+    })
+    expect(tree.label).toContain("2 regions")
+    expect(tree.label).toContain(
+      "Use linked highlighting to compare related locations."
+    )
+    expect(tree.children?.[0].label).toBe("Regions: 2 marks.")
+    expect(tree.children?.[0].children?.map((child) => child.label)).toEqual([
+      "North: 8.",
+      "South: 3."
+    ])
+  })
+
+  it("uses FlowMap nodes and ProportionalSymbolMap point IDs for locations", () => {
+    const flows = buildNavigationTree("FlowMap", {
+      nodes: [{ city: "Alpha" }, { city: "Beta" }],
+      flows: [{ source: "Alpha", target: "Beta", value: 3 }],
+      nodeIdAccessor: "city"
+    })
+    const symbols = buildNavigationTree("ProportionalSymbolMap", {
+      points: [{ place: "North", value: 4 }],
+      pointIdAccessor: "place",
+      sizeBy: "value"
+    })
+
+    expect(flows.label).toContain("2 locations")
+    expect(flows.children?.[0]).toMatchObject({
+      label: "Locations: 2 marks.",
+      children: expect.arrayContaining([
+        expect.objectContaining({ label: "Alpha." })
+      ])
+    })
+    expect(symbols.children?.[0]?.children?.[0]?.label).toBe("North: 4.")
+  })
+
+  it("keeps slug-colliding network group and node IDs unique", () => {
+    const tree = buildNavigationTree("ForceDirectedGraph", {
+      nodes: [
+        { id: "A B", group: "A B" },
+        { id: "A-B", group: "A-B" }
+      ],
+      edges: []
+    })
+    const expanded = new Set([
+      "root",
+      ...(tree.children?.map((node) => node.id) ?? [])
+    ])
+    const ids = flattenVisible(tree, expanded).map((node) => node.id)
+
+    expect(new Set(ids).size).toBe(ids.length)
   })
 })
 
@@ -95,28 +242,40 @@ describe("buildNavigationTree — annotations branch (M8)", () => {
   const data = [
     { month: "Jan", sales: 100 },
     { month: "Feb", sales: 250 },
-    { month: "Mar", sales: 180 },
+    { month: "Mar", sales: 180 }
   ]
-  const annotationBranch = (tree: NavTreeNode) => tree.children?.find((c) => c.role === "annotation")
+  const annotationBranch = (tree: NavTreeNode) =>
+    tree.children?.find((c) => c.role === "annotation")
 
   it("adds no annotation branch when the chart has none", () => {
-    const tree = buildNavigationTree("LineChart", { data, xAccessor: "month", yAccessor: "sales" })
+    const tree = buildNavigationTree("LineChart", {
+      data,
+      xAccessor: "month",
+      yAccessor: "sales"
+    })
     expect(annotationBranch(tree)).toBeUndefined()
   })
 
   it("appends a grouped annotations branch after the data, reusing the prose vocabulary", () => {
     const tree = buildNavigationTree("LineChart", {
-      data, xAccessor: "month", yAccessor: "sales",
+      data,
+      xAccessor: "month",
+      yAccessor: "sales",
       annotations: [
         { type: "callout", x: "Feb", label: "Peak to investigate" },
-        { type: "y-threshold", y: 200, label: "Target", provenance: { authorKind: "agent" } },
-      ],
+        {
+          type: "y-threshold",
+          y: 200,
+          label: "Target",
+          provenance: { authorKind: "agent" }
+        }
+      ]
     })
     const branch = annotationBranch(tree)
     expect(branch?.label).toBe("Annotations: 2 marked features.")
     expect(branch?.children?.map((c) => c.label)).toEqual([
       `A callout labeled "Peak to investigate".`,
-      `An AI-suggested threshold line labeled "Target".`,
+      `An AI-suggested threshold line labeled "Target".`
     ])
     // Each node carries its raw annotation for consumers (e.g. focusAnnotation).
     expect(branch?.children?.[0].datum?.label).toBe("Peak to investigate")
@@ -124,51 +283,82 @@ describe("buildNavigationTree — annotations branch (M8)", () => {
 
   it("surfaces editorial status inline and skips retracted notes", () => {
     const tree = buildNavigationTree("LineChart", {
-      data, xAccessor: "month", yAccessor: "sales",
+      data,
+      xAccessor: "month",
+      yAccessor: "sales",
       annotations: [
-        { type: "callout", x: "Feb", label: "Contested", lifecycle: { status: "disputed" } },
-        { type: "callout", x: "Mar", label: "Withdrawn", lifecycle: { status: "retracted" } },
-        { type: "callout", x: "Jan", label: "Confirmed", lifecycle: { status: "accepted" } },
-      ],
+        {
+          type: "callout",
+          x: "Feb",
+          label: "Contested",
+          lifecycle: { status: "disputed" }
+        },
+        {
+          type: "callout",
+          x: "Mar",
+          label: "Withdrawn",
+          lifecycle: { status: "retracted" }
+        },
+        {
+          type: "callout",
+          x: "Jan",
+          label: "Confirmed",
+          lifecycle: { status: "accepted" }
+        }
+      ]
     })
     const labels = annotationBranch(tree)?.children?.map((c) => c.label)
     // Retracted is gone; disputed wears its status; accepted reads plainly.
     expect(labels).toEqual([
       `A callout labeled "Contested" (disputed).`,
-      `A callout labeled "Confirmed".`,
+      `A callout labeled "Confirmed".`
     ])
   })
 
   it("skips superseded notes in both the root description and annotation branch", () => {
     const tree = buildNavigationTree("LineChart", {
-      data, xAccessor: "month", yAccessor: "sales",
+      data,
+      xAccessor: "month",
+      yAccessor: "sales",
       annotations: [
         { type: "callout", label: "Old", provenance: { stableId: "claim-1" } },
-        { type: "callout", label: "Current", provenance: { stableId: "claim-2" }, lifecycle: { supersedes: "claim-1" } },
-      ],
+        {
+          type: "callout",
+          label: "Current",
+          provenance: { stableId: "claim-2" },
+          lifecycle: { supersedes: "claim-1" }
+        }
+      ]
     })
     expect(tree.label).toContain('"Current"')
     expect(tree.label).not.toContain('"Old"')
     expect(annotationBranch(tree)?.children?.map((c) => c.label)).toEqual([
-      `A callout labeled "Current".`,
+      `A callout labeled "Current".`
     ])
   })
 
-  it("surfaces annotations even on a root-only (non-stats) family", () => {
+  it("surfaces annotations alongside network structure", () => {
     const tree = buildNavigationTree("ForceDirectedGraph", {
-      nodes: [{ id: "a" }], edges: [],
-      annotations: [{ type: "label", x: 1, y: 1, label: "Cluster" }],
+      nodes: [{ id: "a" }],
+      edges: [],
+      annotations: [{ type: "label", x: 1, y: 1, label: "Cluster" }]
     })
-    expect(tree.children?.map((c) => c.role)).toEqual(["annotation"])
+    expect(tree.children?.map((c) => c.role)).toEqual(["series", "annotation"])
   })
 })
 
 describe("flattenVisible & countNodes", () => {
   const data = [
-    { m: "Jan", v: 1, g: "A" }, { m: "Feb", v: 2, g: "A" },
-    { m: "Jan", v: 3, g: "B" },
+    { m: "Jan", v: 1, g: "A" },
+    { m: "Feb", v: 2, g: "A" },
+    { m: "Jan", v: 3, g: "B" }
   ]
-  const tree = buildNavigationTree("LineChart", { data, xAccessor: "m", yAccessor: "v", lineBy: "g" })
+  const tree = buildNavigationTree("LineChart", {
+    data,
+    xAccessor: "m",
+    yAccessor: "v",
+    lineBy: "g"
+  })
 
   it("shows only the root's children when only the root is expanded", () => {
     const visible = flattenVisible(tree, new Set([tree.id]))

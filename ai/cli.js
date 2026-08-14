@@ -54,6 +54,8 @@ Usage:
   npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
   npx semiotic-ai --audit-mobile Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
                                 JSON against Chartability (POUR-CAF) accessibility heuristics
+  npx semiotic-ai --evaluate Evaluate { component, props, data?, inChartContainer?, describe?, navigable? }
+                                with data, deception, and accessibility checks (add --json for a machine-readable report)
   npx semiotic-ai --help       Show this help message
 `.trim()
 
@@ -481,6 +483,55 @@ if (flag === "--audit-mobile") {
     process.exit(result.ok ? 0 : 1)
   } catch (err) {
     console.error(`Failed to parse input: ${errorMessage(err)}`)
+    process.exit(1)
+  }
+}
+
+// --evaluate: run the unified data/deception/accessibility evaluator
+if (flag === "--evaluate") {
+  const input = readJSONInput("Usage: npx semiotic-ai --evaluate '{\"component\":\"LineChart\",\"props\":{\"xAccessor\":\"x\",\"yAccessor\":\"y\"},\"data\":[...]}'")
+  const asJson = process.argv.includes("--json")
+
+  try {
+    const { component, props, data, inChartContainer, describe, navigable } = JSON.parse(input)
+    if (!component || !props) {
+      const msg = "Input must be JSON with { component, props } fields."
+      if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+      else console.error(msg)
+      process.exit(1)
+    }
+
+    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+    let evaluateChart, formatEvaluateChart
+    try {
+      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+        const mod = require(distPath)
+        evaluateChart = mod.evaluateChart
+        formatEvaluateChart = mod.formatEvaluateChart
+      }
+    } catch (e) {
+      // Dist unavailable.
+    }
+
+    if (!evaluateChart || !formatEvaluateChart) {
+      const msg = "Chart evaluation requires the built library. Run `npm run dist` first, or use the MCP `evaluateChart` tool."
+      if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+      else console.error(msg)
+      process.exit(2)
+    }
+
+    const result = evaluateChart(component, props, Array.isArray(data) ? data : undefined, {
+      inChartContainer: inChartContainer === true,
+      describe: describe === true,
+      navigable: navigable === true,
+    })
+    if (asJson) console.log(JSON.stringify(result, null, 2))
+    else console.log(formatEvaluateChart(result))
+    process.exit(result.ok ? 0 : 1)
+  } catch (err) {
+    const msg = `Failed to parse input: ${errorMessage(err)}`
+    if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+    else console.error(msg)
     process.exit(1)
   }
 }

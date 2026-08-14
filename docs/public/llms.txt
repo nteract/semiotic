@@ -66,7 +66,7 @@
 
 ## Charts — Value
 
-- [BigNumber](/charts/big-number): Focal-value display: one number, optionally with comparison / target / threshold zones (mapped to semantic theme roles) / four layout modes (tile /… _(act: presenting)_
+- [BigNumber](/charts/big-number): Value component, not a chart HOC: render one focal number with optional comparison / target / threshold zones and four layout modes (tile / present… _(act: presenting)_
 
 ## Charts — Realtime
 

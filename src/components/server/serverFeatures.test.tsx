@@ -79,10 +79,10 @@ describe("DifferenceChart server layout", () => {
       height: 240,
     })
 
-    expect(svg).toContain('class="semiotic-legend" transform="translate(320,50)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(317,50)"')
   })
 
-  it("does not overwrite an explicit legend-side margin", () => {
+  it("does not overwrite an explicit legend-side margin and keeps the focus ring in bounds", () => {
     const svg = renderChart("DifferenceChart", {
       data,
       xAccessor: "x",
@@ -93,7 +93,7 @@ describe("DifferenceChart server layout", () => {
       margin: { right: 64 },
     })
 
-    expect(svg).toContain('class="semiotic-legend" transform="translate(366,50)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(317,50)"')
   })
 })
 
@@ -161,7 +161,7 @@ describe("Shared HOC rendering contracts", () => {
       height: 260,
     })
 
-    expect(svg).toContain('class="semiotic-legend" transform="translate(360,50)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(357,50)"')
   })
 })
 

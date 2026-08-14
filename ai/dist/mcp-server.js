@@ -35028,6 +35028,26 @@ async function auditAccessibilityHandler(args) {
     isError: !result.ok
   };
 }
+async function evaluateChartHandler(args) {
+  const component = args.component;
+  const props = args.props ?? {};
+  if (!component) {
+    return {
+      content: [{ type: "text", text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... }, data?: [...] }." }],
+      isError: true
+    };
+  }
+  const result = (0, import_ai3.evaluateChart)(component, props, args.data, {
+    inChartContainer: args.inChartContainer === true,
+    describe: args.describe === true,
+    navigable: args.navigable === true
+  });
+  return {
+    content: [{ type: "text", text: (0, import_ai3.formatEvaluateChart)(result) }],
+    structuredContent: result,
+    isError: !result.ok
+  };
+}
 async function auditMobileVisualizationHandler(args) {
   const component = args.component;
   const props = args.props ?? {};
@@ -35958,6 +35978,20 @@ function createServer2(profile = "developer", options = {}) {
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     auditAccessibilityHandler
+  );
+  srv.tool(
+    "evaluateChart",
+    "Evaluate a Semiotic chart through one deterministic quality pass: numeric data contracts, configuration and representation/deception checks, and static Chartability accessibility heuristics. Returns the independent audit reports plus a severity-ranked findings list and notification feed. Pass data separately when it should override props.data; use inChartContainer, describe, or navigable to describe the intended accessibility wrapper. This is static analysis and does not replace manual assistive-technology testing or render evidence.",
+    {
+      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'."),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props/config, including accessors and optional data."),
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional().describe("Optional explicit dataset. When supplied, this is used as the effective props.data for evaluation."),
+      inChartContainer: external_exports3.boolean().optional().describe("Whether the chart will be wrapped in ChartContainer or an equivalent control surface."),
+      describe: external_exports3.boolean().optional().describe("Whether ChartContainer's generated description is enabled."),
+      navigable: external_exports3.boolean().optional().describe("Whether ChartContainer's structured navigation tree is enabled.")
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    evaluateChartHandler
   );
   srv.tool(
     "auditMobileVisualization",

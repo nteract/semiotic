@@ -226,8 +226,8 @@ describe("ChoroplethMap", () => {
     })
 
     it.each([
-      ["right", "right", 110],
-      ["left", "left", 110],
+      ["right", "right", 113],
+      ["left", "left", 113],
       ["top", "top", 56],
       ["bottom", "bottom", 80],
     ] as const)(

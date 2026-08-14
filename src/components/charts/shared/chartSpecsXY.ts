@@ -17,6 +17,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      frameProps: { type: "object", omitFromSchema: true },
       styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of data objects" },
       xAccessor: { type: ["string", "function"], default: "x", description: "Key or accessor function for x-axis values. Functions can derive a value, e.g. `d => d.timestamp`." },
@@ -479,6 +480,12 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      // ScatterplotMatrix owns its grid-level rendering and does not forward
+      // the Stream Frame escape hatch used by the other chart HOCs.
+      frameProps: {
+        type: "object",
+        omitFromSchema: true,
+      },
       data: { type: "array" },
       fields: { type: "array" },
       fieldLabels: { type: "object", description: "Display-label map keyed by field name." },

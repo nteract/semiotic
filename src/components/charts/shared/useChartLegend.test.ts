@@ -141,7 +141,7 @@ describe("useChartLegendAndMargin", () => {
     expect(groups).toHaveLength(2)
     expect(groups[0].items.map((item) => item.label)).toEqual(["A", "B", "C"])
     expect(groups[1].items[0].label).toBe("Threshold")
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(113)
   })
 
   it("carries caller legendDistance into the composed automatic legend", () => {
@@ -160,7 +160,7 @@ describe("useChartLegendAndMargin", () => {
     if (!isLegendConfig(legend))
       throw new Error("Expected a categorical legend")
     expect(legend.legendDistance).toBe(24)
-    expect(result.current.margin.right).toBe(124)
+    expect(result.current.margin.right).toBe(127)
   })
 
   it("does not create a legend when showLegend is false", () => {
@@ -201,7 +201,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: undefined
       })
     )
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(113)
   })
 
   it("preserves an explicitly owned right margin", () => {
@@ -229,7 +229,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: undefined }
       })
     )
-    expect(result.current.margin.right).toBe(110)
+    expect(result.current.margin.right).toBe(113)
   })
 
   it("treats auto and null margin sides as explicit auto-reservation", () => {
@@ -243,7 +243,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: "auto" }
       })
     )
-    expect(rightAuto.result.current.margin.right).toBe(110)
+    expect(rightAuto.result.current.margin.right).toBe(113)
 
     const rightNull = renderHook(() =>
       useChartLegendAndMargin({
@@ -254,7 +254,7 @@ describe("useChartLegendAndMargin", () => {
         userMargin: { right: null }
       })
     )
-    expect(rightNull.result.current.margin.right).toBe(110)
+    expect(rightNull.result.current.margin.right).toBe(113)
   })
 
   it("sizes automatic side margins from the longest legend label", () => {
@@ -300,7 +300,7 @@ describe("useChartLegendAndMargin", () => {
       })
     )
 
-    expect(result.current.margin.right).toBe(180)
+    expect(result.current.margin.right).toBe(183)
   })
 
   it("grows automatic horizontal margins for wrapped or distant legends", () => {

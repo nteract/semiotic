@@ -643,14 +643,14 @@ describe("renderChart", () => {
     const explicitRight = renderChart("ProcessSankey", { ...props, margin: { right: 30 } })
 
     // The HOC owns this specific legend rather than the frame auto-legend.
-    // Its default right gutter is 140px; an explicit caller margin remains
-    // authoritative for external legend layouts.
+    // Its default right gutter is 140px; explicitly owned margins retain the
+    // legend contract while the edge gutter keeps the focus ring inside SVG.
     expect(svg).toContain(">Intake<")
     expect(svg).toContain(">Review<")
     expect(countMatches(svg, />Intake</g)).toBe(1)
     expect(countMatches(svg, />Review</g)).toBe(1)
     expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
-    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(380,30)"')
+    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(297,30)"')
   })
 
   it("composes caller groups after specialized chart-owned legends", () => {

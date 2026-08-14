@@ -45,15 +45,50 @@ describe("renderLegendFromConfig sideGutter", () => {
           {renderLegendFromConfig({
             legend,
             legendPosition,
-            legendLayout: { sideGutter: 60 },
+            legendLayout: { sideGutter: 60, edgeGutter: 3 },
             totalWidth: 500,
             totalHeight: 300,
-            margin: { top: 60, right: 180, bottom: 70, left: 180 },
+            margin: { top: 60, right: 183, bottom: 70, left: 183 },
           })}
         </svg>,
       )
 
-    expect(renderWithGutter("right")).toContain('transform="translate(400, 60)"')
-    expect(renderWithGutter("left")).toContain('transform="translate(0, 60)"')
+    expect(renderWithGutter("right")).toContain('transform="translate(397, 60)"')
+    expect(renderWithGutter("left")).toContain('transform="translate(3, 60)"')
+  })
+
+  it("supports an explicit zero edge gutter for flush placement", () => {
+    const html = ReactDOMServer.renderToStaticMarkup(
+      <svg>
+        {renderLegendFromConfig({
+          legend,
+          legendPosition: "left",
+          legendLayout: { sideGutter: 60, edgeGutter: 0 },
+          totalWidth: 500,
+          totalHeight: 300,
+          margin: { top: 60, right: 180, bottom: 70, left: 180 },
+        })}
+      </svg>,
+    )
+    expect(html).toContain('transform="translate(0, 60)"')
+  })
+
+  it("keeps focus-ring clearance when the side margin is explicitly owned", () => {
+    const renderWithExplicitMargin = (legendPosition: "right" | "left") =>
+      ReactDOMServer.renderToStaticMarkup(
+        <svg>
+          {renderLegendFromConfig({
+            legend,
+            legendPosition,
+            legendLayout: { edgeGutter: 3 },
+            totalWidth: 500,
+            totalHeight: 300,
+            margin: { top: 60, right: 120, bottom: 70, left: 120 },
+          })}
+        </svg>,
+      )
+
+    expect(renderWithExplicitMargin("right")).toContain('transform="translate(397, 60)"')
+    expect(renderWithExplicitMargin("left")).toContain('transform="translate(3, 60)"')
   })
 })

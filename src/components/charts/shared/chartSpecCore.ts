@@ -172,6 +172,22 @@ export interface ChartSpec {
 // Shared prop bags
 // ---------------------------------------------------------------------------
 
+const legendLayoutSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    align: { type: "string", enum: ["start", "center", "end", "left", "right"] },
+    swatchSize: { type: "number", minimum: 1 },
+    labelGap: { type: "number", minimum: 0 },
+    itemGap: { type: "number", minimum: 0 },
+    rowHeight: { type: "number", minimum: 1 },
+    maxWidth: { type: "number", minimum: 1 },
+    edgeGutter: { type: "number", minimum: 0, default: 3 },
+    sideGutter: { type: "number", minimum: 0 },
+    axisGutter: { type: "number", minimum: 0 },
+  },
+} as const
+
 const commonProps: Record<string, ChartPropSpec> = {
   mode: {
     type: "string",
@@ -270,7 +286,16 @@ const commonProps: Record<string, ChartPropSpec> = {
   onObservation: { type: "function", omitFromSchema: true },
   // `frameProps` is a typed pass-through for advanced StreamFrame
   // overrides — too unstructured to be useful in LLM tool definitions.
-  frameProps: { type: "object", omitFromSchema: true },
+  frameProps: {
+    type: "object",
+    description: "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+    schema: {
+      additionalProperties: true,
+      properties: {
+        legendLayout: legendLayoutSchema,
+      },
+    },
+  },
   // `onClick` is a function-only handler; LLMs can't populate it.
   onClick: { type: "function", omitFromSchema: true },
 }

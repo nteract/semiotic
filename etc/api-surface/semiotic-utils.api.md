@@ -61,10 +61,12 @@ function darkenColor(hex: string, factor?: number | undefined): string
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
 function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
+function evaluateChart(component: string, props?: Datum | undefined, data?: readonly Datum[] | undefined, options?: EvaluateChartOptions | undefined): EvaluateChartResult
 function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string
+function formatEvaluateChart(result: EvaluateChartResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
 function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
 function fromURL(urlString: string): ChartConfig
@@ -102,6 +104,7 @@ function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
+function toEvaluateChartNotifications(findings: readonly EvaluateChartFinding[], max?: number | undefined): EvaluateChartNotification[]
 function toURL(config: ChartConfig): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function useHighContrast(): boolean
@@ -131,6 +134,11 @@ interface DataAuditResult
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
+interface EvaluateChartFinding
+interface EvaluateChartNotification
+interface EvaluateChartOptions extends AuditAccessibilityOptions
+interface EvaluateChartResult
+interface EvaluateChartSummary
 interface HatchFill
 interface HatchPatternOptions
 interface MobileVisualizationAuditResult
@@ -283,6 +291,45 @@ interface-member DescribeChartResult::property::annotations = optional annotatio
 interface-member DescribeChartResult::property::caveats = optional caveats: string[] | undefined
 interface-member DescribeChartResult::property::levels = required levels: {l1?: string; l2?: string; l3?: string; l4?: string;}
 interface-member DescribeChartResult::property::text = required text: string
+interface-member EvaluateChartFinding::property::code = required readonly code: string
+interface-member EvaluateChartFinding::property::count = optional readonly count: number | undefined
+interface-member EvaluateChartFinding::property::critical = optional readonly critical: boolean | undefined
+interface-member EvaluateChartFinding::property::field = optional readonly field: string | undefined
+interface-member EvaluateChartFinding::property::fix = optional readonly fix: string | undefined
+interface-member EvaluateChartFinding::property::heuristic = optional readonly heuristic: string | undefined
+interface-member EvaluateChartFinding::property::id = required readonly id: string
+interface-member EvaluateChartFinding::property::message = required readonly message: string
+interface-member EvaluateChartFinding::property::principle = optional readonly principle: import("../semiotic-ai-core").A11yPrinciple | undefined
+interface-member EvaluateChartFinding::property::rank = required readonly rank: number
+interface-member EvaluateChartFinding::property::role = optional readonly role: string | undefined
+interface-member EvaluateChartFinding::property::rows = optional readonly rows: readonly number[] | undefined
+interface-member EvaluateChartFinding::property::severity = required readonly severity: EvaluateChartSeverity
+interface-member EvaluateChartFinding::property::source = required readonly source: string
+interface-member EvaluateChartFinding::property::stage = required readonly stage: EvaluateChartStage
+interface-member EvaluateChartNotification::property::dismissible = required readonly dismissible: true
+interface-member EvaluateChartNotification::property::id = required readonly id: string
+interface-member EvaluateChartNotification::property::level = required readonly level: "error" | "warning"
+interface-member EvaluateChartNotification::property::message = required readonly message: string
+interface-member EvaluateChartNotification::property::source = required readonly source: "Semiotic chart evaluation"
+interface-member EvaluateChartNotification::property::title = required readonly title: string
+interface-member EvaluateChartOptions::property::dataAudit = optional readonly dataAudit: AuditDataOptions | undefined
+interface-member EvaluateChartOptions::property::notificationMax = optional readonly notificationMax: number | undefined
+interface-member EvaluateChartOptions::property::render = optional readonly render: RenderFn | undefined
+interface-member EvaluateChartResult::property::accessibility = required readonly accessibility: AccessibilityAuditResult
+interface-member EvaluateChartResult::property::component = required readonly component: string
+interface-member EvaluateChartResult::property::data = required readonly data: DataAuditResult
+interface-member EvaluateChartResult::property::deception = required readonly deception: readonly Diagnosis[]
+interface-member EvaluateChartResult::property::evidence = optional readonly evidence: RenderEvidence | undefined
+interface-member EvaluateChartResult::property::findings = required readonly findings: readonly EvaluateChartFinding[]
+interface-member EvaluateChartResult::property::notifications = required readonly notifications: readonly EvaluateChartNotification[]
+interface-member EvaluateChartResult::property::ok = required readonly ok: boolean
+interface-member EvaluateChartResult::property::summary = required readonly summary: EvaluateChartSummary
+interface-member EvaluateChartResult::property::validation = required readonly validation: ValidationResult
+interface-member EvaluateChartSummary::property::errors = required readonly errors: number
+interface-member EvaluateChartSummary::property::findings = required readonly findings: number
+interface-member EvaluateChartSummary::property::manual = required readonly manual: number
+interface-member EvaluateChartSummary::property::notifications = required readonly notifications: number
+interface-member EvaluateChartSummary::property::warnings = required readonly warnings: number
 interface-member HatchFill::property::angle = optional angle: number | undefined
 interface-member HatchFill::property::background = optional background: string | undefined
 interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
@@ -537,6 +584,8 @@ type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "comparing" | "locating" | "nesting" | "presenting" | "ranking" | "relating" | "tracing" | "tracking"
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
+type EvaluateChartSeverity = "error" | "manual" | "warning"
+type EvaluateChartStage = "accessibility" | "data" | "deception" | "render"
 type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
 type MobileAuditCategory = "annotation" | "density" | "interaction" | "layout" | "semantics"
 type MobileAuditImpact = "high" | "low" | "medium"

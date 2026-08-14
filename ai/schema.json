@@ -783,6 +783,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -1334,6 +1390,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -1863,6 +1975,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -2367,6 +2535,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "xLabel": {
               "type": "string"
@@ -2874,6 +3098,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -3167,6 +3447,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "xLabel": {
               "type": "string"
@@ -3493,6 +3829,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "xLabel": {
               "type": "string"
@@ -3992,6 +4384,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -4312,6 +4760,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "xLabel": {
               "type": "string"
@@ -4800,6 +5304,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -5278,6 +5838,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -5746,6 +6362,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -6063,6 +6735,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "categoryLabel": {
               "type": "string"
@@ -6527,6 +7255,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -6851,6 +7635,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -7149,6 +7989,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -7439,6 +8335,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "categoryLabel": {
               "type": "string"
@@ -7744,6 +8696,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -8037,6 +9045,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "categoryLabel": {
               "type": "string"
@@ -8352,6 +9416,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -8627,6 +9747,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "data": {
               "type": "array",
@@ -8916,6 +10092,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "value": {
               "type": "number",
@@ -9225,6 +10457,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "styleRules": {
               "type": "array",
@@ -9734,6 +11022,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -10223,6 +11567,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -10690,6 +12090,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -11006,6 +12462,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -11303,6 +12815,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -11591,6 +13159,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "data": {
               "type": "object",
@@ -13395,6 +15019,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -13698,6 +15378,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "categoryLabel": {
               "type": "string"
@@ -14344,6 +16080,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "data": {
               "type": "array"
             },
@@ -14668,6 +16460,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "styleRules": {
               "type": "array",
@@ -15135,6 +16983,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "styleRules": {
               "type": "array",
@@ -15641,6 +17545,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "flows": {
               "type": "array"
             },
@@ -16038,6 +17998,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "styleRules": {
               "type": "array",
@@ -16572,6 +18588,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "edges": {
               "type": "array",
@@ -17228,6 +19300,62 @@
             "opacity": {
               "type": "number"
             },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
             "xLabel": {
               "type": "string"
             },
@@ -17682,7 +19810,7 @@
       "type": "function",
       "function": {
         "name": "BigNumber",
-        "description": "Focal-value display: one number, optionally with comparison / target / threshold zones (mapped to semantic theme roles) / four layout modes (tile / presentation / inline / thumbnail). Ships with NO chart-family dependency — embed your own Semiotic chart via two slots: `trendSlot` for wide / rectangular charts (LineChart, AreaChart) under the value, and `chartSlot` for square charts (DonutChart, PieChart, Scatterplot, Treemap) beside the value. The slot context exposes the resolved threshold colour + sentiment + push buffer so embedded charts can theme-link. Forward-looking POC for a future SingleValueFrame.",
+        "description": "Value component, not a chart HOC: render one focal number with optional comparison / target / threshold zones and four layout modes (tile / presentation / inline / thumbnail). Do not add chart-only props such as `title` or `accessibleTable`; use `label`, `description`, and `summary` for accessible text. Ships with NO chart-family dependency — embed your own Semiotic chart via two slots: `trendSlot` for wide / rectangular charts (LineChart, AreaChart) under the value, and `chartSlot` for square charts (DonutChart, PieChart, Scatterplot, Treemap) beside the value. The slot context exposes the resolved threshold colour + sentiment + push buffer so embedded charts can theme-link. Forward-looking POC for a future SingleValueFrame.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -19830,6 +21958,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "size": {
               "type": "array",
@@ -22202,6 +24386,62 @@
             },
             "opacity": {
               "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
             },
             "data": {
               "type": "array",

@@ -98,7 +98,10 @@ const ENTRY_GRAPHS = [
   // Bumped 505→506: BumpChart's validated ranking capability, collision-safe
   // label controls, and AI description/caveat handling add 0.1 KiB to the
   // reachable graph. Retain one KiB of explicit headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 506 },
+  // Bumped 506→510: the unified evaluateChart data/deception/accessibility
+  // surface is exported from the AI entry point. The current graph measures
+  // 508.1 KiB; retain reviewable headroom for the evaluator's shared audits.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 510 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
