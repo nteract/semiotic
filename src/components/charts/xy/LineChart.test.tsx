@@ -53,6 +53,17 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.chartType).toBe("line")
     })
 
+    it("forwards the accessible-table portal target", () => {
+      const accessibleTable = { portalTarget: "outside-chart-image" }
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} accessibleTable={accessibleTable} />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.accessibleTable).toBe(accessibleTable)
+    })
+
     it("sets chartType to 'area' when fillArea is true", () => {
       render(
         <TooltipProvider>

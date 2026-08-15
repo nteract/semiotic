@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { inferIntent } from "./inferIntent"
+import { registerIntent } from "./intents"
 
 describe("inferIntent", () => {
   const cases: Array<[string, string]> = [
@@ -47,5 +48,63 @@ describe("inferIntent", () => {
   it("geo wins over other intents when geography is mentioned", () => {
     const result = inferIntent("show me the trend across countries")
     expect(result?.intent).toBe("geo")
+  })
+
+  it("keeps field-name inference opt-in", () => {
+    expect(inferIntent("cloud region phase throughput partitions")).toBeNull()
+    expect(
+      inferIntent("cloud region phase throughput partitions", {
+        mode: "schema",
+      })?.intent,
+    ).toBe("geo")
+  })
+
+  it("matches registered field signals without prose", () => {
+    registerIntent({
+      id: "capacity-planning-test",
+      label: "Capacity planning",
+      description: "Compare provisioned capacity with observed throughput.",
+      composes: ["trend", "change-detection"],
+      signals: {
+        fieldNames: ["throughput", "partitions"],
+        minimumFieldMatches: 2,
+      },
+    })
+
+    const result = inferIntent("cloud region phase throughput partitions", {
+      mode: "schema",
+    })
+    expect(result).toMatchObject({
+      intent: "capacity-planning-test",
+      source: "field-name",
+    })
+    expect(result?.confidence).toBeGreaterThan(3)
+  })
+
+  it("uses typed data shape only in schema mode", () => {
+    const result = inferIntent("", {
+      mode: "schema",
+      fields: [
+        { name: "recorded_at", kind: "datetime" },
+        { name: "throughput", kind: "number" },
+      ],
+    })
+    expect(result).toMatchObject({
+      intent: "trend",
+      source: "data-shape",
+    })
+  })
+
+  it("honors a caller confidence floor for ambiguous schemas", () => {
+    expect(
+      inferIntent("", {
+        mode: "schema",
+        fields: [
+          { name: "first_metric", kind: "numeric" },
+          { name: "second_metric", kind: "numeric" },
+        ],
+        minimumConfidence: 4,
+      }),
+    ).toBeNull()
   })
 })

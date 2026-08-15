@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { contrastRatio } from "../charts/shared/colorContrast"
 import { extractAllRows } from "../stream/accessibleDataRows"
+import type { AccessibleTableProp } from "../stream/accessibleTableTypes"
 import type { NavTreeNode } from "./navigationTree"
 import type {
   AccessibilityTableField,
@@ -59,7 +60,7 @@ export interface AuditObservedSceneInput {
     title?: string
     summary?: string
     description?: string
-    accessibleTable?: boolean
+    accessibleTable?: AccessibleTableProp
     navigationTree?: NavTreeNode
     selectedIds?: ReadonlyArray<string>
   }

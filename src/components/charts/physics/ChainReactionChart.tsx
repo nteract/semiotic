@@ -54,6 +54,7 @@ import {
 } from "./chainReactionRuntime"
 import { ChainReactionOverlay } from "./chainReactionOverlay"
 import { ChainReactionAccessibleTable } from "./chainReactionAccessibleTable"
+import { AccessibleTablePortal } from "../../stream/AccessibleDataTable"
 
 export type * from "./chainReactionTypes"
 
@@ -769,11 +770,13 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
         />
       </div>
       {accessibleTable && (
-        <ChainReactionAccessibleTable
-          blockerSummary={blockerSummary}
-          machine={machine}
-          runtime={runtime}
-        />
+        <AccessibleTablePortal accessibleTable={accessibleTable}>
+          <ChainReactionAccessibleTable
+            blockerSummary={blockerSummary}
+            machine={machine}
+            runtime={runtime}
+          />
+        </AccessibleTablePortal>
       )}
     </div>
   )

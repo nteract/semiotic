@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { suggestCharts, scoreChart, explainCapabilityFit } from "./suggestCharts"
 import { registerChartCapability, unregisterChartCapability } from "./chartCapabilities"
 import type { ChartCapability } from "./chartCapabilityTypes"
+import { registerIntent } from "./intents"
 
 const temporalMultiSeries = [
   { month: 1, revenue: 1200, region: "EU" },
@@ -101,6 +102,36 @@ describe("suggestCharts", () => {
     expect(suggestions.length).toBeGreaterThan(0)
     expect(suggestions[0].component).toBe("LineChart")
     expect(suggestions[0].score).toBeGreaterThan(3)
+  })
+
+  it("ranks a registered intent by composing existing capability scores", () => {
+    registerIntent({
+      id: "momentum-test",
+      label: "Momentum",
+      description: "Emphasize trends with meaningful changes.",
+      composes: ["trend", "change-detection"],
+      weights: { trend: 1, "change-detection": 3 },
+    })
+
+    const [line] = suggestCharts(temporalMultiSeries, {
+      allow: ["LineChart"],
+      intent: "momentum-test",
+      includeVariants: false,
+    })
+    expect(line.intentScores["momentum-test"]).toBe(4.25)
+    expect(line.score).toBeGreaterThan(0)
+    expect(line.reasons).toContain("Strong fit for momentum-test (4.25/5)")
+
+    const scored = scoreChart("LineChart", temporalMultiSeries, {
+      intent: "momentum-test",
+    })
+    expect("score" in scored && scored.score).toBe(4.25)
+
+    const [withoutIntent] = suggestCharts(temporalMultiSeries, {
+      allow: ["LineChart"],
+      includeVariants: false,
+    })
+    expect(withoutIntent.intentScores).not.toHaveProperty("momentum-test")
   })
 
   it("collapses identical-score variants of the same component", () => {
@@ -233,6 +264,74 @@ describe("suggestCharts", () => {
     expect(top.props.yAccessor).toBe("revenue")
     expect(top.props.lineBy).toBe("region")
     expect(top.props.colorBy).toBe("region")
+  })
+
+  it("forwards identifier hints so generated accessors never encode IDs", () => {
+    const rows = [
+      { id: 701, region: "west", throughput: 42 },
+      { id: 702, region: "east", throughput: 57 },
+      { id: 703, region: "west", throughput: 49 },
+    ]
+    const [bar] = suggestCharts(rows, {
+      identifiers: ["id"],
+      allow: ["BarChart"],
+      includeVariants: false,
+    })
+
+    expect(bar.props.categoryAccessor).toBe("region")
+    expect(bar.props.valueAccessor).toBe("throughput")
+  })
+
+  it("enforces capability-owned identifier measure policies after buildProps", () => {
+    const unsafe: ChartCapability = {
+      component: "UnsafeMetricCard",
+      family: "custom",
+      importPath: "semiotic",
+      rubric: { familiarity: 1, accuracy: 1, precision: 1 },
+      fits: () => null,
+      intentScores: { rank: 5 },
+      fieldPolicy: { measureAccessorProps: ["metricField"] },
+      buildProps: () => ({ metricField: "id" }),
+    }
+    const rows = [
+      { id: 1001, amount: 20 },
+      { id: 1002, amount: 30 },
+    ]
+
+    expect(
+      suggestCharts(rows, {
+        identifiers: ["id"],
+        capabilities: [unsafe],
+      }),
+    ).toEqual([])
+    const explanation = explainCapabilityFit(rows, {
+      identifiers: ["id"],
+      capabilities: [unsafe],
+    })
+    expect(explanation.rejected[0]?.reason).toMatch(/cannot use identifier field "id" as the measure/i)
+  })
+
+  it("attaches machine-readable prop contracts to chart and value suggestions", () => {
+    const [valueSuggestion] = suggestCharts([{ revenue: 97 }], {
+      allow: ["BigNumber"],
+      includeVariants: false,
+    })
+    const [chartSuggestion] = suggestCharts(categorical, {
+      allow: ["BarChart"],
+      includeVariants: false,
+    })
+
+    expect(valueSuggestion.propContract).toEqual({
+      componentKind: "value-component",
+      commonChartProps: "component-specific",
+      headingProp: "label",
+      modeValues: ["tile", "presentation", "inline", "thumbnail"],
+    })
+    expect(chartSuggestion.propContract).toMatchObject({
+      componentKind: "chart-hoc",
+      commonChartProps: "supported",
+      headingProp: "title",
+    })
   })
 
   it("respects user-registered capabilities", () => {

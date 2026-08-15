@@ -380,6 +380,10 @@ export * from "./semiotic-ai-data-audit"
 // Chart capability layer — heuristic recommendations + intent taxonomy
 export { profileData } from "./ai/profileData"
 export type { ProfileDataOptions } from "./ai/profileData"
+export { deriveProfileFields, rederiveProfile } from "./ai/deriveProfileFields"
+export type { DerivedProfileFields, ProfilePrimaryFields, ReprofileFieldsOptions } from "./ai/deriveProfileFields"
+export type { ProfileFieldRole, ProfileFieldRoleHint, ProfileFieldRoleHints, NormalizedProfileFieldRoles } from "./ai/fieldRoles"
+export type { SuggestionPropContract } from "./ai/suggestionPropContracts"
 export {
   suggestCharts,
   suggestChartsGrouped,
@@ -388,6 +392,7 @@ export {
 } from "./ai/suggestCharts"
 export type {
   SuggestChartsOptions,
+  ScoreChartOptions,
   RejectedCapability,
   ExplainCapabilityFitResult
 } from "./ai/suggestCharts"
@@ -422,7 +427,7 @@ export type {
   ScaleHintInput
 } from "./ai/dataScaleProfile"
 export { inferIntent } from "./ai/inferIntent"
-export type { InferIntentResult } from "./ai/inferIntent"
+export type { InferIntentField, InferIntentOptions, InferIntentResult } from "./ai/inferIntent"
 export { suggestDashboard } from "./ai/suggestDashboard"
 export type {
   DashboardPanel,
@@ -569,6 +574,7 @@ export type {
   SuggestionScaleRange,
   WhyCustomExplanation
 } from "./ai/chartCapabilityTypes"
+export type { ChartFieldPolicy, SemanticRenderEvidence, SemanticViabilityCallback, SemanticViabilityCheck, SemanticViabilityDiagnostic, SemanticViabilityRule } from "./ai/chartCapabilityTypes"
 export {
   defineChartRecipe,
   validateChartRecipe,
@@ -655,7 +661,7 @@ export {
   registerIntent,
   BUILT_IN_INTENT_IDS
 } from "./ai/intents"
-export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
+export type { BuiltInIntentId, IntentDescriptor, IntentFieldKind, IntentId, IntentSignals } from "./ai/intents"
 
 // Variant discovery — heuristic proposal + evaluation surface. The built-in
 // proposer emits registered capability variants, adds conservative heuristic

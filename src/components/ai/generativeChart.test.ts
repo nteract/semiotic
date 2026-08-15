@@ -138,6 +138,31 @@ describe("prepareChart", () => {
     expect(result.evidence?.markCount).toBe(3)
   })
 
+  it("fails a painted proposal when semantic evidence is degenerate", () => {
+    const result = prepareChart(GOOD_BAR, {
+      render: () => ({
+        svg: "<svg>marks</svg>",
+        evidence: evidence({
+          semanticStatus: "degenerate",
+          semanticDiagnostics: [
+            {
+              code: "TEST_DEGENERATE",
+              severity: "error",
+              message: "Every mark carries the same semantic value.",
+              fix: "Choose a field with meaningful variation.",
+            },
+          ],
+          warnings: ["TEST_DEGENERATE"],
+        }),
+      }),
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.evidence?.empty).toBe(false)
+    expect(result.reasons.join(" ")).toContain("TEST_DEGENERATE")
+    expect(result.reasons.join(" ")).toContain("meaningful variation")
+  })
+
   it("does not call the renderer after wire validation rejects a callback string", () => {
     let renderCalls = 0
     const result = prepareChart({

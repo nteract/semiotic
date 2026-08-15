@@ -407,17 +407,17 @@ export default function LegendsPage() {
       </p>
 
       <p>
-        A numeric margin pins that side to an exact width and opts out of
-        automatic reservation. When passing a complete margin object, leave the
-        legend-owned side automatic so labels have room:
+        A numeric margin is a minimum. Semiotic preserves it when it is large
+        enough and grows it when the chart-owned legend needs more room, so a
+        complete margin object composes with automatic reservation:
       </p>
 
       <CodeBlock
-        code={`// Right legend: Semiotic measures the labels and reserves the gutter
+        code={`// 24px is the baseline; Semiotic grows it to fit the right legend
 <LineChart
   {...props}
   legendPosition="right"
-  margin={{ top: 24, right: "auto", bottom: 48, left: 64 }}
+  margin={{ top: 24, right: 24, bottom: 48, left: 64 }}
   legend={{ legendGroups: [], legendDistance: 18 }}
 />
 
@@ -425,7 +425,7 @@ export default function LegendsPage() {
 <LineChart
   {...props}
   legendPosition="left"
-  margin={{ top: 24, right: 24, bottom: 48, left: "auto" }}
+  margin={{ top: 24, right: 24, bottom: 48, left: 24 }}
 />`}
         language="jsx"
       />

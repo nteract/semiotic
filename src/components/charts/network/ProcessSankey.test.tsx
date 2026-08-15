@@ -84,6 +84,18 @@ describe("ProcessSankey HOC", () => {
     expect(lastFrameProps?.layoutConfig.ribbons.map((ribbon) => ribbon.fill)).toEqual(["#ff0000"])
   })
 
+  it.each([
+    ["right", 140], ["left", 140], ["top", 50], ["bottom", 80],
+  ] as const)("grows a small explicit %s margin for its chart-owned legend", (position, minimum) => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey nodes={sampleNodes} edges={sampleEdges} domain={DOMAIN}
+          colorBy="category" legendPosition={position} margin={{ [position]: 30 }} />
+      </TooltipProvider>,
+    )
+    expect(lastFrameProps?.margin[position]).toBe(minimum)
+  })
+
   it("forwards HatchFill node style rules to the canvas band scene", () => {
     render(
       <TooltipProvider>

@@ -69,6 +69,7 @@ import {
   useSceneRevisionDiagnostics
 } from "../sceneRevisionDiagnostics"
 import {
+  AccessibleTablePortal,
   AriaLiveTooltip,
   ScreenReaderSummary,
   SkipToTableLink
@@ -1435,13 +1436,15 @@ export const StreamPhysicsFrame = memo(
               diagnostics={sceneRevisionDiagnosticsRef.current}
             />
           )}
-          {accessibleTable ? <SkipToTableLink tableId={tableId} /> : null}
           {accessibleTable ? (
-            <PhysicsSemanticDataTable
-              chartTitle={typeof title === "string" ? title : ariaLabel}
-              items={allSemanticItems}
-              tableId={tableId}
-            />
+            <AccessibleTablePortal accessibleTable={accessibleTable}>
+              <SkipToTableLink tableId={tableId} />
+              <PhysicsSemanticDataTable
+                chartTitle={typeof title === "string" ? title : ariaLabel}
+                items={allSemanticItems}
+                tableId={tableId}
+              />
+            </AccessibleTablePortal>
           ) : null}
           <ScreenReaderSummary summary={summary} />
           {/* Live region must sit outside role="img" so AT announces hover/focus. */}

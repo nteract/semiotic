@@ -541,7 +541,7 @@ interface-member BarStyle::property::gap = optional gap: number | undefined
 interface-member BarStyle::property::opacity = optional opacity: number | undefined
 interface-member BarStyle::property::stroke = optional stroke: string | undefined
 interface-member BarStyle::property::strokeWidth = optional strokeWidth: number | undefined
-interface-member BaseChartProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member BaseChartProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member BaseChartProps::property::animate = optional animate: AnimateProp | undefined
 interface-member BaseChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member BaseChartProps::property::axisExtent = optional axisExtent: import("./axisExtent").AxisExtentMode | undefined
@@ -2190,7 +2190,7 @@ interface-member StreamNetworkFrameHandle::method::removeEdge = required removeE
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
 interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamNetworkFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamNetworkFrameProps::property::background = optional background: string | undefined
 interface-member StreamNetworkFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<null>
@@ -2289,7 +2289,7 @@ interface-member StreamOrdinalFrameHandle::method::pushMany = required pushMany(
 interface-member StreamOrdinalFrameHandle::method::remove = required remove(id: string | string[]): T[]
 interface-member StreamOrdinalFrameHandle::method::replace = required replace(data: T[]): void
 interface-member StreamOrdinalFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
-interface-member StreamOrdinalFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamOrdinalFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
@@ -2415,7 +2415,7 @@ interface-member StreamXYFrameHandle::method::push = required push(datum: T): vo
 interface-member StreamXYFrameHandle::method::pushMany = required pushMany(data: T[]): void
 interface-member StreamXYFrameHandle::method::remove = required remove(id: string | string[]): T[]
 interface-member StreamXYFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
-interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamXYFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamXYFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamXYFrameProps::property::annotations = optional annotations: Datum[] | undefined
@@ -2879,6 +2879,8 @@ type CurveType = "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | 
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type ForceLayoutStatus = "error" | "pending" | "ready"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
 type LegendInteractionMode = "highlight" | "isolate" | "none"
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode

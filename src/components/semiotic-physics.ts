@@ -68,6 +68,10 @@ export type {
   LegendValue,
 } from "./types/legendTypes"
 export type { Style } from "./stream/types"
+export type {
+  FrameTextAnnotation,
+  FrameTextPosition
+} from "./charts/shared/frameTextAnnotation"
 import { evaluatePhysicsBodyBudget } from "./stream/physics/PhysicsBodyBudget"
 import {
   PhysicsSedimentAccumulator,

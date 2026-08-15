@@ -197,7 +197,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   },
   width: { type: "number", default: 600 },
   height: { type: "number", default: 400 },
-  margin: { type: ["number", "object"], description: "Uniform numeric margin or an object margin. A side value of \"auto\" or null leaves that side available for auto-reservation." },
+  margin: { type: ["number", "object"], description: "Uniform numeric margin or an object margin. Numeric sides are minima when chart-owned chrome such as legends needs more room; \"auto\", null, and omitted sides start from chart-mode defaults." },
   className: { type: "string" },
   title: {
     type: "string",
@@ -212,9 +212,25 @@ const commonProps: Record<string, ChartPropSpec> = {
     description: "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant.",
   },
   accessibleTable: {
-    type: "boolean",
+    type: ["boolean", "object"],
     default: true,
-    description: "Expose the chart data through Semiotic's screen-reader data table.",
+    description: "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+    schema: {
+      oneOf: [
+        { type: "boolean" },
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["portalTarget"],
+          properties: {
+            portalTarget: {
+              type: "string",
+              description: "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API.",
+            },
+          },
+        },
+      ],
+    },
   },
   enableHover: { type: "boolean", default: true },
   showLegend: { type: "boolean" },
@@ -351,7 +367,22 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   title: { type: "string", description: "Visible title and accessible chart name." },
   description: { type: "string", description: "Concise accessible chart description." },
   summary: { type: "string", description: "Screen-reader-only takeaway or interaction guidance." },
-  accessibleTable: { type: "boolean", default: true, description: "Expose the current streaming window as an accessible data table." },
+  accessibleTable: {
+    type: ["boolean", "object"],
+    default: true,
+    description: "Expose the current streaming window as an accessible data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+    schema: {
+      oneOf: [
+        { type: "boolean" },
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["portalTarget"],
+          properties: { portalTarget: { type: "string" } },
+        },
+      ],
+    },
+  },
   showLegend: { type: "boolean" },
   legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const, default: "right" },
   legendInteraction: { type: "string", enum: ["highlight", "isolate", "none"] as const, default: "none" },
@@ -426,8 +457,19 @@ const physicsProps: Record<string, ChartPropSpec> = {
     description: "Screen-reader-only takeaway and interaction guidance.",
   },
   accessibleTable: {
-    type: "boolean",
-    description: "Expose source data through Semiotic's screen-reader data table.",
+    type: ["boolean", "object"],
+    description: "Expose source data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+    schema: {
+      oneOf: [
+        { type: "boolean" },
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["portalTarget"],
+          properties: { portalTarget: { type: "string" } },
+        },
+      ],
+    },
   },
   chartId: { type: "string", description: "Stable chart identity for linked observation and navigation." },
   emphasis: { type: "string", enum: ["primary", "secondary"] as const },

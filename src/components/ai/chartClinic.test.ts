@@ -115,6 +115,36 @@ describe("Chart Clinic read-only inspection", () => {
     expect(report.reasons).toContain("EMPTY_SCENE: the renderer produced no data marks.")
   })
 
+  it("refuses a painted scene with a degenerate semantic status", () => {
+    const report = inspectChart({
+      component: "BarChart",
+      props: { data: bars, categoryAccessor: "category", valueAccessor: "value" },
+    }, {
+      render: () => ({
+        svg: "<svg/>",
+        evidence: evidence({
+          semanticStatus: "degenerate",
+          semanticDiagnostics: [
+            {
+              code: "TEST_SEMANTIC_DEGENERACY",
+              severity: "error",
+              message: "The marks do not support the intended comparison.",
+            },
+          ],
+          warnings: ["TEST_SEMANTIC_DEGENERACY"],
+        }),
+      }),
+    })
+
+    expect(report.ok).toBe(false)
+    expect(report.scene).toMatchObject({
+      status: "ok",
+      semanticStatus: "degenerate",
+      semanticDiagnostics: [expect.objectContaining({ code: "TEST_SEMANTIC_DEGENERACY" })],
+    })
+    expect(report.reasons.join(" ")).toContain("marks do not support the intended comparison")
+  })
+
   it("does not invoke rendering for invalid input and reports the structural error", () => {
     const render = () => {
       throw new Error("must not render")

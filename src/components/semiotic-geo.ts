@@ -33,6 +33,10 @@ export type {
   ResponsiveRuleMatch,
   ResponsiveRuleResult,
 } from "./charts/shared/responsiveRules"
+export type {
+  FrameTextAnnotation,
+  FrameTextPosition,
+} from "./charts/shared/frameTextAnnotation"
 
 // Custom-layout hit targets — make overlay-drawn geographic marks navigable.
 export { geoHitTarget, geoAreaHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"

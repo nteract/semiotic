@@ -24,6 +24,7 @@ import type { GlyphDef } from "./glyphDef"
 import type { SceneRenderMode } from "./sceneRenderBackendTypes"
 import type { StreamSemanticInteractionProps } from "./streamSemanticTypes"
 import type { XYFrameAxisConfig } from "./xyFrameAxisTypes"
+import type { AccessibleTableProp } from "./accessibleTableTypes"
 export type { SceneRenderBackend, SceneRenderMode } from "./sceneRenderBackendTypes"
 export type { ThemeSemanticColors } from "./streamThemeTypes"
 export type { AxisTickFormat, AxisTickFormatter, XYFrameAxisConfig } from "./xyFrameAxisTypes"
@@ -970,7 +971,7 @@ export interface StreamXYFrameProps<T = Datum>
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   /** Accessible description overriding the auto-generated aria-label on the chart container */
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */

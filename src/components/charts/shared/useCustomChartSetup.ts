@@ -40,6 +40,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "./useChartLegend"
+import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 /**
  * Margin shorthand → sided form. The Stream*Frame margin props only
@@ -67,7 +68,7 @@ interface ScaffoldOptions {
   title?: string
   description?: string
   summary?: string
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   mobileInteraction?: MobileInteractionProp
   mobileSemantics?: MobileVisualizationContract
   responsiveRules?: ResponsiveRule[]

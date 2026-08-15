@@ -163,11 +163,11 @@ export function useChartLegendAndMargin({
       bottom: resolveSide("bottom"),
       left: resolveSide("left")
     }
-    // Numeric margin sides are authoritative in 3.x. Only omitted,
-    // `"auto"`, null, or undefined sides participate in compatibility
-    // auto-reservation, sized from the legend plus legendDistance.
-    const sideSet = (side: keyof MarginType): boolean =>
-      typeof userSides[side] === "number"
+    // Caller-supplied numeric sides are minimum plot gutters. Legend
+    // reservation composes with that baseline on every side instead of making
+    // callers choose between their own padding and Semiotic's measured legend
+    // requirement. `"auto"`, null, and omitted sides still begin at the
+    // chart-mode default.
     if (legend) {
       const sideLegendMargin = resolveSideLegendMargin(legend, legendLayout)
       const plotWidth = Math.max(
@@ -210,21 +210,13 @@ export function useChartLegendAndMargin({
           legendLayout
         ) +
         (legendPosition === "top" && hasTitle ? 24 : 0)
-      if (
-        legendPosition === "right" &&
-        !sideSet("right") &&
-        finalMargin.right < sideLegendMargin
-      )
+      if (legendPosition === "right" && finalMargin.right < sideLegendMargin)
         finalMargin.right = sideLegendMargin
-      else if (
-        legendPosition === "left" &&
-        !sideSet("left") &&
-        finalMargin.left < sideLegendMargin
-      )
+      else if (legendPosition === "left" && finalMargin.left < sideLegendMargin)
         finalMargin.left = sideLegendMargin
-      else if (legendPosition === "top" && !sideSet("top"))
+      else if (legendPosition === "top")
         finalMargin.top = Math.max(finalMargin.top, 50, horizontalLegendMargin)
-      else if (legendPosition === "bottom" && !sideSet("bottom"))
+      else if (legendPosition === "bottom")
         finalMargin.bottom = Math.max(
           finalMargin.bottom,
           80,

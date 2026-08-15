@@ -56,6 +56,7 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import {
   NetworkAccessibleDataTable,
+  AccessibleTablePortal,
   AriaLiveTooltip,
   ScreenReaderSummary,
   SkipToTableLink,
@@ -1489,15 +1490,17 @@ const StreamNetworkFrame = memo(forwardRef<
           diagnostics={sceneRevisionDiagnosticsRef.current}
         />
       )}
-      {accessibleTable && <SkipToTableLink tableId={tableId} />}
       {accessibleTable && (
-        <NetworkAccessibleDataTable
-          nodes={store?.sceneNodes ?? []}
-          edges={store?.sceneEdges ?? []}
-          chartType="Network chart"
-          tableId={tableId}
-          chartTitle={typeof title === "string" ? title : undefined}
-        />
+        <AccessibleTablePortal accessibleTable={accessibleTable}>
+          <SkipToTableLink tableId={tableId} />
+          <NetworkAccessibleDataTable
+            nodes={store?.sceneNodes ?? []}
+            edges={store?.sceneEdges ?? []}
+            chartType="Network chart"
+            tableId={tableId}
+            chartTitle={typeof title === "string" ? title : undefined}
+          />
+        </AccessibleTablePortal>
       )}
       <ScreenReaderSummary summary={summary} />
       {/* Live region MUST live outside the role="img" wrapper — AT treats the

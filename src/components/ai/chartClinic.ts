@@ -16,6 +16,7 @@ import type { RenderEvidence } from "../server/renderEvidence"
 import type { RevisionSet } from "../stream/pipelineUpdateContract"
 import { CHART_CLINIC_METADATA } from "./chartClinicMetadata.generated"
 import { prepareChart, type RenderFn } from "./generativeChart"
+import { semanticFailureReasons } from "./semanticEvidence"
 
 /**
  * Inspection is a reproducible projection, not an authored export. The
@@ -49,6 +50,7 @@ export interface ChartClinicOptions {
 
 export interface ChartClinicSceneSummary {
   readonly status: RenderEvidence["status"]
+  readonly semanticStatus?: RenderEvidence["semanticStatus"]
   readonly frameType: RenderEvidence["frameType"]
   readonly markCount: number
   readonly markCountByType: Readonly<Record<string, number>>
@@ -57,6 +59,7 @@ export interface ChartClinicSceneSummary {
   readonly categories?: readonly string[]
   readonly nodeCount?: number
   readonly edgeCount?: number
+  readonly semanticDiagnostics?: RenderEvidence["semanticDiagnostics"]
 }
 
 export interface ChartClinicRevisionStatus {
@@ -128,6 +131,7 @@ function revisionStatus(input?: ChartClinicRevisionInput): ChartClinicRevisionSt
 function sceneSummary(evidence: RenderEvidence): ChartClinicSceneSummary {
   return {
     status: evidence.status,
+    ...(evidence.semanticStatus ? { semanticStatus: evidence.semanticStatus } : {}),
     frameType: evidence.frameType,
     markCount: evidence.markCount,
     markCountByType: { ...evidence.markCountByType },
@@ -136,6 +140,9 @@ function sceneSummary(evidence: RenderEvidence): ChartClinicSceneSummary {
     ...(evidence.categories ? { categories: [...evidence.categories] } : {}),
     ...(evidence.nodeCount !== undefined ? { nodeCount: evidence.nodeCount } : {}),
     ...(evidence.edgeCount !== undefined ? { edgeCount: evidence.edgeCount } : {}),
+    ...(evidence.semanticDiagnostics
+      ? { semanticDiagnostics: [...evidence.semanticDiagnostics] }
+      : {}),
   }
 }
 
@@ -170,6 +177,7 @@ export function inspectChart(
       if (evidence.empty) {
         reasons.push("EMPTY_SCENE: the renderer produced no data marks.")
       }
+      reasons.push(...semanticFailureReasons(evidence))
       for (const warning of evidence.warnings) {
         if (!reasons.includes(warning)) reasons.push(warning)
       }
@@ -178,7 +186,11 @@ export function inspectChart(
     }
   }
 
-  const ok = prepared.ok && !evidence?.empty && !reasons.some((reason) => reason.startsWith("RENDER_FAILED"))
+  const ok =
+    prepared.ok &&
+    !evidence?.empty &&
+    evidence?.semanticStatus !== "degenerate" &&
+    !reasons.some((reason) => reason.startsWith("RENDER_FAILED"))
   return {
     mode: "read-only",
     component: input.component,

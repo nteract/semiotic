@@ -32,6 +32,7 @@ const explicitExternals = [
   ...optionalPeerNames,
   /^world-atlas\//,
   "react-dom/server",
+  "react-dom/server.edge",
   "react/jsx-runtime",
   "react/jsx-dev-runtime"
 ]
@@ -1304,6 +1305,33 @@ async function build() {
 
   assertNoEmptyJavaScriptArtifacts()
   assertDirectivePlacement(bundledEntries)
+  assertBrowserCompatibleStaticMarkupImports()
+}
+
+/**
+ * Browser consumers may intentionally use `semiotic/server` for synchronous
+ * SVG export. React's bare `react-dom/server` condition defaults to the Node
+ * renderer when a CommonJS bundle is processed, which forces downstream
+ * shims/rewrite plugins. Production code must request React's explicit
+ * edge-compatible static renderer instead.
+ */
+function assertBrowserCompatibleStaticMarkupImports() {
+  const bareServerRequest = /["']react-dom\/server["']/
+  const offenders = readdirSync("dist")
+    .filter((name) => name.endsWith(".js"))
+    .filter((name) => bareServerRequest.test(readFileSync(`dist/${name}`, "utf8")))
+
+  if (offenders.length === 0) {
+    console.log(
+      "\u2705 static markup imports verified (no bare react-dom/server requests)"
+    )
+    return
+  }
+
+  throw new Error(
+    `Browser-incompatible bare react-dom/server request in: ${offenders.join(", ")}. ` +
+      'Import from "react-dom/server.edge" in production static-render paths.'
+  )
 }
 
 /**

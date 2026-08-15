@@ -278,9 +278,27 @@ export default function AccessibilityPage() {
 
       <CodeBlock
         code={`// Data summary is on by default — disable if needed
-<LineChart data={data} accessibleTable={false} />`}
+<LineChart data={data} accessibleTable={false} />
+
+// If a design-system wrapper owns role="img", portal the focusable table UI
+// to a sibling so the atomic image has no focusable descendants.
+<div role="img" aria-label="Monthly revenue">
+  <LineChart
+    data={data}
+    accessibleTable={{ portalTarget: "revenue-data-summary" }}
+  />
+</div>
+<div id="revenue-data-summary" />`}
         language="jsx"
       />
+
+      <p>
+        The default high-level chart DOM already keeps its data-summary controls
+        outside Semiotic&apos;s inner <code>role="img"</code>. Use the object form
+        above only when a consumer or design-system wrapper places the entire chart
+        inside another atomic image. React callers may also supply an element or a
+        callback returning an element as <code>portalTarget</code>.
+      </p>
 
       <h3 id="focus-ring">Focus Ring</h3>
 
@@ -487,7 +505,7 @@ const result = diagnoseConfig("LineChart", {
             ["title", "string | ReactNode", "-", "Visible heading; fallback aria-label when description is not set"],
             ["description", "string", "-", "Overrides the auto-generated aria-label with a detailed description"],
             ["summary", "string", "-", "Screen-reader-only note (role=\"note\") for trends or key takeaways"],
-            ["accessibleTable", "boolean", "true", "Enable JIT data summary (stats + pageable sample rows) for screen readers"],
+            ["accessibleTable", "boolean | object", "true", "Enable JIT data summary; object form portals its interactive UI outside a consumer role=img"],
             ["actions.dataSummary", "boolean", "false", "ChartContainer: toolbar button to show data summary visibly"],
           ].map(([prop, type, def, desc], i) => (
             <tr key={i} style={{ borderBottom: "1px solid var(--surface-3)" }}>

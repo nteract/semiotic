@@ -508,6 +508,14 @@ export default async function DashboardPage() {
         output matches what you'd see in the browser — minus interactivity.
       </p>
 
+      <p>
+        The synchronous SVG renderer uses React&apos;s edge-compatible static
+        markup entry. Browser and edge build pipelines can import from
+        <code>semiotic/server/edge</code> without a <code>react-dom/server</code>
+        shim or source-rewrite plugin. Use <code>semiotic/server/node</code> when
+        the same application also needs Node-only raster image or GIF export.
+      </p>
+
       <h3 id="installation">Setup</h3>
 
       <p>

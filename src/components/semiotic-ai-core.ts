@@ -76,10 +76,38 @@ export type {
 
 export { profileData } from "./ai/profileData"
 export type { ProfileDataOptions } from "./ai/profileData"
+export { deriveProfileFields, rederiveProfile } from "./ai/deriveProfileFields"
+export type {
+  DerivedProfileFields,
+  ProfilePrimaryFields,
+  ReprofileFieldsOptions,
+} from "./ai/deriveProfileFields"
+export type {
+  ProfileFieldRole,
+  ProfileFieldRoleHint,
+  ProfileFieldRoleHints,
+  NormalizedProfileFieldRoles,
+} from "./ai/fieldRoles"
+export type { SuggestionPropContract } from "./ai/suggestionPropContracts"
+export type {
+  ChartFieldPolicy,
+  SemanticRenderEvidence,
+  SemanticViabilityCallback,
+  SemanticViabilityCheck,
+  SemanticViabilityDiagnostic,
+  SemanticViabilityRule,
+} from "./ai/chartCapabilityTypes"
 export { inferIntent } from "./ai/inferIntent"
-export type { InferIntentResult } from "./ai/inferIntent"
+export type { InferIntentField, InferIntentOptions, InferIntentResult } from "./ai/inferIntent"
+export { BUILT_IN_INTENT_IDS, getIntent, listIntents, registerIntent } from "./ai/intents"
+export type { BuiltInIntentId, IntentDescriptor, IntentFieldKind, IntentId, IntentSignals } from "./ai/intents"
 export { suggestCharts, suggestChartsGrouped, scoreChart, explainCapabilityFit } from "./ai/suggestCharts"
-export type { SuggestChartsOptions, RejectedCapability, ExplainCapabilityFitResult } from "./ai/suggestCharts"
+export type {
+  SuggestChartsOptions,
+  ScoreChartOptions,
+  RejectedCapability,
+  ExplainCapabilityFitResult,
+} from "./ai/suggestCharts"
 export { suggestDashboard } from "./ai/suggestDashboard"
 export type { DashboardPanel, DashboardSuggestion, SuggestDashboardOptions } from "./ai/suggestDashboard"
 export { suggestStreamCharts } from "./ai/suggestStreamCharts"

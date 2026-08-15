@@ -496,7 +496,7 @@ interface-member StreamGeoFrameHandle::method::pushManyLines = required pushMany
 interface-member StreamGeoFrameHandle::method::removeLine = required removeLine(id: string | string[]): Datum[]
 interface-member StreamGeoFrameHandle::method::removePoint = required removePoint(id: string | string[]): Datum[]
 interface-member StreamGeoFrameHandle::method::resetZoom = required resetZoom(): void
-interface-member StreamGeoFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamGeoFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamGeoFrameProps::property::allowTooltipOverflow = optional allowTooltipOverflow: boolean | undefined
 interface-member StreamGeoFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
@@ -635,6 +635,8 @@ interface-member TooltipRootProps::property::chrome = optional chrome: TooltipCh
 type AreasProp = GeoJSON.Feature[] | ReferenceGeography
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type GeoCustomLayout<C extends object = Record<string, unknown>> = (ctx: GeoLayoutContext<C>) => GeoLayoutResult
 type GeoSceneNode = GeoAreaSceneNode | GeoLineSceneNode | GlyphSceneNode | PointSceneNode
 type GeographicDotGridAccessor = ((datum: GeographicDotGridDatum, index: number) => unknown) | string

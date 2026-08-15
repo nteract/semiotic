@@ -17,6 +17,7 @@ Object.assign(global, { TextEncoder, TextDecoder })
 import {
   renderToStaticSVG,
   renderChart,
+  renderChartWithEvidence,
   renderDashboard,
 } from "./renderToStaticSVG"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
@@ -643,14 +644,22 @@ describe("renderChart", () => {
     const explicitRight = renderChart("ProcessSankey", { ...props, margin: { right: 30 } })
 
     // The HOC owns this specific legend rather than the frame auto-legend.
-    // Its default right gutter is 140px; explicitly owned margins retain the
-    // legend contract while the edge gutter keeps the focus ring inside SVG.
+    // Its default right gutter is 140px; explicit numeric margins are minima,
+    // so the legend contract still grows a smaller caller baseline.
     expect(svg).toContain(">Intake<")
     expect(svg).toContain(">Review<")
     expect(countMatches(svg, />Intake</g)).toBe(1)
     expect(countMatches(svg, />Review</g)).toBe(1)
     expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
-    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(297,30)"')
+    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(270,30)"')
+    for (const [position, minimum] of [
+      ["right", 140], ["left", 140], ["top", 50], ["bottom", 80],
+    ] as const) {
+      const { evidence } = renderChartWithEvidence("ProcessSankey", {
+        ...props, legendPosition: position, margin: { [position]: 30 },
+      })
+      expect(evidence.margin?.[position]).toBe(minimum)
+    }
   })
 
   it("composes caller groups after specialized chart-owned legends", () => {

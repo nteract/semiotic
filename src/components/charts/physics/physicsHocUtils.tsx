@@ -341,7 +341,7 @@ export type PhysicsChartModeProps = {
   title?: string
   description?: string
   summary?: string
-  accessibleTable?: boolean
+  accessibleTable?: BaseChartProps["accessibleTable"]
   /** Frame-level hover; HOCs may pass via tooltip or frameProps. */
   enableHover?: boolean
   mobileInteraction?: BaseChartProps["mobileInteraction"]
@@ -373,7 +373,7 @@ export interface PhysicsChartModeResult {
   title: string | undefined
   description: string | undefined
   summary: string | undefined
-  accessibleTable: boolean | undefined
+  accessibleTable: BaseChartProps["accessibleTable"]
   className: string | undefined
   compactMode: boolean
   mobileInteraction: ChartModeResult["mobileInteraction"]
@@ -666,7 +666,7 @@ export function resolvePhysicsFrameSharedProps(
     title?: string
     description?: string
     summary?: string
-    accessibleTable?: boolean
+    accessibleTable?: BaseChartProps["accessibleTable"]
     enableHover?: boolean
     margin?: StreamPhysicsFrameProps["margin"]
   }

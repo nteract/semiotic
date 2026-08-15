@@ -283,13 +283,46 @@ export default function SuggestionsPage() {
 
       <h2>How it composes</h2>
       <ol>
-        <li><code>profileData(data)</code> infers candidate x/y/series/category fields, distinct counts, monotonicity, and structure (hierarchy/network/geo).</li>
+        <li><code>profileData(data)</code> infers candidate x/y/series/category fields, distinct counts, monotonicity, and structure (hierarchy/network/geo). Identifier and field-role hints are applied before inference.</li>
         <li>For each capability: <code>fits(profile)</code> is a hard gate (returns <code>null</code> to pass).</li>
         <li><code>intentScores</code> are evaluated (numbers or profile-aware functions).</li>
         <li>Variants apply additive <code>intentDeltas</code> and <code>rubricDeltas</code>.</li>
         <li>Suggestions are sorted by the requested intent (or mean across intents).</li>
-        <li><code>buildProps(profile, variant)</code> returns spreadable props for the chart.</li>
+        <li><code>buildProps(profile, variant)</code> returns spreadable props for the chart. The capability&apos;s field policy rejects an identifier emitted as a measure.</li>
+        <li>Each result carries a machine-readable <code>propContract</code> so a generic renderer knows whether chart-HOC defaults are safe.</li>
       </ol>
+
+      <h2>Identifiers and field-role hints</h2>
+      <p>
+        Numeric IDs and unique string keys are structurally plausible but poor visual measures or
+        categories. Declare them as identifiers before profiling. Use semantic roles for unusual
+        field names, or exact encoding roles when the normal type/name heuristic is not enough.
+        The same options work with <code>suggestCharts</code>, <code>useChartSuggestions</code>, and
+        the MCP <code>suggestCharts</code> tool.
+      </p>
+      <CodeBlock language="ts">
+{`import { profileData, rederiveProfile, suggestCharts } from "semiotic/ai"
+
+const options = {
+  identifiers: ["id", "accountId"],
+  fieldRoles: {
+    recordedAt: "temporal",
+    throughput: "measure",
+    regionCode: "category",
+  },
+}
+
+const profile = profileData(rows, options)
+// id/accountId cannot appear in any encoding candidate or primary role.
+
+const revised = rederiveProfile(profile, {
+  primary: { category: "regionCode", y: "throughput" },
+})
+// primary, categoryCount, seriesCount, x cardinality, repetition, and
+// stackability are recomputed together; identifier assignments throw.
+
+const suggestions = suggestCharts(rows, options)`}
+      </CodeBlock>
 
       <h2>Implementation</h2>
       <CodeBlock language="jsx">
@@ -303,6 +336,29 @@ function SuggestedChart({ data, intent }) {
   if (!top) return <p>No fitting chart for this data.</p>
   const Component = COMPONENT_MAP[top.component]
   return <Component {...top.props} />
+}`}
+      </CodeBlock>
+
+      <h2>Rendering mixed chart and value suggestions</h2>
+      <p>
+        A value component such as <code>BigNumber</code> has its own prop envelope and mode
+        vocabulary. Read <code>propContract</code> instead of maintaining a component-name set.
+        The same declarations are published for every component in{" "}
+        <code>ai/surface-manifest.json</code> at{" "}
+        <code>components.suggestionPropContracts</code>.
+      </p>
+      <CodeBlock language="tsx">
+{`function DynamicSuggestion({ suggestion }) {
+  const Component = COMPONENT_MAP[suggestion.component]
+  const contract = suggestion.propContract
+  const chartDefaults = contract.commonChartProps === "supported"
+    ? { responsiveWidth: true }
+    : {}
+
+  // BigNumber reports value-component / component-specific / headingProp=label
+  // and modes tile|presentation|inline|thumbnail. Chart HOCs report their own
+  // common contract and primary|context|sparkline|mobile modes.
+  return <Component {...chartDefaults} {...suggestion.props} />
 }`}
       </CodeBlock>
 

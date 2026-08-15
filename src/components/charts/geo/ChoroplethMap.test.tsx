@@ -249,7 +249,7 @@ describe("ChoroplethMap", () => {
     )
 
     it.each(["right", "left", "top", "bottom"] as const)(
-      "preserves an explicitly owned %s gradient-legend margin",
+      "treats an explicit %s gradient-legend margin as a minimum",
       (legendPosition) => {
         render(
           <Wrapper>
@@ -262,7 +262,9 @@ describe("ChoroplethMap", () => {
           </Wrapper>
         )
 
-        expect(lastGeoFrameProps.margin[legendPosition]).toBe(19)
+        expect(lastGeoFrameProps.margin[legendPosition]).toBe(
+          { right: 113, left: 113, top: 56, bottom: 80 }[legendPosition]
+        )
       }
     )
 

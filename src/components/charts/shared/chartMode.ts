@@ -7,6 +7,7 @@ import type {
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import { resolveResponsiveRules } from "./responsiveRules"
 import type { ResponsiveRule } from "./responsiveRules"
+import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 export const MOBILE_INTERACTION_TARGET_SIZE = 44
 export const MOBILE_INTERACTION_MIN_HIT_RADIUS = 24
@@ -116,7 +117,7 @@ export interface ChartModeInput {
   title?: string
   description?: string
   summary?: string
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   xLabel?: string
   yLabel?: string
   categoryLabel?: string
@@ -140,7 +141,7 @@ export interface ChartModeResult {
   title: string | undefined
   description: string | undefined
   summary: string | undefined
-  accessibleTable: boolean | undefined
+  accessibleTable: AccessibleTableProp | undefined
   xLabel: string | undefined
   yLabel: string | undefined
   categoryLabel: string | undefined

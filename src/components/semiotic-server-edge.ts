@@ -11,7 +11,7 @@ export {
 
 export { generateFrameSVGs, generatePhysicsFrameSVGs, generateFrameSequence } from "./server/animatedGif"
 
-export type { RenderEvidence } from "./server/renderEvidence"
+export type { RenderEvidence, SemanticViabilityStatus } from "./server/renderEvidence"
 
 export type {
   DashboardChart,

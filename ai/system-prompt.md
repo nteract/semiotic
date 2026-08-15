@@ -41,6 +41,10 @@ request.
 This map narrows discovery; it does not define props. Use `suggestCharts` and
 the selected component's exact schema for the final choice.
 
+Before profiling GraphQL or database rows, declare record keys through
+`identifiers` (or `fieldRoles: { key: "identifier" }`). Identifier fields are
+identity, not quantitative measures or unique-value categories.
+
 ## Delivery Modes
 
 - Static JSX, SSR, MCP rendering, and serialized configurations keep the
@@ -113,7 +117,8 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 
 ## Key Patterns
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
-- **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `"Sparkline"` (no axes, 2px margins). `renderChartWithEvidence()` returns `{ svg, evidence }` (mark counts by scene type, axis domains, empty flag, annotation count, accessible name) so agents can verify the render drew data marks. `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`. Required props: StackedBarChart needs `stackBy`, GroupedBarChart needs `groupBy`, StackedAreaChart needs `areaBy`, BubbleChart needs `sizeBy`, FunnelChart uses `stepAccessor`, GaugeChart needs `value` (`thresholds` optional).
+- **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `"Sparkline"` (no axes, 2px margins). `renderChartWithEvidence()` returns `{ svg, evidence }` (mark counts by scene type, axis domains, empty flag, semantic status/diagnostics, annotation count, accessible name). Check `empty`/`markCount` for paint and `semanticStatus` separately for meaning; `degenerate` marks are not trustworthy even when paint `status` is `ok`, while `not-assessed` means no capability check exists. `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`. Required props: StackedBarChart needs `stackBy`, GroupedBarChart needs `groupBy`, StackedAreaChart needs `areaBy`, BubbleChart needs `sizeBy`, FunnelChart uses `stepAccessor`, GaugeChart needs `value` (`thresholds` optional).
+- **Serializable chart-adjacent text**: use a `frame-text` annotation instead of splicing server SVG. It anchors to the resolved plot rectangle without data coordinates: `{ type: "frame-text", text: "100", position: "bottom-right", dy: 16 }`. Positions cover the plot's nine edge/center anchors; `dx`/`dy` may move text into a caller-reserved margin. The same annotation renders in CSR and SSR.
 - **CLI**: `npx semiotic-ai --list` shows components/import paths/renderability; `npx semiotic-ai --schema GaugeChart` prints one component schema with metadata; `--doctor` validates props JSON and behavior contracts.
 - **MCP**: `npx semiotic-mcp` exposes schema, chart suggestion, token-encoding suggestion (`suggestTokenEncoding` for ISOTYPE/dot/icon arrays), diagnosis, accessibility, grounding, issue, theme, static render (`renderChart`), and ChatGPT Apps render (`renderInteractiveChart`) tools. Resources include `semiotic://schema`, `semiotic://components`, `semiotic://behavior-contracts`, `semiotic://system-prompt`, `semiotic://examples`, and the widget template `ui://semiotic/chart-widget.html`. Prompts: `build-semiotic-chart`, `debug-semiotic-chart`.
 - **Data Pitfalls bridge**: `toDataPitfallsChain(component, props, { rendered, context, narrative })` from `semiotic/ai` returns a dependency-free `datapitfalls` chain input containing config, JSX, reader grounding, diagnostics, accessibility audit, and optional render evidence/image.

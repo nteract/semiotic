@@ -160,6 +160,7 @@ function createWebhookConversationArcSink(options: WebhookConversationArcSinkOpt
 function currentTimestamp(): string
 function dataQualityToAnnotations(results: readonly DataQualityResult[], options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
 function defineChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): ChartRecipe<TDatum, TConfig>
+function deriveProfileFields(data: readonly Datum[], candidates: {x: import("./chartCapabilityTypes").FieldCandidate[]; y: import("./chartCapabilityTypes").FieldCandidate[]; size: import("./chartCapabilityTypes").FieldCandidate[]; category: import("./chartCapabilityTypes").FieldCandidate[]; series: import("./chartCapabilityTypes").FieldCandidate[]; time: import("./chartCapabilityTypes").FieldCandidate[];}, roles: Readonly<Record<string, readonly import("./fieldRoles").ProfileFieldRole[]>>, options?: ReprofileFieldsOptions | undefined): DerivedProfileFields
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function describeRecipeChart(recipe: ChartRecipe<Datum, Record<string, unknown>>, props: Datum, options?: DescribeRecipeChartOptions | undefined): DescribeChartResult
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
@@ -192,7 +193,7 @@ function getIntent(id: IntentId): IntentDescriptor | undefined
 function getRecipeLayout(layoutId: string): CustomLayoutFunction | undefined
 function getRegisteredVariantDiscovery(): readonly ProposeVariantFn[]
 function getStreamCapabilities(): readonly StreamChartCapability[]
-function inferIntent(query: string): InferIntentResult | null
+function inferIntent(query: string, options?: InferIntentOptions | undefined): InferIntentResult | null
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest
 function isJsonSafe(value: unknown, seen?: Set<object> | undefined): boolean
 function isRegisteredRecipeLayout(layout: unknown): boolean
@@ -211,6 +212,7 @@ function receivabilityBias(audit: AccessibilityAuditResult, modality: ReceptionM
 function recipeToChartCapability(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): ChartCapability
 function recordAnnotationStatusChange(toStatus: AnnotationStatus, opts?: undefined | {annotationId?: string; fromStatus?: AnnotationStatus; chartId?: string; arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
 function recordAudienceChange(audience: string, previous?: null | string | undefined, extra?: undefined | {arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
+function rederiveProfile(profile: ChartDataProfile, options?: ReprofileFieldsOptions | undefined): ChartDataProfile
 function registerChartCapability(capability: ChartCapability): void
 function registerChartRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): void
 function registerConversationArcSink(sink: ConversationArcSink): () => void
@@ -229,7 +231,7 @@ function resolveRowsToNumber(declared: ScaleBand | number | undefined, measuredR
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function runQualityScorecard(fixtures: readonly ScorecardFixture[], capabilities?: readonly ChartCapability[] | undefined): ScorecardReport
 function scaleHints(hint: ScaleHintInput): ScaleFitFn
-function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: undefined | {intent?: IntentId | IntentId[]; variantKey?: string; profile?: ChartDataProfile; audience?: AudienceProfile; portability?: "local" | "portable"; riskTolerance?: "high" | "low" | "medium"; receptionChannel?: ReceptionModality;}): Suggestion | {reason: string;}
+function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): Suggestion | {reason: string;}
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): number
 function subscribeToConversationArcChange(listener: () => void): () => void
@@ -314,6 +316,7 @@ interface ChartContainerProps
 interface ChartDataProfile extends DataSummary
 interface ChartEditedEvent extends ConversationArcEventBase
 interface ChartExportedEvent extends ConversationArcEventBase
+interface ChartFieldPolicy
 interface ChartGridProps
 interface ChartNotification
 interface ChartReaderGrounding
@@ -355,6 +358,7 @@ interface DataSummary
 interface DateFieldSummary
 interface DbtArtifacts
 interface DeclaredRecipeSemantics
+interface DerivedProfileFields
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
@@ -381,11 +385,14 @@ interface GEValidationResult
 interface HoverEndObservation extends ObservationBase
 interface HoverObservation extends ObservationBase
 interface IndexedDBConversationArcSinkOptions
+interface InferIntentField
+interface InferIntentOptions
 interface InferIntentResult
 interface IntentDescriptor
 interface IntentManifest
 interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
+interface IntentSignals
 interface InterrogationAnsweredEvent extends ConversationArcEventBase
 interface InterrogationAskedEvent extends ConversationArcEventBase
 interface InterrogationContext
@@ -443,6 +450,7 @@ interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
 interface ProfileNumericFieldsOptions
+interface ProfilePrimaryFields
 interface ProposalRefusedEvent extends ConversationArcEventBase
 interface ReceivabilitySignal
 interface ReceptionDefinition
@@ -458,8 +466,9 @@ interface RejectedCapability
 interface RenderEvidenceEvent extends ConversationArcEventBase
 interface RepairAlternativeResult
 interface RepairOkResult
-interface RepairOptions
+interface RepairOptions extends ProfileDataOptions
 interface RepairUnknownResult
+interface ReprofileFieldsOptions
 interface ResolvedMobileInteractionConfig
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
@@ -471,10 +480,14 @@ interface ScaleFitResult
 interface ScaleHintInput
 interface ScaleThresholds
 interface ScaledSuggestionGroups
+interface ScoreChartOptions extends ProfileDataOptions
 interface ScorecardFixture
 interface ScorecardReport
 interface SelectionEndObservation extends ObservationBase
 interface SelectionObservation extends ObservationBase
+interface SemanticRenderEvidence
+interface SemanticViabilityDiagnostic
+interface SemanticViabilityRule
 interface SerializedSelection
 interface SmallMultipleChartProps<TItem extends SmallMultipleItem = SmallMultipleItem>
 interface SmallMultipleItem<TDatum = unknown>
@@ -486,12 +499,13 @@ interface StreamSchema
 interface StreamSuggestion
 interface StretchSuggestion
 interface SuggestChartsOptions extends ProfileDataOptions
-interface SuggestDashboardOptions
+interface SuggestDashboardOptions extends ProfileDataOptions
 interface SuggestStreamChartsOptions
-interface SuggestStretchChartsOptions
+interface SuggestStretchChartsOptions extends ProfileDataOptions
 interface SuggestTokenEncodingInput
 interface Suggestion
 interface SuggestionChosenEvent extends ConversationArcEventBase
+interface SuggestionPropContract
 interface SuggestionScaleRange
 interface SuggestionShownEvent extends ConversationArcEventBase
 interface SummarizeOptions
@@ -638,7 +652,7 @@ interface-member AuditMobileVisualizationOptions::property::inChartContainer = o
 interface-member AuditMobileVisualizationOptions::property::targetSize = optional targetSize: number | undefined
 interface-member AuditMobileVisualizationOptions::property::viewportWidth = optional viewportWidth: number | undefined
 interface-member AuditObservedSceneInput::property::annotations = optional annotations: readonly Datum[] | undefined
-interface-member AuditObservedSceneInput::property::chart = optional chart: undefined | {title?: string; summary?: string; description?: string; accessibleTable?: boolean; navigationTree?: NavTreeNode; selectedIds?: ReadonlyArray<string>;}
+interface-member AuditObservedSceneInput::property::chart = optional chart: undefined | {title?: string; summary?: string; description?: string; accessibleTable?: AccessibleTableProp; navigationTree?: NavTreeNode; selectedIds?: ReadonlyArray<string>;}
 interface-member AuditObservedSceneInput::property::dimensions = required dimensions: {width: number; height: number; plot?: {x?: number; y?: number; width: number; height: number;};}
 interface-member AuditObservedSceneInput::property::inputData = required inputData: readonly Datum[]
 interface-member AuditObservedSceneInput::property::layoutConfig = optional layoutConfig: Record<string, unknown> | undefined
@@ -670,6 +684,7 @@ interface-member ChartCapability::property::caveats = optional caveats: ((profil
 interface-member ChartCapability::property::component = required component: string
 interface-member ChartCapability::property::displayName = optional displayName: string | undefined
 interface-member ChartCapability::property::family = required family: ChartFamily
+interface-member ChartCapability::property::fieldPolicy = optional fieldPolicy: ChartFieldPolicy | undefined
 interface-member ChartCapability::property::fits = required fits: (profile: ChartDataProfile) => FitResult
 interface-member ChartCapability::property::importPath = required importPath: ChartImportPath
 interface-member ChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, IntentScorer>>
@@ -681,6 +696,8 @@ interface-member ChartCapability::property::recipe = optional recipe: ChartRecip
 interface-member ChartCapability::property::renderingFamily = optional renderingFamily: ChartRecipeFrameFamily | undefined
 interface-member ChartCapability::property::rubric = required rubric: ChartRubric
 interface-member ChartCapability::property::scaleFit = optional scaleFit: ScaleFitFn | undefined
+interface-member ChartCapability::property::semanticViability = optional semanticViability: SemanticViabilityCheck | undefined
+interface-member ChartCapability::property::suggestionPropContract = optional suggestionPropContract: SuggestionPropContract | undefined
 interface-member ChartCapability::property::variants = optional variants: readonly ChartVariant[] | undefined
 interface-member ChartCapability::property::whyCustom = optional whyCustom: WhyCustomExplanation | undefined
 interface-member ChartConfig::property::component = required component: string
@@ -731,6 +748,7 @@ interface-member ChartContainerProps::property::width = optional width: number |
 interface-member ChartDataProfile::property::candidates = required candidates: {x: FieldCandidate[]; y: FieldCandidate[]; size: FieldCandidate[]; category: FieldCandidate[]; series: FieldCandidate[]; time: FieldCandidate[];}
 interface-member ChartDataProfile::property::categoryCount = optional categoryCount: number | undefined
 interface-member ChartDataProfile::property::data = required data: readonly Datum[]
+interface-member ChartDataProfile::property::fieldRoles = optional fieldRoles: Readonly<Record<string, readonly import("./fieldRoles").ProfileFieldRole[]>> | undefined
 interface-member ChartDataProfile::property::geo = optional geo: undefined | {features: ReadonlyArray<Datum>; points?: ReadonlyArray<Datum>; flows?: ReadonlyArray<Datum>;}
 interface-member ChartDataProfile::property::hasGeo = required hasGeo: boolean
 interface-member ChartDataProfile::property::hasHierarchy = required hasHierarchy: boolean
@@ -738,6 +756,7 @@ interface-member ChartDataProfile::property::hasNetwork = required hasNetwork: b
 interface-member ChartDataProfile::property::hasRepeatedX = required hasRepeatedX: boolean
 interface-member ChartDataProfile::property::hasTimeAxis = required hasTimeAxis: boolean
 interface-member ChartDataProfile::property::hierarchy = optional hierarchy: Datum | undefined
+interface-member ChartDataProfile::property::identifiers = optional identifiers: readonly string[] | undefined
 interface-member ChartDataProfile::property::monotonicX = required monotonicX: boolean
 interface-member ChartDataProfile::property::network = optional network: undefined | {nodes: ReadonlyArray<Datum>; edges: ReadonlyArray<Datum>;}
 interface-member ChartDataProfile::property::numericFields = optional numericFields: Readonly<Record<string, NumericFieldProfile>> | undefined
@@ -753,6 +772,9 @@ interface-member ChartEditedEvent::property::type = required type: "chart-edited
 interface-member ChartExportedEvent::property::component = required component: string
 interface-member ChartExportedEvent::property::format = required format: string
 interface-member ChartExportedEvent::property::type = required type: "chart-exported"
+interface-member ChartFieldPolicy::property::allowIdentifierMeasures = optional allowIdentifierMeasures: boolean | undefined
+interface-member ChartFieldPolicy::property::measureAccessorProps = optional measureAccessorProps: readonly string[] | undefined
+interface-member ChartFieldPolicy::property::measureFields = optional measureFields: ((profile: ChartDataProfile, props: Readonly<Record<string, unknown>>, variant?: ChartVariant) => ReadonlyArray<string>) | undefined
 interface-member ChartGridProps::property::chartDefaults = optional chartDefaults: Record<string, unknown> | undefined
 interface-member ChartGridProps::property::children = required children: React.ReactNode
 interface-member ChartGridProps::property::className = optional className: string | undefined
@@ -985,6 +1007,15 @@ interface-member DeclaredRecipeSemantics::property::dataRoles = required dataRol
 interface-member DeclaredRecipeSemantics::property::designContractDeclared = required designContractDeclared: boolean
 interface-member DeclaredRecipeSemantics::property::fallbackDeclared = required fallbackDeclared: boolean
 interface-member DeclaredRecipeSemantics::property::intents = required intents: string[]
+interface-member DerivedProfileFields::property::categoryCount = optional categoryCount: number | undefined
+interface-member DerivedProfileFields::property::hasRepeatedX = required hasRepeatedX: boolean
+interface-member DerivedProfileFields::property::hasTimeAxis = required hasTimeAxis: boolean
+interface-member DerivedProfileFields::property::monotonicX = required monotonicX: boolean
+interface-member DerivedProfileFields::property::primary = required primary: ProfilePrimaryFields
+interface-member DerivedProfileFields::property::seriesCount = optional seriesCount: number | undefined
+interface-member DerivedProfileFields::property::stackability = optional stackability: undefined | {seriesPerX: number; multiSeriesFraction: number; xColumns: number;}
+interface-member DerivedProfileFields::property::uniqueXCount = optional uniqueXCount: number | undefined
+interface-member DerivedProfileFields::property::xProvenance = required xProvenance: "named" | "none" | "scatter" | "time"
 interface-member DescribeCapabilityContext::property::act = optional act: CommunicativeAct | undefined
 interface-member DescribeCapabilityContext::property::family = optional family: ChartFamily | undefined
 interface-member DescribeCapabilityContext::property::intentScores = optional intentScores: Partial<Record<IntentId, number>> | undefined
@@ -1091,6 +1122,7 @@ interface-member ExplainCapabilityFitResult::property::profile = required profil
 interface-member ExplainCapabilityFitResult::property::rejected = required rejected: RejectedCapability[]
 interface-member FieldCandidate::property::distinctCount = optional distinctCount: number | undefined
 interface-member FieldCandidate::property::field = required field: string
+interface-member FieldCandidate::property::hinted = optional hinted: boolean | undefined
 interface-member FieldCandidate::property::kind = required kind: FieldKind
 interface-member FieldCandidate::property::monotonic = optional monotonic: boolean | undefined
 interface-member FieldCandidate::property::quality = required quality: number
@@ -1139,13 +1171,23 @@ interface-member IndexedDBConversationArcSinkOptions::property::dbName = optiona
 interface-member IndexedDBConversationArcSinkOptions::property::indexedDB = optional indexedDB: IDBFactory | undefined
 interface-member IndexedDBConversationArcSinkOptions::property::maxEvents = optional maxEvents: number | undefined
 interface-member IndexedDBConversationArcSinkOptions::property::storeName = optional storeName: string | undefined
+interface-member InferIntentField::property::kind = optional kind: (string & {}) | IntentFieldKind | undefined
+interface-member InferIntentField::property::name = required name: string
+interface-member InferIntentField::property::role = optional role: string | undefined
+interface-member InferIntentOptions::property::fields = optional fields: readonly (InferIntentField | string)[] | undefined
+interface-member InferIntentOptions::property::minimumConfidence = optional minimumConfidence: number | undefined
+interface-member InferIntentOptions::property::mode = optional mode: "combined" | "prose" | "schema" | undefined
 interface-member InferIntentResult::property::alternates = required alternates: readonly {intent: IntentId; confidence: number;}[]
 interface-member InferIntentResult::property::confidence = required confidence: number
 interface-member InferIntentResult::property::intent = required intent: IntentId
+interface-member InferIntentResult::property::source = required source: "combined" | "data-shape" | "field-name" | "prose"
+interface-member IntentDescriptor::property::composes = optional composes: readonly IntentId[] | undefined
 interface-member IntentDescriptor::property::description = required description: string
 interface-member IntentDescriptor::property::familyHint = optional familyHint: "categorical" | "distribution" | "flow" | "geo" | "hierarchy" | "network" | "relationship" | "time-series" | undefined
 interface-member IntentDescriptor::property::id = required id: IntentId
 interface-member IntentDescriptor::property::label = required label: string
+interface-member IntentDescriptor::property::signals = optional signals: IntentSignals | undefined
+interface-member IntentDescriptor::property::weights = optional weights: Readonly<Partial<Record<IntentId, number>>> | undefined
 interface-member IntentManifest::property::accessibility = optional accessibility: undefined | {description?: string; navigation?: boolean; dataFallback?: boolean; manualChecks?: string[];}
 interface-member IntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
 interface-member IntentManifest::property::author = optional author: string | undefined
@@ -1167,6 +1209,9 @@ interface-member IntentMarkProps::property::className = optional className: stri
 interface-member IntentMarkProps::property::label = optional label: string | undefined
 interface-member IntentMarkProps::property::manifest = required manifest: IntentManifest
 interface-member IntentMarkProps::property::showSummary = optional showSummary: boolean | undefined
+interface-member IntentSignals::property::dataShape = optional dataShape: undefined | {minNumericFields?: number; minCategoricalFields?: number; minDateFields?: number; minBooleanFields?: number; confidence?: number;}
+interface-member IntentSignals::property::fieldNames = optional fieldNames: readonly string[] | undefined
+interface-member IntentSignals::property::minimumFieldMatches = optional minimumFieldMatches: number | undefined
 interface-member InterrogationAnsweredEvent::property::annotationCount = optional annotationCount: number | undefined
 interface-member InterrogationAnsweredEvent::property::answer = optional answer: string | undefined
 interface-member InterrogationAnsweredEvent::property::component = optional component: string | undefined
@@ -1495,6 +1540,8 @@ interface-member PrepareChartResult::property::validation = required validation:
 interface-member PrimaryRoleChange::property::from = required from: string | undefined
 interface-member PrimaryRoleChange::property::role = required role: PrimaryRole
 interface-member PrimaryRoleChange::property::to = required to: string | undefined
+interface-member ProfileDataOptions::property::fieldRoles = optional fieldRoles: Readonly<Record<string, import("./fieldRoles").ProfileFieldRoleHint>> | undefined
+interface-member ProfileDataOptions::property::identifiers = optional identifiers: readonly string[] | undefined
 interface-member ProfileDataOptions::property::rawInput = optional rawInput: unknown
 interface-member ProfileDataOptions::property::seriesField = optional seriesField: string | undefined
 interface-member ProfileDiff::property::added = required added: readonly string[]
@@ -1506,6 +1553,12 @@ interface-member ProfileDiff::property::rowCountChange = required rowCountChange
 interface-member ProfileDiff::property::typeChanges = required typeChanges: readonly FieldTypeChange[]
 interface-member ProfileDiff::property::unchanged = required unchanged: boolean
 interface-member ProfileNumericFieldsOptions::property::quantiles = optional readonly quantiles: boolean | undefined
+interface-member ProfilePrimaryFields::property::category = optional category: string | undefined
+interface-member ProfilePrimaryFields::property::series = optional series: string | undefined
+interface-member ProfilePrimaryFields::property::size = optional size: string | undefined
+interface-member ProfilePrimaryFields::property::time = optional time: string | undefined
+interface-member ProfilePrimaryFields::property::x = optional x: string | undefined
+interface-member ProfilePrimaryFields::property::y = optional y: string | undefined
 interface-member ProposalRefusedEvent::property::alternatives = optional alternatives: string[] | undefined
 interface-member ProposalRefusedEvent::property::codes = required codes: string[]
 interface-member ProposalRefusedEvent::property::component = optional component: string | undefined
@@ -1570,12 +1623,12 @@ interface-member RepairOptions::property::maxAlternatives = optional maxAlternat
 interface-member RepairOptions::property::observedSceneAudit = optional observedSceneAudit: ObservedSceneAuditResult | undefined
 interface-member RepairOptions::property::profile = optional profile: ChartDataProfile | undefined
 interface-member RepairOptions::property::props = optional props: Datum | undefined
-interface-member RepairOptions::property::rawInput = optional rawInput: unknown
 interface-member RepairUnknownResult::property::alternatives = required alternatives: Suggestion[]
 interface-member RepairUnknownResult::property::component = required component: string
 interface-member RepairUnknownResult::property::profile = required profile: ChartDataProfile
 interface-member RepairUnknownResult::property::repairs = optional repairs: string[] | undefined
 interface-member RepairUnknownResult::property::status = required status: "unknown"
+interface-member ReprofileFieldsOptions::property::primary = optional primary: Partial<ProfilePrimaryFields> | undefined
 interface-member ResolvedMobileInteractionConfig::property::brushHandleSize = required brushHandleSize: number
 interface-member ResolvedMobileInteractionConfig::property::clearSelection = required clearSelection: MobileClearSelectionBehavior
 interface-member ResolvedMobileInteractionConfig::property::enabled = required enabled: boolean
@@ -1620,6 +1673,13 @@ interface-member ScaledSuggestionGroups::property::large = required large: Sugge
 interface-member ScaledSuggestionGroups::property::medium = required medium: Suggestion[]
 interface-member ScaledSuggestionGroups::property::small = required small: Suggestion[]
 interface-member ScaledSuggestionGroups::property::tiny = required tiny: Suggestion[]
+interface-member ScoreChartOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member ScoreChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member ScoreChartOptions::property::portability = optional portability: "local" | "portable" | undefined
+interface-member ScoreChartOptions::property::profile = optional profile: ChartDataProfile | undefined
+interface-member ScoreChartOptions::property::receptionChannel = optional receptionChannel: ReceptionModality | undefined
+interface-member ScoreChartOptions::property::riskTolerance = optional riskTolerance: "high" | "low" | "medium" | undefined
+interface-member ScoreChartOptions::property::variantKey = optional variantKey: string | undefined
 interface-member ScorecardFixture::property::data = required data: readonly Datum[]
 interface-member ScorecardFixture::property::expected = optional expected: readonly string[] | undefined
 interface-member ScorecardFixture::property::expectsNoFit = optional expectsNoFit: boolean | undefined
@@ -1634,6 +1694,22 @@ interface-member SelectionEndObservation::property::selection = required selecti
 interface-member SelectionEndObservation::property::type = required type: "selection-end"
 interface-member SelectionObservation::property::selection = required selection: {name: string; fields: Datum;}
 interface-member SelectionObservation::property::type = required type: "selection"
+interface-member SemanticRenderEvidence::property::categories = optional readonly categories: readonly string[] | undefined
+interface-member SemanticRenderEvidence::property::component = required readonly component: string
+interface-member SemanticRenderEvidence::property::edgeCount = optional readonly edgeCount: number | undefined
+interface-member SemanticRenderEvidence::property::empty = required readonly empty: boolean
+interface-member SemanticRenderEvidence::property::frameType = required readonly frameType: "geo" | "network" | "ordinal" | "physics" | "value" | "xy"
+interface-member SemanticRenderEvidence::property::markCount = required readonly markCount: number
+interface-member SemanticRenderEvidence::property::markCountByType = required readonly markCountByType: Readonly<Record<string, number>>
+interface-member SemanticRenderEvidence::property::nodeCount = optional readonly nodeCount: number | undefined
+interface-member SemanticRenderEvidence::property::xDomain = optional readonly xDomain: readonly [number, number] | undefined
+interface-member SemanticRenderEvidence::property::yDomain = optional readonly yDomain: readonly [number, number] | undefined
+interface-member SemanticViabilityDiagnostic::property::code = required readonly code: string
+interface-member SemanticViabilityDiagnostic::property::fix = optional readonly fix: string | undefined
+interface-member SemanticViabilityDiagnostic::property::message = required readonly message: string
+interface-member SemanticViabilityDiagnostic::property::metrics = optional readonly metrics: Readonly<Record<string, boolean | number | string>> | undefined
+interface-member SemanticViabilityDiagnostic::property::severity = required readonly severity: "error" | "warning"
+interface-member SemanticViabilityRule::property::kind = required readonly kind: "rank-competition"
 interface-member SerializedSelection::property::clauses = required clauses: {clientId: string; type: "interval" | "point"; fields: Record<string, SerializedFieldSelection>;}[]
 interface-member SerializedSelection::property::name = required name: string
 interface-member SerializedSelection::property::resolution = required resolution: "crossfilter" | "intersect" | "union"
@@ -1729,7 +1805,6 @@ interface-member SuggestDashboardOptions::property::intents = optional intents: 
 interface-member SuggestDashboardOptions::property::maxPanels = optional maxPanels: number | undefined
 interface-member SuggestDashboardOptions::property::maxStretchPanels = optional maxStretchPanels: number | undefined
 interface-member SuggestDashboardOptions::property::profile = optional profile: ChartDataProfile | undefined
-interface-member SuggestDashboardOptions::property::rawInput = optional rawInput: unknown
 interface-member SuggestStreamChartsOptions::property::allow = optional allow: readonly string[] | undefined
 interface-member SuggestStreamChartsOptions::property::capabilities = optional capabilities: readonly StreamChartCapability[] | undefined
 interface-member SuggestStreamChartsOptions::property::deny = optional deny: readonly string[] | undefined
@@ -1742,7 +1817,6 @@ interface-member SuggestStretchChartsOptions::property::deny = optional deny: re
 interface-member SuggestStretchChartsOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member SuggestStretchChartsOptions::property::maxResults = optional maxResults: number | undefined
 interface-member SuggestStretchChartsOptions::property::profile = optional profile: ChartDataProfile | undefined
-interface-member SuggestStretchChartsOptions::property::rawInput = optional rawInput: unknown
 interface-member SuggestStretchChartsOptions::property::scoreTolerance = optional scoreTolerance: number | undefined
 interface-member SuggestTokenEncodingInput::property::audience = optional audience: "expert" | "general-public" | "internal" | undefined
 interface-member SuggestTokenEncodingInput::property::availableSpace = optional availableSpace: "large" | "medium" | "small" | undefined
@@ -1757,6 +1831,7 @@ interface-member Suggestion::property::displayName = required displayName: strin
 interface-member Suggestion::property::family = required family: ChartFamily
 interface-member Suggestion::property::importPath = required importPath: ChartImportPath
 interface-member Suggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
+interface-member Suggestion::property::propContract = required propContract: SuggestionPropContract
 interface-member Suggestion::property::props = required props: Record<string, unknown>
 interface-member Suggestion::property::reasons = required reasons: readonly string[]
 interface-member Suggestion::property::recipeId = optional recipeId: string | undefined
@@ -1769,6 +1844,10 @@ interface-member SuggestionChosenEvent::property::component = required component
 interface-member SuggestionChosenEvent::property::rank = optional rank: number | undefined
 interface-member SuggestionChosenEvent::property::source = optional source: "agent" | "auto" | "user" | undefined
 interface-member SuggestionChosenEvent::property::type = required type: "suggestion-chosen"
+interface-member SuggestionPropContract::property::commonChartProps = required readonly commonChartProps: "component-specific" | "supported"
+interface-member SuggestionPropContract::property::componentKind = required readonly componentKind: "chart-hoc" | "value-component"
+interface-member SuggestionPropContract::property::headingProp = required readonly headingProp: string
+interface-member SuggestionPropContract::property::modeValues = required readonly modeValues: readonly string[]
 interface-member SuggestionScaleRange::property::band = required band: ScaleBand
 interface-member SuggestionScaleRange::property::cardinalityBand = optional cardinalityBand: CardinalityBand | undefined
 interface-member SuggestionScaleRange::property::rows = required rows: number
@@ -2030,6 +2109,7 @@ type FieldSummary = CategoricalFieldSummary | DateFieldSummary | NumericFieldSum
 type FieldType = "categorical" | "date" | "numeric" | "unknown"
 type FitResult = null | string
 type IntentDefinition = IntentId | {/** Canonical intent id. `name` is accepted as an author-friendly alias. */ id?: IntentId; name?: IntentId; strength?: "primary" | "secondary" | "supporting"; score?: number; rationale?: string;}
+type IntentFieldKind = "boolean" | "categorical" | "date" | "numeric" | "unknown"
 type IntentId = (string & {}) | BuiltInIntentId
 type IntentScorer = ((profile: ChartDataProfile) => number) | number
 type InterrogationQuery = (query: string, context: InterrogationContext) => Promise<InterrogationResult>
@@ -2047,6 +2127,7 @@ type MobileStandardControlRequest = MobileStandardControlsMode
 type MobileStandardControlsMode = "all" | MobileStandardControlKind | MobileStandardControlKind[] | boolean
 type NavTreeRole = "annotation" | "axis" | "chart" | "datum" | "series"
 type NavigationStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => NavTreeNode
+type NormalizedProfileFieldRoles = Readonly<Record<string, ReadonlyArray<ProfileFieldRole>>>
 type NumericFieldRole = "close" | "count" | "high" | "low" | "lower" | "opacity" | "open" | "size" | "time" | "upper" | "value" | "x" | "y" | (string & {})
 type NumericRequirement = "finite" | "integer" | "non-negative" | "positive" | "unit-interval"
 type ObservationInputType = "keyboard" | "navigation-tree" | "pointer" | "touch"
@@ -2054,6 +2135,9 @@ type ObservedAuditStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn
 type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
 type OnObservationCallback = (observation: ChartObservation) => void
 type PrimaryRole = "category" | "series" | "size" | "time" | "x" | "y"
+type ProfileFieldRole = "category" | "dimension" | "identifier" | "ignore" | "measure" | "series" | "size" | "temporal" | "time" | "x" | "y"
+type ProfileFieldRoleHint = ProfileFieldRole | ReadonlyArray<ProfileFieldRole>
+type ProfileFieldRoleHints = Readonly<Record<string, ProfileFieldRoleHint>>
 type ProposeVariantFn = (component: string, capability: ChartCapability, context: VariantDiscoveryContext) => ReadonlyArray<VariantProposal>
 type QualityFitFn = (profile: ChartDataProfile, quality: DataQualityProfile) => ScaleFitResult | null
 type ReceptionModality = "agent" | "screen-reader" | "sonified" | "visual"
@@ -2062,6 +2146,8 @@ type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResu
 type ResponsiveOrientation = "landscape" | "portrait"
 type ScaleBand = "huge" | "large" | "medium" | "small" | "tiny"
 type ScaleFitFn = (profile: ChartDataProfile, effective: EffectiveScale, scale: DataScaleProfile | undefined) => ScaleFitResult | null
+type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
+type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 type SerializableSchema = Record<string, unknown>
 type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}
 type SerializedSelections = Record<string, SerializedSelection>

@@ -46,7 +46,6 @@ export type {
   ProcessSankeyTick
 } from "./ProcessSankeyProps"
 
-type MarginSide = "top" | "right" | "bottom" | "left"
 type TimeLike = ProcessSankeyTimeLike
 
 
@@ -320,32 +319,16 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
   })
 
   const legendActive = (showLegend ?? !!colorBy) && !!colorBy
-  const userMarginSet = useCallback(
-    (side: MarginSide): boolean => {
-      if (userMargin == null) return false
-      if (typeof userMargin === "number") return true
-      return (userMargin as Partial<Record<MarginSide, number>>)[side] != null
-    },
-    [userMargin]
-  )
   const margin = useMemo(() => {
     const merged = { ...setup.margin }
     if (legendActive) {
-      if (
-        legendPosition === "right" &&
-        !userMarginSet("right") &&
-        merged.right < 140
-      )
-        merged.right = 140
-      else if (
-        legendPosition === "bottom" &&
-        !userMarginSet("bottom") &&
-        merged.bottom < 80
-      )
-        merged.bottom = 80
+      if (legendPosition === "right" && merged.right < 140) merged.right = 140
+      else if (legendPosition === "left" && merged.left < 140) merged.left = 140
+      else if (legendPosition === "top" && merged.top < 50) merged.top = 50
+      else if (legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
     }
     return merged
-  }, [setup.margin, legendActive, legendPosition, userMarginSet])
+  }, [setup.margin, legendActive, legendPosition])
 
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom

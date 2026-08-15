@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { profileData } from "./profileData"
+import { profileData, type ProfileDataOptions } from "./profileData"
 import { suggestCharts } from "./suggestCharts"
 import { suggestStretchCharts, type StretchSuggestion } from "./suggestStretchCharts"
 import type { ChartDataProfile, Suggestion } from "./chartCapabilityTypes"
@@ -36,7 +36,7 @@ export interface DashboardSuggestion {
   profile: ChartDataProfile
 }
 
-export interface SuggestDashboardOptions {
+export interface SuggestDashboardOptions extends ProfileDataOptions {
   /**
    * Intents to attempt. When omitted, the engine picks a sensible default set
    * based on the data shape (e.g. if `hasTimeAxis`, include "trend"; if
@@ -56,8 +56,6 @@ export interface SuggestDashboardOptions {
   deny?: ReadonlyArray<string>
   /** Optional pre-built profile (avoids recomputation). */
   profile?: ChartDataProfile
-  /** Non-tabular payload — forwarded to profileData. */
-  rawInput?: unknown
   /**
    * Audience profile — applies familiarity overrides and adoption-target bias
    * to every panel's ranking. When set with `exposureLevel >= 1`, the dashboard
@@ -140,7 +138,7 @@ export function suggestDashboard(
   data: ReadonlyArray<Datum> | null | undefined,
   options: SuggestDashboardOptions = {},
 ): DashboardSuggestion {
-  const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput })
+  const profile = options.profile ?? profileData(data ?? [], options)
   const maxPanels = options.maxPanels ?? 6
   const diversify = options.diversifyByFamily !== false
   const intents = options.intents ?? defaultIntents(profile)

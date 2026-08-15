@@ -1,6 +1,6 @@
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import * as ReactDOMServer from "react-dom/server.edge"
 import type {
   NetworkPipelineConfig,
   RealtimeNode,

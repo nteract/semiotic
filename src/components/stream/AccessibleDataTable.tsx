@@ -2,6 +2,7 @@
 import * as React from "react"
 import { useDataSummary } from "../DataSummaryContext"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
+import type { AccessibleTableProp } from "./accessibleTableTypes"
 import {
   extractAllRows,
   type AccessibleSceneNode as AnySceneNode,
@@ -14,10 +15,27 @@ import {
   formatSummary,
   type NetworkTableElement,
 } from "./accessibleDataTableModel"
-
+export type { AccessibleTableOptions, AccessibleTablePortalTarget, AccessibleTableProp } from "./accessibleTableTypes"
 export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
 export { AriaLiveTooltip, SR_ONLY_STYLE } from "./AriaLiveTooltip"
+
+const AccessibleTablePortalImpl = React.lazy(() => import("./AccessibleTablePortalImpl"))
+
+/** Relocate the complete interactive accessible-table UI when a chart lives
+ * inside a consumer-owned `role="img"`. The historical inline DOM remains
+ * unchanged for `accessibleTable={true}`. */
+export function AccessibleTablePortal({
+  accessibleTable,
+  children
+}: {
+  accessibleTable: AccessibleTableProp
+  children: React.ReactNode
+}) {
+  if (typeof accessibleTable !== "object") return children
+  if (typeof document === "undefined") return null
+  return <React.Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></React.Suspense>
+}
 
 // ── Aria-label helpers ──────────────────────────────────────────────────
 

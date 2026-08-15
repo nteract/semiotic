@@ -2,8 +2,17 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { summarizeData, type FieldSummary } from "../data/DataSummarizer"
 import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabilityTypes"
 import { profileNumericFields } from "../data/auditData"
+import { deriveProfileFields } from "./deriveProfileFields"
+import {
+  fieldRoleCandidateMatch,
+  identifierFields,
+  normalizeProfileFieldRoles,
+  PROFILE_X_FIELD_HINT,
+  type CandidateFieldRole,
+  type NormalizedProfileFieldRoles,
+  type ProfileFieldRoleHints,
+} from "./fieldRoles"
 
-const X_FIELD_HINT = /^(x|index|rank|order|step|sequence|year|quarter|qtr|fiscal|month|week|day|date|time|timestamp)$/i
 const Y_FIELD_HINT = /^(y|value|amount|total|count|revenue|sales|price|score|rate|population|measure)$/i
 const SIZE_FIELD_HINT = /(size|magnitude|volume|weight|count|amount)/i
 const CATEGORY_FIELD_HINT = /^(category|label|name|type|group|region|segment|kind|class)$/i
@@ -44,14 +53,24 @@ function rankCandidates(
   data: ReadonlyArray<Datum>,
   allowed: Set<FieldKind>,
   hint: RegExp,
+  candidateRole: CandidateFieldRole,
+  fieldRoles: NormalizedProfileFieldRoles,
   options: { computeMonotonic?: boolean } = {}
 ): FieldCandidate[] {
   const out: FieldCandidate[] = []
   for (const [field, summary] of Object.entries(fields)) {
     const kind = fieldKindFromSummary(summary)
-    if (!allowed.has(kind)) continue
+    const roleMatch = fieldRoleCandidateMatch(
+      fieldRoles,
+      field,
+      candidateRole,
+      allowed.has(kind),
+    )
+    if (roleMatch === 0) continue
+    const hinted = roleMatch === 2
     let quality = 0.5
     quality += nameBonus(field, hint)
+    if (hinted) quality += 0.35
 
     let distinctCount: number | undefined
     if (summary.type === "categorical") {
@@ -70,6 +89,7 @@ function rankCandidates(
       kind,
       quality: Math.max(0, Math.min(1, quality)),
       distinctCount,
+      ...(hinted ? { hinted: true } : {}),
     }
     if (options.computeMonotonic && (kind === "numeric" || kind === "date")) {
       candidate.monotonic = monotonic(data, field)
@@ -79,28 +99,6 @@ function rankCandidates(
   }
   out.sort((a, b) => b.quality - a.quality)
   return out
-}
-
-function distinct(data: ReadonlyArray<Datum>, field: string): number {
-  const seen = new Set<string>()
-  for (let i = 0; i < data.length; i++) {
-    const v = data[i]?.[field]
-    if (v == null) continue
-    seen.add(String(v))
-  }
-  return seen.size
-}
-
-function hasRepeatedField(data: ReadonlyArray<Datum>, field: string): boolean {
-  const seen = new Set<string>()
-  for (let i = 0; i < data.length; i++) {
-    const v = data[i]?.[field]
-    if (v == null) continue
-    const key = String(v)
-    if (seen.has(key)) return true
-    seen.add(key)
-  }
-  return false
 }
 
 interface InferStructure {
@@ -243,6 +241,16 @@ export interface ProfileDataOptions {
   rawInput?: unknown
   /** Override the field used as the primary series, useful when the heuristic guesses wrong. */
   seriesField?: string
+  /**
+   * Fields that identify records rather than encode values. Identifier fields
+   * are excluded from every x/y/size/category/series/time candidate list.
+   */
+  identifiers?: ReadonlyArray<string>
+  /**
+   * Per-field semantic or exact encoding roles. `identifier` and `ignore`
+   * always take precedence; exact roles boost that candidate deterministically.
+   */
+  fieldRoles?: ProfileFieldRoleHints
 }
 
 /**
@@ -259,6 +267,11 @@ export function profileData(
   const summary = summarizeData(data ?? [])
   const rows: ReadonlyArray<Datum> = Array.isArray(data) ? data : []
   const structure = inferStructure(options.rawInput)
+  const fieldRoles = normalizeProfileFieldRoles(
+    options.fieldRoles,
+    options.identifiers,
+    options.seriesField,
+  )
 
   // Transition-event detection: a flat array of rows with source/target fields
   // is conceptually a network even though there's no {nodes, edges} payload.
@@ -273,69 +286,65 @@ export function profileData(
     }
   }
 
-  const xCandidates = rankCandidates(summary.fields, rows, NUMERIC_OR_TIME_FOR_X, X_FIELD_HINT, { computeMonotonic: true })
-  const yCandidates = rankCandidates(summary.fields, rows, NUMERIC_FOR_Y, Y_FIELD_HINT)
-  const sizeCandidates = rankCandidates(summary.fields, rows, NUMERIC_LIKE_FOR_SIZE, SIZE_FIELD_HINT)
-  const categoryCandidates = rankCandidates(summary.fields, rows, CATEGORICAL_LIKE, CATEGORY_FIELD_HINT)
-  const seriesCandidates = rankCandidates(summary.fields, rows, CATEGORICAL_LIKE, SERIES_FIELD_HINT)
-  const timeCandidates = rankCandidates(summary.fields, rows, DATE_FOR_TIME, /(date|time|timestamp)/i, { computeMonotonic: true })
-
-  // x assignment proceeds in three tiers, each tagged so downstream logic
-  // can tell *how confident* we are that x is meaningful:
-  //   • "time"   — there's a date/time field; almost certainly the x axis
-  //   • "named"  — a numeric named like "month", "rank", "year"; high confidence
-  //   • "scatter"— two+ numerics with no x-name signal; we pick one as a fallback
-  // The category/series disambiguation later uses this — when x is a scatter
-  // fallback, the lone categorical is more useful as `category` than `series`.
-  const time = timeCandidates[0]?.field
-  let x: string | undefined = time
-  let xProvenance: "time" | "named" | "scatter" | "none" = time ? "time" : "none"
-  if (!x) {
-    const xNamed = xCandidates.find((c) => X_FIELD_HINT.test(c.field) && c.kind === "numeric")
-    if (xNamed) {
-      x = xNamed.field
-      xProvenance = "named"
-    }
+  const xCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    NUMERIC_OR_TIME_FOR_X,
+    PROFILE_X_FIELD_HINT,
+    "x",
+    fieldRoles,
+    { computeMonotonic: true },
+  )
+  const yCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    NUMERIC_FOR_Y,
+    Y_FIELD_HINT,
+    "y",
+    fieldRoles,
+  )
+  const sizeCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    NUMERIC_LIKE_FOR_SIZE,
+    SIZE_FIELD_HINT,
+    "size",
+    fieldRoles,
+  )
+  const categoryCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    CATEGORICAL_LIKE,
+    CATEGORY_FIELD_HINT,
+    "category",
+    fieldRoles,
+  )
+  const seriesCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    CATEGORICAL_LIKE,
+    SERIES_FIELD_HINT,
+    "series",
+    fieldRoles,
+  )
+  const timeCandidates = rankCandidates(
+    summary.fields,
+    rows,
+    DATE_FOR_TIME,
+    /(date|time|timestamp)/i,
+    "time",
+    fieldRoles,
+    { computeMonotonic: true },
+  )
+  const candidates = {
+    x: xCandidates,
+    y: yCandidates,
+    size: sizeCandidates,
+    category: categoryCandidates,
+    series: seriesCandidates,
+    time: timeCandidates,
   }
-
-  // y: best numeric that isn't already x
-  const y: string | undefined = yCandidates.find((c) => c.field !== x)?.field
-
-  // Scatter pattern: two+ numerics, no time-or-named x.
-  if (!x && y) {
-    const numericFields = Object.entries(summary.fields)
-      .filter(([_, s]) => s.type === "numeric")
-      .map(([k]) => k)
-    if (numericFields.length >= 2) {
-      x = numericFields.find((f) => f !== y)
-      if (x) xProvenance = "scatter"
-    }
-  }
-
-  const size = sizeCandidates.find((c) => c.field !== x && c.field !== y)?.field
-
-  // Category vs. series disambiguation.
-  //   • Strong x (time/named): the lone categorical is the series (lineBy / stackBy).
-  //   • Scatter-fallback x or no x: the lone categorical is the category — that's
-  //     what enables BoxPlot/ViolinPlot/SwarmPlot on data like {id, value, cohort}.
-  const strongX = xProvenance === "time" || xProvenance === "named"
-  const categoricalList = categoryCandidates.map((c) => c.field)
-  let category: string | undefined
-  let series: string | undefined
-  if (strongX) {
-    series = options.seriesField ?? categoricalList[0]
-    category = categoricalList.find((f) => f !== series)
-  } else {
-    category = categoricalList[0]
-    series = options.seriesField ?? categoricalList.find((f) => f !== category)
-  }
-
-  const categoryCount = category ? distinct(rows, category) : undefined
-  const seriesCount = series ? distinct(rows, series) : undefined
-  const uniqueXCount = x ? distinct(rows, x) : undefined
-  const hasRepeatedX = x ? hasRepeatedField(rows, x) : false
-  const monotonicX = xCandidates.find((c) => c.field === x)?.monotonic ?? false
-  const hasTimeAxis = timeCandidates.length > 0
+  const derived = deriveProfileFields(rows, candidates, fieldRoles)
 
   return {
     ...summary,
@@ -344,25 +353,13 @@ export function profileData(
     // keeps its second scan linear here; callers that need exact quartiles can
     // request them directly from profileNumericFields().
     numericFields: profileNumericFields(rows, { quantiles: false }),
-    candidates: {
-      x: xCandidates,
-      y: yCandidates,
-      size: sizeCandidates,
-      category: categoryCandidates,
-      series: seriesCandidates,
-      time: timeCandidates,
-    },
-    primary: { x, y, size, category, series, time },
-    categoryCount,
-    seriesCount,
-    uniqueXCount,
-    hasRepeatedX,
-    monotonicX,
-    hasTimeAxis,
+    fieldRoles,
+    identifiers: identifierFields(fieldRoles),
+    candidates,
+    ...derived,
     hasHierarchy: structure.hasHierarchy,
     hasNetwork: structure.hasNetwork,
     hasGeo: structure.hasGeo,
-    xProvenance,
     network: structure.network,
     hierarchy: structure.hierarchy,
     geo: structure.geo,

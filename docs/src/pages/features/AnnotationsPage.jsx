@@ -384,6 +384,50 @@ export default function AnnotationsPage() {
         lines, and bands work without a <code>frameProps</code> wrapper.
       </p>
 
+      <h2 id="frame-text">Plot-relative text</h2>
+
+      <p>
+        Use <code>frame-text</code> for labels that belong to the chart but not
+        to a data point: compact-axis endpoints, a quota caption, or other
+        chart-adjacent text. Its <code>position</code> anchors to the resolved
+        plot rectangle, and pixel <code>dx</code>/<code>dy</code> offsets can move
+        it into a reserved margin. Because the annotation is plain data, the
+        same definition works in a live chart, <code>renderChart()</code>, and
+        MCP-rendered SVG without string post-processing.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: barData,
+          categoryAccessor: "product",
+          valueAccessor: "units",
+          height: 220,
+          margin: { bottom: 36 },
+          showCategoryTicks: false,
+          annotations: [
+            { type: "frame-text", text: "0", position: "bottom-left", dy: 18 },
+            { type: "frame-text", text: "700 units", position: "bottom-right", dy: 18 },
+          ],
+        }}
+        type={BarChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { product: "Alpha", units: 450 },
+  { product: "Beta", units: 380 },
+  { product: "Gamma", units: 520 },
+  { product: "Delta", units: 290 },
+  { product: "Epsilon", units: 610 }
+]`,
+          margin: `{ bottom: 36 }`,
+          annotations: `[
+  { type: "frame-text", text: "0", position: "bottom-left", dy: 18 },
+  { type: "frame-text", text: "700 units", position: "bottom-right", dy: 18 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Thresholds */}
       {/* ----------------------------------------------------------------- */}

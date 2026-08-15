@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import * as ReactDOMServer from "react-dom/server.edge"
 import { xySceneNodeToSVG } from "../SceneToSVG"
 import { withSceneMarkCursor } from "../sceneCursor"
 import type { Style } from "../types"

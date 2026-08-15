@@ -351,6 +351,8 @@ export type {
   MobileInteractionConfig,
   MobileInteractionProp,
   ResolvedMobileInteractionConfig,
+  FrameTextAnnotation,
+  FrameTextPosition,
   ResponsiveOrientation,
   ResponsiveRuleCondition,
   ResponsiveRuleContext,

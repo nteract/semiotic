@@ -432,43 +432,24 @@ describe("diagnoseConfig", () => {
     expect(diag.severity).toBe("warning")
   })
 
-  it("detects bottom legend with insufficient margin", () => {
+  it("does not warn when a bottom legend grows a numeric margin minimum", () => {
     const result = diagnoseConfig("LineChart", {
       data: [{ x: 1, y: 2 }],
       legendPosition: "bottom",
       margin: { bottom: 40 }
     })
     const codes = result.diagnoses.map((d) => d.code)
-    expect(codes).toContain("BOTTOM_MARGIN_WITH_LEGEND")
-    const diag = result.diagnoses.find(
-      (d) => d.code === "BOTTOM_MARGIN_WITH_LEGEND"
-    )!
-    expect(diag.severity).toBe("warning")
+    expect(codes).not.toContain("BOTTOM_MARGIN_WITH_LEGEND")
   })
 
-  it("detects tight legend margin", () => {
+  it("does not warn when a side legend grows a numeric margin minimum", () => {
     const result = diagnoseConfig("LineChart", {
       data: [{ x: 1, y: 2 }],
       showLegend: true,
       margin: { right: 50 }
     })
     const codes = result.diagnoses.map((d) => d.code)
-    expect(codes).toContain("LEGEND_MARGIN_TIGHT")
-    const diag = result.diagnoses.find((d) => d.code === "LEGEND_MARGIN_TIGHT")!
-    expect(diag.severity).toBe("warning")
-    expect(diag.fix).toContain('right: "auto"')
-  })
-
-  it("detects a tight authoritative left legend margin", () => {
-    const result = diagnoseConfig("LineChart", {
-      data: [{ x: 1, y: 2 }],
-      showLegend: true,
-      legendPosition: "left",
-      margin: { left: 50 }
-    })
-    const diag = result.diagnoses.find((d) => d.code === "LEGEND_MARGIN_TIGHT")!
-    expect(diag.message).toContain("authoritative margin.left=50px")
-    expect(diag.fix).toContain('left: "auto"')
+    expect(codes).not.toContain("LEGEND_MARGIN_TIGHT")
   })
 
   it("warns about function accessors", () => {

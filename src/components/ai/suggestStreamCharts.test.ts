@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { suggestStreamCharts, registerStreamChartCapability, unregisterStreamChartCapability } from "./suggestStreamCharts"
 import type { StreamSchema, StreamChartCapability } from "./streamingTypes"
+import { registerIntent } from "./intents"
 
 const latencyStream: StreamSchema = {
   fields: [
@@ -94,5 +95,21 @@ describe("suggestStreamCharts", () => {
     } finally {
       unregisterStreamChartCapability("MyStreamChart")
     }
+  })
+
+  it("composes registered intent scores for stream capabilities", () => {
+    registerIntent({
+      id: "stream-momentum-test",
+      label: "Stream momentum",
+      description: "Track sustained trends and abrupt changes.",
+      composes: ["trend", "change-detection"],
+    })
+
+    const [line] = suggestStreamCharts(latencyStream, {
+      allow: ["RealtimeLineChart"],
+      intent: "stream-momentum-test",
+    })
+    expect(line.score).toBe(4.5)
+    expect(line.intentScores["stream-momentum-test"]).toBe(4.5)
   })
 })

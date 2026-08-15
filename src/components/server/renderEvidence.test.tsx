@@ -57,6 +57,33 @@ describe("renderChartWithEvidence", () => {
     expect(evidence.warnings).toEqual([])
   })
 
+  it("reports a painted BumpChart with no rank competition as degenerate", () => {
+    const { evidence } = renderChartWithEvidence("BumpChart", {
+      data: [
+        { period: "Q1", service: "alpha", throughput: 10 },
+        { period: "Q2", service: "alpha", throughput: 15 },
+        { period: "Q3", service: "alpha", throughput: 8 },
+        { period: "Q4", service: "alpha", throughput: 18 },
+      ],
+      xAccessor: "period",
+      yAccessor: "throughput",
+      lineBy: "service",
+      showPoints: true,
+      showLabels: false,
+    })
+
+    expect(evidence.status).toBe("ok")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCount).toBeGreaterThan(0)
+    expect(evidence.semanticStatus).toBe("degenerate")
+    expect(evidence.semanticDiagnostics).toEqual([
+      expect.objectContaining({
+        code: "BUMP_NO_RANK_COMPETITION",
+        severity: "error",
+      }),
+    ])
+  })
+
   it("reports an empty render honestly", () => {
     const { svg, evidence } = renderChartWithEvidence("LineChart", {
       data: [],

@@ -30,6 +30,7 @@ import type {
 } from "../charts/shared/semanticInteractions"
 import type { OnAnnotationActivateCallback } from "../charts/shared/annotationActivation"
 import type { GradientConfig, GradientInput } from "../charts/shared/gradient"
+import type { AccessibleTableProp } from "./accessibleTableTypes"
 
 // ── Chart types ────────────────────────────────────────────────────────
 
@@ -597,7 +598,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   /** Accessible description overriding the auto-generated aria-label on the chart container */
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */

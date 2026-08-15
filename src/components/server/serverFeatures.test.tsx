@@ -25,6 +25,7 @@ import {
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
   renderChart,
+  renderChartWithEvidence,
 } from "./renderToStaticSVG"
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -82,8 +83,8 @@ describe("DifferenceChart server layout", () => {
     expect(svg).toContain('class="semiotic-legend" transform="translate(317,50)"')
   })
 
-  it("does not overwrite an explicit legend-side margin and keeps the focus ring in bounds", () => {
-    const svg = renderChart("DifferenceChart", {
+  it("grows an explicit legend-side minimum and keeps the focus ring in bounds", () => {
+    const { svg, evidence } = renderChartWithEvidence("DifferenceChart", {
       data,
       xAccessor: "x",
       seriesAAccessor: "a",
@@ -93,6 +94,7 @@ describe("DifferenceChart server layout", () => {
       margin: { right: 64 },
     })
 
+    expect(evidence.margin?.right).toBeGreaterThan(64)
     expect(svg).toContain('class="semiotic-legend" transform="translate(317,50)"')
   })
 })

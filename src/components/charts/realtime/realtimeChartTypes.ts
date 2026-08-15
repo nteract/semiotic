@@ -3,6 +3,7 @@ import type { TooltipPropWithHoverCallback } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../stream/types"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
+import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 /** Accessibility metadata shared by the streaming chart wrappers. */
 export interface RealtimeAccessibilityProps {
@@ -13,7 +14,7 @@ export interface RealtimeAccessibilityProps {
   /** Screen-reader-only takeaway or interaction guidance. */
   summary?: string
   /** Expose the current streaming window as an accessible data table. @default true */
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
 }
 
 /**

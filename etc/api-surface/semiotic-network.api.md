@@ -484,7 +484,7 @@ interface-member StreamNetworkFrameHandle::method::removeEdge = required removeE
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
 interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamNetworkFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamNetworkFrameProps::property::background = optional background: string | undefined
 interface-member StreamNetworkFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<null>
@@ -670,6 +670,8 @@ interface-member UseForceLayoutResult::property::status = required status: Force
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type ForceLayoutStatus = "error" | "pending" | "ready"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type NetworkChartType = "chord" | "circlepack" | "cluster" | "force" | "orbit" | "partition" | "sankey" | "tree" | "treemap"
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult

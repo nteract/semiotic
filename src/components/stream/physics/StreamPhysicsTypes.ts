@@ -32,6 +32,7 @@ import type { PhysicsController } from "./PhysicsControllers"
 import type { PhysicsExecution } from "./PhysicsWorkerProtocol"
 import type { StreamPhysicsPopOptions } from "./physicsBodyCanvas"
 import type { PhysicsCanvasTheme } from "./PhysicsCanvasTheme"
+import type { AccessibleTableProp } from "../accessibleTableTypes"
 
 export interface PhysicsBodySelection {
   isActive?: boolean
@@ -238,7 +239,7 @@ export interface PhysicsCanvasPaintContext {
 }
 
 export interface StreamPhysicsFrameProps {
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   /**
    * Canvas fill. When set, overrides the theme background unless
    * `backgroundGraphics` already owns the backdrop. Pass `"transparent"`
