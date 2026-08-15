@@ -46,7 +46,7 @@ import {
   createPhysicsFrameStore,
   defaultPhysicsFrameClock
 } from "./physicsFrameSetup"
-import { renderPhysicsSettledSVG } from "./PhysicsSettledSVG"
+import { createPhysicsSettledSVG } from "./PhysicsSettledSVGElement"
 import type { PhysicsSettledBodyStyleContext } from "./PhysicsSettledScene"
 import { renderPhysicsSettledChrome } from "./physicsSettledChrome"
 import { composePhysicsControllers } from "./PhysicsControllers"
@@ -1377,7 +1377,7 @@ export const StreamPhysicsFrame = memo(
             stylePrimitives
           )
         }
-        const { svg } = renderPhysicsSettledSVG(store, {
+        const { element } = createPhysicsSettledSVG(store, {
           width: size[0],
           height: size[1],
           title: titleText,
@@ -1409,7 +1409,7 @@ export const StreamPhysicsFrame = memo(
             }}
           >
             <ScreenReaderSummary summary={summary} />
-            <div dangerouslySetInnerHTML={{ __html: svg }} />
+            {element}
           </div>
         )
       }

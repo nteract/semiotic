@@ -8,7 +8,7 @@ import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
  * staticGeo / staticPhysics; shared chrome in staticSVGChrome.
  */
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.edge"
+import * as ReactDOMServer from "react-dom/server.browser"
 import type { StreamXYFrameProps } from "../stream/types"
 import type { StreamNetworkFrameProps } from "../stream/networkTypes"
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"

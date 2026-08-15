@@ -1,6 +1,6 @@
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.edge"
+import * as ReactDOMServer from "react-dom/server.browser"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import type { StreamXYFrameProps } from "../stream/types"
 import { resolveThemeSemanticColors } from "../store/themeCore"

@@ -46,6 +46,25 @@ const componentMetadata = require("../../../ai/componentMetadata.cjs") as {
 }
 
 describe("Chart Spec Registry round-trip", () => {
+  it("accepts serializable frame-text annotations in generated schemas", () => {
+    const generated = generateSchemaToolEntry(
+      CHART_SPECS.LineChart,
+      composeProps(CHART_SPECS.LineChart)
+    )
+    const annotations = generated.function.parameters.properties.annotations as {
+      items: { properties: { type: { enum: string[] } } }
+    }
+    const canonical = schema.tools.find(
+      (tool) => tool.function.name === "LineChart"
+    )?.function.parameters.properties.annotations as unknown as {
+      items: { properties: { type: { enum: string[] } } }
+    }
+
+    expect(annotations.items.properties.type.enum).toContain("frame-text")
+    expect(canonical).toBeDefined()
+    expect(canonical?.items.properties.type.enum ?? []).toContain("frame-text")
+  })
+
   it("publishes Crucible's nested authored-program grammar without widening runtime validation", () => {
     const spec = CHART_SPECS.CrucibleChart
     const composed = composeProps(spec)

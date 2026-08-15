@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.edge"
+import * as ReactDOMServer from "react-dom/server.browser"
 
 import type { Datum } from "../charts/shared/datumTypes"
 import {

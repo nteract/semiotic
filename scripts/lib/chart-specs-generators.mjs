@@ -43,7 +43,7 @@ const ANNOTATIONS_PROP_SCHEMA = {
       type: {
         type: "string",
         enum: [
-          "widget", "label", "callout", "text", "bracket",
+          "widget", "label", "callout", "text", "frame-text", "bracket",
           "y-threshold", "x-threshold", "band",
           "enclose", "rect-enclose", "highlight",
           "trend", "envelope", "anomaly-band", "forecast",
