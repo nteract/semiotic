@@ -469,11 +469,11 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **133.2 KiB** |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
-| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **148.4 KiB** |
+| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **148.3 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **302.8 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **172.7 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **302.9 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **171.9 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **303.3 KiB** |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **236.6 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **37.9 KiB** |

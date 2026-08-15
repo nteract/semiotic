@@ -107,8 +107,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 453336,
-      "gzipBytes": 151931,
+      "rawBytes": 453233,
+      "gzipBytes": 151883,
       "packedPackageInputFiles": 10
     },
     {
@@ -134,8 +134,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 976558,
-      "gzipBytes": 310093,
+      "rawBytes": 976614,
+      "gzipBytes": 310139,
       "packedPackageInputFiles": 5
     },
     {
@@ -143,17 +143,17 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 548321,
-      "gzipBytes": 176810,
-      "packedPackageInputFiles": 11
+      "rawBytes": 548092,
+      "gzipBytes": 176016,
+      "packedPackageInputFiles": 3
     },
     {
       "exportKey": "./server/node",
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 977521,
-      "gzipBytes": 310588,
+      "rawBytes": 977577,
+      "gzipBytes": 310626,
       "packedPackageInputFiles": 5
     },
     {
