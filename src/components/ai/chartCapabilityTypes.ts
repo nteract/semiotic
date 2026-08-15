@@ -398,8 +398,12 @@ export interface Suggestion {
   caveats: ReadonlyArray<string>
   /** Ready-to-spread props. */
   props: Record<string, unknown>
-  /** Machine-readable rules for augmenting and rendering `props`. */
-  propContract: SuggestionPropContract
+  /**
+   * Machine-readable rules for augmenting and rendering `props`. Present on
+   * suggestions returned by current versions; optional for compatibility with
+   * the original public suggestion shape.
+   */
+  propContract?: SuggestionPropContract
   whyCustom?: WhyCustomExplanation
   /**
    * Scale tag — present when scale/quality information is available, either

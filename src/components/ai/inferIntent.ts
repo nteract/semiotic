@@ -143,8 +143,12 @@ export interface InferIntentResult {
   confidence: number
   /** Other plausible intents, sorted by confidence. */
   alternates: ReadonlyArray<{ intent: IntentId; confidence: number }>
-  /** Which inference channel supported the winning intent. */
-  source: "prose" | "field-name" | "data-shape" | "combined"
+  /**
+   * Which inference channel supported the winning intent. Present on results
+   * returned by current versions; optional for source compatibility with the
+   * original public result shape.
+   */
+  source?: "prose" | "field-name" | "data-shape" | "combined"
 }
 
 export interface InferIntentField {
