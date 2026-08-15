@@ -15,8 +15,12 @@ jobs:
     # committed Linux snapshots. A release tag must not bypass the PR visual
     # gate merely because npm publication uses a separate job.
     container: mcr.microsoft.com/playwright:v1.61.1-noble
+    # Firefox requires root's home in this container, but a bind-mounted
+    # Docker config beneath it may be unreadable. Visual tests do not use
+    # Docker, so isolate incidental Docker configuration lookups in /tmp.
     env:
       HOME: /root
+      DOCKER_CONFIG: /tmp/semiotic-docker-config
 
     steps:
       - name: Checkout tagged source

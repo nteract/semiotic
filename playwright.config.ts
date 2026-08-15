@@ -15,6 +15,21 @@ export default {
   // and update commands override this setting when a maintainer intends to
   // write proposed baselines.
   updateSnapshots: "none",
+  // CI's default dot reporter hides the active test and makes a slow tail look
+  // hung. Keep a named completion log plus GitHub failure annotations instead.
+  reporter: process.env.CI ? [["list"], ["github"]] : "list",
+  // Keep the existing resource-safe worker ceiling while allowing independent
+  // tests from a large spec to fill an idle worker. Specs with shared output
+  // opt into serial mode themselves.
+  fullyParallel: true,
+  // A healthy per-browser visual run takes under six minutes. This preserves
+  // ample cold-start headroom but turns a wedged suite into an actionable
+  // failure with artifacts rather than consuming the job's six-hour default.
+  globalTimeout: process.env.CI ? 20 * 60 * 1000 : undefined,
+  reportSlowTests: {
+    max: 10,
+    threshold: 15_000
+  },
   use: {
     headless: true, // Always run headless to avoid disrupting work
     screenshot: "on",

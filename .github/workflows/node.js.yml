@@ -319,8 +319,12 @@ jobs:
     # pwuser) while steps run as root. Firefox refuses to launch unless $HOME
     # is owned by the current user, so point it at root's own home. Chromium
     # and WebKit are unaffected; without this only Firefox fails to start.
+    # GitHub can bind an unreadable Docker config below that home. The visual
+    # test steps neither build nor pull images, so use a fresh writable config
+    # directory instead of emitting a misleading Docker permission warning.
     env:
       HOME: /root
+      DOCKER_CONFIG: /tmp/semiotic-docker-config
 
     steps:
       - name: Checkout source code
