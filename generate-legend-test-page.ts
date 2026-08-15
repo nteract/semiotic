@@ -8,7 +8,10 @@
 
 import * as fs from "fs"
 import * as path from "path"
-import { renderChart } from "./src/components/server/renderToStaticSVG"
+// Run static generation through the Node export. The source renderer uses the
+// browser-compatible React entry for edge bundles, which intentionally keeps a
+// MessagePort alive when evaluated directly by Node on React 19.
+import { renderChart } from "semiotic/server/node"
 
 const outDir = path.resolve(__dirname, "test-results")
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })

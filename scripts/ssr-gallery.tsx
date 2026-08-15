@@ -33,7 +33,7 @@ import {
   renderXYToStaticSVG,
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
-} from "../src/components/server/renderToStaticSVG"
+} from "semiotic/server/node"
 
 // ── Data ────────────────────────────────────────────────────────────────
 

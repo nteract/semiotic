@@ -4,7 +4,7 @@
  */
 import * as fs from "fs"
 import * as path from "path"
-import { renderChart } from "../src/components/server/renderToStaticSVG"
+import { renderChart } from "semiotic/server/node"
 
 const outDir = path.resolve(__dirname, "../test-results")
 fs.mkdirSync(outDir, { recursive: true })
