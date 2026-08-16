@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global console, process */
 /** Build or verify the immutable tarball/evidence set used by a release. */
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"

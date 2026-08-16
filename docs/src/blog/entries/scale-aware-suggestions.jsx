@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+
 import React, { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { suggestCharts, GaugeChart, StackedBarChart, Treemap } from "semiotic/ai"

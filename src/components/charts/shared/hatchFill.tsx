@@ -28,6 +28,8 @@ import * as React from "react"
 import { createHatchPattern } from "./hatchPattern"
 import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 
+type AnnotationGradientDirection = "horizontal" | "vertical"
+
 /**
  * A declarative diagonal-hatch fill. Assign it anywhere a `style.fill`
  * is accepted (`pieceStyle`, `styleRules`, annotation region `fill`).
@@ -198,4 +200,76 @@ export function resolveSvgFill(
   }
   if (!fill || typeof fill !== "string") return { fill: fallback }
   return { fill }
+}
+
+/**
+ * Resolve the serializable `gradient` option accepted by band annotations.
+ *
+ * Gradient stops deliberately share the familiar `{ offset: 0..1, color?,
+ * opacity? }` contract used by area and legend gradients. The annotation owns
+ * its direction: horizontal for an x-band and vertical for a y-band, unless
+ * callers explicitly select the other direction. Invalid JSON input simply
+ * falls through to the annotation's solid fill instead of breaking rendering.
+ */
+export function resolveAnnotationGradient(
+  gradient: unknown,
+  idBase: string,
+  defaultDirection: AnnotationGradientDirection,
+  fallback: string,
+): { fill: string; def: React.ReactElement } | undefined {
+  if (!gradient || typeof gradient !== "object") return undefined
+  const candidate = gradient as {
+    direction?: unknown
+    stops?: unknown
+  }
+  if (!Array.isArray(candidate.stops)) return undefined
+
+  const stops = candidate.stops
+    .flatMap((stop) => {
+      if (!stop || typeof stop !== "object") return []
+      const { offset, color, opacity } = stop as {
+        offset?: unknown
+        color?: unknown
+        opacity?: unknown
+      }
+      if (typeof offset !== "number" || !Number.isFinite(offset)) return []
+      return [{
+        offset: Math.max(0, Math.min(1, offset)),
+        color: typeof color === "string" && color ? color : fallback,
+        opacity: typeof opacity === "number" && Number.isFinite(opacity)
+          ? Math.max(0, Math.min(1, opacity))
+          : undefined,
+      }]
+    })
+    .sort((a, b) => a.offset - b.offset)
+  if (!stops.length) return undefined
+
+  const direction: AnnotationGradientDirection = candidate.direction === "horizontal"
+    ? "horizontal"
+    : candidate.direction === "vertical"
+      ? "vertical"
+      : defaultDirection
+  const id = `${idBase}-gradient`
+  return {
+    fill: `url(#${id})`,
+    def: (
+      <linearGradient
+        key={id}
+        id={id}
+        x1={0}
+        y1={0}
+        x2={direction === "horizontal" ? "100%" : 0}
+        y2={direction === "vertical" ? "100%" : 0}
+      >
+        {stops.map((stop, index) => (
+          <stop
+            key={`${stop.offset}-${index}`}
+            offset={`${stop.offset * 100}%`}
+            stopColor={stop.color}
+            stopOpacity={stop.opacity}
+          />
+        ))}
+      </linearGradient>
+    ),
+  }
 }

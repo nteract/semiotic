@@ -404,6 +404,14 @@ export default function ThemingPage() {
         You can also pass a custom theme object.
       </p>
 
+      <p>
+        For stable category-to-color assignments across several charts, pair a
+        theme with <code>CategoryColorProvider</code> from <code>semiotic</code>.
+        It intentionally is not re-exported from <code>semiotic/themes/react</code>:
+        that narrow entry contains only theme state, while category mapping also
+        brings the chart palette resolver.
+      </p>
+
       {/* ================================================================= */}
       {/* Quick Start */}
       {/* ================================================================= */}

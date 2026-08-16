@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { repairChartConfig } from "./repairChartConfig"
+import { registerChartCapability, unregisterChartCapability } from "./chartCapabilities"
 import { defineChartRecipe } from "./chartRecipes"
+import type { ChartCapability } from "./chartCapabilityTypes"
 import {
   registerChartRecipe,
   unregisterChartRecipe,
@@ -80,6 +82,42 @@ describe("repairChartConfig", () => {
       const top = result.alternatives[0]
       expect(top.props).toBeDefined()
       expect(top.props.data).toBeDefined()
+    }
+  })
+
+  it("deduplicates convergent repaired component/variant suggestions", () => {
+    const sharedVariant = {
+      key: "safe",
+      label: "Safe repair",
+      component: "SharedRepairChart",
+      props: {},
+    }
+    const capability = (component: string, trendScore: number): ChartCapability => ({
+      component,
+      family: "time-series",
+      importPath: "semiotic/xy",
+      rubric: { familiarity: 3, accuracy: 3, precision: 3 },
+      fits: () => null,
+      intentScores: { trend: trendScore },
+      variants: [sharedVariant],
+      buildProps: () => ({ data: temporal, xAccessor: "month", yAccessor: "revenue" }),
+    })
+    registerChartCapability(capability("RepairDuplicateOne", 5))
+    registerChartCapability(capability("RepairDuplicateTwo", 4))
+    try {
+      const result = repairChartConfig("NoRepairCapability", temporal, {
+        intent: "trend",
+        maxAlternatives: 100,
+      })
+      expect(result.status).toBe("unknown")
+      if (result.status === "unknown") {
+        expect(result.alternatives.filter((alternative) =>
+          alternative.component === "SharedRepairChart" && alternative.variant?.key === "safe",
+        )).toHaveLength(1)
+      }
+    } finally {
+      unregisterChartCapability("RepairDuplicateOne")
+      unregisterChartCapability("RepairDuplicateTwo")
     }
   })
 

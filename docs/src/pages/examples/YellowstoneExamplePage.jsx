@@ -262,7 +262,10 @@ export default function YellowstoneExamplePage() {
   const compact = width < 620
   const chartWidth = Math.max(300, Math.min(980, width))
   const chartHeight = compact ? 720 : 570
-  const plate = compact ? { width: 78, height: 54 } : { width: 96, height: 60 }
+  const plate = useMemo(
+    () => (compact ? { width: 78, height: 54 } : { width: 96, height: 60 }),
+    [compact],
+  )
   const activeNodes = useMemo(
     () => (detail === "full" ? ALL_NODES : CORE_NODES),
     [detail],

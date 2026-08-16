@@ -527,8 +527,10 @@ describe("AreaChart — semanticGradient SSR parity", () => {
       annotations: [{ type: "y-threshold", value: 90, label: "Critical", color: "#FF7077" }],
     })
     const label = svg.match(/<text[^>]*>Critical<\/text>/)?.[0] ?? ""
-    expect(label).toContain("stroke=")
-    expect(label).not.toContain('stroke="transparent"')
+    // React may serialize SVG presentation props either as attributes or as
+    // inline CSS. Both forms produce the required opaque text halo.
+    expect(label).toMatch(/(?:stroke=|stroke:)/)
+    expect(label).not.toMatch(/(?:stroke=|stroke:)\s*["']?transparent/)
   })
 })
 

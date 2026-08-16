@@ -55,6 +55,6 @@ export function useRafTween({ trigger, duration = 500, onStart, onFrame, ease = 
     requestAnimationFrame(step)
     return () => { tokenRef.current++ }
     // Callbacks are read through refs; only trigger/duration drive re-runs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [trigger, duration])
 }

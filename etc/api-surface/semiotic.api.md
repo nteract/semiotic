@@ -2850,6 +2850,7 @@ interface-member XYFrameAxisConfig::property::label = optional label: string | u
 interface-member XYFrameAxisConfig::property::landmarkTicks = optional landmarkTicks: ((Date | number | value: string, index: number) => boolean) | boolean | undefined
 interface-member XYFrameAxisConfig::property::orient = required orient: "bottom" | "left" | "right" | "top"
 interface-member XYFrameAxisConfig::property::tickAnchor = optional tickAnchor: "edges" | "middle" | undefined
+interface-member XYFrameAxisConfig::property::tickCount = optional tickCount: number | undefined
 interface-member XYFrameAxisConfig::property::tickFormat = optional tickFormat: ((Date | d: string | number, index?: number, allTicks?: number[]) => string | ReactNode) | undefined
 interface-member XYFrameAxisConfig::property::tickValues = optional tickValues: (Date | number)[] | undefined
 interface-member XYFrameAxisConfig::property::ticks = optional ticks: number | undefined

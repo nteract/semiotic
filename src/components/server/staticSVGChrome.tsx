@@ -33,6 +33,7 @@ import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { resolveAxisLineStyle, resolveGridDash } from "../stream/svgOverlayUtils"
+import { axisTickCount } from "../stream/axisTickUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   resolveAxisChromeGutter,
@@ -446,10 +447,10 @@ export function renderGridSVG(
       : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
   const xTicks =
     xAxis?.tickValues ??
-    ticksForMode(scales.x, xAxis?.ticks ?? xTickCount, xExtentMode)
+    ticksForMode(scales.x, axisTickCount(xAxis, xTickCount), xExtentMode)
   const yTicks =
     yAxis?.tickValues ??
-    ticksForMode(scales.y, yAxis?.ticks ?? yTickCount, yExtentMode)
+    ticksForMode(scales.y, axisTickCount(yAxis, yTickCount), yExtentMode)
   const showXGrid = xAxis?.grid !== false
   const showYGrid = yAxis?.grid !== false
   const xGridDash = resolveGridDash(xAxis?.gridStyle)
@@ -671,7 +672,7 @@ export function generateAxesSVG(
       : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
   const rawXTicks =
     xAxis?.tickValues ??
-    ticksForMode(scales.x, xAxis?.ticks ?? resolvedXTickCount, xExtentMode)
+    ticksForMode(scales.x, axisTickCount(xAxis, resolvedXTickCount), xExtentMode)
   const rawXValues = rawXTicks.map((value) => value.valueOf())
   const xFormatter =
     xAxis?.tickFormat ||
@@ -685,7 +686,7 @@ export function generateAxesSVG(
 
   const rawYTicks =
     yAxis?.tickValues ??
-    ticksForMode(scales.y, yAxis?.ticks ?? resolvedYTickCount, yExtentMode)
+    ticksForMode(scales.y, axisTickCount(yAxis, resolvedYTickCount), yExtentMode)
   const yFormatter =
     yAxis?.tickFormat ||
     props.yFormat ||

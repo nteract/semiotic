@@ -241,6 +241,43 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain("Range")
     })
 
+    it("accepts color as a fill alias, matching x-band", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "band", y0: 30, y1: 70, color: "#7C5CFF" }],
+      })
+      expect(svg).toContain('fill="#7C5CFF"')
+    })
+
+    it("serializes a vertical gradient for a y-band", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{
+          type: "band",
+          y0: 25,
+          y1: 75,
+          gradient: { stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] },
+        }],
+      })
+      expect(svg).toContain('<linearGradient id="ssr-band-0-gradient"')
+      expect(svg).toContain('y2="100%"')
+      expect(svg).toContain('fill="url(#ssr-band-0-gradient)"')
+    })
+
+    it("uses a string fill as the fallback color for gradient stops", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{
+          type: "band",
+          y0: 25,
+          y1: 75,
+          fill: "#00ff00",
+          gradient: { stops: [{ offset: 0 }, { offset: 1 }] },
+        }],
+      })
+      expect(svg).toContain('stop-color="#00ff00"')
+    })
+
     it("uses default opacity", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
@@ -282,6 +319,21 @@ describe("renderStaticAnnotations", () => {
       })
       expect(svg).toContain('<rect x="80" y="0" width="160" height="300"')
       expect(svg).toContain('fill="#7C5CFF"')
+    })
+
+    it("serializes a horizontal gradient for an x-band", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{
+          type: "x-band",
+          x0: 20,
+          x1: 60,
+          gradient: { stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] },
+        }],
+      })
+      expect(svg).toContain('<linearGradient id="ssr-xband-0-gradient"')
+      expect(svg).toContain('x2="100%"')
+      expect(svg).toContain('fill="url(#ssr-xband-0-gradient)"')
     })
 
     it("normalizes reversed bounds and renders a label", () => {

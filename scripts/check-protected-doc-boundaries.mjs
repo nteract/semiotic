@@ -68,7 +68,7 @@ export function discoverProtectedDocPaths(root = ROOT) {
       (line) =>
         line.startsWith("/docs/") &&
         !line.startsWith("!") &&
-        !/[?*\[\]]/.test(line)
+        !/[?*[\]]/.test(line)
     )
     .map((line) => normalizePath(line.replace(/^\//, "").replace(/\/$/, "")))
 }
@@ -156,22 +156,32 @@ function protectedOutputIdentifiers(
   protectedReferenceFilenames,
   publicStems = new Set()
 ) {
-  const identifiers = new Set(
+  const directoryNames = new Set(
     protectedPaths.map((protectedPath) => basename(protectedPath).toLowerCase())
   )
+  const filenameFragments = new Set()
   for (const filename of protectedReferenceFilenames) {
-    identifiers.add(filename)
+    filenameFragments.add(filename)
     const filenameStem = stem(filename)
     if (filenameStem.length >= 12 && !publicStems.has(filenameStem)) {
-      identifiers.add(filenameStem)
+      filenameFragments.add(filenameStem)
     }
   }
-  return identifiers
+  return { directoryNames, filenameFragments }
 }
 
 function containsProtectedOutputPath(candidate, identifiers) {
   const normalized = normalizePath(candidate).toLowerCase()
-  return [...identifiers].some((identifier) => normalized.includes(identifier))
+  const segments = normalized.split("/")
+  const filenameStem = stem(segments.at(-1))
+  return (
+    [...identifiers.directoryNames].some((identifier) =>
+      segments.slice(0, -1).includes(identifier) || filenameStem === identifier
+    ) ||
+    [...identifiers.filenameFragments].some((identifier) =>
+      normalized.includes(identifier)
+    )
+  )
 }
 
 function inspectProtectedDocReferenceLeaks({

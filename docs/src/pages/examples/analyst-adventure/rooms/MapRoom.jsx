@@ -129,7 +129,7 @@ export default function MapRoom({
         lifecycle: { status: activated ? "accepted" : "proposed", anchor: "semantic" },
       },
     ],
-    [activateServiceTunnel, activated, serviceTunnel],
+    [activated, serviceTunnel],
   )
   const chartProps = useMemo(
     () => ({

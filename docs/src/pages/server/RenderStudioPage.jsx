@@ -198,7 +198,7 @@ export default function RenderStudioPage() {
         ...(orientation !== "vertical" && { projection: orientation === "horizontal" ? "horizontal" : "vertical" }),
       }, { stepSize: Math.max(1, Math.ceil((baseProps.data || dataset.data || []).length / 20)), transitionFrames: 0 })
     } catch { return [] }
-  }, [showAnimation, chartType, theme, width, height, title, orientation, config, dataset, frameChartType])
+  }, [showAnimation, theme, width, height, title, orientation, config, dataset, frameChartType])
 
   useEffect(() => {
     if (!animPlaying || animFrames.length === 0) return

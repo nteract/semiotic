@@ -355,30 +355,30 @@ function PushApiDemo() {
 // Continuous streaming demo (from former RealtimeSankey page)
 // ---------------------------------------------------------------------------
 
+const CONTINUOUS_STREAM_PIPELINE = [
+  { source: "Ingest", target: "Validate", w: 3 },
+  { source: "Validate", target: "Process", w: 3 },
+  { source: "Validate", target: "Reject", w: 1 },
+  { source: "Process", target: "Store", w: 2 },
+  { source: "Process", target: "Cache", w: 2 },
+  { source: "Store", target: "Serve", w: 2 },
+  { source: "Cache", target: "Serve", w: 3 },
+  { source: "Serve", target: "Ingest", w: 1 }
+]
+
 function ContinuousStreamDemo() {
   const chartRef = useRef()
   const [containerRef, containerWidth] = useContainerWidth()
   const [running, setRunning] = useState(false)
 
-  const PIPELINE = [
-    { source: "Ingest", target: "Validate", w: 3 },
-    { source: "Validate", target: "Process", w: 3 },
-    { source: "Validate", target: "Reject", w: 1 },
-    { source: "Process", target: "Store", w: 2 },
-    { source: "Process", target: "Cache", w: 2 },
-    { source: "Store", target: "Serve", w: 2 },
-    { source: "Cache", target: "Serve", w: 3 },
-    { source: "Serve", target: "Ingest", w: 1 }
-  ]
-
   useEffect(() => {
     if (!running) return
-    const totalW = PIPELINE.reduce((s, l) => s + l.w, 0)
+    const totalW = CONTINUOUS_STREAM_PIPELINE.reduce((s, l) => s + l.w, 0)
     const id = setInterval(() => {
       if (!chartRef.current) return
       let r = Math.random() * totalW
-      let link = PIPELINE[0]
-      for (const l of PIPELINE) {
+      let link = CONTINUOUS_STREAM_PIPELINE[0]
+      for (const l of CONTINUOUS_STREAM_PIPELINE) {
         r -= l.w
         if (r <= 0) { link = l; break }
       }

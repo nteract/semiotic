@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global console, process */
 /**
  * Capability-driven visual baseline coverage gate.
  *

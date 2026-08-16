@@ -41,6 +41,14 @@ for (const [category, names] of Object.entries(COMPONENTS_BY_CATEGORY)) {
   }
 }
 
+// AI's component catalog can expose imperative/custom-layout charts that
+// deliberately have no JSON schema. Keep that small extension separate from
+// the schema-backed metadata above so chart-spec drift checks retain their
+// exact one-to-one inventory contract.
+const AI_EXPORT_ONLY_CATEGORIES = {
+  PhysicsCustomChart: "physics",
+}
+
 function schemaEntries(schema) {
   return schema.tools.map((tool) => tool.function)
 }
@@ -51,6 +59,10 @@ function categoryForComponent(name) {
     throw new Error(`No AI component metadata category for "${name}"`)
   }
   return category
+}
+
+function categoryForAIExport(name) {
+  return COMPONENT_TO_CATEGORY.get(name) ?? AI_EXPORT_ONLY_CATEGORIES[name]
 }
 
 function importPathForCategory(category) {
@@ -73,6 +85,7 @@ function metadataForComponent(entryOrName) {
     category,
     importPath: importPathForCategory(category),
     renderable: !isPushOnly,
+    requiresLiveData: isPushOnly,
     description: typeof entryOrName === "string" ? undefined : entryOrName.description,
   }
 }
@@ -106,6 +119,7 @@ function componentIndexFromSchema(schema) {
     totalComponents: components.length,
     renderableComponents: components.filter((component) => component.renderable).length,
     browserOnlyComponents: components.filter((component) => !component.renderable).length,
+    requiresLiveDataComponents: components.filter((component) => component.requiresLiveData).length,
     categories,
     components,
   }
@@ -115,6 +129,7 @@ module.exports = {
   CATEGORY_ORDER,
   COMPONENTS_BY_CATEGORY,
   categoryForComponent,
+  categoryForAIExport,
   componentIndexFromSchema,
   findComponent,
   importPathForCategory,

@@ -96,6 +96,9 @@ export type {
   SemanticViabilityCheck,
   SemanticViabilityDiagnostic,
   SemanticViabilityRule,
+  ScoreChartRejected,
+  ScoreChartResult,
+  ScoreChartSuggestion,
 } from "./ai/chartCapabilityTypes"
 export { inferIntent } from "./ai/inferIntent"
 export type { InferIntentField, InferIntentOptions, InferIntentResult } from "./ai/inferIntent"

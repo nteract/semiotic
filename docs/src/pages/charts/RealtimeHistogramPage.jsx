@@ -68,17 +68,17 @@ function BasicBarDemo() {
   )
 }
 
+const HISTOGRAM_CATEGORIES = ["errors", "warnings", "info"]
+
 function StackedBarDemo() {
   const chartRef = useRef()
   const indexRef = useRef(0)
   const [containerRef, containerWidth] = useContainerWidth()
-  const categories = ["errors", "warnings", "info"]
-
   useEffect(() => {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const cat = categories[i % categories.length]
+        const cat = HISTOGRAM_CATEGORIES[i % HISTOGRAM_CATEGORIES.length]
         const ranges = { errors: 5, warnings: 10, info: 20 }
         chartRef.current.push({
           time: Math.floor(i / 3),

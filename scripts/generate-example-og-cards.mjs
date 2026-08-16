@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global Buffer, console, process */
 /**
  * Generates the social-preview Open Graph cards for each examples entry.
  *

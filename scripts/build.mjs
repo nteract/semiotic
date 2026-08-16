@@ -1,5 +1,3 @@
-/* global console, process */
-
 import { execSync } from "child_process"
 import {
   existsSync,

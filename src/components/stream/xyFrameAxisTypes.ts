@@ -36,6 +36,8 @@ export interface XYFrameAxisConfig {
   orient: "left" | "right" | "top" | "bottom"
   label?: string
   ticks?: number
+  /** Compatibility alias for `ticks`; `ticks` wins when both are supplied. */
+  tickCount?: number
   /**
    * Override the chart-level `axisExtent` mode for this axis. Horizontal
    * (`top`/`bottom`) and vertical (`left`/`right`) axes resolve independently.

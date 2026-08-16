@@ -114,7 +114,7 @@ export default function ExecutiveSuiteRoom({
         lifecycle: { status: "accepted", anchor: "semantic" },
       },
     ],
-    [activateCachedRoof, activated, roof],
+    [activated, roof],
   )
   const chartProps = useMemo(
     () => ({

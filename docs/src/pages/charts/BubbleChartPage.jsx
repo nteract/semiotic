@@ -112,16 +112,17 @@ function StreamingCountryData() {
   )
 }`
 
+const STREAMING_CONTINENTS = ["Americas", "Europe", "Asia"]
+
 function StreamingBubbleDemo({ width }) {
   const chartRef = useRef()
   const indexRef = useRef(0)
-  const continents = ["Americas", "Europe", "Asia"]
 
   useEffect(() => {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const continent = continents[i % continents.length]
+        const continent = STREAMING_CONTINENTS[i % STREAMING_CONTINENTS.length]
         chartRef.current.push({
           time: i,
           value: 60 + Math.random() * 25,

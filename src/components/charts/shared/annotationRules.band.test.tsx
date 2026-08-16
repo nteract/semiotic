@@ -106,6 +106,54 @@ describe("band annotations", () => {
     )
     expect(svg).toContain('fill-opacity="0.75"')
   })
+
+  it("accepts color as the fill alias for y-bands, matching x-bands", () => {
+    const svg = renderToStaticMarkup(
+      rules({ type: "band", y0: 30, y1: 70, color: "#7C5CFF" }, 0, context) as React.ReactElement,
+    )
+    expect(svg).toContain('fill="#7C5CFF"')
+  })
+
+  it("renders serializable gradients for y- and x-bands with matching default directions", () => {
+    const yBand = renderToStaticMarkup(
+      rules({
+        type: "band",
+        y0: 30,
+        y1: 70,
+        gradient: { stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f", opacity: 0.2 }] },
+      }, 0, context) as React.ReactElement,
+    )
+    const xBand = renderToStaticMarkup(
+      rules({
+        type: "x-band",
+        x0: 20,
+        x1: 60,
+        gradient: { stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] },
+      }, 1, context) as React.ReactElement,
+    )
+
+    expect(yBand).toContain('<linearGradient id="ann-0-gradient"')
+    expect(yBand).toContain('y2="100%"')
+    expect(yBand).toContain('fill="url(#ann-0-gradient)"')
+    expect(yBand).toContain('stop-opacity="0.2"')
+    expect(xBand).toContain('<linearGradient id="ann-1-gradient"')
+    expect(xBand).toContain('x2="100%"')
+    expect(xBand).toContain('fill="url(#ann-1-gradient)"')
+  })
+
+  it("uses a string fill as the fallback color for gradient stops", () => {
+    const svg = renderToStaticMarkup(
+      rules({
+        type: "band",
+        y0: 30,
+        y1: 70,
+        fill: "#00ff00",
+        gradient: { stops: [{ offset: 0 }, { offset: 1 }] },
+      }, 0, context) as React.ReactElement,
+    )
+
+    expect(svg).toContain('stop-color="#00ff00"')
+  })
 })
 
 describe("top annotation label clearance", () => {

@@ -122,7 +122,7 @@ export default function ThemeShowcasePage() {
       }
       return { themeName, svg }
     })
-  }, [chartKey, config])
+  }, [config])
 
   return (
     <PageLayout

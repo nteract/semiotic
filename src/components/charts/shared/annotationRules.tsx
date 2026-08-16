@@ -20,7 +20,7 @@ import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
 import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 import { AnnotationLabel } from "./AnnotationLabel"
-import { resolveSvgFill } from "./hatchFill"
+import { resolveAnnotationBandFill } from "./annotationBandFill"
 import { FrameTextAnnotationSVG } from "./FrameTextAnnotationSVG"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
@@ -576,7 +576,7 @@ export function createDefaultAnnotationRules(
         const y0px = y0Value != null && scaleY ? scaleY(y0Value) : 0
         const y1px = y1Value != null && scaleY ? scaleY(y1Value) : (context.height || 0)
         // Region fill may be a declarative HatchFill → inline <pattern>.
-        const bandFill = resolveSvgFill(ann.fill, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
+        const bandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "vertical", "var(--semiotic-primary, #6366f1)")
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
             {bandFill.def && <defs>{bandFill.def}</defs>}
@@ -615,7 +615,7 @@ export function createDefaultAnnotationRules(
         const x0px = x0Value != null && scaleX ? scaleX(x0Value) : null
         const x1px = x1Value != null && scaleX ? scaleX(x1Value) : null
         if (x0px == null || x1px == null) return null
-        const xBandFill = resolveSvgFill(ann.fill || ann.color, `ann-${index}`, "var(--semiotic-primary, #6366f1)")
+        const xBandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "horizontal", "var(--semiotic-primary, #6366f1)")
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
             {xBandFill.def && <defs>{xBandFill.def}</defs>}

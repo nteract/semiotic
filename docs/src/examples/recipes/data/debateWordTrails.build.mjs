@@ -1,4 +1,3 @@
-/* global URL, console */
 // One-off data builder for the Word Trails example.
 // Fetches 3 real presidential-debate transcripts, tokenizes, bins by position
 // in the debate (0..19 segments), and writes per-(speaker, word, segment)

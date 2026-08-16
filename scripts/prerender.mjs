@@ -751,7 +751,13 @@ function normalizeMachineHtml(html) {
 }
 
 function shouldRemoveSanitizedHref(href) {
-  const normalizedHref = href.trim().replace(/[\x00-\x20\x7f]+/g, "").toLowerCase()
+  const normalizedHref = [...href.trim()]
+    .filter((character) => {
+      const code = character.charCodeAt(0)
+      return code > 32 && code !== 127
+    })
+    .join("")
+    .toLowerCase()
   return !normalizedHref || /^(?:file|data|javascript|vbscript):/.test(normalizedHref)
 }
 
@@ -872,7 +878,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
   // `/charts/line-chart/`) don't end up pointing at
   // `/charts/line-chart/blog/feed.xml`.
   const blogFeedAlternate = '<link rel="alternate" type="application/atom+xml" title="Semiotic Blog" href="/blog/feed.xml" />'
-  const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
+  const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>'
   const canonicalUrl = routePath ? `${SITE_URL}/${routePath}` : SITE_URL
   let normalizedShell = normalizeShellAssetUrls(shellHtml)
   let previousShell

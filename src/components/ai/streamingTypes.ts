@@ -48,6 +48,8 @@ export interface StreamSchema {
 export interface StreamChartCapability {
   component: string
   importPath: "semiotic/realtime"
+  /** True when this chart consumes an event stream and has no static render proof. */
+  requiresLiveData?: boolean
   rubric: ChartRubric
   fits: (schema: StreamSchema) => null | string
   intentScores: Partial<Record<IntentId, StreamIntentScorer>>
@@ -63,6 +65,8 @@ export interface StreamSuggestion {
   component: string
   family: "realtime"
   importPath: "semiotic/realtime"
+  /** Whether the recommendation must receive live event data rather than a bounded array. */
+  requiresLiveData?: boolean
   score: number
   intentScores: Partial<Record<IntentId, number>>
   rubric: ChartRubric

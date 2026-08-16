@@ -63,6 +63,7 @@ describe("suggestStreamCharts", () => {
     const suggestions = suggestStreamCharts(latencyStream, { intent: "trend" })
     expect(suggestions[0].props.timeAccessor).toBe("ts")
     expect(suggestions[0].props.valueAccessor).toBe("latency_ms")
+    expect(suggestions[0].requiresLiveData).toBe(true)
   })
 
   it("surfaces cumulative-retention caveat for line chart", () => {
