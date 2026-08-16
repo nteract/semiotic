@@ -39,7 +39,7 @@ interface-member SemioticTheme::property::borderRadius = optional borderRadius: 
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
 interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
-interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; tickFontFamily?: string; titleFontSize?: number;}
+interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; legendFontFamily?: string; legendFontWeight?: number | string; tickFontFamily?: string; titleFontSize?: number; titleFontFamily?: string; titleFontWeight?: number | string;}
 type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
 type ThemePresetName = (string & {}) | KnownThemePresetName
 ```

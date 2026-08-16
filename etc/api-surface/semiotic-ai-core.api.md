@@ -17,6 +17,7 @@ function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function countNodes(root: NavTreeNode): number
 function createChartToolHandler(optionsFor?: ((input: PrepareChartInput) => PrepareChartOptions) | undefined): (input: PrepareChartInput) => PrepareChartResult
+function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo
 function deriveProfileFields(data: readonly Datum[], candidates: {x: import("./chartCapabilityTypes").FieldCandidate[]; y: import("./chartCapabilityTypes").FieldCandidate[]; size: import("./chartCapabilityTypes").FieldCandidate[]; category: import("./chartCapabilityTypes").FieldCandidate[]; series: import("./chartCapabilityTypes").FieldCandidate[]; time: import("./chartCapabilityTypes").FieldCandidate[];}, roles: Readonly<Record<string, readonly import("./fieldRoles").ProfileFieldRole[]>>, options?: ReprofileFieldsOptions | undefined): DerivedProfileFields
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
@@ -40,6 +41,7 @@ function profileData(data: null | readonly Datum[] | undefined, options?: Profil
 function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
 function rederiveProfile(profile: ChartDataProfile, options?: ReprofileFieldsOptions | undefined): ChartDataProfile
+function refreshChartDiagnostics(component: string, props: Datum): Diagnosis[]
 function registerIntent(intent: IntentDescriptor): void
 function repairChartConfig(component: string, data: null | readonly Datum[] | undefined, options?: RepairOptions | undefined): RepairResult
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
@@ -118,6 +120,7 @@ interface ProfileDataOptions
 interface ProfileNumericFieldsOptions
 interface ProfilePrimaryFields
 interface RejectedCapability
+interface RenderEvidenceMemo
 interface RepairOptions extends ProfileDataOptions
 interface ReprofileFieldsOptions
 interface ScoreChartOptions extends ProfileDataOptions
@@ -419,6 +422,7 @@ interface-member PrepareChartInput::property::props = optional props: Datum | un
 interface-member PrepareChartOptions::property::data = optional data: readonly Datum[] | undefined
 interface-member PrepareChartOptions::property::diagnose = optional diagnose: boolean | undefined
 interface-member PrepareChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member PrepareChartOptions::property::narration = optional narration: Partial<Pick<Datum, "description" | "summary" | "title">> | undefined
 interface-member PrepareChartOptions::property::render = optional render: RenderFn | undefined
 interface-member PrepareChartOptions::property::repair = optional repair: boolean | undefined
 interface-member PrepareChartOptions::property::treatErrorsAsBlocking = optional treatErrorsAsBlocking: boolean | undefined
@@ -448,6 +452,8 @@ interface-member RejectedCapability::property::component = required component: s
 interface-member RejectedCapability::property::family = required family: import("./chartCapabilityTypes").ChartFamily
 interface-member RejectedCapability::property::importPath = required importPath: import("./chartCapabilityTypes").ChartImportPath
 interface-member RejectedCapability::property::reason = required reason: string
+interface-member RenderEvidenceMemo::property::clear = required clear: () => void
+interface-member RenderEvidenceMemo::property::render = required render: RenderFn
 interface-member RepairOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member RepairOptions::property::maxAlternatives = optional maxAlternatives: number | undefined
 interface-member RepairOptions::property::observedSceneAudit = optional observedSceneAudit: ObservedSceneAuditResult | undefined

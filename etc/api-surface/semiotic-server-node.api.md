@@ -7,19 +7,20 @@ _Edit dist/semiotic-server-node.d.ts's sources, then re-run `npm run docs:api-su
 function generateFrameSVGs(chartType: string, data: Datum[], props: Datum, options?: AnimatedGifOptions | undefined): string[]
 function generateFrameSequence(component: string, snapshots: Datum[], baseProps?: Datum | undefined): string[]
 function generatePhysicsFrameSVGs(props: PhysicsGifFrameProps, options?: PhysicsGifOptions | undefined): string[]
-function renderChart(component: ChartName, props: Datum, options?: RenderChartOptions | undefined): string
-function renderChartWithEvidence(component: ChartName, props: Datum, options?: RenderChartOptions | undefined): {svg: string; evidence: RenderEvidence;}
+function renderChart(component: string, props: Datum, options?: RenderChartOptions | undefined): string
+function renderChartWithEvidence(component: string, props: Datum, options?: RenderChartOptions | undefined): {svg: string; evidence: RenderEvidence;}
 function renderDashboard(charts: DashboardChart[], options?: RenderDashboardOptions | undefined): string
 function renderGeoToStaticSVG(props: StreamGeoFrameProps<Datum> & ThemeAwareProps): string
 function renderNetworkToStaticSVG(props: StreamNetworkFrameProps<Datum> & ThemeAwareProps): string
 function renderOrdinalToStaticSVG(props: StreamOrdinalFrameProps<Datum> & ThemeAwareProps): string
 function renderPhysicsToAnimatedGif(props: PhysicsGifFrameProps, options?: PhysicsGifOptions | undefined): Promise<Buffer>
 function renderToAnimatedGif(chartType: string, data: Datum[], props: Datum, options?: AnimatedGifOptions | undefined): Promise<Buffer>
-function renderToImage(frameTypeOrComponent: ChartName | FrameType, props: Datum, options?: RenderToImageOptions | undefined): Promise<Buffer>
+function renderToImage(frameTypeOrComponent: FrameType | RenderChartName, props: Datum, options?: RenderToImageOptions | undefined): Promise<Buffer>
 function renderToStaticSVG(frameType: FrameType, props: StaticFrameProps): string
 function renderXYToStaticSVG(props: StreamXYFrameProps<Datum> & ThemeAwareProps): string
 function resolveTheme(theme: ThemeInput): SemioticTheme
-function themeStyles(theme: SemioticTheme): {background: string; text: string; textSecondary: string; grid: string; border: string; primary: string; fontFamily: string; titleSize: number; labelSize: number; tickSize: number; categorical: string[]; annotation: string; legendSize: number; titleFontSize: number; tickFontFamily: string;}
+function serializeSvgPrecision(svg: string, precision?: number | undefined): string
+function themeStyles(theme: SemioticTheme): {background: string; text: string; textSecondary: string; grid: string; border: string; primary: string; fontFamily: string; titleSize: number; labelSize: number; tickSize: number; categorical: string[]; annotation: string; legendSize: number; legendFontFamily: string; legendFontWeight: number | string | undefined; titleFontSize: number; titleFontFamily: string; titleFontWeight: number | string; tickFontFamily: string;}
 interface AnimatedGifOptions
 interface CategoricalLegendConfig
 interface DashboardChart
@@ -31,6 +32,7 @@ interface LegendItem
 interface LegendLayout
 interface PhysicsGifFrameProps extends Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel">
 interface PhysicsGifOptions extends Pick<AnimatedGifOptions, "background" | "fps" | "frameCount" | "loop" | "scale">
+interface RenderChartOptions
 interface RenderDashboardOptions
 interface RenderEvidence
 interface RenderToImageOptions
@@ -49,7 +51,7 @@ interface-member AnimatedGifOptions::property::yExtent = optional yExtent: [numb
 interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
 interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
 interface-member DashboardChart::property::colSpan = optional colSpan: number | undefined
-interface-member DashboardChart::property::component = optional component: ChartName | undefined
+interface-member DashboardChart::property::component = optional component: RenderChartName | undefined
 interface-member DashboardChart::property::frameType = optional frameType: FrameType | undefined
 interface-member DashboardChart::property::props = required props: Datum
 interface-member DashboardLayout::property::columns = optional columns: number | undefined
@@ -92,6 +94,8 @@ interface-member PhysicsGifOptions::property::durationSeconds = optional duratio
 interface-member PhysicsGifOptions::property::includeInitialFrame = optional includeInitialFrame: boolean | undefined
 interface-member PhysicsGifOptions::property::stepDt = optional stepDt: number | undefined
 interface-member PhysicsGifOptions::property::stepsPerFrame = optional stepsPerFrame: number | undefined
+interface-member RenderChartOptions::property::format = optional format: "svg" | undefined
+interface-member RenderChartOptions::property::precision = optional precision: number | undefined
 interface-member RenderDashboardOptions::property::background = optional background: string | undefined
 interface-member RenderDashboardOptions::property::format = optional format: "svg" | undefined
 interface-member RenderDashboardOptions::property::height = optional height: number | undefined
@@ -125,6 +129,7 @@ interface-member RenderToImageOptions::property::background = optional backgroun
 interface-member RenderToImageOptions::property::format = optional format: "jpeg" | "png" | undefined
 interface-member RenderToImageOptions::property::scale = optional scale: number | undefined
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type RenderChartName = ValueChartName | keyof typeof CHART_CONFIGS
 type SemanticViabilityStatus = "degenerate" | "degraded" | "meaningful" | "not-assessed"
 type ThemeInput = PartialThemeObject | string | undefined
 ```
