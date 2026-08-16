@@ -154,6 +154,23 @@ describe("renderStaticLegend", () => {
     expect(compact).toContain("font-size=\"20\"")
   })
 
+  it("uses legend typography family and weight from the theme", () => {
+    const svg = renderLegendString({
+      ...baseConfig,
+      theme: {
+        ...LIGHT_THEME,
+        typography: {
+          ...LIGHT_THEME.typography,
+          legendFontFamily: "Courier New",
+          legendFontWeight: 600,
+        },
+      },
+    })
+
+    expect(svg).toContain('font-family="Courier New"')
+    expect(svg).toContain('font-weight="600"')
+  })
+
   it("reports actual horizontal width when a single item exceeds maxWidth", () => {
     const metrics = measureStaticLegend({
       ...baseConfig,

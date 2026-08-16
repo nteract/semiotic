@@ -77,7 +77,11 @@ export function themeStyles(theme: SemioticTheme) {
     categorical: theme.colors.categorical,
     annotation: theme.colors.annotation ?? theme.colors.text,
     legendSize: theme.typography.legendSize ?? theme.typography.labelSize,
+    legendFontFamily: theme.typography.legendFontFamily ?? theme.typography.fontFamily,
+    legendFontWeight: theme.typography.legendFontWeight,
     titleFontSize: theme.typography.titleFontSize ?? theme.typography.titleSize,
+    titleFontFamily: theme.typography.titleFontFamily ?? theme.typography.fontFamily,
+    titleFontWeight: theme.typography.titleFontWeight ?? "bold",
     tickFontFamily: theme.typography.tickFontFamily ?? theme.typography.fontFamily,
   }
 }

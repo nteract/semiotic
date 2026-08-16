@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import type { BarCornerRadius, StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
@@ -85,7 +85,7 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
    *  lane. Both ends round: left+right in horizontal orientation, top+bottom
    *  in vertical. Middle segments of multi-segment lanes stay square so
    *  pieces visually butt against each other. */
-  roundedTop?: number
+  roundedTop?: BarCornerRadius
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
   valueExtent?: [number | undefined, number | undefined] | [number]
   /** Pass-through props to StreamOrdinalFrame */

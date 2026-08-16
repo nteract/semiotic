@@ -149,6 +149,14 @@ function legendFontSize(theme: SemioticTheme): number {
   return Number(theme.typography.legendSize ?? theme.typography.labelSize ?? theme.typography.tickSize) || 11
 }
 
+function legendFontFamily(theme: SemioticTheme): string {
+  return theme.typography.legendFontFamily ?? theme.typography.fontFamily
+}
+
+function legendFontWeight(theme: SemioticTheme): string | number | undefined {
+  return theme.typography.legendFontWeight
+}
+
 function itemWidth(category: string, swatchSize: number, labelGap: number, theme: SemioticTheme): number {
   const size = legendFontSize(theme)
   return swatchSize + labelGap + Math.ceil(category.length * size * 0.58)
@@ -448,13 +456,13 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
           dominantBaseline="central"
           fontSize={legendFontSize(theme)}
           fill={theme.colors.text}
-          fontFamily={theme.typography.fontFamily}
+          fontFamily={legendFontFamily(theme)}
         >
           {item.category}
         </text>
       </g>
     ))
-    return <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>{items}</g>
+    return <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(theme)}>{items}</g>
   }
 
   // Vertical layout
@@ -471,7 +479,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
         dominantBaseline="central"
         fontSize={legendFontSize(theme)}
         fill={theme.colors.text}
-        fontFamily={theme.typography.fontFamily}
+        fontFamily={legendFontFamily(theme)}
       >
         {item.category}
       </text>
@@ -479,7 +487,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   ))
 
   return (
-    <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
+    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(theme)}>
       <line x1={0} y1={verticalLayout.lineY} x2={sideLegendWidth} y2={verticalLayout.lineY} stroke="gray" />
       {items}
     </g>
@@ -546,7 +554,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             y={layout.labelY}
             fontSize={legendFontSize(config.theme)}
             fill={config.theme.colors.text}
-            fontFamily={config.theme.typography.fontFamily}
+            fontFamily={legendFontFamily(config.theme)}
           >
             {group.label}
           </text>
@@ -572,7 +580,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
                   dominantBaseline="central"
                   fontSize={legendFontSize(config.theme)}
                   fill={config.theme.colors.text}
-                  fontFamily={config.theme.typography.fontFamily}
+                  fontFamily={legendFontFamily(config.theme)}
                 >
                   {item.label}
                 </text>
@@ -586,7 +594,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
     })
 
     return (
-      <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation="vertical">
+      <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation="vertical" fontWeight={legendFontWeight(config.theme)}>
         {groups}
       </g>
     )
@@ -606,7 +614,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             textAnchor="start"
             fontSize={legendFontSize(config.theme)}
             fill={config.theme.colors.text}
-            fontFamily={config.theme.typography.fontFamily}
+            fontFamily={legendFontFamily(config.theme)}
           >
             {group.label}
           </text>
@@ -618,7 +626,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             y={groupLayout.y + legendFontSize(config.theme)}
             fontSize={legendFontSize(config.theme)}
             fill={config.theme.colors.text}
-            fontFamily={config.theme.typography.fontFamily}
+            fontFamily={legendFontFamily(config.theme)}
           >
             {group.label}
           </text>
@@ -646,7 +654,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             dominantBaseline="central"
             fontSize={legendFontSize(config.theme)}
             fill={config.theme.colors.text}
-            fontFamily={config.theme.typography.fontFamily}
+            fontFamily={legendFontFamily(config.theme)}
           >
             {layout.category}
           </text>
@@ -672,7 +680,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   })
 
   return (
-    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation={isHorizontal ? "horizontal" : "vertical"}>
+    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation={isHorizontal ? "horizontal" : "vertical"} fontWeight={legendFontWeight(config.theme)}>
       {items}
     </g>
   )
@@ -722,12 +730,12 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
       : undefined
     const barY = config.gradient.label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
     return (
-      <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
+      <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(config.theme)}>
         <defs><linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">{stops}</linearGradient></defs>
-        {config.gradient.label && <text x={metrics.width / 2} y={labelY} textAnchor="middle" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
+        {config.gradient.label && <text x={metrics.width / 2} y={labelY} textAnchor="middle" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={legendFontFamily(config.theme)}>{config.gradient.label}</text>}
         <rect x={0} y={barY} width={metrics.width} height={barHeight} fill={`url(#${id})`} rx={2} />
-        <text x={0} y={barY + barHeight + 12} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
-        <text x={metrics.width} y={barY + barHeight + 12} textAnchor="end" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
+        <text x={0} y={barY + barHeight + 12} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={legendFontFamily(config.theme)}>{fmt(config.gradient.domain[0])}</text>
+        <text x={metrics.width} y={barY + barHeight + 12} textAnchor="end" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={legendFontFamily(config.theme)}>{fmt(config.gradient.domain[1])}</text>
       </g>
     )
   }
@@ -739,12 +747,12 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
     : undefined
   const barY = config.gradient.label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
   return (
-    <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
+    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(config.theme)}>
       <defs><linearGradient id={id} x1="0%" y1="0%" x2="0%" y2="100%">{stops}</linearGradient></defs>
-      {config.gradient.label && <text x={0} y={labelY} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
+      {config.gradient.label && <text x={0} y={labelY} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={legendFontFamily(config.theme)}>{config.gradient.label}</text>}
       <rect x={0} y={barY} width={barWidth} height={barHeight} fill={`url(#${id})`} rx={2} />
-      <text x={barWidth + 5} y={barY + 10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
-      <text x={barWidth + 5} y={barY + barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
+      <text x={barWidth + 5} y={barY + 10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={legendFontFamily(config.theme)}>{fmt(config.gradient.domain[1])}</text>
+      <text x={barWidth + 5} y={barY + barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={legendFontFamily(config.theme)}>{fmt(config.gradient.domain[0])}</text>
     </g>
   )
 }

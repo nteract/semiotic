@@ -122,8 +122,28 @@ describe("AreaChart", () => {
         ],
       })
       expect(lastXYFrameProps.semanticLineStops).toEqual([
-        { offset: 0, color: "#336699" },
-        { offset: 1, color: "#336699" },
+        { offset: 0, color: "#336699", opacity: 0.1 },
+        { offset: 1, color: "#336699", opacity: 0.8 },
+      ])
+    })
+
+    it("extends the first semantic line stop to the bottom of the domain", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={sampleData}
+            semanticGradient={{ stops: [
+              { offset: 0.5, color: "#e5a800", opacity: 0.3 },
+              { offset: 0.8, color: "#ff7077", opacity: 0.7 },
+            ] }}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.semanticLineStops).toEqual([
+        { offset: 0, color: "#e5a800", opacity: 0.3 },
+        { offset: 0.5, color: "#e5a800", opacity: 0.3 },
+        { offset: 0.8, color: "#ff7077", opacity: 0.7 },
       ])
     })
 

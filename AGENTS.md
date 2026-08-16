@@ -79,6 +79,16 @@ generated artifacts in the same change.
   validating generated charts; a successful render alone does not prove that
   data marks were drawn correctly.
 
+## Custom lint failures
+
+`npm run check:custom-lints` is a blocking CI gate. Rules marked `unstable` are
+deliberately provisional: when one fails, evaluate the rule as well as the
+code. Resolve each finding by fixing a bug, recording evidence and
+adjusting/demoting/retiring the rule, or promoting a strongly validated rule;
+combinations are valid. Promotion requires a 10/10 evidence score, five
+distinct positive references, focused tests, and no grandfathered findings.
+Read `scripts/custom-lint/README.md` before changing the registry or baseline.
+
 ## Verification
 
 Choose checks proportional to the change; do not run the entire release suite
@@ -86,6 +96,7 @@ for a narrowly scoped edit unless shared behavior is affected.
 
 - Focused unit test: `npx vitest run path/to/file.test.tsx`
 - Lint source changes: `npm run lint` or `npx eslint <touched-files>`
+- Custom lint and lifecycle changes: `npm run check:custom-lints`
 - Type changes: `npm run typescript` and, when applicable,
   `npm run typescript:tests` or `npm run typescript:mcp`
 - Library build: `npm run dist:prod`

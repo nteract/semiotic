@@ -46,6 +46,8 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
   connectorOpacity?: number
   /** Show step name + value labels on bars (default true) */
   showLabels?: boolean
+  /** Show axes and category ticks for vertical funnels (default true). */
+  showAxes?: boolean
   enableHover?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
@@ -111,6 +113,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: false,
     enableHover: props.enableHover,
     showLegend: props.showLegend,
@@ -122,7 +125,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-})
+  })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -205,9 +208,10 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     height,
     hasTitle: !!title,
     // FunnelChart has no categoryLabel/valueLabel props; horizontal (the
-    // default) draws no axis at all, matching `showAxes: isVertical` below.
+    // default) draws no axis at all. Vertical funnels use the resolved caller
+    // value so `showAxes={false}` remains a real compact/sparkline control.
     axisChrome: resolveOrdinalAxisChrome({
-      showAxes: isVertical,
+      showAxes: isVertical && resolved.showAxes,
       projection: isVertical ? "vertical" : "horizontal",
       hasCategoryLabel: false,
       hasValueLabel: false,
@@ -301,8 +305,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     margin: setup.margin,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
-    showAxes: isVertical,
-    showCategoryTicks: isVertical,
+    showAxes: isVertical && resolved.showAxes,
+    showCategoryTicks: isVertical && resolved.showAxes,
     ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid: isVertical,
     ...(!isVertical && { connectorOpacity }),

@@ -8,7 +8,8 @@ import {
   renderXYToStaticSVG,
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
-  renderGeoToStaticSVG
+  renderGeoToStaticSVG,
+  renderChart
 } from "./renderToStaticSVG"
 import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
 import type { FrameGraphicsContext, StreamScales } from "../stream/types"
@@ -36,6 +37,26 @@ describe("renderOrdinalToStaticSVG", () => {
     { category: "B", value: 20 },
     { category: "C", value: 15 }
   ]
+
+  it("serializes title typography from a theme", () => {
+    const svg = renderChart("BarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      title: "Revenue",
+      theme: {
+        typography: {
+          titleFontSize: 21,
+          titleFontFamily: "Georgia",
+          titleFontWeight: 500,
+        },
+      },
+    })
+
+    expect(svg).toContain('font-size="21"')
+    expect(svg).toContain('font-family="Georgia"')
+    expect(svg).toContain('font-weight="500"')
+  })
 
   it("resolves scale-aware background and foreground graphics around marks", () => {
     const contexts: Array<FrameGraphicsContext<OrdinalScales>> = []
@@ -179,6 +200,18 @@ describe("renderOrdinalToStaticSVG", () => {
     expect(svg).not.toContain("ordinal-axes")
   })
 
+  it("honors top-level showAxes=false for a vertical FunnelChart", () => {
+    const svg = renderChart("FunnelChart", {
+      data: barData,
+      stepAccessor: "category",
+      valueAccessor: "value",
+      orientation: "vertical",
+      showAxes: false
+    })
+
+    expect(svg).not.toContain('id="axes"')
+  })
+
   it("renders with custom className", () => {
     const svg = renderOrdinalToStaticSVG({
       chartType: "bar",
@@ -203,6 +236,37 @@ describe("renderOrdinalToStaticSVG", () => {
 
     expect(svg).toContain("Category")
     expect(svg).toContain("Value")
+  })
+})
+
+describe("renderChart SVG precision", () => {
+  const precisionProps = {
+    data: [
+      { x: 0.123456789, y: 12.3456789 },
+      { x: 1.987654321, y: 98.7654321 },
+      { x: 2.555555555, y: 42.4242424 },
+    ],
+    xAccessor: "x",
+    yAccessor: "y",
+    width: 281,
+    height: 279,
+    title: "Metric 1.23456789",
+  }
+
+  it("rounds geometry and path data only when precision is requested", () => {
+    const exact = renderChart("LineChart", precisionProps)
+    const rounded = renderChart("LineChart", precisionProps, { precision: 3 })
+
+    expect(rounded).not.toBe(exact)
+    expect(exact).toMatch(/d="[^"\n]*\.\d{4,}/)
+    expect(rounded).not.toMatch(/d="[^"\n]*\.\d{4,}/)
+    expect(rounded).toContain(">Metric 1.23456789<")
+  })
+
+  it("leaves output byte-for-byte unchanged when precision is omitted", () => {
+    expect(renderChart("LineChart", precisionProps)).toBe(
+      renderChart("LineChart", precisionProps, {}),
+    )
   })
 })
 

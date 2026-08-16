@@ -42,6 +42,84 @@ export type RenderFn = (
   props: Datum
 ) => { svg: string; evidence: RenderEvidence }
 
+/** A bounded-by-input-identity cache for injected render-evidence oracles. */
+export interface RenderEvidenceMemo {
+  /** Pass this function as `PrepareChartOptions.render` or `EvaluateChartOptions.render`. */
+  render: RenderFn
+  /** Invalidate every cached result after mutable data or external state changes. */
+  clear: () => void
+}
+
+function memoToken(
+  value: unknown,
+  objectIds: WeakMap<object, number>,
+  nextObjectId: { value: number },
+): string {
+  if (value === null) return "null"
+  switch (typeof value) {
+    case "undefined": return "undefined"
+    case "string": return `string:${value}`
+    case "number": return Number.isNaN(value) ? "number:NaN" : `number:${Object.is(value, -0) ? "-0" : value}`
+    case "boolean": return `boolean:${value}`
+    case "bigint": return `bigint:${value}`
+    case "symbol": return `symbol:${String(value)}`
+    case "function":
+    case "object": {
+      const object = value as object
+      let id = objectIds.get(object)
+      if (id === undefined) {
+        id = nextObjectId.value++
+        objectIds.set(object, id)
+      }
+      return `object:${id}`
+    }
+    default: return "unknown"
+  }
+}
+
+/**
+ * Memoize an injected `(component, props) → SVG + evidence` oracle safely.
+ *
+ * Results are scoped to the identity of `props.data` and to every other prop's
+ * primitive value or object/function identity. That avoids serializing user
+ * callbacks or accidentally sharing a result across distinct datasets. Treat
+ * data as immutable; call `clear()` after an in-place mutation or whenever an
+ * external renderer dependency changes.
+ */
+export function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo {
+  let byData = new WeakMap<object, Map<string, ReturnType<RenderFn>>>()
+  const objectIds = new WeakMap<object, number>()
+  const nextObjectId = { value: 1 }
+
+  return {
+    render(component, props) {
+      const data = props.data
+      if (data === null || (typeof data !== "object" && typeof data !== "function")) {
+        return render(component, props)
+      }
+      const key = Object.keys(props)
+        .filter((name) => name !== "data")
+        .sort()
+        .map((name) => `${name}=${memoToken(props[name], objectIds, nextObjectId)}`)
+        .join("\\u0001")
+      const cacheKey = `${component}\\u0000${key}`
+      let entries = byData.get(data)
+      if (!entries) {
+        entries = new Map()
+        byData.set(data, entries)
+      }
+      const cached = entries.get(cacheKey)
+      if (cached) return cached
+      const result = render(component, props)
+      entries.set(cacheKey, result)
+      return result
+    },
+    clear() {
+      byData = new WeakMap()
+    },
+  }
+}
+
 export interface PrepareChartInput {
   /** Chart component name the model proposed (e.g. "LineChart"). */
   component: string
@@ -59,6 +137,12 @@ export interface PrepareChartOptions {
   intent?: IntentId | IntentId[]
   /** Run `diagnoseConfig` anti-pattern checks (default true). */
   diagnose?: boolean
+  /**
+   * Narration authored after chart selection. It is merged before validation
+   * and diagnosis, so `MISSING_DESCRIPTION` cannot linger from an earlier
+   * proposal after a caller supplies generated title/description/summary text.
+   */
+  narration?: Partial<Pick<Datum, "title" | "description" | "summary">>
   /**
    * Run repair routing (fit check + ranked alternatives). Default: true when
    * `data` is provided, false otherwise (repair needs the data to profile).
@@ -107,6 +191,16 @@ export interface PrepareChartResult {
 
 const NO_VALIDATION: ValidationResult = { valid: false, errors: [] }
 
+/** Re-run only the inexpensive configuration diagnosis after props change. */
+export function refreshChartDiagnostics(
+  component: string,
+  props: Datum,
+): Diagnosis[] {
+  return VALIDATION_MAP[component]
+    ? diagnoseConfig(component, props).diagnoses
+    : []
+}
+
 /**
  * Run an LLM chart proposal through the trust loop. Pure except for any side
  * effects of an injected `render` function.
@@ -116,7 +210,7 @@ export function prepareChart(
   options: PrepareChartOptions = {}
 ): PrepareChartResult {
   const component = input.component
-  const props: Datum = input.props ?? {}
+  const props: Datum = { ...input.props, ...options.narration }
   const reasons: string[] = []
 
   const known = Boolean(VALIDATION_MAP[component])
@@ -132,7 +226,7 @@ export function prepareChart(
   }
 
   const runDiagnose = options.diagnose !== false && known
-  const diagnostics: Diagnosis[] = runDiagnose ? diagnoseConfig(component, props).diagnoses : []
+  const diagnostics: Diagnosis[] = runDiagnose ? refreshChartDiagnostics(component, props) : []
   const errorDiagnostics = diagnostics.filter((d) => d.severity === "error")
   const treatErrorsAsBlocking = options.treatErrorsAsBlocking !== false
   if (treatErrorsAsBlocking) {

@@ -312,6 +312,7 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     defaults: resolved.marginDefaults,
     additionalLegend: gradientLegend,
     chartWidth: resolvedSize[0],
+    chartHeight: resolvedSize[1],
     axisChrome: { hasAxis: resolved.showAxes !== false }
   })
   // Heatcell datums are aggregated bins, not the user's raw rows — the

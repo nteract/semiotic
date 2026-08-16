@@ -382,6 +382,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     defaults: marginDefaults,
     additionalLegend: gradientLegend,
     chartWidth: resolved.width,
+    chartHeight: resolved.height,
     legendLayout: frameProps.legendLayout,
     hasTitle: !!resolved.title,
     // Geo frames draw no horizontal axis, so a bottom legend only needs its

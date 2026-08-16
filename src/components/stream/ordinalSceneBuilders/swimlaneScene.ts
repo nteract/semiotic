@@ -46,17 +46,19 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     }
   }
 
-  // Rounded-corner radius applied to the outermost ends of each lane (left
-  // and right for horizontal, top and bottom for vertical). 0 disables.
-  const cornerR = ctx.config.roundedTop && ctx.config.roundedTop > 0
-    ? Math.max(0, ctx.config.roundedTop)
-    : 0
-
   for (const col of Object.values(columns)) {
     // Each piece becomes its own rect, stacked sequentially within the lane.
     // No aggregation — duplicates of the same subcategory are expected.
     let offset = 0
     const laneStartIndex = nodes.length
+    // The lane bandwidth is the public bar-width argument in either
+    // projection (horizontal uses its height; vertical uses its width).
+    const requestedRadius = typeof ctx.config.roundedTop === "function"
+      ? ctx.config.roundedTop(col.width)
+      : ctx.config.roundedTop
+    const cornerR = typeof requestedRadius === "number" && Number.isFinite(requestedRadius)
+      ? Math.max(0, requestedRadius)
+      : 0
 
     for (const d of col.pieceData) {
       const val = Math.abs(getR(d))

@@ -102,6 +102,17 @@ describe("FunnelChart", () => {
     expect(lastOrdinalFrameProps.projection).toBe("vertical")
   })
 
+  it("honors showAxes=false for a vertical funnel", () => {
+    render(
+      <TooltipProvider>
+        <FunnelChart data={sampleData} orientation="vertical" showAxes={false} />
+      </TooltipProvider>
+    )
+
+    expect(lastOrdinalFrameProps.showAxes).toBe(false)
+    expect(lastOrdinalFrameProps.showCategoryTicks).toBe(false)
+  })
+
   // ── Test 5: connectorOpacity forwarded in horizontal mode ─────────
 
   it("forwards connectorOpacity in horizontal mode", () => {

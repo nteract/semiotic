@@ -76,6 +76,35 @@ describe("per-axis grid visibility", () => {
     expect(gridLines.length).toBeGreaterThan(0)
     for (const line of gridLines) expect(line.getAttribute("x1")).toBe("0")
   })
+
+  it("applies per-axis grid and baseline stroke attributes", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[
+          {
+            orient: "bottom",
+            gridStyle: { stroke: "#0ea5e9", strokeWidth: 2, strokeOpacity: 0.4, strokeDasharray: "3,2" },
+            axisStyle: { stroke: "#be123c", strokeWidth: 3, strokeDasharray: "5,1" },
+          },
+          { orient: "left" },
+        ]}
+      />,
+    )
+
+    const gridLine = container.querySelector("g.stream-grid line[x1]:not([x1='0'])")
+    expect(gridLine).toHaveAttribute("stroke", "#0ea5e9")
+    expect(gridLine).toHaveAttribute("stroke-width", "2")
+    expect(gridLine).toHaveAttribute("stroke-opacity", "0.4")
+    expect(gridLine).toHaveAttribute("stroke-dasharray", "3,2")
+    const baseline = container.querySelector("[data-orient='bottom'] > line")
+    expect(baseline).toHaveAttribute("stroke", "#be123c")
+    expect(baseline).toHaveAttribute("stroke-width", "3")
+    expect(baseline).toHaveAttribute("stroke-dasharray", "5,1")
+  })
 })
 
 // ── tickAnchor ─────────────────────────────────────────────────────────
@@ -204,7 +233,7 @@ describe("tickAnchor: edges", () => {
     // already covered by the per-axis tests above.
     const axes: import("./types").StreamXYFrameProps["axes"] = [
       { orient: "bottom", tickAnchor: "edges", landmarkTicks: true, autoRotate: true },
-      { orient: "left", tickAnchor: "middle", gridStyle: "dashed", includeMax: true },
+      { orient: "left", tickAnchor: "middle", gridStyle: { stroke: "#64748b", strokeWidth: 1 }, axisStyle: { stroke: "#334155" }, includeMax: true },
     ]
     expect(axes).toHaveLength(2)
   })

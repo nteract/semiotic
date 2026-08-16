@@ -77,6 +77,9 @@ describe("themeStyles", () => {
     expect(s.titleSize).toBe(16)
     expect(s.labelSize).toBe(12)
     expect(s.tickSize).toBe(12)
+    expect(s.legendFontFamily).toBe("sans-serif")
+    expect(s.titleFontFamily).toBe("sans-serif")
+    expect(s.titleFontWeight).toBe("bold")
     expect(s.categorical).toEqual(LIGHT_THEME.colors.categorical)
   })
 

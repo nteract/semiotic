@@ -422,4 +422,24 @@ describe("RenderEvidence — resolved margin / plot rect", () => {
     expect(withLegend.evidence.margin?.left).toBeCloseTo(Number(tx))
     expect(withLegend.evidence.margin?.top).toBeCloseTo(Number(ty))
   })
+
+  it("clamps compact HOC legend reservation before it can make the plot negative", () => {
+    const { evidence } = renderChartWithEvidence("BarChart", {
+      data: [
+        { category: "A", value: 1, group: "one" },
+        { category: "B", value: 2, group: "two" },
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "group",
+      mode: "sparkline",
+      showLegend: true,
+      legendPosition: "bottom",
+      width: 120,
+      height: 24,
+    })
+
+    expect(evidence.margin).toBeDefined()
+    expect(evidence.plot?.height).toBeGreaterThanOrEqual(8)
+  })
 })

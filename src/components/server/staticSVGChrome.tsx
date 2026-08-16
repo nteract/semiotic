@@ -32,10 +32,11 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
-import { resolveGridDash } from "../stream/svgOverlayUtils"
+import { resolveAxisLineStyle, resolveGridDash } from "../stream/svgOverlayUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   resolveAxisChromeGutter,
+  clampLegendReservation,
   resolveLegendDistance,
   resolveLegendSideGutter,
   resolveSideLegendMargin,
@@ -338,6 +339,7 @@ export function reserveFrameLegendMargin(
 ): LegendPosition {
   const { props, categories, theme, size, hasTitle } = options
   const position = props.legendPosition || "right"
+  const baselineMargin = { ...margin }
   const shared = {
     theme,
     position,
@@ -359,6 +361,7 @@ export function reserveFrameLegendMargin(
       colorScheme: props.colorScheme
     })
   }
+  clampLegendReservation(margin, baselineMargin, size, position)
   return position
 }
 
@@ -451,6 +454,8 @@ export function renderGridSVG(
   const showYGrid = yAxis?.grid !== false
   const xGridDash = resolveGridDash(xAxis?.gridStyle)
   const yGridDash = resolveGridDash(yAxis?.gridStyle)
+  const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
+  const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
@@ -464,9 +469,8 @@ export function renderGridSVG(
               y1={0}
               x2={px}
               y2={layout.height}
-              stroke={grid}
-              strokeWidth={0.5}
-              strokeDasharray={xGridDash}
+              {...xGridLine}
+              strokeDasharray={xGridDash ?? xGridLine.strokeDasharray}
             />
           )
         })}
@@ -480,9 +484,8 @@ export function renderGridSVG(
               y1={py}
               x2={layout.width}
               y2={py}
-              stroke={grid}
-              strokeWidth={0.5}
-              strokeDasharray={yGridDash}
+              {...yGridLine}
+              strokeDasharray={yGridDash ?? yGridLine.strokeDasharray}
             />
           )
         })}
@@ -609,10 +612,10 @@ export function wrapSVG(
           x={opts.width / 2}
           y={TITLE_BASELINE}
           textAnchor="middle"
-          fontSize={s.titleSize}
-          fontWeight="bold"
+          fontSize={s.titleFontSize}
+          fontWeight={s.titleFontWeight}
           fill={s.text}
-          fontFamily={s.fontFamily}
+          fontFamily={s.titleFontFamily}
         >
           {titleText}
         </text>
@@ -688,6 +691,8 @@ export function generateAxesSVG(
   }))
   const xLabel = xAxis?.label ?? props.xLabel
   const yLabel = yAxis?.label ?? props.yLabel
+  const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
+  const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
@@ -697,8 +702,7 @@ export function generateAxesSVG(
           y1={layout.height}
           x2={layout.width}
           y2={layout.height}
-          stroke={s.border}
-          strokeWidth={1}
+          {...xAxisLine}
         />
       )}
       {xTicks.map((tick, i) => (
@@ -706,7 +710,7 @@ export function generateAxesSVG(
           key={`xtick-${i}`}
           transform={`translate(${tick.pixel},${layout.height})`}
         >
-          <line y2={5} stroke={s.border} strokeWidth={1} />
+          <line y2={5} {...xAxisLine} />
           <text
             y={18}
             textAnchor="middle"
@@ -737,13 +741,12 @@ export function generateAxesSVG(
           y1={0}
           x2={0}
           y2={layout.height}
-          stroke={s.border}
-          strokeWidth={1}
+          {...yAxisLine}
         />
       )}
       {yTicks.map((tick, i) => (
         <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
-          <line x2={-5} stroke={s.border} strokeWidth={1} />
+          <line x2={-5} {...yAxisLine} />
           <text
             x={-8}
             textAnchor="end"

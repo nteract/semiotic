@@ -383,6 +383,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     categories: activeCategories,
     additionalLegend,
     chartWidth: width,
+    chartHeight: height,
     legendLayout,
     hasTitle,
     axisChrome

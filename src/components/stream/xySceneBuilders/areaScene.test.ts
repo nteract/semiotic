@@ -84,7 +84,7 @@ describe("buildAreaScene", () => {
       { value: 160, color: "#critical", thresholdType: "greater" },
     ])
     expect(node.strokeColorBands).toEqual([
-      { y: 150, height: 50, color: undefined },
+      { y: 150, height: 50, color: "#warning" },
       { y: 50, height: 100, color: "#warning" },
       { y: 0, height: 50, color: "#critical" },
     ])

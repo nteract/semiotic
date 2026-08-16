@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import type { BarCornerRadius, StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
@@ -37,8 +37,9 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   /** Category sort order. Default: `false` (data insertion order). `"asc"`/`"desc"` sorts by total stacked value. `"auto"` preserves insertion order while streaming and falls through to value-desc on static data. Custom comparators receive category keys. */
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
-  /** Rounded top corner radius. Only the topmost stacked segment gets rounded. */
-  roundedTop?: number
+  /** Rounded top corner radius, or a function of the rendered bar width. Only
+   * the topmost stacked segment gets rounded. */
+  roundedTop?: BarCornerRadius
   /** Tip-to-base segment gradient using `{ stops: [{ offset, color?, opacity? }] }`. */
   gradientFill?: GradientInput
   /**

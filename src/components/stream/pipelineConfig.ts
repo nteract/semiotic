@@ -123,7 +123,7 @@ export interface PipelineConfig {
   // Horizontal gradient for line strokes
   lineGradient?: GradientConfig
   // Value-anchored color bands for an area's top-edge stroke
-  semanticLineStops?: Array<{ offset: number; color: string }>
+  semanticLineStops?: Array<{ offset: number; color: string; opacity?: number }>
 
   // Style
   lineStyle?: Style | ((d: Datum, group?: string) => Style)

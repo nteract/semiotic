@@ -35,6 +35,57 @@ import {
   wrapSVG
 } from "./staticSVGChrome"
 
+// `centerContent` is historically an HTML overlay in StreamOrdinalFrame, so
+// arbitrary React content must remain inside a foreignObject in static SVG.
+// A native SVG element, however, is safe and materially more portable (Figma
+// and several SVG importers discard foreignObject entirely). Keep the allow
+// list deliberately narrow: unknown components still take the HTML fallback.
+const SVG_CENTER_CONTENT_TAGS = new Set([
+  "svg", "g", "text", "tspan", "path", "circle", "ellipse", "rect",
+  "line", "polyline", "polygon", "use", "image", "defs", "symbol"
+])
+
+function renderSvgCenterContent(
+  centerContent: React.ReactNode,
+  centerX: number,
+  centerY: number
+): React.ReactNode | null {
+  if (!React.isValidElement(centerContent)) return null
+  if (
+    typeof centerContent.type !== "string" ||
+    !SVG_CENTER_CONTENT_TAGS.has(centerContent.type)
+  ) {
+    return null
+  }
+
+  const svgElement = centerContent as React.ReactElement<React.SVGProps<SVGElement>>
+
+  // A bare <text> is the common Gauge readout. Give it useful center defaults
+  // without rewriting explicit SVG coordinates or typography supplied by the
+  // caller. Other SVG nodes retain their complete native shape untouched.
+  const element = svgElement.type === "text"
+    ? React.cloneElement(
+        svgElement,
+        {
+          x: svgElement.props.x ?? 0,
+          y: svgElement.props.y ?? 0,
+          textAnchor: svgElement.props.textAnchor ?? "middle",
+          dominantBaseline: svgElement.props.dominantBaseline ?? "middle"
+        }
+      )
+    : svgElement
+
+  return (
+    <g
+      className="semiotic-radial-center-content"
+      transform={`translate(${centerX},${centerY})`}
+      pointerEvents="none"
+    >
+      {element}
+    </g>
+  )
+}
+
 export function generateOrdinalAxesSVG(
   store: OrdinalPipelineStore,
   layout: { width: number; height: number },
@@ -407,17 +458,27 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   })
 
   // StreamOrdinalFrame places donut center content as an HTML overlay. A
-  // standalone SVG has no surrounding positioned container, so preserve the
-  // same slot with a foreignObject centered over the radial plot area.
-  const centerContent = isRadial && props.centerContent ? (
-    <foreignObject x={margin.left} y={margin.top} width={width} height={height} pointerEvents="none">
-      <div
-        style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}
-      >
-        {props.centerContent}
-      </div>
-    </foreignObject>
-  ) : null
+  // standalone SVG has no surrounding positioned container, so preserve that
+  // slot with a foreignObject for HTML. Native SVG content takes the portable
+  // SVG path above instead, avoiding foreignObject for Gauge text/icons.
+  const svgCenterContent = isRadial && props.centerContent
+    ? renderSvgCenterContent(
+        props.centerContent,
+        margin.left + width / 2,
+        margin.top + height / 2
+      )
+    : null
+  const centerContent = isRadial && props.centerContent
+    ? svgCenterContent ?? (
+        <foreignObject x={margin.left} y={margin.top} width={width} height={height} pointerEvents="none">
+          <div
+            style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}
+          >
+            {props.centerContent}
+          </div>
+        </foreignObject>
+      )
+    : null
 
   const plotContent = (
     <>

@@ -36,7 +36,7 @@ function resolveSchemaType(typeOrTypes) {
 // repeating ~30 lines of identical text per tool entry.
 const ANNOTATIONS_PROP_SCHEMA = {
   type: "array",
-  description: "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+  description: "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
   items: {
     type: "object",
     properties: {
@@ -44,7 +44,7 @@ const ANNOTATIONS_PROP_SCHEMA = {
         type: "string",
         enum: [
           "widget", "label", "callout", "text", "frame-text", "bracket",
-          "y-threshold", "x-threshold", "band",
+          "y-threshold", "x-threshold", "band", "x-band",
           "enclose", "rect-enclose", "highlight",
           "trend", "envelope", "anomaly-band", "forecast",
         ],

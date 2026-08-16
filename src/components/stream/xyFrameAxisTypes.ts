@@ -13,6 +13,14 @@ export type AxisTickFormatter = {
   ): string | ReactNode
 }["bivarianceHack"]
 
+/** SVG stroke properties shared by an axis baseline/ticks or its grid lines. */
+export interface AxisLineStyle {
+  stroke?: string
+  strokeWidth?: number
+  strokeOpacity?: number
+  strokeDasharray?: string
+}
+
 /**
  * Per-axis configuration object for an XY frame's `axes: []` array.
  * Distinct from `AxisConfig` exported from the HOC layer (which is the
@@ -43,10 +51,12 @@ export interface XYFrameAxisConfig {
    *  the positions. Pixel-distance filtering downstream still drops
    *  overlapping labels. Mirrors the ordinal frame's `rTickValues`. */
   tickValues?: Array<number | Date>
-  /** Grid line stroke style: `"dashed"` (6,4), `"dotted"` (2,4), or a
-   *  custom strokeDasharray string. Applied to grid lines extending
-   *  from ticks across the chart area. */
-  gridStyle?: "dashed" | "dotted" | string
+  /** Grid line stroke style. A string is a dash preset (`"dashed"`,
+   * `"dotted"`) or custom strokeDasharray; an object controls each grid
+   * line's SVG stroke attributes. */
+  gridStyle?: "dashed" | "dotted" | string | AxisLineStyle
+  /** Baseline and tick-mark stroke styling for this axis. */
+  axisStyle?: AxisLineStyle
   /** Set false to suppress grid lines emitted from this axis while retaining
    * its ticks and baseline. For example, set the bottom axis to `false` for
    * horizontal-only (y-axis) grid lines. */

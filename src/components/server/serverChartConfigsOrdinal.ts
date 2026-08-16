@@ -593,7 +593,10 @@ export const funnelChart: ChartConfig = {
       barPadding: isVertical ? 40 : 0,
       colorScheme,
       ...common,
-      showAxes: isVertical,
+      // A vertical funnel normally needs ordinal axes, but the public
+      // `showAxes` contract still takes precedence for compact/static use.
+      // Horizontal funnels intentionally never draw axes.
+      showAxes: isVertical && common.showAxes !== false,
       showGrid: isVertical,
       // A one-series funnel is intentionally monocolor; per-step palette
       // cycling is a frame fallback, not FunnelChart's HOC contract.

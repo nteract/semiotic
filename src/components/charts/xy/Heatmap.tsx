@@ -426,6 +426,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     defaults: resolved.marginDefaults,
     additionalLegend: gradientLegend,
     chartWidth: width,
+    chartHeight: height,
     legendLayout: frameProps.legendLayout,
     hasTitle: !!title,
     // Reserve the bottom-axis band a bottom legend is placed beyond.

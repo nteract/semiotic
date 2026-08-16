@@ -35,6 +35,13 @@ export type GradientInput =
 export type ColorGradientInput = GradientConfig | ColorStopsConfig
 export type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 
+/** A semantic stop after it has been made safe for an area's top stroke. */
+export interface SemanticLineStop {
+  offset: number
+  color: string
+  opacity?: number
+}
+
 export const DEFAULT_GRADIENT: GradientConfig = {
   stops: [
     { offset: 0, opacity: 0.8 },
@@ -87,6 +94,34 @@ export function normalizeSemanticGradient(
       ...(opacity != null && { opacity }),
     })),
   }
+}
+
+/**
+ * Build the top-stroke counterpart of a semantic fill gradient.
+ *
+ * SVG gradients naturally extend their first stop down to zero. The segmented
+ * area stroke used to leave that range uncoloured, exposing the chart's normal
+ * brand stroke below the first semantic threshold. Carry the first coloured
+ * stop to zero so canvas, SVG, and static rendering have matching coverage;
+ * opacity is part of the same contract.
+ */
+export function semanticLineStopsForGradient(
+  gradient: GradientConfig | undefined,
+): SemanticLineStop[] | undefined {
+  const stops = gradient?.stops
+    .filter((stop): stop is GradientStop & { color: string } =>
+      typeof stop.color === "string" && Number.isFinite(stop.offset),
+    )
+    .map(({ offset, color, opacity }) => ({
+      offset: Math.max(0, Math.min(1, offset)),
+      color,
+      ...(Number.isFinite(opacity) && { opacity: Math.max(0, Math.min(1, opacity!)) }),
+    }))
+    .sort((a, b) => a.offset - b.offset)
+
+  if (!stops?.length) return undefined
+  const first = stops[0]
+  return first.offset > 0 ? [{ ...first, offset: 0 }, ...stops] : stops
 }
 
 export function reverseGradient(gradient: GradientConfig): GradientConfig {

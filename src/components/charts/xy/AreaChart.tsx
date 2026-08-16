@@ -26,6 +26,7 @@ import {
   normalizeGradient,
   normalizeSemanticGradient,
   reverseGradient,
+  semanticLineStopsForGradient,
   type ColorGradientInput,
   type GradientInput,
   type SemanticGradientInput,
@@ -424,11 +425,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     [lineGradient],
   )
   const semanticLineStops = useMemo(
-    () => semanticLine && resolvedSemanticGradient?.stops.length
-      ? resolvedSemanticGradient.stops.flatMap(({ offset, color }) =>
-          color ? [{ offset, color }] : [],
-        )
-      : undefined,
+    () => semanticLine ? semanticLineStopsForGradient(resolvedSemanticGradient) : undefined,
     [resolvedSemanticGradient, semanticLine],
   )
 

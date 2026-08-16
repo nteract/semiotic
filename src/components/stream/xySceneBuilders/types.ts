@@ -71,7 +71,7 @@ export interface XYSceneConfig {
   gradientFill?: AreaGradientConfig
   areaGroups?: Set<string>
   lineGradient?: GradientConfig
-  semanticLineStops?: Array<{ offset: number; color: string }>
+  semanticLineStops?: Array<{ offset: number; color: string; opacity?: number }>
   annotations?: Datum[]
 
   // Point/bubble

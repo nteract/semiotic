@@ -7,7 +7,9 @@ export {
   renderChart,
   renderChartWithEvidence,
   renderDashboard,
+  serializeSvgPrecision,
 } from "./server/renderToStaticSVG"
+export type { RenderChartName, RenderChartOptions } from "./server/renderToStaticSVG"
 
 export { generateFrameSVGs, generatePhysicsFrameSVGs, generateFrameSequence } from "./server/animatedGif"
 

@@ -142,7 +142,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -158,6 +158,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -711,7 +712,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -727,6 +728,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -1340,7 +1342,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -1356,6 +1358,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -1947,7 +1950,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -1963,6 +1966,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -2530,7 +2534,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -2546,6 +2550,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -3114,7 +3119,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -3130,6 +3135,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -3486,7 +3492,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -3502,6 +3508,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -3890,7 +3897,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -3906,6 +3913,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -4466,7 +4474,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -4482,6 +4490,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -4865,7 +4874,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -4881,6 +4890,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -5430,7 +5440,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -5446,6 +5456,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -5986,7 +5997,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -6002,6 +6013,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -6532,7 +6544,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -6548,6 +6560,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -6928,7 +6941,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -6944,6 +6957,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -7469,7 +7483,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -7485,6 +7499,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -7871,7 +7886,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -7887,6 +7902,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -8247,7 +8263,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -8263,6 +8279,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -8616,7 +8633,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -8632,6 +8649,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -8998,7 +9016,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -9014,6 +9032,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -9370,7 +9389,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -9386,6 +9405,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -9762,7 +9782,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -9778,6 +9798,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -10116,7 +10137,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -10132,6 +10153,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -10483,7 +10505,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -10499,6 +10521,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -10870,7 +10893,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -10886,6 +10909,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -11456,7 +11480,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -11472,6 +11496,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -12023,7 +12048,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -12039,6 +12064,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -12568,7 +12594,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -12584,6 +12610,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -12962,7 +12989,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -12978,6 +13005,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -13337,7 +13365,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -13353,6 +13381,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -13704,7 +13733,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -13720,6 +13749,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -14156,7 +14186,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -14172,6 +14202,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -14456,7 +14487,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -14472,6 +14503,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -14800,7 +14832,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -14816,6 +14848,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -15116,7 +15149,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -15132,6 +15165,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -15420,7 +15454,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -15436,6 +15470,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -15690,7 +15725,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -15706,6 +15741,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -15928,6 +15964,11 @@
             "showLabels": {
               "type": "boolean",
               "default": true
+            },
+            "showAxes": {
+              "type": "boolean",
+              "description": "Show axes and category tick labels for vertical funnels.",
+              "default": true
             }
           },
           "required": [
@@ -16072,7 +16113,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -16088,6 +16129,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -16308,7 +16350,11 @@
             },
             "roundedTop": {
               "type": "number",
-              "description": "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners."
+              "description": "Rounded corner radius (px), or a function of rendered lane width, applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners.",
+              "x-semiotic-runtime-types": [
+                "number",
+                "function"
+              ]
             },
             "gradientFill": {
               "type": [
@@ -16487,7 +16533,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -16503,6 +16549,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -16817,7 +16864,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -16833,6 +16880,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -17220,7 +17268,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -17236,6 +17284,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -17765,7 +17814,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -17781,6 +17830,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -18348,7 +18398,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -18364,6 +18414,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -18824,7 +18875,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -18840,6 +18891,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -19436,7 +19488,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -19452,6 +19504,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -20169,7 +20222,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -20185,6 +20238,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -20656,7 +20710,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -20672,6 +20726,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -21212,7 +21267,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -21228,6 +21283,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -21656,7 +21712,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -21672,6 +21728,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -22096,7 +22153,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -22112,6 +22169,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -22538,7 +22596,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -22554,6 +22612,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -22955,7 +23014,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -22971,6 +23030,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -23611,7 +23671,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -23627,6 +23687,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -23985,7 +24046,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -24001,6 +24062,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -24357,7 +24419,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -24373,6 +24435,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -25465,7 +25528,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -25481,6 +25544,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",
@@ -26087,7 +26151,7 @@
             },
             "annotations": {
               "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
               "items": {
                 "type": "object",
                 "properties": {
@@ -26103,6 +26167,7 @@
                       "y-threshold",
                       "x-threshold",
                       "band",
+                      "x-band",
                       "enclose",
                       "rect-enclose",
                       "highlight",

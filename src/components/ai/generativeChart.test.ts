@@ -1,11 +1,15 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { renderChartWithEvidence } from "../server/renderToStaticSVG"
+import { repairChartConfig } from "./repairChartConfig"
+import { suggestCharts } from "./suggestCharts"
 import type { ChartToolDefinition } from "./generativeChart"
 import {
   chartGenerationTool,
+  createRenderEvidenceMemo,
   createChartToolHandler,
   prepareChart,
+  refreshChartDiagnostics,
   toAnthropicTool,
   toOpenAITool,
   toOpenAIResponsesTool,
@@ -88,6 +92,54 @@ describe("prepareChart", () => {
     expect(result.config?.component).toBe("BarChart")
     expect(result.jsx).toContain("<BarChart")
     expect(result.jsx).toContain('categoryAccessor="cat"')
+  })
+
+  it("refreshes narration diagnostics when preparation receives generated text", () => {
+    const withoutNarration = prepareChart(GOOD_BAR)
+    expect(withoutNarration.diagnostics.some((diagnostic) => diagnostic.code === "MISSING_DESCRIPTION")).toBe(true)
+
+    const withNarration = prepareChart(GOOD_BAR, {
+      narration: { description: "A bar chart comparing the three categories." },
+    })
+    expect(withNarration.props.description).toBe("A bar chart comparing the three categories.")
+    expect(withNarration.diagnostics.some((diagnostic) => diagnostic.code === "MISSING_DESCRIPTION")).toBe(false)
+    expect(refreshChartDiagnostics(withNarration.component, withNarration.props)
+      .some((diagnostic) => diagnostic.code === "MISSING_DESCRIPTION")).toBe(false)
+  })
+
+  it("memoizes render evidence by immutable data identity and relevant props", () => {
+    const render = vi.fn((_component: string, _props: Record<string, unknown>) => ({
+      svg: "<svg />",
+      evidence: evidence({}),
+    }))
+    const memo = createRenderEvidenceMemo(render)
+    const props = GOOD_BAR.props
+
+    expect(memo.render("BarChart", props)).toEqual(memo.render("BarChart", props))
+    expect(render).toHaveBeenCalledTimes(1)
+    memo.render("BarChart", { ...props, valueAccessor: "otherValue" })
+    expect(render).toHaveBeenCalledTimes(2)
+    memo.clear()
+    memo.render("BarChart", props)
+    expect(render).toHaveBeenCalledTimes(3)
+  })
+
+  it("keeps the documented suggestion → prepare → repair → render path type-safe", () => {
+    const [suggestion] = suggestCharts(BARS, { allow: ["BarChart"], includeVariants: false })
+    expect(suggestion).toBeDefined()
+    if (!suggestion) return
+
+    const prepared = prepareChart({ component: suggestion.component, props: suggestion.props })
+    const repaired = repairChartConfig(suggestion.component, BARS)
+    const alternative = repaired.status === "alternative" || repaired.status === "unknown"
+      ? repaired.alternatives[0] ?? suggestion
+      : suggestion
+    const preparedAlternative = prepareChart({ component: alternative.component, props: alternative.props })
+    const rendered = renderChartWithEvidence(alternative.component, alternative.props)
+
+    expect(prepared.validation.valid).toBe(true)
+    expect(preparedAlternative.validation.valid).toBe(true)
+    expect(rendered.evidence.component).toBe(alternative.component)
   })
 
   it("fails an unknown component without painting (no config, with reasons)", () => {

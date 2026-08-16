@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "initialScore": 5,
+    "promotionScore": 10,
+    "retirementScore": 0,
+    "minimumPromotionEvidence": 5,
+    "evidenceWeights": {
+      "confirmed_bug": 1,
+      "prevented_regression": 1,
+      "false_positive": -2,
+      "unsafe_remediation": -3,
+      "excessive_noise": -1,
+      "redundant": -2,
+      "rule_revision": 0
+    }
+  },
+  "rules": [
+    {
+      "id": "semiotic/frame-props-last",
+      "status": "unstable",
+      "score": 3,
+      "introducedAt": "2026-08-16",
+      "implementation": "scripts/custom-lint/rules/frame-props-last.mjs",
+      "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
+      "rationale": "Advanced frameProps retain final precedence unless a chart documents why it must compose an owned renderer or layout prop afterward.",
+      "evidence": [
+        {
+          "kind": "false_positive",
+          "date": "2026-08-16",
+          "reference": "initial-adoption-audit",
+          "note": "The original final-property rule misclassified documented chart-owned renderer and overlay composition after frameProps."
+        }
+      ]
+    },
+    {
+      "id": "semiotic/family-subpath-imports",
+      "status": "unstable",
+      "score": 5,
+      "introducedAt": "2026-08-16",
+      "implementation": "scripts/custom-lint/rules/family-subpath-imports.mjs",
+      "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
+      "rationale": "Production examples should model package-family imports so consumers do not accidentally widen their entry graph.",
+      "evidence": []
+    },
+    {
+      "id": "semiotic/interaction-test-layout-control",
+      "status": "unstable",
+      "score": 5,
+      "introducedAt": "2026-08-16",
+      "implementation": "scripts/custom-lint/rules/interaction-test-layout-control.mjs",
+      "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
+      "rationale": "Literal hover coordinates are invalid when an automatic grouped-chart legend changes the drawable plot dimensions.",
+      "evidence": []
+    }
+  ]
+}

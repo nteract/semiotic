@@ -642,7 +642,10 @@ export default function Legend(props: LegendProps) {
           : undefined
       }
       aria-label="Chart legend"
-      style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}
+      style={{
+        fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
+        fontWeight: "var(--semiotic-legend-font-weight, normal)",
+      }}
     >
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text

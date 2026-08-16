@@ -412,6 +412,25 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.margin.top).toBe(56)
   })
 
+  it("clamps a compact horizontal legend reservation to leave a plot", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        legendPosition: "bottom",
+        userMargin: undefined,
+        defaults: { top: 2, right: 0, bottom: 2, left: 0 },
+        chartWidth: 120,
+        chartHeight: 24,
+        axisChrome: { hasAxis: false }
+      })
+    )
+
+    expect(result.current.margin.top + result.current.margin.bottom).toBe(16)
+  })
+
   it("merges user margin with defaults", () => {
     const { result } = renderHook(() =>
       useChartLegendAndMargin({

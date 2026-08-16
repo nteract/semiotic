@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import type { BarCornerRadius, StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
@@ -37,7 +37,8 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
   /** Rounded corner radius on bar ends (away from baseline). */
-  roundedTop?: number
+  /** Rounded top corner radius, or a function of the rendered bar width. */
+  roundedTop?: BarCornerRadius
   /** Tip-to-base bar gradient using `{ stops: [{ offset, color?, opacity? }] }`. */
   gradientFill?: GradientInput
   /**

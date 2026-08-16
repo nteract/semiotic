@@ -637,7 +637,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           fill="var(--semiotic-text, #333)"
           fontSize={14}
           className="semiotic-chart-title"
-          style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
+          style={{
+            userSelect: "none",
+            fontSize: "var(--semiotic-title-font-size, 14px)",
+            fontFamily: "var(--semiotic-title-font-family, var(--semiotic-font-family, sans-serif))",
+            fontWeight: "var(--semiotic-title-font-weight, bold)",
+          }}
         >
           {title}
         </text>
