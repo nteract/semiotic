@@ -45,7 +45,7 @@ function refreshChartDiagnostics(component: string, props: Datum): Diagnosis[]
 function registerIntent(intent: IntentDescriptor): void
 function repairChartConfig(component: string, data: null | readonly Datum[] | undefined, options?: RepairOptions | undefined): RepairResult
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
-function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): Suggestion | {reason: string;}
+function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): ScoreChartResult
 function suggestCharts(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
 function suggestChartsGrouped(data: null | readonly Datum[] | undefined, options?: (SuggestChartsOptions & {maxPerBand?: number;}) | undefined): ScaledSuggestionGroups
 function suggestDashboard(data: null | readonly Datum[] | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
@@ -124,6 +124,7 @@ interface RenderEvidenceMemo
 interface RepairOptions extends ProfileDataOptions
 interface ReprofileFieldsOptions
 interface ScoreChartOptions extends ProfileDataOptions
+interface ScoreChartRejected
 interface SemanticRenderEvidence
 interface SemanticViabilityDiagnostic
 interface SemanticViabilityRule
@@ -467,6 +468,8 @@ interface-member ScoreChartOptions::property::profile = optional profile: ChartD
 interface-member ScoreChartOptions::property::receptionChannel = optional receptionChannel: ReceptionModality | undefined
 interface-member ScoreChartOptions::property::riskTolerance = optional riskTolerance: "high" | "low" | "medium" | undefined
 interface-member ScoreChartOptions::property::variantKey = optional variantKey: string | undefined
+interface-member ScoreChartRejected::property::reason = required reason: string
+interface-member ScoreChartRejected::property::status = required status: "rejected"
 interface-member SemanticRenderEvidence::property::categories = optional readonly categories: readonly string[] | undefined
 interface-member SemanticRenderEvidence::property::component = required readonly component: string
 interface-member SemanticRenderEvidence::property::edgeCount = optional readonly edgeCount: number | undefined
@@ -493,6 +496,7 @@ interface-member StreamSuggestion::property::importPath = required importPath: "
 interface-member StreamSuggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
 interface-member StreamSuggestion::property::props = required props: Record<string, unknown>
 interface-member StreamSuggestion::property::reasons = required reasons: readonly string[]
+interface-member StreamSuggestion::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamSuggestion::property::rubric = required rubric: ChartRubric
 interface-member StreamSuggestion::property::score = required score: number
 interface-member StretchSuggestion::property::familiarity = required familiarity: number
@@ -582,6 +586,8 @@ type ProfileFieldRoleHint = ProfileFieldRole | ReadonlyArray<ProfileFieldRole>
 type ProfileFieldRoleHints = Readonly<Record<string, ProfileFieldRoleHint>>
 type RenderFn = (component: string, props: Datum) => {svg: string; evidence: RenderEvidence;}
 type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResult
+type ScoreChartResult = ScoreChartRejected | ScoreChartSuggestion
+type ScoreChartSuggestion = Suggestion & {status?: "ok";}
 type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
 type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 ```

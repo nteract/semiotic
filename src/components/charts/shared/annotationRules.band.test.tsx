@@ -140,6 +140,20 @@ describe("band annotations", () => {
     expect(xBand).toContain('x2="100%"')
     expect(xBand).toContain('fill="url(#ann-1-gradient)"')
   })
+
+  it("uses a string fill as the fallback color for gradient stops", () => {
+    const svg = renderToStaticMarkup(
+      rules({
+        type: "band",
+        y0: 30,
+        y1: 70,
+        fill: "#00ff00",
+        gradient: { stops: [{ offset: 0 }, { offset: 1 }] },
+      }, 0, context) as React.ReactElement,
+    )
+
+    expect(svg).toContain('stop-color="#00ff00"')
+  })
 })
 
 describe("top annotation label clearance", () => {

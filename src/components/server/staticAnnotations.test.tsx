@@ -264,6 +264,20 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain('fill="url(#ssr-band-0-gradient)"')
     })
 
+    it("uses a string fill as the fallback color for gradient stops", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{
+          type: "band",
+          y0: 25,
+          y1: 75,
+          fill: "#00ff00",
+          gradient: { stops: [{ offset: 0 }, { offset: 1 }] },
+        }],
+      })
+      expect(svg).toContain('stop-color="#00ff00"')
+    })
+
     it("uses default opacity", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,

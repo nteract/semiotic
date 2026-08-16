@@ -233,7 +233,7 @@ function resolveRowsToNumber(declared: ScaleBand | number | undefined, measuredR
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function runQualityScorecard(fixtures: readonly ScorecardFixture[], capabilities?: readonly ChartCapability[] | undefined): ScorecardReport
 function scaleHints(hint: ScaleHintInput): ScaleFitFn
-function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): Suggestion | {reason: string;}
+function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): ScoreChartResult
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): number
 function subscribeToConversationArcChange(listener: () => void): () => void
@@ -484,6 +484,7 @@ interface ScaleHintInput
 interface ScaleThresholds
 interface ScaledSuggestionGroups
 interface ScoreChartOptions extends ProfileDataOptions
+interface ScoreChartRejected
 interface ScorecardFixture
 interface ScorecardReport
 interface SelectionEndObservation extends ObservationBase
@@ -1686,6 +1687,8 @@ interface-member ScoreChartOptions::property::profile = optional profile: ChartD
 interface-member ScoreChartOptions::property::receptionChannel = optional receptionChannel: ReceptionModality | undefined
 interface-member ScoreChartOptions::property::riskTolerance = optional riskTolerance: "high" | "low" | "medium" | undefined
 interface-member ScoreChartOptions::property::variantKey = optional variantKey: string | undefined
+interface-member ScoreChartRejected::property::reason = required reason: string
+interface-member ScoreChartRejected::property::status = required status: "rejected"
 interface-member ScorecardFixture::property::data = required data: readonly Datum[]
 interface-member ScorecardFixture::property::expected = optional expected: readonly string[] | undefined
 interface-member ScorecardFixture::property::expectsNoFit = optional expectsNoFit: boolean | undefined
@@ -1769,6 +1772,7 @@ interface-member StreamChartCapability::property::component = required component
 interface-member StreamChartCapability::property::fits = required fits: (schema: StreamSchema) => null | string
 interface-member StreamChartCapability::property::importPath = required importPath: "semiotic/realtime"
 interface-member StreamChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, StreamIntentScorer>>
+interface-member StreamChartCapability::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamChartCapability::property::rubric = required rubric: ChartRubric
 interface-member StreamFieldSchema::property::kind = required kind: StreamFieldKind
 interface-member StreamFieldSchema::property::name = required name: string
@@ -1783,6 +1787,7 @@ interface-member StreamSuggestion::property::importPath = required importPath: "
 interface-member StreamSuggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
 interface-member StreamSuggestion::property::props = required props: Record<string, unknown>
 interface-member StreamSuggestion::property::reasons = required reasons: readonly string[]
+interface-member StreamSuggestion::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamSuggestion::property::rubric = required rubric: ChartRubric
 interface-member StreamSuggestion::property::score = required score: number
 interface-member StretchSuggestion::property::familiarity = required familiarity: number
@@ -2152,6 +2157,8 @@ type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResu
 type ResponsiveOrientation = "landscape" | "portrait"
 type ScaleBand = "huge" | "large" | "medium" | "small" | "tiny"
 type ScaleFitFn = (profile: ChartDataProfile, effective: EffectiveScale, scale: DataScaleProfile | undefined) => ScaleFitResult | null
+type ScoreChartResult = ScoreChartRejected | ScoreChartSuggestion
+type ScoreChartSuggestion = Suggestion & {status?: "ok";}
 type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
 type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 type SerializableSchema = Record<string, unknown>

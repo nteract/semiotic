@@ -84,7 +84,7 @@ function StreamingRevenue() {
         const i = indexRef.current++
         const region = regions[i % regions.length]
         chartRef.current.push({
-          time: Math.floor(i / STREAMING_REGIONS.length),
+          time: Math.floor(i / regions.length),
           value: 5000 + Math.random() * 10000,
           region,
         })

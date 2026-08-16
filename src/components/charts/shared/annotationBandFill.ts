@@ -9,10 +9,15 @@ export function resolveAnnotationBandFill(
   fallback: string,
 ) {
   const solidFill = resolveSvgFill(annotation.fill ?? annotation.color, idBase, fallback)
+  const gradientFallback = typeof annotation.fill === "string" && annotation.fill
+    ? annotation.fill
+    : typeof annotation.color === "string" && annotation.color
+      ? annotation.color
+      : fallback
   return resolveAnnotationGradient(
     annotation.gradient,
     idBase,
     direction,
-    annotation.color || fallback,
+    gradientFallback,
   ) ?? solidFill
 }

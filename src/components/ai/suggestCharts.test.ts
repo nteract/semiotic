@@ -443,7 +443,7 @@ describe("scoreChart", () => {
   it("returns a reason when the chart doesn't fit", () => {
     const result = scoreChart("StackedBarChart", categorical)
     expect(result.status).toBe("rejected")
-    if (result.status === "rejected") expect(result.reason).toBeTruthy()
+    if (result.status !== "ok") expect(result.reason).toBeTruthy()
   })
 
   it("returns a reason for unknown components", () => {
