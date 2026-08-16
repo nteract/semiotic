@@ -587,7 +587,7 @@ type ProfileFieldRoleHints = Readonly<Record<string, ProfileFieldRoleHint>>
 type RenderFn = (component: string, props: Datum) => {svg: string; evidence: RenderEvidence;}
 type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResult
 type ScoreChartResult = ScoreChartRejected | ScoreChartSuggestion
-type ScoreChartSuggestion = Suggestion & {status?: "ok";}
+type ScoreChartSuggestion = Suggestion & {status: "ok";}
 type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
 type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 ```

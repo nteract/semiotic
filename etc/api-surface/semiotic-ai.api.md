@@ -2158,7 +2158,7 @@ type ResponsiveOrientation = "landscape" | "portrait"
 type ScaleBand = "huge" | "large" | "medium" | "small" | "tiny"
 type ScaleFitFn = (profile: ChartDataProfile, effective: EffectiveScale, scale: DataScaleProfile | undefined) => ScaleFitResult | null
 type ScoreChartResult = ScoreChartRejected | ScoreChartSuggestion
-type ScoreChartSuggestion = Suggestion & {status?: "ok";}
+type ScoreChartSuggestion = Suggestion & {status: "ok";}
 type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
 type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 type SerializableSchema = Record<string, unknown>
