@@ -283,12 +283,12 @@ describe("renderChart SVG precision", () => {
 
   it("preserves compact SVG numeric boundaries while rounding", () => {
     const svg = serializeSvgPrecision(
-      '<svg><path d="M.4.5L-.4-.5" points=".4.5,-.4-.5" transform="translate(.4.5)" /></svg>',
+      '<svg><path d="M.4.5L-.6-.6" points=".4.5,-.6-.6" transform="translate(.4.5)" /></svg>',
       0,
     )
 
-    expect(svg).toContain('d="M0 1L0 -1"')
-    expect(svg).toContain('points="0 1,0 -1"')
+    expect(svg).toContain('d="M0 1L-1 -1"')
+    expect(svg).toContain('points="0 1,-1 -1"')
     expect(svg).toContain('transform="translate(0 1)"')
   })
 

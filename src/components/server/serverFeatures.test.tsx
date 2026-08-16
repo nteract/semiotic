@@ -227,8 +227,22 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
       showGrid: true,
       frameProps: {
         axes: [
-          { orient: "top", tickValues: [0, 2], tickFormat: (v: number) => `top-${v}`, label: "Top axis", grid: false },
-          { orient: "right", tickValues: [10, 40], tickFormat: (v: number) => `right-${v}`, label: "Right axis", gridStyle: "dashed" },
+          {
+            orient: "top",
+            tickValues: [0, 2],
+            tickFormat: (v: number) => `top-${v}`,
+            label: "Top axis",
+            grid: false,
+            axisStyle: { stroke: "#dc2626", strokeWidth: 2 },
+          },
+          {
+            orient: "right",
+            tickValues: [10, 40],
+            tickFormat: (v: number) => `right-${v}`,
+            label: "Right axis",
+            gridStyle: "dashed",
+            axisStyle: { stroke: "#2563eb", strokeWidth: 3 },
+          },
         ],
       },
     })
@@ -240,6 +254,8 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
     const grid = svg.match(/<g[^>]*class="semiotic-grid"[\s\S]*?<\/g>/)?.[0] ?? ""
     expect(grid).not.toMatch(/<line[^>]*x1="(?!0")/)
     expect(grid).toContain('stroke-dasharray="6,4"')
+    expect(svg).toMatch(/<line(?=[^>]*\by1="0")(?=[^>]*\by2="0")(?=[^>]*\bstroke="#dc2626")/)
+    expect(svg).toMatch(/<line(?=[^>]*\bx1="290")(?=[^>]*\bx2="290")(?=[^>]*\bstroke="#2563eb")/)
   })
 })
 

@@ -119,6 +119,47 @@ describe("per-axis grid visibility", () => {
     expect(baseline).toHaveAttribute("stroke-width", "3")
     expect(baseline).toHaveAttribute("stroke-dasharray", "5,1")
   })
+
+  it("places and styles top/right-only axes in both SVG layers", () => {
+    const axes = [
+      { orient: "top" as const, grid: false, axisStyle: { stroke: "#dc2626", strokeWidth: 2 } },
+      { orient: "right" as const, grid: false, axisStyle: { stroke: "#2563eb", strokeWidth: 3 } },
+    ]
+    const overlay = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={axes}
+      />,
+    ).container
+    const underlay = render(
+      <SVGUnderlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={axes}
+      />,
+    ).container
+
+    const topBaseline = overlay.querySelector("[data-orient='top'] > line")
+    expect(topBaseline).toHaveAttribute("y1", "0")
+    expect(topBaseline).toHaveAttribute("y2", "0")
+    expect(topBaseline).toHaveAttribute("stroke", "#dc2626")
+    expect(overlay.querySelector("[data-orient='top'] > g > line")).toHaveAttribute("y2", "-5")
+    expect(overlay.querySelector("[data-orient='bottom']")).toBeNull()
+
+    const rightBaseline = overlay.querySelector("[data-orient='right'] > line")
+    expect(rightBaseline).toHaveAttribute("x1", "300")
+    expect(rightBaseline).toHaveAttribute("x2", "300")
+    expect(rightBaseline).toHaveAttribute("stroke", "#2563eb")
+    expect(overlay.querySelector("[data-orient='left']")).toBeNull()
+
+    expect(underlay.querySelector('line[stroke="#dc2626"]')).toHaveAttribute("y1", "0")
+    expect(underlay.querySelector('line[stroke="#2563eb"]')).toHaveAttribute("x1", "300")
+  })
 })
 
 // ── tickAnchor ─────────────────────────────────────────────────────────
