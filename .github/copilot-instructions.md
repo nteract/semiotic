@@ -21,3 +21,10 @@ commands, product contracts, or the full verification matrix.
 For chart-generation guidance, start with `ai/system-prompt.md` and the exact
 component schema. Treat `ai/reference.md` and `ai/examples.md` as on-demand
 resources rather than default context.
+
+For pull request review, use the workflow in
+`.github/skills/code-review/SKILL.md`. Use GitHub MCP to retrieve referenced
+issues, incidents, related pull requests, and relevant CI results. Use
+Playwright MCP when a review claim depends on browser rendering, interaction,
+responsive layout, hydration, or accessibility. When an unstable custom lint
+fails, evaluate the rule as well as the code before recommending a disposition.

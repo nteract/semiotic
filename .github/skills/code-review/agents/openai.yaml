@@ -1,0 +1,4 @@
+interface:
+  display_name: "Semiotic Code Review"
+  short_description: "Review Semiotic pull requests against runtime contracts"
+  default_prompt: "Review this Semiotic pull request for correctness, regressions, contract drift, and missing verification."
