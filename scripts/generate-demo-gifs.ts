@@ -9,8 +9,12 @@
 
 import * as fs from "fs"
 import * as path from "path"
-import { renderToAnimatedGif } from "../src/components/server/animatedGif"
-import { generateFrameSequence } from "../src/components/server/animatedGif"
+import { applyPalette, GIFEncoder, quantize } from "gifenc"
+import sharp from "sharp"
+import {
+  generateFrameSequence,
+  renderToAnimatedGif,
+} from "semiotic/server/node"
 
 const OUT = path.resolve(__dirname, "../docs/public/assets/gifs")
 fs.mkdirSync(OUT, { recursive: true })
@@ -132,8 +136,6 @@ async function main() {
     nodeStyle: (d: any) => ({ fill: groupColors[d.data?.group] || "#888" }),
   })
   // Encode SVG frames to GIF manually using sharp + gifenc
-  const sharp = require("sharp")
-  const { GIFEncoder, quantize, applyPalette } = require("gifenc")
   const networkEncoder = GIFEncoder()
   for (const svg of networkSvgs) {
     const pixels = await sharp(Buffer.from(svg), { density: 144 })
