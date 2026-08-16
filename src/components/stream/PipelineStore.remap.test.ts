@@ -120,7 +120,7 @@ describe("PipelineStore — Resize Remap", () => {
     store.computeScene({ width: 100, height: 100 })
     const area = store.scene.find(n => n.type === "area")
     const initialBands = area?.type === "area" ? area.strokeColorBands : undefined
-    expect(initialBands?.map((band) => band.color)).toEqual([undefined, "#warning", "#critical"])
+    expect(initialBands?.map((band) => band.color)).toEqual(["#warning", "#warning", "#critical"])
     expect(initialBands?.map((band) => band.y)).toEqual(
       expect.arrayContaining([expect.closeTo(50), expect.closeTo(20), expect.closeTo(0)]),
     )
@@ -131,7 +131,7 @@ describe("PipelineStore — Resize Remap", () => {
     store.computeScene({ width: 200, height: 200 })
     const resized = store.scene.find(n => n.type === "area")
     const resizedBands = resized?.type === "area" ? resized.strokeColorBands : undefined
-    expect(resizedBands?.map((band) => band.color)).toEqual([undefined, "#warning", "#critical"])
+    expect(resizedBands?.map((band) => band.color)).toEqual(["#warning", "#warning", "#critical"])
     expect(resizedBands?.map((band) => band.y)).toEqual(
       expect.arrayContaining([expect.closeTo(100), expect.closeTo(40), expect.closeTo(0)]),
     )

@@ -257,8 +257,8 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
         {hasGrid && (() => {
           const bottomGridStyle = resolveGridDash((bottomAxis ?? topAxis)?.gridStyle)
           const leftGridStyle = resolveGridDash((leftAxis ?? rightAxis)?.gridStyle)
-          const showXGrid = axes?.find(a => a.orient === "bottom")?.grid !== false
-          const showYGrid = axes?.find(a => a.orient === "left")?.grid !== false
+          const showXGrid = (bottomAxis ?? topAxis)?.grid !== false
+          const showYGrid = (leftAxis ?? rightAxis)?.grid !== false
           return (
           <g className="stream-grid">
             {showXGrid && xTicks.map((tick, i) => (

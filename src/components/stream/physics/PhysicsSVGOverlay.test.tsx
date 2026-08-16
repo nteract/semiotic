@@ -89,7 +89,7 @@ describe("PhysicsSVGOverlay", () => {
   })
 
   it("renders title, legend swatches, and body-anchored labels", () => {
-    render(
+    const { container } = render(
       <PhysicsSVGOverlay
         width={200}
         height={120}
@@ -123,6 +123,9 @@ describe("PhysicsSVGOverlay", () => {
     expect(screen.getByText("Overlay title")).toBeInTheDocument()
     expect(screen.getByText("Alpha")).toBeInTheDocument()
     expect(screen.getByText("Body note")).toBeInTheDocument()
+    const title = container.querySelector(".semiotic-chart-title")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-family")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-weight")
   })
 
   it("honors x-threshold annotations in pixel space", () => {

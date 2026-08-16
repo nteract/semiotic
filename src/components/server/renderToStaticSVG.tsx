@@ -142,7 +142,7 @@ export function serializeSvgPrecision(svg: string, precision?: number): string {
   return svg.replace(/<[^>]+>/g, (tag) => tag.replace(
     /\s([\w:-]+)="([^"]*)"/g,
     (attribute, name: string, value: string) => {
-      if (!PRECISION_ATTRIBUTES.has(name)) return attribute
+      if (!PRECISION_ATTRIBUTES.has(name) || /\b(?:var|calc|url)\(/i.test(value)) return attribute
       return ` ${name}="${value.replace(SVG_NUMBER, (number) => roundSvgNumber(number, resolved))}"`
     },
   ))
@@ -298,7 +298,7 @@ function renderChartInternal(
   options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
-  if (component in VALUE_RENDERERS) {
+  if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {
       svg: serializeSvgPrecision(renderValueChart(component as ValueChartName, props, sink), options?.precision),
       frameType: "value"
@@ -308,13 +308,13 @@ function renderChartInternal(
   // Resolve the public HOC contract before mapping chart-specific props. The
   // resolver is the same pure function every React chart HOC consumes, so
   // context/sparkline/mobile dimensions and chrome cannot drift in SSR.
-  const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]
-  if (!config) {
+  if (!Object.prototype.hasOwnProperty.call(CHART_CONFIGS, component)) {
     throw new Error(
       `Unknown chart component: "${component}". ` +
         `Run \`npx semiotic-ai --list\` for supported chart types.`
     )
   }
+  const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]
   // Some chart families also own a chart-specific `mode` prop (for example
   // physics `mode="mechanical"`). Only consume the four semantic display
   // modes here; the original prop remains in `rest` for the chart builder.
@@ -701,10 +701,10 @@ export function renderDashboard(
           x={width / 2}
           y={24}
           textAnchor="middle"
-          fontSize={s.titleSize + 4}
-          fontWeight="bold"
+          fontSize={s.titleFontSize + 4}
+          fontWeight={s.titleFontWeight}
           fill={s.text}
-          fontFamily={s.fontFamily}
+          fontFamily={s.titleFontFamily}
         >
           {title}
         </text>

@@ -77,6 +77,20 @@ describe("per-axis grid visibility", () => {
     for (const line of gridLines) expect(line.getAttribute("x1")).toBe("0")
   })
 
+  it("uses top/right-only axes for underlay grid visibility", () => {
+    const { container } = render(
+      <SVGUnderlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[{ orient: "top", grid: false }, { orient: "right", grid: false }]}
+      />,
+    )
+
+    expect(container.querySelectorAll("g.stream-grid line")).toHaveLength(0)
+  })
+
   it("applies per-axis grid and baseline stroke attributes", () => {
     const { container } = render(
       <SVGOverlay

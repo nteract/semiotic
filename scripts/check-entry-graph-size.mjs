@@ -69,7 +69,10 @@ const ENTRY_GRAPHS = [
   // the portal implementation, the network graph measures 148.1 KiB gzip.
   { entry: "network.module.min.js", label: "network", limitKb: 149 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
+  // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
+  // resolved plot height through every realtime chart so legends cannot erase
+  // the drawable area. Production graph measures 160.2 KiB gzip.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 161 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -79,7 +82,10 @@ const ENTRY_GRAPHS = [
   // Bumped 163→164 (3.9.0): physics frames share the opt-in accessible-table
   // portal contract. The lazy implementation leaves the graph at 163.1 KiB.
   { entry: "physics.module.min.js", label: "physics", limitKb: 164 },
-  { entry: "server.module.min.js", label: "server", limitKb: 240 },
+  // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
+  // precision add serializer/runtime code to the server entry. Production
+  // graph measures 240.8 KiB gzip; retain measured one-KiB headroom.
+  { entry: "server.module.min.js", label: "server", limitKb: 242 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -109,7 +115,10 @@ const ENTRY_GRAPHS = [
   // Bumped 510→512 (3.9.0): composable/schema-aware intents, identifier-safe
   // profiling and re-derivation, suggestion prop contracts, and semantic
   // viability evidence measure 511.1 KiB after dependency and registry splits.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 512 },
+  // Bumped 512→514 (3.9.0): typed suggestion preparation, narration
+  // diagnostic refresh, and render-evidence memoization complete the public
+  // AI repair/render flow. Production graph measures 512.4 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 514 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

@@ -20,7 +20,9 @@ function lint(code, ruleId, filename) {
 describe("Semiotic custom lint rules", () => {
   it("requires frameProps spreads to retain final precedence", () => {
     assert.equal(lint("const props = { data, ...framePropsWithoutLegend }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 0)
-    assert.equal(lint("const props = { ...frameProps, /* compose the owned overlay after the spread */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 0)
+    assert.equal(lint("const props = { ...frameProps, /* frameProps precedence: compose the owned overlay after the spread */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 0)
+    assert.equal(lint("const props = { ...frameProps, /* preserve the label color */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 1)
+    assert.equal(lint("const props = { ...frameProps, data, /* frameProps precedence: compose the foreground */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 1)
     const findings = lint("const props = { ...frameProps, data }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx")
     assert.equal(findings.length, 1)
     assert.equal(findings[0].messageId, "framePropsLast")
@@ -46,5 +48,14 @@ describe("Semiotic custom lint rules", () => {
     assert.equal(findings.length, 1)
     assert.equal(findings[0].messageId, "uncontrolledLayout")
     assert.equal(lint(valid, "semiotic/interaction-test-layout-control", "src/example.test.tsx").length, 0)
+    const separateTests = `
+      it("grouped chart", () => {
+        const view = <LineChart lineBy="series" />
+      })
+      it("unrelated pointer test", () => {
+        fireEvent.mouseMove(target, { clientX: 100, clientY: 50 })
+      })
+    `
+    assert.equal(lint(separateTests, "semiotic/interaction-test-layout-control", "src/example.test.tsx").length, 0)
   })
 })

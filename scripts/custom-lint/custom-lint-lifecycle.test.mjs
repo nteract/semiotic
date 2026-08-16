@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
   calculateRuleScore,
+  evidenceDigest,
+  validateEvidenceCursor,
   validateCustomLintRegistry
 } from "../lib/custom-lint-lifecycle.mjs"
 
@@ -87,5 +89,27 @@ describe("custom lint lifecycle", () => {
     assert.match(validateCustomLintRegistry(registry(rule)).join("\n"), /requires retired status/)
     rule.status = "retired"
     assert.deepEqual(validateCustomLintRegistry(registry(rule)), [])
+  })
+
+  it("makes evidence append-only after the baseline cursor", () => {
+    const first = event("confirmed_bug", 1)
+    const rule = candidate({ score: 6, evidence: [first] })
+    const cursor = { [rule.id]: { count: 1, digest: evidenceDigest(rule.evidence) } }
+    const updated = { ...rule, score: 7, evidence: [first, event("prevented_regression", 2)] }
+
+    assert.deepEqual(validateEvidenceCursor(registry(updated), cursor), [])
+    const rewritten = {
+      ...updated,
+      evidence: [{ ...first, note: "Edited historical evidence note" }, updated.evidence[1]]
+    }
+    assert.match(
+      validateEvidenceCursor(registry(rewritten), cursor).join("\n"),
+      /edited or reordered/
+    )
+    const removed = { ...rule, evidence: [] }
+    assert.match(
+      validateEvidenceCursor(registry(removed), cursor).join("\n"),
+      /evidence was removed/
+    )
   })
 })

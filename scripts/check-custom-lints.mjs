@@ -7,7 +7,7 @@ import { ESLint } from "eslint"
 import {
   ACTIVE_STATUSES,
   RULE_CHANGE_EVIDENCE,
-  calculateRuleScore,
+  validateEvidenceCursor,
   validateCustomLintRegistry
 } from "./lib/custom-lint-lifecycle.mjs"
 
@@ -30,12 +30,6 @@ function normalizedSourceLine(filePath, line) {
 
 function fingerprint(finding) {
   return [finding.ruleId, finding.file, finding.messageId || finding.message, finding.source].join(" :: ")
-}
-
-function countsByRule(findings) {
-  const counts = {}
-  for (const finding of findings) counts[finding.ruleId] = (counts[finding.ruleId] || 0) + 1
-  return counts
 }
 
 function countFingerprints(findings) {
@@ -111,6 +105,23 @@ const registry = readJson(registryPath)
 const baseline = readJson(baselinePath)
 const activeIds = new Set(registry.rules.filter(rule => ACTIVE_STATUSES.has(rule.status)).map(rule => rule.id))
 const eslint = new ESLint({ cwd: repoRoot, overrideConfigFile: configPath })
+const effectiveConfig = await eslint.calculateConfigForFile(join(repoRoot, "src/components/stream/SVGOverlay.tsx"))
+const configuredRuleIds = new Set(
+  Object.entries(effectiveConfig.rules || {})
+    .filter(([id, setting]) => {
+      const severity = Array.isArray(setting) ? setting[0] : setting
+      return id.startsWith("semiotic/") && (severity === 2 || severity === "error")
+    })
+    .map(([id]) => id)
+)
+const missingConfiguredRules = [...activeIds].filter(id => !configuredRuleIds.has(id))
+const untrackedConfiguredRules = [...configuredRuleIds].filter(id => !activeIds.has(id))
+if (missingConfiguredRules.length > 0 || untrackedConfiguredRules.length > 0) {
+  console.error("CUSTOM LINT POLICY: registry and ESLint configuration disagree")
+  if (missingConfiguredRules.length > 0) console.error(`  active but not configured: ${missingConfiguredRules.join(", ")}`)
+  if (untrackedConfiguredRules.length > 0) console.error(`  configured but not active: ${untrackedConfiguredRules.join(", ")}`)
+  process.exit(1)
+}
 const results = await eslint.lintFiles(["src/**/*.{js,jsx,ts,tsx}", "docs/src/**/*.{js,jsx,ts,tsx}"])
 const findings = []
 for (const result of results) {
@@ -135,7 +146,10 @@ for (const [key, count] of Object.entries(baseline.findings || {})) {
   const id = ruleIdFromFingerprint(key)
   baselineCounts[id] = (baselineCounts[id] || 0) + count
 }
-const registryErrors = validateCustomLintRegistry(registry, { repoRoot, baselineCounts })
+const registryErrors = [
+  ...validateCustomLintRegistry(registry, { repoRoot, baselineCounts }),
+  ...validateEvidenceCursor(registry, baseline.evidenceCursor)
+]
 if (registryErrors.length > 0) {
   console.error("CUSTOM LINT POLICY: INVALID")
   for (const error of registryErrors) console.error(`  - ${error}`)

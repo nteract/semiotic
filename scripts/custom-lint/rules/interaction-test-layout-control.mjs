@@ -57,8 +57,43 @@ export default {
   },
   create(context) {
     if (!/\.(test|spec)\.[^.]+$/.test(context.filename)) return {}
-    const hardcodedMoves = []
-    let hasGroupedChartWithAutomaticLegend = false
+    const stateByScope = new Map()
+
+    function isTestCallback(node) {
+      const call = node.parent
+      return (
+        call?.type === "CallExpression" &&
+        call.callee.type === "Identifier" &&
+        (call.callee.name === "it" || call.callee.name === "test")
+      )
+    }
+
+    function nearestInteractionScope(node) {
+      let current = node.parent
+      let fallback
+      while (current) {
+        if (
+          current.type === "ArrowFunctionExpression" ||
+          current.type === "FunctionExpression" ||
+          current.type === "FunctionDeclaration"
+        ) {
+          if (isTestCallback(current)) return current
+          fallback ||= current
+        }
+        current = current.parent
+      }
+      return fallback ?? context.sourceCode.ast
+    }
+
+    function stateFor(node) {
+      const scope = nearestInteractionScope(node)
+      let state = stateByScope.get(scope)
+      if (!state) {
+        state = { hasGroupedChartWithAutomaticLegend: false, hardcodedMoves: [] }
+        stateByScope.set(scope, state)
+      }
+      return state
+    }
 
     return {
       JSXOpeningElement(node) {
@@ -68,16 +103,18 @@ export default {
         const hasGrouping = attributes.some(attribute => GROUPING_PROPS.has(attributeName(attribute)))
         const showLegend = attributes.find(attribute => attributeName(attribute) === "showLegend")
         if (hasGrouping && !isExplicitFalse(showLegend)) {
-          hasGroupedChartWithAutomaticLegend = true
+          stateFor(node).hasGroupedChartWithAutomaticLegend = true
         }
       },
       CallExpression(node) {
-        if (isHardcodedFireEventMove(node)) hardcodedMoves.push(node)
+        if (isHardcodedFireEventMove(node)) stateFor(node).hardcodedMoves.push(node)
       },
       "Program:exit"() {
-        if (!hasGroupedChartWithAutomaticLegend) return
-        for (const node of hardcodedMoves) {
-          context.report({ node, messageId: "uncontrolledLayout" })
+        for (const state of stateByScope.values()) {
+          if (!state.hasGroupedChartWithAutomaticLegend) continue
+          for (const node of state.hardcodedMoves) {
+            context.report({ node, messageId: "uncontrolledLayout" })
+          }
         }
       }
     }

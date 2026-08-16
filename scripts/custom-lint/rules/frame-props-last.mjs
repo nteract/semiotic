@@ -24,11 +24,13 @@ export default {
             property.argument.type === "Identifier" &&
             FRAME_PROPS_RE.test(property.argument.name)
           ) {
+            const firstOverride = node.properties[index + 1]
             const comments = sourceCode.getAllComments().filter(comment =>
-              comment.range[0] > property.range[1] && comment.range[1] < node.range[1]
+              comment.range[0] >= property.range[1] && comment.range[1] <= firstOverride.range[0]
             )
             const explainsOverride = comments.some(comment =>
-              /override|compose|preserve|clobber|after (?:the )?spread/i.test(comment.value)
+              /frame\s*props/i.test(comment.value) &&
+              /override|precedence|compose|preserve|clobber|after (?:the )?spread/i.test(comment.value)
             )
             if (explainsOverride) continue
             context.report({

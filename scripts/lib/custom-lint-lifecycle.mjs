@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
 import { resolve } from "node:path"
 
@@ -9,6 +10,39 @@ export const RULE_CHANGE_EVIDENCE = new Set([
   "redundant",
   "rule_revision"
 ])
+
+export function evidenceDigest(evidence = []) {
+  return createHash("sha256").update(JSON.stringify(evidence)).digest("hex").slice(0, 16)
+}
+
+/** Ensure historical evidence remains append-only after a baseline is recorded. */
+export function validateEvidenceCursor(registry, cursorByRule = {}) {
+  const errors = []
+  const knownIds = new Set((registry.rules || []).map(rule => rule.id))
+  for (const [id, cursor] of Object.entries(cursorByRule)) {
+    if (!knownIds.has(id)) errors.push(`evidence cursor contains unknown rule ${id}`)
+    if (!Number.isInteger(cursor?.count) || cursor.count < 0 || typeof cursor?.digest !== "string") {
+      errors.push(`${id}: evidence cursor must include a non-negative count and digest`)
+    }
+  }
+  for (const rule of registry.rules || []) {
+    const cursor = cursorByRule[rule.id]
+    if (!cursor) {
+      errors.push(`${rule.id}: evidence cursor is missing`)
+      continue
+    }
+    const evidence = rule.evidence || []
+    if (!Number.isInteger(cursor.count) || cursor.count < 0 || typeof cursor.digest !== "string") continue
+    if (evidence.length < cursor.count) {
+      errors.push(`${rule.id}: evidence was removed after the recorded cursor`)
+      continue
+    }
+    if (evidenceDigest(evidence.slice(0, cursor.count)) !== cursor.digest) {
+      errors.push(`${rule.id}: evidence before the recorded cursor was edited or reordered`)
+    }
+  }
+  return errors
+}
 
 export function calculateRuleScore(registry, rule) {
   const { initialScore, promotionScore, retirementScore, evidenceWeights } = registry.policy

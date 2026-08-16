@@ -30,6 +30,12 @@
           "date": "2026-08-16",
           "reference": "initial-adoption-audit",
           "note": "The original final-property rule misclassified documented chart-owned renderer and overlay composition after frameProps."
+        },
+        {
+          "kind": "rule_revision",
+          "date": "2026-08-16",
+          "reference": "review-local-frame-prop-scope",
+          "note": "Review required the precedence explanation to be attached to the frameProps spread and first override."
         }
       ]
     },
@@ -51,7 +57,14 @@
       "implementation": "scripts/custom-lint/rules/interaction-test-layout-control.mjs",
       "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
       "rationale": "Literal hover coordinates are invalid when an automatic grouped-chart legend changes the drawable plot dimensions.",
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "rule_revision",
+          "date": "2026-08-16",
+          "reference": "review-local-interaction-scope",
+          "note": "Review limited grouped-chart and literal-pointer correlation to the same function scope."
+        }
+      ]
     }
   ]
 }

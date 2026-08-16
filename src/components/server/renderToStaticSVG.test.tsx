@@ -9,7 +9,8 @@ import {
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
   renderGeoToStaticSVG,
-  renderChart
+  renderChart,
+  serializeSvgPrecision
 } from "./renderToStaticSVG"
 import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
 import type { FrameGraphicsContext, StreamScales } from "../stream/types"
@@ -267,6 +268,21 @@ describe("renderChart SVG precision", () => {
     expect(renderChart("LineChart", precisionProps)).toBe(
       renderChart("LineChart", precisionProps, {}),
     )
+  })
+
+  it("leaves CSS functional values untouched while rounding geometry", () => {
+    const svg = serializeSvgPrecision(
+      '<svg><path d="M 1.25 2.75" stroke-dasharray="var(--dash-1.25)" transform="translate(1.25 2.75)" /></svg>',
+      0,
+    )
+
+    expect(svg).toContain('d="M 1 3"')
+    expect(svg).toContain('transform="translate(1 3)"')
+    expect(svg).toContain('stroke-dasharray="var(--dash-1.25)"')
+  })
+
+  it("rejects prototype component names as unknown charts", () => {
+    expect(() => renderChart("toString", {})).toThrow('Unknown chart component: "toString"')
   })
 })
 
