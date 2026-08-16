@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "initialized": true,
+  "description": "Grandfathered findings for unstable custom lints. Managed by scripts/check-custom-lints.mjs; do not edit by hand.",
+  "evidenceCursor": {
+    "semiotic/frame-props-last": {
+      "count": 1,
+      "digest": "0f13742190776c0f"
+    },
+    "semiotic/family-subpath-imports": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c"
+    },
+    "semiotic/interaction-test-layout-control": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c"
+    }
+  },
+  "findings": {
+    "semiotic/family-subpath-imports :: docs/src/examples/BarLineChart.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/CanvasInteraction.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/CustomLayout.jsx :: familySubpath :: import { StreamNetworkFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/DotPlot.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/HomerunMap.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/IsotypeChart.jsx :: familySubpath :: import { OrdinalCustomChart } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/MarginalGraphics.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/MarimekkoChart.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/Matrix.jsx :: familySubpath :: import { StreamNetworkFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/RadarPlot.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/AnscombesSankey.jsx :: familySubpath :: import { SankeyDiagram, ProcessSankey, ThemeProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/BenchmarkDashboard.jsx :: familySubpath :: import { GroupedBarChart, LineChart, BarChart, Heatmap, StackedBarChart } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/KpiCardSparkline.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/Kstreams.jsx :: familySubpath :: import { LinkedCharts, useSelectionActions } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/MinardsMarch.jsx :: familySubpath :: import { LinkedCharts, CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/MinardsMarchStreaming.jsx :: familySubpath :: import { CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/NetworkExplorer.jsx :: familySubpath :: import { StreamNetworkFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/PatientJourneys.jsx :: familySubpath :: import { SankeyDiagram, ProcessSankey, ThemeProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/RoslingBubbleChart.jsx :: familySubpath :: } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/SatellitesInSpace.jsx :: familySubpath :: import { AccessibleNavTree } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/StreamingMigrationMap.jsx :: familySubpath :: import { CategoryColorProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/TimeSeriesBrush.jsx :: familySubpath :: import { MinimapChart } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/recipes/WaterCycleFlow.jsx :: familySubpath :: import { SankeyDiagram, ThemeProvider } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/RidgelinePlot.jsx :: familySubpath :: import { RidgelinePlot as RidgelineChart } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/SlopeChart.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/StreamingMarginalGraphics.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/SwarmPlot.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/Timeline.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/UncertaintyVisualization.jsx :: familySubpath :: import { StreamXYFrame } from \"semiotic\"": 1,
+    "semiotic/family-subpath-imports :: docs/src/examples/WaterfallChart.jsx :: familySubpath :: import { StreamOrdinalFrame } from \"semiotic\"": 1,
+    "semiotic/frame-props-last :: src/components/charts/xy/MultiAxisLineChart.tsx :: framePropsLast :: ...frameProps,": 1
+  }
+}

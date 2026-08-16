@@ -158,6 +158,15 @@ Prefer **subpath imports** in application code (`semiotic/xy`, `semiotic/ordinal
 - Prettier and ESLint define formatting and lint rules.
 - Existing style uses no semicolons and double quotes.
 
+### Custom lint lifecycle
+
+Repository-specific lints run as a blocking ratchet in `npm run
+check:custom-lints`. New rules begin as unstable at 5/10, and every failure is
+also a test of the rule itself. The accepted dispositions are: fix the bug;
+adjust, demote, or retire the rule with evidence; and promote it only after the
+strong-evidence threshold is met. See `scripts/custom-lint/README.md` for the
+scoring model, evidence ledger, and baseline commands.
+
 ### Source file size limits
 
 CI enforces hard line counts on `src/**/*.{ts,tsx,js,jsx}` (physical lines, same as `wc -l`):

@@ -505,8 +505,8 @@ function renderXYFrameSVG(
         {dataMarks}
       </g>
       {titleText && (
-        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleSize}
-          fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
+        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleFontSize}
+          fontWeight={s.titleFontWeight} fill={s.text} fontFamily={s.titleFontFamily}>
           {titleText}
         </text>
       )}
@@ -556,8 +556,8 @@ function renderOrdinalFrameSVG(
         {dataMarks}
       </g>
       {titleText && (
-        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleSize}
-          fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
+        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleFontSize}
+          fontWeight={s.titleFontWeight} fill={s.text} fontFamily={s.titleFontFamily}>
           {titleText}
         </text>
       )}

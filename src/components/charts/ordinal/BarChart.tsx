@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import type { BarCornerRadius, StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useSortedData, useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
@@ -77,8 +77,9 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    *  the category list on the axis. */
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
-  /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
-  roundedTop?: number
+  /** Rounded top corner radius in pixels, or a function of the rendered bar
+   * width. Only the end away from the baseline is rounded. */
+  roundedTop?: BarCornerRadius
   /**
    * Gradient fill from the bar's tip (offset 0) toward its base (offset 1).
    * Stops can set `color`, `opacity`, or both. Omit a stop color to inherit

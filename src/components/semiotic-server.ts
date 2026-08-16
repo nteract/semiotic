@@ -8,7 +8,9 @@ export {
   renderChartWithEvidence,
   renderToImage,
   renderDashboard,
+  serializeSvgPrecision,
 } from "./server/renderToStaticSVG"
+export type { RenderChartName, RenderChartOptions } from "./server/renderToStaticSVG"
 
 export type { RenderEvidence, SemanticViabilityStatus } from "./server/renderEvidence"
 

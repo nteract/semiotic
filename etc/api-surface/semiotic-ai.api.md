@@ -156,6 +156,7 @@ function countNodes(root: NavTreeNode): number
 function createChartToolHandler(optionsFor?: ((input: PrepareChartInput) => PrepareChartOptions) | undefined): (input: PrepareChartInput) => PrepareChartResult
 function createIndexedDBConversationArcSink(options?: IndexedDBConversationArcSinkOptions | undefined): ConversationArcSink & {load(): Promise<ConversationArcEvent[]>;}
 function createLocalStorageConversationArcSink(options?: LocalStorageConversationArcSinkOptions | undefined): ConversationArcSink & {load(): ConversationArcEvent[];}
+function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo
 function createWebhookConversationArcSink(options: WebhookConversationArcSinkOptions): ConversationArcSink
 function currentTimestamp(): string
 function dataQualityToAnnotations(results: readonly DataQualityResult[], options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
@@ -213,6 +214,7 @@ function recipeToChartCapability(recipe: ChartRecipe<import("../stream/networkCo
 function recordAnnotationStatusChange(toStatus: AnnotationStatus, opts?: undefined | {annotationId?: string; fromStatus?: AnnotationStatus; chartId?: string; arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
 function recordAudienceChange(audience: string, previous?: null | string | undefined, extra?: undefined | {arcId?: string; meta?: Record<string, unknown>;}): ConversationArcEvent | null
 function rederiveProfile(profile: ChartDataProfile, options?: ReprofileFieldsOptions | undefined): ChartDataProfile
+function refreshChartDiagnostics(component: string, props: Datum): Diagnosis[]
 function registerChartCapability(capability: ChartCapability): void
 function registerChartRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>): void
 function registerConversationArcSink(sink: ConversationArcSink): () => void
@@ -464,6 +466,7 @@ interface RecipeStrategyContext<TDatum extends Datum = Datum, TConfig extends ob
 interface RegisteredRecipeLayout
 interface RejectedCapability
 interface RenderEvidenceEvent extends ConversationArcEventBase
+interface RenderEvidenceMemo
 interface RepairAlternativeResult
 interface RepairOkResult
 interface RepairOptions extends ProfileDataOptions
@@ -1523,6 +1526,7 @@ interface-member PrepareChartInput::property::props = optional props: Datum | un
 interface-member PrepareChartOptions::property::data = optional data: readonly Datum[] | undefined
 interface-member PrepareChartOptions::property::diagnose = optional diagnose: boolean | undefined
 interface-member PrepareChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member PrepareChartOptions::property::narration = optional narration: Partial<Pick<Datum, "description" | "summary" | "title">> | undefined
 interface-member PrepareChartOptions::property::render = optional render: RenderFn | undefined
 interface-member PrepareChartOptions::property::repair = optional repair: boolean | undefined
 interface-member PrepareChartOptions::property::treatErrorsAsBlocking = optional treatErrorsAsBlocking: boolean | undefined
@@ -1608,6 +1612,8 @@ interface-member RenderEvidenceEvent::property::empty = required empty: boolean
 interface-member RenderEvidenceEvent::property::markCount = required markCount: number
 interface-member RenderEvidenceEvent::property::type = required type: "render-evidence"
 interface-member RenderEvidenceEvent::property::warnings = required warnings: string[]
+interface-member RenderEvidenceMemo::property::clear = required clear: () => void
+interface-member RenderEvidenceMemo::property::render = required render: RenderFn
 interface-member RepairAlternativeResult::property::alternatives = required alternatives: Suggestion[]
 interface-member RepairAlternativeResult::property::component = required component: string
 interface-member RepairAlternativeResult::property::profile = required profile: ChartDataProfile

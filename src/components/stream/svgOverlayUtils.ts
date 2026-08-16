@@ -37,12 +37,36 @@ export function tickPixelExtent(ticks: Array<{ pixel: number }>): {
 }
 
 export function resolveGridDash(
-  style: "dashed" | "dotted" | string | undefined
+  style: "dashed" | "dotted" | string | { strokeDasharray?: string } | undefined
 ): string | undefined {
   if (!style) return undefined
+  if (typeof style === "object") return style.strokeDasharray
   if (style === "dashed") return "6,4"
   if (style === "dotted") return "2,4"
   return style
+}
+
+/**
+ * Normalize the line-style forms shared by live SVG and static rendering.
+ * This returns presentation attributes, not CSS, so consumers can still use
+ * CSS variables in `stroke` and the generated SVG remains self-contained.
+ */
+export function resolveAxisLineStyle(
+  style: string | { stroke?: string; strokeWidth?: number; strokeOpacity?: number; strokeDasharray?: string } | undefined,
+  fallback: { stroke: string; strokeWidth: number },
+): { stroke: string; strokeWidth: number; strokeOpacity?: number; strokeDasharray?: string } {
+  if (!style || typeof style === "string") {
+    return {
+      ...fallback,
+      ...(typeof style === "string" && { strokeDasharray: resolveGridDash(style) }),
+    }
+  }
+  return {
+    stroke: style.stroke ?? fallback.stroke,
+    strokeWidth: style.strokeWidth ?? fallback.strokeWidth,
+    ...(style.strokeOpacity != null && { strokeOpacity: style.strokeOpacity }),
+    ...(style.strokeDasharray && { strokeDasharray: style.strokeDasharray }),
+  }
 }
 
 export function jaggedBaselinePath(

@@ -319,6 +319,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     defaults: marginDefaults,
     categories: allCategories,
     chartWidth: width,
+    chartHeight: height,
     hasTitle,
   })
   const resolvedMobileInteraction = useMemo(

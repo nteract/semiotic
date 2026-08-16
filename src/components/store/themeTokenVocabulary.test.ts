@@ -72,8 +72,12 @@ function emittedTokens(): Set<string> {
     typography: {
       ...HIGH_CONTRAST_THEME.typography,
       legendSize: 12,
+      legendFontFamily: "sans-serif",
+      legendFontWeight: 500,
       tickFontFamily: "sans-serif",
       titleFontSize: 16,
+      titleFontFamily: "sans-serif",
+      titleFontWeight: 600,
     },
   }
   return new Set(Object.keys(themeToCSSVariables(exhaustiveTheme)))

@@ -4,6 +4,19 @@ import type { RectSceneNode } from "../types"
 import type { OrdinalSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
+function radiusForBar(
+  roundedTop: OrdinalSceneContext["config"]["roundedTop"],
+  node: RectSceneNode,
+  isVertical: boolean
+): number {
+  const requested = typeof roundedTop === "function"
+    ? roundedTop(isVertical ? node.w : node.h)
+    : roundedTop
+  return typeof requested === "number" && Number.isFinite(requested)
+    ? Math.max(0, requested)
+    : 0
+}
+
 export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, getStack, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
@@ -106,7 +119,6 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
   }
 
   const isV = projection === "vertical"
-  const r = config.roundedTop && config.roundedTop > 0 ? Math.max(0, config.roundedTop) : 0
 
   // Tag every segment with its tip edge (away from baseline) and the optional
   // gradient. roundedEdge is set unconditionally so gradients resolve orientation
@@ -127,7 +139,7 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
   }
 
   // Rounded corners still go on only the outermost segment per category.
-  if (r > 0) {
+  if (config.roundedTop !== undefined) {
     const byCat = new Map<string, RectSceneNode[]>()
     for (const n of nodes) {
       if (n.type !== "rect") continue
@@ -143,13 +155,15 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
         const topmost = isV
           ? positive.reduce((a, b) => a.y < b.y ? a : b)
           : positive.reduce((a, b) => (a.x + a.w) > (b.x + b.w) ? a : b)
-        topmost.roundedTop = r
+        const radius = radiusForBar(config.roundedTop, topmost, isV)
+        if (radius > 0) topmost.roundedTop = radius
       }
       if (negative.length > 0) {
         const bottommost = isV
           ? negative.reduce((a, b) => (a.y + a.h) > (b.y + b.h) ? a : b)
           : negative.reduce((a, b) => a.x < b.x ? a : b)
-        bottommost.roundedTop = r
+        const radius = radiusForBar(config.roundedTop, bottommost, isV)
+        if (radius > 0) bottommost.roundedTop = radius
       }
     }
   }
@@ -223,12 +237,12 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalL
   // we want gradients running from tip → base regardless of orientation or
   // sign. Setting this unconditionally (not only when roundedTop > 0) keeps
   // gradient direction resolvable without roundedTop being set.
-  const r = config.roundedTop && config.roundedTop > 0 ? Math.max(0, config.roundedTop) : 0
   for (const n of nodes) {
     if (n.type !== "rect") continue
     if (n.datum == null) continue
     const val = getR(n.datum)
-    if (r > 0) n.roundedTop = r
+    const radius = radiusForBar(config.roundedTop, n, isVertical)
+    if (radius > 0) n.roundedTop = radius
     if (isVertical) {
       n.roundedEdge = val >= 0 ? "top" : "bottom"
     } else {

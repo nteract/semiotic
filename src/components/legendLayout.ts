@@ -11,6 +11,28 @@ export const DEFAULT_LEGEND_DISTANCE = 10
 // the outer stroke inside the SVG when a side legend is placed at an edge.
 export const DEFAULT_LEGEND_EDGE_GUTTER = 3
 
+/** Keep a chart's data area meaningful when chart-owned chrome (currently a
+ * legend) is measured in a compact frame. This intentionally does not shrink
+ * caller/default margins: it caps only the reservation that was added for the
+ * requested legend side. */
+export function clampLegendReservation(
+  margin: { top: number; right: number; bottom: number; left: number },
+  baseline: { top: number; right: number; bottom: number; left: number },
+  size: [number, number],
+  position: "right" | "left" | "top" | "bottom",
+  minPlotSize = 8
+): void {
+  const horizontal = position === "left" || position === "right"
+  const side = position
+  const opposite = position === "left" ? "right"
+    : position === "right" ? "left"
+      : position === "top" ? "bottom"
+        : "top"
+  const available = Math.max(0, (horizontal ? size[0] : size[1]) - minPlotSize)
+  const maximumSide = Math.max(baseline[side], available - margin[opposite])
+  if (margin[side] > maximumSide) margin[side] = maximumSide
+}
+
 /**
  * Labeled gradient legends use one shared, non-negative vertical layout in
  * both the browser and static SVG renderers. Legend placement treats its

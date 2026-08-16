@@ -311,6 +311,7 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
       defaults: resolved.marginDefaults,
       categories: activeCategories,
       chartWidth: resolvedSize[0],
+      chartHeight: resolvedSize[1],
       axisChrome: { hasAxis: resolved.showAxes !== false }
     })
   const legendState = useLegendInteraction(

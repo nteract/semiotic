@@ -244,7 +244,7 @@ export interface AreaSceneNode {
    * redraws the complete top path, preserving its configured curve exactly.
    * An omitted color means the area's normal stroke color.
    */
-  strokeColorBands?: Array<{ y: number; height: number; color?: string }>
+  strokeColorBands?: Array<{ y: number; height: number; color?: string; opacity?: number }>
   style: Style
   datum: SeriesDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
@@ -741,7 +741,7 @@ export interface StreamXYFrameProps<T = Datum>
    * Internal value-anchored color stops for an area's top-edge stroke.
    * Offsets are resolved against the final y-domain by the scene builder.
    */
-  semanticLineStops?: Array<{ offset: number; color: string }>
+  semanticLineStops?: Array<{ offset: number; color: string; opacity?: number }>
 
   /** Series names (matching lineBy/colorBy group keys) that render as filled areas in "mixed" chartType */
   areaGroups?: string[]

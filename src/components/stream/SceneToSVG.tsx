@@ -279,7 +279,7 @@ function xySceneNodeToSVGMark(
                 fill="none"
                 stroke={band.color ?? svgFill(n.style.stroke)}
                 strokeWidth={strokeWidth}
-                opacity={n.style.opacity}
+                opacity={(n.style.opacity ?? 1) * (band.opacity ?? 1)}
                 clipPath={`url(#${thresholdClipIds[bandIndex]})`}
               />
             ))

@@ -76,6 +76,90 @@ describe("per-axis grid visibility", () => {
     expect(gridLines.length).toBeGreaterThan(0)
     for (const line of gridLines) expect(line.getAttribute("x1")).toBe("0")
   })
+
+  it("uses top/right-only axes for underlay grid visibility", () => {
+    const { container } = render(
+      <SVGUnderlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[{ orient: "top", grid: false }, { orient: "right", grid: false }]}
+      />,
+    )
+
+    expect(container.querySelectorAll("g.stream-grid line")).toHaveLength(0)
+  })
+
+  it("applies per-axis grid and baseline stroke attributes", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={[
+          {
+            orient: "bottom",
+            gridStyle: { stroke: "#0ea5e9", strokeWidth: 2, strokeOpacity: 0.4, strokeDasharray: "3,2" },
+            axisStyle: { stroke: "#be123c", strokeWidth: 3, strokeDasharray: "5,1" },
+          },
+          { orient: "left" },
+        ]}
+      />,
+    )
+
+    const gridLine = container.querySelector("g.stream-grid line[x1]:not([x1='0'])")
+    expect(gridLine).toHaveAttribute("stroke", "#0ea5e9")
+    expect(gridLine).toHaveAttribute("stroke-width", "2")
+    expect(gridLine).toHaveAttribute("stroke-opacity", "0.4")
+    expect(gridLine).toHaveAttribute("stroke-dasharray", "3,2")
+    const baseline = container.querySelector("[data-orient='bottom'] > line")
+    expect(baseline).toHaveAttribute("stroke", "#be123c")
+    expect(baseline).toHaveAttribute("stroke-width", "3")
+    expect(baseline).toHaveAttribute("stroke-dasharray", "5,1")
+  })
+
+  it("places and styles top/right-only axes in both SVG layers", () => {
+    const axes = [
+      { orient: "top" as const, grid: false, axisStyle: { stroke: "#dc2626", strokeWidth: 2 } },
+      { orient: "right" as const, grid: false, axisStyle: { stroke: "#2563eb", strokeWidth: 3 } },
+    ]
+    const overlay = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={axes}
+      />,
+    ).container
+    const underlay = render(
+      <SVGUnderlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        showGrid={true}
+        axes={axes}
+      />,
+    ).container
+
+    const topBaseline = overlay.querySelector("[data-orient='top'] > line")
+    expect(topBaseline).toHaveAttribute("y1", "0")
+    expect(topBaseline).toHaveAttribute("y2", "0")
+    expect(topBaseline).toHaveAttribute("stroke", "#dc2626")
+    expect(overlay.querySelector("[data-orient='top'] > g > line")).toHaveAttribute("y2", "-5")
+    expect(overlay.querySelector("[data-orient='bottom']")).toBeNull()
+
+    const rightBaseline = overlay.querySelector("[data-orient='right'] > line")
+    expect(rightBaseline).toHaveAttribute("x1", "300")
+    expect(rightBaseline).toHaveAttribute("x2", "300")
+    expect(rightBaseline).toHaveAttribute("stroke", "#2563eb")
+    expect(overlay.querySelector("[data-orient='left']")).toBeNull()
+
+    expect(underlay.querySelector('line[stroke="#dc2626"]')).toHaveAttribute("y1", "0")
+    expect(underlay.querySelector('line[stroke="#2563eb"]')).toHaveAttribute("x1", "300")
+  })
 })
 
 // ── tickAnchor ─────────────────────────────────────────────────────────
@@ -204,7 +288,7 @@ describe("tickAnchor: edges", () => {
     // already covered by the per-axis tests above.
     const axes: import("./types").StreamXYFrameProps["axes"] = [
       { orient: "bottom", tickAnchor: "edges", landmarkTicks: true, autoRotate: true },
-      { orient: "left", tickAnchor: "middle", gridStyle: "dashed", includeMax: true },
+      { orient: "left", tickAnchor: "middle", gridStyle: { stroke: "#64748b", strokeWidth: 1 }, axisStyle: { stroke: "#334155" }, includeMax: true },
     ]
     expect(axes).toHaveLength(2)
   })

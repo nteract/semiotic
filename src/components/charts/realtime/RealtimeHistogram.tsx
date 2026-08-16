@@ -378,6 +378,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       categories: histogramLegendCategories,
       additionalLegend,
       chartWidth: resolvedSize[0],
+      chartHeight: resolvedSize[1],
       // Reserve the bottom-axis band a bottom legend is placed beyond.
       axisChrome: { hasAxis: resolved.showAxes !== false }
     })

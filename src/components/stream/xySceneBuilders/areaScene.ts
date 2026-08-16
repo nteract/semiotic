@@ -39,6 +39,7 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
     .map((stop) => ({
       value: yDomain[0] + Math.max(0, Math.min(1, stop.offset)) * (yDomain[1] - yDomain[0]),
       color: stop.color,
+      opacity: stop.opacity,
       thresholdType: "greater" as const,
     }))
     .sort((a, b) => a.value - b.value)
@@ -54,21 +55,32 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
           },
           [],
         )
-        const valueBands: Array<{ from: number; to: number; color?: string }> = [
-          { from: yDomain[0], to: uniqueThresholds[0].value },
+        const valueBands: Array<{ from: number; to: number; color?: string; opacity?: number }> = [
+          {
+            from: yDomain[0],
+            to: uniqueThresholds[0].value,
+            color: uniqueThresholds[0].color,
+            opacity: uniqueThresholds[0].opacity,
+          },
         ]
         for (let i = 0; i < uniqueThresholds.length; i++) {
           valueBands.push({
             from: uniqueThresholds[i].value,
             to: uniqueThresholds[i + 1]?.value ?? yDomain[1],
             color: uniqueThresholds[i].color,
+            opacity: uniqueThresholds[i].opacity,
           })
         }
         return valueBands
-          .map(({ from, to, color }) => {
+          .map(({ from, to, color, opacity }) => {
             const fromY = ctx.scales.y(from)
             const toY = ctx.scales.y(to)
-            return { y: Math.min(fromY, toY), height: Math.abs(toY - fromY), color }
+            return {
+              y: Math.min(fromY, toY),
+              height: Math.abs(toY - fromY),
+              color,
+              ...(opacity != null && { opacity }),
+            }
           })
           .filter((band) => band.height > 0)
       })()

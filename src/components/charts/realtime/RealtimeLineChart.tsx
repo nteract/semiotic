@@ -370,6 +370,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     defaults: resolved.marginDefaults,
     additionalLegend: lineLegend,
     chartWidth: resolvedSize[0],
+    chartHeight: resolvedSize[1],
     axisChrome: { hasAxis: resolved.showAxes !== false }
   })
   // Accessor-aware default tooltip — reads data-space `time` /

@@ -11,6 +11,7 @@ import {
   normalizeGradient,
   normalizeSemanticGradient,
   reverseGradient,
+  semanticLineStopsForGradient,
   type SemanticGradientInput,
 } from "../charts/shared/gradient"
 import {
@@ -439,10 +440,8 @@ export const areaChart: ChartConfig = {
       : normalizeGradient(
           common.gradientFill as Parameters<typeof normalizeGradient>[0],
         )
-    const semanticLineStops = rest.semanticLine !== false && semanticGradient?.stops.length
-      ? semanticGradient.stops.flatMap(({ offset, color }) =>
-          color ? [{ offset, color }] : [],
-        )
+    const semanticLineStops = rest.semanticLine !== false
+      ? semanticLineStopsForGradient(semanticGradient)
       : undefined
     const pointStyle = common.pointStyle || buildShowPointsStyle(preparedData, effectiveColorBy, colorScheme, common, rest)
     return {

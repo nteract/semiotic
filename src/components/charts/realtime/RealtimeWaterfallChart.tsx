@@ -312,6 +312,7 @@ export const RealtimeWaterfallChart = forwardRef(
       defaults: resolved.marginDefaults,
       additionalLegend: waterfallLegend,
       chartWidth: resolvedSize[0],
+      chartHeight: resolvedSize[1],
       axisChrome: { hasAxis: resolved.showAxes !== false }
     })
     // Waterfall-aware default tooltip. Each bar's height represents

@@ -32,6 +32,10 @@ import type { OnAnnotationActivateCallback } from "../charts/shared/annotationAc
 import type { GradientConfig, GradientInput } from "../charts/shared/gradient"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
 
+/** A fixed radius or a deterministic radius derived from the rendered bar
+ * width (the category-axis bandwidth, in pixels). */
+export type BarCornerRadius = number | ((barWidth: number) => number)
+
 // ── Chart types ────────────────────────────────────────────────────────
 
 export type OrdinalChartType =
@@ -283,8 +287,8 @@ export interface OrdinalPipelineConfig {
 
   // Layout
   barPadding?: number
-  /** Rounded top corner radius for bar charts. Only the end away from the baseline is rounded. For stacked bars, only the topmost segment gets rounded. */
-  roundedTop?: number
+  /** Rounded top corner radius for bar charts. Only the end away from the baseline is rounded. For stacked bars, only the topmost segment gets rounded. A callback receives the rendered bar width in pixels. */
+  roundedTop?: BarCornerRadius
   /** Gradient fill for bar rects. Offset 0 is the tip; offset 1 is the base. */
   gradientFill?: GradientConfig
   /** Swimlane "track" fill — a rect drawn behind each lane spanning the
@@ -423,7 +427,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   /** Maximum canvas backing-store DPR; defaults to the environment cap. */
   maxDevicePixelRatio?: number
   barPadding?: number
-  roundedTop?: number
+  roundedTop?: BarCornerRadius
   /** Gradient fill for bar rects. Offset 0 is the tip; offset 1 is the base. */
   gradientFill?: GradientInput
   /** Swimlane "track" fill — see OrdinalPipelineConfig.trackFill */

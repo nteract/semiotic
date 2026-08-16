@@ -350,6 +350,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     legendPosition: legendPositionProp,
     userMargin,
     chartWidth: width,
+    chartHeight: height,
     hasTitle: !!title,
     // Reserve the bottom-axis band a bottom legend is placed beyond.
     // The detail chart always renders axes (see the `showAxes: true` frame

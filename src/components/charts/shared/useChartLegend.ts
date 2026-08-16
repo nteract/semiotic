@@ -16,6 +16,7 @@ import type {
 import { composeLegendConfigs } from "../../types/legendTypes"
 import {
   resolveAxisChromeGutter,
+  clampLegendReservation,
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
   resolveSideLegendMargin,
@@ -59,6 +60,7 @@ export function useChartLegendAndMargin({
   categories,
   additionalLegend,
   chartWidth,
+  chartHeight,
   legendLayout,
   hasTitle = false,
   axisChrome
@@ -75,6 +77,9 @@ export function useChartLegendAndMargin({
   additionalLegend?: LegendValue
   /** Total chart width, used to estimate wrapping for top/bottom legends. */
   chartWidth?: number
+  /** Total chart height, used to keep legend reservation from consuming a
+   * compact frame's whole plot. */
+  chartHeight?: number
   /** Legend metrics shared with the renderer. */
   legendLayout?: LegendLayout
   /** Reserve the chart-title band above a top legend. */
@@ -163,6 +168,7 @@ export function useChartLegendAndMargin({
       bottom: resolveSide("bottom"),
       left: resolveSide("left")
     }
+    const baselineMargin = { ...finalMargin }
     // Caller-supplied numeric sides are minimum plot gutters. Legend
     // reservation composes with that baseline on every side instead of making
     // callers choose between their own padding and Semiotic's measured legend
@@ -222,6 +228,14 @@ export function useChartLegendAndMargin({
           80,
           horizontalLegendMargin
         )
+      if (chartWidth != null && chartHeight != null) {
+        clampLegendReservation(
+          finalMargin,
+          baselineMargin,
+          [chartWidth, chartHeight],
+          legendPosition
+        )
+      }
     }
     return finalMargin
   }, [
@@ -230,6 +244,7 @@ export function useChartLegendAndMargin({
     legend,
     legendPosition,
     chartWidth,
+    chartHeight,
     legendLayout,
     hasTitle,
     hasAxis,

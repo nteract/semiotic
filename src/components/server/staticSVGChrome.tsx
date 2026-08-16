@@ -32,10 +32,11 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
-import { resolveGridDash } from "../stream/svgOverlayUtils"
+import { resolveAxisLineStyle, resolveGridDash } from "../stream/svgOverlayUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   resolveAxisChromeGutter,
+  clampLegendReservation,
   resolveLegendDistance,
   resolveLegendSideGutter,
   resolveSideLegendMargin,
@@ -338,6 +339,7 @@ export function reserveFrameLegendMargin(
 ): LegendPosition {
   const { props, categories, theme, size, hasTitle } = options
   const position = props.legendPosition || "right"
+  const baselineMargin = { ...margin }
   const shared = {
     theme,
     position,
@@ -359,6 +361,7 @@ export function reserveFrameLegendMargin(
       colorScheme: props.colorScheme
     })
   }
+  clampLegendReservation(margin, baselineMargin, size, position)
   return position
 }
 
@@ -451,6 +454,8 @@ export function renderGridSVG(
   const showYGrid = yAxis?.grid !== false
   const xGridDash = resolveGridDash(xAxis?.gridStyle)
   const yGridDash = resolveGridDash(yAxis?.gridStyle)
+  const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
+  const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
 
   return (
     <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
@@ -464,9 +469,8 @@ export function renderGridSVG(
               y1={0}
               x2={px}
               y2={layout.height}
-              stroke={grid}
-              strokeWidth={0.5}
-              strokeDasharray={xGridDash}
+              {...xGridLine}
+              strokeDasharray={xGridDash ?? xGridLine.strokeDasharray}
             />
           )
         })}
@@ -480,9 +484,8 @@ export function renderGridSVG(
               y1={py}
               x2={layout.width}
               y2={py}
-              stroke={grid}
-              strokeWidth={0.5}
-              strokeDasharray={yGridDash}
+              {...yGridLine}
+              strokeDasharray={yGridDash ?? yGridLine.strokeDasharray}
             />
           )
         })}
@@ -609,10 +612,10 @@ export function wrapSVG(
           x={opts.width / 2}
           y={TITLE_BASELINE}
           textAnchor="middle"
-          fontSize={s.titleSize}
-          fontWeight="bold"
+          fontSize={s.titleFontSize}
+          fontWeight={s.titleFontWeight}
           fill={s.text}
-          fontFamily={s.fontFamily}
+          fontFamily={s.titleFontFamily}
         >
           {titleText}
         </text>
@@ -650,6 +653,12 @@ export function generateAxesSVG(
   const rightAxis = props.axes?.find((axis) => axis.orient === "right")
   const xAxis = bottomAxis ?? topAxis
   const yAxis = leftAxis ?? rightAxis
+  const xOrient = bottomAxis ? "bottom" : topAxis ? "top" : "bottom"
+  const yOrient = leftAxis ? "left" : rightAxis ? "right" : "left"
+  const xBaselineY = xOrient === "top" ? 0 : layout.height
+  const yBaselineX = yOrient === "right" ? layout.width : 0
+  const xTickDirection = xOrient === "top" ? -1 : 1
+  const yTickDirection = yOrient === "right" ? 1 : -1
   const xExtentMode = xAxis?.extent ?? props.axisExtent
   const yExtentMode = yAxis?.extent ?? props.axisExtent
   const resolvedXTickCount =
@@ -687,28 +696,32 @@ export function generateAxesSVG(
     label: yFormatter(v)
   }))
   const xLabel = xAxis?.label ?? props.xLabel
-  const yLabel = yAxis?.label ?? props.yLabel
+  const yLabel = yAxis?.label ?? (yOrient === "right" ? props.yLabelRight ?? props.yLabel : props.yLabel)
+  const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
+  const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
+  const yAxisLabelX = yOrient === "right"
+    ? layout.width + (props.margin?.right ?? 40) - 15
+    : -leftAxisLabelMargin + 15
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
       {xAxis?.baseline !== false && (
         <line
           x1={0}
-          y1={layout.height}
+          y1={xBaselineY}
           x2={layout.width}
-          y2={layout.height}
-          stroke={s.border}
-          strokeWidth={1}
+          y2={xBaselineY}
+          {...xAxisLine}
         />
       )}
       {xTicks.map((tick, i) => (
         <g
           key={`xtick-${i}`}
-          transform={`translate(${tick.pixel},${layout.height})`}
+          transform={`translate(${tick.pixel},${xBaselineY})`}
         >
-          <line y2={5} stroke={s.border} strokeWidth={1} />
+          <line y2={xTickDirection * 5} {...xAxisLine} />
           <text
-            y={18}
+            y={xTickDirection * 18}
             textAnchor="middle"
             fontSize={s.tickSize}
             fill={s.textSecondary}
@@ -721,7 +734,7 @@ export function generateAxesSVG(
       {xLabel && (
         <text
           x={layout.width / 2}
-          y={layout.height + 40}
+          y={xOrient === "top" ? -40 : layout.height + 40}
           textAnchor="middle"
           fontSize={s.labelSize}
           fill={s.text}
@@ -733,20 +746,19 @@ export function generateAxesSVG(
 
       {yAxis?.baseline !== false && (
         <line
-          x1={0}
+          x1={yBaselineX}
           y1={0}
-          x2={0}
+          x2={yBaselineX}
           y2={layout.height}
-          stroke={s.border}
-          strokeWidth={1}
+          {...yAxisLine}
         />
       )}
       {yTicks.map((tick, i) => (
-        <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
-          <line x2={-5} stroke={s.border} strokeWidth={1} />
+        <g key={`ytick-${i}`} transform={`translate(${yBaselineX},${tick.pixel})`}>
+          <line x2={yTickDirection * 5} {...yAxisLine} />
           <text
-            x={-8}
-            textAnchor="end"
+            x={yTickDirection * 8}
+            textAnchor={yOrient === "right" ? "start" : "end"}
             dominantBaseline="middle"
             fontSize={s.tickSize}
             fill={s.textSecondary}
@@ -758,13 +770,13 @@ export function generateAxesSVG(
       ))}
       {yLabel && (
         <text
-          x={-leftAxisLabelMargin + 15}
+          x={yAxisLabelX}
           y={layout.height / 2}
           textAnchor="middle"
           fontSize={s.labelSize}
           fill={s.text}
           fontFamily={s.fontFamily}
-          transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${layout.height / 2})`}
+          transform={`rotate(${yOrient === "right" ? 90 : -90}, ${yAxisLabelX}, ${layout.height / 2})`}
         >
           {yLabel}
         </text>

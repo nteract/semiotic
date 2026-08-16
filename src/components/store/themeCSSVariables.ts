@@ -77,9 +77,21 @@ export function themeToCSSVariables(
     variables["--semiotic-legend-font-size"] =
       `${theme.typography.legendSize}px`
   }
+  if (theme.typography.legendFontFamily != null) {
+    variables["--semiotic-legend-font-family"] = theme.typography.legendFontFamily
+  }
+  if (theme.typography.legendFontWeight != null) {
+    variables["--semiotic-legend-font-weight"] = String(theme.typography.legendFontWeight)
+  }
   if (theme.typography.titleFontSize != null) {
     variables["--semiotic-title-font-size"] =
       `${theme.typography.titleFontSize}px`
+  }
+  if (theme.typography.titleFontFamily != null) {
+    variables["--semiotic-title-font-family"] = theme.typography.titleFontFamily
+  }
+  if (theme.typography.titleFontWeight != null) {
+    variables["--semiotic-title-font-weight"] = String(theme.typography.titleFontWeight)
   }
   if (theme.typography.tickFontFamily != null) {
     variables["--semiotic-tick-font-family"] =

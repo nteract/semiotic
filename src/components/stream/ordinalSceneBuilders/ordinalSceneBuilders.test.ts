@@ -585,7 +585,6 @@ describe("buildPieScene", () => {
       expect(nodes[1].endAngle).toBeCloseTo(nodes[0].startAngle + totalArc * 0.7)
       expect(nodes[1]._gradientBand?.colors).toEqual(["#ef4444", "#f59e0b", "#3b82f6"])
     })
-
   })
 })
 
@@ -2043,5 +2042,6 @@ describe("buildSwimlaneScene", () => {
         if (n.type === "rect") expect(n.cornerRadii).toBeUndefined()
       }
     })
+
   })
 })

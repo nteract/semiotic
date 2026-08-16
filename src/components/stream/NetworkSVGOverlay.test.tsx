@@ -57,6 +57,25 @@ describe("NetworkSVGOverlay", () => {
     expect(Number(node!.getAttribute("data-dx"))).toBeLessThan(0)
   })
 
+  it("uses the chart title typography variables", () => {
+    const { container } = render(
+      <NetworkSVGOverlay
+        width={200}
+        height={120}
+        totalWidth={240}
+        totalHeight={160}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        labels={[]}
+        sceneNodes={[]}
+        title="Network title"
+      />
+    )
+
+    const title = container.querySelector(".semiotic-chart-title")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-family")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-weight")
+  })
+
   it("renders a pointId-anchored annotation via the default network rules (no svgAnnotationRules)", () => {
     // Regression: NetworkSVGOverlay previously rendered nothing unless a custom
     // svgAnnotationRules was supplied, so the documented pointId anchoring on

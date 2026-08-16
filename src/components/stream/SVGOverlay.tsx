@@ -22,12 +22,16 @@ import {
 } from "../charts/shared/annotationActivation"
 import {
   jaggedBaselinePath,
+  resolveAxisLineStyle,
   resolveGridDash,
   resolveHorizontalTickAnchor,
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
-import { TITLE_BASELINE } from "./titleLayout"
+import { defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
+import { SVGChartTitle } from "./SVGChartTitle"
+
+export { SVGUnderlay } from "./SVGUnderlay"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 //
@@ -135,205 +139,6 @@ interface SVGOverlayProps {
   linkedCrosshairSourceId?: string
 
   children?: ReactNode
-}
-
-// ── SVGUnderlay ─────────────────────────────────────────────────────────
-// Renders ONLY grid lines and axis baseline lines behind the canvas.
-
-interface SVGUnderlayProps {
-  width: number
-  height: number
-  totalWidth: number
-  totalHeight: number
-  margin: { top: number; right: number; bottom: number; left: number }
-  scales: StreamScales | null
-  showAxes?: boolean
-  axes?: AxisConfig[]
-  showGrid?: boolean
-  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
-  yFormat?: (d: number | Date | string) => string | ReactNode
-  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
-}
-
-export function SVGUnderlay(props: SVGUnderlayProps) {
-  const {
-    width,
-    height,
-    totalWidth,
-    totalHeight,
-    margin,
-    scales,
-    showAxes,
-    axes,
-    showGrid,
-    xFormat,
-    yFormat,
-    axisExtent
-  } = props
-  const xTicks = useMemo(() => {
-    if (!scales) return []
-    const bottomAxis = axes?.find(a => a.orient === "bottom")
-    // Prefer the bottom axis config; when only a top axis is declared, inherit
-    // its extent/ticks so chart-level + per-axis overrides still apply.
-    const topAxis = axes?.find(a => a.orient === "top")
-    const xAxis = bottomAxis ?? topAxis
-    const extentMode = xAxis?.extent ?? axisExtent
-    const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = xAxis?.ticks ?? 5
-    // Explicit `tickValues` bypasses both d3's "nice" generator and
-    // `axisExtent: "exact"` — the caller has hand-picked the positions
-    // and we honor them verbatim. Same contract as the ordinal frame's
-    // `rTickValues`. Pixel-distance filtering downstream still drops
-    // overlapping labels.
-    // Exact mode (without explicit values) honors the requested count
-    // rather than clamping it to `maxFit`; floor at 2 because
-    // `equidistantTicks` needs both endpoints.
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
-    const rawValues = rawTicks.map(v => v.valueOf())
-    const candidates = rawTicks.map((v, i) => ({
-      value: v,
-      pixel: scales.x(v),
-      label: fmt(v, i, rawValues)
-    }))
-    // Estimate the widest label and use that as minimum spacing so labels
-    // (which are center-anchored) don't overlap.
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
-    const minPx = Math.max(55, maxLabelWidth + 8)
-    return filterTicksByPixelDistance(candidates, minPx)
-  }, [scales, axes, xFormat, width, axisExtent])
-
-  const yTicks = useMemo(() => {
-    if (!scales) return []
-    const leftAxis = axes?.find(a => a.orient === "left")
-    const extentMode = leftAxis?.extent ?? axisExtent
-    const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = leftAxis?.ticks ?? 5
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    // Explicit `tickValues` wins over generated ticks — see xTicks comment.
-    const rawTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
-    const candidates = rawTicks.map(v => ({
-      value: v,
-      pixel: scales.y(v),
-      label: fmt(v)
-    }))
-    return filterTicksByPixelDistance(candidates, 22)
-  }, [scales, axes, yFormat, height, axisExtent])
-
-  const hasGrid = showGrid && scales
-  const hasBaselines = showAxes && scales
-
-  if (!hasGrid && !hasBaselines) return null
-
-  const bottomAxis = axes?.find(a => a.orient === "bottom")
-  const leftAxis = axes?.find(a => a.orient === "left")
-  const showBottomBaseline = hasBaselines && (bottomAxis ? bottomAxis.baseline !== false : true)
-  const showLeftBaseline = hasBaselines && (leftAxis ? leftAxis.baseline !== false : true)
-  const bottomJagged = bottomAxis?.jaggedBase || false
-  const leftJagged = leftAxis?.jaggedBase || false
-  const axisStroke = "var(--semiotic-border, #ccc)"
-
-  return (
-    <svg
-      width={totalWidth}
-      height={totalHeight}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        pointerEvents: "none"
-      }}
-    >
-      <g transform={`translate(${margin.left},${margin.top})`}>
-        {/* Grid lines */}
-        {hasGrid && (() => {
-          const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
-          const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
-          const showXGrid = axes?.find(a => a.orient === "bottom")?.grid !== false
-          const showYGrid = axes?.find(a => a.orient === "left")?.grid !== false
-          return (
-          <g className="stream-grid">
-            {showXGrid && xTicks.map((tick, i) => (
-              <line
-                key={`xgrid-${i}`}
-                x1={tick.pixel}
-                y1={0}
-                x2={tick.pixel}
-                y2={height}
-                stroke="var(--semiotic-grid, #e0e0e0)"
-                strokeWidth={1}
-                strokeDasharray={bottomGridStyle}
-              />
-            ))}
-            {showYGrid && yTicks.map((tick, i) => (
-              <line
-                key={`ygrid-${i}`}
-                x1={0}
-                y1={tick.pixel}
-                x2={width}
-                y2={tick.pixel}
-                stroke="var(--semiotic-grid, #e0e0e0)"
-                strokeWidth={1}
-                strokeDasharray={leftGridStyle}
-              />
-            ))}
-          </g>
-          )
-        })()}
-
-        {/* Axis baselines */}
-        {showBottomBaseline && !bottomJagged && (
-          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1}  />
-        )}
-        {bottomJagged && (
-          <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
-        )}
-        {showLeftBaseline && !leftJagged && (
-          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
-        )}
-        {leftJagged && (
-          <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
-        )}
-      </g>
-    </svg>
-  )
-}
-
-
-function defaultTickFormat(v: string | number | Date, _index?: number, _allTicks?: number[]): string {
-  if (v instanceof Date) {
-    return `${v.toLocaleString("en", { month: "short" })} ${v.getDate()}`
-  }
-  if (typeof v === "number") return String(Math.round(v * 100) / 100)
-  return String(v)
-}
-
-/** Greedily filter ticks so consecutive labels are at least `minPx` apart.
- *  Always keeps the first and last tick. */
-// `value` is widened to `number | Date` so this helper accepts the
-// candidates produced for both linear scales and time-scale axes (the
-// latter emit Date instances; only `pixel` is used for distance math).
-function filterTicksByPixelDistance<T extends { value: number | Date; pixel: number; label: string | ReactNode }>(
-  ticks: T[],
-  minPx: number
-): T[] {
-  if (ticks.length <= 2) return ticks
-  const result = [ticks[0]]
-  for (let i = 1; i < ticks.length - 1; i++) {
-    if (Math.abs(ticks[i].pixel - result[result.length - 1].pixel) >= minPx) {
-      result.push(ticks[i])
-    }
-  }
-  const last = ticks[ticks.length - 1]
-  // Always keep the last tick (axis endpoint); if too close, replace the previous intermediate tick
-  if (Math.abs(last.pixel - result[result.length - 1].pixel) >= minPx) {
-    result.push(last)
-  } else {
-    result[result.length - 1] = last
-  }
-  return result
 }
 
 export function SVGOverlay(props: SVGOverlayProps) {
@@ -459,15 +264,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
   }, [showAxes, scales, axes, xFormat, width, axisExtent])
 
   /**
-   * Bottom tick labels rotate 45° when `autoRotate` is set and the labels
-   * would otherwise collide. Hoisted to component scope because it changes the
-   * height of the bottom axis chrome (the axis title drops from +40 to +58),
-   * which a bottom legend has to clear — the axis renderer below and the
-   * legend's `axisChrome` must agree on it.
+   * The active horizontal axis rotates tick labels when `autoRotate` is set
+   * and they would otherwise collide. Bottom-axis rotation also changes the
+   * chrome that a bottom legend must clear.
    */
   const shouldRotateBottomTicks = useMemo(() => {
     const bottomAxis = axes?.find(a => a.orient === "bottom")
-    if (!bottomAxis?.autoRotate || xTicks.length <= 1) return false
+    const topAxis = axes?.find(a => a.orient === "top")
+    const xAxis = bottomAxis ?? topAxis
+    if (!xAxis?.autoRotate || xTicks.length <= 1) return false
     const avgSpacing = width / Math.max(xTicks.length - 1, 1)
     const maxLabelW = xTicks.reduce(
       (max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60),
@@ -479,12 +284,14 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const leftAxis = axes?.find(a => a.orient === "left")
-    const extentMode = leftAxis?.extent ?? axisExtent
-    const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
+    const rightAxis = axes?.find(a => a.orient === "right")
+    const yAxis = leftAxis ?? rightAxis
+    const extentMode = yAxis?.extent ?? axisExtent
+    const fmt = yAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = leftAxis?.ticks ?? 5
+    const requested = yAxis?.ticks ?? 5
     const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawYTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
+    const rawYTicks = yAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawYTicks.map(v => ({
       value: v,
       pixel: scales.y(v),
@@ -495,7 +302,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     if (filtered.length > 1) {
       filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
     }
-    if (leftAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !leftAxis?.tickValues) {
+    if (yAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !yAxis?.tickValues) {
       const domain = scales.y.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.y(domainMax)
@@ -636,10 +443,18 @@ export function SVGOverlay(props: SVGOverlayProps) {
          *    `canvasObscuresUnderlay` keeps both regressions out of
          *    play simultaneously. */}
         {showGrid && scales && (!underlayRendered || canvasObscuresUnderlay) && (() => {
-          const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
-          const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
-          const showXGrid = axes?.find(a => a.orient === "bottom")?.grid !== false
-          const showYGrid = axes?.find(a => a.orient === "left")?.grid !== false
+          const bottomAxis = axes?.find(a => a.orient === "bottom")
+          const topAxis = axes?.find(a => a.orient === "top")
+          const leftAxis = axes?.find(a => a.orient === "left")
+          const rightAxis = axes?.find(a => a.orient === "right")
+          const xAxis = bottomAxis ?? topAxis
+          const yAxis = leftAxis ?? rightAxis
+          const bottomGridStyle = resolveGridDash(xAxis?.gridStyle)
+          const leftGridStyle = resolveGridDash(yAxis?.gridStyle)
+          const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
+          const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
+          const showXGrid = xAxis?.grid !== false
+          const showYGrid = yAxis?.grid !== false
           return (
           <g className="stream-grid">
             {showXGrid && xTicks.map((tick, i) => (
@@ -649,9 +464,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y1={0}
                 x2={tick.pixel}
                 y2={height}
-                stroke="var(--semiotic-grid, #e0e0e0)"
-                strokeWidth={1}
-                strokeDasharray={bottomGridStyle}
+                {...xGridLine}
+                strokeDasharray={bottomGridStyle ?? xGridLine.strokeDasharray}
               />
             ))}
             {showYGrid && yTicks.map((tick, i) => (
@@ -661,9 +475,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y1={tick.pixel}
                 x2={width}
                 y2={tick.pixel}
-                stroke="var(--semiotic-grid, #e0e0e0)"
-                strokeWidth={1}
-                strokeDasharray={leftGridStyle}
+                {...yGridLine}
+                strokeDasharray={leftGridStyle ?? yGridLine.strokeDasharray}
               />
             ))}
           </g>
@@ -672,22 +485,29 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Axes */}
         {showAxes && scales && (() => {
-          // Resolve per-axis config from the axes array
-          const leftAxis = axes?.find(a => a.orient === "left")
           const bottomAxis = axes?.find(a => a.orient === "bottom")
-          const showLeftBaseline = leftAxis ? leftAxis.baseline !== false : true
-          const showBottomBaseline = bottomAxis ? bottomAxis.baseline !== false : true
-          const leftJagged = leftAxis?.jaggedBase || false
-          const bottomJagged = bottomAxis?.jaggedBase || false
-          const bottomLandmark = bottomAxis?.landmarkTicks
-          const leftLandmark = leftAxis?.landmarkTicks
-          const axisStroke = "var(--semiotic-border, #ccc)"
+          const topAxis = axes?.find(a => a.orient === "top")
+          const leftAxis = axes?.find(a => a.orient === "left")
+          const rightAxis = axes?.find(a => a.orient === "right")
+          const xAxis = bottomAxis ?? topAxis
+          const yAxis = leftAxis ?? rightAxis
+          const xOrient = bottomAxis ? "bottom" : topAxis ? "top" : "bottom"
+          const yOrient = leftAxis ? "left" : rightAxis ? "right" : "left"
+          const xBaselineY = xOrient === "top" ? 0 : height
+          const yBaselineX = yOrient === "right" ? width : 0
+          const xTickDirection = xOrient === "top" ? -1 : 1
+          const yTickDirection = yOrient === "right" ? 1 : -1
+          const showXBaseline = xAxis ? xAxis.baseline !== false : true
+          const showYBaseline = yAxis ? yAxis.baseline !== false : true
+          const xJagged = xAxis?.jaggedBase || false
+          const yJagged = yAxis?.jaggedBase || false
+          const xLandmark = xAxis?.landmarkTicks
+          const yLandmark = yAxis?.landmarkTicks
+          const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: "var(--semiotic-border, #ccc)", strokeWidth: 1 })
+          const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: "var(--semiotic-border, #ccc)", strokeWidth: 1 })
           const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
-          // Rotate bottom-axis labels 45° when autoRotate is set AND labels
-          // would overlap horizontally. Computed once at component scope so
-          // the legend's axis-chrome gutter reads the same value.
-          const shouldRotateBottom = shouldRotateBottomTicks
+          const shouldRotateXAxis = shouldRotateBottomTicks
 
           // Per-axis font-size resolution. Inline `style` references the
           // CSS var with the literal default as the fallback — consumers
@@ -706,8 +526,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const TICK_FONT_SIZE = 12
           const LANDMARK_TICK_FONT_SIZE = 13
           const AXIS_LABEL_FONT_SIZE = 12
-          const bottomTickAnchorMode = bottomAxis?.tickAnchor
-          const leftTickAnchorMode = leftAxis?.tickAnchor
+          const xTickAnchorMode = xAxis?.tickAnchor
+          const yTickAnchorMode = yAxis?.tickAnchor
+          const xAxisLabel = xAxis?.label ?? xLabel
+          const yAxisLabel = yAxis?.label ?? (yOrient === "right" ? yLabelRight ?? yLabel : yLabel)
+          const yAxisLabelX = yOrient === "right"
+            ? width + rightAxisLabelMargin - 15
+            : -leftAxisLabelMargin + 15
           // Pre-compute the edge pixels for each axis so the tick-render
           // loop can identify the leftmost/rightmost or topmost/bottommost
           // entry without depending on array index — y ticks are in
@@ -717,30 +542,30 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const yPixelExtent = tickPixelExtent(yTicks)
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
-            <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
-            {/* X axis baseline. Same three-state gate as the grid block
+            <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
+            {/* Horizontal-axis baseline. Same three-state gate as the grid block
                 above: render unless the underlay is already showing
                 through a transparent canvas. */}
-            {(!underlayRendered || canvasObscuresUnderlay) && showBottomBaseline && !bottomJagged && (
-              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1}  />
+            {(!underlayRendered || canvasObscuresUnderlay) && showXBaseline && !xJagged && (
+              <line x1={0} y1={xBaselineY} x2={width} y2={xBaselineY} {...xAxisLine} />
             )}
-            {(!underlayRendered || canvasObscuresUnderlay) && bottomJagged && (
-              <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+            {(!underlayRendered || canvasObscuresUnderlay) && xJagged && (
+              <path d={jaggedBaselinePath(xOrient, width, height)} fill="none" {...xAxisLine} />
             )}
             {xTicks.map((tick, i) => {
-              const isLandmark = bottomLandmark
-                ? typeof bottomLandmark === "function"
-                  ? bottomLandmark(tick.value, i)
+              const isLandmark = xLandmark
+                ? typeof xLandmark === "function"
+                  ? xLandmark(tick.value, i)
                   : isTimeLandmark(tick.value, i > 0 ? xTicks[i - 1].value : undefined)
                 : false
               return (
-              <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${height})`}>
-                <line y2={5} stroke={axisStroke} strokeWidth={1} />
+              <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${xBaselineY})`}>
+                <line y2={xTickDirection * 5} {...xAxisLine} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
-                    y={shouldRotateBottom ? 12 : 18}
-                    textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(
-                      bottomTickAnchorMode,
+                    y={xTickDirection * (shouldRotateXAxis ? 12 : 18)}
+                    textAnchor={shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
+                      xTickAnchorMode,
                       tick.pixel === xPixelExtent.min,
                       tick.pixel === xPixelExtent.max,
                     )}
@@ -749,56 +574,56 @@ export function SVGOverlay(props: SVGOverlayProps) {
                     fontSize={isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE}
                     className="semiotic-axis-tick"
                     style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
-                    transform={shouldRotateBottom ? "rotate(-45)" : undefined}
+                    transform={shouldRotateXAxis ? xOrient === "top" ? "rotate(45)" : "rotate(-45)" : undefined}
                   >
                     {tick.label}
                   </text>
                 ) : (
-                  <foreignObject x={-30} y={6} width={60} height={24} style={{ overflow: "visible" }}>
+                  <foreignObject x={-30} y={xOrient === "top" ? -30 : 6} width={60} height={24} style={{ overflow: "visible" }}>
                     <div style={{ textAlign: "center", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                   </foreignObject>
                 )}
               </g>
               )
             })}
-            {xLabel && (
+            {xAxisLabel && (
               <text
                 x={width / 2}
-                y={height + (shouldRotateBottom ? 58 : 40)}
+                y={xOrient === "top" ? -(shouldRotateXAxis ? 58 : 40) : height + (shouldRotateXAxis ? 58 : 40)}
                 textAnchor="middle"
                 fill={labelColor}
                 fontSize={AXIS_LABEL_FONT_SIZE}
                 className="semiotic-axis-label"
                 style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
-                {xLabel}
+                {xAxisLabel}
               </text>
             )}
             </g>
 
-            <g className="semiotic-axis semiotic-axis-left" data-orient="left">
-            {/* Y axis baseline. Same gate as the X baseline above. */}
-            {(!underlayRendered || canvasObscuresUnderlay) && showLeftBaseline && !leftJagged && (
-              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
+            <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
+            {/* Vertical-axis baseline. Same gate as the horizontal baseline above. */}
+            {(!underlayRendered || canvasObscuresUnderlay) && showYBaseline && !yJagged && (
+              <line x1={yBaselineX} y1={0} x2={yBaselineX} y2={height} {...yAxisLine} />
             )}
-            {(!underlayRendered || canvasObscuresUnderlay) && leftJagged && (
-              <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+            {(!underlayRendered || canvasObscuresUnderlay) && yJagged && (
+              <path d={jaggedBaselinePath(yOrient, width, height)} fill="none" {...yAxisLine} />
             )}
             {yTicks.map((tick, i) => {
-              const isLandmark = leftLandmark
-                ? typeof leftLandmark === "function"
-                  ? leftLandmark(tick.value, i)
+              const isLandmark = yLandmark
+                ? typeof yLandmark === "function"
+                  ? yLandmark(tick.value, i)
                   : isTimeLandmark(tick.value, i > 0 ? yTicks[i - 1].value : undefined)
                 : false
               return (
-              <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
-                <line x2={-5} stroke={axisStroke} strokeWidth={1} />
+              <g key={`ytick-${i}`} transform={`translate(${yBaselineX},${tick.pixel})`}>
+                <line x2={yTickDirection * 5} {...yAxisLine} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
-                    x={-8}
-                    textAnchor="end"
+                    x={yTickDirection * 8}
+                    textAnchor={yOrient === "right" ? "start" : "end"}
                     dominantBaseline={resolveVerticalTickBaseline(
-                      leftTickAnchorMode,
+                      yTickAnchorMode,
                       tick.pixel === yPixelExtent.min,
                       tick.pixel === yPixelExtent.max,
                     )}
@@ -811,45 +636,47 @@ export function SVGOverlay(props: SVGOverlayProps) {
                     {tick.label}
                   </text>
                 ) : (
-                  <foreignObject x={-68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
-                    <div style={{ textAlign: "right", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
+                  <foreignObject x={yOrient === "right" ? 8 : -68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
+                    <div style={{ textAlign: yOrient === "right" ? "left" : "right", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                   </foreignObject>
                 )}
               </g>
               )
             })}
-            {(() => {
-              const leftLabel = leftAxis?.label || yLabel
-              return leftLabel ? (
+            {yAxisLabel && (
               <text
-                x={-leftAxisLabelMargin + 15}
+                x={yAxisLabelX}
                 y={height / 2}
                 textAnchor="middle"
                 fill={labelColor}
-                transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${height / 2})`}
+                transform={`rotate(${yOrient === "right" ? 90 : -90}, ${yAxisLabelX}, ${height / 2})`}
                 fontSize={AXIS_LABEL_FONT_SIZE}
                 className="semiotic-axis-label"
                 style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
-                {leftLabel}
+                {yAxisLabel}
               </text>
-              ) : null
-            })()}
+            )}
             </g>
 
             {/* Right Y axis */}
             {(() => {
               const rightAxis = axes?.find(a => a.orient === "right")
-              if (!rightAxis || yTicksRight.length === 0) return null
+              // With no left axis, the primary vertical-axis block above is
+              // the right axis. Render this second block only for an explicit
+              // left/right pair so right-only configs do not also create a
+              // default left axis.
+              if (!leftAxis || !rightAxis || yTicksRight.length === 0) return null
               const showRightBaseline = rightAxis.baseline !== false
               const rightLandmark = rightAxis.landmarkTicks
               const rightLabel = rightAxis.label || yLabelRight
               const rightTickAnchorMode = rightAxis.tickAnchor
+              const rightAxisLine = resolveAxisLineStyle(rightAxis.axisStyle, { stroke: "var(--semiotic-border, #ccc)", strokeWidth: 1 })
               const yRightPixelExtent = tickPixelExtent(yTicksRight)
               return (
                 <g className="semiotic-axis semiotic-axis-right" data-orient="right">
                   {showRightBaseline && (
-                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+                    <line x1={width} y1={0} x2={width} y2={height} {...rightAxisLine} />
                   )}
                   {yTicksRight.map((tick, i) => {
                     const isLandmark = rightLandmark
@@ -859,7 +686,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                       : false
                     return (
                     <g key={`ytick-r-${i}`} transform={`translate(${width},${tick.pixel})`}>
-                      <line x2={5} stroke={axisStroke} strokeWidth={1} />
+                      <line x2={5} {...rightAxisLine} />
                       {typeof tick.label === "string" || typeof tick.label === "number" ? (
                         <text
                           x={8}
@@ -985,25 +812,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
         {children}
       </g>
 
-      {/* Title */}
-      {title && typeof title === "string" ? (
-        <text
-          x={totalWidth / 2}
-          y={TITLE_BASELINE}
-          textAnchor="middle"
-          fontWeight="bold"
-          fill="var(--semiotic-text, #333)"
-          fontSize={14}
-          className="semiotic-chart-title"
-          style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
-        >
-          {title}
-        </text>
-      ) : title ? (
-        <foreignObject x={0} y={0} width={totalWidth} height={margin.top}>
-          {title}
-        </foreignObject>
-      ) : null}
+      <SVGChartTitle title={title} totalWidth={totalWidth} marginTop={margin.top} />
 
       {/* Legend */}
       {renderLegendFromConfig({

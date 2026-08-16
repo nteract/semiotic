@@ -332,6 +332,8 @@ export type {
 } from "./ai/dataQualityBridge"
 export {
   prepareChart,
+  refreshChartDiagnostics,
+  createRenderEvidenceMemo,
   chartGenerationTool,
   toAnthropicTool,
   toOpenAITool,
@@ -340,6 +342,7 @@ export {
 } from "./ai/generativeChart"
 export type {
   RenderFn,
+  RenderEvidenceMemo,
   PrepareChartInput,
   PrepareChartOptions,
   PrepareChartResult,

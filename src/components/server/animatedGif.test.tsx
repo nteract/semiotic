@@ -278,7 +278,7 @@ describe("generateFrameSVGs", () => {
       expect(frames.length).toBeGreaterThan(0)
     })
 
-    it("applies title to frames", () => {
+  it("applies title to frames", () => {
       const frames = generateFrameSVGs("line", lineData, {
         xAccessor: "x", yAccessor: "y", width: 400, height: 300,
         title: "Revenue Trend",
@@ -298,6 +298,21 @@ describe("generateFrameSVGs", () => {
 
       frames.forEach(f => expect(f).toContain("#1a1a2e"))
     })
+  })
+
+  it("applies title typography to frames", () => {
+    const frames = generateFrameSVGs("line", lineData, {
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 300,
+      title: "Revenue Trend",
+      theme: { typography: { titleFontSize: 19, titleFontFamily: "Georgia", titleFontWeight: 500 } },
+    }, { stepSize: 20, transitionFrames: 0 })
+
+    expect(frames[0]).toContain('font-size="19"')
+    expect(frames[0]).toContain('font-family="Georgia"')
+    expect(frames[0]).toContain('font-weight="500"')
   })
 
   // ═════════════════════════════════════════════════════════════════════

@@ -227,8 +227,22 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
       showGrid: true,
       frameProps: {
         axes: [
-          { orient: "top", tickValues: [0, 2], tickFormat: (v: number) => `top-${v}`, label: "Top axis", grid: false },
-          { orient: "right", tickValues: [10, 40], tickFormat: (v: number) => `right-${v}`, label: "Right axis", gridStyle: "dashed" },
+          {
+            orient: "top",
+            tickValues: [0, 2],
+            tickFormat: (v: number) => `top-${v}`,
+            label: "Top axis",
+            grid: false,
+            axisStyle: { stroke: "#dc2626", strokeWidth: 2 },
+          },
+          {
+            orient: "right",
+            tickValues: [10, 40],
+            tickFormat: (v: number) => `right-${v}`,
+            label: "Right axis",
+            gridStyle: "dashed",
+            axisStyle: { stroke: "#2563eb", strokeWidth: 3 },
+          },
         ],
       },
     })
@@ -240,6 +254,8 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
     const grid = svg.match(/<g[^>]*class="semiotic-grid"[\s\S]*?<\/g>/)?.[0] ?? ""
     expect(grid).not.toMatch(/<line[^>]*x1="(?!0")/)
     expect(grid).toContain('stroke-dasharray="6,4"')
+    expect(svg).toMatch(/<line(?=[^>]*\by1="0")(?=[^>]*\by2="0")(?=[^>]*\bstroke="#dc2626")/)
+    expect(svg).toMatch(/<line(?=[^>]*\bx1="290")(?=[^>]*\bx2="290")(?=[^>]*\bstroke="#2563eb")/)
   })
 })
 
@@ -504,6 +520,30 @@ describe("Grid lines", () => {
     // instead have a non-zero x1 tick coordinate.
     expect(grid).not.toMatch(/<line[^>]*x1="(?!0")/)
     expect(grid).toContain('stroke-dasharray="6,4"')
+  })
+
+  it("serializes per-axis grid and baseline stroke styling", () => {
+    const svg = renderXYToStaticSVG({
+      chartType: "line",
+      data: [{ x: 0, y: 10 }, { x: 1, y: 20 }, { x: 2, y: 15 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [400, 300],
+      showGrid: true,
+      axes: [{
+        orient: "bottom",
+        gridStyle: { stroke: "#0ea5e9", strokeWidth: 2, strokeOpacity: 0.4, strokeDasharray: "3,2" },
+        axisStyle: { stroke: "#be123c", strokeWidth: 3, strokeDasharray: "5,1" },
+      }],
+    } as StaticXYProps)
+
+    expect(svg).toContain('stroke="#0ea5e9"')
+    expect(svg).toContain('stroke-width="2"')
+    expect(svg).toContain('stroke-opacity="0.4"')
+    expect(svg).toContain('stroke-dasharray="3,2"')
+    expect(svg).toContain('stroke="#be123c"')
+    expect(svg).toContain('stroke-width="3"')
+    expect(svg).toContain('stroke-dasharray="5,1"')
   })
 
   it("renders grid when showGrid is true (ordinal vertical)", () => {

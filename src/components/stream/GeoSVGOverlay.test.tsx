@@ -90,6 +90,13 @@ describe("GeoSVGOverlay parity", () => {
     ).not.toBeNull()
   })
 
+  it("uses the chart title typography variables", () => {
+    const { container } = render(geoOverlay())
+    const title = container.querySelector(".semiotic-chart-title")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-family")
+    expect(title?.getAttribute("style")).toContain("--semiotic-title-font-weight")
+  })
+
   it("preserves empty and showAxes-only overlay behavior", () => {
     const dimensions = {
       width: 220,

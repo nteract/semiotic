@@ -100,11 +100,79 @@ export function renderGeoToStaticSVG(
  * union — no second edit required, no silent drift like the CandlestickChart
  * gap that motivated this refactor.
  */
-type ChartName = keyof typeof CHART_CONFIGS | ValueChartName
+export type RenderChartName = keyof typeof CHART_CONFIGS | ValueChartName
 
-interface RenderChartOptions {
+export interface RenderChartOptions {
   /** Output format — currently only "svg" is synchronous */
   format?: "svg"
+  /**
+   * Decimal places for SVG geometry serialization. This opt-in postprocess
+   * rounds numeric SVG attributes, path data, transforms, and point lists;
+   * text nodes, IDs, and arbitrary CSS/style strings are left untouched.
+   * Values are clamped to the practical 0–8 range.
+   */
+  precision?: number
+}
+
+const PRECISION_ATTRIBUTES = new Set([
+  "d", "transform", "points", "viewBox", "x", "y", "x1", "x2", "y1", "y2",
+  "cx", "cy", "r", "rx", "ry", "width", "height", "dx", "dy", "offset",
+  "startOffset", "stroke-width", "stroke-opacity", "stroke-dasharray",
+  "stroke-dashoffset", "fill-opacity", "opacity", "font-size", "letter-spacing",
+])
+const SVG_NUMBER = /-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi
+
+function resolvedPrecision(precision: number | undefined): number | undefined {
+  if (!Number.isFinite(precision)) return undefined
+  return Math.max(0, Math.min(8, Math.floor(precision as number)))
+}
+
+function roundSvgNumber(token: string, precision: number): string {
+  const value = Number(token)
+  if (!Number.isFinite(value)) return token
+  const factor = 10 ** precision
+  const rounded = Math.round((value + Number.EPSILON) * factor) / factor
+  return Object.is(rounded, -0) ? "0" : String(rounded)
+}
+
+/**
+ * Round the numeric tokens in an SVG geometry value without changing its
+ * token boundaries. Compact path syntax permits adjacent numbers such as
+ * `M.4.5`; after rounding those to integers, concatenating `01` would turn a
+ * coordinate pair into one number. A whitespace separator is legal in path,
+ * transform, and point-list grammars, so retain the original gaps and insert
+ * one only where the source deliberately used an implicit numeric boundary.
+ */
+function roundSvgGeometryValue(value: string, precision: number): string {
+  const numberPattern = new RegExp(SVG_NUMBER.source, SVG_NUMBER.flags)
+  let roundedValue = ""
+  let cursor = 0
+  let hasPreviousNumber = false
+  let match: RegExpExecArray | null
+
+  while ((match = numberPattern.exec(value))) {
+    const gap = value.slice(cursor, match.index)
+    if (hasPreviousNumber && gap.length === 0) roundedValue += " "
+    else roundedValue += gap
+    roundedValue += roundSvgNumber(match[0], precision)
+    cursor = match.index + match[0].length
+    hasPreviousNumber = true
+  }
+
+  return roundedValue + value.slice(cursor)
+}
+
+/** Apply the documented renderChart precision contract to SVG geometry only. */
+export function serializeSvgPrecision(svg: string, precision?: number): string {
+  const resolved = resolvedPrecision(precision)
+  if (resolved === undefined) return svg
+  return svg.replace(/<[^>]+>/g, (tag) => tag.replace(
+    /\s([\w:-]+)="([^"]*)"/g,
+    (attribute, name: string, value: string) => {
+      if (!PRECISION_ATTRIBUTES.has(name) || /\b(?:var|calc|url)\(/i.test(value)) return attribute
+      return ` ${name}="${roundSvgGeometryValue(value, resolved)}"`
+    },
+  ))
 }
 
 const COMMON_FRAME_PROP_KEYS = [
@@ -203,7 +271,7 @@ function pickDefinedProps(source: Datum, keys: readonly string[]): Datum {
  * This is the primary API for AI/MCP workflows.
  */
 export function renderChart(
-  component: ChartName,
+  component: string,
   props: Datum,
   options?: RenderChartOptions
 ): string {
@@ -219,7 +287,7 @@ export function renderChart(
  * pixel inspection. Exposed through the MCP `renderChart` tool response.
  */
 export function renderChartWithEvidence(
-  component: ChartName,
+  component: string,
   props: Datum,
   options?: RenderChartOptions
 ): { svg: string; evidence: RenderEvidence } {
@@ -252,14 +320,14 @@ export function renderChartWithEvidence(
 }
 
 function renderChartInternal(
-  component: ChartName,
+  component: string,
   props: Datum,
-  _options?: RenderChartOptions,
+  options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
-  if (component in VALUE_RENDERERS) {
+  if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {
-      svg: renderValueChart(component as ValueChartName, props, sink),
+      svg: serializeSvgPrecision(renderValueChart(component as ValueChartName, props, sink), options?.precision),
       frameType: "value"
     }
   }
@@ -267,13 +335,13 @@ function renderChartInternal(
   // Resolve the public HOC contract before mapping chart-specific props. The
   // resolver is the same pure function every React chart HOC consumes, so
   // context/sparkline/mobile dimensions and chrome cannot drift in SSR.
-  const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]
-  if (!config) {
+  if (!Object.prototype.hasOwnProperty.call(CHART_CONFIGS, component)) {
     throw new Error(
       `Unknown chart component: "${component}". ` +
         `Run \`npx semiotic-ai --list\` for supported chart types.`
     )
   }
+  const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]
   // Some chart families also own a chart-specific `mode` prop (for example
   // physics `mode="mechanical"`). Only consume the four semantic display
   // modes here; the original prop remains in `rest` for the chart builder.
@@ -420,7 +488,10 @@ function renderChartInternal(
         : `${svg.slice(0, closingSvgIndex)}${overlayMarkup}${svg.slice(closingSvgIndex)}`
   }
 
-  return { svg, frameType: config.frameType as RenderEvidence["frameType"] }
+  return {
+    svg: serializeSvgPrecision(svg, options?.precision),
+    frameType: config.frameType as RenderEvidence["frameType"],
+  }
 }
 
 // ── Image export ────────────────────────────────────────────────────────
@@ -441,7 +512,7 @@ export interface RenderToImageOptions {
  * Falls back to a descriptive error if sharp is not installed.
  */
 export async function renderToImage(
-  frameTypeOrComponent: FrameType | ChartName,
+  frameTypeOrComponent: FrameType | RenderChartName,
   props: Datum,
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
@@ -456,7 +527,7 @@ export async function renderToImage(
       props as StaticFrameProps
     )
   } else {
-    svg = renderChart(frameTypeOrComponent as ChartName, props)
+    svg = renderChart(frameTypeOrComponent, props)
   }
 
   // Apply background if specified
@@ -503,7 +574,7 @@ export async function renderToImage(
 
 export interface DashboardChart {
   /** Frame type or HOC component name */
-  component?: ChartName
+  component?: RenderChartName
   frameType?: FrameType
   /** Chart props (data, accessors, etc.) */
   props: Datum
@@ -657,10 +728,10 @@ export function renderDashboard(
           x={width / 2}
           y={24}
           textAnchor="middle"
-          fontSize={s.titleSize + 4}
-          fontWeight="bold"
+          fontSize={s.titleFontSize + 4}
+          fontWeight={s.titleFontWeight}
           fill={s.text}
-          fontFamily={s.fontFamily}
+          fontFamily={s.titleFontFamily}
         >
           {title}
         </text>

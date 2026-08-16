@@ -909,6 +909,19 @@ describe("renderDashboard", () => {
     expect(svg).toContain("Q1 Dashboard")
   })
 
+  it("applies title typography to the dashboard heading", () => {
+    const svg = renderDashboard([], {
+      title: "Q1 Dashboard",
+      theme: { typography: { titleFontSize: 19, titleFontFamily: "Georgia", titleFontWeight: 500 } },
+      width: 800,
+      height: 400,
+    })
+
+    expect(svg).toContain('font-size="23"')
+    expect(svg).toContain('font-family="Georgia"')
+    expect(svg).toContain('font-weight="500"')
+  })
+
   it("renders dashboard with subtitle", () => {
     const svg = renderDashboard([], {
       title: "Dashboard",

@@ -48,10 +48,18 @@ export interface SemioticTheme {
     tickSize: number
     /** Font size for legend text. Falls back to `labelSize` if unset. */
     legendSize?: number
+    /** Font family for legends. Falls back to `fontFamily` if unset. */
+    legendFontFamily?: string
+    /** Font weight for legends. Inherits the browser normal weight if unset. */
+    legendFontWeight?: string | number
     /** Font family for axis tick labels. Falls back to `fontFamily`. */
     tickFontFamily?: string
     /** Font size for chart title. Falls back to `titleSize` if unset. */
     titleFontSize?: number
+    /** Font family for chart titles. Falls back to `fontFamily` if unset. */
+    titleFontFamily?: string
+    /** Font weight for chart titles. Falls back to the established bold title treatment. */
+    titleFontWeight?: string | number
   }
   tooltip?: {
     background?: string

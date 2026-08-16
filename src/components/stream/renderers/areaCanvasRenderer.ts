@@ -209,6 +209,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
           ctx.clip()
           const bandColor = band.color ?? baseStroke
           ctx.strokeStyle = resolveCSSColor(ctx, bandColor) || bandColor
+          ctx.globalAlpha = nodeOpacity * (band.opacity ?? 1)
           traceAreaTopPath(ctx, node)
           ctx.stroke()
           ctx.restore()

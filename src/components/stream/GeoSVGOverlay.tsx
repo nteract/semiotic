@@ -214,7 +214,9 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
           className="semiotic-chart-title"
           style={{
             userSelect: "none",
-            fontSize: "var(--semiotic-title-font-size, 14px)"
+            fontSize: "var(--semiotic-title-font-size, 14px)",
+            fontFamily: "var(--semiotic-title-font-family, var(--semiotic-font-family, sans-serif))",
+            fontWeight: "var(--semiotic-title-font-weight, bold)",
           }}
         >
           {title}

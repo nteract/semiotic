@@ -162,6 +162,10 @@ export function GradientLegend({
         role={interactive ? "listbox" : undefined}
         aria-orientation={interactive ? "horizontal" : undefined}
         aria-multiselectable={interactive && isolateMode ? true : undefined}
+        style={{
+          fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
+          fontWeight: "var(--semiotic-legend-font-weight, normal)",
+        }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -232,6 +236,10 @@ export function GradientLegend({
       role={interactive ? "listbox" : undefined}
       aria-orientation={interactive ? "vertical" : undefined}
       aria-multiselectable={interactive && isolateMode ? true : undefined}
+      style={{
+        fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
+        fontWeight: "var(--semiotic-legend-font-weight, normal)",
+      }}
     >
       {label && (
         <text

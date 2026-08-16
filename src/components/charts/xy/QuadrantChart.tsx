@@ -660,7 +660,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     canvasPreRenderers: mergedPreRenderers,
     ...setup.crosshairProps,
     ...frameProps,
-    // Override pre-renderers after spread so user can't clobber quadrant renderers
+    // frameProps precedence: override pre-renderers so quadrant renderers cannot be clobbered.
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
     svgPreRenderers,
   }
