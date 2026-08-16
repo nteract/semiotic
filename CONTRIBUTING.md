@@ -112,6 +112,16 @@ npm run check:pack
 npm run release:check
 ```
 
+## Confirmed-defect related-surface audit
+
+When a user-visible defect is confirmed, do not close it once only the minimal
+reproduction passes. Trace its contract through parallel renderers and entry
+points, generated artifacts and schemas, serialized formats, and relevant
+public API paths. Fix or add regression coverage for every same-class issue
+found, then record the audit scope, negative results, and verification in the
+issue or PR. This additional audit is not required for a transient CI or
+infrastructure failure unless it also demonstrates a product behavior failure.
+
 TypeDoc treats warnings as errors. Its validation intentionally skips only the
 "referenced but not exported" category: Semiotic's entry-point declarations
 use structural types from internal modules, while the checked-in API snapshots

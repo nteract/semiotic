@@ -22,6 +22,7 @@ import { buildBumpRibbonGeometry } from "../../geometry/bumpRibbonGeometry"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 import { useTheme } from "../../ThemeProvider"
+import { resolveExplicitColor } from "../shared/colorUtils"
 import { useBumpTooltip } from "./bumpTooltip"
 import {
   mapBumpAnnotations,
@@ -47,6 +48,7 @@ export interface BumpLayoutConfig {
   lineOpacity: number
   neutralColor?: string
   color?: string
+  colorMap?: Record<string, string>
   stroke?: string
   strokeWidth?: number
   opacity?: number
@@ -222,7 +224,9 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
     if (rows.length < 2) continue
 
     const isHighlighted = rows[0].__bumpHighlighted
-    const resolvedSeriesColor = ctx.resolveColor(rows[0].__bumpSeries, rows[0])
+    const resolvedSeriesColor =
+      (config.colorMap && resolveExplicitColor(config.colorMap, series))
+      ?? ctx.resolveColor(rows[0].__bumpSeries, rows[0])
     const color = config.color ?? (isHighlighted
       ? resolvedSeriesColor
       : config.neutralColor
@@ -552,6 +556,9 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     lineOpacity,
     neutralColor,
     color: props.color,
+    colorMap: resolvedColorScheme && typeof resolvedColorScheme === "object" && !Array.isArray(resolvedColorScheme)
+      ? resolvedColorScheme
+      : undefined,
     stroke: props.stroke,
     strokeWidth: props.strokeWidth,
     opacity: props.opacity,
@@ -566,7 +573,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     maxLabels,
   }), [
     ribbon, curve, samplesPerSegment, ribbonSizeRange, ranked.valueExtent,
-    ranked.seriesOrder, lineWidth, ribbonOpacity, lineOpacity, neutralColor,
+    ranked.seriesOrder, lineWidth, ribbonOpacity, lineOpacity, neutralColor, resolvedColorScheme,
     props.color, props.stroke, props.strokeWidth, props.opacity, styleRules,
     frameAreaStyle, framePointStyle, labelStyle, showPoints, pointRadius, showLabels,
     labelPriorityAccessor, maxLabels,

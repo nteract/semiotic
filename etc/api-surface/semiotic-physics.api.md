@@ -594,7 +594,7 @@ interface-member ChainReactionChartHandle::property::reset = required reset: () 
 interface-member ChainReactionChartHandle::property::settle = required settle: () => void
 interface-member ChainReactionChartHandle::property::step = required step: () => void
 interface-member ChainReactionChartHandle::property::unblockTask = required unblockTask: (taskID: string) => void
-interface-member ChainReactionChartProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member ChainReactionChartProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member ChainReactionChartProps::property::blockerAccessor = optional blockerAccessor: DependencyAccessor<TDatum, string | undefined> | undefined
 interface-member ChainReactionChartProps::property::className = optional className: string | undefined
 interface-member ChainReactionChartProps::property::completionTimeAccessor = optional completionTimeAccessor: DependencyAccessor<TDatum, Date | number | undefined> | undefined
@@ -2277,7 +2277,7 @@ interface-member StreamPhysicsFrameHandle::property::getData = required getData:
 interface-member StreamPhysicsFrameHandle::property::getRegionState = required getRegionState: (bodyId?: string) => StreamPhysicsBodyRegionState | Record<string, StreamPhysicsBodyRegionState> | undefined
 interface-member StreamPhysicsFrameHandle::property::getStore = required getStore: () => PhysicsPipelineStore
 interface-member StreamPhysicsFrameHandle::property::popBodies = required popBodies: (ids: string[], options?: StreamPhysicsPopOptions) => string[]
-interface-member StreamPhysicsFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamPhysicsFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamPhysicsFrameProps::property::afterPaint = optional afterPaint: ((ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[], paint: PhysicsCanvasPaintContext) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamPhysicsFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
@@ -2477,6 +2477,8 @@ type DependencyMachineDiagnosticCode = "cycle" | "duplicate-task-id" | "missing-
 type DependencyReplayClock = Date | number | {currentTime: Date | number;}
 type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: Date | number;} | {type: "task-armed"; taskID: string; at: Date | number;} | {type: "task-blocked"; taskID: string; reason: string; at: Date | number;} | {type: "task-completed"; taskID: string; at: Date | number;} | {type: "task-unblocked"; taskID: string; at: Date | number;}
 type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type GauntletPopSpec = readonly string[] | {candidates?: readonly string[]; count?: number; ids?: readonly string[];}
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type MotionAgeOpacityType = "exponential" | "linear" | "step"

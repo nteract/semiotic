@@ -6,6 +6,7 @@ import type { Datum, DatumValue } from "./datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { ResponsiveRule } from "./responsiveRules"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
+import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -123,9 +124,9 @@ export interface BaseChartProps {
   height?: number
   /** Margin around the chart. Accepts a number (same on all sides) or an object
    *  with any subset of `top`/`bottom`/`left`/`right`. Missing sides fall back
-   *  to the chart-mode defaults. Use `"auto"` or `null` for a side to explicitly
-   *  allow chart auto-reservation, e.g. `margin={{ right: "auto" }}` with a
-   *  right-side legend. */
+   *  to the chart-mode defaults. Numeric sides are minima when chart-owned
+   *  chrome such as a legend needs more room; `"auto"` and `null` start from
+   *  the chart-mode default. */
   margin?: PartialMargin
   /** Auto-match width to parent container. Default: false */
   responsiveWidth?: boolean
@@ -200,8 +201,9 @@ export interface BaseChartProps {
    * Use for trend descriptions or key takeaways that supplement the visual. */
   summary?: string
 
-  /** Enable accessible data table below the chart canvas. Default: true (via frame). */
-  accessibleTable?: boolean
+  /** Enable the accessible data table. Use `{ portalTarget }` to relocate its
+   * interactive UI outside a consumer-owned `role="img"`. Default: true. */
+  accessibleTable?: AccessibleTableProp
 
   /** Callback when a data element is clicked. Receives the original datum and pixel coordinates.
    * For lines, receives the line data; for bars, the bar datum; for pie slices, the slice datum. */

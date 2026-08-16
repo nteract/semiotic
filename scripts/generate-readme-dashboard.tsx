@@ -12,7 +12,7 @@ import { constants as zlibConstants, gzipSync } from "node:zlib"
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { renderChart } from "../src/components/server/renderToStaticSVG"
+import { renderChart } from "semiotic/server/node"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")

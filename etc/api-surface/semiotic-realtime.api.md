@@ -578,7 +578,7 @@ interface-member StreamNetworkFrameHandle::method::removeEdge = required removeE
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
 interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamNetworkFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamNetworkFrameProps::property::background = optional background: string | undefined
 interface-member StreamNetworkFrameProps::property::backgroundGraphics = optional backgroundGraphics: FrameGraphicsProp<null>
@@ -682,7 +682,7 @@ interface-member StreamXYFrameHandle::method::push = required push(datum: T): vo
 interface-member StreamXYFrameHandle::method::pushMany = required pushMany(data: T[]): void
 interface-member StreamXYFrameHandle::method::remove = required remove(id: string | string[]): T[]
 interface-member StreamXYFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
-interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamXYFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamXYFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamXYFrameProps::property::annotations = optional annotations: Datum[] | undefined
@@ -861,6 +861,8 @@ interface-member WindowAccumulatorConfig::property::window = optional window: Wi
 type AggregateBand = "minmax" | "none" | "stddev"
 type AggregateStat = "count" | "max" | "mean" | "min" | "sum"
 type ArrowOfTime = "down" | "left" | "right" | "up"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LatePolicy = "drop" | "keep"
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type LifecycleBand = "aging" | "expired" | "fresh" | "stale"

@@ -1,6 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { getCapability } from "./chartCapabilities"
-import { profileData } from "./profileData"
+import { profileData, type ProfileDataOptions } from "./profileData"
 import { suggestCharts } from "./suggestCharts"
 import type { ChartDataProfile, Suggestion } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
@@ -50,11 +50,9 @@ export interface RepairUnknownResult {
 
 export type RepairResult = RepairOkResult | RepairAlternativeResult | RepairUnknownResult
 
-export interface RepairOptions {
+export interface RepairOptions extends ProfileDataOptions {
   /** Caller's intent — informs ranking of alternatives when the chart doesn't fit. */
   intent?: IntentId | IntentId[]
-  /** Non-tabular payload (network/hierarchy/GeoJSON). Forwarded to profileData. */
-  rawInput?: unknown
   /** Limit number of alternatives returned (default 3). */
   maxAlternatives?: number
   /** Pre-computed profile, avoids recomputation. */
@@ -145,7 +143,7 @@ export function repairChartConfig(
   data: ReadonlyArray<Datum> | null | undefined,
   options: RepairOptions = {},
 ): RepairResult {
-  const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput })
+  const profile = options.profile ?? profileData(data ?? [], options)
   const capability = getCapability(component)
   const maxAlternatives = options.maxAlternatives ?? 3
   const repairs = capability?.recipe

@@ -204,7 +204,7 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.margin.right).toBe(113)
   })
 
-  it("preserves an explicitly owned right margin", () => {
+  it("preserves an explicit right-margin minimum when it already fits", () => {
     const colorScale = (_v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
@@ -216,6 +216,20 @@ describe("useChartLegendAndMargin", () => {
       })
     )
     expect(result.current.margin.right).toBe(200)
+  })
+
+  it("grows a small explicit side margin to fit the legend", () => {
+    const colorScale = (_v: string) => "#ccc"
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: 19 }
+      })
+    )
+    expect(result.current.margin.right).toBe(113)
   })
 
   it("treats undefined margin sides as omitted for legend reservation", () => {
@@ -329,6 +343,31 @@ describe("useChartLegendAndMargin", () => {
     // falls back to the widest ordinary band: under-reserving would let the
     // renderer clamp the legend back up onto the tick labels.
     expect(result.current.margin.bottom).toBe(162)
+  })
+
+  it("grows explicit horizontal margin minima for wrapped legends", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data: [],
+        colorBy: undefined,
+        colorScale: undefined,
+        showLegend: false,
+        legendPosition: "bottom",
+        userMargin: { bottom: 12 },
+        chartWidth: 220,
+        axisChrome: { hasAxis: false },
+        additionalLegend: {
+          gradient: {
+            domain: [0, 1],
+            colorFn: () => "#ccc",
+            label: "Probability"
+          },
+          legendDistance: 70
+        }
+      })
+    )
+
+    expect(result.current.margin.bottom).toBe(116)
   })
 
   it("does not add the gutter for a caller that declares no bottom axis", () => {

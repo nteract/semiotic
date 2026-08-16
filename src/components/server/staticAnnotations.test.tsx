@@ -31,6 +31,29 @@ describe("renderStaticAnnotations", () => {
     expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined })).toBeNull()
   })
 
+  it("serializes plot-relative frame text outside the data area", () => {
+    const svg = renderAnnotationsString({
+      ...baseConfig,
+      annotations: [
+        {
+          type: "frame-text",
+          label: "Quota maximum",
+          position: "bottom-right",
+          dx: -6,
+          dy: 18,
+          fill: "#2457C5",
+          fontSize: 12
+        }
+      ]
+    })
+    expect(svg).toContain("Quota maximum")
+    expect(svg).toContain('x="394"')
+    expect(svg).toContain('y="318"')
+    expect(svg).toContain('text-anchor="end"')
+    expect(svg).toContain('fill="#2457C5"')
+    expect(svg).not.toContain("foreignObject")
+  })
+
   it("honors svgAnnotationRules for custom annotation types and falls through on null", () => {
     const svg = renderAnnotationsString({
       ...baseConfig,

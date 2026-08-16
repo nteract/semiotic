@@ -10,7 +10,7 @@ import type {
   Suggestion,
   SuggestionScaleRange,
 } from "./chartCapabilityTypes"
-import type { IntentId } from "./intents"
+import { expandComposedIntentScores, type IntentId } from "./intents"
 import { getCapabilities } from "./chartCapabilities"
 import {
   applyAudienceBias,
@@ -25,6 +25,51 @@ import {
   type DataQualityProfile,
   type DataScaleProfile,
 } from "./dataScaleProfile"
+import { suggestionPropContractForFamily } from "./suggestionPropContracts"
+import { identifierFields } from "./fieldRoles"
+
+const CONVENTIONAL_MEASURE_ACCESSOR_PROPS = [
+  "xAccessor",
+  "yAccessor",
+  "valueAccessor",
+  "sizeAccessor",
+  "sizeBy",
+  "weightAccessor",
+  "radiusAccessor",
+  "rAccessor",
+  "amountAccessor",
+  "measureAccessor",
+] as const
+
+function identifierMeasureViolation(
+  capability: ChartCapability,
+  profile: ChartDataProfile,
+  props: Readonly<Record<string, unknown>>,
+  variant?: ChartVariant,
+): string | null {
+  const identifiers = new Set([
+    ...(profile.identifiers ?? []),
+    ...identifierFields(profile.fieldRoles ?? {}),
+  ])
+  if (identifiers.size === 0 || capability.fieldPolicy?.allowIdentifierMeasures === true) {
+    return null
+  }
+
+  const accessorProps = new Set<string>([
+    ...CONVENTIONAL_MEASURE_ACCESSOR_PROPS,
+    ...(capability.fieldPolicy?.measureAccessorProps ?? []),
+  ])
+  for (const propName of accessorProps) {
+    const field = props[propName]
+    if (typeof field === "string" && identifiers.has(field)) {
+      return `${capability.component} cannot use identifier field "${field}" as the measure in "${propName}".`
+    }
+  }
+
+  const resolvedFields = capability.fieldPolicy?.measureFields?.(profile, props, variant) ?? []
+  const identifier = resolvedFields.find((field) => identifiers.has(field))
+  return identifier ? `${capability.component} cannot use identifier field "${identifier}" as a measure.` : null
+}
 
 function score(scorer: IntentScorer | undefined, profile: ChartDataProfile): number {
   if (scorer === undefined) return 0
@@ -232,7 +277,7 @@ export function suggestCharts(
   data: ReadonlyArray<Datum> | null | undefined,
   options: SuggestChartsOptions = {}
 ): Suggestion[] {
-  const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput, seriesField: options.seriesField })
+  const profile = options.profile ?? profileData(data ?? [], options)
   const capabilities = options.capabilities ?? getCapabilities()
   const rankingIntents: IntentId[] = options.intent
     ? Array.isArray(options.intent) ? options.intent : [options.intent]
@@ -289,10 +334,16 @@ export function suggestCharts(
         : [undefined]
 
     for (const variant of variants) {
-      const intentScores = applyVariantToScores(baseScores, variant)
+      const intentScores = expandComposedIntentScores(
+        applyVariantToScores(baseScores, variant),
+        rankingIntents,
+      )
       const baseComposite = compositeScore(intentScores, rankingIntents)
       const variantRubric = applyVariantToRubric(capability.rubric, variant)
       const props = capability.buildProps(profile, variant)
+      if (identifierMeasureViolation(capability, profile, props, variant)) {
+        continue
+      }
       const baseCaveats = capability.caveats
         ? Array.from(capability.caveats(scaledProfile, variant))
         : []
@@ -372,6 +423,7 @@ export function suggestCharts(
         reasons,
         caveats,
         props,
+        propContract: capability.suggestionPropContract ?? suggestionPropContractForFamily(capability.family),
         ...(capability.whyCustom ? { whyCustom: capability.whyCustom } : {}),
         scaleRange,
       })
@@ -437,7 +489,7 @@ export function explainCapabilityFit(
   data: ReadonlyArray<Datum> | null | undefined,
   options: SuggestChartsOptions = {}
 ): ExplainCapabilityFitResult {
-  const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput, seriesField: options.seriesField })
+  const profile = options.profile ?? profileData(data ?? [], options)
   const capabilities = options.capabilities ?? getCapabilities()
 
   const allow = options.allow ? new Set(options.allow) : null
@@ -465,6 +517,24 @@ export function explainCapabilityFit(
         importPath: capability.importPath,
         reason: fitReason,
       })
+      continue
+    }
+
+    const variants: ReadonlyArray<ChartVariant | undefined> =
+      options.includeVariants !== false && capability.variants?.length
+        ? capability.variants
+        : [undefined]
+    const policyFailures = variants.map((variant) => {
+      const props = capability.buildProps(profile, variant)
+      return identifierMeasureViolation(capability, profile, props, variant)
+    })
+    if (policyFailures.length > 0 && policyFailures.every(Boolean)) {
+      rejected.push({
+        component: capability.component,
+        family: capability.family,
+        importPath: capability.importPath,
+        reason: policyFailures[0] as string,
+      })
     }
   }
 
@@ -477,23 +547,25 @@ export function explainCapabilityFit(
  * Score a specific (component, variant) pair against a dataset and (optionally) an intent.
  * Useful for evaluating a chart a user already chose: "is this a good fit for what they want?"
  */
+export interface ScoreChartOptions extends ProfileDataOptions {
+  intent?: IntentId | IntentId[]
+  variantKey?: string
+  profile?: ChartDataProfile
+  audience?: AudienceProfile
+  portability?: "portable" | "local"
+  riskTolerance?: "low" | "medium" | "high"
+  receptionChannel?: ReceptionModality
+}
+
 export function scoreChart(
   component: string,
   data: ReadonlyArray<Datum> | null | undefined,
-  options: {
-    intent?: IntentId | IntentId[]
-    variantKey?: string
-    profile?: ChartDataProfile
-    audience?: AudienceProfile
-    portability?: "portable" | "local"
-    riskTolerance?: "low" | "medium" | "high"
-    receptionChannel?: ReceptionModality
-  } = {}
+  options: ScoreChartOptions = {}
 ): Suggestion | { reason: string } {
   const capabilities = getCapabilities()
   const capability = capabilities.find((c) => c.component === component)
   if (!capability) return { reason: `No capability registered for "${component}"` }
-  const profile = options.profile ?? profileData(data ?? [])
+  const profile = options.profile ?? profileData(data ?? [], options)
   const fit = capability.fits(profile)
   if (fit !== null) return { reason: fit }
 
@@ -509,7 +581,10 @@ export function scoreChart(
   for (const [intent, scorer] of Object.entries(capability.intentScores) as Array<[IntentId, IntentScorer]>) {
     baseScores[intent] = score(scorer, profile)
   }
-  const intentScores = applyVariantToScores(baseScores, variant)
+  const intentScores = expandComposedIntentScores(
+    applyVariantToScores(baseScores, variant),
+    intents,
+  )
   const composite = compositeScore(intentScores, intents)
   const rubric = applyVariantToRubric(capability.rubric, variant)
   const reasons = buildReasons(capability, profile, intentScores, intents)
@@ -521,6 +596,10 @@ export function scoreChart(
     ...(variant?.caveats ?? []),
     ...recipeBias.caveats,
   ]
+
+  const props = capability.buildProps(profile, variant)
+  const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
+  if (policyFailure) return { reason: policyFailure }
 
   const resolvedComponent = variant?.component ?? capability.component
   return {
@@ -536,7 +615,8 @@ export function scoreChart(
     rubric,
     reasons,
     caveats,
-    props: capability.buildProps(profile, variant),
+    props,
+    propContract: capability.suggestionPropContract ?? suggestionPropContractForFamily(capability.family),
     ...(capability.whyCustom ? { whyCustom: capability.whyCustom } : {}),
   }
 }
@@ -561,10 +641,7 @@ export function suggestChartsGrouped(
   data: ReadonlyArray<Datum> | null | undefined,
   options: SuggestChartsOptions & { maxPerBand?: number } = {}
 ): ScaledSuggestionGroups {
-  const profile = options.profile ?? profileData(data ?? [], {
-    rawInput: options.rawInput,
-    seriesField: options.seriesField,
-  })
+  const profile = options.profile ?? profileData(data ?? [], options)
 
   const effective = computeEffectiveScale(profile, options.scale)
   const maxPerBand = options.maxPerBand ?? options.maxResults ?? 5

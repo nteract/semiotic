@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { profileData } from "./profileData"
+import { profileData, type ProfileDataOptions } from "./profileData"
 import { suggestCharts } from "./suggestCharts"
 import { getCapabilities } from "./chartCapabilities"
 import type { ChartDataProfile, Suggestion } from "./chartCapabilityTypes"
@@ -26,7 +26,7 @@ export interface StretchSuggestion {
   familiarity: number
 }
 
-export interface SuggestStretchChartsOptions {
+export interface SuggestStretchChartsOptions extends ProfileDataOptions {
   /** Intent(s) to rank by. When omitted, charts are picked by data fit alone. */
   intent?: IntentId | IntentId[]
   /** Required — without an audience profile, the concept of "stretch" doesn't apply. */
@@ -39,8 +39,6 @@ export interface SuggestStretchChartsOptions {
   maxResults?: number
   /** Pre-built profile. */
   profile?: ChartDataProfile
-  /** Non-tabular payload — forwarded to profileData. */
-  rawInput?: unknown
   /**
    * Only return stretches within this score distance of the top familiar pick
    * (default 1.5). Tighter values keep the suggestions plausible; wider values
@@ -75,7 +73,7 @@ export function suggestStretchCharts(
   const audience = options.audience
   if (!audience) return []
 
-  const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput })
+  const profile = options.profile ?? profileData(data ?? [], options)
   const ceiling = stretchFamiliarityCeiling(audience)
   const scoreTolerance = options.scoreTolerance ?? 1.5
   const maxResults = options.maxResults ?? 5

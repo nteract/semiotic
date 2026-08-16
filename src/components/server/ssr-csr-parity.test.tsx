@@ -39,7 +39,7 @@ import { BarChart } from "../charts/ordinal/BarChart"
 import { PieChart } from "../charts/ordinal/PieChart"
 import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import { Treemap } from "../charts/network/Treemap"
-import { LIGHT_THEME } from "../ThemeProvider"
+import { LIGHT_THEME, ThemeProvider } from "../ThemeProvider"
 
 const xyData = [
   { x: 0, y: 1 },
@@ -323,5 +323,45 @@ describe("BumpChart shared styling in static SVG", () => {
     expect(svg).toContain('stroke="#101010"')
     expect(svg).toContain('stroke-width="2"')
     expect(svg).toContain('opacity="0.4"')
+  })
+
+  it("keeps the best series on the first highlight color regardless of category order", () => {
+    const data = [
+      { year: 2023, series: "Alpha", value: 1 },
+      { year: 2023, series: "Zulu", value: 10 },
+      { year: 2024, series: "Alpha", value: 2 },
+      { year: 2024, series: "Zulu", value: 11 }
+    ]
+    const theme = {
+      ...LIGHT_THEME,
+      colors: {
+        ...LIGHT_THEME.colors,
+        categorical: ["#123456", "#abcdef"],
+        textSecondary: "#778899"
+      }
+    }
+    const chartProps = {
+      data,
+      xAccessor: "year" as const,
+      yAccessor: "value" as const,
+      lineBy: "series" as const,
+      highlightTop: 1,
+      showLabels: false,
+      width: 400,
+      height: 200
+    }
+
+    const staticApi = renderChart("BumpChart", { ...chartProps, theme })
+    const inFrame = renderToString(
+      <ThemeProvider theme={theme}>
+        <BumpChart {...chartProps} />
+      </ThemeProvider>
+    )
+
+    for (const svg of [staticApi, inFrame]) {
+      expect(svg).toContain('fill="#123456"')
+      expect(svg).toContain('fill="#778899"')
+      expect(svg).not.toContain('fill="#abcdef"')
+    }
   })
 })

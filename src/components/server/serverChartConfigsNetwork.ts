@@ -169,21 +169,16 @@ export const processSankey: ChartConfig = {
     const showLegend = common.showLegend ?? Boolean(colorBy)
     const legendActive = showLegend && Boolean(colorBy)
     const legendPos = (common.legendPosition as string | undefined) ?? "right"
-    const explicitMargin = common.__explicitMargin as
-      | { top?: number; right?: number; bottom?: number; left?: number }
-      | number
-      | undefined
-    const marginWasSet = (side: "top" | "right" | "bottom" | "left") =>
-      typeof explicitMargin === "number" ||
-      (explicitMargin != null &&
-        typeof explicitMargin === "object" &&
-        explicitMargin[side] != null)
-    // Match the HOC's custom legend reservation. Do not overwrite a side the
-    // caller explicitly set: that is the contract used for external legends.
+    // Match the HOC's custom legend reservation. Numeric caller margins are
+    // minima, so the chart-owned legend can grow its side when necessary.
     if (legendActive) {
-      if (legendPos === "right" && !marginWasSet("right"))
+      if (legendPos === "right")
         baseMargin.right = Math.max(baseMargin.right, 140)
-      else if (legendPos === "bottom" && !marginWasSet("bottom"))
+      else if (legendPos === "left")
+        baseMargin.left = Math.max(baseMargin.left, 140)
+      else if (legendPos === "top")
+        baseMargin.top = Math.max(baseMargin.top, 50)
+      else if (legendPos === "bottom")
         baseMargin.bottom = Math.max(baseMargin.bottom, 80)
     }
     const margin = baseMargin

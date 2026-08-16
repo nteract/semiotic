@@ -36,6 +36,34 @@ const explicitExternals = [
   "react/jsx-dev-runtime"
 ]
 
+/**
+ * React 18 exports `react-dom/server.browser`, while React 19 also adds the
+ * `server.edge` alias. Browser/edge source uses the former so the declared
+ * peer range stays valid. Node artifacts rewrite only these local static
+ * render modules to React's normal server entry, which avoids retaining a
+ * MessagePort in short-lived Node processes.
+ */
+function nodeStaticMarkupSourcePlugin() {
+  const nodeRenderedSources = /(?:\/|\\)(?:renderToStaticSVG|staticXY|staticOrdinal|staticNetwork|staticGeo|staticValue|animatedGif|PhysicsSettledSVG)\.tsx$/
+  return {
+    name: "node-static-markup-source",
+    setup(build) {
+      build.onLoad({ filter: /\.tsx$/ }, (args) => {
+        if (!nodeRenderedSources.test(args.path)) return null
+        const source = readFileSync(args.path, "utf8")
+        if (!source.includes('"react-dom/server.browser"')) return null
+        return {
+          contents: source.replaceAll(
+            '"react-dom/server.browser"',
+            '"react-dom/server"'
+          ),
+          loader: "tsx"
+        }
+      })
+    }
+  }
+}
+
 function useClientDirectivePlugin({
   clientOnly = false,
   entryNames = []
@@ -121,7 +149,7 @@ async function createCjsBundle(options = {}) {
     name: `${name}:cjs`,
     format: "cjs",
     splitting: false,
-    esbuildPlugins,
+    esbuildPlugins: [nodeStaticMarkupSourcePlugin(), ...esbuildPlugins],
     noExternal: esbuildPlugins.length > 0 ? ["d3-geo"] : undefined,
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
@@ -167,7 +195,10 @@ async function createSharedEsmGroup({
     format: "esm",
     splitting: true,
     metafile: analyze,
-    esbuildPlugins,
+    esbuildPlugins: [
+      ...(serverOnly ? [nodeStaticMarkupSourcePlugin()] : []),
+      ...esbuildPlugins
+    ],
     // Public ESM entries retain the package's historical `.module.min.js`
     // names, while private content-hashed chunks use the shorter `.min.js`
     // suffix. Both remain covered by package.json's `dist/*.min.js` file glob.
@@ -866,6 +897,18 @@ function writeClientPassThroughFacades() {
   console.log("\u2705 client pass-through facades created")
 }
 
+function writeNodeExperimentalFacade() {
+  writeFileSync(
+    "dist/semiotic-experimental-node.module.min.js",
+    '"use client";\n' +
+      'export*from"./semiotic-experimental-node-auxiliary.module.min.js";' +
+      'export*from"./semiotic-experimental-vacp.module.min.js";' +
+      'export{SemioticVACPBridge as unstable_SemioticVACPBridge}from"./semiotic-experimental-react-shared.module.min.js";' +
+      'export{BuiltInPhysicsEngineAdapter as unstable_BuiltInPhysicsEngineAdapter,createDefaultPhysicsEngineAdapter as unstable_createDefaultPhysicsEngineAdapter,PhysicsPipelineStore as unstable_PhysicsPipelineStore,evaluatePhysicsBodyBudget as unstable_evaluatePhysicsBodyBudget,PhysicsSedimentAccumulator as unstable_PhysicsSedimentAccumulator,sedimentHeightfield as unstable_sedimentHeightfield,StreamPhysicsFrame as unstable_StreamPhysicsFrame,PhysicsCustomChart as unstable_PhysicsCustomChart}from"./physics.module.min.js";\n'
+  )
+  console.log("\u2705 Node experimental facade created")
+}
+
 function assertNoEmptyJavaScriptArtifacts() {
   const emptyArtifacts = readdirSync("dist")
     .filter((name) => /\.(?:cjs|js|mjs)$/.test(name))
@@ -1225,12 +1268,39 @@ async function build() {
     serverOnly: true,
     groupName: "server"
   })
+  // Node can resolve the public edge entry while running package smoke tests
+  // or universal build tooling. Keep that condition on the Node renderer so
+  // React 19's browser static renderer cannot retain a MessagePort there;
+  // browser and worker conditions still select the regular edge artifact.
+  await createSharedEsmGroup({
+    entries: {
+      "semiotic-server-edge-node": "src/components/semiotic-server-edge.ts"
+    },
+    minify,
+    serverOnly: true,
+    groupName: "edge-server-node"
+  })
   await createSharedEsmGroup({
     entries: neutralEntries,
     minify,
     groupName: "neutral"
   })
   writeClientPassThroughFacades()
+  // The browser experimental facade includes the browser static-markup
+  // renderer for its unstable settled-physics serializer. Node resolves a
+  // companion facade whose auxiliary slice uses React's normal server entry,
+  // retaining the same physics export identities without keeping Node alive.
+  await createSharedEsmGroup({
+    entries: {
+      "semiotic-experimental-node-auxiliary":
+        "src/components/internal/semioticExperimentalEsmAuxiliary.ts"
+    },
+    minify,
+    clientOnly: true,
+    groupName: "experimental-node",
+    esbuildPlugins: [nodeStaticMarkupSourcePlugin()]
+  })
+  writeNodeExperimentalFacade()
 
   // ── CJS: one client namespace graph + independent non-client entries ─────
   // CommonJS cannot split chunks. Building every browser subpath separately
@@ -1304,6 +1374,78 @@ async function build() {
 
   assertNoEmptyJavaScriptArtifacts()
   assertDirectivePlacement(bundledEntries)
+  assertBrowserCompatibleStaticMarkupImports()
+}
+
+/**
+ * Browser consumers may intentionally use `semiotic/server` for synchronous
+ * SVG export. React's bare `react-dom/server` condition defaults to the Node
+ * renderer when a CommonJS bundle is processed, which forces downstream
+ * shims/rewrite plugins. Production code must request React's explicit,
+ * cross-version browser static renderer instead.
+ */
+function assertBrowserCompatibleStaticMarkupImports() {
+  const emitted = readdirSync("dist")
+    .filter((name) => name.endsWith(".js"))
+    .map((name) => [name, readFileSync(`dist/${name}`, "utf8")])
+  const codeByFile = new Map(emitted)
+  const edgeArtifacts = emitted
+    .filter(([, code]) => /["']react-dom\/server\.edge["']/.test(code))
+    .map(([name]) => name)
+  const browserRemap = pkg.browser?.["react-dom/server"]
+
+  if (edgeArtifacts.length > 0) {
+    throw new Error(
+      `React-19-only react-dom/server.edge request in: ${edgeArtifacts.join(", ")}. ` +
+        'Use "react-dom/server.browser" in browser/edge source paths.'
+    )
+  }
+  if (browserRemap !== "react-dom/server.browser") {
+    throw new Error(
+      'package.json browser mapping must resolve react-dom/server to "react-dom/server.browser".'
+    )
+  }
+
+  const requiredBrowserRenderer = "semiotic-server-edge.module.min.js"
+  const requiredNodeRenderers = [
+    "server.module.min.js",
+    "semiotic-server-edge-node.module.min.js"
+  ]
+  const rendererRequests = (entryName) => {
+    const visited = new Set()
+    const visit = (name) => {
+      if (visited.has(name)) return ""
+      visited.add(name)
+      const code = codeByFile.get(name) ?? ""
+      const requests = [...code.matchAll(/["']\.\/([^"']+\.js)["']/g)]
+      return (
+        code +
+        requests.map(([, imported]) => visit(imported)).join("")
+      )
+    }
+    return visit(entryName)
+  }
+  if (
+    !rendererRequests(requiredBrowserRenderer).includes(
+      '"react-dom/server.browser"'
+    )
+  ) {
+    throw new Error(
+      `${requiredBrowserRenderer} must retain react-dom/server.browser for React 18 browser and edge consumers.`
+    )
+  }
+  const nodeRendererDrift = requiredNodeRenderers.filter(
+    (name) => !rendererRequests(name).includes('"react-dom/server"')
+  )
+  if (nodeRendererDrift.length > 0) {
+    throw new Error(
+      `Node static-render artifacts must use react-dom/server: ${nodeRendererDrift.join(", ")}`
+    )
+  }
+
+  console.log(
+    "\u2705 static markup imports verified (React 18-compatible browser mapping; Node bundles use react-dom/server)"
+  )
 }
 
 /**

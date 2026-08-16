@@ -15,6 +15,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
+import { buildSuggestionPropContracts } from "./lib/ai-surface-suggestion-contracts.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -84,6 +85,10 @@ const output = {
     mcpRenderable: componentIndex.renderableComponents,
     browserOnly: componentIndex.browserOnlyComponents,
     categories: componentIndex.categories,
+    suggestionPropContracts: buildSuggestionPropContracts(
+      schema,
+      componentIndex,
+    ),
     aiChartExportNames: aiChartExports,
     geoExcludedFromAIExports: componentIndex.categories.geo,
   },

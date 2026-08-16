@@ -73,6 +73,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
         yAccessor="y"
         lineBy="series"
         tooltip="multi"
+        showLegend={false}
         xExtent={[0, 10]}
         yExtent={[0, 30]}
         width={200}
@@ -139,6 +140,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
             )
           },
         }}
+        showLegend={false}
         xExtent={[0, 10]}
         yExtent={[0, 30]}
         width={200}

@@ -12,6 +12,11 @@ test.beforeAll(async () => {
   }
 })
 
+// This legacy fixture writes a shared generated gallery and named screenshots.
+// Keep it serial when the main visual suite schedules independent tests across
+// its fixed worker pool.
+test.describe.configure({ mode: "serial" })
+
 test.describe("Server-rendered SVG legend positioning", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`file://${galleryPath}`)

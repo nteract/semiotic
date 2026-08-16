@@ -94,8 +94,6 @@ export interface ThemeAwareProps {
   legendLayout?: LegendLayout
   /** Prefix for SVG element IDs — used by renderDashboard to avoid collisions */
   _idPrefix?: string
-  /** Internal HOC-level legend/margin contract metadata. */
-  __explicitMargin?: unknown
   /** Internal HOC mode signal used by axis-free static chart chrome. */
   __compactMode?: boolean
   __autoLegendMargin?: boolean
@@ -145,32 +143,15 @@ const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
 /**
  * The client HOCs reserve a minimum legend gutter before layout. The static
  * frame API uses the same content measurement, while renderChart() marks HOC
- * requests so both paths retain their compatibility floor. An explicitly set
- * numeric side remains fully caller-controlled.
+ * requests so both paths retain their compatibility floor. Caller-supplied
+ * numeric sides are minima and therefore compose with this requirement.
  */
 export function hocLegendMarginMinimum(
   props: ThemeAwareProps,
   position: LegendPosition
 ): number | undefined {
   if (!props.__autoLegendMargin) return undefined
-  if (hasExplicitLegendMargin(props, position)) return undefined
   return HOC_LEGEND_MARGIN[position]
-}
-
-/** Whether the caller, rather than the HOC default, owns a legend side. */
-export function hasExplicitLegendMargin(
-  props: ThemeAwareProps,
-  position: LegendPosition
-): boolean {
-  const explicit = props.__explicitMargin
-  return (
-    typeof explicit === "number" ||
-    Boolean(
-      explicit &&
-      typeof explicit === "object" &&
-      typeof (explicit as Record<string, unknown>)[position] === "number"
-    )
-  )
 }
 
 export function reserveStaticLegendMargin(
@@ -184,12 +165,10 @@ export function reserveStaticLegendMargin(
     hasTitle?: boolean
     legendLayout?: LegendLayout
     minimumMargin?: number
-    preserveExplicitMargin?: boolean
     axisChrome?: AxisChromeInput
   }
 ): void {
   if (options.categories.length === 0) return
-  if (options.preserveExplicitMargin) return
   const position = options.position || "right"
   const metrics = measureStaticLegend({
     categories: options.categories,
@@ -248,11 +227,9 @@ export function reserveLegendConfigMargin(
     hasTitle?: boolean
     legendLayout?: LegendLayout
     minimumMargin?: number
-    preserveExplicitMargin?: boolean
     axisChrome?: AxisChromeInput
   }
 ): void {
-  if (options.preserveExplicitMargin) return
   const position = options.position || "right"
   const base = {
     theme: options.theme,
@@ -368,8 +345,7 @@ export function reserveFrameLegendMargin(
     hasTitle,
     legendLayout: props.legendLayout,
     axisChrome: props.axisChrome,
-    minimumMargin: hocLegendMarginMinimum(props, position),
-    preserveExplicitMargin: hasExplicitLegendMargin(props, position)
+    minimumMargin: hocLegendMarginMinimum(props, position)
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)

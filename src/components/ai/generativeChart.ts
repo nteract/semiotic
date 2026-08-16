@@ -30,6 +30,7 @@ import type { RepairResult } from "./repairChartConfig"
 import { repairChartConfig } from "./repairChartConfig"
 import type { IntentId } from "./intents"
 import type { RenderEvidence } from "../server/renderEvidence"
+import { semanticFailureReasons } from "./semanticEvidence"
 
 /**
  * A renderer that turns a validated config into SVG + render evidence. Inject
@@ -80,8 +81,8 @@ export interface PrepareChartResult {
   /**
    * True only when the proposal is trustworthy: it validates, carries no
    * error-severity diagnostics, and — if a renderer was injected — produced a
-   * non-empty scene. A `false` result is the signal to retry with `reasons` and
-   * `repair.alternatives`, never to paint.
+   * non-empty, non-degenerate scene. A `false` result is the signal to retry
+   * with `reasons` and `repair.alternatives`, never to paint.
    */
   ok: boolean
   component: string
@@ -180,6 +181,7 @@ export function prepareChart(
     if (evidence.empty) {
       reasons.push("Rendered to an empty scene (no marks) — the data or accessors produce nothing to draw.")
     }
+    reasons.push(...semanticFailureReasons(evidence))
     for (const w of evidence.warnings) reasons.push(w)
   }
 
@@ -188,7 +190,7 @@ export function prepareChart(
     validation.valid &&
     (!treatErrorsAsBlocking || errorDiagnostics.length === 0) &&
     (!repair || repair.status === "ok") &&
-    (!evidence || !evidence.empty)
+    (!evidence || (!evidence.empty && evidence.semanticStatus !== "degenerate"))
 
   return {
     ok,

@@ -463,7 +463,7 @@ interface-member StreamOrdinalFrameHandle::method::pushMany = required pushMany(
 interface-member StreamOrdinalFrameHandle::method::remove = required remove(id: string | string[]): T[]
 interface-member StreamOrdinalFrameHandle::method::replace = required replace(data: T[]): void
 interface-member StreamOrdinalFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
-interface-member StreamOrdinalFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamOrdinalFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
@@ -661,6 +661,8 @@ interface-member TooltipRootProps::property::chrome = optional chrome: TooltipCh
 type AnnotationLabelBackground = "box" | "halo" | "none" | AnnotationLabelBackgroundConfig | boolean
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type OrdinalChartType = "bar" | "bar-funnel" | "boxplot" | "clusterbar" | "custom" | "donut" | "funnel" | "histogram" | "pie" | "point" | "ridgeline" | "swarm" | "swimlane" | "timeline" | "violin"
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult

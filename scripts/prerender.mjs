@@ -610,6 +610,14 @@ export async function createStaticRouteRenderer() {
       platform: "node",
       format: "esm",
       outfile,
+      // Documentation pages import the browser-compatible static renderer so
+      // they can render previews in the client bundle. This temporary bundle
+      // is executed only by Node, where React 19's browser entry retains a
+      // MessagePort and prevents short-lived prerender/test processes from
+      // exiting. Mirror the library's Node build condition here.
+      alias: {
+        "react-dom/server.browser": "react-dom/server",
+      },
       loader: {
         ".js": "jsx",
         ".css": "empty",

@@ -3,6 +3,8 @@ import type { DataSummary } from "../data/DataSummarizer"
 import type { NumericContracts } from "../data/numericContracts"
 import type { NumericFieldProfile } from "../data/auditData"
 import type { IntentId } from "./intents"
+import type { NormalizedProfileFieldRoles } from "./fieldRoles"
+import type { SuggestionPropContract } from "./suggestionPropContracts"
 import type { ChartRecipe, ChartRecipeFrameFamily, MobileDesignDefinition } from "./chartRecipes"
 import type {
   ScaleFitFn,
@@ -79,6 +81,8 @@ export interface FieldCandidate {
   distinctCount?: number
   /** True if the field's values are strictly increasing in row order. */
   monotonic?: boolean
+  /** True when an explicit semantic or encoding role boosted this candidate. */
+  hinted?: boolean
 }
 
 /**
@@ -94,6 +98,10 @@ export interface ChartDataProfile extends DataSummary {
    * visible here as `nonNumericCount` rather than being silently discarded.
    */
   numericFields?: Readonly<Record<string, NumericFieldProfile>>
+  /** Normalized caller-supplied semantic/encoding roles keyed by field. */
+  fieldRoles?: NormalizedProfileFieldRoles
+  /** Identifier fields, also represented by the `identifier` field role. */
+  identifiers?: ReadonlyArray<string>
   /** Candidate fields per role, sorted best-first. */
   candidates: {
     x: FieldCandidate[]
@@ -201,6 +209,67 @@ export interface ChartVariant {
 }
 
 /**
+ * Capability-owned enforcement for quantitative fields emitted by buildProps.
+ * The engine also recognizes conventional measure accessor names, while this
+ * hook covers custom prop vocabularies and direct/computed value components.
+ */
+export interface ChartFieldPolicy {
+  /** Field-valued buildProps keys that encode quantitative measures. */
+  measureAccessorProps?: ReadonlyArray<string>
+  /**
+   * Resolve source fields for direct or computed measure props. This is needed
+   * when buildProps emits a number rather than an accessor string.
+   */
+  measureFields?: (
+    profile: ChartDataProfile,
+    props: Readonly<Record<string, unknown>>,
+    variant?: ChartVariant,
+  ) => ReadonlyArray<string>
+  /** Explicit escape hatch; omitted/false means identifiers are forbidden. */
+  allowIdentifierMeasures?: boolean
+}
+
+/** The scene-derived evidence exposed to capability-owned semantic checks. */
+export interface SemanticRenderEvidence {
+  readonly component: string
+  readonly frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
+  readonly empty: boolean
+  readonly markCount: number
+  readonly markCountByType: Readonly<Record<string, number>>
+  readonly xDomain?: readonly [number, number]
+  readonly yDomain?: readonly [number, number]
+  readonly categories?: ReadonlyArray<string>
+  readonly nodeCount?: number
+  readonly edgeCount?: number
+}
+
+/**
+ * A chart-specific semantic problem found after marks rendered. Errors mean
+ * the encoding is degenerate for its stated purpose; warnings mean it remains
+ * usable but materially weakened.
+ */
+export interface SemanticViabilityDiagnostic {
+  readonly code: string
+  readonly severity: "warning" | "error"
+  readonly message: string
+  readonly fix?: string
+  /** Small aggregate values only; never copy source rows into evidence. */
+  readonly metrics?: Readonly<Record<string, string | number | boolean>>
+}
+
+export type SemanticViabilityCallback = (
+  props: Readonly<Datum>,
+  evidence: SemanticRenderEvidence,
+) => ReadonlyArray<SemanticViabilityDiagnostic>
+
+/** Built-in, JSON-safe semantic rule kinds evaluated by static rendering. */
+export interface SemanticViabilityRule {
+  readonly kind: "rank-competition"
+}
+
+export type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
+
+/**
  * Result of a capability's `fits()` gate. `null` means the chart fits. A string
  * is the human-readable reason it doesn't, used for diagnostics and reasoning.
  */
@@ -240,6 +309,15 @@ export interface ChartCapability {
    * Values may be functions for profile-aware scoring.
    */
   intentScores: Partial<Record<IntentId, IntentScorer>>
+  /** Prop-envelope metadata copied onto every suggestion for generic renderers. */
+  suggestionPropContract?: SuggestionPropContract
+  /** Enforces identifier exclusions across capability-owned buildProps. */
+  fieldPolicy?: ChartFieldPolicy
+  /**
+   * Optional post-render check for encodings that paint marks but cannot carry
+   * their intended semantics (for example a bump chart with no rank competition).
+   */
+  semanticViability?: SemanticViabilityCheck
   /**
    * Variants — different settings that change what the chart is useful for.
    * Suggestion engine emits one suggestion per (capability × variant) pair.
@@ -320,6 +398,12 @@ export interface Suggestion {
   caveats: ReadonlyArray<string>
   /** Ready-to-spread props. */
   props: Record<string, unknown>
+  /**
+   * Machine-readable rules for augmenting and rendering `props`. Present on
+   * suggestions returned by current versions; optional for compatibility with
+   * the original public suggestion shape.
+   */
+  propContract?: SuggestionPropContract
   whyCustom?: WhyCustomExplanation
   /**
    * Scale tag — present when scale/quality information is available, either

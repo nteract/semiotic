@@ -189,6 +189,9 @@ export const bumpChart: ChartConfig = {
       lineOpacity: typeof rest.lineOpacity === "number" ? rest.lineOpacity : 0.9,
       neutralColor: typeof rest.neutralColor === "string" ? rest.neutralColor : undefined,
       color: typeof rest.color === "string" ? rest.color : undefined,
+      colorMap: resolvedColorScheme && typeof resolvedColorScheme === "object" && !Array.isArray(resolvedColorScheme)
+        ? resolvedColorScheme
+        : undefined,
       stroke: typeof rest.stroke === "string" ? rest.stroke : undefined,
       strokeWidth: typeof rest.strokeWidth === "number" ? rest.strokeWidth : undefined,
       opacity: typeof rest.opacity === "number" ? rest.opacity : undefined,

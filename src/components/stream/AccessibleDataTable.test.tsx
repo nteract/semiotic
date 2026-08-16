@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
+  AccessibleTablePortal,
   NetworkAccessibleDataTable,
   computeCanvasAriaLabel,
   computeNetworkAriaLabel,
@@ -128,6 +129,47 @@ describe("computeNetworkAriaLabel", () => {
 // ── public styling hooks ───────────────────────────────────────────────
 
 describe("AccessibleDataTable styling hooks", () => {
+  it("portals the focusable summary trigger outside a consumer role=img", async () => {
+    const { getByTestId } = render(
+      <>
+        <div role="img" aria-label="Consumer chart" data-testid="image">
+          <AccessibleTablePortal accessibleTable={{ portalTarget: "outside-chart-image" }}>
+            <AccessibleDataTable
+              tableId="semiotic-table-portaled"
+              chartType="line chart"
+              scene={[{ type: "point", x: 1, y: 2 }]}
+            />
+          </AccessibleTablePortal>
+        </div>
+        <div id="outside-chart-image" data-testid="portal-target" />
+      </>
+    )
+
+    const image = getByTestId("image")
+    const portalTarget = getByTestId("portal-target")
+    const trigger = await screen.findByRole("button", { name: /view data summary/i })
+    expect(image).not.toContainElement(trigger)
+    expect(portalTarget).toContainElement(trigger)
+  })
+
+  it("keeps the historical inline placement for accessibleTable=true", () => {
+    const { getByTestId } = render(
+      <div data-testid="chart-root">
+        <AccessibleTablePortal accessibleTable>
+          <AccessibleDataTable
+            tableId="semiotic-table-inline"
+            chartType="line chart"
+            scene={[{ type: "point", x: 1, y: 2 }]}
+          />
+        </AccessibleTablePortal>
+      </div>
+    )
+
+    expect(getByTestId("chart-root")).toContainElement(
+      screen.getByRole("button", { name: /view data summary/i })
+    )
+  })
+
   it("constrains the collapsed trigger to the visually hidden region", () => {
     render(
       <AccessibleDataTable

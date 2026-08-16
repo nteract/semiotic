@@ -16,7 +16,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import * as ReactDOMServer from "react-dom/server.browser"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"

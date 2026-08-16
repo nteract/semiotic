@@ -46,7 +46,7 @@ import {
   createPhysicsFrameStore,
   defaultPhysicsFrameClock
 } from "./physicsFrameSetup"
-import { renderPhysicsSettledSVG } from "./PhysicsSettledSVG"
+import { createPhysicsSettledSVG } from "./PhysicsSettledSVGElement"
 import type { PhysicsSettledBodyStyleContext } from "./PhysicsSettledScene"
 import { renderPhysicsSettledChrome } from "./physicsSettledChrome"
 import { composePhysicsControllers } from "./PhysicsControllers"
@@ -69,6 +69,7 @@ import {
   useSceneRevisionDiagnostics
 } from "../sceneRevisionDiagnostics"
 import {
+  AccessibleTablePortal,
   AriaLiveTooltip,
   ScreenReaderSummary,
   SkipToTableLink
@@ -1376,7 +1377,7 @@ export const StreamPhysicsFrame = memo(
             stylePrimitives
           )
         }
-        const { svg } = renderPhysicsSettledSVG(store, {
+        const { element } = createPhysicsSettledSVG(store, {
           width: size[0],
           height: size[1],
           title: titleText,
@@ -1408,7 +1409,7 @@ export const StreamPhysicsFrame = memo(
             }}
           >
             <ScreenReaderSummary summary={summary} />
-            <div dangerouslySetInnerHTML={{ __html: svg }} />
+            {element}
           </div>
         )
       }
@@ -1435,13 +1436,15 @@ export const StreamPhysicsFrame = memo(
               diagnostics={sceneRevisionDiagnosticsRef.current}
             />
           )}
-          {accessibleTable ? <SkipToTableLink tableId={tableId} /> : null}
           {accessibleTable ? (
-            <PhysicsSemanticDataTable
-              chartTitle={typeof title === "string" ? title : ariaLabel}
-              items={allSemanticItems}
-              tableId={tableId}
-            />
+            <AccessibleTablePortal accessibleTable={accessibleTable}>
+              <SkipToTableLink tableId={tableId} />
+              <PhysicsSemanticDataTable
+                chartTitle={typeof title === "string" ? title : ariaLabel}
+                items={allSemanticItems}
+                tableId={tableId}
+              />
+            </AccessibleTablePortal>
           ) : null}
           <ScreenReaderSummary summary={summary} />
           {/* Live region must sit outside role="img" so AT announces hover/focus. */}

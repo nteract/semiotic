@@ -25,6 +25,7 @@ import {
 } from "../data/auditData"
 import type { RenderEvidence } from "../server/renderEvidence"
 import type { RenderFn } from "./generativeChart"
+import { semanticEvidenceDiagnostics } from "./semanticEvidence"
 
 export type EvaluateChartStage =
   "data" | "deception" | "accessibility" | "render"
@@ -191,7 +192,21 @@ function renderFindings(
       source: "renderChartWithEvidence"
     })
   }
+  const semanticCodes = new Set<string>()
+  for (const diagnostic of semanticEvidenceDiagnostics(evidence)) {
+    semanticCodes.add(diagnostic.code)
+    findings.push({
+      id: `render.${diagnostic.code.toLowerCase()}`,
+      stage: "render",
+      severity: diagnostic.severity,
+      code: diagnostic.code,
+      message: diagnostic.message,
+      ...(diagnostic.fix ? { fix: diagnostic.fix } : {}),
+      source: "capability.semanticViability"
+    })
+  }
   for (const warning of evidence.warnings) {
+    if (semanticCodes.has(warning)) continue
     findings.push({
       id: `render.${warning.toLowerCase()}`,
       stage: "render",

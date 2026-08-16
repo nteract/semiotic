@@ -86,6 +86,638 @@
         "BigNumber"
       ]
     },
+    "suggestionPropContracts": {
+      "AreaChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "BarChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "BigNumber": {
+        "componentKind": "value-component",
+        "commonChartProps": "component-specific",
+        "headingProp": "label",
+        "modeValues": [
+          "tile",
+          "presentation",
+          "inline",
+          "thumbnail"
+        ]
+      },
+      "BoxPlot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "BubbleChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "BumpChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "CandlestickChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ChainReactionChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "snapshot",
+          "replay",
+          "mechanical"
+        ]
+      },
+      "ChordDiagram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ChoroplethMap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "CirclePack": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "CollisionSwarmChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ConnectedScatterplot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "CrucibleChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "DifferenceChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "DistanceCartogram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "DonutChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "DotPlot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "EventDropChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "FlowMap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ForceDirectedGraph": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "FunnelChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "GaltonBoardChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile",
+          "sample",
+          "mechanical"
+        ]
+      },
+      "GaugeChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "GauntletChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "GroupedBarChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "Heatmap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "Histogram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "LikertChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "LineChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "MinimapChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "MultiAxisLineChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "OrbitDiagram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "PacketFlowChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "PieChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ProcessFlowChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ProcessSankey": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ProportionalSymbolMap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "QuadrantChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RealtimeHeatmap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RealtimeHistogram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RealtimeLineChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RealtimeSwarmChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RealtimeWaterfallChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "RidgelinePlot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "SankeyDiagram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "Scatterplot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "ScatterplotMatrix": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "StackedAreaChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "StackedBarChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "SwarmPlot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "SwimlaneChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "TemporalHistogram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "TreeDiagram": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "Treemap": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
+      "UnitPileChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile",
+          "sample",
+          "mechanical"
+        ]
+      },
+      "ViolinPlot": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      }
+    },
     "aiChartExportNames": [
       "AreaChart",
       "BarChart",

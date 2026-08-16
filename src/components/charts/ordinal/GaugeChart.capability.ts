@@ -4,6 +4,10 @@ export const GaugeChartCapability: ChartCapability = {
   component: "GaugeChart",
   family: "categorical",
   importPath: "semiotic/ordinal",
+  fieldPolicy: {
+    measureFields: (profile) =>
+      profile.primary.y ? [profile.primary.y] : [],
+  },
   rubric: { familiarity: 4, accuracy: 2, precision: 2 },
 
   fits: (profile) => {

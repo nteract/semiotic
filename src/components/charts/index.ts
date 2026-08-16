@@ -349,6 +349,10 @@ export type {
   MobileStandardControlsMode,
   ResolvedMobileInteractionConfig,
 } from "./shared/types"
+export type {
+  FrameTextAnnotation,
+  FrameTextPosition,
+} from "./shared/frameTextAnnotation"
 export { responsiveRuleMatches, resolveResponsiveRules } from "./shared/responsiveRules"
 export type {
   ResponsiveOrientation,

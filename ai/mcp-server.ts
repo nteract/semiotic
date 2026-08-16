@@ -101,6 +101,26 @@ import {
   tokenTaskIntentToCapabilityIntents,
 } from "semiotic/ai"
 import type { IntentId, StreamSchema, AudienceProfile, ChartDataProfile, VariantProposal, TokenTaskIntent } from "semiotic/ai"
+
+// tsconfig.mcp.json resolves `semiotic/ai` through the existing dist
+// declarations, so this local mirror keeps MCP typechecking build-independent.
+// The Zod enum on the tool input remains the runtime validation source.
+type McpProfileFieldRole =
+  | "identifier"
+  | "measure"
+  | "dimension"
+  | "temporal"
+  | "x"
+  | "y"
+  | "size"
+  | "category"
+  | "series"
+  | "time"
+  | "ignore"
+type McpProfileFieldRoleHints = Record<
+  string,
+  McpProfileFieldRole | McpProfileFieldRole[]
+>
 // Sibling .cjs modules (authored as CommonJS, also consumed by the CLI/doctor).
 // esModuleInterop maps each module.exports object to the default import.
 import componentMetadataModule from "./componentMetadata.cjs"
@@ -1763,19 +1783,36 @@ async function suggestChartsHandler(args: {
   allow?: string[]
   deny?: string[]
   audience?: AudienceProfile
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, intent, maxResults, allow, deny, audience } = args
+  const {
+    data,
+    intent,
+    maxResults,
+    allow,
+    deny,
+    audience,
+    identifiers,
+    fieldRoles,
+  } = args
   const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
     | IntentId[]
     | undefined
 
-  const suggestions = suggestChartsFromCapabilities(data as Record<string, unknown>[], {
+  const suggestionOptions = {
     intent: intentArg,
     allow,
     deny,
     maxResults: maxResults ?? 8,
     audience,
-  })
+    identifiers,
+    fieldRoles,
+  }
+  const suggestions = suggestChartsFromCapabilities(
+    data as Record<string, unknown>[],
+    suggestionOptions,
+  )
 
   const lines: string[] = [
     `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} for ${(data as unknown[]).length} rows${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
@@ -2873,6 +2910,46 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
         allow: z.array(z.string()).optional().describe("Restrict to these component names."),
         deny: z.array(z.string()).optional().describe("Exclude these component names."),
+        identifiers: z
+          .array(z.string())
+          .optional()
+          .describe("Fields that identify records and must not be used as visual encodings or measures."),
+        fieldRoles: z
+          .record(
+            z.string(),
+            z.union([
+              z.enum([
+                "identifier",
+                "measure",
+                "dimension",
+                "temporal",
+                "x",
+                "y",
+                "size",
+                "category",
+                "series",
+                "time",
+                "ignore",
+              ]),
+              z.array(
+                z.enum([
+                  "identifier",
+                  "measure",
+                  "dimension",
+                  "temporal",
+                  "x",
+                  "y",
+                  "size",
+                  "category",
+                  "series",
+                  "time",
+                  "ignore",
+                ]),
+              ),
+            ]),
+          )
+          .optional()
+          .describe("Per-field semantic or exact encoding-role hints used before chart ranking."),
         audience: z
           .object({
             name: z.string().optional(),

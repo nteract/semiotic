@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BIG_NUMBER_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
 /**
  * BigNumber capability descriptor.
@@ -15,6 +16,16 @@ export const BigNumberCapability: ChartCapability = {
   component: "BigNumber",
   family: "value",
   importPath: "semiotic/value",
+  suggestionPropContract: BIG_NUMBER_SUGGESTION_PROP_CONTRACT,
+  fieldPolicy: {
+    measureFields: (profile) => {
+      const field =
+        profile.primary.y ??
+        profile.primary.size ??
+        profile.candidates.y[0]?.field
+      return field ? [field] : []
+    },
+  },
   // Familiarity 5 (every dashboard user has seen one), accuracy 5 (the
   // number is the data, no encoding distortion), precision 5 (exact
   // figure right there in the value text).

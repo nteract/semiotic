@@ -571,7 +571,7 @@ interface-member StreamXYFrameHandle::method::push = required push(datum: T): vo
 interface-member StreamXYFrameHandle::method::pushMany = required pushMany(data: T[]): void
 interface-member StreamXYFrameHandle::method::remove = required remove(id: string | string[]): T[]
 interface-member StreamXYFrameHandle::method::update = required update(id: string | string[], updater: (d: T) => T): T[]
-interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: boolean | undefined
+interface-member StreamXYFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamXYFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamXYFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamXYFrameProps::property::annotations = optional annotations: Datum[] | undefined
@@ -770,6 +770,8 @@ interface-member XYCustomChartProps::property::yExtent = optional yExtent: [numb
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
+type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type QuadrantsConfigOverride = {[TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;}
 type ResponsiveOrientation = "landscape" | "portrait"

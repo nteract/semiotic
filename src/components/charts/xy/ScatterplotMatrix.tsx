@@ -24,6 +24,7 @@ import {
 import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
 import {
   AccessibleDataTable,
+  AccessibleTablePortal,
   ScreenReaderSummary,
   SkipToTableLink,
 } from "../../stream/AccessibleDataTable"
@@ -643,7 +644,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
           {title}
         </div>
       )}
-      {accessibleTable && <SkipToTableLink tableId={tableId} />}
+      {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /></AccessibleTablePortal>}
       <ScreenReaderSummary summary={summary} />
       {legend && (
         <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
@@ -851,12 +852,12 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
       })()}
       </div>
       {accessibleTable && (
-        <AccessibleDataTable
-          scene={accessibleScene}
-          chartType="scatterplot matrix"
-          tableId={tableId}
-          chartTitle={title}
-        />
+        <AccessibleTablePortal accessibleTable={accessibleTable}><AccessibleDataTable
+            scene={accessibleScene}
+            chartType="scatterplot matrix"
+            tableId={tableId}
+            chartTitle={title}
+          /></AccessibleTablePortal>
       )}
     </div>
   )

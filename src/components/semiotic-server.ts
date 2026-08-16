@@ -10,7 +10,7 @@ export {
   renderDashboard,
 } from "./server/renderToStaticSVG"
 
-export type { RenderEvidence } from "./server/renderEvidence"
+export type { RenderEvidence, SemanticViabilityStatus } from "./server/renderEvidence"
 
 export type {
   RenderToImageOptions,

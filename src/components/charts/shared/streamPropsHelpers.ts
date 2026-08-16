@@ -30,6 +30,7 @@ import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig, ResolvedMobi
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
+import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 /**
  * The frames accept `tooltipContent: (d: HoverData) => ReactNode`,
@@ -66,7 +67,7 @@ export interface BaseMetadataProps {
   title?: string | ReactNode
   description?: string
   summary?: string
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   className?: string
   animate?: AnimateProp
   maxDevicePixelRatio?: number

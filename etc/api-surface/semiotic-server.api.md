@@ -114,6 +114,8 @@ interface-member RenderEvidence::property::markCount = required markCount: numbe
 interface-member RenderEvidence::property::markCountByType = required markCountByType: Record<string, number>
 interface-member RenderEvidence::property::nodeCount = optional nodeCount: number | undefined
 interface-member RenderEvidence::property::plot = optional plot: undefined | {x: number; y: number; width: number; height: number;}
+interface-member RenderEvidence::property::semanticDiagnostics = optional semanticDiagnostics: SemanticViabilityDiagnostic[] | undefined
+interface-member RenderEvidence::property::semanticStatus = optional semanticStatus: SemanticViabilityStatus | undefined
 interface-member RenderEvidence::property::status = required status: "empty" | "ok"
 interface-member RenderEvidence::property::warnings = required warnings: string[]
 interface-member RenderEvidence::property::width = required width: number
@@ -123,5 +125,6 @@ interface-member RenderToImageOptions::property::background = optional backgroun
 interface-member RenderToImageOptions::property::format = optional format: "jpeg" | "png" | undefined
 interface-member RenderToImageOptions::property::scale = optional scale: number | undefined
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
+type SemanticViabilityStatus = "degenerate" | "degraded" | "meaningful" | "not-assessed"
 type ThemeInput = PartialThemeObject | string | undefined
 ```

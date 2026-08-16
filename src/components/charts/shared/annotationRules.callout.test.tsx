@@ -21,6 +21,22 @@ const render = (annotation: Datum) =>
   renderToStaticMarkup(<>{rules(annotation, 0, ctx)}</>)
 
 describe("default callout annotation rules", () => {
+  it("renders plot-relative frame text without data coordinates", () => {
+    const html = render({
+      type: "frame-text",
+      text: "Maximum",
+      position: "bottom-right",
+      dx: -4,
+      dy: 16,
+      fontWeight: 600
+    })
+    expect(html).toContain("Maximum")
+    expect(html).toContain('x="196"')
+    expect(html).toContain('y="216"')
+    expect(html).toContain('text-anchor="end"')
+    expect(html).toContain('font-weight="600"')
+  })
+
   it("renders the public callout-circle type with its subject radius", () => {
     const html = render({ type: "callout-circle", x: 5, y: 5, label: "Peak", radius: 18 })
     expect(html).toContain("annotation-subject")

@@ -116,6 +116,44 @@ describe("evaluateChart", () => {
     expect(result.ok).toBe(false)
   })
 
+  it("promotes semantic degeneracy into a chart-specific render finding", () => {
+    const evidence: RenderEvidence = {
+      component: "LineChart",
+      frameType: "xy",
+      status: "ok",
+      empty: false,
+      markCount: 3,
+      markCountByType: { line: 3 },
+      width: 640,
+      height: 400,
+      annotationCount: 0,
+      ariaLabel: "Sales over time",
+      warnings: ["TEST_SEMANTIC_DEGENERACY"],
+      semanticStatus: "degenerate",
+      semanticDiagnostics: [
+        {
+          code: "TEST_SEMANTIC_DEGENERACY",
+          severity: "error",
+          message: "The encoding paints but cannot express the intended comparison.",
+          fix: "Choose fields with competing values."
+        }
+      ]
+    }
+    const result = evaluateChart("LineChart", baseProps, data, {
+      render: () => ({ svg: "<svg />", evidence })
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.findings.filter((finding) => finding.code === "TEST_SEMANTIC_DEGENERACY")).toEqual([
+      expect.objectContaining({
+        stage: "render",
+        severity: "error",
+        message: "The encoding paints but cannot express the intended comparison.",
+        source: "capability.semanticViability"
+      })
+    ])
+  })
+
   it("orders non-critical and unspecified warning findings by stage", () => {
     const evidence: RenderEvidence = {
       component: "Scatterplot",

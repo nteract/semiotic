@@ -11,6 +11,7 @@ import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
+import type { AccessibleTableProp } from "./accessibleTableTypes"
 
 /** Style-callback result, including `cursor` on legacy datum-shaped returns. */
 export type NetworkMarkStyle = Style | (Datum & Pick<Style, "cursor">)
@@ -811,7 +812,7 @@ export interface StreamNetworkFrameProps<T = Datum>
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */
-  accessibleTable?: boolean
+  accessibleTable?: AccessibleTableProp
   /** Accessible description overriding the auto-generated aria-label on the chart container */
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */

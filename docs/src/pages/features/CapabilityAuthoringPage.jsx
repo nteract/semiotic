@@ -74,6 +74,11 @@ export const lineChartCapability: ChartCapability = {
         <li><code>rubric</code> — <code>{`{ familiarity, accuracy, precision }`}</code>, each 1–5. The audience layer can override <code>familiarity</code> per-reader (see <Link to="/intelligence/audience-profiles">Audience Profiles</Link>).</li>
         <li><code>fits(profile)</code> — the gate. <code>null</code> means "can render this"; a string is a human-readable reason it can't, surfaced verbatim by repair and suggestions.</li>
         <li><code>intentScores</code> — a <code>Partial&lt;Record&lt;IntentId, number | (profile) =&gt; number&gt;&gt;</code>. The composite suggestion score reasons over these.</li>
+        <li>
+          <code>semanticViability?(props, evidence)</code> — an optional post-render check for marks that paint but
+          cannot carry the chart’s intended meaning. Return stable warning/error diagnostics; errors make the evidence{" "}
+          <code>degenerate</code>.
+        </li>
         <li><code>variants?</code> — see below.</li>
         <li><code>caveats?(profile)</code> — strings describing what the chart hides, distorts, or demands; surfaced in <code>suggestion.caveats</code>.</li>
         <li><code>buildProps(profile, variant?)</code> — produce a spreadable, runnable config (<code>&lt;Component {`{...props}`} /&gt;</code>).</li>
@@ -95,15 +100,70 @@ export const lineChartCapability: ChartCapability = {
         Extend the taxonomy with <code>registerIntent</code> when your domain has
         an act the built-ins don't capture:
       </p>
-      <CodeBlock language="ts">{`import { registerIntent } from "semiotic/ai"
+      <CodeBlock language="ts">{`import { inferIntent, registerIntent, suggestCharts } from "semiotic/ai"
 
 registerIntent({
   id: "forecast-vs-actual",
   label: "Forecast vs. actual",
   description: "Compare a projected series against realized values.",
   familyHint: "time-series",
+  // Blend scores charts already own. Explicit capability scores for this
+  // custom intent still take precedence when a chart declares one.
+  composes: ["compare-series", "change-detection"],
+  weights: { "compare-series": 2, "change-detection": 1 },
+  // Used only by inferIntent's opt-in schema mode.
+  signals: {
+    fieldNames: ["forecast", "actual"],
+    minimumFieldMatches: 2,
+  },
 })
-// Capabilities can now score the "forecast-vs-actual" intent.`}</CodeBlock>
+// The intent is immediately rankable without editing every capability.
+suggestCharts(data, { intent: "forecast-vs-actual" })`}</CodeBlock>
+      <p>
+        Natural-language inference remains the default. For a dataset with no user question, opt into schema mode;
+        whole-token matching, minimum match counts, and a confidence floor keep incidental substrings from becoming
+        intent signals.
+      </p>
+      <CodeBlock language="ts">{`const inferred = inferIntent("", {
+  mode: "schema",
+  fields: [
+    { name: "forecast", kind: "numeric" },
+    { name: "actual", kind: "numeric" },
+    { name: "recorded_at", kind: "datetime" },
+  ],
+  minimumConfidence: 3,
+})
+// → { intent: "forecast-vs-actual", source: "field-name", ... }
+
+// With no fields array, schema mode treats whitespace-delimited input as
+// field names — useful for compact catalog/schema summaries.
+inferIntent("cloud region phase throughput partitions", { mode: "schema" })`}</CodeBlock>
+
+      <h2 id="semantic-viability">Post-render semantic viability</h2>
+      <p>
+        <code>fits(profile)</code> prevents a chart from being recommended for an unsuitable dataset.{" "}
+        <code>semanticViability</code> is the final, capability-owned oracle for direct renders: it runs against the
+        actual HOC props and scene evidence after marks paint. This is where a ranking chart can report that every
+        trajectory stayed at rank 1, or another family can detect its own semantically collapsed encoding.
+      </p>
+      <CodeBlock language="ts">{`semanticViability: (props, evidence) => {
+  const result = inspectMyEncoding(props, evidence)
+  if (result.meaningful) return []
+  return [{
+    code: "MY_CHART_DEGENERATE_ENCODING",
+    severity: "error",
+    message: "Marks painted, but the selected fields collapse the encoding.",
+    fix: "Choose a field with variation across the comparison groups.",
+    metrics: { distinctValues: result.distinctValues },
+  }]
+}`}</CodeBlock>
+      <p>
+        <code>renderChartWithEvidence</code> keeps paint and meaning separate: a degenerate chart still has{" "}
+        <code>status: ok</code> and
+        <code>empty: false</code>, plus <code>semanticStatus: degenerate</code>
+        and structured <code>semanticDiagnostics</code>. Capabilities without a check report <code>not-assessed</code>;
+        the server never assumes they were proven meaningful.
+      </p>
 
       <h2 id="variants">Variants</h2>
       <p>

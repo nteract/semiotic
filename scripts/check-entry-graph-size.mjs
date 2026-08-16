@@ -64,7 +64,10 @@ const ENTRY_GRAPHS = [
   // subpath. Production graph measures 144.8 KiB gzip.
   // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling
   // row reuse measure 147.1 KiB gzip, retaining less than 1 KiB of headroom.
-  { entry: "network.module.min.js", label: "network", limitKb: 148 },
+  // Bumped 148→149 (3.9.0): the opt-in accessible-table portal keeps focusable
+  // summary controls outside consumer-owned role=img roots. After lazy-splitting
+  // the portal implementation, the network graph measures 148.1 KiB gzip.
+  { entry: "network.module.min.js", label: "network", limitKb: 149 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 160 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
@@ -73,7 +76,9 @@ const ENTRY_GRAPHS = [
   // Bumped 161→162: the current shared graph measures 161.2 KiB gzip.
   // Bumped 162→163: the consistent tooltip/theme surface adds 0.7 KiB gzip
   // to the physics facade (162.7 KiB measured).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 163 },
+  // Bumped 163→164 (3.9.0): physics frames share the opt-in accessible-table
+  // portal contract. The lazy implementation leaves the graph at 163.1 KiB.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 164 },
   { entry: "server.module.min.js", label: "server", limitKb: 240 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
@@ -101,7 +106,10 @@ const ENTRY_GRAPHS = [
   // Bumped 506→510: the unified evaluateChart data/deception/accessibility
   // surface is exported from the AI entry point. The current graph measures
   // 508.1 KiB; retain reviewable headroom for the evaluator's shared audits.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 510 },
+  // Bumped 510→512 (3.9.0): composable/schema-aware intents, identifier-safe
+  // profiling and re-derivation, suggestion prop contracts, and semantic
+  // viability evidence measure 511.1 KiB after dependency and registry splits.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 512 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

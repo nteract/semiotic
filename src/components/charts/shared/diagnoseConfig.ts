@@ -284,46 +284,6 @@ function checkBarPaddingInvisible(
   }
 }
 
-function checkBottomMarginWithLegend(
-  _component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (props.legendPosition !== "bottom") return
-  const m = props.margin
-  if (!m || typeof m !== "object") return
-  const bottom = m.bottom
-  if (typeof bottom === "number" && bottom < 70) {
-    out.push({
-      severity: "warning",
-      code: "BOTTOM_MARGIN_WITH_LEGEND",
-      message: `legendPosition="bottom" uses the authoritative margin.bottom=${bottom}px — the legend may be clipped or overlap axis labels.`,
-      fix: `Use margin={{ ...margin, bottom: "auto" }} or provide enough bottom margin for the legend, its legendDistance, and any desired outer padding.`,
-    })
-  }
-}
-
-function checkLegendMarginTight(
-  _component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (!props.showLegend) return
-  const pos = props.legendPosition ?? "right"
-  if (pos !== "right" && pos !== "left") return
-  const m = props.margin
-  if (!m || typeof m !== "object") return
-  const sideMargin = m[pos]
-  if (typeof sideMargin === "number" && sideMargin < 110) {
-    out.push({
-      severity: "warning",
-      code: "LEGEND_MARGIN_TIGHT",
-      message: `showLegend is true with legendPosition="${pos}" and authoritative margin.${pos}=${sideMargin}px — the legend may be clipped.`,
-      fix: `Use margin={{ ...margin, ${pos}: "auto" }} or provide enough ${pos} margin for the measured legend width, its legendDistance, and any desired outer padding.`,
-    })
-  }
-}
-
 function checkHeatmapStringAccessor(
   component: string,
   props: Datum,
@@ -693,8 +653,6 @@ export function diagnoseConfig(
     if (!legacyAlreadyReportedEmpty) diagnoses.push(finding)
   }
   checkBarPaddingInvisible(componentName, props, diagnoses)
-  checkBottomMarginWithLegend(componentName, props, diagnoses)
-  checkLegendMarginTight(componentName, props, diagnoses)
   checkHeatmapStringAccessor(componentName, props, diagnoses)
   checkColorContrast(componentName, props, diagnoses)
   checkAdjacentCategoryContrast(componentName, props, diagnoses)

@@ -9,18 +9,17 @@ export interface MarginType {
   right: number
 }
 
-/** Public margin side value. Numbers pin a side to an exact pixel value.
- *  `"auto"` and `null` explicitly leave that side to chart defaults plus
- *  auto-reservation such as legends. */
+/** Public margin side value. Numbers set a pixel baseline; chart-owned chrome
+ *  such as legends may grow that side when it needs more room. `"auto"` and
+ *  `null` explicitly start from the chart-mode default. */
 export type MarginSide = number | "auto" | null | undefined
 
 /** Public-API margin shape. Users can pass any subset of sides (`{ left: 120 }`
  *  for wide y-axis labels is a common pattern) or a single number as shorthand
- *  for "same on all sides". Pass a side as `"auto"` or `null` to explicitly
- *  opt back into chart auto-reservation for that side, e.g.
- *  `{ right: "auto" }` with a right-side legend. The frame fills missing/auto
- *  sides from chart-mode defaults before handing a fully-resolved
- *  `MarginType` to the layout code. */
+ *  for "same baseline on all sides". Numeric values are minima when Semiotic
+ *  reserves chart-owned chrome such as legends. Pass a side as `"auto"` or
+ *  `null` to start from the chart-mode default. The frame fills missing/auto
+ *  sides before handing a fully-resolved `MarginType` to layout code. */
 export type PartialMargin = number | {
   top?: MarginSide
   right?: MarginSide

@@ -46,6 +46,10 @@ export type {
   ResponsiveRuleMatch,
   ResponsiveRuleResult,
 } from "./charts/shared/responsiveRules"
+export type {
+  FrameTextAnnotation,
+  FrameTextPosition,
+} from "./charts/shared/frameTextAnnotation"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 export type {

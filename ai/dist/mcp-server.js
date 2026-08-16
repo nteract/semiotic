@@ -7707,7 +7707,7 @@ var require_behaviorContracts = __commonJS({
         severity: "warning",
         appliesTo: {},
         summary: "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
-        agentAction: "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1\u2013L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields."
+        agentAction: 'Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. If a consumer-owned role=img wraps the chart, use accessibleTable: { portalTarget: "element-id" } and render that target outside the image. For generated L1\u2013L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.'
       },
       {
         id: "interaction.cursor-is-presentation-only",
@@ -33799,7 +33799,7 @@ function boundedEvidenceStrings(value, limits) {
 function createWidgetEvidencePreview(evidence, limits = resolveMcpRenderOutputLimits()) {
   if (!evidence) return null;
   const preview = {};
-  for (const key of ["component", "frameType", "status", "ariaLabel"]) {
+  for (const key of ["component", "frameType", "status", "semanticStatus", "ariaLabel"]) {
     if (typeof evidence[key] === "string") {
       preview[key] = truncateUtf8(evidence[key], limits.maxWidgetValueBytes);
     }
@@ -33833,6 +33833,25 @@ function createWidgetEvidencePreview(evidence, limits = resolveMcpRenderOutputLi
   if (warnings) {
     preview.warnings = warnings.values;
     if (warnings.truncated) preview.warningsTruncated = true;
+  }
+  if (Array.isArray(evidence.semanticDiagnostics)) {
+    const sourceDiagnostics = evidence.semanticDiagnostics;
+    const semanticDiagnostics = sourceDiagnostics.slice(0, WIDGET_EVIDENCE_ARRAY_ITEMS).filter(isRecord).map((diagnostic) => {
+      const bounded = {};
+      for (const key of ["code", "severity", "message", "fix"]) {
+        if (typeof diagnostic[key] === "string") {
+          bounded[key] = truncateUtf8(
+            diagnostic[key],
+            key === "code" || key === "severity" ? WIDGET_COLUMN_LABEL_BYTES : limits.maxWidgetValueBytes
+          );
+        }
+      }
+      return bounded;
+    });
+    preview.semanticDiagnostics = semanticDiagnostics;
+    if (sourceDiagnostics.length > semanticDiagnostics.length) {
+      preview.semanticDiagnosticsTruncated = true;
+    }
   }
   if (isRecord(evidence.markCountByType)) {
     const markCountByType = {};
@@ -35265,15 +35284,30 @@ async function proposeChartVariantsHandler(args) {
   };
 }
 async function suggestChartsHandler(args) {
-  const { data, intent, maxResults, allow, deny, audience } = args;
+  const {
+    data,
+    intent,
+    maxResults,
+    allow,
+    deny,
+    audience,
+    identifiers,
+    fieldRoles
+  } = args;
   const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
-  const suggestions = (0, import_ai3.suggestCharts)(data, {
+  const suggestionOptions = {
     intent: intentArg,
     allow,
     deny,
     maxResults: maxResults ?? 8,
-    audience
-  });
+    audience,
+    identifiers,
+    fieldRoles
+  };
+  const suggestions = (0, import_ai3.suggestCharts)(
+    data,
+    suggestionOptions
+  );
   const lines = [
     `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} for ${data.length} rows${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
     "",
@@ -36191,6 +36225,40 @@ function createServer2(profile = "developer", options = {}) {
         maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
         allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
         deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names."),
+        identifiers: external_exports3.array(external_exports3.string()).optional().describe("Fields that identify records and must not be used as visual encodings or measures."),
+        fieldRoles: external_exports3.record(
+          external_exports3.string(),
+          external_exports3.union([
+            external_exports3.enum([
+              "identifier",
+              "measure",
+              "dimension",
+              "temporal",
+              "x",
+              "y",
+              "size",
+              "category",
+              "series",
+              "time",
+              "ignore"
+            ]),
+            external_exports3.array(
+              external_exports3.enum([
+                "identifier",
+                "measure",
+                "dimension",
+                "temporal",
+                "x",
+                "y",
+                "size",
+                "category",
+                "series",
+                "time",
+                "ignore"
+              ])
+            )
+          ])
+        ).optional().describe("Per-field semantic or exact encoding-role hints used before chart ranking."),
         audience: external_exports3.object({
           name: external_exports3.string().optional(),
           familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),

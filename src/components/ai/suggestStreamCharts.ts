@@ -5,7 +5,7 @@ import type {
   StreamSuggestion,
 } from "./streamingTypes"
 import type { ChartRubric } from "./chartCapabilityTypes"
-import type { IntentId } from "./intents"
+import { expandComposedIntentScores, type IntentId } from "./intents"
 import { RealtimeLineChartCapability } from "../charts/realtime/RealtimeLineChart.capability"
 import { RealtimeHistogramCapability } from "../charts/realtime/RealtimeHistogram.capability"
 import { RealtimeSwarmChartCapability } from "../charts/realtime/RealtimeSwarmChart.capability"
@@ -131,10 +131,11 @@ export function suggestStreamCharts(
     const fitReason = capability.fits(schema)
     if (fitReason !== null) continue
 
-    const intentScores: Partial<Record<IntentId, number>> = {}
+    const baseIntentScores: Partial<Record<IntentId, number>> = {}
     for (const [intent, scorer] of Object.entries(capability.intentScores) as Array<[IntentId, StreamIntentScorer]>) {
-      intentScores[intent] = scoreValue(scorer, schema)
+      baseIntentScores[intent] = scoreValue(scorer, schema)
     }
+    const intentScores = expandComposedIntentScores(baseIntentScores, rankingIntents)
 
     const composite = compositeScore(intentScores, rankingIntents)
     if (composite < minScore) continue

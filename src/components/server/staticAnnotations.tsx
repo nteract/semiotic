@@ -15,6 +15,7 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
 import { resolveSvgFill } from "../charts/shared/hatchFill"
 import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
+import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 
 const TOP_LABEL_BASELINE = 16
 const TOP_THRESHOLD_LABEL_FLIP = 20
@@ -257,6 +258,19 @@ function renderAnnotation(
 ): React.ReactNode | null {
   const { scales, layout, theme, xAccessor, yAccessor } = config
   switch (ann.type) {
+    case "frame-text":
+      return (
+        <FrameTextAnnotationSVG
+          key={`ann-frame-text-${index}`} annotation={ann}
+          width={layout.width} height={layout.height}
+          defaults={{
+            fill: theme.colors.text,
+            fontSize: theme.typography.labelSize,
+            fontFamily: theme.typography.fontFamily
+          }}
+        />
+      )
+
     case "y-threshold": {
       const value = ann.value
       if (value == null) return null

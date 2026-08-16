@@ -333,7 +333,7 @@ export function createWidgetEvidencePreview(
   if (!evidence) return null
 
   const preview: Record<string, unknown> = {}
-  for (const key of ["component", "frameType", "status", "ariaLabel"] as const) {
+  for (const key of ["component", "frameType", "status", "semanticStatus", "ariaLabel"] as const) {
     if (typeof evidence[key] === "string") {
       preview[key] = truncateUtf8(evidence[key] as string, limits.maxWidgetValueBytes)
     }
@@ -370,6 +370,29 @@ export function createWidgetEvidencePreview(
   if (warnings) {
     preview.warnings = warnings.values
     if (warnings.truncated) preview.warningsTruncated = true
+  }
+
+  if (Array.isArray(evidence.semanticDiagnostics)) {
+    const sourceDiagnostics = evidence.semanticDiagnostics
+    const semanticDiagnostics = sourceDiagnostics
+      .slice(0, WIDGET_EVIDENCE_ARRAY_ITEMS)
+      .filter(isRecord)
+      .map((diagnostic) => {
+        const bounded: Record<string, string> = {}
+        for (const key of ["code", "severity", "message", "fix"] as const) {
+          if (typeof diagnostic[key] === "string") {
+            bounded[key] = truncateUtf8(
+              diagnostic[key] as string,
+              key === "code" || key === "severity" ? WIDGET_COLUMN_LABEL_BYTES : limits.maxWidgetValueBytes,
+            )
+          }
+        }
+        return bounded
+      })
+    preview.semanticDiagnostics = semanticDiagnostics
+    if (sourceDiagnostics.length > semanticDiagnostics.length) {
+      preview.semanticDiagnosticsTruncated = true
+    }
   }
 
   if (isRecord(evidence.markCountByType)) {

@@ -94,19 +94,38 @@ describe("MCP render output limits", () => {
   it("allowlists and bounds evidence before it reaches the widget", () => {
     const evidence = createWidgetEvidencePreview({
       component: "BarChart",
+      semanticStatus: "degenerate",
       markCount: 3,
       categories: Array.from({ length: 40 }, (_, index) => `category-${index}`),
       markCountByType: { rect: 3 },
+      semanticDiagnostics: [
+        {
+          code: "TEST_DEGENERATE",
+          severity: "error",
+          message: "x".repeat(300),
+          fix: "Choose fields that compete.",
+          metrics: { echoedInput: "must not be forwarded" },
+        },
+      ],
       internalInputEcho: "must not be forwarded",
     }, smallLimits)
 
     expect(evidence).toMatchObject({
       component: "BarChart",
+      semanticStatus: "degenerate",
       markCount: 3,
       markCountByType: { rect: 3 },
       categoriesTruncated: true,
+      semanticDiagnostics: [
+        {
+          code: "TEST_DEGENERATE",
+          severity: "error",
+        },
+      ],
     })
     expect((evidence?.categories as string[])).toHaveLength(32)
+    expect((evidence?.semanticDiagnostics as Array<{ fix: string }>)[0].fix).toContain("…")
+    expect(JSON.stringify(evidence)).not.toContain("echoedInput")
     expect(evidence).not.toHaveProperty("internalInputEcho")
   })
 

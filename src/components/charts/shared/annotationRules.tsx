@@ -21,6 +21,7 @@ import { annotationActivationProps, type AnnotationActivationOptions } from "./a
 import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 import { AnnotationLabel } from "./AnnotationLabel"
 import { resolveSvgFill } from "./hatchFill"
+import { FrameTextAnnotationSVG } from "./FrameTextAnnotationSVG"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -992,6 +993,13 @@ export function createDefaultAnnotationRules(
           </g>
         )
       }
+
+      // ── Frame text (serializable plot-relative chrome) ──────────────
+      case "frame-text":
+        return <FrameTextAnnotationSVG
+          key={`ann-frame-text-${index}`} annotation={ann}
+          width={context.width || 0} height={context.height || 0}
+        />
 
       // ── Category Highlight (ordinal band behind a category) ──────────
       case "category-highlight": {

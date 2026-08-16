@@ -1,6 +1,7 @@
 import type { ChartCapability, ChartDataProfile, ChartVariant } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
+import { BUMP_CHART_SEMANTIC_VIABILITY } from "./BumpChart.semanticViability"
 
 export interface RankColumnOccupancy {
   columns: number
@@ -131,6 +132,8 @@ export const BumpChartCapability: ChartCapability = {
       return 0
     },
   },
+
+  semanticViability: BUMP_CHART_SEMANTIC_VIABILITY,
 
   caveats: (p, variant?: ChartVariant) => {
     const out: string[] = []

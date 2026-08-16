@@ -5,6 +5,9 @@
   "description": "Verified generative visualization for React and agents, with deterministic chart validation, repair, rendering evidence, and MCP.",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
+  "browser": {
+    "react-dom/server": "react-dom/server.browser"
+  },
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "bin": {
@@ -86,6 +89,10 @@
     },
     "./server/edge": {
       "types": "./dist/semiotic-server-edge.d.ts",
+      "node": {
+        "import": "./dist/semiotic-server-edge-node.module.min.js",
+        "require": "./dist/semiotic-server-edge.min.js"
+      },
       "import": "./dist/semiotic-server-edge.module.min.js",
       "require": "./dist/semiotic-server-edge.min.js",
       "default": "./dist/semiotic-server-edge.module.min.js"
@@ -182,6 +189,10 @@
     },
     "./experimental": {
       "types": "./dist/semiotic-experimental.d.ts",
+      "node": {
+        "import": "./dist/semiotic-experimental-node.module.min.js",
+        "require": "./dist/semiotic-experimental.min.js"
+      },
       "import": "./dist/semiotic-experimental.module.min.js",
       "require": "./dist/semiotic-experimental.min.js",
       "default": "./dist/semiotic-experimental.module.min.js"
@@ -317,7 +328,7 @@
     "check:mcp-registry-live": "node scripts/check-mcp-registry-live.mjs",
     "check:surface": "node scripts/check-surface-parity.js",
     "check:package-surface": "node scripts/generate-package-surface-manifest.mjs --check",
-    "check:ai-surface": "node scripts/generate-ai-surface-manifest.mjs --check",
+    "check:ai-surface": "node scripts/generate-ai-surface-manifest.mjs --check && node --test scripts/ai-surface-manifest.test.mjs",
     "check:agent-skill": "node scripts/check-agent-skill.mjs",
     "eval:ai": "node scripts/run-ai-evals.mjs",
     "eval:ai:openai": "node scripts/run-openai-ai-evals.mjs",

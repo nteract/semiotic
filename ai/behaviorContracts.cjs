@@ -163,7 +163,7 @@ const BEHAVIOR_CONTRACTS = [
     severity: "warning",
     appliesTo: {},
     summary: "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
-    agentAction: "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.",
+    agentAction: 'Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. If a consumer-owned role=img wraps the chart, use accessibleTable: { portalTarget: "element-id" } and render that target outside the image. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields.',
   },
   {
     id: "interaction.cursor-is-presentation-only",

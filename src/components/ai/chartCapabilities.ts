@@ -7,6 +7,10 @@ import {
   getRegisteredRecipeCapabilities,
   hasRegisteredRecipeCapabilities
 } from "./chartRecipeRegistry"
+import {
+  deleteRegisteredSemanticViability,
+  setRegisteredSemanticViability
+} from "./semanticViabilityRegistry"
 
 // XY family
 import { LineChartCapability } from "../charts/xy/LineChart.capability"
@@ -157,12 +161,14 @@ const userCapabilities = new Map<string, ChartCapability>()
 export function registerChartCapability(capability: ChartCapability): void {
   userCapabilities.set(capability.component, capability)
   registerNumericContracts(capability.component, capability.numericContracts)
+  setRegisteredSemanticViability(capability.component, capability.semanticViability)
 }
 
 /** Remove a previously-registered capability. Does not affect built-ins. */
 export function unregisterChartCapability(component: string): void {
   userCapabilities.delete(component)
   unregisterNumericContracts(component)
+  deleteRegisteredSemanticViability(component)
 }
 
 /**

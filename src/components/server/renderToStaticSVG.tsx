@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
+import { applySemanticViability } from "../ai/semanticViability"
 import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
@@ -7,7 +8,7 @@ import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
  * staticGeo / staticPhysics; shared chrome in staticSVGChrome.
  */
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import * as ReactDOMServer from "react-dom/server.browser"
 import type { StreamXYFrameProps } from "../stream/types"
 import type { StreamNetworkFrameProps } from "../stream/networkTypes"
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"
@@ -246,6 +247,7 @@ export function renderChartWithEvidence(
       extraWarnings: ["NO_EVIDENCE"]
     })
   evidence.component = component
+  applySemanticViability(evidence, component, props)
   return { svg, evidence }
 }
 
@@ -309,10 +311,8 @@ function renderChartInternal(
     typeof layoutMargin === "function"
       ? layoutMargin(props, resolvedMode)
       : (layoutMargin ?? resolvedMode.marginDefaults)
-  // Keep the caller-supplied margin separately from the resolved default.
-  // Some chart HOCs (for example DifferenceChart's custom legend) only
-  // reserve their standard legend gutter when that side was not explicitly
-  // set by the caller. The static configuration needs the same distinction.
+  // Resolve the caller's numeric margin as a baseline. Chart-owned chrome can
+  // grow it later, matching the client HOC's minimum-margin contract.
   const explicitMargin =
     margin !== undefined ? margin : framePropsOverrides.margin
   // useChartLegendAndMargin merges partial caller margins over its mode
@@ -356,7 +356,6 @@ function renderChartInternal(
     annotations,
     size,
     margin: effectiveMargin,
-    __explicitMargin: explicitMargin,
     __compactMode: resolvedMode.compactMode,
     // renderChart is the HOC-level server API. Its legend reservation must
     // follow useChartLegendAndMargin rather than the lower-level static

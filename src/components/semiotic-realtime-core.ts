@@ -101,6 +101,10 @@ export type {
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
+export type {
+  FrameTextAnnotation,
+  FrameTextPosition,
+} from "./charts/shared/frameTextAnnotation"
 
 export type {
   ArrowOfTime,

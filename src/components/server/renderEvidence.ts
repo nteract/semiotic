@@ -16,6 +16,10 @@
  * that difference becomes visible to a non-visual caller.
  */
 
+import type { SemanticViabilityDiagnostic } from "../ai/chartCapabilityTypes"
+
+export type SemanticViabilityStatus = "meaningful" | "degraded" | "degenerate" | "not-assessed"
+
 export interface RenderEvidence {
   /** HOC component name as passed to renderChart. */
   component: string
@@ -48,6 +52,14 @@ export interface RenderEvidence {
   ariaLabel: string
   /** Stable warning codes (EMPTY_SCENE, NO_SCALES). */
   warnings: string[]
+  /**
+   * Whether a capability-owned post-render check found the painted encoding
+   * meaningful. Optional for compatibility with externally supplied evidence;
+   * `renderChartWithEvidence` always populates it.
+   */
+  semanticStatus?: SemanticViabilityStatus
+  /** Structured chart-family diagnostics supporting `semanticStatus`. */
+  semanticDiagnostics?: SemanticViabilityDiagnostic[]
   /**
    * The resolved margin Semiotic actually used — after auto-reservation for a
    * legend, a title, or any other chrome that grows a side beyond the caller's
@@ -161,6 +173,8 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     annotationCount,
     ariaLabel,
     warnings,
+    semanticStatus: "not-assessed",
+    semanticDiagnostics: [],
     ...(margin ? { margin } : {}),
     ...(plot ? { plot } : {}),
   }
