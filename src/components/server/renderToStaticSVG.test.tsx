@@ -281,6 +281,17 @@ describe("renderChart SVG precision", () => {
     expect(svg).toContain('stroke-dasharray="var(--dash-1.25)"')
   })
 
+  it("preserves compact SVG numeric boundaries while rounding", () => {
+    const svg = serializeSvgPrecision(
+      '<svg><path d="M.4.5L-.4-.5" points=".4.5,-.4-.5" transform="translate(.4.5)" /></svg>',
+      0,
+    )
+
+    expect(svg).toContain('d="M0 1L0 -1"')
+    expect(svg).toContain('points="0 1,0 -1"')
+    expect(svg).toContain('transform="translate(0 1)"')
+  })
+
   it("rejects prototype component names as unknown charts", () => {
     expect(() => renderChart("toString", {})).toThrow('Unknown chart component: "toString"')
   })

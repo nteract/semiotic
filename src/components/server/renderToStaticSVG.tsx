@@ -135,6 +135,33 @@ function roundSvgNumber(token: string, precision: number): string {
   return Object.is(rounded, -0) ? "0" : String(rounded)
 }
 
+/**
+ * Round the numeric tokens in an SVG geometry value without changing its
+ * token boundaries. Compact path syntax permits adjacent numbers such as
+ * `M.4.5`; after rounding those to integers, concatenating `01` would turn a
+ * coordinate pair into one number. A whitespace separator is legal in path,
+ * transform, and point-list grammars, so retain the original gaps and insert
+ * one only where the source deliberately used an implicit numeric boundary.
+ */
+function roundSvgGeometryValue(value: string, precision: number): string {
+  const numberPattern = new RegExp(SVG_NUMBER.source, SVG_NUMBER.flags)
+  let roundedValue = ""
+  let cursor = 0
+  let hasPreviousNumber = false
+  let match: RegExpExecArray | null
+
+  while ((match = numberPattern.exec(value))) {
+    const gap = value.slice(cursor, match.index)
+    if (hasPreviousNumber && gap.length === 0) roundedValue += " "
+    else roundedValue += gap
+    roundedValue += roundSvgNumber(match[0], precision)
+    cursor = match.index + match[0].length
+    hasPreviousNumber = true
+  }
+
+  return roundedValue + value.slice(cursor)
+}
+
 /** Apply the documented renderChart precision contract to SVG geometry only. */
 export function serializeSvgPrecision(svg: string, precision?: number): string {
   const resolved = resolvedPrecision(precision)
@@ -143,7 +170,7 @@ export function serializeSvgPrecision(svg: string, precision?: number): string {
     /\s([\w:-]+)="([^"]*)"/g,
     (attribute, name: string, value: string) => {
       if (!PRECISION_ATTRIBUTES.has(name) || /\b(?:var|calc|url)\(/i.test(value)) return attribute
-      return ` ${name}="${value.replace(SVG_NUMBER, (number) => roundSvgNumber(number, resolved))}"`
+      return ` ${name}="${roundSvgGeometryValue(value, resolved)}"`
     },
   ))
 }

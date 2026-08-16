@@ -100,9 +100,11 @@ export function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo {
       const key = Object.keys(props)
         .filter((name) => name !== "data")
         .sort()
-        .map((name) => `${name}=${memoToken(props[name], objectIds, nextObjectId)}`)
-        .join("\\u0001")
-      const cacheKey = `${component}\\u0000${key}`
+        .map((name) => [name, memoToken(props[name], objectIds, nextObjectId)])
+      // Keep the component and sorted prop pairs as a structured value. Raw
+      // delimiter joining let string-valued props manufacture a second pair
+      // and collide with a distinct configuration.
+      const cacheKey = JSON.stringify([component, key])
       let entries = byData.get(data)
       if (!entries) {
         entries = new Map()

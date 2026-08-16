@@ -124,6 +124,28 @@ describe("prepareChart", () => {
     expect(render).toHaveBeenCalledTimes(3)
   })
 
+  it("does not collide prop bags containing the legacy cache delimiters", () => {
+    const render = vi.fn((_component: string, props: Record<string, unknown>) => ({
+      svg: `<svg data-props="${Object.keys(props).join(",")}" />`,
+      evidence: evidence({}),
+    }))
+    const memo = createRenderEvidenceMemo(render)
+    const data = [{ category: "A", value: 1 }]
+
+    const embeddedPair = memo.render("BarChart", {
+      data,
+      a: "x\u0001b=string:y",
+    })
+    const distinctPair = memo.render("BarChart", {
+      data,
+      a: "x",
+      b: "y",
+    })
+
+    expect(embeddedPair).not.toBe(distinctPair)
+    expect(render).toHaveBeenCalledTimes(2)
+  })
+
   it("keeps the documented suggestion → prepare → repair → render path type-safe", () => {
     const [suggestion] = suggestCharts(BARS, { allow: ["BarChart"], includeVariants: false })
     expect(suggestion).toBeDefined()
