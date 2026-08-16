@@ -249,12 +249,12 @@ jobs:
   testing:
     name: testing
     runs-on: ubuntu-latest
-    needs: [fast-contracts, testing-full, testing-matrix, e2e]
+    needs: [fast-contracts, testing-full, testing-matrix, e2e, docs-examples]
     if: always()
     steps:
       - name: Aggregate matrix result
         run: |
-          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" ]]; then
+          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" || "${{ needs['docs-examples'].result }}" != "success" ]]; then
             {
               echo "## Testing failed"
               echo ""
@@ -262,10 +262,11 @@ jobs:
               echo "Full checks result: \`${{ needs['testing-full'].result }}\`"
               echo "Smoke matrix result: \`${{ needs['testing-matrix'].result }}\`"
               echo "E2E result: \`${{ needs['e2e'].result }}\`"
+              echo "Docs examples result: \`${{ needs['docs-examples'].result }}\`"
               echo ""
               echo "Open the failed job above for the concrete error."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}"
+            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; Docs examples: ${{ needs['docs-examples'].result }}"
             exit 1
           fi
 
@@ -300,6 +301,62 @@ jobs:
 
       - name: Compare PR vs main on identical hardware
         run: npm run bench:pr-vs-main
+
+  # The docs source route suite owns a separate Vite server and exercises
+  # authored examples rather than the packaged visual harness. Keep it in an
+  # independent Chromium job so a slow or failed docs route neither obscures
+  # nor delays completion of the three-browser visual E2E matrix.
+  docs-examples:
+    name: Docs examples (Chromium)
+    runs-on: ubuntu-latest
+    needs: fast-contracts
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    env:
+      HOME: /root
+      DOCKER_CONFIG: /tmp/semiotic-docker-config
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run docs example source tests
+        run: npm run test:examples:source
+
+      # The contract test validates this complete local-only capture before it
+      # writes the JSON. Retain it for review, but do not compare it against a
+      # committed baseline: capture time and runner geometry are per-run facts.
+      # It records reduced-motion and browser-emitted visibility behavior without
+      # claiming policy-specific animation, performance, or cross-browser parity.
+      - name: Upload local docs example contract evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docs-example-local-contract-evidence
+          path: test-results/**/docs-example-local-contract-evidence.v2.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload docs example test artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report-docs-examples
+          path: |
+            test-results/
+            integration-tests/test-results/
+          retention-days: 7
 
   e2e:
     runs-on: ubuntu-latest
@@ -354,24 +411,6 @@ jobs:
         # pull request. Maintainers can use `test:visual:bootstrap` locally
         # to generate a proposed baseline, then commit it with review.
         run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
-
-      - name: Capture docs example source and local Chromium contract evidence
-        if: matrix.project == 'chromium'
-        run: npm run test:examples:source
-
-      # The contract test validates this complete local-only capture before it
-      # writes the JSON. Retain it for review, but do not compare it against a
-      # committed baseline: capture time and runner geometry are per-run facts.
-      # It records reduced-motion and browser-emitted visibility behavior without
-      # claiming policy-specific animation, performance, or cross-browser parity.
-      - name: Upload local docs example contract evidence
-        if: always() && matrix.project == 'chromium'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: docs-example-local-contract-evidence
-          path: test-results/**/docs-example-local-contract-evidence.v2.json
-          if-no-files-found: warn
-          retention-days: 14
 
       - name: Upload snapshot baselines
         if: always() && matrix.project == 'chromium'
