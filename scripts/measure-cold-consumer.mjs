@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global console, process */
 /**
  * Generate or check the packed cold-consumer named-import baseline.
  *

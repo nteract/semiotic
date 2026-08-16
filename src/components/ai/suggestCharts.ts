@@ -6,6 +6,7 @@ import type {
   ChartRubric,
   ChartVariant,
   IntentScorer,
+  ScoreChartResult,
   ScaledSuggestionGroups,
   Suggestion,
   SuggestionScaleRange,
@@ -561,13 +562,13 @@ export function scoreChart(
   component: string,
   data: ReadonlyArray<Datum> | null | undefined,
   options: ScoreChartOptions = {}
-): Suggestion | { reason: string } {
+): ScoreChartResult {
   const capabilities = getCapabilities()
   const capability = capabilities.find((c) => c.component === component)
-  if (!capability) return { reason: `No capability registered for "${component}"` }
+  if (!capability) return { status: "rejected", reason: `No capability registered for "${component}"` }
   const profile = options.profile ?? profileData(data ?? [], options)
   const fit = capability.fits(profile)
-  if (fit !== null) return { reason: fit }
+  if (fit !== null) return { status: "rejected", reason: fit }
 
   const variant = options.variantKey
     ? capability.variants?.find((v) => v.key === options.variantKey)
@@ -589,7 +590,7 @@ export function scoreChart(
   const rubric = applyVariantToRubric(capability.rubric, variant)
   const reasons = buildReasons(capability, profile, intentScores, intents)
   const recipeBias = recipeScoreAdjustment(capability, options)
-  if (recipeBias.excluded) return { reason: recipeBias.excluded }
+  if (recipeBias.excluded) return { status: "rejected", reason: recipeBias.excluded }
   reasons.push(...recipeBias.reasons)
   const caveats = [
     ...(capability.caveats ? capability.caveats(profile, variant) : []),
@@ -599,10 +600,11 @@ export function scoreChart(
 
   const props = capability.buildProps(profile, variant)
   const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
-  if (policyFailure) return { reason: policyFailure }
+  if (policyFailure) return { status: "rejected", reason: policyFailure }
 
   const resolvedComponent = variant?.component ?? capability.component
   return {
+    status: "ok",
     component: resolvedComponent,
     displayName: capability.displayName ?? resolvedComponent,
     candidateKind: capability.candidateKind ?? "built-in",

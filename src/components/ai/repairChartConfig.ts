@@ -63,6 +63,41 @@ export interface RepairOptions extends ProfileDataOptions {
   observedSceneAudit?: ObservedSceneAuditResult
 }
 
+/**
+ * Repair retries need one entry per resolved component/variant, even when
+ * separate rejected proposals converge on the same safe alternative. The
+ * input has already been score-sorted, so retaining the first entry preserves
+ * score and reason ordering deterministically.
+ */
+function dedupeRepairAlternatives(suggestions: ReadonlyArray<Suggestion>): Suggestion[] {
+  const seen = new Set<string>()
+  return suggestions.filter((suggestion) => {
+    const key = `${suggestion.component}::${suggestion.variant?.key ?? "default"}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function repairedSuggestions(
+  data: ReadonlyArray<Datum> | null | undefined,
+  options: RepairOptions,
+  profile: ChartDataProfile,
+  maxAlternatives: number,
+  deny?: ReadonlyArray<string>,
+): Suggestion[] {
+  // Gather the ranked candidates before applying the repair-specific identity
+  // filter. Otherwise two duplicate top results could leave a caller with
+  // fewer alternatives even when a distinct candidate is immediately below.
+  return dedupeRepairAlternatives(suggestCharts(data, {
+    profile,
+    intent: options.intent,
+    maxResults: Number.MAX_SAFE_INTEGER,
+    includeVariants: true,
+    ...(deny ? { deny } : {}),
+  })).slice(0, maxAlternatives)
+}
+
 function recipeRepairs(
   recipe: ChartRecipe,
   options: RepairOptions,
@@ -152,12 +187,7 @@ export function repairChartConfig(
 
   if (!capability) {
     // Unknown component — return top suggestions as best-effort fallbacks
-    const alternatives = suggestCharts(data, {
-      profile,
-      intent: options.intent,
-      maxResults: maxAlternatives,
-      includeVariants: false,
-    })
+    const alternatives = repairedSuggestions(data, options, profile, maxAlternatives)
     return { status: "unknown", component, alternatives, profile }
   }
 
@@ -171,13 +201,7 @@ export function repairChartConfig(
     }
   }
 
-  const alternatives = suggestCharts(data, {
-    profile,
-    intent: options.intent,
-    maxResults: maxAlternatives,
-    deny: [component], // don't recommend the one that already failed
-    includeVariants: false,
-  })
+  const alternatives = repairedSuggestions(data, options, profile, maxAlternatives, [component])
 
   return {
     status: "alternative",

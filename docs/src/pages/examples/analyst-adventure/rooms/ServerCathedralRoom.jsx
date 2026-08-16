@@ -85,7 +85,7 @@ export default function ServerCathedralRoom({
         lifecycle: { status: activated ? "accepted" : "proposed", anchor: "semantic" },
       },
     ],
-    [activateDaemon, activated],
+    [activated],
   )
   const accessibleRows = useMemo(
     () =>

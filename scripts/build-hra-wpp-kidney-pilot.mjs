@@ -24,7 +24,7 @@ const uniqueBy = (items, accessor) => {
   })
 }
 
-const shortId = (id) => String(id).split(/[\/#]/).filter(Boolean).at(-1)
+const shortId = (id) => String(id).split(/[/#]/).filter(Boolean).at(-1)
 
 function validateSource(source) {
   const data = source?.data

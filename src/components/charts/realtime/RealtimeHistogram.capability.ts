@@ -3,6 +3,7 @@ import type { StreamChartCapability } from "../../ai/streamingTypes"
 export const RealtimeHistogramCapability: StreamChartCapability = {
   component: "RealtimeHistogram",
   importPath: "semiotic/realtime",
+  requiresLiveData: true,
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
 
   fits: (schema) => {

@@ -27,9 +27,12 @@ export default [
   js.configs.recommended,
 
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    files: ["**/*.{js,jsx,ts,tsx,mjs,cjs}"],
     languageOptions: {
-      ecmaVersion: 2020,
+      // Scripts use current Node syntax (top-level await, numeric separators,
+      // and private fields), so parsing them as ES2020 turns valid code into
+      // misleading lint errors.
+      ecmaVersion: "latest",
       sourceType: "module",
       parserOptions: {
         ecmaFeatures: { jsx: true }
@@ -104,6 +107,26 @@ export default [
       "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-unsafe-function-type": "error",
       "@typescript-eslint/no-this-alias": "error"
+    }
+  },
+
+  {
+    // Documentation pages intentionally contain human-readable prose and
+    // quoted API examples. Escaping every apostrophe or quotation mark harms
+    // that source without changing the rendered output.
+    files: ["docs/src/**/*.{jsx,tsx}"],
+    rules: {
+      "react/no-unescaped-entities": "off"
+    }
+  },
+
+  {
+    // Build and maintenance scripts are not React components. Their helper
+    // names may legitimately begin with "use", so React hook heuristics do
+    // not apply there.
+    files: ["scripts/**/*.{js,jsx,ts,tsx,mjs,cjs}"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off"
     }
   }
 ]

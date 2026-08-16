@@ -117,9 +117,9 @@ export default function PlaygroundLayout({
     setValues((prev) => ({ ...prev, [name]: value }))
   }, [])
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     setValues(defaults)
-  }, [])
+  }
 
   // Build chart props from current knob values
   const currentDataset = datasets[datasetIndex]
@@ -182,25 +182,22 @@ export default function PlaygroundLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values), datasetIndex])
 
-  const handleCopy = useCallback(
-    async (kind) => {
-      if (typeof window === "undefined") return
-      try {
-        if (kind === "link") {
-          const sc = toURL(buildConfig(componentName, chartProps, { includeData: false }))
-          const url = `${window.location.origin}${window.location.pathname}?${sc}&ds=${datasetIndex}`
-          await navigator.clipboard.writeText(url)
-        } else {
-          await copyConfig(buildConfig(componentName, chartProps, { includeData: true }), "json")
-        }
-        setCopied(kind)
-        setTimeout(() => setCopied(null), 2000)
-      } catch {
-        /* clipboard denied or non-serializable — no-op */
+  const handleCopy = async (kind) => {
+    if (typeof window === "undefined") return
+    try {
+      if (kind === "link") {
+        const sc = toURL(buildConfig(componentName, chartProps, { includeData: false }))
+        const url = `${window.location.origin}${window.location.pathname}?${sc}&ds=${datasetIndex}`
+        await navigator.clipboard.writeText(url)
+      } else {
+        await copyConfig(buildConfig(componentName, chartProps, { includeData: true }), "json")
       }
-    },
-    [componentName, chartProps, datasetIndex]
-  )
+      setCopied(kind)
+      setTimeout(() => setCopied(null), 2000)
+    } catch {
+      /* clipboard denied or non-serializable — no-op */
+    }
+  }
 
   return (
     <PageLayout

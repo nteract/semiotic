@@ -8,9 +8,9 @@ const svg = (el: React.ReactElement) => renderToStaticMarkup(<svg>{el}</svg>)
 describe("AnnotationLabel", () => {
   it("defaults to a stroke halo (paint-order:stroke)", () => {
     const out = svg(<AnnotationLabel x={10} y={10} text="Max · 15" fill="#d7263d" />)
-    expect(out).toContain('paint-order="stroke"')
-    expect(out).toContain('stroke-width="3"')
-    expect(out).toContain('stroke="var(--semiotic-bg, #ffffff)"')
+    expect(out).toContain("paint-order:stroke")
+    expect(out).toContain("stroke-width:3")
+    expect(out).toContain("stroke:var(--semiotic-bg, #ffffff)")
     expect(out).toContain("Max · 15")
     expect(out).not.toContain("<rect")
   })

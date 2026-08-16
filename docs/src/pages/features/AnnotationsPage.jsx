@@ -170,7 +170,7 @@ function StreamingCalloutDemo() {
     setTick(t => t + 1)
   }, [])
 
-  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [])
+  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [start])
 
   // Callouts anchored to points #60, #120, and #180 by ID.
   return (
@@ -224,7 +224,7 @@ function StreamingCalloutDemo({ width }) {
     setTick(t => t + 1)
   }, [])
 
-  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [])
+  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [start])
 
   return (
     <div>

@@ -13,7 +13,7 @@ import { renderAnnotationPass } from "../charts/shared/annotationRules"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
-import { resolveSvgFill } from "../charts/shared/hatchFill"
+import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
 import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 
@@ -376,7 +376,12 @@ function renderAnnotation(
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
       // Region fill may be a declarative HatchFill → inline <pattern>.
-      const bandFill = resolveSvgFill(ann.fill || resolveAnnotationColor(ann, theme), `ssr-band-${index}`)
+      const bandFill = resolveAnnotationBandFill(
+        ann,
+        `ssr-band-${index}`,
+        "vertical",
+        resolveAnnotationColor(ann, theme),
+      )
       // Base fill alpha from `fillOpacity` (matches the client renderer);
       // `opacity` is the group/decay alpha so freshness dimming composes.
       const fillOpacity = ann.fillOpacity ?? 0.1
@@ -414,7 +419,12 @@ function renderAnnotation(
       if (x0 == null || x1 == null) return null
       const left = Math.min(x0, x1)
       const width = Math.abs(x1 - x0)
-      const xBandFill = resolveSvgFill(ann.fill || resolveAnnotationColor(ann, theme), `ssr-xband-${index}`)
+      const xBandFill = resolveAnnotationBandFill(
+        ann,
+        `ssr-xband-${index}`,
+        "horizontal",
+        resolveAnnotationColor(ann, theme),
+      )
       const fillOpacity = ann.fillOpacity ?? 0.1
       return (
         <g key={`ann-xband-${index}`} opacity={ann.opacity}>

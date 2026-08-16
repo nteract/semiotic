@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global Buffer, URL, console, process */
 
 import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync } from "node:fs"

@@ -75,6 +75,6 @@ describe("renderChart — annotation labelBackground (server path)", () => {
       valueAccessor: "value",
       annotations: [{ type: "y-threshold", value: 10, label: "Max", color: "#d7263d" }],
     })
-    expect(svg).toContain('paint-order="stroke"')
+    expect(svg).toContain("paint-order:stroke")
   })
 })

@@ -84,7 +84,7 @@ function StreamingRevenue() {
         const i = indexRef.current++
         const region = regions[i % regions.length]
         chartRef.current.push({
-          time: Math.floor(i / regions.length),
+          time: Math.floor(i / STREAMING_REGIONS.length),
           value: 5000 + Math.random() * 10000,
           region,
         })
@@ -107,18 +107,19 @@ function StreamingRevenue() {
   )
 }`
 
+const STREAMING_REGIONS = ["North", "South", "East", "West"]
+
 function StreamingStackedDemo({ width }) {
   const chartRef = useRef()
   const indexRef = useRef(0)
-  const regions = ["North", "South", "East", "West"]
 
   useEffect(() => {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const region = regions[i % regions.length]
+        const region = STREAMING_REGIONS[i % STREAMING_REGIONS.length]
         chartRef.current.push({
-          time: Math.floor(i / regions.length),
+          time: Math.floor(i / STREAMING_REGIONS.length),
           value: 5000 + Math.random() * 10000,
           region,
         })

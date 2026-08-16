@@ -394,7 +394,7 @@ export default function AnalyticalRoom({
       if (!datumId) return
       onInspect?.(String(datumId), event.inputType ?? "pointer")
     },
-    [navigation.onObservation, onInspect],
+    [navigation, onInspect],
   )
 
   const onChartAnnotationActivate = useCallback(

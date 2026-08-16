@@ -162,7 +162,7 @@ const axisProps = [
     required: false,
     default: null,
     description:
-      "Suggested number of ticks to display. The actual count may vary based on D3 tick algorithm.",
+      "Suggested number of ticks to display. The actual count may vary based on D3 tick algorithm. `tickCount` is accepted as a compatibility alias; use `ticks` in new code.",
   },
   {
     name: "extent",

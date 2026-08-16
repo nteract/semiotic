@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"

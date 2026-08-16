@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global console */
 /**
  * Validates the docs examples as a coherent public surface.
  *

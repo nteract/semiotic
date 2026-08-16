@@ -146,7 +146,7 @@ export default function RealtimeLineChartPlayground() {
     setValues((prev) => ({ ...prev, [name]: value }))
   }, [])
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     setValues((prev) => {
       const next = { ...prev }
       for (const c of controls) {
@@ -154,7 +154,7 @@ export default function RealtimeLineChartPlayground() {
       }
       return next
     })
-  }, [chartType])
+  }
 
   const handleClear = useCallback(() => {
     chartRef.current?.clear()

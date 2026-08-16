@@ -14,6 +14,24 @@ const manifest = JSON.parse(
 )
 
 describe("AI surface suggestion prop contracts", () => {
+  it("keeps category inventory complete, including PhysicsCustomChart", () => {
+    const schemaNames = schema.tools.map((tool) => tool.function.name).sort()
+    const manifestNames = new Set(Object.values(manifest.components.categories).flat())
+    for (const name of schemaNames) assert.ok(manifestNames.has(name))
+    for (const name of manifest.components.aiChartExportNames) assert.ok(manifestNames.has(name))
+    assert.ok(manifest.components.categories.physics.includes("PhysicsCustomChart"))
+  })
+
+  it("records the exact realtime charts that require live data", () => {
+    assert.deepEqual(manifest.components.requiresLiveData, [
+      "RealtimeHeatmap",
+      "RealtimeHistogram",
+      "RealtimeLineChart",
+      "RealtimeSwarmChart",
+      "RealtimeWaterfallChart",
+    ])
+  })
+
   it("derives value contracts from category metadata, never a name set", () => {
     const fakeSchema = {
       tools: [{

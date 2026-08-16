@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* global console, fetch, process, URL */
-
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { Buffer } from "node:buffer"

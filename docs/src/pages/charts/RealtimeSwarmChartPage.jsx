@@ -69,17 +69,17 @@ function BasicSwarmDemo() {
   )
 }
 
+const SWARM_SENSORS = ["sensor1", "sensor2", "sensor3"]
+
 function CategorizedSwarmDemo() {
   const chartRef = useRef()
   const indexRef = useRef(0)
   const [containerRef, containerWidth] = useContainerWidth()
-  const sensors = ["sensor1", "sensor2", "sensor3"]
-
   useEffect(() => {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const sensor = sensors[i % 3]
+        const sensor = SWARM_SENSORS[i % SWARM_SENSORS.length]
         const base = sensor === "sensor1" ? 60 : sensor === "sensor2" ? 45 : 30
         chartRef.current.push({
           time: i,

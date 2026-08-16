@@ -414,6 +414,19 @@ export interface Suggestion {
   scaleRange?: SuggestionScaleRange
 }
 
+/** A successful `scoreChart` result. `status` is optional on the shared
+ * Suggestion shape so existing suggestion literals and consumers remain valid. */
+export type ScoreChartSuggestion = Suggestion & { status?: "ok" }
+
+/** A requested chart could not be scored against the supplied data. */
+export interface ScoreChartRejected {
+  status: "rejected"
+  reason: string
+}
+
+/** Discriminated result returned by `scoreChart`. */
+export type ScoreChartResult = ScoreChartSuggestion | ScoreChartRejected
+
 /**
  * Multi-tier grouping of suggestions by scale band. Returned by
  * `suggestChartsGrouped()`.

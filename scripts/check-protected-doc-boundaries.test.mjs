@@ -144,6 +144,23 @@ test("does not confuse a same-stem public asset with a protected document", () =
   })
 })
 
+test("does not treat a protected directory name inside a generated filename as a leak", () => {
+  withFixture((root) => {
+    mkdirSync(join(root, "docs", "public", "api"), { recursive: true })
+    writeFileSync(
+      join(root, "docs", "public", "api", "uses-internal-notes.html"),
+      "<main>public API documentation</main>\n"
+    )
+
+    const leaks = findProtectedDocReferenceLeaks({
+      root,
+      tracked: [".gitignore"]
+    })
+
+    assert.deepEqual(leaks, [])
+  })
+})
+
 test("does not confuse a public generated filename with a private reference", () => {
   withFixture((root) => {
     writeFileSync(

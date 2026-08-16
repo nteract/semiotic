@@ -90,7 +90,7 @@ export default function RecordsCatacombsRoom({
         lifecycle: { status: "accepted", anchor: "semantic" },
       },
     ],
-    [activateArchivist, activated, archaeology],
+    [activated, archaeology],
   )
   const chartProps = useMemo(
     () => ({

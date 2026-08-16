@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { LineChart } from "semiotic"
@@ -94,6 +94,8 @@ const SALES_DATA = [
   { month: 11, revenue: 2080, label: "Nov" },
   { month: 12, revenue: 2240, label: "Dec" },
 ]
+
+const PLOT = { left: 60, right: 30, top: 30, bottom: 40, width: 600, height: 280 }
 
 // Canned LLM stand-in. A real implementation calls a model with:
 //   { question, focus.datum, summary, profile }
@@ -289,7 +291,6 @@ function AnchoredDemo() {
   // dimensions. In production code this comes from the chart's ref
   // (`chart.current.getScales()`); here we hardcode them to keep the demo
   // self-contained.
-  const PLOT = { left: 60, right: 30, top: 30, bottom: 40, width: 600, height: 280 }
   const scales = useMemo(() => {
     const innerW = PLOT.width - PLOT.left - PLOT.right
     const innerH = PLOT.height - PLOT.top - PLOT.bottom

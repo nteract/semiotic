@@ -149,6 +149,7 @@ export function suggestStreamCharts(
       component: capability.component,
       family: "realtime",
       importPath: capability.importPath,
+      requiresLiveData: capability.requiresLiveData === true,
       score: composite,
       intentScores,
       rubric,

@@ -1,4 +1,3 @@
-/* global process */
 /**
  * Build and verify the immutable artifact used by a release.
  *

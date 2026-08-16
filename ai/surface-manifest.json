@@ -13,6 +13,13 @@
     "aiChartExports": 54,
     "mcpRenderable": 52,
     "browserOnly": 5,
+    "requiresLiveData": [
+      "RealtimeHeatmap",
+      "RealtimeHistogram",
+      "RealtimeLineChart",
+      "RealtimeSwarmChart",
+      "RealtimeWaterfallChart"
+    ],
     "categories": {
       "xy": [
         "AreaChart",
@@ -79,6 +86,7 @@
         "GaltonBoardChart",
         "GauntletChart",
         "PacketFlowChart",
+        "PhysicsCustomChart",
         "ProcessFlowChart",
         "UnitPileChart"
       ],

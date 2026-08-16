@@ -68,9 +68,9 @@ describe("suggestCharts", () => {
   it("keeps the ribbon caveat only on the non-ribbon BumpChart suggestion", () => {
     const base = scoreChart("BumpChart", viableBumpRows)
     const ribbon = scoreChart("BumpChart", viableBumpRows, { variantKey: "ribbon" })
-    expect("score" in base).toBe(true)
-    expect("score" in ribbon).toBe(true)
-    if ("score" in base && "score" in ribbon) {
+    expect(base.status).toBe("ok")
+    expect(ribbon.status).toBe("ok")
+    if (base.status === "ok" && ribbon.status === "ok") {
       expect(base.caveats.some((caveat) => /use ribbon/i.test(caveat))).toBe(true)
       expect(ribbon.caveats.some((caveat) => /use ribbon/i.test(caveat))).toBe(false)
     }
@@ -78,7 +78,7 @@ describe("suggestCharts", () => {
 
   it("accepts categorical ranking columns when multiple series share them", () => {
     const result = scoreChart("BumpChart", categoricalBumpRows)
-    expect("score" in result).toBe(true)
+    expect(result.status).toBe("ok")
   })
 
   it("does not count non-finite values as competing ranking series", () => {
@@ -433,8 +433,8 @@ describe("explainCapabilityFit", () => {
 describe("scoreChart", () => {
   it("returns a suggestion for a fitting chart", () => {
     const result = scoreChart("LineChart", temporalMultiSeries, { intent: "trend" })
-    expect("score" in result).toBe(true)
-    if ("score" in result) {
+    expect(result.status).toBe("ok")
+    if (result.status === "ok") {
       expect(result.score).toBeGreaterThan(3)
       expect(result.props.xAccessor).toBe("month")
     }
@@ -442,11 +442,13 @@ describe("scoreChart", () => {
 
   it("returns a reason when the chart doesn't fit", () => {
     const result = scoreChart("StackedBarChart", categorical)
-    expect("reason" in result).toBe(true)
+    expect(result.status).toBe("rejected")
+    if (result.status === "rejected") expect(result.reason).toBeTruthy()
   })
 
   it("returns a reason for unknown components", () => {
     const result = scoreChart("DoesNotExist", categorical)
-    expect("reason" in result).toBe(true)
+    expect(result.status).toBe("rejected")
+    if (result.status === "rejected") expect(result.reason).toMatch(/no capability/i)
   })
 })

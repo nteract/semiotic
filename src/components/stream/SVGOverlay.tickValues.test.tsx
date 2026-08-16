@@ -13,6 +13,7 @@ import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { SVGOverlay } from "./SVGOverlay"
+import { axisTickCount } from "./axisTickUtils"
 import type { StreamScales } from "./types"
 
 // Scale stubs sized so that arbitrary picked tick values land far enough
@@ -44,6 +45,12 @@ const baseProps = {
 }
 
 describe("tickValues on XY axes", () => {
+  it("accepts tickCount as the ticks compatibility alias, with ticks taking precedence", () => {
+    expect(axisTickCount({ tickCount: 3 }, 5)).toBe(3)
+    expect(axisTickCount({ ticks: 4, tickCount: 3 }, 5)).toBe(4)
+    expect(axisTickCount(undefined, 5)).toBe(5)
+  })
+
   it("lets one axis override the chart-level extent mode", () => {
     const x = Object.assign((v: number) => v * 30, {
       ticks: () => [0, 20, 40, 60, 80],

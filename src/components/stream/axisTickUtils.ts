@@ -1,5 +1,13 @@
 import type { ReactNode } from "react"
 
+/** Resolve the canonical `ticks` count while retaining `tickCount` compatibility. */
+export function axisTickCount(
+  axis: { ticks?: number; tickCount?: number } | undefined,
+  fallback: number,
+): number {
+  return axis?.ticks ?? axis?.tickCount ?? fallback
+}
+
 export function defaultTickFormat(v: string | number | Date, _index?: number, _allTicks?: number[]): string {
   if (v instanceof Date) {
     return `${v.toLocaleString("en", { month: "short" })} ${v.getDate()}`

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global console, process */
 /**
  * Measures gzip size of every public-subpath ESM bundle in `dist/`,
  * formats two views (table + bullet list), and upserts them into the

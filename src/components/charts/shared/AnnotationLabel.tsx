@@ -141,7 +141,16 @@ export function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement
       fontWeight={fontWeight}
       fontFamily={fontFamily}
       className={className}
-      {...(haloProps ? { stroke: haloProps.stroke, strokeWidth: haloProps.strokeWidth, paintOrder: "stroke" } : {})}
+      // A CSS variable used as an SVG presentation attribute is not resolved
+      // consistently by browser SVG paint paths. Put halo paint in the style
+      // declaration so the CSS cascade resolves it before the text is drawn.
+      {...(haloProps ? {
+        style: {
+          stroke: haloProps.stroke,
+          strokeWidth: haloProps.strokeWidth,
+          paintOrder: "stroke",
+        },
+      } : {})}
     >
       {text}
     </text>

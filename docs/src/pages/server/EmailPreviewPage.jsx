@@ -146,7 +146,7 @@ export default function EmailPreviewPage() {
     } catch (e) {
       return `<svg width="400" height="200"><text x="20" y="40" fill="red">${e.message}</text></svg>`
     }
-  }, [preset, emailSafe, config])
+  }, [emailSafe, config])
 
   const svgSize = (chartSvg.length / 1024).toFixed(1)
 

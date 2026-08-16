@@ -78,9 +78,9 @@ export default function ConnectedScatterplotPlayground() {
     setValues((prev) => ({ ...prev, [name]: value }))
   }, [])
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     setValues(defaults)
-  }, [])
+  }
 
   const chartWidth = containerWidth || 600
   const chartHeight = 450

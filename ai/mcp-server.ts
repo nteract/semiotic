@@ -136,12 +136,14 @@ const {
     totalComponents: number
     renderableComponents: number
     browserOnlyComponents: number
+    requiresLiveDataComponents: number
     categories: Record<string, string[]>
     components: Array<{
       name: string
       category: string
       importPath: string
       renderable: boolean
+      requiresLiveData: boolean
       description?: string
     }>
   }
@@ -150,6 +152,7 @@ const {
     category: string
     importPath: string
     renderable: boolean
+    requiresLiveData: boolean
     description?: string
   }
 }
@@ -1084,6 +1087,7 @@ async function getSchemaHandler(args: {
   const availableComponents = allComponentNames.map(name => ({
     name,
     renderable: metadataForComponent(name).renderable,
+    requiresLiveData: metadataForComponent(name).requiresLiveData,
   }))
 
   if (!component) {
@@ -1123,6 +1127,7 @@ async function getSchemaHandler(args: {
   }
 
   const renderable = metadataForComponent(component).renderable
+  const requiresLiveData = metadataForComponent(component).requiresLiveData
   const renderableNote = renderable
     ? "This component can be rendered to SVG via renderChart."
     : "This component requires a browser environment and cannot be rendered via renderChart."
@@ -1145,6 +1150,7 @@ async function getSchemaHandler(args: {
       status: "component-schema",
       component,
       renderable,
+      requiresLiveData,
       schema: entry,
       accessibility: schemaAccessibilityGuidance(entry),
       behaviorContracts: contracts,
@@ -1208,8 +1214,10 @@ async function renderChartHandler(
 
   if (!COMPONENT_REGISTRY[component]) {
     if (schemaByComponent[component]) {
+      const metadata = metadataForComponent(component)
+      const environment = metadata.requiresLiveData ? "live-data browser" : "browser"
       return capRenderChartResult({
-        content: [{ type: "text" as const, text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
+        content: [{ type: "text" as const, text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a ${environment} environment. Renderable components: ${componentNames.join(", ")}` }],
         isError: true,
       })
     }

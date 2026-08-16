@@ -28,7 +28,7 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
-import { defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
+import { axisTickCount, defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
 import { SVGChartTitle } from "./SVGChartTitle"
 
 export { SVGUnderlay } from "./SVGUnderlay"
@@ -218,7 +218,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const extentMode = xAxis?.extent ?? axisExtent
     const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = xAxis?.ticks ?? 5
+    const requested = axisTickCount(xAxis, 5)
     // Exact-mode contract: honor the requested count verbatim. The
     // `maxFit` clamp would silently collapse "give me exactly 7 ticks"
     // to whatever the width permits — pixel-distance filtering below
@@ -289,7 +289,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const extentMode = yAxis?.extent ?? axisExtent
     const fmt = yAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = yAxis?.ticks ?? 5
+    const requested = axisTickCount(yAxis, 5)
     const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawYTicks = yAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawYTicks.map(v => ({
@@ -327,7 +327,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const extentMode = rightAxis.extent ?? axisExtent
     const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = rightAxis.ticks ?? 5
+    const requested = axisTickCount(rightAxis, 5)
     const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawYTicksRight = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawYTicksRight.map(v => ({

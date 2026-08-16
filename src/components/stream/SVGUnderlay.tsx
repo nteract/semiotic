@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import type { ReactNode } from "react"
 import { ticksForMode } from "../charts/shared/axisExtent"
 import type { StreamScales, XYFrameAxisConfig } from "./types"
-import { defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
+import { axisTickCount, defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
 import { jaggedBaselinePath, resolveAxisLineStyle, resolveGridDash } from "./svgOverlayUtils"
 
 /** Props for the canvas-behind grid and axis-baseline SVG layer. */
@@ -47,7 +47,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const extentMode = xAxis?.extent ?? axisExtent
     const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = xAxis?.ticks ?? 5
+    const requested = axisTickCount(xAxis, 5)
     const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
     const rawValues = rawTicks.map(v => v.valueOf())
@@ -78,7 +78,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const extentMode = yAxis?.extent ?? axisExtent
     const fmt = yAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = yAxis?.ticks ?? 5
+    const requested = axisTickCount(yAxis, 5)
     const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawTicks = yAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
     const candidates = rawTicks.map(v => ({

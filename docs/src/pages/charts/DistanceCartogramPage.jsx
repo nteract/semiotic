@@ -230,7 +230,7 @@ const distanceCartogramProps = [
   { name: "showRings", type: "boolean | number | number[]", required: false, default: "true", description: "Cost reference marks. Radial: concentric rings. Strip/sparkline: baseline ticks. true for auto, number for count, or number[] for explicit cost values." },
   { name: "ringStyle", type: "object", required: false, default: null, description: "Ring / strip-tick style: { stroke, strokeWidth, strokeDasharray, labelColor, labelSize }." },
   { name: "showNorth", type: "boolean", required: false, default: "true (false in sparkline)", description: "Show a north-pointing compass indicator. Off by default for strip/sparkline layout." },
-  { name: "cartogramLayout", type: '"radial" | "strip"', required: false, default: '"radial" (\"strip\" in sparkline)', description: "Cost encoding. radial = polar cartogram (bearing from geography). strip = Langren-style 1D cost axis (x ∝ cost). Sparkline mode defaults to strip." },
+  { name: "cartogramLayout", type: '"radial" | "strip"', required: false, default: '"radial" ("strip" in sparkline)', description: "Cost encoding. radial = polar cartogram (bearing from geography). strip = Langren-style 1D cost axis (x ∝ cost). Sparkline mode defaults to strip." },
   { name: "costLabel", type: "string", required: false, default: null, description: 'Unit label for ring values (e.g. "hrs", "km").' },
   { name: "mode", type: '"primary" | "context" | "sparkline"', required: false, default: '"primary"', description: "Display mode. sparkline collapses to a Langren 1D cost strip with no map chrome." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Tooltip configuration." },

@@ -21,7 +21,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname, "..")
 const require = createRequire(import.meta.url)
-const { componentIndexFromSchema } = require(path.join(ROOT, "ai/componentMetadata.cjs"))
+const { categoryForAIExport, componentIndexFromSchema } = require(path.join(ROOT, "ai/componentMetadata.cjs"))
 
 const files = {
   package: path.join(ROOT, "package.json"),
@@ -62,6 +62,26 @@ const packageJson = JSON.parse(read(files.package))
 const schema = JSON.parse(read(files.schema))
 const componentIndex = componentIndexFromSchema(schema)
 const aiChartExports = parseAIChartExports(read(files.semioticAI))
+const categories = Object.fromEntries(
+  Object.entries(componentIndex.categories).map(([category, names]) => [
+    category,
+    new Set(names),
+  ]),
+)
+// Some AI-entry chart exports intentionally have no JSON schema because their
+// API needs a user function (for example PhysicsCustomChart's layout). They
+// still belong in the discovery inventory, which must never force consumers
+// back to scanning declarations to identify a chart's family.
+for (const name of aiChartExports) {
+  const category = categoryForAIExport(name)
+  if (!category || !categories[category]) {
+    throw new Error(`No manifest category for AI chart export "${name}"`)
+  }
+  categories[category].add(name)
+}
+const manifestCategories = Object.fromEntries(
+  Object.entries(categories).map(([category, names]) => [category, sorted(names)]),
+)
 const mcpSource = read(files.mcpServer)
 const tools = sorted([
   ...parseRegistrationNames(mcpSource, "tool"),
@@ -84,7 +104,12 @@ const output = {
     aiChartExports: aiChartExports.length,
     mcpRenderable: componentIndex.renderableComponents,
     browserOnly: componentIndex.browserOnlyComponents,
-    categories: componentIndex.categories,
+    requiresLiveData: sorted(
+      componentIndex.components
+        .filter((component) => component.requiresLiveData)
+        .map((component) => component.name),
+    ),
+    categories: manifestCategories,
     suggestionPropContracts: buildSuggestionPropContracts(
       schema,
       componentIndex,
