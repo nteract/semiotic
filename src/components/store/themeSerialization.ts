@@ -85,8 +85,24 @@ export function themeToTokens(theme: SemioticTheme): Datum {
       ...(theme.typography.legendSize != null ? {
         "legend-font-size": { $value: `${theme.typography.legendSize}px`, $type: "dimension" },
       } : {}),
-      ...(theme.typography.titleFontSize != null ? {
-        "title-font-size": { $value: `${theme.typography.titleFontSize}px`, $type: "dimension" },
+      ...(theme.typography.legendFontFamily != null ? {
+        "legend-font-family": { $value: theme.typography.legendFontFamily, $type: "fontFamily" },
+      } : {}),
+      ...(theme.typography.legendFontWeight != null ? {
+        "legend-font-weight": { $value: theme.typography.legendFontWeight, $type: "fontWeight" },
+      } : {}),
+      // titleSize is required and is the established fallback for the newer
+      // titleFontSize control. Serialize the effective value so a preset with
+      // no explicit override retains its visible title treatment on import.
+      "title-font-size": {
+        $value: `${theme.typography.titleFontSize ?? theme.typography.titleSize}px`,
+        $type: "dimension",
+      },
+      ...(theme.typography.titleFontFamily != null ? {
+        "title-font-family": { $value: theme.typography.titleFontFamily, $type: "fontFamily" },
+      } : {}),
+      ...(theme.typography.titleFontWeight != null ? {
+        "title-font-weight": { $value: theme.typography.titleFontWeight, $type: "fontWeight" },
       } : {}),
       ...(theme.typography.tickFontFamily != null ? {
         "tick-font-family": { $value: theme.typography.tickFontFamily, $type: "fontFamily" },

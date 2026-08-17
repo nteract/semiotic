@@ -29,6 +29,53 @@ describe("designTokensToTheme", () => {
     expect(recovered.colors.categorical).toEqual(theme.colors.categorical)
   })
 
+  it("round-trips title and legend typography through native tokens", () => {
+    const base = resolveThemePreset("tufte")!
+    const theme = {
+      ...base,
+      typography: {
+        ...base.typography,
+        legendSize: 13,
+        legendFontFamily: "Inter, sans-serif",
+        legendFontWeight: "500",
+        titleFontSize: 23,
+        titleFontFamily: "Merriweather, serif",
+        titleFontWeight: 650,
+      },
+    }
+
+    const tokens = themeToTokens(theme)
+    expect(tokens.semiotic["legend-font-family"]).toEqual({
+      $value: "Inter, sans-serif",
+      $type: "fontFamily",
+    })
+    expect(tokens.semiotic["legend-font-weight"]).toEqual({
+      $value: "500",
+      $type: "fontWeight",
+    })
+    expect(tokens.semiotic["title-font-family"]).toEqual({
+      $value: "Merriweather, serif",
+      $type: "fontFamily",
+    })
+    expect(tokens.semiotic["title-font-weight"]).toEqual({
+      $value: 650,
+      $type: "fontWeight",
+    })
+
+    expect(designTokensToTheme(tokens).typography).toMatchObject(theme.typography)
+  })
+
+  it("retains a preset's effective title size when titleFontSize is unset", () => {
+    for (const preset of ["high-contrast", "journalist"]) {
+      const theme = resolveThemePreset(preset)!
+      const recovered = designTokensToTheme(themeToTokens(theme))
+
+      expect(theme.typography.titleFontSize).toBeUndefined()
+      expect(recovered.typography.titleFontSize ?? recovered.typography.titleSize)
+        .toBe(theme.typography.titleSize)
+    }
+  })
+
   it("maps a foreign brand token file to roles by leaf name", () => {
     const brand = {
       color: {

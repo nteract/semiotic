@@ -176,6 +176,13 @@ type AccumulatedMatch = [confidence: number, sourceMask: number]
 const PROSE_SOURCE = 1
 const FIELD_SOURCE = 2
 const SHAPE_SOURCE = 4
+const DATE_KIND_ALIASES = new Set([
+  "date",
+  "time",
+  "datetime",
+  "timestamp",
+  "temporal",
+])
 
 function addMatch(
   matches: Map<IntentId, AccumulatedMatch>,
@@ -198,7 +205,10 @@ function normalizeKind(kind: string | undefined): IntentFieldKind {
   const value = kind?.trim().toLowerCase() ?? ""
   if (/^(num|int|float|double|decimal)/.test(value)) return "numeric"
   if (/^(cat|string|enum|nominal|ordinal)/.test(value)) return "categorical"
-  if (/^(date|time|temp)/.test(value)) return "date"
+  // Accept common date/time spellings, but do not turn unrelated schema
+  // types such as "temperature" or "template" into temporal fields.
+  const dateAlias = value.replace(/[\s_-]/g, "")
+  if (DATE_KIND_ALIASES.has(dateAlias)) return "date"
   if (/^bool/.test(value)) return "boolean"
   return "unknown"
 }
@@ -224,11 +234,21 @@ function collectSchemaMatches(
   fieldsInput: InferIntentOptions["fields"],
   matches: Map<IntentId, AccumulatedMatch>,
 ): void {
-  const source = fieldsInput?.length ? fieldsInput : query.trim().split(/\s+/)
+  // Without explicit schema fields, the query is one unknown field boundary
+  // rather than a list of one-word fields. This preserves phrase matching for
+  // callers using the schema-mode shorthand while explicit `fields` retain
+  // their real per-field boundaries below.
+  const source = fieldsInput?.length
+    ? fieldsInput
+    : query.trim()
+      ? [{ name: query }]
+      : []
   const fields = source.map((field) => (typeof field === "string" ? { name: field } : field))
   if (fields.length === 0) return
 
-  const fieldTokens = new Set(fields.flatMap((field) => normalizedFieldTokens(field.name)))
+  const fieldTokenSets = fields.map(
+    (field) => new Set(normalizedFieldTokens(field.name)),
+  )
   const kindCounts: Partial<Record<IntentFieldKind, number>> = {}
   for (const field of fields) {
     const kind = normalizeKind(field.kind)
@@ -245,7 +265,12 @@ function collectSchemaMatches(
         const signalTokens = normalizedFieldTokens(signal)
         return (
           signalTokens.length > 0 &&
-          signalTokens.every((token) => fieldTokens.has(token))
+          // A multi-token signal describes one field name. Pooling tokens
+          // across fields made { operating, margin } match "operating
+          // margin", even though no field actually carries that meaning.
+          fieldTokenSets.some((fieldTokens) =>
+            signalTokens.every((token) => fieldTokens.has(token)),
+          )
         )
       }).length
       const defaultMinimum = Math.min(2, names.length)
