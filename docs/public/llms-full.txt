@@ -270,7 +270,7 @@ All HOCs accept `annotations`. Coordinates use data field names.
 
 ## Theming
 
-CSS custom properties: `--semiotic-{bg, text, text-secondary, border, grid, primary, secondary, surface, success, danger, warning, error, info, focus, font-family, annotation-color, legend-font-size, title-font-size, tick-font-family, tick-font-size (12px), axis-label-font-size (12px), tooltip-{bg, text, radius, font-size, shadow}}`.
+CSS custom properties: `--semiotic-{bg, text, text-secondary, border, grid, primary, secondary, surface, success, danger, warning, error, info, focus, font-family, annotation-color, legend-font-size, legend-font-family, legend-font-weight, title-font-size, title-font-family, title-font-weight, tick-font-family, tick-font-size (12px), axis-label-font-size (12px), tooltip-{bg, text, radius, font-size, shadow}}`.
 
 ```jsx
 <ThemeProvider theme="tufte">                                            {/* named preset */}
@@ -279,7 +279,7 @@ CSS custom properties: `--semiotic-{bg, text, text-secondary, border, grid, prim
 
 **Color priority** (with `colorBy`): CategoryColorProvider/LinkedCharts map > `colorScheme` > ThemeProvider `colors.categorical` > `"category10"`. `colorScheme` accepts a named scheme (`"tableau10"`), an array, or a `{category: color}` **object map** for exact per-category colors (no array ordering to keep in sync).
 Presets: `light`, `dark`, `high-contrast`, `pastels`(-dark), `bi-tool`(-dark), `italian`(-dark), `tufte`(-dark), `journalist`(-dark), `playful`(-dark), `carbon`(-dark).
-Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
+Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `designTokensToTheme(tokens)`, `resolveThemePreset(name)`. Native `semiotic.*` tokens round-trip title/legend size, family, and weight along with the base typography and color roles.
 
 **Semantic status roles** (every preset): `colors.success/danger/warning/error/info` + `secondary`/`surface`. Each emits as `--semiotic-{role}`. Use for status-driven charts: `<Waterfall positiveColor="var(--semiotic-success)" negativeColor="var(--semiotic-danger)" />`, `<Swimlane color="var(--semiotic-warning)" />`, status annotations.
 
@@ -308,7 +308,7 @@ Heuristic chart-suggestion engine — no LLM required. Charts ship capability de
 - **`rederiveProfile(profile, { primary? })`** → a new coherent `ChartDataProfile` after candidate edits or explicit primary-role changes. It revalidates assignments and recomputes category/series/x counts, repeated/monotonic x, provenance, and stackability together; assigning an identifier or non-candidate throws.
 - **`deriveProfileFields(data, candidates, fieldRoles, { primary? })`** → the lower-level derived-field projection used by `rederiveProfile`; use it when a profiler adapter owns candidates separately from the complete profile object.
 - **`suggestCharts(data, { intent?, allow?, deny?, maxResults?, includeVariants?, minScore?, audience?, identifiers?, fieldRoles? })`** → ranked `Suggestion[]` with `{ component, family, importPath, variant?, score, intentScores, rubric, reasons, caveats, props, propContract }`. `props` is spreadable directly. `propContract` declares `componentKind`, whether chart-HOC defaults apply, the heading prop, and the valid mode vocabulary; the same per-component contracts live in `ai/surface-manifest.json#components.suggestionPropContracts`. Capability `fieldPolicy` declarations are enforced after `buildProps`, so custom accessor vocabularies and direct values cannot reintroduce an identifier as a measure. **Receivability**: set `audience.receptionModality` (`visual` default | `screen-reader` | `sonified` | `agent`); a non-visual channel audits each candidate and down-ranks charts the audience can't receive there (8-slice pie for a screen reader), adding the audit's findings to `caveats[]` (familiarity and receivability are separate axes). `accessibilityCaveats(auditResult)` distils any audit into the same caveat strings.
-- **`scoreChart(component, data, { intent?, variantKey? })`** → evaluate a specific chart for a dataset.
+- **`scoreChart(component, data, { intent?, variantKey?, audience?, identifiers?, fieldRoles? })`** → evaluate a specific chart for a dataset. It applies the same audience familiarity, target, and non-visual receivability policy as `suggestCharts`, so a direct fit score and a ranked recommendation cannot disagree about the intended audience.
 - **`useChartSuggestions(data, options)`** → memoized React hook returning `{ suggestions, profile }`.
 - **`registerChartCapability(capability)`** / **`unregisterChartCapability(name)`** — runtime registration for custom charts.
 - **Intent taxonomy** (13 built-in): `trend`, `compare-series`, `compare-categories`, `rank`, `part-to-whole`, `distribution`, `correlation`, `flow`, `hierarchy`, `geo`, `outlier-detection`, `composition-over-time`, `change-detection`. Extend via `registerIntent`. A registered descriptor may declare `composes` plus optional `weights`; requested custom scores are blended from existing capability scores without changing no-intent/default rankings. `inferIntent(query, { mode: "schema", fields?, minimumConfidence? })` opts into whole-token field signals and typed data-shape signals; natural-language prose remains the default mode.

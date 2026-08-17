@@ -192,6 +192,16 @@
           "kind": "types",
           "path": "dist/semiotic-experimental.d.ts",
           "sourceMap": false
+        },
+        {
+          "kind": "node.import",
+          "path": "dist/semiotic-experimental-node.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "node.require",
+          "path": "dist/semiotic-experimental.min.js",
+          "sourceMap": false
         }
       ],
       "esm": true,
@@ -702,6 +712,16 @@
         {
           "kind": "types",
           "path": "dist/semiotic-server-edge.d.ts",
+          "sourceMap": false
+        },
+        {
+          "kind": "node.import",
+          "path": "dist/semiotic-server-edge-node.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "node.require",
+          "path": "dist/semiotic-server-edge.min.js",
           "sourceMap": false
         }
       ],

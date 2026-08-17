@@ -470,4 +470,38 @@ describe("scoreChart", () => {
     expect(result.status).toBe("rejected")
     if (result.status === "rejected") expect(result.reason).toMatch(/no capability/i)
   })
+
+  it("applies audience policy and receivability to built-in scores", () => {
+    const eightCategories = Array.from(
+      { length: 8 },
+      (_, i) => ({ vendor: `V${i}`, share: 20 - i }),
+    )
+    const baseline = scoreChart("PieChart", eightCategories, {
+      intent: "part-to-whole",
+    })
+    const audienceAdjusted = scoreChart("PieChart", eightCategories, {
+      intent: "part-to-whole",
+      audience: {
+        familiarity: { PieChart: 1 },
+        targets: {
+          PieChart: {
+            direction: "decrease",
+            weight: 2,
+            reason: "Prefer a more precise ranked view.",
+          },
+        },
+        receptionModality: "screen-reader",
+      },
+    })
+
+    expect(baseline.status).toBe("ok")
+    expect(audienceAdjusted.status).toBe("ok")
+    if (baseline.status !== "ok" || audienceAdjusted.status !== "ok") return
+
+    expect(audienceAdjusted.score).toBeLessThan(baseline.score - 2)
+    expect(audienceAdjusted.rubric.familiarity).toBe(1)
+    expect(audienceAdjusted.reasons).toContain("Prefer a more precise ranked view.")
+    expect(audienceAdjusted.reasons.some((reason) => reason.includes("screen reader"))).toBe(true)
+    expect(audienceAdjusted.caveats.some((caveat) => /slice|density/i.test(caveat))).toBe(true)
+  })
 })

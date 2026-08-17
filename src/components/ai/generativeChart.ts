@@ -42,7 +42,7 @@ export type RenderFn = (
   props: Datum
 ) => { svg: string; evidence: RenderEvidence }
 
-/** A bounded-by-input-identity cache for injected render-evidence oracles. */
+/** A bounded cache for injected render-evidence oracles. */
 export interface RenderEvidenceMemo {
   /** Pass this function as `PrepareChartOptions.render` or `EvaluateChartOptions.render`. */
   render: RenderFn
@@ -80,44 +80,104 @@ function memoToken(
 /**
  * Memoize an injected `(component, props) → SVG + evidence` oracle safely.
  *
- * Results are scoped to the identity of `props.data` and to every other prop's
- * primitive value or object/function identity. That avoids serializing user
- * callbacks or accidentally sharing a result across distinct datasets. Treat
- * data as immutable; call `clear()` after an in-place mutation or whenever an
- * external renderer dependency changes.
+ * Results are scoped to the identity of the chart's primary input (`data`,
+ * `nodes`, or `edges`) and to every other prop's primitive value or
+ * object/function identity. Value-backed components (for example BigNumber)
+ * use a small bounded configuration cache because their input is commonly a
+ * scalar rather than an array. This avoids serializing user callbacks or
+ * accidentally sharing a result across distinct inputs. Treat inputs as
+ * immutable; call `clear()` after an in-place mutation or whenever an external
+ * renderer dependency changes.
  */
+const MEMO_INPUT_PROPS = ["data", "nodes", "edges"] as const
+const VALUE_CONFIG_CACHE_LIMIT = 64
+
+interface MemoInput {
+  prop: string
+  value: object
+}
+
+function primaryMemoInput(props: Datum): MemoInput | undefined {
+  for (const prop of MEMO_INPUT_PROPS) {
+    const value = props[prop]
+    if (value !== null && (typeof value === "object" || typeof value === "function")) {
+      return { prop, value: value as object }
+    }
+  }
+  return undefined
+}
+
+function memoCacheKey(
+  component: string,
+  props: Datum,
+  objectIds: WeakMap<object, number>,
+  nextObjectId: { value: number },
+  excludedProp?: string,
+): string {
+  const key = Object.keys(props)
+    .filter((name) => name !== excludedProp)
+    .sort()
+    .map((name) => [name, memoToken(props[name], objectIds, nextObjectId)])
+  // Keep the component and sorted prop pairs as a structured value. Raw
+  // delimiter joining let string-valued props manufacture a second pair and
+  // collide with a distinct configuration.
+  return JSON.stringify([component, key])
+}
+
 export function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo {
-  let byData = new WeakMap<object, Map<string, ReturnType<RenderFn>>>()
+  let byInput = new WeakMap<object, Map<string, ReturnType<RenderFn>>>()
+  let valueConfigurations = new Map<string, ReturnType<RenderFn>>()
   const objectIds = new WeakMap<object, number>()
   const nextObjectId = { value: 1 }
 
   return {
     render(component, props) {
-      const data = props.data
-      if (data === null || (typeof data !== "object" && typeof data !== "function")) {
-        return render(component, props)
+      const input = primaryMemoInput(props)
+      if (!input) {
+        // Value components usually receive a primitive `value`, so they cannot
+        // use a WeakMap identity key. Keep their fully-keyed configurations
+        // bounded rather than making every BigNumber render miss the cache.
+        if (!Object.prototype.hasOwnProperty.call(props, "value")) {
+          return render(component, props)
+        }
+        const cacheKey = memoCacheKey(component, props, objectIds, nextObjectId)
+        const cached = valueConfigurations.get(cacheKey)
+        if (cached !== undefined) {
+          // Refresh insertion order so this behaves as a compact LRU cache.
+          valueConfigurations.delete(cacheKey)
+          valueConfigurations.set(cacheKey, cached)
+          return cached
+        }
+        const result = render(component, props)
+        if (valueConfigurations.size >= VALUE_CONFIG_CACHE_LIMIT) {
+          const oldest = valueConfigurations.keys().next().value as string | undefined
+          if (oldest !== undefined) valueConfigurations.delete(oldest)
+        }
+        valueConfigurations.set(cacheKey, result)
+        return result
       }
-      const key = Object.keys(props)
-        .filter((name) => name !== "data")
-        .sort()
-        .map((name) => [name, memoToken(props[name], objectIds, nextObjectId)])
-      // Keep the component and sorted prop pairs as a structured value. Raw
-      // delimiter joining let string-valued props manufacture a second pair
-      // and collide with a distinct configuration.
-      const cacheKey = JSON.stringify([component, key])
-      let entries = byData.get(data)
+
+      const cacheKey = memoCacheKey(
+        component,
+        props,
+        objectIds,
+        nextObjectId,
+        input.prop,
+      )
+      let entries = byInput.get(input.value)
       if (!entries) {
         entries = new Map()
-        byData.set(data, entries)
+        byInput.set(input.value, entries)
       }
       const cached = entries.get(cacheKey)
-      if (cached) return cached
+      if (cached !== undefined) return cached
       const result = render(component, props)
       entries.set(cacheKey, result)
       return result
     },
     clear() {
-      byData = new WeakMap()
+      byInput = new WeakMap()
+      valueConfigurations = new Map()
     },
   }
 }
