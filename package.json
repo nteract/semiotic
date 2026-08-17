@@ -332,7 +332,7 @@
     "check:mcp-registry": "node scripts/check-mcp-registry.mjs",
     "check:mcp-registry-live": "node scripts/check-mcp-registry-live.mjs",
     "check:surface": "node scripts/check-surface-parity.js",
-    "check:package-surface": "node scripts/generate-package-surface-manifest.mjs --check && node scripts/check-public-entrypoints.mjs",
+    "check:package-surface": "node scripts/generate-package-surface-manifest.mjs --check && node --test scripts/public-entrypoints.test.mjs && node scripts/check-public-entrypoints.mjs",
     "check:ai-surface": "node scripts/generate-ai-surface-manifest.mjs --check && node --test scripts/ai-surface-manifest.test.mjs",
     "check:agent-skill": "node scripts/check-agent-skill.mjs",
     "eval:ai": "node scripts/run-ai-evals.mjs",
