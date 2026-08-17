@@ -9,7 +9,6 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
-import { fileURLToPath } from "node:url"
 import { semioticSourceAliases } from "../vite.shared.mjs"
 import {
   REPO_ROOT,
