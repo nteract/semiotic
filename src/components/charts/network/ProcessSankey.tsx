@@ -27,9 +27,7 @@ import {
 } from "./processSankey/streamingLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { Datum } from "../shared/datumTypes"
-import type {
-  ChartAccessor
-} from "../shared/types"
+import type { ChartAccessor } from "../shared/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
@@ -39,6 +37,7 @@ import type {
   BezierCache
 } from "../../stream/networkTypes"
 import type { LegendGroup } from "../../types/legendTypes"
+import { clampLegendReservation, reserveLegendMargin } from "../../legendLayout"
 import type { ProcessSankeyProps } from "./ProcessSankeyProps"
 
 export type {
@@ -47,7 +46,6 @@ export type {
 } from "./ProcessSankeyProps"
 
 type TimeLike = ProcessSankeyTimeLike
-
 
 /**
  * ProcessSankey draws timed process flow as lane bands and ribbons on a real time axis.
@@ -324,21 +322,6 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
   // also reserve the ProcessSankey-generated legend on a different side.
   const hasFrameLegend = Object.hasOwn(frameProps, "legend")
   const legendActive = !hasFrameLegend && (showLegend ?? !!colorBy) && !!colorBy
-  const margin = useMemo(() => {
-    const merged = { ...setup.margin }
-    if (legendActive) {
-      if (setup.legendPosition === "right" && merged.right < 140) merged.right = 140
-      else if (setup.legendPosition === "left" && merged.left < 140) merged.left = 140
-      else if (setup.legendPosition === "top" && merged.top < 50) merged.top = 50
-      else if (setup.legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
-    }
-    return merged
-  }, [setup.margin, setup.legendPosition, legendActive])
-
-  const plotW = width - margin.left - margin.right
-  const plotH = height - margin.top - margin.bottom
-  const timelineExtent = orientation === "vertical" ? plotH : plotW
-
   const colorOf = useCallback(
     (id: string, idx: number): string => {
       if (colorBy && rawNodes) {
@@ -356,6 +339,70 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     },
     [colorBy, rawNodes, rawNodeById, setup.colorScale, setup.effectivePalette]
   )
+  const legendNode = useMemo(() => {
+    if (!legendActive || !colorBy) return undefined
+    const seen = new Map<string, { label: string; color: string }>()
+    ;(rawNodes ?? []).forEach((n, i) => {
+      const v = readChartAccessor(colorBy as ChartAccessor<TNode, string>, n)
+      const label = v == null ? "" : String(v)
+      if (!label || seen.has(label)) return
+      seen.set(label, { label, color: colorOf(getNodeId(n), i) })
+    })
+    const items = Array.from(seen.values())
+    if (items.length === 0) return undefined
+    const legendGroups: LegendGroup[] = [
+      {
+        type: "fill",
+        label: "",
+        items,
+        styleFn: (d: { color?: string }) => {
+          const c = d.color || "#333"
+          return { fill: c, stroke: c }
+        }
+      }
+    ]
+    return { legendGroups }
+  }, [legendActive, colorBy, rawNodes, colorOf, getNodeId])
+  const renderedLegend = hasFrameLegend ? frameProps.legend : legendNode
+  const margin = useMemo(() => {
+    const merged = { ...setup.margin }
+    if (renderedLegend) {
+      const baseline = { ...merged }
+      const minimumMargin =
+        setup.legendPosition === "right" || setup.legendPosition === "left"
+          ? 140
+          : setup.legendPosition === "top"
+            ? 50
+            : 80
+      reserveLegendMargin(merged, {
+        legend: renderedLegend,
+        position: setup.legendPosition,
+        size: [width, height],
+        hasTitle: Boolean(title),
+        legendLayout: frameProps.legendLayout,
+        minimumMargin
+      })
+      clampLegendReservation(
+        merged,
+        baseline,
+        [width, height],
+        setup.legendPosition
+      )
+    }
+    return merged
+  }, [
+    setup.margin,
+    setup.legendPosition,
+    renderedLegend,
+    width,
+    height,
+    title,
+    frameProps.legendLayout
+  ])
+
+  const plotW = width - margin.left - margin.right
+  const plotH = height - margin.top - margin.bottom
+  const timelineExtent = orientation === "vertical" ? plotH : plotW
 
   const sceneInput: BuildScenesInput | null = useMemo(() => {
     if (plotW <= 0 || plotH <= 0) return null
@@ -470,31 +517,6 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     )
   }, [warnings])
 
-  const legendNode = useMemo(() => {
-    if (!legendActive || !colorBy) return undefined
-    const seen = new Map<string, { label: string; color: string }>()
-    ;(rawNodes ?? []).forEach((n, i) => {
-      const v = readChartAccessor(colorBy as ChartAccessor<TNode, string>, n)
-      const label = v == null ? "" : String(v)
-      if (!label || seen.has(label)) return
-      seen.set(label, { label, color: colorOf(getNodeId(n), i) })
-    })
-    const items = Array.from(seen.values())
-    if (items.length === 0) return undefined
-    const legendGroups: LegendGroup[] = [
-      {
-        type: "fill",
-        label: "",
-        items,
-        styleFn: (d: { color?: string }) => {
-          const c = d.color || "#333"
-          return { fill: c, stroke: c }
-        }
-      }
-    ]
-    return { legendGroups }
-  }, [legendActive, colorBy, rawNodes, colorOf, getNodeId])
-  const renderedLegend = hasFrameLegend ? frameProps.legend : legendNode
   const renderedLegendMarginReserved =
     renderedLegend !== undefined && !Object.hasOwn(frameProps, "margin")
 
@@ -659,7 +681,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
         legend={renderedLegend}
         legendPosition={setup.legendPosition}
         {...(renderedLegendMarginReserved && {
-          __legendMarginReservedFor: renderedLegend,
+          __legendMarginReservedFor: renderedLegend
         })}
         {...buildCustomBehaviorProps({
           linkedHover,

@@ -63,6 +63,9 @@ describe("StreamPhysicsFrame settled SSR chrome", () => {
     expect(html).toContain("Body note")
     expect(html).toContain("Barrier note")
     expect(html).toContain("Settled summary")
+    expect(html).toMatch(
+      /<clipPath id="physics-[^"]+-plot-clip"><rect width="127" height="140"><\/rect><\/clipPath>/
+    )
     expect(html).not.toContain("<table")
     expect(html).not.toContain("aria-live")
   })

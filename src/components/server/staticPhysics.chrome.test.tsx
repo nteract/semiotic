@@ -86,8 +86,13 @@ describe("static physics chrome", () => {
     const svg = renderToStaticSVG("physics", {
       ...movingFrame,
       annotations: [
-        { id: "body-label", type: "text", bodyId: "moving", label: "Body alias" },
-        { id: "custom", type: "custom" },
+        {
+          id: "body-label",
+          type: "text",
+          bodyId: "moving",
+          label: "Body alias"
+        },
+        { id: "custom", type: "custom" }
       ],
       svgAnnotationRules: (annotation, _index, context) => {
         const xScale = context.scales?.x
@@ -95,13 +100,17 @@ describe("static physics chrome", () => {
           domain: xScale?.domain?.(),
           inverted: typeof xScale?.invert,
           xAccessor: context.xAccessor,
-          yAccessor: context.yAccessor,
+          yAccessor: context.yAccessor
         })
-        return annotation.type === "custom"
-          ? <text data-testid="physics-custom-annotation">Custom annotation</text>
-          : null
+        return annotation.type === "custom" ? (
+          <text data-testid="physics-custom-annotation">Custom annotation</text>
+        ) : null
       },
-      legend: <g data-testid="raw-physics-legend"><text>Raw physics legend</text></g>,
+      legend: (
+        <g data-testid="raw-physics-legend">
+          <text>Raw physics legend</text>
+        </g>
+      )
     })
 
     expect(svg).toContain("Body alias")
@@ -110,9 +119,12 @@ describe("static physics chrome", () => {
     expect(svg).toContain(
       '<g transform="translate(97, 0)"><g data-testid="raw-physics-legend"'
     )
+    expect(svg).toContain(
+      '<clipPath id="physics-plot-clip"><rect width="87" height="100"></rect></clipPath>'
+    )
     expect(contexts).toEqual([
-      { domain: [0, 200], inverted: "function", xAccessor: "x", yAccessor: "y" },
-      { domain: [0, 200], inverted: "function", xAccessor: "x", yAccessor: "y" },
+      { domain: [0, 87], inverted: "function", xAccessor: "x", yAccessor: "y" },
+      { domain: [0, 87], inverted: "function", xAccessor: "x", yAccessor: "y" }
     ])
   })
 
