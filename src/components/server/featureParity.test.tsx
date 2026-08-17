@@ -152,6 +152,31 @@ describe("SSR feature parity: annotations", () => {
     expect(svg).toContain("PROBE")
   })
 
+  it("network passes projected nodes to shared highlight annotations", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+      nodeIDAccessor: "id",
+      size: [400, 300],
+      annotations: [{ type: "highlight", field: "id", value: "a", color: "#a3176f" }],
+    } as StaticNetworkProps)
+    expect(svg).toContain("#a3176f")
+  })
+
+  it("network resolves pointId-anchored annotations from the laid-out scene", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+      nodeIDAccessor: "id",
+      size: [400, 300],
+      annotations: [{ type: "label", pointId: "a", label: "Pinned network node" }],
+    } as StaticNetworkProps)
+    expect(svg).toContain("Pinned network")
+    expect(svg).toContain("node")
+  })
+
   it("geo renders annotation overlay group with [lon, lat] coordinates", () => {
     // Geo annotations use `coordinates: [lon, lat]`; the resolved
     // projection from GeoPipelineStore.scales projects them to pixel space.
@@ -171,6 +196,50 @@ describe("SSR feature parity: annotations", () => {
     expect(svg).toContain("semiotic-annotations")
     expect(svg).toContain("PROBE")
   })
+
+  it("geo projects shared bracket annotations before rendering them", () => {
+    const svg = renderGeoToStaticSVG({
+      chartType: "geo",
+      areas: [{
+        type: "Feature" as const,
+        geometry: { type: "Polygon" as const, coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] },
+        properties: {},
+      }],
+      projection: "equalEarth",
+      size: [400, 300],
+      annotations: [{
+        type: "bracket",
+        coordinates: [5, 5],
+        width: 24,
+        height: 16,
+        label: "Geo bracket",
+      }],
+    } as StaticGeoProps)
+    expect(svg).toContain("Geo bracket")
+  })
+
+  it("geo resolves pointId-anchored annotations from projected point marks", () => {
+    const svg = renderGeoToStaticSVG({
+      chartType: "geo",
+      areas: [{
+        type: "Feature" as const,
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [[[0, 40], [10, 40], [10, 50], [0, 50], [0, 40]]],
+        },
+        properties: {},
+      }],
+      points: [{ id: "paris", lon: 2.35, lat: 48.86 }],
+      xAccessor: "lon",
+      yAccessor: "lat",
+      pointIdAccessor: "id",
+      projection: "equalEarth",
+      size: [400, 300],
+      annotations: [{ type: "label", pointId: "paris", label: "Pinned geo point" }],
+    } as StaticGeoProps)
+    expect(svg).toContain("Pinned geo")
+    expect(svg).toContain("point")
+  })
 })
 
 // ── Legend ─────────────────────────────────────────────────────────────
@@ -184,6 +253,14 @@ describe("SSR feature parity: annotations", () => {
 
 const EXPLICIT_LEGEND_MARKER = "data-explicit-legend-marker"
 const explicitReactNodeLegend = (<g data-explicit-legend-marker="yes"><text>Custom</text></g>)
+const explicitConfigLegend = {
+  legendGroups: [{
+    label: "",
+    type: "fill" as const,
+    styleFn: () => ({ fill: "#f00" }),
+    items: [{ label: "Empty config legend" }],
+  }],
+}
 
 describe("SSR feature parity: legend", () => {
   it("xy: explicit ReactNode `legend` prop wins over auto-build", () => {
@@ -202,6 +279,55 @@ describe("SSR feature parity: legend", () => {
     expect(svg).toContain(`id="legend"`)
     expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
     expect(svg).not.toContain("semiotic-legend")
+  })
+
+  it.each([
+    ["xy"],
+    ["ordinal"],
+    ["network"],
+    ["geo"],
+  ] as const)("%s positions an explicit ReactNode legend like the live overlay", (frame) => {
+    const svg = FRAME_RENDERERS[frame]({ legend: explicitReactNodeLegend })
+    expect(svg).toMatch(
+      /id="legend"><g transform="translate\([^)]*\)"><g data-explicit-legend-marker="yes"/
+    )
+  })
+
+  it.each([
+    ["xy", { data: [] }],
+    ["ordinal", { data: [] }],
+    ["network", { nodes: [], edges: [] }],
+    ["geo", { areas: [] }],
+  ] as const)("%s keeps a raw legend when its static scene is empty", (frame, emptyProps) => {
+    const svg = FRAME_RENDERERS[frame]({ ...emptyProps, legend: explicitReactNodeLegend })
+    expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
+    expect(svg).toMatch(/id="legend"><g transform="translate\([^)]*\)">/)
+  })
+
+  it.each([
+    ["xy", { data: [] }],
+    ["ordinal", { data: [] }],
+    ["network", { nodes: [], edges: [] }],
+    ["geo", { areas: [] }],
+  ] as const)("%s keeps a configured legend when its static scene is empty", (frame, emptyProps) => {
+    const svg = FRAME_RENDERERS[frame]({ ...emptyProps, legend: explicitConfigLegend })
+    expect(svg).toContain("Empty config legend")
+    expect(svg).toContain('id="legend"')
+  })
+
+  it("xy reserves the shared raw-legend box before drawing the plot", () => {
+    const right = FRAME_RENDERERS.xy({ legend: explicitReactNodeLegend })
+    expect(right).toContain('id="data-area" transform="translate(70,50)"')
+    expect(right).toContain('<rect x="0" y="0" width="217" height="190"')
+    expect(right).toContain('id="legend"><g transform="translate(297, 50)"')
+
+    const bottom = FRAME_RENDERERS.xy({
+      xLabel: "Month",
+      legend: explicitReactNodeLegend,
+      legendPosition: "bottom",
+    })
+    expect(bottom).toContain('<rect x="0" y="0" width="290" height="174"')
+    expect(bottom).toContain('id="legend"><g transform="translate(70, 280)"')
   })
 
   it("xy: auto-build includes the legend group element when no explicit legend", () => {

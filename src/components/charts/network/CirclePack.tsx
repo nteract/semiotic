@@ -140,6 +140,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     colorScheme,
     showLegend: false,
     legendInteraction,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -202,6 +203,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
       hierarchySum={hierarchySumFn}

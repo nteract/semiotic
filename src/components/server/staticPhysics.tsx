@@ -11,9 +11,10 @@ import { themeToCSSVariables } from "../store/themeCSSVariables"
 import { resolveTheme } from "./themeResolver"
 import { resolvePhysicsFramePipelineConfig } from "../stream/physics/physicsFramePipelineConfig"
 import {
-  renderPhysicsSettledChrome,
-  type PhysicsSettledChromeProps
-} from "../stream/physics/physicsSettledChrome"
+  renderStaticPhysicsChrome,
+  type StaticPhysicsChromeProps,
+} from "./staticPhysicsChrome"
+import type { StaticAnnotationRenderResult } from "./staticAnnotations"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
 
 export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
@@ -23,7 +24,7 @@ export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   size?: [number, number]
   theme?: Parameters<typeof resolveTheme>[0]
   _idPrefix?: string
-} & PhysicsSettledChromeProps &
+} & StaticPhysicsChromeProps &
   Pick<StreamPhysicsFrameProps, "regionEffects" | "seed">
 
 const DEFAULT_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -38,6 +39,7 @@ export function renderPhysicsFrame(
     props.theme === undefined ? {} : themeToCSSVariables(theme)
   const authoredBodyStyle = props.bodyStyle
   const margin = { ...DEFAULT_MARGIN, ...props.margin }
+  let annotationRender: StaticAnnotationRenderResult | undefined
   const config = resolvePhysicsFramePipelineConfig({
     annotations: props.annotations,
     chartId: props.chartId,
@@ -78,8 +80,11 @@ export function renderPhysicsFrame(
     charge: props.charge,
     idPrefix: props.idPrefix ?? props._idPrefix ?? "physics",
     margin,
-    renderChrome: (scene) =>
-      renderPhysicsSettledChrome(scene, props, size, margin)
+    renderChrome: (scene) => {
+      const chrome = renderStaticPhysicsChrome(scene, props, size, margin, theme)
+      annotationRender = chrome.annotationRender
+      return chrome.node
+    }
   })
   if (sink) {
     sink.evidence = buildEvidence({
@@ -90,6 +95,7 @@ export function renderPhysicsFrame(
       title: props.title,
       description: props.description,
       annotations: props.annotations,
+      annotationRender,
       extraWarnings: [
         ...(result.scene.sceneNodes.length === 0
           ? ["PHYSICS_EMPTY_SCENE"]

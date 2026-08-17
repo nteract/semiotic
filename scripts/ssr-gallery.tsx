@@ -27,6 +27,11 @@ import { ForceDirectedGraph } from "../src/components/charts/network/ForceDirect
 import { SankeyDiagram } from "../src/components/charts/network/SankeyDiagram"
 import { TreeDiagram } from "../src/components/charts/network/TreeDiagram"
 import { Treemap } from "../src/components/charts/network/Treemap"
+import {
+  AXIS_FRAME_DEFAULT_MARGIN,
+  CENTERED_NETWORK_FRAME_DEFAULT_MARGIN,
+  NETWORK_FRAME_DEFAULT_MARGIN,
+} from "../src/components/stream/frameDefaultMargins"
 
 // Standalone SSR
 import {
@@ -250,6 +255,9 @@ function card(title: string, svg: string): string {
 const W = 500
 const H = 320
 const pieSize = 360
+// Standalone frame APIs are public in their own right. Keep the gallery
+// explicit about the chrome they need instead of masking a regression with a
+// card-level overflow rule.
 
 const charts: string[] = []
 
@@ -334,6 +342,7 @@ try {
     xAccessor: "month",
     yAccessor: "revenue",
     size: [W, H],
+    margin: { ...AXIS_FRAME_DEFAULT_MARGIN },
     showAxes: true,
     xLabel: "Month",
     yLabel: "Revenue",
@@ -349,6 +358,7 @@ try {
     xAccessor: "age",
     yAccessor: "income",
     size: [W, H],
+    margin: { ...AXIS_FRAME_DEFAULT_MARGIN },
     showAxes: true,
   })))
 } catch (e: any) {
@@ -362,6 +372,7 @@ try {
     oAccessor: "department",
     rAccessor: "headcount",
     size: [W, H],
+    margin: { ...AXIS_FRAME_DEFAULT_MARGIN },
     showAxes: true,
   })))
 } catch (e: any) {
@@ -389,6 +400,7 @@ try {
     targetAccessor: "target",
     valueAccessor: "value",
     size: [W, H],
+    margin: { ...NETWORK_FRAME_DEFAULT_MARGIN },
   })))
 } catch (e: any) {
   standaloneCharts.push(card("Sankey (standalone)", `<div style="color:red">${e.message}</div>`))
@@ -403,6 +415,7 @@ try {
     sourceAccessor: "source",
     targetAccessor: "target",
     size: [W, H],
+    margin: { ...CENTERED_NETWORK_FRAME_DEFAULT_MARGIN },
   })))
 } catch (e: any) {
   standaloneCharts.push(card("Force (standalone)", `<div style="color:red">${e.message}</div>`))

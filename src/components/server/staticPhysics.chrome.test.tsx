@@ -76,6 +76,46 @@ describe("static physics chrome", () => {
     )
   })
 
+  it("preserves live physics annotation scales, body aliases, and raw legend nodes", () => {
+    const contexts: Array<{
+      domain?: unknown
+      inverted?: unknown
+      xAccessor?: string
+      yAccessor?: string
+    }> = []
+    const svg = renderToStaticSVG("physics", {
+      ...movingFrame,
+      annotations: [
+        { id: "body-label", type: "text", bodyId: "moving", label: "Body alias" },
+        { id: "custom", type: "custom" },
+      ],
+      svgAnnotationRules: (annotation, _index, context) => {
+        const xScale = context.scales?.x
+        contexts.push({
+          domain: xScale?.domain?.(),
+          inverted: typeof xScale?.invert,
+          xAccessor: context.xAccessor,
+          yAccessor: context.yAccessor,
+        })
+        return annotation.type === "custom"
+          ? <text data-testid="physics-custom-annotation">Custom annotation</text>
+          : null
+      },
+      legend: <g data-testid="raw-physics-legend"><text>Raw physics legend</text></g>,
+    })
+
+    expect(svg).toContain("Body alias")
+    expect(svg).toContain("Custom annotation")
+    expect(svg).toContain("Raw physics legend")
+    expect(svg).toContain(
+      '<g transform="translate(97, 0)"><g data-testid="raw-physics-legend"'
+    )
+    expect(contexts).toEqual([
+      { domain: [0, 200], inverted: "function", xAccessor: "x", yAccessor: "y" },
+      { domain: [0, 200], inverted: "function", xAccessor: "x", yAccessor: "y" },
+    ])
+  })
+
   it("installs barrier annotations before settling the static simulation", () => {
     const free = renderToStaticSVG("physics", movingFrame)
     const blocked = renderToStaticSVG("physics", {

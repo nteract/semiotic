@@ -8,7 +8,6 @@
 import type { Datum } from "../../charts/shared/datumTypes"
 import * as React from "react"
 import type { ReactNode } from "react"
-import { scaleLinear } from "d3-scale"
 import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import { renderLegendFromConfig } from "../legendRenderer"
 import { ANNOTATION_DISCLOSURE_REVEAL_CSS } from "../../charts/shared/annotationHierarchy"
@@ -21,35 +20,24 @@ import {
   type AutoPlaceAnnotations
 } from "../../recipes/annotationLayout"
 import type { AnnotationContext } from "../../realtime/types"
-import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import {
   useAnnotationActivationOptions,
   type OnAnnotationActivateCallback
 } from "../../charts/shared/annotationActivation"
+import { SVGChartTitle } from "../SVGChartTitle"
+import {
+  buildPhysicsAnnotationContext,
+  normalizePhysicsAnnotations,
+  type PhysicsAnnotationAnchorNode,
+} from "./physicsAnnotationContext"
 
-export type PhysicsAnnotationAnchorNode = {
-  pointId?: string
-  x: number
-  y: number
-  r: number
-}
-
-function bodyRadius(body: PhysicsBodyState): number {
-  if (body.shape.type === "circle") return body.shape.radius
-  return Math.max(body.shape.width, body.shape.height) / 2
-}
-
-export function bodiesToAnnotationAnchors(
-  bodies: readonly PhysicsBodyState[]
-): PhysicsAnnotationAnchorNode[] {
-  return bodies.map((body) => ({
-    pointId: body.id,
-    x: body.x,
-    y: body.y,
-    r: Math.max(1, bodyRadius(body))
-  }))
-}
+export {
+  bodiesToAnnotationAnchors,
+  buildPhysicsAnnotationContext,
+  normalizePhysicsAnnotations,
+} from "./physicsAnnotationContext"
+export type { PhysicsAnnotationAnchorNode } from "./physicsAnnotationContext"
 
 export interface PhysicsSVGOverlayProps {
   width: number
@@ -80,46 +68,6 @@ export interface PhysicsSVGOverlayProps {
   ) => ReactNode
   /** Optional foreground SVG already composed into the frame stack. */
   children?: ReactNode
-}
-
-/**
- * Pixel-space annotation context: identity scales so raw `x`/`y` on notes
- * read as canvas coordinates (physics has no data→pixel scale).
- */
-export function buildPhysicsAnnotationContext(options: {
-  width: number
-  height: number
-  pointNodes?: PhysicsAnnotationAnchorNode[]
-  data?: Datum[]
-}): AnnotationContext {
-  const { width, height, pointNodes = [], data } = options
-  const x = scaleLinear().domain([0, Math.max(1, width)]).range([0, Math.max(1, width)])
-  const y = scaleLinear().domain([0, Math.max(1, height)]).range([0, Math.max(1, height)])
-  return {
-    scales: { x, y },
-    width,
-    height,
-    frameType: "network",
-    pointNodes,
-    data,
-    xAccessor: "x",
-    yAccessor: "y"
-  }
-}
-
-/**
- * Normalize common physics annotation aliases onto Semiotic annotation shapes.
- * - `bodyId` → `pointId` (anchor to a live body)
- * - physics barrier/sensor notes still paint as x/y-threshold when typed that way
- */
-export function normalizePhysicsAnnotations(
-  annotations: Datum[] | undefined
-): Datum[] | undefined {
-  if (!annotations?.length) return annotations
-  return annotations.map((ann) => {
-    if (ann.pointId != null || ann.bodyId == null) return ann
-    return { ...ann, pointId: String(ann.bodyId) }
-  })
 }
 
 export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
@@ -226,28 +174,11 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
           {children}
         </g>
 
-        {title && typeof title === "string" ? (
-          <text
-            x={totalWidth / 2}
-            y={16}
-            textAnchor="middle"
-            fontWeight={600}
-            fill="var(--semiotic-text, #333)"
-            fontSize={14}
-            className="semiotic-chart-title"
-            style={{
-              fontSize: "var(--semiotic-title-font-size, 14px)",
-              fontFamily: "var(--semiotic-title-font-family, var(--semiotic-font-family, sans-serif))",
-              fontWeight: "var(--semiotic-title-font-weight, 600)",
-            }}
-          >
-            {title}
-          </text>
-        ) : title ? (
-          <foreignObject x={0} y={0} width={totalWidth} height={Math.max(margin.top, 28)}>
-            {title}
-          </foreignObject>
-        ) : null}
+        <SVGChartTitle
+          title={title}
+          totalWidth={totalWidth}
+          marginTop={Math.max(margin.top, 28)}
+        />
 
         {legend
           ? renderLegendFromConfig({

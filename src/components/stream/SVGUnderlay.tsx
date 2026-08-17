@@ -4,7 +4,12 @@ import { useMemo } from "react"
 import type { ReactNode } from "react"
 import { ticksForMode } from "../charts/shared/axisExtent"
 import type { StreamScales, XYFrameAxisConfig } from "./types"
-import { axisTickCount, defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
+import {
+  axisTickCount,
+  defaultTickFormat,
+  filterTicksByPixelDistance,
+  hasSameTickLabel,
+} from "./axisTickUtils"
 import { jaggedBaselinePath, resolveAxisLineStyle, resolveGridDash } from "./svgOverlayUtils"
 
 /** Props for the canvas-behind grid and axis-baseline SVG layer. */
@@ -67,7 +72,27 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
       ),
       0,
     )
-    return filterTicksByPixelDistance(candidates, Math.max(55, maxLabelWidth + 8))
+    const minPixelDistance = xAxis?.autoRotate
+      ? Math.max(20, Math.min(maxLabelWidth + 8, 55))
+      : Math.max(55, maxLabelWidth + 8)
+    let filtered = filterTicksByPixelDistance(candidates, minPixelDistance)
+    if (filtered.length > 1) {
+      filtered = filtered.filter((tick, index) =>
+        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
+      )
+    }
+    if (xAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !xAxis.tickValues) {
+      const domain = scales.x.domain() as [number, number]
+      const domainMax = domain[1]
+      const maxPx = scales.x(domainMax)
+      const nearestPx = filtered[filtered.length - 1].pixel
+      if (Math.abs(maxPx - nearestPx) > 1) {
+        const maxLabel = fmt(domainMax, filtered.length, rawValues)
+        if (Math.abs(maxPx - nearestPx) < minPixelDistance && filtered.length > 1) filtered = filtered.slice(0, -1)
+        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
+      }
+    }
+    return filtered
   }, [scales, axes, xFormat, width, axisExtent])
 
   const yTicks = useMemo(() => {
@@ -86,7 +111,24 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
       pixel: scales.y(v),
       label: fmt(v),
     }))
-    return filterTicksByPixelDistance(candidates, 22)
+    let filtered = filterTicksByPixelDistance(candidates, 22)
+    if (filtered.length > 1) {
+      filtered = filtered.filter((tick, index) =>
+        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
+      )
+    }
+    if (yAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !yAxis.tickValues) {
+      const domain = scales.y.domain() as [number, number]
+      const domainMax = domain[1]
+      const maxPx = scales.y(domainMax)
+      const nearestPx = filtered[filtered.length - 1].pixel
+      if (Math.abs(maxPx - nearestPx) > 1) {
+        const maxLabel = fmt(domainMax)
+        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
+        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
+      }
+    }
+    return filtered
   }, [scales, axes, yFormat, height, axisExtent])
 
   const hasGrid = showGrid && scales

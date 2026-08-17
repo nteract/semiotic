@@ -5,12 +5,7 @@ import Legend, { GradientLegend } from "../Legend"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
 import {
-  resolveAxisChromeGutter,
-  resolveHorizontalLegendHeight,
-  resolveLegendDistance,
-  resolveLegendEdgeGutter,
-  resolveLegendSideGutter,
-  resolveSideLegendWidth,
+  resolveLegendPlacement,
   type AxisChromeInput,
 } from "../legendLayout"
 
@@ -57,51 +52,18 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
 
   if (!legend) return null
 
+  const { x, y, width: legendWidth } = resolveLegendPlacement(legend, {
+    totalWidth,
+    totalHeight,
+    margin,
+    position: legendPosition,
+    legendLayout,
+    axisChrome: config.axisChrome,
+  })
   const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
-  const plotWidth = Math.max(0, totalWidth - margin.left - margin.right)
-  const legendWidth = Math.max(
-    1,
-    isHorizontal
-      ? legendLayout?.maxWidth ?? plotWidth
-      : resolveSideLegendWidth(legend, legendLayout),
-  )
-  const legendDistance = resolveLegendDistance(legend)
-  const sideGutter = resolveLegendSideGutter(legendLayout)
-  const edgeGutter = resolveLegendEdgeGutter(legendLayout)
-  // Auto-measured chrome describes the bottom axis, which XY/ordinal frames
-  // draw by default. A top axis is opt-in (`frameProps.axes` with
-  // `orient: "top"`), so a top legend only gets a gutter when one is set
-  // explicitly rather than guessing an axis that usually isn't there — the
-  // documented contract on `LegendLayout.axisGutter`. Extending
-  // auto-measurement to the top means threading a second, top-side
-  // `AxisChromeInput` through both this placement path and the margin
-  // reservation in `useChartLegendAndMargin`.
-  const bottomAxisGutter = resolveAxisChromeGutter(config.axisChrome, legendLayout)
-  const topAxisGutter = resolveAxisChromeGutter(undefined, legendLayout)
-  const legendHeight = resolveHorizontalLegendHeight(legend, plotWidth, legendLayout)
-  let tx: number, ty: number
-  if (legendPosition === "left") {
-    tx = Math.max(edgeGutter, margin.left - sideGutter - legendWidth - legendDistance); ty = margin.top
-  } else if (legendPosition === "top") {
-    tx = margin.left; ty = margin.top - topAxisGutter - legendDistance - legendHeight
-  } else if (legendPosition === "bottom") {
-    tx = margin.left
-    // Clamp so the gutter can never push the legend off the canvas when the
-    // reserved bottom margin is smaller than chrome + gap + legend (a wrapped
-    // legend under an axis title, or a caller-pinned margin). The lower bound
-    // keeps this no worse than the pre-gutter placement.
-    const plotBottom = totalHeight - margin.bottom
-    ty = Math.max(
-      plotBottom + legendDistance,
-      Math.min(plotBottom + bottomAxisGutter + legendDistance, totalHeight - legendHeight),
-    )
-  } else {
-    // right (default)
-    tx = Math.min(totalWidth - legendWidth - edgeGutter, totalWidth - margin.right + sideGutter + legendDistance); ty = margin.top
-  }
 
   return (
-    <g transform={`translate(${tx}, ${ty})`}>
+    <g transform={`translate(${x}, ${y})`}>
       {isGradientLegendConfig(legend)
         ? <GradientLegend
             config={legend.gradient}

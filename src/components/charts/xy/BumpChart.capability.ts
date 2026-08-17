@@ -2,6 +2,7 @@ import type { ChartCapability, ChartDataProfile, ChartVariant } from "../../ai/c
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 import { BUMP_CHART_SEMANTIC_VIABILITY } from "./BumpChart.semanticViability"
+import { bumpXIdentity } from "./bumpIdentity"
 
 export interface RankColumnOccupancy {
   columns: number
@@ -33,7 +34,7 @@ export function rankColumnOccupancy(
     const series = datum[seriesField]
     const value = Number(datum[valueField])
     if (column == null || series == null || !Number.isFinite(value)) continue
-    const key = String(column)
+    const key = bumpXIdentity(column)
     const values = seriesByColumn.get(key) ?? new Set<string>()
     values.add(String(series))
     seriesByColumn.set(key, values)

@@ -156,6 +156,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],

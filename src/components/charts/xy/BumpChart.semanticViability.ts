@@ -3,6 +3,7 @@ import type {
   SemanticViabilityRule
 } from "../../ai/chartCapabilityTypes"
 import type { Datum } from "../shared/datumTypes"
+import { bumpXIdentity } from "./bumpIdentity"
 
 export const BUMP_CHART_SEMANTIC_VIABILITY: SemanticViabilityRule = {
   kind: "rank-competition"
@@ -29,9 +30,7 @@ export function evaluateRankCompetition(
   data.forEach((datum, index) => {
     if (!Number.isFinite(Number(accessorValue(props.yAccessor, "y", datum, index)))) return
     const rawColumn = accessorValue(props.xAccessor, "x", datum, index)
-    const column = rawColumn instanceof Date
-      ? `date:${rawColumn.getTime()}`
-      : `${typeof rawColumn}:${String(rawColumn)}`
+    const column = bumpXIdentity(rawColumn)
     const columnSeries = seriesByColumn.get(column) ?? new Set<string>()
     columnSeries.add(String(accessorValue(props.lineBy, "series", datum, index)))
     seriesByColumn.set(column, columnSeries)

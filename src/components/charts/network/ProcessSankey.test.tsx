@@ -96,6 +96,25 @@ describe("ProcessSankey HOC", () => {
     expect(lastFrameProps?.margin[position]).toBe(minimum)
   })
 
+  it("uses frameProps legendPosition while reserving its chart-owned legend", () => {
+    render(
+      <TooltipProvider>
+        <ProcessSankey
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          domain={DOMAIN}
+          colorBy="category"
+          frameProps={{ legendPosition: "left" }}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(lastFrameProps?.legendPosition).toBe("left")
+    expect(lastFrameProps?.margin.left).toBe(140)
+    expect((lastFrameProps as unknown as Record<string, unknown>)?.__legendMarginReservedFor)
+      .toBe(lastFrameProps?.legend)
+  })
+
   it("forwards HatchFill node style rules to the canvas band scene", () => {
     render(
       <TooltipProvider>

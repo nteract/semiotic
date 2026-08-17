@@ -290,6 +290,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     colorScheme,
     showLegend: false,
     legendPosition,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -318,17 +319,21 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     emptyContent
   })
 
-  const legendActive = (showLegend ?? !!colorBy) && !!colorBy
+  // `frameProps` lands last on StreamNetworkFrame. When it supplies a raw
+  // legend, the shared setup has already measured that exact config; do not
+  // also reserve the ProcessSankey-generated legend on a different side.
+  const hasFrameLegend = Object.hasOwn(frameProps, "legend")
+  const legendActive = !hasFrameLegend && (showLegend ?? !!colorBy) && !!colorBy
   const margin = useMemo(() => {
     const merged = { ...setup.margin }
     if (legendActive) {
-      if (legendPosition === "right" && merged.right < 140) merged.right = 140
-      else if (legendPosition === "left" && merged.left < 140) merged.left = 140
-      else if (legendPosition === "top" && merged.top < 50) merged.top = 50
-      else if (legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
+      if (setup.legendPosition === "right" && merged.right < 140) merged.right = 140
+      else if (setup.legendPosition === "left" && merged.left < 140) merged.left = 140
+      else if (setup.legendPosition === "top" && merged.top < 50) merged.top = 50
+      else if (setup.legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
     }
     return merged
-  }, [setup.margin, legendActive, legendPosition])
+  }, [setup.margin, setup.legendPosition, legendActive])
 
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
@@ -489,6 +494,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     ]
     return { legendGroups }
   }, [legendActive, colorBy, rawNodes, colorOf, getNodeId])
+  const renderedLegend = hasFrameLegend ? frameProps.legend : legendNode
+  const renderedLegendMarginReserved =
+    renderedLegend !== undefined && !Object.hasOwn(frameProps, "margin")
 
   const tooltipContent = useProcessSankeyTooltipContent<TNode, TEdge>({
     tooltip,
@@ -648,8 +656,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
         backgroundGraphics={backgroundGraphics}
         showParticles={showParticles}
         particleStyle={particleStyle}
-        legend={legendNode}
-        legendPosition={legendPosition}
+        legend={renderedLegend}
+        legendPosition={setup.legendPosition}
+        {...(renderedLegendMarginReserved && {
+          __legendMarginReservedFor: renderedLegend,
+        })}
         {...buildCustomBehaviorProps({
           linkedHover,
           selection,

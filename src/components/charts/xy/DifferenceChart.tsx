@@ -13,7 +13,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp, resolveMultiCapableTooltip, defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSetup } from "../shared/useChartSetup"
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
 import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
@@ -390,6 +390,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     colorScheme: [seriesAColor, seriesBColor],
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: ["__diffWinner"],
@@ -410,7 +411,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
   // Custom two-item legend keyed to series labels, not the internal
@@ -434,6 +435,14 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     }]
     return { legendGroups: groups }
   }, [showLegend, seriesALabel, seriesBLabel, seriesAColor, seriesBColor])
+  // `frameProps` is the final escape hatch. Measure and mark the exact legend
+  // that reaches StreamXYFrame so a raw replacement does not leave the
+  // automatic two-series reservation on the wrong side (or reserve twice).
+  const renderedLegend = Object.hasOwn(frameProps, "legend")
+    ? frameProps.legend
+    : customLegend
+  const renderedLegendMarginReserved =
+    renderedLegend !== undefined && !Object.hasOwn(frameProps, "margin")
 
   // ── Style resolvers ─────────────────────────────────────────────────
   // areaStyle gets called per segment-group. The group key is
@@ -589,7 +598,8 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     enableHover,
     showGrid,
     ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
-    ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
+    ...(renderedLegend && { legend: renderedLegend, legendPosition: setup.legendPosition }),
+    ...(renderedLegendMarginReserved && { __legendMarginReservedFor: renderedLegend }),
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent,
     ...(tooltipMode === "multi" && { tooltipMode: "multi" as const }),

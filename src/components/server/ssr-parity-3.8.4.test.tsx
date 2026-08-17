@@ -138,25 +138,27 @@ describe("3.8.4 SSR parity — LineChart series features", () => {
     { x: 4, y: 1.8 },
   ]
 
-  it("forecast auto mode paints without throwing and adds marks", () => {
-    const { evidence } = renderChartWithEvidence("LineChart", {
+  it("forecast auto mode preserves its generated envelope annotation", () => {
+    const { svg, evidence } = renderChartWithEvidence("LineChart", {
       data: series,
       xAccessor: "x",
       yAccessor: "y",
-      forecast: { trainEnd: 2, steps: 3 },
+      forecast: { trainEnd: 2, steps: 3, label: "Forecast envelope" },
     })
     expect(evidence.empty).toBe(false)
     expect(evidence.markCount).toBeGreaterThan(0)
+    expect(svg).toContain("Forecast envelope")
+    expect(evidence.unrenderedAnnotationCount).toBe(0)
   })
 
-  it("anomaly config accepts and renders", () => {
+  it("anomaly config preserves its generated band annotation", () => {
     const svg = renderChart("LineChart", {
       data: series,
       xAccessor: "x",
       yAccessor: "y",
-      anomaly: { threshold: 2 },
+      anomaly: { threshold: 2, label: "Anomaly range" },
     })
-    expect(svg).toContain("svg")
+    expect(svg).toContain("Anomaly range")
   })
 
   it("directLabel emits series endpoint text", () => {

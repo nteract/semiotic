@@ -71,8 +71,10 @@ import { isAnnotationActivationTarget } from "../charts/shared/annotationActivat
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useOrdinalKeyboardNavigation } from "./frameKeyboardNavigation"
 import { normalizeGradient } from "../charts/shared/gradient"
+import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
+import { ordinalFrameLegendOptions } from "./frameLegendOptions"
 
-const DEFAULT_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
+const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // ── Component ──────────────────────────────────────────────────────────
 
@@ -204,7 +206,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     // the same fields as the streaming path.
     const effectiveOAccessor = categoryAccessor ?? oAccessor
     const effectiveRAccessor = valueAccessor ?? rAccessor
-
+    // Resolve labels before frame chrome so a direct bottom legend reserves
+    // the exact same band as its SVG overlay.
+    const oLabel = categoryLabel ?? oLabelLegacy
+    const rLabel = valueLabel ?? rLabelLegacy
+    const oFormat = categoryFormat ?? oFormatLegacy
+    const rFormat = valueFormat ?? rFormatLegacy
     // dirtyRef is declared before useFrame so it can be threaded in for
     // the theme-change effect. Initial value `true` is family-specific
     // (Ordinal forces a first paint) — see investigation note #3.
@@ -220,6 +227,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       title,
       legend,
       legendPosition,
+      ...ordinalFrameLegendOptions(props, legend),
       // foreground/background are resolved in this frame's body so a function
       // form can anchor to the resolved `{o, r, projection}` scales (below).
       animate,
@@ -255,12 +263,6 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
     const safeData = useMemo(() => filterSparseArray(data), [data])
-
-    // Resolve labels and formatters.
-    const oLabel = categoryLabel ?? oLabelLegacy
-    const rLabel = valueLabel ?? rLabelLegacy
-    const oFormat = categoryFormat ?? oFormatLegacy
-    const rFormat = valueFormat ?? rFormatLegacy
 
     // ── Refs ─────────────────────────────────────────────────────────────
 

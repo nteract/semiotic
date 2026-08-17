@@ -447,6 +447,29 @@ describe("ForceDirectedGraph", () => {
       expect(lastNetworkFrameProps.legend).toBeDefined()
     })
 
+    it("measures an automatic legend at the frameProps side only once", () => {
+      const coloredNodes = [
+        { id: "A", group: "X" },
+        { id: "B", group: "Y" },
+      ]
+      render(
+        <TooltipProvider>
+          <ForceDirectedGraph
+            nodes={coloredNodes}
+            edges={sampleEdges}
+            colorBy="group"
+            frameProps={{ legendPosition: "left" }}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastNetworkFrameProps.legendPosition).toBe("left")
+      expect(lastNetworkFrameProps.margin).toBeDefined()
+      expect(lastNetworkFrameProps.margin!.left!).toBeGreaterThan(lastNetworkFrameProps.margin!.right!)
+      expect((lastNetworkFrameProps as Record<string, unknown>).__legendMarginReservedFor)
+        .toBe(lastNetworkFrameProps.legend)
+    })
+
     it("does not show legend when colorBy is not specified", () => {
       render(
         <TooltipProvider>

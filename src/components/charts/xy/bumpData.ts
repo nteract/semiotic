@@ -1,6 +1,7 @@
 import type { ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import { resolveDefaultFill } from "../shared/hooks"
+import { bumpXIdentity } from "./bumpIdentity"
 
 const OTHER_COLOR_GROUP = "Other"
 
@@ -42,24 +43,19 @@ function accessorValue<TDatum extends Datum, TValue>(
     : datum[accessor] as TValue
 }
 
-function xIdentity(value: unknown): string {
-  if (value instanceof Date) return `date:${value.getTime()}`
-  return `${typeof value}:${String(value)}`
-}
-
 export function mapBumpAnnotations(
   annotations: Datum[] | undefined,
   xValues: unknown[],
 ): Datum[] | undefined {
   if (!annotations?.length) return undefined
   const xIndexByKey = new Map(
-    xValues.map((value, index) => [xIdentity(value), index]),
+    xValues.map((value, index) => [bumpXIdentity(value), index]),
   )
   return annotations.map(annotation => {
     const mapped = { ...annotation }
     const mapField = (field: "x" | "x0" | "x1" | "value") => {
       if (!(field in annotation)) return
-      const index = xIndexByKey.get(xIdentity(annotation[field]))
+      const index = xIndexByKey.get(bumpXIdentity(annotation[field]))
       if (index !== undefined) mapped[field] = index
     }
     mapField("x")
@@ -141,7 +137,7 @@ export function rankBumpData<TDatum extends Datum = Datum>(
 
   input.forEach((datum, inputIndex) => {
     const xValue = accessorValue(xAccessor, datum, inputIndex)
-    const key = xIdentity(xValue)
+    const key = bumpXIdentity(xValue)
     let xIndex = xIndexByKey.get(key)
     if (xIndex == null) {
       xIndex = xValues.length

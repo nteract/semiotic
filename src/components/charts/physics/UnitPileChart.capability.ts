@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
 export const UnitPileChartCapability: ChartCapability = {
   component: "UnitPileChart",
   family: "categorical",
   importPath: "semiotic/physics",
   rubric: { familiarity: 2, accuracy: 3, precision: 2 },
+  suggestionPropContract: PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT,
 
   fits: (profile) => {
     if (!profile.primary.category) return "needs a categorical field for piles"

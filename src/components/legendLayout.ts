@@ -1,5 +1,9 @@
 import type { LegendLayout, LegendValue } from "./types/legendTypes"
 import { isGradientLegendConfig, isLegendConfig } from "./types/legendTypes"
+import {
+  MIN_TITLE_TOP_LEGEND_MARGIN,
+  MIN_TOP_LEGEND_MARGIN,
+} from "./stream/titleLayout"
 
 export const DEFAULT_LEGEND_SWATCH_SIZE = 16
 export const DEFAULT_LEGEND_LABEL_GAP = 6
@@ -98,8 +102,13 @@ export function resolveLegendDistance(legend: LegendValue | null | undefined): n
 }
 
 /** Resolve plot-adjacent chrome reserved before a left/right legend. */
-export function resolveLegendSideGutter(layout?: LegendLayout): number {
-  return Math.max(0, layout?.sideGutter ?? 0)
+export function resolveLegendSideGutter(
+  layout?: LegendLayout,
+  axisChrome?: Omit<AxisChromeInput, "topAxis" | "leftAxis" | "rightAxis">,
+): number {
+  if (layout?.sideGutter != null) return Math.max(0, layout.sideGutter)
+  if (!axisChrome?.hasAxis) return 0
+  return axisChrome.hasAxisLabel ? SIDE_AXIS_TITLE_CHROME : SIDE_AXIS_TICK_CHROME
 }
 
 /** Resolve the outer edge clearance for a left/right legend. */
@@ -120,6 +129,10 @@ export function resolveLegendEdgeGutter(layout?: LegendLayout): number {
 export const AXIS_TICK_CHROME = 22
 export const AXIS_TITLE_CHROME = 46
 export const ROTATED_AXIS_TITLE_CHROME = 64
+/** Width needed between a side legend and a vertical axis's tick labels. */
+export const SIDE_AXIS_TICK_CHROME = 34
+/** Width needed between a side legend and a vertical axis title/ticks. */
+export const SIDE_AXIS_TITLE_CHROME = 70
 
 export interface AxisChromeInput {
   /** A horizontal axis renders on this side of the plot. */
@@ -128,6 +141,16 @@ export interface AxisChromeInput {
   hasAxisLabel?: boolean
   /** Tick labels are rotated, which pushes the axis title further out. */
   rotatedTicks?: boolean
+  /**
+   * Chrome drawn above the plot. `axisChrome` itself describes the bottom
+   * side for backwards compatibility; a top legend uses this companion when
+   * a caller has explicitly configured a top x axis.
+   */
+  topAxis?: Omit<AxisChromeInput, "topAxis">
+  /** Chrome drawn to the left of the plot, used by a left legend. */
+  leftAxis?: Omit<AxisChromeInput, "topAxis" | "leftAxis" | "rightAxis">
+  /** Chrome drawn to the right of the plot, used by a right legend. */
+  rightAxis?: Omit<AxisChromeInput, "topAxis" | "leftAxis" | "rightAxis">
 }
 
 /**
@@ -160,16 +183,94 @@ export function resolveAxisChromeGutter(
 export function resolveXYAxisChrome(input: {
   showAxes?: boolean
   xLabel?: unknown
+  yLabel?: unknown
+  yLabelRight?: unknown
+  axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+  rotatedTicks?: boolean
 }): AxisChromeInput {
-  return { hasAxis: input.showAxes !== false, hasAxisLabel: !!input.xLabel }
+  const bottomAxis = input.axes?.find(axis => axis.orient === "bottom")
+  const topAxis = input.axes?.find(axis => axis.orient === "top")
+  const leftAxis = input.axes?.find(axis => axis.orient === "left")
+  const rightAxis = input.axes?.find(axis => axis.orient === "right")
+  // No horizontal config means the frame renders its default bottom axis.
+  // A top-only config instead moves that axis above the plot, so it should
+  // not make a bottom legend reserve an imaginary lower gutter.
+  const hasBottomAxis = !topAxis || !!bottomAxis
+  const hasTopAxis = !!topAxis && !bottomAxis
+  const hasLeftAxis = !rightAxis || !!leftAxis
+  const hasRightAxis = !!rightAxis
+  const visible = input.showAxes !== false
+  return {
+    hasAxis: visible && hasBottomAxis,
+    hasAxisLabel: visible && hasBottomAxis && !!(bottomAxis?.label ?? input.xLabel),
+    // Margin resolution happens before the tick renderer can measure its
+    // final collision result. Treat an enabled `autoRotate` as rotated here:
+    // the small amount of extra gutter when labels ultimately fit is safe,
+    // while reserving only the unrotated title band lets a bottom legend
+    // paint through the rotated title in compact charts.
+    rotatedTicks: visible && hasBottomAxis && (input.rotatedTicks ?? Boolean(bottomAxis?.autoRotate)),
+    topAxis: hasTopAxis
+      ? {
+          hasAxis: visible,
+          hasAxisLabel: visible && !!(topAxis?.label ?? input.xLabel),
+          rotatedTicks: visible && (input.rotatedTicks ?? Boolean(topAxis?.autoRotate)),
+        }
+      : undefined,
+    leftAxis: hasLeftAxis
+      ? {
+          hasAxis: visible,
+          hasAxisLabel: visible && !!(leftAxis?.label ?? input.yLabel),
+        }
+      : undefined,
+    rightAxis: hasRightAxis
+      ? {
+          hasAxis: visible,
+          hasAxisLabel: visible && !!(rightAxis?.label ?? input.yLabelRight ?? input.yLabel),
+        }
+      : undefined,
+  }
+}
+
+/**
+ * Merge a high-level chart's defaults with optional `frameProps` before
+ * measuring legend-adjacent axis chrome. The rendered frame receives the
+ * same precedence, so centralizing it prevents every XY wrapper from
+ * accidentally reserving a bottom-only/default axis for a supplied top or
+ * side-axis configuration.
+ */
+export function resolveXYFramePropsAxisChrome(
+  frameProps: {
+    showAxes?: boolean
+    xLabel?: unknown
+    yLabel?: unknown
+    yLabelRight?: unknown
+    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+  },
+  defaults: {
+    showAxes?: boolean
+    xLabel?: unknown
+    yLabel?: unknown
+    yLabelRight?: unknown
+    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+  },
+): AxisChromeInput {
+  return resolveXYAxisChrome({
+    showAxes: frameProps.showAxes ?? defaults.showAxes,
+    xLabel: frameProps.xLabel ?? defaults.xLabel,
+    yLabel: frameProps.yLabel ?? defaults.yLabel,
+    yLabelRight: frameProps.yLabelRight ?? defaults.yLabelRight,
+    axes: frameProps.axes ?? defaults.axes,
+  })
 }
 
 /**
  * Resolve `axisChrome` for an ordinal chart HOC's `useChartLegendAndMargin`
  * call. Mirrors `server/staticOrdinal.tsx`'s `renderOrdinalFrame`: the
  * bottom axis is the value axis for `"horizontal"` projection, the category
- * axis otherwise, and radial projections draw no axis at all. See
- * `resolveXYAxisChrome` for why this must track the server computation.
+ * axis otherwise. Its companion left axis is the remaining category/value
+ * axis, which matters when a left legend must clear a vertical axis title.
+ * Radial projections draw neither. See `resolveXYAxisChrome` for why this
+ * must track the server computation.
  */
 export function resolveOrdinalAxisChrome(input: {
   showAxes?: boolean
@@ -178,9 +279,14 @@ export function resolveOrdinalAxisChrome(input: {
   hasValueLabel: boolean
 }): AxisChromeInput {
   const projection = input.projection ?? "vertical"
+  const visible = input.showAxes !== false && projection !== "radial"
   return {
-    hasAxis: input.showAxes !== false && projection !== "radial",
-    hasAxisLabel: projection === "horizontal" ? input.hasValueLabel : input.hasCategoryLabel,
+    hasAxis: visible,
+    hasAxisLabel: visible && (projection === "horizontal" ? input.hasValueLabel : input.hasCategoryLabel),
+    leftAxis: {
+      hasAxis: visible,
+      hasAxisLabel: visible && (projection === "horizontal" ? input.hasCategoryLabel : input.hasValueLabel),
+    },
   }
 }
 
@@ -233,13 +339,164 @@ export function resolveHorizontalLegendHeight(
 export function resolveSideLegendMargin(
   legend: LegendValue | null | undefined,
   layout?: LegendLayout,
+  axisChrome?: Omit<AxisChromeInput, "topAxis" | "leftAxis" | "rightAxis">,
 ): number {
   return (
     resolveSideLegendWidth(legend, layout) +
     resolveLegendDistance(legend) +
-    resolveLegendSideGutter(layout) +
+    resolveLegendSideGutter(layout, axisChrome) +
     resolveLegendEdgeGutter(layout)
   )
+}
+
+/**
+ * Apply the shared legend reservation used by HOC layout, direct stream
+ * frames, and static rendering. Keeping this here prevents direct SSR from
+ * reserving a different fallback box for raw React legends than its live
+ * hydration target.
+ */
+export function reserveLegendMargin(
+  margin: { top: number; right: number; bottom: number; left: number },
+  options: {
+    legend: LegendValue | null | undefined
+    position?: "right" | "left" | "top" | "bottom"
+    size: [number, number]
+    hasTitle?: boolean
+    legendLayout?: LegendLayout
+    minimumMargin?: number
+    axisChrome?: AxisChromeInput
+  },
+): void {
+  const { legend } = options
+  if (!legend) return
+  const position = options.position ?? "right"
+  const plotWidth = Math.max(1, options.size[0] - margin.left - margin.right)
+  const horizontalHeight = resolveHorizontalLegendHeight(
+    legend,
+    plotWidth,
+    options.legendLayout,
+  )
+  const distance = resolveLegendDistance(legend)
+  const axisChrome = position === "bottom"
+    ? options.axisChrome
+    : position === "top"
+      ? options.axisChrome?.topAxis
+      : undefined
+  const horizontalRequirement =
+    horizontalHeight +
+    distance +
+    resolveAxisChromeGutter(axisChrome, options.legendLayout) +
+    (position === "top" && options.hasTitle ? 24 : 0)
+  // Direct Stream frames already apply this floor through
+  // `reserveFrameChromeMargin`; static and HOC callers arrive here directly.
+  // Keep the minimum owned by the shared reservation so their top-legend
+  // geometry cannot drift by a few pixels before the legend’s own height is
+  // considered.
+  const minimum = Math.max(
+    options.minimumMargin ?? 0,
+    position === "top"
+      ? options.hasTitle ? MIN_TITLE_TOP_LEGEND_MARGIN : MIN_TOP_LEGEND_MARGIN
+      : 0,
+  )
+
+  if (position === "right") {
+    margin.right = Math.max(
+      margin.right,
+      minimum,
+      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.rightAxis),
+    )
+  } else if (position === "left") {
+    margin.left = Math.max(
+      margin.left,
+      minimum,
+      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.leftAxis),
+    )
+  } else if (position === "top") {
+    margin.top = Math.max(margin.top, minimum, horizontalRequirement)
+  } else {
+    margin.bottom = Math.max(margin.bottom, minimum, horizontalRequirement)
+  }
+}
+
+export interface LegendPlacementInput {
+  totalWidth: number
+  totalHeight: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  position?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
+  axisChrome?: AxisChromeInput
+  /** Static renderers may reserve a measured side box wider than the default. */
+  reservedWidth?: number
+}
+
+/**
+ * Resolve the origin and box used by both live and static legend renderers.
+ * This includes the predictable fallback box for raw React nodes, whose
+ * intrinsic SVG dimensions cannot be measured before rendering.
+ */
+export function resolveLegendPlacement(
+  legend: LegendValue | null | undefined,
+  input: LegendPlacementInput,
+): { x: number; y: number; width: number; height: number } {
+  const position = input.position ?? "right"
+  const horizontal = position === "top" || position === "bottom"
+  const plotWidth = Math.max(0, input.totalWidth - input.margin.left - input.margin.right)
+  const width = Math.max(
+    1,
+    horizontal
+      ? input.legendLayout?.maxWidth ?? plotWidth
+      : input.reservedWidth ?? resolveSideLegendWidth(legend, input.legendLayout),
+  )
+  const distance = resolveLegendDistance(legend)
+  const sideGutter = resolveLegendSideGutter(
+    input.legendLayout,
+    position === "left" ? input.axisChrome?.leftAxis : input.axisChrome?.rightAxis,
+  )
+  const edgeGutter = resolveLegendEdgeGutter(input.legendLayout)
+  const height = resolveHorizontalLegendHeight(legend, plotWidth, input.legendLayout)
+  const bottomAxisGutter = resolveAxisChromeGutter(input.axisChrome, input.legendLayout)
+  const topAxisGutter = resolveAxisChromeGutter(input.axisChrome?.topAxis, input.legendLayout)
+
+  if (position === "left") {
+    return {
+      x: Math.max(edgeGutter, input.margin.left - sideGutter - width - distance),
+      y: input.margin.top,
+      width,
+      height,
+    }
+  }
+  if (position === "top") {
+    return {
+      x: input.margin.left,
+      y: input.margin.top - topAxisGutter - distance - height,
+      width,
+      height,
+    }
+  }
+  if (position === "bottom") {
+    const plotBottom = input.totalHeight - input.margin.bottom
+    return {
+      x: input.margin.left,
+      y: Math.max(
+        plotBottom + distance,
+        Math.min(
+          plotBottom + bottomAxisGutter + distance,
+          input.totalHeight - height,
+        ),
+      ),
+      width,
+      height,
+    }
+  }
+  return {
+    x: Math.min(
+      input.totalWidth - width - edgeGutter,
+      input.totalWidth - input.margin.right + sideGutter + distance,
+    ),
+    y: input.margin.top,
+    width,
+    height,
+  }
 }
 
 export interface LegendMetrics {

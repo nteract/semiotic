@@ -133,6 +133,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     legend: additionalLegend,
     legendInteraction,
     legendPosition,
+    frameLegend: framePropsWithoutLegend,
     selection,
     linkedHover,
     hoverHighlight,

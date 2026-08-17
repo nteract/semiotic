@@ -1,10 +1,12 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
 export const GaltonBoardChartCapability: ChartCapability = {
   component: "GaltonBoardChart",
   family: "distribution",
   importPath: "semiotic/physics",
   rubric: { familiarity: 3, accuracy: 3, precision: 2 },
+  suggestionPropContract: PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT,
 
   fits: (profile) => {
     if (profile.rowCount < 20) return "Galton boards need enough observations for a distribution to form"

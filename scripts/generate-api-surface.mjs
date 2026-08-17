@@ -43,6 +43,8 @@ const ENTRIES = {
   "semiotic-ordinal": "dist/semiotic-ordinal.d.ts",
   "semiotic-network": "dist/semiotic-network.d.ts",
   "semiotic-realtime": "dist/semiotic-realtime.d.ts",
+  "semiotic-realtime-core": "dist/semiotic-realtime-core.d.ts",
+  "semiotic-realtime-react": "dist/semiotic-realtime-react.d.ts",
   "semiotic-server": "dist/semiotic-server.d.ts",
   "semiotic-ai": "dist/semiotic-ai.d.ts",
   "semiotic-ai-core": "dist/semiotic-ai-core.d.ts",

@@ -15,24 +15,30 @@ import { resolveTheme } from "./themeResolver"
 import {
   extractCategories
 } from "./staticLegend"
-import { renderStaticAnnotations } from "./staticAnnotations"
+import {
+  renderStaticAnnotations,
+  type StaticAnnotationRenderResult,
+} from "./staticAnnotations"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
   chartUID,
   reserveFrameLegendMargin,
   renderFrameLegend,
-  renderGridSVG,
   wrapSVG,
   generateAxesSVG
 } from "./staticSVGChrome"
+import { renderGridSVG } from "./staticXYGrid"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "../stream/normalizeXYData"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
+import { AXIS_FRAME_DEFAULT_MARGIN } from "../stream/frameDefaultMargins"
+import { renderPairedRightAxisSVG } from "./staticXYAxes"
+import { resolveXYAxisChrome } from "../legendLayout"
 
 export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
-  const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
+  const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
   const size = props.size || [500, 300]
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const hasVisibleTitle = hasTextTitle(props.title)
@@ -41,12 +47,15 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? extractCategories(data, props.colorAccessor || props.groupAccessor || props.categoryAccessor)
     : []
 
-  // Bottom-axis chrome a bottom legend has to clear. Computed once so the
-  // margin reservation and the placement below agree.
-  const legendAxisChrome = {
-    hasAxis: props.showAxes !== false,
-    hasAxisLabel: !!props.xLabel,
-  }
+  // Axis chrome is shared with the live overlay, including labels supplied
+  // through `axes[]` and top/side axes adjacent to a legend.
+  const legendAxisChrome = resolveXYAxisChrome({
+    showAxes: props.showAxes,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+    yLabelRight: props.yLabelRight,
+    axes: props.axes,
+  })
 
   // Expand margin for legend BEFORE calculating inner dimensions
   reserveFrameLegendMargin(margin, {
@@ -54,6 +63,14 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     categories: xyLegendCategories,
     theme,
     size,
+    hasTitle: hasVisibleTitle,
+  })
+  const legend = renderFrameLegend({
+    props: { ...props, axisChrome: legendAxisChrome },
+    categories: xyLegendCategories,
+    theme,
+    size,
+    margin,
     hasTitle: hasVisibleTitle,
   })
 
@@ -180,6 +197,18 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   )
 
   if (!store.scales) {
+    let annotationRender: StaticAnnotationRenderResult | undefined
+    const annotationNodes = props.annotations ? renderStaticAnnotations({
+      annotations: props.annotations,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+      svgAnnotationRules: props.svgAnnotationRules,
+      annotationData: data,
+      scales: {},
+      layout: { width, height },
+      theme,
+      idPrefix: props._idPrefix,
+      onRender: result => { annotationRender = result },
+    }) : null
     if (sink) {
       sink.evidence = buildEvidence({
         frameType: "xy",
@@ -187,6 +216,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         marks: [],
         title: props.title, description: props.description,
         annotations: props.annotations,
+        annotationRender,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
         margin,
       })
@@ -195,16 +225,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       ? (
         <>
           {resolvedBackgroundGraphics}
-          {props.annotations ? renderStaticAnnotations({
-            annotations: props.annotations,
-            autoPlaceAnnotations: props.autoPlaceAnnotations,
-            svgAnnotationRules: props.svgAnnotationRules,
-            annotationData: data,
-            scales: {},
-            layout: { width, height },
-            theme,
-            idPrefix: props._idPrefix,
-          }) : null}
+          {annotationNodes}
           {resolvedForegroundGraphics}
         </>
       )
@@ -216,6 +237,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
+        legend,
         idPrefix: props._idPrefix,
       })
     )
@@ -229,22 +251,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       xySceneNodeToSVG(node, index, idPfx, props.hoverRadius ?? 30),
   })
 
-  if (sink) {
-    sink.evidence = buildEvidence({
-      frameType: "xy",
-      width: size[0], height: size[1],
-      marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      xDomain: numericDomain(store.scales.x?.domain?.()),
-      yDomain: numericDomain(store.scales.y?.domain?.()),
-      legendItems: xyLegendCategories.length > 0 ? xyLegendCategories.length : undefined,
-      margin,
-    })
-  }
-
   const grid = props.showGrid
-    ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes)
+    ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes, props)
     : null
 
   const dataMarks = renderedScene.map(entry => entry.element)
@@ -252,12 +260,35 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   const showAxes = props.showAxes !== false
   const axes = showAxes
-    ? generateAxesSVG(store.scales, { width, height }, props, theme, idPfx)
+    ? generateAxesSVG(
+        store.scales,
+        { width, height },
+        props,
+        theme,
+        idPfx,
+        margin,
+        legendAxisChrome,
+        Boolean(legend),
+      )
+    : null
+  const pairedRightAxis = showAxes
+    ? renderPairedRightAxisSVG({
+        scales: store.scales,
+        layout: { width, height },
+        props,
+        theme,
+        leftAxis: props.axes?.find((axis) => axis.orient === "left"),
+        rightAxis: props.axes?.find((axis) => axis.orient === "right"),
+        margin,
+        axisChrome: legendAxisChrome,
+        hasRenderedLegend: Boolean(legend),
+      })
     : null
 
   // Annotations — honor `svgAnnotationRules` so custom overlays (e.g. a
   // RangeChart mean/median bulb+pill) serialize through renderChart the same
   // way they paint on the client SVG overlay.
+  let annotationRender: StaticAnnotationRenderResult | undefined
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
@@ -269,7 +300,23 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     xAccessor: typeof props.xAccessor === "string" ? props.xAccessor : undefined,
     yAccessor: typeof props.yAccessor === "string" ? props.yAccessor : undefined,
     idPrefix: idPfx,
+    onRender: result => { annotationRender = result },
   }) : null
+
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "xy",
+      width: size[0], height: size[1],
+      marks: renderedScene.map(entry => entry.node),
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      annotationRender,
+      xDomain: numericDomain(store.scales.x?.domain?.()),
+      yDomain: numericDomain(store.scales.y?.domain?.()),
+      legendItems: xyLegendCategories.length > 0 ? xyLegendCategories.length : undefined,
+      margin,
+    })
+  }
 
   // svgPreRenderers run after scene compute so they can position via the
   // resolved scales (used by QuadrantChart for the four quadrant fills +
@@ -287,17 +334,6 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         .filter(Boolean)
     : null
 
-  // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
-  // honor a caller-supplied pre-rendered ReactNode/config object.
-  const legend = renderFrameLegend({
-    props: { ...props, axisChrome: legendAxisChrome },
-    categories: xyLegendCategories,
-    theme,
-    size,
-    margin,
-    hasTitle: hasVisibleTitle,
-  })
-
   const content = (
     <>
       {resolvedBackgroundGraphics}
@@ -310,6 +346,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       </defs>
       <g clipPath={`url(#${plotClipId})`}>{dataMarks}</g>
       {axes}
+      {pairedRightAxis}
       {annotationNodes}
       {resolvedForegroundGraphics}
       {store.customLayoutOverlays}
