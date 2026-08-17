@@ -3,7 +3,11 @@ import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { DifferenceChart, computeDifferenceSegments, type DifferenceChartProps } from "./DifferenceChart"
+import {
+  DifferenceChart,
+  computeDifferenceSegments,
+  type DifferenceChartProps
+} from "./DifferenceChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
@@ -12,10 +16,17 @@ let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
+    default: React.forwardRef<
+      Partial<StreamXYFrameHandle>,
+      CapturedXYFrameProps
+    >((props, _ref) => {
       lastXYFrameProps = props
-      return <div className="stream-xy-frame"><svg /></div>
-    }),
+      return (
+        <div className="stream-xy-frame">
+          <svg />
+        </div>
+      )
+    })
   }
 })
 
@@ -35,11 +46,17 @@ describe("computeDifferenceSegments", () => {
 
   it("single segment when A is always above B", () => {
     const rows = computeDifferenceSegments(
-      [{ x: 0, a: 10, b: 5 }, { x: 1, a: 12, b: 6 }, { x: 2, a: 14, b: 7 }],
-      getX, getA, getB,
+      [
+        { x: 0, a: 10, b: 5 },
+        { x: 1, a: 12, b: 6 },
+        { x: 2, a: 14, b: 7 }
+      ],
+      getX,
+      getA,
+      getB
     )
     expect(rows.length).toBe(3)
-    const winners = new Set(rows.map(r => r.__diffWinner))
+    const winners = new Set(rows.map((r) => r.__diffWinner))
     expect(winners.size).toBe(1)
     expect(winners.has("A")).toBe(true)
     // Upper boundary should be A, lower should be B.
@@ -53,8 +70,13 @@ describe("computeDifferenceSegments", () => {
     // A=5,15 and B=10,8 cross between x=0 (B>A) and x=1 (A>B).
     // Solve: 5 + t*10 = 10 + t*(-2) → t = 5/12 ≈ 0.4167
     const rows = computeDifferenceSegments(
-      [{ x: 0, a: 5, b: 10 }, { x: 1, a: 15, b: 8 }],
-      getX, getA, getB,
+      [
+        { x: 0, a: 5, b: 10 },
+        { x: 1, a: 15, b: 8 }
+      ],
+      getX,
+      getA,
+      getB
     )
     // Expected: B-segment vertex at x=0, then TWO crossover vertices
     // (one closing the B segment, one opening the A segment) at the
@@ -80,19 +102,27 @@ describe("computeDifferenceSegments", () => {
       [
         { x: 0, a: 5, b: 3 },
         { x: 1, a: NaN, b: 4 },
-        { x: 2, a: 8, b: 6 },
+        { x: 2, a: 8, b: 6 }
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
     // Two valid points; both have A>B so one segment, two vertices.
     expect(rows.length).toBe(2)
-    expect(rows.every(r => r.__diffWinner === "A")).toBe(true)
+    expect(rows.every((r) => r.__diffWinner === "A")).toBe(true)
   })
 
   it("sorts input by x before processing", () => {
     const rows = computeDifferenceSegments(
-      [{ x: 2, a: 10, b: 5 }, { x: 0, a: 4, b: 6 }, { x: 1, a: 7, b: 7 }],
-      getX, getA, getB,
+      [
+        { x: 2, a: 10, b: 5 },
+        { x: 0, a: 4, b: 6 },
+        { x: 1, a: 7, b: 7 }
+      ],
+      getX,
+      getA,
+      getB
     )
     // Sorted by x: (0,4,6) → B-win, (1,7,7) → tie, (2,10,5) → A-win.
     // First and last x reflect sorted order.
@@ -108,8 +138,13 @@ describe("computeDifferenceSegments", () => {
 
   it("attaches valA/valB for tooltip lookup", () => {
     const rows = computeDifferenceSegments(
-      [{ x: 0, a: 10, b: 5 }, { x: 1, a: 12, b: 8 }],
-      getX, getA, getB,
+      [
+        { x: 0, a: 10, b: 5 },
+        { x: 1, a: 12, b: 8 }
+      ],
+      getX,
+      getA,
+      getB
     )
     expect(rows[0].__valA).toBe(10)
     expect(rows[0].__valB).toBe(5)
@@ -123,19 +158,21 @@ describe("computeDifferenceSegments", () => {
     // (B-winning) row in the stale A segment with the wrong fill.
     const rows = computeDifferenceSegments(
       [
-        { x: 0, a: 5,  b: 5 },   // tie
-        { x: 1, a: 4,  b: 9 },   // B > A
-        { x: 2, a: 3,  b: 12 },  // B > A
+        { x: 0, a: 5, b: 5 }, // tie
+        { x: 1, a: 4, b: 9 }, // B > A
+        { x: 2, a: 3, b: 12 } // B > A
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
     // Expect a single B segment containing all three rows.
-    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    const segKeys = new Set(rows.map((r) => r.__diffSegment))
     expect(segKeys.size).toBe(1)
     expect([...segKeys][0]).toMatch(/-B$/)
-    expect(rows.every(r => r.__diffWinner === "B")).toBe(true)
+    expect(rows.every((r) => r.__diffWinner === "B")).toBe(true)
     // The leading tie is in the B segment as a zero-width vertex.
-    const tieRow = rows.find(r => r.__x === 0)!
+    const tieRow = rows.find((r) => r.__x === 0)!
     expect(tieRow.__y).toBe(5)
     expect(tieRow.__y0).toBe(5)
   })
@@ -145,15 +182,17 @@ describe("computeDifferenceSegments", () => {
       [
         { x: 0, a: 5, b: 5 },
         { x: 1, a: 6, b: 6 },
-        { x: 2, a: 10, b: 4 },  // A > B (first real winner)
+        { x: 2, a: 10, b: 4 } // A > B (first real winner)
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
-    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    const segKeys = new Set(rows.map((r) => r.__diffSegment))
     expect(segKeys.size).toBe(1)
     expect([...segKeys][0]).toMatch(/-A$/)
     // All three rows in the A segment.
-    expect(rows.map(r => r.__x).sort()).toEqual([0, 1, 2])
+    expect(rows.map((r) => r.__x).sort()).toEqual([0, 1, 2])
   })
 
   it("uses the tie row as the crossover when A→tie→B", () => {
@@ -164,21 +203,25 @@ describe("computeDifferenceSegments", () => {
     // AT the tie row, which is what the data actually says.
     const rows = computeDifferenceSegments(
       [
-        { x: 0, a: 10, b: 5 },  // A > B
-        { x: 2, a: 8,  b: 8 },  // tie
-        { x: 3, a: 4,  b: 9 },  // B > A
+        { x: 0, a: 10, b: 5 }, // A > B
+        { x: 2, a: 8, b: 8 }, // tie
+        { x: 3, a: 4, b: 9 } // B > A
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
     // Expect two segments split AT x=2 (the tie point).
-    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    const segKeys = new Set(rows.map((r) => r.__diffSegment))
     expect(segKeys.size).toBe(2)
     // The crossover vertices (close A, open B) sit at the tie's x=2,y=8.
-    const crossovers = rows.filter(r => r.__x === 2 && r.__y === 8 && r.__y0 === 8)
+    const crossovers = rows.filter(
+      (r) => r.__x === 2 && r.__y === 8 && r.__y0 === 8
+    )
     expect(crossovers.length).toBeGreaterThanOrEqual(2)
     // The post-tie row must be in the B segment (the new winner), not
     // stranded in the A segment.
-    const postRow = rows.find(r => r.__x === 3)!
+    const postRow = rows.find((r) => r.__x === 3)!
     expect(postRow.__diffWinner).toBe("B")
   })
 
@@ -188,16 +231,18 @@ describe("computeDifferenceSegments", () => {
     const rows = computeDifferenceSegments(
       [
         { x: 0, a: 10, b: 5 },
-        { x: 1, a: 8,  b: 8 },  // tie
-        { x: 2, a: 12, b: 4 },
+        { x: 1, a: 8, b: 8 }, // tie
+        { x: 2, a: 12, b: 4 }
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
-    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    const segKeys = new Set(rows.map((r) => r.__diffSegment))
     expect(segKeys.size).toBe(1)
     expect([...segKeys][0]).toMatch(/-A$/)
     // The tie row is in the segment as a zero-width vertex.
-    const tieRow = rows.find(r => r.__x === 1)!
+    const tieRow = rows.find((r) => r.__x === 1)!
     expect(tieRow.__y).toBe(8)
     expect(tieRow.__y0).toBe(8)
   })
@@ -208,26 +253,28 @@ describe("computeDifferenceSegments", () => {
     const rows = computeDifferenceSegments(
       [
         { x: 0, a: 10, b: 5 },
-        { x: 1, a: 8,  b: 8 },
-        { x: 2, a: 7,  b: 7 },
-        { x: 3, a: 6,  b: 6 },
-        { x: 4, a: 4,  b: 9 },
+        { x: 1, a: 8, b: 8 },
+        { x: 2, a: 7, b: 7 },
+        { x: 3, a: 6, b: 6 },
+        { x: 4, a: 4, b: 9 }
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
-    const segKeys = [...new Set(rows.map(r => r.__diffSegment))]
+    const segKeys = [...new Set(rows.map((r) => r.__diffSegment))]
     expect(segKeys.length).toBe(2)
     // First-tie x=1 is the boundary: vertices at (1, 8) close A, open B.
-    const aRows = rows.filter(r => r.__diffWinner === "A")
-    const bRows = rows.filter(r => r.__diffWinner === "B")
+    const aRows = rows.filter((r) => r.__diffWinner === "A")
+    const bRows = rows.filter((r) => r.__diffWinner === "B")
     // A segment ends at x=1 (no later non-tie rows are A-winning).
-    expect(Math.max(...aRows.map(r => r.__x))).toBe(1)
+    expect(Math.max(...aRows.map((r) => r.__x))).toBe(1)
     // B segment opens at x=1 (the first tie) and includes the remaining
     // ties + the final non-tie row.
-    expect(Math.min(...bRows.map(r => r.__x))).toBe(1)
-    expect(bRows.some(r => r.__x === 2)).toBe(true)
-    expect(bRows.some(r => r.__x === 3)).toBe(true)
-    expect(bRows.some(r => r.__x === 4)).toBe(true)
+    expect(Math.min(...bRows.map((r) => r.__x))).toBe(1)
+    expect(bRows.some((r) => r.__x === 2)).toBe(true)
+    expect(bRows.some((r) => r.__x === 3)).toBe(true)
+    expect(bRows.some((r) => r.__x === 4)).toBe(true)
   })
 
   it("non-finite-x rows don't scramble the sort of finite-x rows", () => {
@@ -237,16 +284,18 @@ describe("computeDifferenceSegments", () => {
     // path keeps the total ordering well-defined.
     const rows = computeDifferenceSegments(
       [
-        { x: 5,   a: 10, b: 5 },   // valid, ends up last after sort
-        { x: NaN, a: 10, b: 5 },   // invalid, dropped
-        { x: 0,   a: 12, b: 4 },   // valid, ends up first after sort
-        { x: 3,   a: 8,  b: 6 },   // valid, middle
+        { x: 5, a: 10, b: 5 }, // valid, ends up last after sort
+        { x: NaN, a: 10, b: 5 }, // invalid, dropped
+        { x: 0, a: 12, b: 4 }, // valid, ends up first after sort
+        { x: 3, a: 8, b: 6 } // valid, middle
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
     // Strip out crossover-only zero-width vertices (they share x/y
     // with neighbors); the source rows should be in ascending x order.
-    const sourceXs = rows.filter(r => r.__sourceDatum).map(r => r.__x)
+    const sourceXs = rows.filter((r) => r.__sourceDatum).map((r) => r.__x)
     // Three valid source rows in order.
     expect(sourceXs).toEqual([0, 3, 5])
   })
@@ -259,18 +308,20 @@ describe("computeDifferenceSegments", () => {
       [
         { x: 0, a: 10, b: 5 },
         { x: 1, a: NaN, b: NaN },
-        { x: 2, a: 4, b: 9 },
+        { x: 2, a: 4, b: 9 }
       ],
-      getX, getA, getB,
+      getX,
+      getA,
+      getB
     )
     // Expect the crossover between x=0 (A-winner) and x=2 (B-winner)
     // to produce both segments — the NaN row in between must not
     // suppress the segment break.
-    const winners = new Set(rows.map(r => r.__diffWinner))
+    const winners = new Set(rows.map((r) => r.__diffWinner))
     expect(winners.has("A")).toBe(true)
     expect(winners.has("B")).toBe(true)
     // Two segment groups → ≥ 1 crossover-vertex pair emitted.
-    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    const segKeys = new Set(rows.map((r) => r.__diffSegment))
     expect(segKeys.size).toBe(2)
   })
 })
@@ -280,7 +331,7 @@ describe("DifferenceChart", () => {
   const sampleData = [
     { date: 0, actual: 50, forecast: 45 },
     { date: 1, actual: 52, forecast: 60 },
-    { date: 2, actual: 70, forecast: 58 },
+    { date: 2, actual: 70, forecast: 58 }
   ]
 
   it("sets chartType to 'mixed' for area+line composition", () => {
@@ -311,16 +362,22 @@ describe("DifferenceChart", () => {
       )
       rerender(
         <TooltipProvider>
-          <DifferenceChart data={sampleData} xAccessor="date" seriesAAccessor="actual" seriesBAccessor="forecast" />
+          <DifferenceChart
+            data={sampleData}
+            xAccessor="date"
+            seriesAAccessor="actual"
+            seriesBAccessor="forecast"
+          />
         </TooltipProvider>
       )
       // The frame must actually render with the data — if a hooks-count error
       // fired, the chart's error boundary would swallow the render and the
       // frame would never receive the data.
       expect(lastXYFrameProps.chartType).toBe("mixed")
-      const hookErr = errSpy.mock.calls.some((c) =>
-        String(c[0]).includes("Rendered more hooks") ||
-        String(c[0]).includes("change in the order of Hooks")
+      const hookErr = errSpy.mock.calls.some(
+        (c) =>
+          String(c[0]).includes("Rendered more hooks") ||
+          String(c[0]).includes("change in the order of Hooks")
       )
       expect(hookErr).toBe(false)
     } finally {
@@ -441,6 +498,27 @@ describe("DifferenceChart", () => {
     expect(legend.legendGroups[0].items[1].label).toBe("Forecast")
   })
 
+  it("measures its chart-owned legend before handing it to the frame", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          seriesALabel="Actual series with a deliberately long legend label"
+          seriesBLabel="Forecast series with a deliberately long legend label"
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastXYFrameProps.margin.right).toBeGreaterThan(140)
+    expect(
+      (lastXYFrameProps as unknown as Record<string, unknown>)
+        .__legendMarginReservedFor
+    ).toBe(lastXYFrameProps.legend)
+  })
+
   it("omits legend when showLegend is false", () => {
     render(
       <TooltipProvider>
@@ -468,14 +546,21 @@ describe("DifferenceChart", () => {
         />
       </TooltipProvider>
     )
-    expect(lastXYFrameProps.gradientFill).toEqual({ stops: [
-      { offset: 0, opacity: 0.85 },
-      { offset: 1, opacity: 0.15 },
-    ] })
+    expect(lastXYFrameProps.gradientFill).toEqual({
+      stops: [
+        { offset: 0, opacity: 0.85 },
+        { offset: 1, opacity: 0.15 }
+      ]
+    })
   })
 
   it("forwards explicit gradientFill stops unchanged", () => {
-    const stops = { stops: [{ offset: 0, color: "#aaa" }, { offset: 1, color: "#fff" }] }
+    const stops = {
+      stops: [
+        { offset: 0, color: "#aaa" },
+        { offset: 1, color: "#fff" }
+      ]
+    }
     render(
       <TooltipProvider>
         <DifferenceChart
@@ -588,7 +673,9 @@ describe("DifferenceChart push API", () => {
       </TooltipProvider>
     )
     // Frame should see both segment rows (2) + two line rows (2 each → 4).
-    const segmentRows = lastXYFrameProps.data.filter((d) => d.__diffSegment.startsWith("seg-"))
+    const segmentRows = lastXYFrameProps.data.filter((d) =>
+      d.__diffSegment.startsWith("seg-")
+    )
     expect(segmentRows.length).toBe(2)
     expect(ref.current!.getData().length).toBe(2)
   })
@@ -597,14 +684,24 @@ describe("DifferenceChart push API", () => {
     const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     const { rerender } = render(
       <TooltipProvider>
-        <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
       </TooltipProvider>
     )
     ref.current!.push({ x: 0, a: 10, b: 5 })
     ref.current!.clear()
     rerender(
       <TooltipProvider>
-        <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
       </TooltipProvider>
     )
     expect(ref.current!.getData()).toEqual([])
@@ -628,7 +725,7 @@ describe("DifferenceChart push API", () => {
     ref.current!.pushMany([
       { id: "r1", x: 0, a: 10, b: 5 },
       { id: "r2", x: 1, a: 12, b: 8 },
-      { id: "r3", x: 2, a: 9, b: 14 },
+      { id: "r3", x: 2, a: 9, b: 14 }
     ])
     const removed = ref.current!.remove(["r1", "r3"])
     expect(removed).toHaveLength(2)
@@ -676,7 +773,7 @@ describe("DifferenceChart push API", () => {
       { x: 1, a: 11, b: 6 },
       { x: 2, a: 12, b: 7 },
       { x: 3, a: 13, b: 8 },
-      { x: 4, a: 14, b: 9 },
+      { x: 4, a: 14, b: 9 }
     ])
     const live = ref.current!.getData()
     expect(live).toHaveLength(3)
@@ -695,7 +792,7 @@ describe("DifferenceChart accessor coercion", () => {
         <DifferenceChart
           data={[
             { date: date0, a: 10, b: 5 },
-            { date: date1, a: 4, b: 9 },
+            { date: date1, a: 4, b: 9 }
           ]}
           xAccessor="date"
           seriesAAccessor="a"
@@ -704,8 +801,8 @@ describe("DifferenceChart accessor coercion", () => {
       </TooltipProvider>
     )
     // Segment rows should carry x as milliseconds (Date.getTime()).
-    const segmentRows = lastXYFrameProps.data.filter(
-      (d) => d.__diffSegment.startsWith("seg-")
+    const segmentRows = lastXYFrameProps.data.filter((d) =>
+      d.__diffSegment.startsWith("seg-")
     )
     expect(segmentRows.length).toBeGreaterThan(0)
     expect(typeof segmentRows[0].__x).toBe("number")
@@ -716,18 +813,20 @@ describe("DifferenceChart accessor coercion", () => {
     render(
       <TooltipProvider>
         <DifferenceChart
-          data={[
-            { x: "0", a: "10", b: "5" },
-            { x: "1", a: "4", b: "9" },
-          ] as unknown as DifferenceChartProps["data"]}
+          data={
+            [
+              { x: "0", a: "10", b: "5" },
+              { x: "1", a: "4", b: "9" }
+            ] as unknown as DifferenceChartProps["data"]
+          }
           xAccessor="x"
           seriesAAccessor="a"
           seriesBAccessor="b"
         />
       </TooltipProvider>
     )
-    const segmentRows = lastXYFrameProps.data.filter(
-      (d) => d.__diffSegment.startsWith("seg-")
+    const segmentRows = lastXYFrameProps.data.filter((d) =>
+      d.__diffSegment.startsWith("seg-")
     )
     expect(segmentRows.length).toBeGreaterThan(0)
     // x and y values must be numbers after coercion, not strings.

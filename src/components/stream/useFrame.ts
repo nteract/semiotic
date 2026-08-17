@@ -54,6 +54,12 @@ import {
 import type { HoverPointerCoords } from "./hoverUtils"
 import { FrameRuntime, type FrameClock, type FrameRandom } from "./FrameRuntime"
 import { reserveFrameChromeMargin } from "./titleLayout"
+import {
+  clampLegendReservation,
+  reserveLegendMargin,
+  type AxisChromeInput,
+} from "../legendLayout"
+import type { LegendLayout, LegendValue } from "../types/legendTypes"
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -142,6 +148,12 @@ export interface UseFrameInput {
   legend?: unknown
   /** Legend placement used for shared top-chrome clearance. */
   legendPosition?: "right" | "left" | "top" | "bottom"
+  /** Shared legend metrics used to reserve direct-frame plot space. */
+  legendLayout?: LegendLayout
+  /** Axis chrome adjacent to the legend, when the frame has axes. */
+  axisChrome?: AxisChromeInput
+  /** A chart HOC already calculated the legend-aware margin. */
+  legendMarginReserved?: boolean
   /** Frame's `foregroundGraphics` prop. */
   foregroundGraphics?: FrameGraphicsProp
   /** Frame's `backgroundGraphics` prop. */
@@ -304,19 +316,52 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     input.responsiveWidth,
     input.responsiveHeight,
   )
+  const sizeWidth = size[0]
+  const sizeHeight = size[1]
+  // `useResponsiveSize` may return a fresh tuple with unchanged dimensions.
+  // Keep legend geometry stable in that case so the memoized margin remains a
+  // stable dependency for frame rendering work.
+  const legendSize = useMemo<[number, number]>(
+    () => [sizeWidth, sizeHeight],
+    [sizeWidth, sizeHeight],
+  )
 
   // ── Margin merge + adjusted dimensions ────────────────────────────────
   // Memoized so frames using `margin` as a useMemo dependency don't loop.
   const hasTitle = Boolean(input.title)
   const hasTopLegend = Boolean(input.legend) && input.legendPosition === "top"
-  const margin = useMemo<FrameMargin>(
-    () => reserveFrameChromeMargin(
+  const margin = useMemo<FrameMargin>(() => {
+    const resolved = reserveFrameChromeMargin(
       { ...input.marginDefault, ...input.userMargin },
       hasTitle,
       hasTopLegend,
-    ),
-    [input.marginDefault, input.userMargin, hasTitle, hasTopLegend],
-  )
+    )
+    if (input.legend && !input.legendMarginReserved) {
+      const baseline = { ...resolved }
+      const position = input.legendPosition ?? "right"
+      reserveLegendMargin(resolved, {
+        legend: input.legend as LegendValue,
+        position,
+        size: legendSize,
+        hasTitle,
+        legendLayout: input.legendLayout,
+        axisChrome: input.axisChrome,
+      })
+      clampLegendReservation(resolved, baseline, legendSize, position)
+    }
+    return resolved
+  }, [
+    input.marginDefault,
+    input.userMargin,
+    input.legend,
+    input.legendPosition,
+    input.legendLayout,
+    input.axisChrome,
+    input.legendMarginReserved,
+    hasTitle,
+    hasTopLegend,
+    legendSize,
+  ])
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom
 

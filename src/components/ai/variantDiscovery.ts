@@ -16,7 +16,7 @@ import type {
   ChartVariant,
   IntentScorer,
 } from "./chartCapabilityTypes"
-import type { IntentId } from "./intents"
+import { expandComposedIntentScores, type IntentId } from "./intents"
 import {
   applyAudienceBias,
   receivabilityBias,
@@ -27,6 +27,7 @@ import {
 import { getCapabilities, getCapability } from "./chartCapabilities"
 import { auditAccessibility } from "../charts/shared/auditAccessibility"
 import type { Datum } from "../charts/shared/datumTypes"
+import { identifierMeasureViolation } from "./fieldPolicy"
 
 // ── Proposal ──────────────────────────────────────────────────────────
 
@@ -100,6 +101,8 @@ export type VariantRejectionReason = string
 export interface VariantScore {
   /** Echoes `VariantProposal.id`. */
   proposalId: string
+  /** True when this proposal cannot safely be emitted for the supplied profile. */
+  rejected?: boolean
   /**
    * How well this proposal matches the profile + audience, 0..5.
    * Drawn from the same 0..5 scale `suggestCharts` uses so consumers
@@ -362,7 +365,10 @@ function builtInHeuristicProposals(
       .filter((candidate) => candidate.component !== component)
       .filter((candidate) => candidate.fits(profile) === null)
       .map((candidate) => {
-        const scores = intentScoresFor(candidate, profile)
+        const scores = expandComposedIntentScores(
+          intentScoresFor(candidate, profile),
+          intents,
+        )
         return {
           candidate,
           fit: compositeScore(scores, intents),
@@ -458,6 +464,7 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   if (!capability) {
     return {
       proposalId: proposal.id,
+      rejected: true,
       fit: 0,
       novelty: 1,
       risk: 1,
@@ -469,6 +476,7 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   if (fitReason !== null) {
     return {
       proposalId: proposal.id,
+      rejected: true,
       fit: 0,
       novelty: proposal.source === "manual" ? 0.2 : 0.7,
       risk: 1,
@@ -477,7 +485,32 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   }
 
   const rankingIntents = normalizeIntents(options.intent)
-  const intentScores = intentScoresFor(capability, profile, proposal.intentDeltas)
+  const intentScores = expandComposedIntentScores(
+    intentScoresFor(capability, profile, proposal.intentDeltas),
+    rankingIntents,
+  )
+  const variant = proposal.variantKey
+    ? capability.variants?.find((entry) => entry.key === proposal.variantKey)
+    : undefined
+  const props = proposal.buildProps
+    ? proposal.buildProps(profile, audience)
+    : capability.buildProps(profile, variant)
+  const policyFailure = identifierMeasureViolation(
+    capability,
+    profile,
+    props,
+    variant,
+  )
+  if (policyFailure) {
+    return {
+      proposalId: proposal.id,
+      rejected: true,
+      fit: 0,
+      novelty: proposal.source === "manual" ? 0.2 : 0.7,
+      risk: 1,
+      reasons: [`Rejected: ${policyFailure}`],
+    }
+  }
   const baseFit = compositeScore(intentScores, rankingIntents)
   const rubric = applyRubricDeltas(capability.rubric, proposal.rubricDeltas)
 
@@ -490,12 +523,6 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   let receivability: ReceivabilitySignal | undefined
   const modality = audience?.receptionModality
   if (modality && modality !== "visual") {
-    const variant = proposal.variantKey
-      ? capability.variants?.find((v) => v.key === proposal.variantKey)
-      : undefined
-    const props = proposal.buildProps
-      ? proposal.buildProps(profile, audience)
-      : capability.buildProps(profile, variant)
     const audit = auditAccessibility(proposal.baseComponent, props as Datum)
     receivability = receivabilityBias(audit, modality as ReceptionModality)
   }

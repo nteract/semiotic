@@ -107,6 +107,9 @@ export function createPhysicsSettledSVG(
     margin.left || margin.top
       ? `translate(${margin.left},${margin.top})`
       : undefined
+  const plotWidth = Math.max(1, width - margin.left - margin.right)
+  const plotHeight = Math.max(1, height - margin.top - margin.bottom)
+  const plotClipId = `${prefix}-plot-clip`
   const translatedBackground =
     plotTransform && resolvedBackground != null ? (
       <g transform={plotTransform}>{resolvedBackground}</g>
@@ -128,6 +131,11 @@ export function createPhysicsSettledSVG(
       >
         {title && <title id={titleId}>{title}</title>}
         {description && <desc id={descId}>{description}</desc>}
+        <defs>
+          <clipPath id={plotClipId}>
+            <rect width={plotWidth} height={plotHeight} />
+          </clipPath>
+        </defs>
         {backgroundGraphicsBackdrop &&
         backgroundGraphicsBackdrop !== "transparent" ? (
           <rect
@@ -143,7 +151,11 @@ export function createPhysicsSettledSVG(
           <rect x={0} y={0} width={width} height={height} fill={background} />
         ) : null}
         {translatedBackground}
-        <g id={`${prefix}-data-area`} transform={plotTransform}>
+        <g
+          id={`${prefix}-data-area`}
+          transform={plotTransform}
+          clipPath={`url(#${plotClipId})`}
+        >
           {scene.sceneNodes.map((node, index) => {
             const body = scene.bodies[index]
             const custom =

@@ -171,6 +171,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     colorScheme,
     showLegend: false,
     legendInteraction,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -291,6 +292,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}

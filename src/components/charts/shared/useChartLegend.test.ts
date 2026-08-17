@@ -5,7 +5,8 @@ import {
   useGradientLegendInteraction,
   useLegendInteraction
 } from "./hooks"
-import { isLegendConfig } from "../../types/legendTypes"
+import { isLegendConfig, type CategoricalLegendConfig } from "../../types/legendTypes"
+import type { FrameLegendOverrides } from "./hooks"
 
 /**
  * Tests for `useChartLegend.ts` — the legend construction + margin
@@ -110,6 +111,47 @@ describe("useChartLegendAndMargin", () => {
       throw new Error("Expected a categorical legend")
     expect(legend.legendGroups).toHaveLength(1)
     expect(legend.legendGroups[0].items).toHaveLength(3)
+  })
+
+  it("measures frame legend overrides before the wrapper forwards frameProps", () => {
+    const frameLegend: CategoricalLegendConfig = {
+      legendGroups: [{
+        label: "Override",
+        type: "fill" as const,
+        styleFn: () => ({ fill: "#246" }),
+        items: [{ label: "Rendered only", color: "#246" }]
+      }]
+    }
+    const initialFrame: FrameLegendOverrides = {
+      legend: frameLegend,
+      legendPosition: "left"
+    }
+    const { result, rerender } = renderHook(
+      ({ frame }: { frame: FrameLegendOverrides }) => useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        showLegend: true,
+        legendPosition: "right",
+        userMargin: undefined,
+        frameLegend: frame,
+      }),
+      { initialProps: { frame: initialFrame } }
+    )
+
+    expect(result.current.legend).toBe(frameLegend)
+    expect(result.current.legendPosition).toBe("left")
+    expect(result.current.margin.left).toBeGreaterThan(result.current.margin.right)
+    expect(result.current.legendMarginReserved).toBe(true)
+
+    rerender({
+      frame: {
+        legend: frameLegend,
+        legendPosition: "left",
+        margin: { top: 20, right: 20, bottom: 20, left: 20 }
+      }
+    })
+    expect(result.current.legendMarginReserved).toBe(false)
   })
 
   it("appends caller categorical groups after the inferred legend", () => {
@@ -409,7 +451,7 @@ describe("useChartLegendAndMargin", () => {
       })
     )
 
-    expect(result.current.margin.top).toBe(56)
+    expect(result.current.margin.top).toBe(58)
   })
 
   it("clamps a compact horizontal legend reservation to leave a plot", () => {

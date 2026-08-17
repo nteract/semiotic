@@ -31,7 +31,7 @@ import {
   resolveMobileInteraction,
   distinctCategories
 } from "./hooks"
-import type { LegendInteractionMode, LegendPosition } from "./hooks"
+import type { FrameLegendOverrides, LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
 import {
   createColorScale,
@@ -97,6 +97,8 @@ export interface ChartSetupInput {
   legend?: LegendValue
   /** Shared legend metrics, including any side-axis gutter. */
   legendLayout?: LegendLayout
+  /** Frame-level legend fields which take precedence in the rendered frame. */
+  frameLegend?: FrameLegendOverrides
   /** User-provided margin */
   userMargin: PartialMargin | undefined
   /** Mode-resolved margin defaults */
@@ -213,6 +215,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     showLegend,
     legend: additionalLegend,
     legendLayout,
+    frameLegend,
     userMargin,
     marginDefaults,
     onClick,
@@ -372,7 +375,13 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   ])
 
   // ── Legend & margin ────────────────────────────────────────────────────
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+  const {
+    legend,
+    margin,
+    legendPosition,
+    legendLayout: resolvedLegendLayout,
+    legendMarginReserved
+  } = useChartLegendAndMargin({
     data: safeData,
     colorBy,
     colorScale: legendColorScale,
@@ -385,6 +394,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartWidth: width,
     chartHeight: height,
     legendLayout,
+    frameLegend,
     hasTitle,
     axisChrome
   })
@@ -395,7 +405,16 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     if (legend) {
       props.legend = legend
       props.legendPosition = legendPosition
-      if (legendLayout) props.legendLayout = legendLayout
+      // Stream frames also support raw, direct-use legends. HOC margins have
+      // already been measured above, so flag this internal hand-off to avoid
+      // reserving the same legend twice at the lower frame boundary. An
+      // explicit frameProps.margin wins over this computed margin, so leave
+      // the marker out in that case and let the Stream frame reserve against
+      // the actual margin it receives.
+      if (legendMarginReserved) {
+        props.__legendMarginReservedFor = legend
+      }
+      if (resolvedLegendLayout) props.legendLayout = resolvedLegendLayout
     }
     if (legendInteraction && legendInteraction !== "none") {
       props.legendHoverBehavior = legendState.onLegendHover
@@ -411,7 +430,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   }, [
     legend,
     legendPosition,
-    legendLayout,
+    resolvedLegendLayout,
+    legendMarginReserved,
     legendInteraction,
     legendState.onLegendHover,
     legendState.onLegendClick,

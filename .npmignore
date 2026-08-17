@@ -1,0 +1,3 @@
+# Package contents are defined exclusively by package.json's "files" allowlist.
+# Do not inherit .gitignore: the published package intentionally includes the
+# three browser worker entry points under dist/.

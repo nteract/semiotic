@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check committed MCP bundle
+        run: npm run check:mcp-bundle
+
       - name: Build library
         run: npm run dist
 
@@ -230,6 +233,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check committed MCP bundle
+        run: npm run check:mcp-bundle
 
       - name: Build library
         run: npm run dist

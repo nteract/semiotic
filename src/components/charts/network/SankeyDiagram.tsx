@@ -198,6 +198,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     showLegend,                   // undefined → auto-on when colorBy is set
     legendPosition,
     legendInteraction,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -301,6 +302,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}

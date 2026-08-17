@@ -274,6 +274,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: edgeColorBy ? [typeof edgeColorBy === "string" ? edgeColorBy : ""] : [],

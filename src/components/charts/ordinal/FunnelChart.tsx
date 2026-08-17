@@ -187,6 +187,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],

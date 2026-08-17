@@ -109,12 +109,10 @@ import {
   rehitNetworkFrameCursor,
   type NetworkCursorInventory
 } from "./networkFrameCursorInteraction"
+import { networkFrameDefaultMargin } from "./frameDefaultMargins"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
-const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
-const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
-const CENTERED_TYPES = new Set(["chord", "force", "circlepack", "orbit"])
 const DEFAULT_SIZE: [number, number] = [800, 600]
 
 // ── StreamNetworkFrame ─────────────────────────────────────────────────
@@ -228,12 +226,10 @@ const StreamNetworkFrame = memo(forwardRef<
   } = props
 
   // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
-  // Network has two margin defaults — CENTERED for radial chart types, the
-  // standard DEFAULT_MARGIN for everything else. Resolve the family default
-  // before handing it to useFrame.
-  const baseMargin = CENTERED_TYPES.has(chartType)
-    ? CENTERED_MARGIN
-    : DEFAULT_MARGIN
+  // Network has a compact centered default for radial chart types and a wider
+  // label-safe default for directional layouts. Static rendering resolves the
+  // exact same family default through networkFrameDefaultMargin.
+  const baseMargin = networkFrameDefaultMargin(chartType)
   // dirtyRef declared before useFrame so it can be threaded in for the
   // theme-change effect. Network inits to true (load-bearing).
   const dirtyRef = useRef(true)
@@ -246,6 +242,8 @@ const StreamNetworkFrame = memo(forwardRef<
     title,
     legend,
     legendPosition,
+    legendLayout,
+    legendMarginReserved: (props as { __legendMarginReservedFor?: unknown }).__legendMarginReservedFor === legend,
     animate,
     transitionProp,
     frameScheduler,

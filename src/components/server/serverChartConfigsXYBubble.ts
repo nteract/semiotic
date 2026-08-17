@@ -12,25 +12,32 @@ import {
   type StyleRule
 } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
-import type { ChartConfig } from "./serverChartConfigShared"
+import { mergeServerRegressionAnnotation, type ChartConfig } from "./serverChartConfigShared"
 
 export const bubbleChart: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "scatter",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    colorAccessor: colorBy,
-    sizeAccessor: rest.sizeBy,
-    sizeRange: rest.sizeRange || [5, 40],
-    colorScheme,
-    ...common,
-    pointStyle:
-      common.pointStyle ||
-      buildBubblePointStyle(data, colorBy, colorScheme, common, rest),
-    showLegend: common.showLegend ?? Boolean(colorBy)
-  })
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const annotations = mergeServerRegressionAnnotation(
+      common.annotations,
+      rest.regression,
+    )
+    return {
+      chartType: "scatter",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      colorAccessor: colorBy,
+      sizeAccessor: rest.sizeBy,
+      sizeRange: rest.sizeRange || [5, 40],
+      colorScheme,
+      ...common,
+      ...(annotations && { annotations }),
+      pointStyle:
+        common.pointStyle ||
+        buildBubblePointStyle(data, colorBy, colorScheme, common, rest),
+      showLegend: common.showLegend ?? Boolean(colorBy)
+    }
+  }
 }
 
 /** Mirror BubbleChart's HOC-level point encoding on the server path. */

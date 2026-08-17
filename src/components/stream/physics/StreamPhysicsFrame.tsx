@@ -423,6 +423,9 @@ export const StreamPhysicsFrame = memo(
         responsiveHeight,
         userMargin: marginProp,
         marginDefault: DEFAULT_MARGIN,
+        legend,
+        legendPosition,
+        legendLayout,
         themeDirtyRef: dirtyRef,
         skipInitialThemeInvalidation: true,
         foregroundGraphics,
@@ -450,6 +453,8 @@ export const StreamPhysicsFrame = memo(
       } = frame
       const frameWidth = size[0]
       const frameHeight = size[1]
+      const plotWidth = Math.max(1, frameWidth - margin.left - margin.right)
+      const plotHeight = Math.max(1, frameHeight - margin.top - margin.bottom)
 
       const augmentedConfig = React.useMemo(
         () =>
@@ -461,7 +466,7 @@ export const StreamPhysicsFrame = memo(
             onRegionObservation: handleRegionObservation,
             regionEffects,
             seed,
-            size: [frameWidth, frameHeight]
+            size: [plotWidth, plotHeight]
           }),
         [
           annotations,
@@ -470,8 +475,8 @@ export const StreamPhysicsFrame = memo(
           handleRegionObservation,
           regionEffects,
           seed,
-          frameWidth,
-          frameHeight
+          plotWidth,
+          plotHeight
         ]
       )
       const hadConfiguredCollidersRef = useRef(
@@ -624,6 +629,13 @@ export const StreamPhysicsFrame = memo(
               : paintContext.resolvePaint(background, theme.background)
           ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
         }
+        // Physics bodies render in plot-local coordinates just like the other
+        // frame families. Keep that scene inside the legend/title-reserved
+        // rectangle rather than letting a direct-frame legend paint over it.
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, 0, plotWidth, plotHeight)
+        ctx.clip()
 
         const snapshot = store.snapshot()
         const bodies = store.readBodies()
@@ -702,6 +714,7 @@ export const StreamPhysicsFrame = memo(
           popAnimationsRef.current,
           logicalClockRef.current()
         )
+        ctx.restore()
         sceneRevisionDiagnosticsRef.current.afterCompute(
           sceneRevisionCheck,
           true,
@@ -714,6 +727,8 @@ export const StreamPhysicsFrame = memo(
         sceneRevisionDiagnosticsRef,
         size,
         margin,
+        plotWidth,
+        plotHeight,
         backgroundGraphics,
         background,
         maxDevicePixelRatio,
@@ -1318,8 +1333,6 @@ export const StreamPhysicsFrame = memo(
         (typeof title === "string" ? title : undefined) ??
         "Physics chart"
       const tableId = `${svgInstanceId}-physics-table`
-      const plotWidth = Math.max(1, size[0] - margin.left - margin.right)
-      const plotHeight = Math.max(1, size[1] - margin.top - margin.bottom)
       const tooltipRendered =
         enableHover && hoverData ? (
           tooltipContent ? (

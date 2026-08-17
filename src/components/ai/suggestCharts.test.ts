@@ -334,6 +334,25 @@ describe("suggestCharts", () => {
     })
   })
 
+  it("does not recommend BumpChart when mixed-type x values only appear to share columns", () => {
+    const suggestions = suggestCharts([
+      { period: 1, service: "alpha", throughput: 10 },
+      { period: "1", service: "bravo", throughput: 9 },
+      { period: 2, service: "alpha", throughput: 12 },
+      { period: "2", service: "bravo", throughput: 11 },
+    ], {
+      allow: ["BumpChart"],
+      includeVariants: false,
+      fieldRoles: {
+        period: "x",
+        service: "series",
+        throughput: "y",
+      },
+    })
+
+    expect(suggestions).toEqual([])
+  })
+
   it("respects user-registered capabilities", () => {
     const fake: ChartCapability = {
       component: "MyCustomChart",

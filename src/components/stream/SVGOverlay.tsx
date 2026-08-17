@@ -7,7 +7,7 @@ import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
-import { resolveLegendSideGutter } from "../legendLayout"
+import { resolveLegendSideGutter, resolveXYAxisChrome } from "../legendLayout"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
@@ -28,7 +28,12 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
-import { axisTickCount, defaultTickFormat, filterTicksByPixelDistance } from "./axisTickUtils"
+import {
+  axisTickCount,
+  defaultTickFormat,
+  filterTicksByPixelDistance,
+  hasSameTickLabel,
+} from "./axisTickUtils"
 import { SVGChartTitle } from "./SVGChartTitle"
 
 export { SVGUnderlay } from "./SVGUnderlay"
@@ -195,14 +200,28 @@ export function SVGOverlay(props: SVGOverlayProps) {
     chartId,
     chartType
   })
-  const sideLegendGutter = resolveLegendSideGutter(legendLayout)
+  const legendAxisChrome = resolveXYAxisChrome({
+    showAxes,
+    xLabel,
+    yLabel,
+    yLabelRight,
+    axes,
+  })
+  const leftSideLegendGutter = resolveLegendSideGutter(
+    legendLayout,
+    legendAxisChrome.leftAxis,
+  )
+  const rightSideLegendGutter = resolveLegendSideGutter(
+    legendLayout,
+    legendAxisChrome.rightAxis,
+  )
   const leftAxisLabelMargin =
-    legend && legendPosition === "left" && sideLegendGutter > 0
-      ? sideLegendGutter
+    legend && legendPosition === "left" && leftSideLegendGutter > 0
+      ? leftSideLegendGutter
       : margin.left
   const rightAxisLabelMargin =
-    legend && legendPosition === "right" && sideLegendGutter > 0
-      ? sideLegendGutter
+    legend && legendPosition === "right" && rightSideLegendGutter > 0
+      ? rightSideLegendGutter
       : margin.right
 
   // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap.
@@ -242,7 +261,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     let filtered = filterTicksByPixelDistance(candidates, minPx)
     // Deduplicate adjacent identical labels (e.g. low-resolution date formats)
     if (filtered.length > 1) {
-      filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
+      filtered = filtered.filter((tick, index) =>
+        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
+      )
     }
     // includeMax: ensure the domain max is represented as a tick.
     // In exact-mode the last tick is always pinned to the domain max
@@ -300,7 +321,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     let filtered = filterTicksByPixelDistance(candidates, 22)
     // Deduplicate adjacent identical labels
     if (filtered.length > 1) {
-      filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
+      filtered = filtered.filter((tick, index) =>
+        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
+      )
     }
     if (yAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !yAxis?.tickValues) {
       const domain = scales.y.domain() as [number, number]
@@ -335,7 +358,26 @@ export function SVGOverlay(props: SVGOverlayProps) {
       pixel: scales.y(v),
       label: fmt(v)
     }))
-    return filterTicksByPixelDistance(candidates, 22)
+    let filtered = filterTicksByPixelDistance(candidates, 22)
+    if (filtered.length > 1) {
+      filtered = filtered.filter((tick, index) =>
+        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
+      )
+    }
+    // The paired-right branch is a full axis, not a decorative duplicate.
+    // Keep `includeMax` consistent with the primary vertical-axis path.
+    if (rightAxis.includeMax && filtered.length > 0 && extentMode !== "exact" && !rightAxis.tickValues) {
+      const domain = scales.y.domain() as [number, number]
+      const domainMax = domain[1]
+      const maxPx = scales.y(domainMax)
+      const nearestPx = filtered[filtered.length - 1].pixel
+      if (Math.abs(maxPx - nearestPx) > 1) {
+        const maxLabel = fmt(domainMax)
+        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
+        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
+      }
+    }
+    return filtered
   }, [showAxes, scales, axes, yFormat, height, axisExtent])
 
   // Persistent cache for sticky annotation positions (survives re-renders)
@@ -675,8 +717,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
               const yRightPixelExtent = tickPixelExtent(yTicksRight)
               return (
                 <g className="semiotic-axis semiotic-axis-right" data-orient="right">
-                  {showRightBaseline && (
+                  {showRightBaseline && !rightAxis.jaggedBase && (
                     <line x1={width} y1={0} x2={width} y2={height} {...rightAxisLine} />
+                  )}
+                  {rightAxis.jaggedBase && (
+                    <path d={jaggedBaselinePath("right", width, height)} fill="none" {...rightAxisLine} />
                   )}
                   {yTicksRight.map((tick, i) => {
                     const isLandmark = rightLandmark
@@ -818,14 +863,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
         legendLayout,
-        // Keep a bottom legend clear of the bottom axis's tick labels and
-        // title. Rotated ticks push the title from +40 to +58, so the gutter
-        // has to know about the rotation or the legend still overlaps.
-        axisChrome: {
-          hasAxis: !!showAxes,
-          hasAxisLabel: !!xLabel,
-          rotatedTicks: shouldRotateBottomTicks,
-        },
+        // `resolveXYAxisChrome` deliberately reserves the rotated title
+        // band whenever auto-rotation is enabled. That conservative choice
+        // is shared with HOCs and static SVG, which calculate margins before
+        // runtime collision measurement can decide whether to rotate.
+        axisChrome: legendAxisChrome,
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>
