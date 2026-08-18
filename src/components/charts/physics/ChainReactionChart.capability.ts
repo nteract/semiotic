@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { CHAIN_REACTION_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
 /**
  * ChainReactionChart is intentionally known to the AI surface but never selected
@@ -12,6 +13,7 @@ export const ChainReactionChartCapability: ChartCapability = {
   family: "hierarchy",
   importPath: "semiotic/physics",
   rubric: { familiarity: 2, accuracy: 4, precision: 3 },
+  suggestionPropContract: CHAIN_REACTION_SUGGESTION_PROP_CONTRACT,
 
   fits: () =>
     "requires an authored dependency graph (stable task ids plus an explicit array of prerequisite ids per task); edges cannot be inferred from flat data",

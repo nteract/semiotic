@@ -22,6 +22,16 @@ const CHART_HOC_SUGGESTION_PROP_CONTRACT: SuggestionPropContract = {
   modeValues: ["primary", "context", "sparkline", "mobile"],
 }
 
+export const PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT: SuggestionPropContract = {
+  ...CHART_HOC_SUGGESTION_PROP_CONTRACT,
+  modeValues: ["primary", "context", "sparkline", "mobile", "sample", "mechanical"],
+}
+
+export const CHAIN_REACTION_SUGGESTION_PROP_CONTRACT: SuggestionPropContract = {
+  ...CHART_HOC_SUGGESTION_PROP_CONTRACT,
+  modeValues: ["snapshot", "replay", "mechanical"],
+}
+
 export const BIG_NUMBER_SUGGESTION_PROP_CONTRACT: SuggestionPropContract = {
   componentKind: "value-component",
   commonChartProps: "component-specific",

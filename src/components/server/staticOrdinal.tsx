@@ -22,7 +22,10 @@ import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import {
   extractCategories
 } from "./staticLegend"
-import { renderStaticAnnotations } from "./staticAnnotations"
+import {
+  renderStaticAnnotations,
+  type StaticAnnotationRenderResult,
+} from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
 import type { SemioticTheme } from "../store/themeCore"
 import type { ThemeAwareProps } from "./staticSVGChrome"
@@ -34,6 +37,16 @@ import {
   renderOrdinalGridSVG,
   wrapSVG
 } from "./staticSVGChrome"
+import { AXIS_FRAME_DEFAULT_MARGIN } from "../stream/frameDefaultMargins"
+import {
+  isStaticTextTickLabel,
+  renderStaticTickForeignObject,
+} from "./staticAxisTickLabel"
+import {
+  resolveLegendSideGutter,
+  resolveOrdinalAxisChrome,
+  type AxisChromeInput,
+} from "../legendLayout"
 
 // `centerContent` is historically an HTML overlay in StreamOrdinalFrame, so
 // arbitrary React content must remain inside a foreignObject in static SVG.
@@ -91,7 +104,10 @@ export function generateOrdinalAxesSVG(
   layout: { width: number; height: number },
   props: StreamOrdinalFrameProps,
   theme: SemioticTheme,
-  idPrefix?: string
+  idPrefix?: string,
+  margin?: { top: number; right: number; bottom: number; left: number },
+  axisChrome?: AxisChromeInput,
+  hasRenderedLegend = false,
 ): React.ReactNode {
   const scales = store.scales
   if (!scales) return null
@@ -106,10 +122,19 @@ export function generateOrdinalAxesSVG(
   const valFormat = props.valueFormat || props.rFormat
   const catLabel = props.categoryLabel || props.oLabel
   const valLabel = props.valueLabel || props.rLabel
+  const legendPosition = props.legendPosition ?? "right"
+  const leftSideLegendGutter = resolveLegendSideGutter(
+    props.legendLayout,
+    axisChrome?.leftAxis,
+  )
+  const leftAxisLabelMargin =
+    hasRenderedLegend && legendPosition === "left" && leftSideLegendGutter > 0
+      ? leftSideLegendGutter
+      : (margin?.left ?? props.margin?.left ?? 40)
 
-  const categoryTicks = Object.values(columns).map(col => ({
+  const categoryTicks = Object.values(columns).map((col, index) => ({
     pixel: col.middle,
-    label: (catFormat || String)(col.name)
+    label: catFormat ? catFormat(col.name, index) : col.name
   }))
 
   // ticksForMode mirrors the client OrdinalSVGOverlay: "exact" pins the
@@ -130,7 +155,17 @@ export function generateOrdinalAxesSVG(
         {categoryTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
             <line y2={5} stroke={s.border} strokeWidth={1} />
-            <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+            {isStaticTextTickLabel(tick.label) ? (
+              <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+            ) : renderStaticTickForeignObject({
+              label: tick.label,
+              x: -30,
+              y: 6,
+              textAlign: "center",
+              fontSize: s.tickSize,
+              fontFamily: s.fontFamily,
+              color: s.textSecondary,
+            })}
           </g>
         ))}
         {catLabel && (
@@ -147,10 +182,10 @@ export function generateOrdinalAxesSVG(
         ))}
         {valLabel && (
           <text
-            x={-(props.margin?.left ?? 40) + 15}
+            x={-leftAxisLabelMargin + 15}
             y={layout.height / 2}
             textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}
-            transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
+            transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${layout.height / 2})`}
           >
             {valLabel}
           </text>
@@ -176,15 +211,25 @@ export function generateOrdinalAxesSVG(
         {categoryTicks.map((tick, i) => (
           <g key={`oytick-${i}`} transform={`translate(0,${tick.pixel})`}>
             <line x2={-5} stroke={s.border} strokeWidth={1} />
-            <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+            {isStaticTextTickLabel(tick.label) ? (
+              <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+            ) : renderStaticTickForeignObject({
+              label: tick.label,
+              x: -68,
+              y: -12,
+              textAlign: "right",
+              fontSize: s.tickSize,
+              fontFamily: s.fontFamily,
+              color: s.textSecondary,
+            })}
           </g>
         ))}
         {catLabel && (
           <text
-            x={-(props.margin?.left ?? 40) + 15}
+            x={-leftAxisLabelMargin + 15}
             y={layout.height / 2}
             textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}
-            transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
+            transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${layout.height / 2})`}
           >
             {catLabel}
           </text>
@@ -196,7 +241,7 @@ export function generateOrdinalAxesSVG(
 
 export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
-  const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
+  const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
   const size = props.size || [500, 400]
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const hasVisibleTitle = hasTextTitle(props.title)
@@ -205,16 +250,15 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     ? extractCategories(data, props.colorAccessor || props.stackBy || props.groupBy)
     : []
 
-  // The bottom axis is the value axis when horizontal, the category axis when
-  // vertical, and absent when radial. Computed once so reservation and
-  // placement agree.
-  const legendProjection = props.projection || "vertical"
-  const legendAxisChrome = {
-    hasAxis: props.showAxes !== false && legendProjection !== "radial",
-    hasAxisLabel: legendProjection === "horizontal"
-      ? !!(props.valueLabel || props.rLabel)
-      : !!(props.categoryLabel || props.oLabel),
-  }
+  // Both the horizontal and left ordinal axes contribute chrome adjacent to
+  // a legend. Compute it once so reservation, placement, and axis-title
+  // offsets agree.
+  const legendAxisChrome = resolveOrdinalAxisChrome({
+    showAxes: props.showAxes,
+    projection: props.projection,
+    hasCategoryLabel: Boolean(props.categoryLabel || props.oLabel),
+    hasValueLabel: Boolean(props.valueLabel || props.rLabel),
+  })
 
   // Expand margin for legend BEFORE calculating inner dimensions
   reserveFrameLegendMargin(margin, {
@@ -222,6 +266,14 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     categories: ordinalLegendCategories,
     theme,
     size,
+    hasTitle: hasVisibleTitle,
+  })
+  const legend = renderFrameLegend({
+    props: { ...props, axisChrome: legendAxisChrome },
+    categories: ordinalLegendCategories,
+    theme,
+    size,
+    margin,
     hasTitle: hasVisibleTitle,
   })
 
@@ -319,6 +371,19 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   )
 
   if (!store.scales) {
+    let annotationRender: StaticAnnotationRenderResult | undefined
+    const annotationNodes = props.annotations ? renderStaticAnnotations({
+      annotations: props.annotations,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+      svgAnnotationRules: props.svgAnnotationRules,
+      annotationData: data,
+      scales: {},
+      layout: { width, height },
+      theme,
+      projection: projection as "vertical" | "horizontal" | "radial",
+      idPrefix: props._idPrefix,
+      onRender: result => { annotationRender = result },
+    }) : null
     if (sink) {
       sink.evidence = buildEvidence({
         frameType: "ordinal",
@@ -326,6 +391,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         marks: [],
         title: props.title, description: props.description,
         annotations: props.annotations,
+        annotationRender,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
         margin,
       })
@@ -334,17 +400,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       ? (
         <>
           {resolvedBackgroundGraphics}
-          {props.annotations ? renderStaticAnnotations({
-            annotations: props.annotations,
-            autoPlaceAnnotations: props.autoPlaceAnnotations,
-            svgAnnotationRules: props.svgAnnotationRules,
-            annotationData: data,
-            scales: {},
-            layout: { width, height },
-            theme,
-            projection: projection as "vertical" | "horizontal" | "radial",
-            idPrefix: props._idPrefix,
-          }) : null}
+          {annotationNodes}
           {resolvedForegroundGraphics}
           {store.customLayoutOverlays}
         </>
@@ -357,6 +413,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
+        legend,
         idPrefix: props._idPrefix,
       })
     )
@@ -408,27 +465,23 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   })
   const dataMarks = renderedScene.map(entry => entry.element)
 
-  if (sink) {
-    const oDomain = store.scales.o?.domain?.()
-    sink.evidence = buildEvidence({
-      frameType: "ordinal",
-      width: size[0], height: size[1],
-      marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      yDomain: numericDomain(store.scales.r?.domain?.()),
-      categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
-      margin,
-    })
-  }
-
   const showAxes = props.showAxes !== false
   const axes = showAxes
-    ? generateOrdinalAxesSVG(store, { width, height }, props, theme, idPfx)
+    ? generateOrdinalAxesSVG(
+        store,
+        { width, height },
+        props,
+        theme,
+        idPfx,
+        margin,
+        legendAxisChrome,
+        Boolean(legend),
+      )
     : null
 
   // Annotations — same custom-rule path as XY so ordinal custom overlays
   // survive renderChart.
+  let annotationRender: StaticAnnotationRenderResult | undefined
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
@@ -442,20 +495,26 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     layout: { width, height },
     theme,
     projection: projection as "vertical" | "horizontal" | "radial",
+    xAccessor: typeof props.oAccessor === "string" ? props.oAccessor : undefined,
+    yAccessor: typeof props.rAccessor === "string" ? props.rAccessor : undefined,
     idPrefix: idPfx,
+    onRender: result => { annotationRender = result },
   }) : null
 
-  // Legend — auto-build from colorAccessor/stackBy/groupBy + showLegend, OR
-  // honor caller-supplied pre-rendered ReactNode. See XY block for the
-  // contract; same pattern. Config-object form deferred.
-  const legend = renderFrameLegend({
-    props: { ...props, axisChrome: legendAxisChrome },
-    categories: ordinalLegendCategories,
-    theme,
-    size,
-    margin,
-    hasTitle: hasVisibleTitle,
-  })
+  if (sink) {
+    const oDomain = store.scales.o?.domain?.()
+    sink.evidence = buildEvidence({
+      frameType: "ordinal",
+      width: size[0], height: size[1],
+      marks: renderedScene.map(entry => entry.node),
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      annotationRender,
+      yDomain: numericDomain(store.scales.r?.domain?.()),
+      categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
+      margin,
+    })
+  }
 
   // StreamOrdinalFrame places donut center content as an HTML overlay. A
   // standalone SVG has no surrounding positioned container, so preserve that

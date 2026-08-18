@@ -16,6 +16,7 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -342,7 +343,12 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   // ── Legend + Margins ──────────────────────────────────────────────────
 
-  const { legend, margin: mainMargin, legendPosition } = useChartLegendAndMargin({
+  const {
+    legend,
+    margin: mainMargin,
+    legendPosition,
+    legendMarginReserved
+  } = useChartLegendAndMargin({
     data: lineData,
     colorBy,
     colorScale,
@@ -351,11 +357,11 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     userMargin,
     chartWidth: width,
     chartHeight: height,
+    frameLegend: frameProps,
     hasTitle: !!title,
-    // Reserve the bottom-axis band a bottom legend is placed beyond.
     // The detail chart always renders axes (see the `showAxes: true` frame
     // props below); `minimap.showAxes` only governs the overview strip.
-    axisChrome: { hasAxis: true, hasAxisLabel: !!xLabel },
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: true, xLabel, yLabel }),
   })
 
   const minimapHeight = minimapConfig.height || 60
@@ -420,6 +426,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     enableHover,
     showGrid,
     ...(legend && { legend, legendPosition }),
+    ...(legendMarginReserved && { __legendMarginReservedFor: legend }),
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),

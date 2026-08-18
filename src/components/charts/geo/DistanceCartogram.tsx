@@ -278,6 +278,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     colorScheme,
     legendInteraction: undefined,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],

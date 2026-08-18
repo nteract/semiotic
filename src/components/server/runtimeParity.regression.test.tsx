@@ -157,11 +157,11 @@ describe("static/runtime parity regressions", () => {
       backgroundGraphics: <rect id="radial-background" x={0} y={0} width={20} height={20} />,
       size: [300, 240],
     })
-    // The data group retains the established absolute radial center while a
-    // counter-transform puts only background graphics back at plot origin.
-    expect(svg).toContain('transform="translate(160,115)"')
+    // Direct static frames now share the live ordinal chrome-safe margin, so
+    // the absolute radial center and counter-transform use that same plot.
+    expect(svg).toContain('transform="translate(165,115)"')
     expect(svg).toContain(
-      '<g transform="translate(-120,-95)"><rect id="radial-background"'
+      '<g transform="translate(-95,-65)"><rect id="radial-background"'
     )
   })
 

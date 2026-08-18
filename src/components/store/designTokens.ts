@@ -130,6 +130,25 @@ function isColor(t: FlatToken): boolean {
   return typeof t.value === "string" && (t.type === "color" || looksLikeColor(t.value))
 }
 
+function resolveFontFamily(value: unknown): string | undefined {
+  if (Array.isArray(value) && value.every((entry) => typeof entry === "string")) {
+    return value.join(", ")
+  }
+  return typeof value === "string" ? value : undefined
+}
+
+function resolvePixelDimension(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (typeof value !== "string") return undefined
+  const match = value.trim().match(/^(-?(?:\d+|\d*\.\d+))px$/)
+  return match ? Number(match[1]) : undefined
+}
+
+function resolveFontWeight(value: unknown): string | number | undefined {
+  if (typeof value === "string") return value
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined
+}
+
 // ── Mode detection ───────────────────────────────────────────────────────────
 
 /** Relative luminance of a hex or rgb(a) color (0 dark … 1 light); null if not parseable. */
@@ -229,13 +248,21 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
     (options.mapping?.fontFamily ? byPath.get(options.mapping.fontFamily) : undefined) ??
     byPath.get("semiotic.font-family") ??
     flat.find((t) => (t.type === "fontFamily" || /font-?family|typeface/i.test(t.leaf)) && (typeof t.value === "string" || Array.isArray(t.value)))
-  const fontFamily = fontToken
-    ? Array.isArray(fontToken.value)
-      ? fontToken.value.join(", ")
-      : typeof fontToken.value === "string"
-        ? fontToken.value
-        : undefined
-    : undefined
+  const fontFamily = fontToken ? resolveFontFamily(fontToken.value) : undefined
+
+  // Typography tokens are native-only by design. Unlike a generic brand
+  // font-family, title/legend treatments have no reliable leaf-name heuristic;
+  // preserving them here makes `designTokensToTheme(themeToTokens(theme))` an
+  // exact inverse for the public title/legend typography controls.
+  const legendSize = resolvePixelDimension(byPath.get("semiotic.legend-font-size")?.value)
+  const legendFontFamily = resolveFontFamily(byPath.get("semiotic.legend-font-family")?.value)
+  const legendFontWeight = resolveFontWeight(byPath.get("semiotic.legend-font-weight")?.value)
+  const titleFontSize = resolvePixelDimension(byPath.get("semiotic.title-font-size")?.value)
+  const titleFontFamily = resolveFontFamily(byPath.get("semiotic.title-font-family")?.value)
+  const titleFontWeight = resolveFontWeight(byPath.get("semiotic.title-font-weight")?.value)
+  const tickFontFamily = resolveFontFamily(byPath.get("semiotic.tick-font-family")?.value)
+  const tickSize = resolvePixelDimension(byPath.get("semiotic.tick-font-size")?.value)
+  const labelSize = resolvePixelDimension(byPath.get("semiotic.axis-label-font-size")?.value)
 
   // Mode + base theme.
   const bgLum = luminance(resolved.background)
@@ -253,6 +280,15 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
     typography: {
       ...base.typography,
       ...(fontFamily ? { fontFamily } : {}),
+      ...(legendSize != null ? { legendSize } : {}),
+      ...(legendFontFamily != null ? { legendFontFamily } : {}),
+      ...(legendFontWeight != null ? { legendFontWeight } : {}),
+      ...(titleFontSize != null ? { titleFontSize } : {}),
+      ...(titleFontFamily != null ? { titleFontFamily } : {}),
+      ...(titleFontWeight != null ? { titleFontWeight } : {}),
+      ...(tickFontFamily != null ? { tickFontFamily } : {}),
+      ...(tickSize != null ? { tickSize } : {}),
+      ...(labelSize != null ? { labelSize } : {}),
     },
   }
 }

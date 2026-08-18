@@ -144,6 +144,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     colorScheme,
     showLegend: false,
     legendInteraction,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -213,6 +214,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
       hierarchySum={hierarchySumFn}

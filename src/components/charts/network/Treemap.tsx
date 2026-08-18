@@ -160,6 +160,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     colorScheme,
     showLegend: false,             // Treemap has no top-level legend prop
     legendInteraction,
+    frameLegend: framePropsRest,
     selection,
     linkedHover,
     onObservation,
@@ -281,6 +282,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
       hierarchySum={hierarchySumFn}

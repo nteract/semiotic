@@ -548,6 +548,25 @@ describe("LikertChart", () => {
     expect(lastOrdinalFrameProps.legendPosition).toBe("right")
   })
 
+  it("measures its level-driven legend after frameProps choose the side", () => {
+    render(
+      <TooltipProvider>
+        <LikertChart
+          data={rawData}
+          valueAccessor="score"
+          levels={levels5}
+          frameProps={{ legendPosition: "left", legendLayout: { sideGutter: 70 } }}
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastOrdinalFrameProps.legendPosition).toBe("left")
+    expect(lastOrdinalFrameProps.margin).toBeDefined()
+    expect(lastOrdinalFrameProps.margin!.left!).toBeGreaterThan(lastOrdinalFrameProps.margin!.right!)
+    expect((lastOrdinalFrameProps as Record<string, unknown>).__legendMarginReservedFor)
+      .toBe(lastOrdinalFrameProps.legend)
+  })
+
   it("survives the loading→data transition without a hooks-count error", () => {
     // Mounting empty (loading skeleton, 0 bars) then re-rendering as data
     // arrives must not call a different number of hooks between renders —

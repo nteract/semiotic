@@ -293,6 +293,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],

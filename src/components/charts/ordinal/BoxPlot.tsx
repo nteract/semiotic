@@ -132,6 +132,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],

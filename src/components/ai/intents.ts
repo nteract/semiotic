@@ -211,18 +211,34 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
   },
 ]
 
-const intentRegistry = new Map<IntentId, IntentDescriptor>(
-  BUILT_IN_INTENTS.map((intent) => [intent.id, intent])
-)
+interface IntentRegistryStore {
+  intents: Map<IntentId, IntentDescriptor>
+}
+
+// `semiotic/ai` and `semiotic/ai/core` are intentionally independent entry
+// bundles. Put the runtime extension point on the realm-global symbol registry
+// so registering an intent through either public entry is immediately visible
+// to the other (as recipe and numeric-contract registries already are).
+const REGISTRY_KEY = Symbol.for("semiotic.intentRegistry")
+
+function registryStore(): IntentRegistryStore {
+  const root = globalThis as typeof globalThis & {
+    [REGISTRY_KEY]?: IntentRegistryStore
+  }
+  root[REGISTRY_KEY] ??= {
+    intents: new Map(BUILT_IN_INTENTS.map((intent) => [intent.id, intent])),
+  }
+  return root[REGISTRY_KEY]
+}
 
 /** Get an intent descriptor by id, or undefined if not registered. */
 export function getIntent(id: IntentId): IntentDescriptor | undefined {
-  return intentRegistry.get(id)
+  return registryStore().intents.get(id)
 }
 
 /** All currently-registered intents (built-in + user-added). */
 export function listIntents(): IntentDescriptor[] {
-  return Array.from(intentRegistry.values())
+  return Array.from(registryStore().intents.values())
 }
 
 /**
@@ -230,7 +246,7 @@ export function listIntents(): IntentDescriptor[] {
  * replaces the descriptor.
  */
 export function registerIntent(intent: IntentDescriptor): void {
-  intentRegistry.set(intent.id, intent)
+  registryStore().intents.set(intent.id, intent)
 }
 
 function resolveComposedScore(
@@ -241,7 +257,7 @@ function resolveComposedScore(
   const direct = scores[id]
   if (Number.isFinite(direct)) return direct
 
-  const descriptor = intentRegistry.get(id)
+  const descriptor = registryStore().intents.get(id)
   if (!descriptor?.composes?.length || visiting.has(id)) return undefined
   visiting.add(id)
 

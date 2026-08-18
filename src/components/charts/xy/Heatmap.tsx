@@ -22,6 +22,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 
 /**
  * Heatmap component props
@@ -416,7 +417,12 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   // Reserve against the legend that is actually rendered. The previous
   // synthetic categorical legend measured the heatmap's raw values instead
   // of the gradient label/endpoints and could disagree with legendDistance.
-  const { margin } = useChartLegendAndMargin({
+  const {
+    margin,
+    legend,
+    legendPosition: resolvedLegendPosition,
+    legendMarginReserved
+  } = useChartLegendAndMargin({
     data: [],
     colorBy: undefined,
     colorScale: undefined,
@@ -428,9 +434,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     chartWidth: width,
     chartHeight: height,
     legendLayout: frameProps.legendLayout,
+    frameLegend: frameProps,
     hasTitle: !!title,
-    // Reserve the bottom-axis band a bottom legend is placed beyond.
-    axisChrome: { hasAxis: resolved.showAxes !== false, hasAxisLabel: !!xLabel },
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
   // Build StreamXYFrame props
@@ -456,7 +462,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     yFormat,
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
-    ...(gradientLegend && { legend: gradientLegend, legendPosition }),
+    ...(legend && { legend, legendPosition: resolvedLegendPosition }),
+    ...(legendMarginReserved && { __legendMarginReservedFor: legend }),
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({

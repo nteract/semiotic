@@ -41,7 +41,18 @@ const RELEASE_TAGS = [
   "v3.7.1",
   "v3.7.2",
   "v3.7.3",
-  "v3.7.4"
+  "v3.7.4",
+  "v3.7.5",
+  "v3.8.0",
+  "v3.8.1",
+  "v3.8.2",
+  "v3.8.3",
+  "v3.8.4",
+  "v3.8.5",
+  "v3.8.6",
+  "v3.8.7",
+  "v3.8.8",
+  "v3.8.9"
 ]
 
 const CURRENT_COLORS = {
@@ -729,10 +740,19 @@ function buildDashboard() {
     colorBy: "metric",
     width: 356,
     height: 230,
-    margin: { top: 14, right: 24, bottom: 44, left: 42 },
+    margin: { top: 36, right: 24, bottom: 44, left: 42 },
     description:
       "Line chart showing chart catalog and public export growth since 3.0.0.",
-    showLegend: true
+    showLegend: true,
+    legendPosition: "top",
+    frameProps: {
+      legendLayout: {
+        swatchSize: 10,
+        labelGap: 4,
+        itemGap: 6,
+        rowHeight: 16
+      }
+    }
   })
 
   const bundleChart = chartSvg("BarChart", "bundle-budget", {
@@ -757,10 +777,19 @@ function buildDashboard() {
     colorBy: "metric",
     width: 356,
     height: 230,
-    margin: { top: 14, right: 24, bottom: 44, left: 42 },
+    margin: { top: 52, right: 24, bottom: 44, left: 42 },
     description:
       "Line chart showing SSR, push, linked hover, and selection coverage since the capability matrix shipped.",
-    showLegend: true
+    showLegend: true,
+    legendPosition: "top",
+    frameProps: {
+      legendLayout: {
+        swatchSize: 10,
+        labelGap: 4,
+        itemGap: 6,
+        rowHeight: 16
+      }
+    }
   })
 
   const familyChart = chartSvg("StackedBarChart", "family-render-path", {

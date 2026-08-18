@@ -19,6 +19,7 @@ import { writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import ts from "typescript"
+import { stableApiEntrypoints } from "./lib/public-entrypoints.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -34,38 +35,13 @@ function argumentValue(name, fallback) {
   return value
 }
 
-// Map of entry-point name → its built `.d.ts` file.
-// `semiotic-experimental` is intentionally omitted: that sub-path is packaged
-// for collaborator previews, but is not a stable API contract for CI snapshots.
-const ENTRIES = {
-  semiotic: "dist/semiotic.d.ts",
-  "semiotic-xy": "dist/semiotic-xy.d.ts",
-  "semiotic-ordinal": "dist/semiotic-ordinal.d.ts",
-  "semiotic-network": "dist/semiotic-network.d.ts",
-  "semiotic-realtime": "dist/semiotic-realtime.d.ts",
-  "semiotic-server": "dist/semiotic-server.d.ts",
-  "semiotic-ai": "dist/semiotic-ai.d.ts",
-  "semiotic-ai-core": "dist/semiotic-ai-core.d.ts",
-  "semiotic-data": "dist/semiotic-data.d.ts",
-  "semiotic-geo": "dist/semiotic-geo.d.ts",
-  "semiotic-rough": "dist/semiotic-rough.d.ts",
-  "semiotic-physics": "dist/semiotic-physics.d.ts",
-  "semiotic-physics-matter": "dist/semiotic-physics-matter.d.ts",
-  "semiotic-physics-rapier": "dist/semiotic-physics-rapier.d.ts",
-  "semiotic-themes": "dist/semiotic-themes.d.ts",
-  "semiotic-themes-core": "dist/semiotic-themes-core.d.ts",
-  "semiotic-themes-react": "dist/semiotic-themes-react.d.ts",
-  "semiotic-utils": "dist/semiotic-utils.d.ts",
-  "semiotic-utils-core": "dist/semiotic-utils-core.d.ts",
-  "semiotic-utils-react": "dist/semiotic-utils-react.d.ts",
-  "semiotic-recipes": "dist/semiotic-recipes.d.ts",
-  "semiotic-recipes-core": "dist/semiotic-recipes-core.d.ts",
-  "semiotic-recipes-react": "dist/semiotic-recipes-react.d.ts",
-  "semiotic-value": "dist/semiotic-value.d.ts",
-  "semiotic-server-node": "dist/semiotic-server-node.d.ts",
-  "semiotic-server-edge": "dist/semiotic-server-edge.d.ts",
-  "semiotic-controls": "dist/semiotic-controls.d.ts",
-}
+// `package.json#exports` is the publishing authority. Derive every stable
+// declaration snapshot from the same inventory that Vite aliases and build
+// parity use; the experimental preview subpaths remain intentionally outside
+// the compatibility contract.
+const ENTRIES = Object.fromEntries(
+  stableApiEntrypoints().map((entry) => [entry.apiSnapshotName, entry.declarationPath])
+)
 
 // CI passes a temporary directory so surface verification never modifies
 // tracked snapshots. The default remains the checked-in location for the

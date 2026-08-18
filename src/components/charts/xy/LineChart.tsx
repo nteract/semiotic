@@ -16,7 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -786,6 +786,7 @@ export const LineChart = forwardRef(
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: framePropsWithoutLegend,
     selection,
     linkedHover,
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
@@ -807,7 +808,7 @@ export const LineChart = forwardRef(
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
   // Aliases so the rest of the file reads naturally — the existing render
@@ -1073,12 +1074,10 @@ export const LineChart = forwardRef(
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     enableHover,
     showGrid,
-    // `setup.legendBehaviorProps` carries the legend slot, legend
-    // interaction handlers, and the push-mode category-domain props
-    // (`legendCategoryAccessor` + `onCategoriesChange`) the frame uses
-    // to feed `setup.activeCategories`. Spreading it as a single block
-    // replaces the previous `useStreamingLegend.categoryDomainProps`
-    // wiring.
+    // `setup.legendBehaviorProps` carries the legend slot, interaction handlers,
+    // and push-mode category-domain props (`legendCategoryAccessor` +
+    // `onCategoriesChange`) that feed `setup.activeCategories`. It replaces
+    // the previous `useStreamingLegend.categoryDomainProps` wiring.
     ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),

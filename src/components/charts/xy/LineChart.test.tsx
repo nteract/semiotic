@@ -485,6 +485,49 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.hoverAnnotation).toBe(false)
     })
 
+    it("measures an automatic legend at its frameProps side before forwarding it", () => {
+      const grouped = [
+        { x: 1, y: 10, series: "A" },
+        { x: 2, y: 20, series: "B" },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={grouped}
+            colorBy="series"
+            frameProps={{ legendPosition: "left", legendLayout: { sideGutter: 70 } }}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.legendPosition).toBe("left")
+      expect(lastXYFrameProps.margin).toBeDefined()
+      expect(lastXYFrameProps.margin!.left!).toBeGreaterThan(lastXYFrameProps.margin!.right!)
+      expect((lastXYFrameProps as Record<string, unknown>).__legendMarginReservedFor)
+        .toBe(lastXYFrameProps.legend)
+    })
+
+    it("lets the Stream frame remeasure when frameProps replaces the computed margin", () => {
+      const grouped = [
+        { x: 1, y: 10, series: "A" },
+        { x: 2, y: 20, series: "B" },
+      ]
+      const frameMargin = { top: 20, right: 20, bottom: 20, left: 20 }
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={grouped}
+            colorBy="series"
+            frameProps={{ legendPosition: "left", margin: frameMargin }}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.margin).toBe(frameMargin)
+      expect((lastXYFrameProps as Record<string, unknown>).__legendMarginReservedFor)
+        .toBeUndefined()
+    })
+
     it("forwards axisExtent=\"exact\" to the frame", () => {
       // LineChart uses a manual thread-through (not buildBaseMetadataProps);
       // verify the explicit branch reaches the frame.
