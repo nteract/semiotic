@@ -123,9 +123,21 @@ try {
   } catch (error) {
     throw new Error(`Could not parse npm pack output: ${error.message}`)
   }
-  const filename = packResult?.[0]?.filename
-  if (!filename) throw new Error("npm pack did not report an archive filename")
-  execFileSync("tar", ["-xzf", join(archiveDir, filename), "-C", extractionDir])
+  const reportedFilename = packResult?.[0]?.filename
+  const archiveNames = readdirSync(archiveDir)
+    .filter((name) => name.endsWith(".tgz"))
+    .sort()
+  if (archiveNames.length !== 1) {
+    throw new Error(
+      `npm pack expected one .tgz archive in ${archiveDir}; found ${archiveNames.length}`,
+    )
+  }
+  if (reportedFilename && reportedFilename !== archiveNames[0]) {
+    throw new Error(
+      `npm pack reported ${reportedFilename}, but wrote ${archiveNames[0]}`,
+    )
+  }
+  execFileSync("tar", ["-xzf", join(archiveDir, archiveNames[0]), "-C", extractionDir])
   const previousPackageRoot = join(extractionDir, "package")
   const previousManifest = JSON.parse(readFileSync(join(previousPackageRoot, "package.json"), "utf8"))
   if (previousManifest.name !== "semiotic" || previousManifest.version !== previousVersion) {
