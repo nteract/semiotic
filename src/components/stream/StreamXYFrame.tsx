@@ -61,10 +61,12 @@ import { normalizeXYData } from "./normalizeXYData"
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import { rehitXYFrameCursor } from "./xyFrameCursorInteraction"
+import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
+import { xyFrameLegendOptions } from "./frameLegendOptions"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
-const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
+const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // Theme colors live in frameThemeColors.ts (shared across Stream Frames).
 const LIGHT_THEME = LIGHT_FRAME_THEME
@@ -243,10 +245,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // transition ends.
     const lastSceneDimsRef = useRef({ w: -1, h: -1 })
     const pulseFramePendingRef = useRef(false)
-    // XY resolves foreground/background locally (not via useFrame) because
-    // the marginalGraphics branch below may expand margin, and function-form
-    // graphics must be evaluated against the final margin. Having useFrame
-    // resolve them too would double-invoke user functions per render.
+    // XY resolves foreground/background locally because marginal graphics
+    // use the final margin and must not invoke function props twice.
     const frame = useFrame({
       sizeProp,
       responsiveWidth,
@@ -256,6 +256,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       title,
       legend,
       legendPosition,
+      ...xyFrameLegendOptions(props, legend),
       animate,
       transitionProp,
       frameScheduler,

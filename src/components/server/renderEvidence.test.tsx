@@ -198,7 +198,7 @@ describe("renderChartWithEvidence", () => {
     expect(evidence.markCount).toBeGreaterThanOrEqual(2)
   })
 
-  it("counts annotations supplied to the render", () => {
+  it("counts annotations rendered into the SVG", () => {
     const { evidence } = renderChartWithEvidence("LineChart", {
       data: lineData,
       xAccessor: "month",
@@ -209,6 +209,26 @@ describe("renderChartWithEvidence", () => {
       ],
     })
     expect(evidence.annotationCount).toBe(2)
+    expect(evidence.annotationInputCount).toBe(2)
+    expect(evidence.unrenderedAnnotationCount).toBe(0)
+  })
+
+  it("reports unrendered annotation input instead of claiming it painted", () => {
+    const { evidence, svg } = renderChartWithEvidence("LineChart", {
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      annotations: [
+        { type: "y-threshold", value: 150, label: "Target" },
+        { type: "not-a-static-annotation" },
+      ],
+    })
+    expect(svg).toContain("Target")
+    expect(evidence.annotationInputCount).toBe(2)
+    expect(evidence.annotationCount).toBe(1)
+    expect(evidence.unrenderedAnnotationCount).toBe(1)
+    expect(evidence.unrenderedAnnotationTypes).toEqual(["not-a-static-annotation"])
+    expect(evidence.warnings).toContain("UNRENDERED_ANNOTATIONS")
   })
 
   it("generates an aria label when no title or description is given", () => {

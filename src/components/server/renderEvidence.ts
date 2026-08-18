@@ -46,11 +46,17 @@ export interface RenderEvidence {
   edgeCount?: number
   /** Number of legend entries rendered (when a legend rendered). */
   legendItems?: number
-  /** Number of annotations supplied to the render. */
+  /** Number of annotations that actually produced SVG nodes. */
   annotationCount: number
+  /** Number of annotation entries supplied by the caller before filtering. */
+  annotationInputCount?: number
+  /** Requested annotations that did not produce SVG nodes. */
+  unrenderedAnnotationCount?: number
+  /** Type names for requested annotations that did not produce SVG nodes. */
+  unrenderedAnnotationTypes?: string[]
   /** The accessible name the SVG carries (description ?? title ?? generated). */
   ariaLabel: string
-  /** Stable warning codes (EMPTY_SCENE, NO_SCALES). */
+  /** Stable warning codes (EMPTY_SCENE, NO_SCALES, UNRENDERED_ANNOTATIONS). */
   warnings: string[]
   /**
    * Whether a capability-owned post-render check found the painted encoding
@@ -121,6 +127,13 @@ interface BuildEvidenceInput {
   title?: unknown
   description?: unknown
   annotations?: unknown
+  /** Static annotation pass accounting; omitted by callers that have none. */
+  annotationRender?: {
+    inputCount: number
+    renderedCount: number
+    unrenderedCount: number
+    unrenderedTypes: string[]
+  }
   xDomain?: [number, number]
   yDomain?: [number, number]
   categories?: string[]
@@ -139,9 +152,17 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
   const empty = count === 0
   const warnings = [...(input.extraWarnings ?? [])]
   if (empty && !warnings.includes("EMPTY_SCENE")) warnings.push("EMPTY_SCENE")
-  const annotationCount = Array.isArray(input.annotations)
+  if (
+    input.annotationRender &&
+    input.annotationRender.unrenderedCount > 0 &&
+    !warnings.includes("UNRENDERED_ANNOTATIONS")
+  ) {
+    warnings.push("UNRENDERED_ANNOTATIONS")
+  }
+  const annotationInputCount = Array.isArray(input.annotations)
     ? input.annotations.length
     : 0
+  const annotationCount = input.annotationRender?.renderedCount ?? annotationInputCount
   const ariaLabel =
     (typeof input.description === "string" && input.description) ||
     (typeof input.title === "string" && input.title) ||
@@ -171,6 +192,15 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     ...(input.edgeCount !== undefined ? { edgeCount: input.edgeCount } : {}),
     ...(input.legendItems !== undefined ? { legendItems: input.legendItems } : {}),
     annotationCount,
+    ...(input.annotationRender
+      ? {
+          annotationInputCount: input.annotationRender.inputCount,
+          unrenderedAnnotationCount: input.annotationRender.unrenderedCount,
+          ...(input.annotationRender.unrenderedTypes.length > 0
+            ? { unrenderedAnnotationTypes: input.annotationRender.unrenderedTypes }
+            : {}),
+        }
+      : {}),
     ariaLabel,
     warnings,
     semanticStatus: "not-assessed",

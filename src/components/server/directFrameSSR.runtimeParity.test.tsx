@@ -7,6 +7,12 @@ import StreamGeoFrame from "../stream/StreamGeoFrame"
 import StreamNetworkFrame from "../stream/StreamNetworkFrame"
 import StreamOrdinalFrame from "../stream/StreamOrdinalFrame"
 import StreamXYFrame from "../stream/StreamXYFrame"
+import {
+  renderGeoToStaticSVG,
+  renderNetworkToStaticSVG,
+  renderOrdinalToStaticSVG,
+  renderXYToStaticSVG,
+} from "./renderToStaticSVG"
 
 function expectMarkupLayerOrder(html: string, mark: string): void {
   const solidIndex = html.indexOf('fill="#badbad"')
@@ -18,6 +24,186 @@ function expectMarkupLayerOrder(html: string, mark: string): void {
 }
 
 describe("direct Stream Frame SSR runtime parity", () => {
+  it("uses chrome-safe defaults for direct frame APIs", () => {
+    const xy = ReactDOMServer.renderToStaticMarkup(
+      <StreamXYFrame
+        chartType="line"
+        data={[{ x: 1, y: 2 }, { x: 2, y: 4 }]}
+        xAccessor="x"
+        yAccessor="y"
+        xLabel="Month"
+        yLabel="Revenue"
+        size={[500, 320]}
+      />
+    )
+    const ordinal = ReactDOMServer.renderToStaticMarkup(
+      <StreamOrdinalFrame
+        chartType="bar"
+        data={[{ category: "A", value: 2 }]}
+        oAccessor="category"
+        rAccessor="value"
+        oLabel="Department"
+        rLabel="Headcount"
+        size={[500, 320]}
+      />
+    )
+    const sankey = ReactDOMServer.renderToStaticMarkup(
+      <StreamNetworkFrame
+        chartType="sankey"
+        edges={[{ source: "Revenue", target: "COGS", value: 10 }]}
+        size={[500, 320]}
+      />
+    )
+    const force = ReactDOMServer.renderToStaticMarkup(
+      <StreamNetworkFrame
+        chartType="force"
+        nodes={[{ id: "A" }, { id: "B" }]}
+        edges={[{ source: "A", target: "B", value: 1 }]}
+        size={[500, 320]}
+      />
+    )
+
+    for (const svg of [xy, ordinal]) {
+      expect(svg).toContain('transform="translate(70,50)"')
+    }
+    expect(sankey).toContain('transform="translate(80,20)"')
+    expect(force).toContain('transform="translate(40,40)"')
+  })
+
+  it("keeps direct static and live side-legend axis title clearance aligned", () => {
+    const legend = {
+      legendGroups: [{
+        label: "",
+        type: "fill" as const,
+        styleFn: () => ({ fill: "#f00" }),
+        items: [{ label: "Key" }],
+      }],
+    }
+    const xyProps = {
+      chartType: "line" as const,
+      data: [{ x: 0, y: 1 }, { x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [500, 300] as [number, number],
+      yLabel: "Long value axis",
+      legend,
+      legendPosition: "left" as const,
+    }
+    const ordinalProps = {
+      chartType: "bar" as const,
+      data: [{ category: "A", value: 1 }],
+      oAccessor: "category",
+      rAccessor: "value",
+      size: [500, 300] as [number, number],
+      rLabel: "Long value axis",
+      legend,
+      legendPosition: "left" as const,
+    }
+
+    const outputs = [
+      ReactDOMServer.renderToStaticMarkup(<StreamXYFrame {...xyProps} />),
+      renderXYToStaticSVG(xyProps),
+      ReactDOMServer.renderToStaticMarkup(<StreamOrdinalFrame {...ordinalProps} />),
+      renderOrdinalToStaticSVG(ordinalProps),
+    ]
+
+    for (const svg of outputs) {
+      // Legend occupies x=3..103; the vertical axis title belongs in the
+      // shared 70px inner gutter at global x=128, not through that legend.
+      expect(svg).toContain('translate(183,50)')
+      expect(svg).toMatch(/<text x="-55"[^>]*>Long value axis<\/text>/)
+    }
+    expect(outputs[0]).toContain('transform="translate(3, 50)"')
+    expect(outputs[1]).toContain('transform="translate(3,50)"')
+    expect(outputs[2]).toContain('transform="translate(3, 50)"')
+    expect(outputs[3]).toContain('transform="translate(3,50)"')
+  })
+
+  it("shares the minimum top raw-legend inset across direct and static network and geo frames", () => {
+    const rawLegend = <g data-testid="raw-top-legend"><text>Raw</text></g>
+    const networkProps = {
+      chartType: "sankey" as const,
+      size: [500, 300] as [number, number],
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b", value: 1 }],
+      nodeIDAccessor: "id",
+      sourceAccessor: "source",
+      targetAccessor: "target",
+      valueAccessor: "value",
+      legendPosition: "top" as const,
+      legend: rawLegend,
+    }
+    const geoProps = {
+      chartType: "geo" as const,
+      projection: "equalEarth" as const,
+      size: [500, 300] as [number, number],
+      points: [{ lon: 0, lat: 0 }],
+      xAccessor: "lon",
+      yAccessor: "lat",
+      legendPosition: "top" as const,
+      legend: rawLegend,
+    }
+
+    const network = [
+      ReactDOMServer.renderToStaticMarkup(<StreamNetworkFrame {...networkProps} />),
+      renderNetworkToStaticSVG(networkProps),
+    ]
+    const geo = [
+      ReactDOMServer.renderToStaticMarkup(<StreamGeoFrame {...geoProps} />),
+      renderGeoToStaticSVG(geoProps),
+    ]
+
+    for (const svg of network) {
+      expect(svg).toContain('translate(80,34)')
+      expect(svg).toMatch(/transform="translate\(80,\s*4\)"/)
+    }
+    for (const svg of geo) {
+      expect(svg).toContain('translate(10,34)')
+      expect(svg).toMatch(/transform="translate\(10,\s*4\)"/)
+    }
+  })
+
+  it("reserves the rotated axis-title band before placing a bottom legend", () => {
+    const legend = {
+      legendGroups: [{
+        label: "",
+        type: "fill" as const,
+        styleFn: () => ({ fill: "#f00" }),
+        items: [
+          { label: "Long legend item one" },
+          { label: "Long legend item two" },
+          { label: "Long legend item three" },
+          { label: "Long legend item four" },
+        ],
+      }],
+    }
+    const props = {
+      chartType: "line" as const,
+      data: [{ x: 0, y: 1 }, { x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [280, 300] as [number, number],
+      xLabel: "Time",
+      legend,
+      legendPosition: "bottom" as const,
+      axes: [{
+        orient: "bottom" as const,
+        autoRotate: true,
+        tickValues: [0, 1],
+        tickFormat: (value: number) => `A deliberately long tick label ${value}`,
+      }],
+    }
+    const live = ReactDOMServer.renderToStaticMarkup(<StreamXYFrame {...props} />)
+    const staticSvg = renderXYToStaticSVG(props)
+
+    for (const svg of [live, staticSvg]) {
+      // `autoRotate` reserves the 58px title offset before rendering. The
+      // legend begins below it at y=212 rather than through the title at 196.
+      expect(svg).toMatch(/<text x="85" y="146"[^>]*>Time<\/text>/)
+      expect(svg).toMatch(/transform="translate\(70,\s*212\)"/)
+    }
+  })
+
   it("normalizes grouped lineDataAccessor records into separate series", () => {
     const html = ReactDOMServer.renderToStaticMarkup(
       <StreamXYFrame

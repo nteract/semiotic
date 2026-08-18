@@ -9,8 +9,12 @@ import {
   type VariantProposal,
 } from "./variantDiscovery"
 import type { ChartCapability, ChartDataProfile } from "./chartCapabilityTypes"
-import type { IntentId } from "./intents"
-import { getCapability } from "./chartCapabilities"
+import { registerIntent, type IntentId } from "./intents"
+import {
+  getCapability,
+  registerChartCapability,
+  unregisterChartCapability,
+} from "./chartCapabilities"
 import { profileData } from "./profileData"
 
 afterEach(() => {
@@ -248,6 +252,65 @@ describe("variantDiscovery — evaluateVariantProposal", () => {
     expect(score.risk).toBe(1)
     expect(score.reasons).toHaveLength(1)
     expect(score.reasons[0]).toMatch(/No capability registered/)
+  })
+
+  it("expands registered composed intents when scoring variants", () => {
+    const intent = "variant-momentum-audit"
+    registerIntent({
+      id: intent,
+      label: "Momentum audit",
+      description: "Trend and change together.",
+      composes: ["trend", "change-detection"],
+    })
+    const profile = profileData([
+      { month: 1, revenue: 10 },
+      { month: 2, revenue: 15 },
+      { month: 3, revenue: 12 },
+      { month: 4, revenue: 21 },
+    ])
+
+    const score = evaluateVariantProposal(
+      { id: "LineChart:composed", baseComponent: "LineChart", source: "manual" },
+      profile,
+      undefined,
+      { intent },
+    )
+
+    expect(score.rejected).not.toBe(true)
+    expect(score.fit).toBeGreaterThan(0)
+    expect(score.reasons.join(" ")).toMatch(/variant-momentum-audit: [1-5]/)
+  })
+
+  it("rejects a variant that uses an identifier as a measure", () => {
+    const capability: ChartCapability = {
+      component: "VariantUnsafeMetric",
+      family: "custom",
+      importPath: "semiotic",
+      rubric: { familiarity: 1, accuracy: 1, precision: 1 },
+      fits: () => null,
+      intentScores: { rank: 5 },
+      fieldPolicy: { measureAccessorProps: ["metricField"] },
+      buildProps: () => ({ metricField: "id" }),
+    }
+    registerChartCapability(capability)
+    try {
+      const score = evaluateVariantProposal(
+        {
+          id: "VariantUnsafeMetric:identifier",
+          baseComponent: capability.component,
+          source: "model",
+        },
+        profileData([{ id: "A", amount: 10 }], { identifiers: ["id"] }),
+        undefined,
+        { intent: "rank" },
+      )
+
+      expect(score.rejected).toBe(true)
+      expect(score.fit).toBe(0)
+      expect(score.reasons.join(" ")).toMatch(/cannot use identifier field "id"/)
+    } finally {
+      unregisterChartCapability(capability.component)
+    }
   })
 
   // Regression: variant scoring must mirror suggestCharts and penalize

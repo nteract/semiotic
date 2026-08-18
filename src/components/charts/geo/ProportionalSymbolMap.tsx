@@ -236,6 +236,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],

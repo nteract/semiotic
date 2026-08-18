@@ -17,7 +17,12 @@ import { getMinMax } from "../charts/shared/minMax"
 import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
 import { resolveTheme } from "./themeResolver"
-import { type ChartConfig, type ServerAccessor, primitiveStyleOverrides } from "./serverChartConfigShared"
+import {
+  type ChartConfig,
+  type ServerAccessor,
+  mergeServerRegressionAnnotation,
+  primitiveStyleOverrides,
+} from "./serverChartConfigShared"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import * as React from "react"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
@@ -191,21 +196,28 @@ function buildSwarmPieceStyle(
 
 export const barChart: ChartConfig = {
   frameType: "ordinal",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "bar",
-    data,
-    oAccessor: rest.categoryAccessor || "category",
-    rAccessor: rest.valueAccessor || "value",
-    projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
-    oSort: rest.sort ?? false,
-    colorAccessor: colorBy,
-    colorScheme,
-    barPadding: rest.barPadding,
-    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
-    ...common,
-    gradientFill: normalizeBarGradientFill(common.gradientFill),
-    pieceStyle: buildBarPieceStyle(data, colorBy, colorScheme, common, rest),
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const annotations = mergeServerRegressionAnnotation(
+      common.annotations,
+      rest.regression,
+    )
+    return {
+      chartType: "bar",
+      data,
+      oAccessor: rest.categoryAccessor || "category",
+      rAccessor: rest.valueAccessor || "value",
+      projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+      oSort: rest.sort ?? false,
+      colorAccessor: colorBy,
+      colorScheme,
+      barPadding: rest.barPadding,
+      ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
+      ...common,
+      ...(annotations && { annotations }),
+      gradientFill: normalizeBarGradientFill(common.gradientFill),
+      pieceStyle: buildBarPieceStyle(data, colorBy, colorScheme, common, rest),
+    }
+  },
 }
 
 export const stackedBarChart: ChartConfig = {
@@ -406,21 +418,28 @@ export const swarmPlot: ChartConfig = {
 export const dotPlot: ChartConfig = {
   frameType: "ordinal",
   layout: { modeDefaults: { showGrid: true } },
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "point",
-    data,
-    oAccessor: rest.categoryAccessor || "category",
-    rAccessor: rest.valueAccessor || "value",
-    colorAccessor: colorBy,
-    colorScheme,
-    projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
-    oSort: rest.sort ?? "auto",
-    barPadding: rest.categoryPadding ?? 10,
-    ...common,
-    pieceStyle: buildDotPlotPieceStyle(data, colorBy, colorScheme, common, rest),
-    showGrid: common.showGrid ?? true,
-    showLegend: common.showLegend ?? Boolean(colorBy),
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const annotations = mergeServerRegressionAnnotation(
+      common.annotations,
+      rest.regression,
+    )
+    return {
+      chartType: "point",
+      data,
+      oAccessor: rest.categoryAccessor || "category",
+      rAccessor: rest.valueAccessor || "value",
+      colorAccessor: colorBy,
+      colorScheme,
+      projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
+      oSort: rest.sort ?? "auto",
+      barPadding: rest.categoryPadding ?? 10,
+      ...common,
+      ...(annotations && { annotations }),
+      pieceStyle: buildDotPlotPieceStyle(data, colorBy, colorScheme, common, rest),
+      showGrid: common.showGrid ?? true,
+      showLegend: common.showLegend ?? Boolean(colorBy),
+    }
+  },
 }
 
 export const swimlaneChart: ChartConfig = {

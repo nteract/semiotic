@@ -10,7 +10,6 @@ import type {
   StreamScales,
   StreamLayout
 } from "../stream/types"
-import type { XYFrameAxisConfig } from "../stream/xyFrameAxisTypes"
 import type {
   StreamNetworkFrameProps,
   RealtimeEdge
@@ -24,23 +23,42 @@ import {
   renderStaticLegendGroups,
   renderStaticGradientLegend,
   buildStaticCategoricalLegendConfig,
-  measureStaticLegend,
-  measureStaticLegendGroups,
-  measureStaticGradientLegend
 } from "./staticLegend"
+import { renderStaticRawLegend } from "./staticRawLegend"
+import {
+  reserveLegendConfigMargin,
+  reserveStaticLegendMargin,
+} from "./staticLegendMargin"
+export {
+  reserveLegendConfigMargin,
+  reserveStaticLegendMargin,
+} from "./staticLegendMargin"
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
-import { resolveAxisLineStyle, resolveGridDash } from "../stream/svgOverlayUtils"
-import { axisTickCount } from "../stream/axisTickUtils"
+import {
+  resolveAxisLineStyle,
+  resolveHorizontalTickAnchor,
+  resolveVerticalTickBaseline,
+  tickPixelExtent,
+  jaggedBaselinePath,
+} from "../stream/svgOverlayUtils"
+import { axisTickCount, defaultTickFormat as defaultAxisTickFormat } from "../stream/axisTickUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
-  resolveAxisChromeGutter,
+  isStaticTextTickLabel,
+  renderStaticTickForeignObject,
+} from "./staticAxisTickLabel"
+import {
+  createStaticAxisTicks,
+  isStaticAxisLandmark,
+  resolveStaticAxisTicks,
+  staticAxisLabelWidth,
+} from "./staticXYAxisTicks"
+import {
   clampLegendReservation,
-  resolveLegendDistance,
   resolveLegendSideGutter,
-  resolveSideLegendMargin,
   type AxisChromeInput
 } from "../legendLayout"
 
@@ -156,135 +174,6 @@ export function hocLegendMarginMinimum(
   return HOC_LEGEND_MARGIN[position]
 }
 
-export function reserveStaticLegendMargin(
-  margin: { top: number; right: number; bottom: number; left: number },
-  options: {
-    categories: string[]
-    colorScheme?: string | string[] | Record<string, string>
-    theme: ReturnType<typeof resolveTheme>
-    position?: "right" | "left" | "top" | "bottom"
-    size: [number, number]
-    hasTitle?: boolean
-    legendLayout?: LegendLayout
-    minimumMargin?: number
-    axisChrome?: AxisChromeInput
-  }
-): void {
-  if (options.categories.length === 0) return
-  const position = options.position || "right"
-  const metrics = measureStaticLegend({
-    categories: options.categories,
-    colorScheme: options.colorScheme,
-    theme: options.theme,
-    position,
-    totalWidth: options.size[0],
-    totalHeight: options.size[1],
-    margin,
-    hasTitle: options.hasTitle,
-    legendLayout: options.legendLayout
-  })
-  const categoricalLegend = buildStaticCategoricalLegendConfig(
-    options.categories,
-    options.colorScheme,
-    options.theme
-  )
-  const legendDistance = resolveLegendDistance(categoricalLegend)
-  const horizontalRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    resolveSideLegendMargin(categoricalLegend, options.legendLayout)
-  )
-  // Include the axis gutter: the legend now sits below the tick labels, so
-  // the reserved band has to cover chrome + gap + legend.
-  const axisGutter = resolveAxisChromeGutter(
-    options.axisChrome,
-    options.legendLayout
-  )
-  const topRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    legendDistance + metrics.height + (options.hasTitle ? 24 : 0)
-  )
-  const bottomRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    axisGutter + legendDistance + metrics.height
-  )
-
-  if (position === "right") {
-    margin.right = Math.max(margin.right, horizontalRequirement)
-  } else if (position === "left") {
-    margin.left = Math.max(margin.left, horizontalRequirement)
-  } else if (position === "top") {
-    margin.top = Math.max(margin.top, topRequirement)
-  } else {
-    margin.bottom = Math.max(margin.bottom, bottomRequirement)
-  }
-}
-
-export function reserveLegendConfigMargin(
-  margin: { top: number; right: number; bottom: number; left: number },
-  options: {
-    legend: unknown
-    theme: ReturnType<typeof resolveTheme>
-    position?: "right" | "left" | "top" | "bottom"
-    size: [number, number]
-    hasTitle?: boolean
-    legendLayout?: LegendLayout
-    minimumMargin?: number
-    axisChrome?: AxisChromeInput
-  }
-): void {
-  const position = options.position || "right"
-  const base = {
-    theme: options.theme,
-    position,
-    totalWidth: options.size[0],
-    totalHeight: options.size[1],
-    margin,
-    hasTitle: options.hasTitle,
-    legendLayout: options.legendLayout
-  }
-  const metrics = isLegendConfig(options.legend)
-    ? measureStaticLegendGroups({
-        ...base,
-        legendGroups: options.legend.legendGroups
-      })
-    : isGradientLegendConfig(options.legend)
-      ? measureStaticGradientLegend({
-          ...base,
-          gradient: options.legend.gradient
-        })
-      : null
-  if (!metrics) return
-  const legendDistance = resolveLegendDistance(options.legend as LegendValue)
-  const horizontalRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    resolveSideLegendMargin(options.legend as LegendValue, options.legendLayout)
-  )
-  // Include the axis gutter: the legend now sits below the tick labels, so
-  // the reserved band has to cover chrome + gap + legend.
-  const axisGutter = resolveAxisChromeGutter(
-    options.axisChrome,
-    options.legendLayout
-  )
-  const topRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    legendDistance + metrics.height + (options.hasTitle ? 24 : 0)
-  )
-  const bottomRequirement = Math.max(
-    options.minimumMargin ?? 0,
-    axisGutter + legendDistance + metrics.height
-  )
-
-  if (position === "right") {
-    margin.right = Math.max(margin.right, horizontalRequirement)
-  } else if (position === "left") {
-    margin.left = Math.max(margin.left, horizontalRequirement)
-  } else if (position === "top") {
-    margin.top = Math.max(margin.top, topRequirement)
-  } else {
-    margin.bottom = Math.max(margin.bottom, bottomRequirement)
-  }
-}
-
 export function renderLegendConfig(
   legend: unknown,
   options: {
@@ -352,7 +241,7 @@ export function reserveFrameLegendMargin(
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
-    if (isLegendConfig(legend) || isGradientLegendConfig(legend)) {
+    if (legend !== undefined && legend !== null && legend !== false) {
       reserveLegendConfigMargin(margin, { ...shared, legend })
     }
   } else if (props.showLegend && categories.length > 0) {
@@ -389,11 +278,27 @@ export function renderFrameLegend(options: {
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
-    if (React.isValidElement(legend)) return legend
+    if (React.isValidElement(legend)) {
+      return renderStaticRawLegend(
+        legend,
+        size,
+        margin,
+        position,
+        props.legendLayout,
+        props.axisChrome,
+      )
+    }
     const configured = renderLegendConfig(legend, shared)
     if (configured) return configured
     if (isLegendConfig(legend) || isGradientLegendConfig(legend)) return null
-    return (legend ?? null) as React.ReactNode
+    return renderStaticRawLegend(
+      (legend ?? null) as React.ReactNode,
+      size,
+      margin,
+      position,
+      props.legendLayout,
+      props.axisChrome,
+    )
   }
   if (!props.showLegend || categories.length === 0) return null
   return renderStaticLegend({
@@ -411,88 +316,8 @@ export function renderFrameLegend(options: {
   })
 }
 
-export function defaultTickFormat(v: number): string {
-  return String(Math.round(v * 100) / 100)
-}
-
-/** Render grid lines for XY charts */
-export function renderGridSVG(
-  scales: StreamScales,
-  layout: StreamLayout,
-  theme: SemioticTheme,
-  idPrefix?: string,
-  axisExtent?: AxisExtentMode,
-  axes?: XYFrameAxisConfig[]
-): React.ReactNode {
-  const { grid } = themeStyles(theme)
-  const pfx = idPrefix ? `${idPrefix}-` : ""
-  const bottomAxis = axes?.find((axis) => axis.orient === "bottom")
-  const topAxis = axes?.find((axis) => axis.orient === "top")
-  const leftAxis = axes?.find((axis) => axis.orient === "left")
-  const rightAxis = axes?.find((axis) => axis.orient === "right")
-  const xAxis = bottomAxis ?? topAxis
-  const yAxis = leftAxis ?? rightAxis
-  const xExtentMode = xAxis?.extent ?? axisExtent
-  const yExtentMode = yAxis?.extent ?? axisExtent
-  // Grid lines share the axis tick positions (ticksForMode) so they align
-  // under axisExtent:"exact" — matching the client SVGOverlay, which draws
-  // grid from the same tick arrays as the axis.
-  const xTickCount =
-    xExtentMode === "exact"
-      ? 5
-      : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount =
-    yExtentMode === "exact"
-      ? 5
-      : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const xTicks =
-    xAxis?.tickValues ??
-    ticksForMode(scales.x, axisTickCount(xAxis, xTickCount), xExtentMode)
-  const yTicks =
-    yAxis?.tickValues ??
-    ticksForMode(scales.y, axisTickCount(yAxis, yTickCount), yExtentMode)
-  const showXGrid = xAxis?.grid !== false
-  const showYGrid = yAxis?.grid !== false
-  const xGridDash = resolveGridDash(xAxis?.gridStyle)
-  const yGridDash = resolveGridDash(yAxis?.gridStyle)
-  const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
-  const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: grid, strokeWidth: 0.5 })
-
-  return (
-    <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
-      {showXGrid &&
-        xTicks.map((v, i) => {
-          const px = scales.x(v)
-          return (
-            <line
-              key={`gx-${i}`}
-              x1={px}
-              y1={0}
-              x2={px}
-              y2={layout.height}
-              {...xGridLine}
-              strokeDasharray={xGridDash ?? xGridLine.strokeDasharray}
-            />
-          )
-        })}
-      {showYGrid &&
-        yTicks.map((v, i) => {
-          const py = scales.y(v)
-          return (
-            <line
-              key={`gy-${i}`}
-              x1={0}
-              y1={py}
-              x2={layout.width}
-              y2={py}
-              {...yGridLine}
-              strokeDasharray={yGridDash ?? yGridLine.strokeDasharray}
-            />
-          )
-        })}
-    </g>
-  )
-}
+/** Shared with the live overlay so time-scale defaults stay human-readable. */
+export const defaultTickFormat = defaultAxisTickFormat
 
 /** Render grid lines for ordinal charts */
 export function renderOrdinalGridSVG(
@@ -634,14 +459,29 @@ export function generateAxesSVG(
   layout: StreamLayout,
   props: StreamXYFrameProps,
   theme: SemioticTheme,
-  idPrefix?: string
+  idPrefix?: string,
+  margin?: { top: number; right: number; bottom: number; left: number },
+  axisChrome?: AxisChromeInput,
+  hasRenderedLegend = false,
 ): React.ReactNode {
   const s = themeStyles(theme)
-  const sideLegendGutter = resolveLegendSideGutter(props.legendLayout)
+  const legendPosition = props.legendPosition ?? "right"
+  const leftSideLegendGutter = resolveLegendSideGutter(
+    props.legendLayout,
+    axisChrome?.leftAxis,
+  )
+  const rightSideLegendGutter = resolveLegendSideGutter(
+    props.legendLayout,
+    axisChrome?.rightAxis,
+  )
   const leftAxisLabelMargin =
-    props.legend && props.legendPosition === "left" && sideLegendGutter > 0
-      ? sideLegendGutter
-      : (props.margin?.left ?? 40)
+    hasRenderedLegend && legendPosition === "left" && leftSideLegendGutter > 0
+      ? leftSideLegendGutter
+      : (margin?.left ?? props.margin?.left ?? 40)
+  const rightAxisLabelMargin =
+    hasRenderedLegend && legendPosition === "right" && rightSideLegendGutter > 0
+      ? rightSideLegendGutter
+      : (margin?.right ?? props.margin?.right ?? 40)
   // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
   // ticks inclusive of the data min/max (the axisExtent headline behavior);
   // "nice"/undefined falls through to scale.ticks — byte-identical to before.
@@ -673,16 +513,32 @@ export function generateAxesSVG(
   const rawXTicks =
     xAxis?.tickValues ??
     ticksForMode(scales.x, axisTickCount(xAxis, resolvedXTickCount), xExtentMode)
-  const rawXValues = rawXTicks.map((value) => value.valueOf())
   const xFormatter =
     xAxis?.tickFormat ||
     props.xFormat ||
     props.tickFormatTime ||
     defaultTickFormat
-  const xTicks = rawXTicks.map((v, index) => ({
-    pixel: scales.x(v),
-    label: xFormatter(v, index, rawXValues)
-  }))
+  const xCandidates = createStaticAxisTicks({
+    values: rawXTicks,
+    scale: scales.x,
+    format: xFormatter,
+  })
+  const xMaxLabelWidth = xCandidates.reduce(
+    (max, tick) => Math.max(max, staticAxisLabelWidth(tick.label)),
+    0,
+  )
+  const xMinPixelDistance = xAxis?.autoRotate
+    ? Math.max(20, Math.min(xMaxLabelWidth + 8, 55))
+    : Math.max(55, xMaxLabelWidth + 8)
+  const xTicks = resolveStaticAxisTicks({
+    candidates: xCandidates,
+    scale: scales.x,
+    minPixelDistance: xMinPixelDistance,
+    includeMax: xAxis?.includeMax,
+    extentMode: xExtentMode,
+    hasExplicitTickValues: Boolean(xAxis?.tickValues),
+    format: xFormatter,
+  })
 
   const rawYTicks =
     yAxis?.tickValues ??
@@ -692,21 +548,49 @@ export function generateAxesSVG(
     props.yFormat ||
     props.tickFormatValue ||
     defaultTickFormat
-  const yTicks = rawYTicks.map((v) => ({
-    pixel: scales.y(v),
-    label: yFormatter(v)
-  }))
+  // SVGOverlay invokes vertical formatters with the value only. Preserve that
+  // contract even though the shared static tick builder also supports x-axis
+  // index/all-ticks arguments.
+  const yTickFormatter = (value: number | Date) => yFormatter(value as number)
+  const yCandidates = createStaticAxisTicks({
+    values: rawYTicks,
+    scale: scales.y,
+    format: yTickFormatter,
+  })
+  const yTicks = resolveStaticAxisTicks({
+    candidates: yCandidates,
+    scale: scales.y,
+    minPixelDistance: 22,
+    includeMax: yAxis?.includeMax,
+    extentMode: yExtentMode,
+    hasExplicitTickValues: Boolean(yAxis?.tickValues),
+    format: yTickFormatter,
+  })
+  const shouldRotateXAxis = Boolean(
+    xAxis?.autoRotate &&
+    xTicks.length > 1 &&
+    layout.width / Math.max(xTicks.length - 1, 1) <
+      xTicks.reduce(
+        (max, tick) => Math.max(
+          max,
+          typeof tick.label === "string" ? tick.label.length * 6.5 : 60,
+        ),
+        0,
+      ) + 8,
+  )
+  const xPixelExtent = tickPixelExtent(xTicks)
+  const yPixelExtent = tickPixelExtent(yTicks)
   const xLabel = xAxis?.label ?? props.xLabel
   const yLabel = yAxis?.label ?? (yOrient === "right" ? props.yLabelRight ?? props.yLabel : props.yLabel)
   const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
   const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
   const yAxisLabelX = yOrient === "right"
-    ? layout.width + (props.margin?.right ?? 40) - 15
+    ? layout.width + rightAxisLabelMargin - 15
     : -leftAxisLabelMargin + 15
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
-      {xAxis?.baseline !== false && (
+      {xAxis?.baseline !== false && !xAxis?.jaggedBase && (
         <line
           x1={0}
           y1={xBaselineY}
@@ -715,27 +599,53 @@ export function generateAxesSVG(
           {...xAxisLine}
         />
       )}
-      {xTicks.map((tick, i) => (
+      {xAxis?.jaggedBase && (
+        <path d={jaggedBaselinePath(xOrient, layout.width, layout.height)} fill="none" {...xAxisLine} />
+      )}
+      {xTicks.map((tick, i) => {
+        const isLandmark = isStaticAxisLandmark(xAxis?.landmarkTicks, tick, i, xTicks)
+        return (
         <g
           key={`xtick-${i}`}
           transform={`translate(${tick.pixel},${xBaselineY})`}
         >
           <line y2={xTickDirection * 5} {...xAxisLine} />
-          <text
-            y={xTickDirection * 18}
-            textAnchor="middle"
-            fontSize={s.tickSize}
-            fill={s.textSecondary}
-            fontFamily={s.fontFamily}
-          >
-            {tick.label}
-          </text>
+          {isStaticTextTickLabel(tick.label) ? (
+            <text
+              y={xTickDirection * (shouldRotateXAxis ? 12 : 18)}
+              textAnchor={shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
+                xAxis?.tickAnchor,
+                tick.pixel === xPixelExtent.min,
+                tick.pixel === xPixelExtent.max,
+              )}
+              fontWeight={isLandmark ? 600 : 400}
+              fontSize={isLandmark ? s.tickSize + 1 : s.tickSize}
+              fill={s.textSecondary}
+              fontFamily={s.fontFamily}
+              transform={shouldRotateXAxis
+                ? xOrient === "top" ? "rotate(45)" : "rotate(-45)"
+                : undefined}
+            >
+              {tick.label}
+            </text>
+          ) : renderStaticTickForeignObject({
+            label: tick.label,
+            x: -30,
+            y: xOrient === "top" ? -30 : 6,
+            textAlign: "center",
+            fontSize: s.tickSize,
+            fontFamily: s.fontFamily,
+            color: s.textSecondary,
+          })}
         </g>
-      ))}
+        )
+      })}
       {xLabel && (
         <text
           x={layout.width / 2}
-          y={xOrient === "top" ? -40 : layout.height + 40}
+          y={xOrient === "top"
+            ? -(shouldRotateXAxis ? 58 : 40)
+            : layout.height + (shouldRotateXAxis ? 58 : 40)}
           textAnchor="middle"
           fontSize={s.labelSize}
           fill={s.text}
@@ -745,7 +655,7 @@ export function generateAxesSVG(
         </text>
       )}
 
-      {yAxis?.baseline !== false && (
+      {yAxis?.baseline !== false && !yAxis?.jaggedBase && (
         <line
           x1={yBaselineX}
           y1={0}
@@ -754,21 +664,42 @@ export function generateAxesSVG(
           {...yAxisLine}
         />
       )}
-      {yTicks.map((tick, i) => (
+      {yAxis?.jaggedBase && (
+        <path d={jaggedBaselinePath(yOrient, layout.width, layout.height)} fill="none" {...yAxisLine} />
+      )}
+      {yTicks.map((tick, i) => {
+        const isLandmark = isStaticAxisLandmark(yAxis?.landmarkTicks, tick, i, yTicks)
+        return (
         <g key={`ytick-${i}`} transform={`translate(${yBaselineX},${tick.pixel})`}>
           <line x2={yTickDirection * 5} {...yAxisLine} />
-          <text
-            x={yTickDirection * 8}
-            textAnchor={yOrient === "right" ? "start" : "end"}
-            dominantBaseline="middle"
-            fontSize={s.tickSize}
-            fill={s.textSecondary}
-            fontFamily={s.fontFamily}
-          >
-            {tick.label}
-          </text>
+          {isStaticTextTickLabel(tick.label) ? (
+            <text
+              x={yTickDirection * 8}
+              textAnchor={yOrient === "right" ? "start" : "end"}
+              dominantBaseline={resolveVerticalTickBaseline(
+                yAxis?.tickAnchor,
+                tick.pixel === yPixelExtent.min,
+                tick.pixel === yPixelExtent.max,
+              )}
+              fontWeight={isLandmark ? 600 : 400}
+              fontSize={isLandmark ? s.tickSize + 1 : s.tickSize}
+              fill={s.textSecondary}
+              fontFamily={s.fontFamily}
+            >
+              {tick.label}
+            </text>
+          ) : renderStaticTickForeignObject({
+            label: tick.label,
+            x: yOrient === "right" ? 8 : -68,
+            y: -12,
+            textAlign: yOrient === "right" ? "left" : "right",
+            fontSize: s.tickSize,
+            fontFamily: s.fontFamily,
+            color: s.textSecondary,
+          })}
         </g>
-      ))}
+        )
+      })}
       {yLabel && (
         <text
           x={yAxisLabelX}

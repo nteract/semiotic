@@ -16,7 +16,11 @@ import {
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
-import { TITLE_BASELINE } from "./titleLayout"
+import { SVGChartTitle } from "./SVGChartTitle"
+import {
+  resolveLegendSideGutter,
+  resolveOrdinalAxisChrome,
+} from "../legendLayout"
 
 interface OrdinalSVGOverlayProps {
   width: number
@@ -253,6 +257,20 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const isHorizontal = scales?.projection === "horizontal"
   const showCategoryTicks = showCategoryTicksProp !== false
   const rendersUnderlayAboveCanvas = !underlayRendered || canvasObscuresUnderlay
+  const legendAxisChrome = resolveOrdinalAxisChrome({
+    showAxes,
+    projection: isRadial ? "radial" : isHorizontal ? "horizontal" : "vertical",
+    hasCategoryLabel: Boolean(oLabel),
+    hasValueLabel: Boolean(rLabel),
+  })
+  const leftSideLegendGutter = resolveLegendSideGutter(
+    legendLayout,
+    legendAxisChrome.leftAxis,
+  )
+  const leftAxisLabelMargin =
+    legend && legendPosition === "left" && leftSideLegendGutter > 0
+      ? leftSideLegendGutter
+      : margin.left
 
   // Category labels (band scale). When many categories crowd the axis —
   // the classic temporal-histogram / many-bin case — drawing every label
@@ -472,11 +490,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 ))}
                 {oLabel && (
                   <text
-                    x={-margin.left + 15}
+                    x={-leftAxisLabelMargin + 15}
                     y={height / 2}
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
-                    transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
+                    transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${height / 2})`}
                     fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
@@ -599,11 +617,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 ))}
                 {rLabel && (
                   <text
-                    x={-margin.left + 15}
+                    x={-leftAxisLabelMargin + 15}
                     y={height / 2}
                     textAnchor="middle"
                     fill="var(--semiotic-text, #333)"
-                    transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
+                    transform={`rotate(-90, ${-leftAxisLabelMargin + 15}, ${height / 2})`}
                     fontSize={AXIS_LABEL_FONT_SIZE}
                     className="semiotic-axis-label"
                     style={{ userSelect: "none", ...axisLabelFontStyle }}
@@ -627,41 +645,13 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         {children}
       </g>
 
-      {/* Title */}
-      {title && typeof title === "string" ? (
-        <text
-          x={totalWidth / 2}
-          y={TITLE_BASELINE}
-          textAnchor="middle"
-          fontWeight="bold"
-          fill="var(--semiotic-text, #333)"
-          fontSize={14}
-          className="semiotic-chart-title"
-          style={{
-            userSelect: "none",
-            fontSize: "var(--semiotic-title-font-size, 14px)",
-            fontFamily: "var(--semiotic-title-font-family, var(--semiotic-font-family, sans-serif))",
-            fontWeight: "var(--semiotic-title-font-weight, bold)",
-          }}
-        >
-          {title}
-        </text>
-      ) : title ? (
-        <foreignObject x={0} y={0} width={totalWidth} height={margin.top}>
-          {title}
-        </foreignObject>
-      ) : null}
+      <SVGChartTitle title={title} totalWidth={totalWidth} marginTop={margin.top} />
 
       {/* Legend */}
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
         legendLayout,
-        // The bottom axis is the value axis when horizontal and the category
-        // axis otherwise; radial projections draw neither.
-        axisChrome: {
-          hasAxis: !!showAxes && !isRadial,
-          hasAxisLabel: isHorizontal ? !!rLabel : !!oLabel,
-        },
+        axisChrome: legendAxisChrome,
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

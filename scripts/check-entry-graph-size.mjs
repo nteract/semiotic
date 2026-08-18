@@ -67,12 +67,19 @@ const ENTRY_GRAPHS = [
   // Bumped 148→149 (3.9.0): the opt-in accessible-table portal keeps focusable
   // summary controls outside consumer-owned role=img roots. After lazy-splitting
   // the portal implementation, the network graph measures 148.1 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 149 },
+  // Bumped 149→151 (3.9.0): shared legend/axis chrome now reserves the
+  // actual frameProps legend side and keeps direct/static chart geometry in
+  // parity. The shared client graph measures 149.8 KiB gzip; retain a
+  // reviewable KiB of headroom instead of splitting common chrome at release.
+  { entry: "network.module.min.js", label: "network", limitKb: 151 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
   // the drawable area. Production graph measures 160.2 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 161 },
+  // Bumped 161→163 (3.9.0): shared legend/axis/title chrome also respects
+  // final frameProps overrides and prevents static/live plot geometry drift.
+  // The reachable graph measures 162.0 KiB gzip; keep one KiB headroom.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 163 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -81,7 +88,10 @@ const ENTRY_GRAPHS = [
   // to the physics facade (162.7 KiB measured).
   // Bumped 163→164 (3.9.0): physics frames share the opt-in accessible-table
   // portal contract. The lazy implementation leaves the graph at 163.1 KiB.
-  { entry: "physics.module.min.js", label: "physics", limitKb: 164 },
+  // Bumped 164→166 (3.9.0): title and legend chrome now shares the same
+  // theme/placement contract across rendering families. The common client
+  // graph measures 164.3 KiB gzip; retain a narrow release headroom.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 166 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry. Production
   // graph measures 240.8 KiB gzip; retain measured one-KiB headroom.
@@ -118,7 +128,10 @@ const ENTRY_GRAPHS = [
   // Bumped 512→514 (3.9.0): typed suggestion preparation, narration
   // diagnostic refresh, and render-evidence memoization complete the public
   // AI repair/render flow. Production graph measures 512.4 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 514 },
+  // Bumped 514→516 (3.9.0): the shared legend/axis/title hardening reaches
+  // the canonical AI chart catalog through the client-primary graph. It
+  // measures 514.5 KiB gzip; keep one KiB of explicit, reviewable headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 516 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

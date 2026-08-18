@@ -206,6 +206,8 @@ const StreamGeoFrame = memo(
       title,
       legend,
       legendPosition,
+      legendLayout,
+      legendMarginReserved: (props as { __legendMarginReservedFor?: unknown }).__legendMarginReservedFor === legend,
       animate,
       transitionProp,
       frameScheduler,

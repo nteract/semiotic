@@ -6,8 +6,12 @@ import {
   resolveHorizontalLegendHeight,
   resolveLegendDistance,
   resolveLegendEdgeGutter,
+  reserveLegendMargin,
   resolveSideLegendMargin,
   resolveSideLegendWidth,
+  resolveOrdinalAxisChrome,
+  resolveXYAxisChrome,
+  resolveXYFramePropsAxisChrome,
 } from "./legendLayout"
 
 describe("side legend measurement", () => {
@@ -191,5 +195,52 @@ describe("resolveAxisChromeGutter", () => {
     // The override applies even with no measured chrome to start from.
     expect(resolveAxisChromeGutter(undefined, { axisGutter: 30 })).toBe(30)
     expect(resolveAxisChromeGutter(chrome, { axisGutter: -5 })).toBe(0)
+  })
+})
+
+describe("axis chrome source precedence", () => {
+  it("uses an explicit top axis and its label instead of inventing a bottom axis", () => {
+    const chrome = resolveXYFramePropsAxisChrome(
+      { axes: [{ orient: "top", label: "Top label" }] },
+      { showAxes: true, xLabel: "Bottom label", yLabel: "Revenue" },
+    )
+
+    expect(chrome.hasAxis).toBe(false)
+    expect(chrome.topAxis).toMatchObject({ hasAxis: true, hasAxisLabel: true })
+    expect(chrome.leftAxis).toMatchObject({ hasAxis: true, hasAxisLabel: true })
+  })
+
+  it("reserves a side-title gutter for both XY and ordinal left legends", () => {
+    const xy = resolveXYAxisChrome({ yLabel: "Revenue" })
+    const ordinal = resolveOrdinalAxisChrome({
+      projection: "vertical",
+      hasCategoryLabel: false,
+      hasValueLabel: true,
+    })
+
+    expect(resolveSideLegendMargin({ legendGroups: [] }, undefined, xy.leftAxis)).toBe(183)
+    expect(resolveSideLegendMargin({ legendGroups: [] }, undefined, ordinal.leftAxis)).toBe(183)
+  })
+
+  it("conservatively measures an auto-rotating axis as rotated before render", () => {
+    const chrome = resolveXYAxisChrome({
+      axes: [{ orient: "bottom", label: "Time", autoRotate: true }],
+    })
+
+    expect(resolveAxisChromeGutter(chrome)).toBe(ROTATED_AXIS_TITLE_CHROME)
+  })
+})
+
+describe("top legend minimum", () => {
+  it("shares the direct-frame top inset when no title or axis requires more", () => {
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 }
+    reserveLegendMargin(margin, {
+      legend: { legendGroups: [{ label: "", styleFn: () => ({ fill: "#555" }), items: [{ label: "A" }] }] },
+      position: "top",
+      size: [500, 300],
+      axisChrome: { hasAxis: false },
+    })
+
+    expect(margin.top).toBe(34)
   })
 })
