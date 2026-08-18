@@ -9,13 +9,15 @@ import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
 import Annotation from "../Annotation"
 import type { SemioticTheme } from "../store/themeCore"
-import { renderAnnotationPass } from "../charts/shared/annotationRules"
+import { renderAnnotationPassWithResult } from "../charts/shared/annotationDispatch"
+import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
 import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
+import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
 
 const TOP_LABEL_BASELINE = 16
 const TOP_THRESHOLD_LABEL_FLIP = 20
@@ -91,6 +93,11 @@ export interface StaticAnnotationConfig {
   /** Ordinal projection — determines whether r maps to x or y */
   projection?: "vertical" | "horizontal" | "radial"
   /**
+   * Explicit frame family for custom/shared rules when a renderer supplies
+   * identity pixel scales (network annotations are the main case).
+   */
+  frameType?: "xy" | "ordinal" | "network"
+  /**
    * Custom SVG annotation renderer — same contract as the client
    * `svgAnnotationRules` frame prop. When present, each annotation is
    * offered to this rule first; returning `null`/`undefined` falls through
@@ -105,6 +112,29 @@ export interface StaticAnnotationConfig {
   ) => React.ReactNode
   /** Chart data forwarded into the AnnotationContext for custom rules. */
   annotationData?: Datum[]
+  /** Laid-out mark anchors for pointId/latest/semantic annotation modes. */
+  pointNodes?: AnnotationContext["pointNodes"]
+  /**
+   * Receives a count from the annotation pass after custom rules and built-in
+   * fallback have resolved. Static frame renderers use this to make render
+   * evidence describe the SVG that was produced, rather than merely echoing
+   * the annotations prop.
+   */
+  onRender?: (result: StaticAnnotationRenderResult) => void
+}
+
+/** Annotation accounting emitted by {@link renderStaticAnnotations}. */
+export interface StaticAnnotationRenderResult {
+  /** Entries requested by the caller, including lifecycle-hidden entries. */
+  inputCount: number
+  /** Entries that survived lifecycle filtering and reached the dispatch pass. */
+  eligibleCount: number
+  /** Entries that produced an SVG node through either rule path. */
+  renderedCount: number
+  /** Requested entries that produced no SVG node. */
+  unrenderedCount: number
+  /** Type names for requested entries that did not produce an SVG node. */
+  unrenderedTypes: string[]
 }
 
 /**
@@ -160,7 +190,16 @@ function resolveYPixel(
  */
 export function renderStaticAnnotations(config: StaticAnnotationConfig): React.ReactNode {
   const { annotations: rawAnnotations } = config
-  if (!rawAnnotations || rawAnnotations.length === 0) return null
+  if (!rawAnnotations || rawAnnotations.length === 0) {
+    config.onRender?.({
+      inputCount: 0,
+      eligibleCount: 0,
+      renderedCount: 0,
+      unrenderedCount: 0,
+      unrenderedTypes: [],
+    })
+    return null
+  }
   // Match describeChart/nav tree: hide retracted & superseded notes by default
   // so SSR/MCP SVG does not paint editorial dead weight the text layers omit.
   const filtered = filterAnnotationsByStatus(rawAnnotations)
@@ -200,11 +239,12 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   // xy rule set (GeoSVGOverlay sets frameType:"xy"); bare network has no
   // Cartesian scales and no geo projection. Never advertise a default
   // ordinal `projection` of "vertical" on non-ordinal frames.
-  const frameType: AnnotationContext["frameType"] = config.projection
-    ? "ordinal"
-    : geoProject || config.scales.x || config.scales.y
-      ? "xy"
-      : "network"
+  const frameType: NonNullable<AnnotationContext["frameType"]> = config.frameType
+    ?? (config.projection
+      ? "ordinal"
+      : geoProject || config.scales.x || config.scales.y
+        ? "xy"
+        : "network")
   const projection: AnnotationContext["projection"] = config.projection
     ? (config.projection === "horizontal" ? "horizontal" : "vertical")
     : undefined
@@ -213,13 +253,35 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   // `svgAnnotationRules` can call `context.scales.x(value)` the same way.
   // Cast: static scales are structurally compatible with d3 ScaleLinear /
   // ScaleBand but carry a slightly wider domain type.
+  // The live ordinal overlay exposes the value and category scales through
+  // x/y according to projection. Preserve that shape here so shared rules
+  // such as trend and highlight do not silently lose their axes in SSR.
+  const contextScales = config.projection === "vertical"
+    ? {
+        x: config.scales.o ?? scaleX,
+        y: config.scales.r ?? scaleY,
+        time: config.scales.o ?? scaleX,
+        value: config.scales.r ?? scaleY,
+        o: config.scales.o,
+      }
+    : config.projection === "horizontal"
+      ? {
+          x: config.scales.r ?? scaleX,
+          y: config.scales.o ?? scaleY,
+          time: config.scales.r ?? scaleX,
+          value: config.scales.o ?? scaleY,
+          o: config.scales.o,
+        }
+      : {
+          x: scaleX,
+          y: scaleY,
+          time: scaleX,
+          value: scaleY,
+          o: config.scales.o,
+        }
   const annotationContext: AnnotationContext = {
     scales: {
-      x: scaleX,
-      y: scaleY,
-      time: scaleX,
-      value: scaleY,
-      o: config.scales.o,
+      ...contextScales,
       ...(geoProject ? { geoProjection: geoProject } : {}),
     } as AnnotationContext["scales"],
     width: config.layout.width,
@@ -227,6 +289,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     xAccessor: config.xAccessor,
     yAccessor: config.yAccessor,
     data: config.annotationData,
+    pointNodes: config.pointNodes,
     frameType,
     ...(projection ? { projection } : {}),
   }
@@ -240,13 +303,42 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     : annotations
 
   // Shared dispatch with the client SVG overlays: custom rules first, then
-  // built-in static handlers, then emphasis hierarchy.
-  const elements = renderAnnotationPass(
+  // theme-aware static handlers, then the context-only fallback for trend,
+  // enclosure, statistical overlays, widgets, brackets, and highlights.
+  // Keeping that fallback in a dependency-light server module avoids retaining
+  // the complete live annotation-rule factory in every server consumer.
+  const pass = renderAnnotationPassWithResult(
     layoutAnnotations,
-    (ann, i) => renderAnnotation(ann, i, config),
+    (ann, i, context) => renderAnnotation(ann, i, config, context)
+      ?? renderStaticAnnotationFallback(ann, i, context),
     config.svgAnnotationRules,
     annotationContext,
   )
+  const elements = pass.nodes
+
+  // Keep a type-level account of requested annotations which did not turn into
+  // SVG. This includes lifecycle-hidden and coordinate-invalid annotations;
+  // callers can distinguish those from the rendered count without pretending
+  // the input array was painted.
+  const renderedByType = new Map<string, number>()
+  for (const annotation of pass.renderedAnnotations) {
+    const type = typeof annotation.type === "string" ? annotation.type : "unknown"
+    renderedByType.set(type, (renderedByType.get(type) ?? 0) + 1)
+  }
+  const unrenderedTypes: string[] = []
+  for (const annotation of rawAnnotations) {
+    const type = typeof annotation.type === "string" ? annotation.type : "unknown"
+    const remaining = renderedByType.get(type) ?? 0
+    if (remaining > 0) renderedByType.set(type, remaining - 1)
+    else unrenderedTypes.push(type)
+  }
+  config.onRender?.({
+    inputCount: rawAnnotations.length,
+    eligibleCount: layoutAnnotations.length,
+    renderedCount: pass.renderedAnnotations.length,
+    unrenderedCount: unrenderedTypes.length,
+    unrenderedTypes,
+  })
   const pfx = config.idPrefix ? `${config.idPrefix}-` : ""
   return elements.length > 0 ? <g id={`${pfx}annotations`} className="semiotic-annotations">{elements}</g> : null
 }
@@ -255,6 +347,7 @@ function renderAnnotation(
   ann: Datum,
   index: number,
   config: StaticAnnotationConfig,
+  context: AnnotationContext,
 ): React.ReactNode | null {
   const { scales, layout, theme, xAccessor, yAccessor } = config
   switch (ann.type) {
@@ -265,14 +358,22 @@ function renderAnnotation(
           width={layout.width} height={layout.height}
           defaults={{
             fill: theme.colors.text,
-            fontSize: theme.typography.labelSize,
+            // Keep the serialized renderer in lockstep with the live
+            // FrameTextAnnotationSVG default. Theme-specific font values are
+            // still resolved for standalone SVG, but an omitted fontSize is
+            // the public 11px annotation default in both environments.
+            fontSize: 11,
             fontFamily: theme.typography.fontFamily
           }}
         />
       )
 
     case "y-threshold": {
-      const value = ann.value
+      // `value` is canonical, but the live default rule keeps `y` as the
+      // compatibility form. Static HOC sugar and older serialized configs may
+      // still emit it, so retain that fallback locally rather than pulling in
+      // the complete live rule factory.
+      const value = ann.value ?? ann.y
       if (value == null) return null
       const color = resolveAnnotationColor(ann, theme)
       const label = ann.label
@@ -325,7 +426,9 @@ function renderAnnotation(
     }
 
     case "x-threshold": {
-      const value = ann.value
+      // See y-threshold above: preserve the established `x` compatibility
+      // form alongside the canonical `value` field.
+      const value = ann.value ?? ann.x
       if (value == null) return null
       // For horizontal ordinal charts (bar/swimlane/etc.), the value axis IS
       // the x axis, so `x-threshold` must resolve against `r`, not the
@@ -512,7 +615,16 @@ function renderAnnotation(
     case "text": {
       // Use resolveCoords so geo annotations with `coordinates: [lon, lat]`
       // and network annotations with raw pixel x/y both flow through.
-      const { x: px, y: py } = resolveCoords(ann, scales, xAccessor, yAccessor)
+      const directPosition = resolveCoords(ann, scales, xAccessor, yAccessor)
+      // The shared client rule resolves pointId/latest/semantic anchors from
+      // scene nodes. Preserve that capability after moving static fallback
+      // rules out of the full client factory; direct coordinates still win so
+      // existing static coordinate behavior remains unchanged.
+      const anchoredPosition = directPosition.x == null || directPosition.y == null
+        ? resolveAnchoredPosition(ann, index, context)
+        : null
+      const px = directPosition.x ?? anchoredPosition?.x ?? null
+      const py = directPosition.y ?? anchoredPosition?.y ?? null
       if (px == null || py == null) return null
       const isText = ann.type === "text"
       const dx = ann.dx ?? (isText ? 0 : 30)

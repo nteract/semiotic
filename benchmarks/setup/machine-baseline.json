@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-machine-baseline",
-  "capturedAt": "2026-08-12T00:31:59.044Z",
+  "capturedAt": "2026-08-17T05:05:43.393Z",
   "source": {
-    "gitCommit": "056398cfb",
+    "gitCommit": "1576487a7",
     "artifact": "checkout npm pack --ignore-scripts",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 683
+      "changedPathCount": 154
     }
   },
   "referenceEnvironment": {
@@ -102,23 +102,23 @@
       },
       "archive": {
         "fileName": "semiotic-3.9.0.tgz",
-        "bytes": 4125231,
-        "sha1": "274746dbac9493a56cc2c5529a17427ccb3e8255",
-        "integrity": "sha512-VvA/bYaOa+v1vi+9t4kKB2at2teqRaNmSd58s7dMtglQPTY5/q0/d26P56eAfZ5dOiNstuWXhs/h2ajDqO1+aQ=="
+        "bytes": 4372605,
+        "sha1": "78254111ac9d4d8c1905591b6c918cee90763036",
+        "integrity": "sha512-q0RGt1kEa6ftgYPi4HGKS++AaSROxgf18JGJTos9UZ3NvE8gN19EH8siBO8tyhuvKIGS04iSMgw9UBD9idkxwg=="
       },
       "unpacked": {
-        "bytes": 15276571,
-        "fileCount": 1038
+        "bytes": 16292568,
+        "fileCount": 1079
       },
       "files": [
         {
           "path": "agent-skill/semiotic-charts/SKILL.md",
-          "size": 7274,
+          "size": 7357,
           "mode": 420
         },
         {
           "path": "ai/behaviorContracts.cjs",
-          "size": 20910,
+          "size": 21050,
           "mode": 420
         },
         {
@@ -128,12 +128,12 @@
         },
         {
           "path": "ai/cli.js",
-          "size": 19316,
+          "size": 21482,
           "mode": 493
         },
         {
           "path": "ai/componentMetadata.cjs",
-          "size": 3940,
+          "size": 4553,
           "mode": 420
         },
         {
@@ -143,7 +143,7 @@
         },
         {
           "path": "ai/dist/mcp-server.js",
-          "size": 1363393,
+          "size": 1370519,
           "mode": 493
         },
         {
@@ -153,37 +153,32 @@
         },
         {
           "path": "ai/examples.md",
-          "size": 52693,
+          "size": 52783,
           "mode": 420
         },
         {
           "path": "ai/reference.md",
-          "size": 103315,
+          "size": 107711,
           "mode": 420
         },
         {
           "path": "ai/schema.json",
-          "size": 838436,
+          "size": 1005359,
           "mode": 420
         },
         {
           "path": "ai/surface-manifest.json",
-          "size": 4678,
+          "size": 20022,
           "mode": 420
         },
         {
           "path": "ai/system-prompt.md",
-          "size": 11940,
+          "size": 12759,
           "mode": 420
         },
         {
-          "path": "dist/c-2DUKGGZ5.min.js",
-          "size": 14639,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-2ZCCBYSU.min.js",
-          "size": 60663,
+          "path": "dist/c-35ASWIIF.min.js",
+          "size": 166414,
           "mode": 420
         },
         {
@@ -192,8 +187,33 @@
           "mode": 420
         },
         {
+          "path": "dist/c-3JMLN4GA.min.js",
+          "size": 168920,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-45TIVVAA.min.js",
+          "size": 60519,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-4POZIAFG.min.js",
+          "size": 10405,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-4TWEX5HG.min.js",
+          "size": 12770,
+          "mode": 420
+        },
+        {
           "path": "dist/c-52TEGIUJ.min.js",
           "size": 2427,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-6FEKTA3U.min.js",
+          "size": 15111,
           "mode": 420
         },
         {
@@ -202,13 +222,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-7FR3LZUH.min.js",
-          "size": 120215,
+          "path": "dist/c-7EA2KQZZ.min.js",
+          "size": 1865,
           "mode": 420
         },
         {
-          "path": "dist/c-A52Z2RXW.min.js",
-          "size": 7557,
+          "path": "dist/c-7G7HE55X.min.js",
+          "size": 6656,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-7WQOIOBN.min.js",
+          "size": 447,
           "mode": 420
         },
         {
@@ -217,18 +242,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-AM6XBHMX.min.js",
-          "size": 25249,
-          "mode": 420
-        },
-        {
           "path": "dist/c-BBKITSXB.min.js",
           "size": 18204,
           "mode": 420
         },
         {
-          "path": "dist/c-CLFC57PB.min.js",
-          "size": 20226,
+          "path": "dist/c-BFLGMTHH.min.js",
+          "size": 31946,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-BWNB6USU.min.js",
+          "size": 48219,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-COHXCW3Q.min.js",
+          "size": 682,
           "mode": 420
         },
         {
@@ -237,28 +267,28 @@
           "mode": 420
         },
         {
-          "path": "dist/c-DFYMVQ33.min.js",
+          "path": "dist/c-E3JFRRMI.min.js",
+          "size": 372,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-EBFPQHHO.min.js",
+          "size": 46625,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-EPU3TUTW.min.js",
+          "size": 2424,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-F3HHRTWL.min.js",
           "size": 3113,
           "mode": 420
         },
         {
-          "path": "dist/c-DNEZVTRS.min.js",
-          "size": 23167,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-DPS3JUTN.min.js",
-          "size": 2401,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-EX4JZFO6.min.js",
-          "size": 41425,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-EZH76E4P.min.js",
-          "size": 1601,
+          "path": "dist/c-G2W4DKG7.min.js",
+          "size": 120858,
           "mode": 420
         },
         {
@@ -267,13 +297,18 @@
           "mode": 420
         },
         {
+          "path": "dist/c-GA23AI35.min.js",
+          "size": 306287,
+          "mode": 420
+        },
+        {
           "path": "dist/c-GGISSW5E.min.js",
           "size": 260,
           "mode": 420
         },
         {
-          "path": "dist/c-INRBH2XQ.min.js",
-          "size": 2067,
+          "path": "dist/c-HGH3THFI.min.js",
+          "size": 7711,
           "mode": 420
         },
         {
@@ -282,23 +317,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-IVR3JK2B.min.js",
-          "size": 2424,
+          "path": "dist/c-JAZ73J32.min.js",
+          "size": 7531,
           "mode": 420
         },
         {
-          "path": "dist/c-IXWL4KQP.min.js",
-          "size": 6337,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-JZ2KJMST.min.js",
-          "size": 126843,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-LUIIUGSV.min.js",
-          "size": 306405,
+          "path": "dist/c-LIXGXMNS.min.js",
+          "size": 78731,
           "mode": 420
         },
         {
@@ -307,18 +332,8 @@
           "mode": 420
         },
         {
-          "path": "dist/c-MDXWVMUS.min.js",
-          "size": 166003,
-          "mode": 420
-        },
-        {
           "path": "dist/c-MNF2S4AA.min.js",
           "size": 1274,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-MQD23U74.min.js",
-          "size": 13750,
           "mode": 420
         },
         {
@@ -332,8 +347,8 @@
           "mode": 420
         },
         {
-          "path": "dist/c-NOX6MVCN.min.js",
-          "size": 81299,
+          "path": "dist/c-NHORLWRX.min.js",
+          "size": 14708,
           "mode": 420
         },
         {
@@ -342,33 +357,23 @@
           "mode": 420
         },
         {
+          "path": "dist/c-O6U6K4CW.min.js",
+          "size": 14555,
+          "mode": 420
+        },
+        {
           "path": "dist/c-OCI56QF2.min.js",
           "size": 212,
           "mode": 420
         },
         {
-          "path": "dist/c-OFHTDLVN.min.js",
-          "size": 2007,
+          "path": "dist/c-OMGCU5NJ.min.js",
+          "size": 133635,
           "mode": 420
         },
         {
-          "path": "dist/c-QQ5WCVOW.min.js",
-          "size": 15111,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-QTEQAPRO.min.js",
-          "size": 820867,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-QYP3S24G.min.js",
-          "size": 4893,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-REFV464I.min.js",
-          "size": 97389,
+          "path": "dist/c-PPWDL5ZI.min.js",
+          "size": 695,
           "mode": 420
         },
         {
@@ -387,33 +392,18 @@
           "mode": 420
         },
         {
+          "path": "dist/c-SGJZ4YCB.min.js",
+          "size": 129383,
+          "mode": 420
+        },
+        {
           "path": "dist/c-SLGMUBUL.min.js",
           "size": 440,
           "mode": 420
         },
         {
-          "path": "dist/c-SZD66DGU.min.js",
-          "size": 161891,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-T5YCW5CT.min.js",
-          "size": 447,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-TTFKRIM2.min.js",
-          "size": 6656,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-TUWBGNAI.min.js",
-          "size": 129543,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-TVDOIZKO.min.js",
-          "size": 31856,
+          "path": "dist/c-SUILCHWU.min.js",
+          "size": 2007,
           "mode": 420
         },
         {
@@ -427,11 +417,6 @@
           "mode": 420
         },
         {
-          "path": "dist/c-V3VGDPVE.min.js",
-          "size": 39833,
-          "mode": 420
-        },
-        {
           "path": "dist/c-VGW3VG3I.min.js",
           "size": 239,
           "mode": 420
@@ -439,6 +424,16 @@
         {
           "path": "dist/c-W3CE4A4S.min.js",
           "size": 349,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-W4MT3QLC.min.js",
+          "size": 99271,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-WFKQP7BC.min.js",
+          "size": 117117,
           "mode": 420
         },
         {
@@ -452,18 +447,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-XU22HOYL.min.js",
-          "size": 583,
+          "path": "dist/c-X7LAWXJK.min.js",
+          "size": 25249,
           "mode": 420
         },
         {
-          "path": "dist/c-Y3THQGNA.min.js",
-          "size": 114708,
+          "path": "dist/c-YDAY2WFR.min.js",
+          "size": 20663,
           "mode": 420
         },
         {
-          "path": "dist/c-YYGKOP2W.min.js",
-          "size": 10405,
+          "path": "dist/c-YVZBCB64.min.js",
+          "size": 681915,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-YWFAX6AE.min.js",
+          "size": 2067,
           "mode": 420
         },
         {
@@ -493,12 +493,12 @@
         },
         {
           "path": "dist/components/ai/chartCapabilityTypes.d.ts",
-          "size": 13834,
+          "size": 18011,
           "mode": 420
         },
         {
           "path": "dist/components/ai/chartClinic.d.ts",
-          "size": 4175,
+          "size": 4313,
           "mode": 420
         },
         {
@@ -552,6 +552,11 @@
           "mode": 420
         },
         {
+          "path": "dist/components/ai/deriveProfileFields.d.ts",
+          "size": 1715,
+          "mode": 420
+        },
+        {
           "path": "dist/components/ai/describeChart.d.ts",
           "size": 6853,
           "mode": 420
@@ -567,13 +572,28 @@
           "mode": 420
         },
         {
+          "path": "dist/components/ai/evaluateChart.d.ts",
+          "size": 4053,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/fieldPolicy.d.ts",
+          "size": 521,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/fieldRoles.d.ts",
+          "size": 1827,
+          "mode": 420
+        },
+        {
           "path": "dist/components/ai/generativeChart.d.ts",
-          "size": 7635,
+          "size": 9035,
           "mode": 420
         },
         {
           "path": "dist/components/ai/inferIntent.d.ts",
-          "size": 836,
+          "size": 1960,
           "mode": 420
         },
         {
@@ -588,22 +608,22 @@
         },
         {
           "path": "dist/components/ai/intents.d.ts",
-          "size": 1852,
+          "size": 3555,
           "mode": 420
         },
         {
           "path": "dist/components/ai/navigationTree.d.ts",
-          "size": 2393,
+          "size": 2388,
           "mode": 420
         },
         {
           "path": "dist/components/ai/observedSceneAudit.d.ts",
-          "size": 2425,
+          "size": 2512,
           "mode": 420
         },
         {
           "path": "dist/components/ai/profileData.d.ts",
-          "size": 868,
+          "size": 1358,
           "mode": 420
         },
         {
@@ -638,7 +658,22 @@
         },
         {
           "path": "dist/components/ai/repairChartConfig.d.ts",
-          "size": 3453,
+          "size": 3427,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/semanticEvidence.d.ts",
+          "size": 346,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/semanticViability.d.ts",
+          "size": 640,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/semanticViabilityRegistry.d.ts",
+          "size": 473,
           "mode": 420
         },
         {
@@ -648,17 +683,22 @@
         },
         {
           "path": "dist/components/ai/streamingTypes.d.ts",
-          "size": 2663,
+          "size": 2912,
           "mode": 420
         },
         {
           "path": "dist/components/ai/suggestCharts.d.ts",
-          "size": 5886,
+          "size": 5964,
           "mode": 420
         },
         {
           "path": "dist/components/ai/suggestDashboard.d.ts",
-          "size": 3966,
+          "size": 3965,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/ai/suggestionPropContracts.d.ts",
+          "size": 1132,
           "mode": 420
         },
         {
@@ -668,7 +708,7 @@
         },
         {
           "path": "dist/components/ai/suggestStretchCharts.d.ts",
-          "size": 2758,
+          "size": 2757,
           "mode": 420
         },
         {
@@ -723,7 +763,7 @@
         },
         {
           "path": "dist/components/ai/variantDiscovery.d.ts",
-          "size": 7463,
+          "size": 7573,
           "mode": 420
         },
         {
@@ -833,7 +873,7 @@
         },
         {
           "path": "dist/components/charts/index.d.ts",
-          "size": 11749,
+          "size": 11842,
           "mode": 420
         },
         {
@@ -1103,7 +1143,7 @@
         },
         {
           "path": "dist/components/charts/ordinal/BarChart.d.ts",
-          "size": 7864,
+          "size": 7938,
           "mode": 420
         },
         {
@@ -1143,7 +1183,7 @@
         },
         {
           "path": "dist/components/charts/ordinal/FunnelChart.d.ts",
-          "size": 3585,
+          "size": 3686,
           "mode": 420
         },
         {
@@ -1163,7 +1203,7 @@
         },
         {
           "path": "dist/components/charts/ordinal/GroupedBarChart.d.ts",
-          "size": 4063,
+          "size": 4168,
           "mode": 420
         },
         {
@@ -1218,7 +1258,7 @@
         },
         {
           "path": "dist/components/charts/ordinal/StackedBarChart.d.ts",
-          "size": 4310,
+          "size": 4384,
           "mode": 420
         },
         {
@@ -1238,7 +1278,7 @@
         },
         {
           "path": "dist/components/charts/ordinal/SwimlaneChart.d.ts",
-          "size": 5315,
+          "size": 5341,
           "mode": 420
         },
         {
@@ -1278,7 +1318,7 @@
         },
         {
           "path": "dist/components/charts/physics/chainReactionTypes.d.ts",
-          "size": 3716,
+          "size": 3806,
           "mode": 420
         },
         {
@@ -1513,7 +1553,7 @@
         },
         {
           "path": "dist/components/charts/physics/physicsHocUtils.d.ts",
-          "size": 9449,
+          "size": 9515,
           "mode": 420
         },
         {
@@ -1578,12 +1618,12 @@
         },
         {
           "path": "dist/components/charts/realtime/realtimeChartRuntime.d.ts",
-          "size": 1736,
+          "size": 1792,
           "mode": 420
         },
         {
           "path": "dist/components/charts/realtime/realtimeChartTypes.d.ts",
-          "size": 1464,
+          "size": 1554,
           "mode": 420
         },
         {
@@ -1662,6 +1702,16 @@
           "mode": 420
         },
         {
+          "path": "dist/components/charts/shared/annotationBandFill.d.ts",
+          "size": 323,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/shared/annotationDispatch.d.ts",
+          "size": 1885,
+          "mode": 420
+        },
+        {
           "path": "dist/components/charts/shared/annotationHierarchy.d.ts",
           "size": 2237,
           "mode": 420
@@ -1688,7 +1738,7 @@
         },
         {
           "path": "dist/components/charts/shared/annotationRules.d.ts",
-          "size": 1566,
+          "size": 648,
           "mode": 420
         },
         {
@@ -1753,7 +1803,7 @@
         },
         {
           "path": "dist/components/charts/shared/chartMode.d.ts",
-          "size": 2974,
+          "size": 3076,
           "mode": 420
         },
         {
@@ -1867,6 +1917,16 @@
           "mode": 420
         },
         {
+          "path": "dist/components/charts/shared/frameTextAnnotation.d.ts",
+          "size": 2211,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/shared/FrameTextAnnotationSVG.d.ts",
+          "size": 444,
+          "mode": 420
+        },
+        {
           "path": "dist/components/charts/shared/gaugeGradient.d.ts",
           "size": 1840,
           "mode": 420
@@ -1878,12 +1938,12 @@
         },
         {
           "path": "dist/components/charts/shared/gradient.d.ts",
-          "size": 1423,
+          "size": 2153,
           "mode": 420
         },
         {
           "path": "dist/components/charts/shared/hatchFill.d.ts",
-          "size": 3805,
+          "size": 4566,
           "mode": 420
         },
         {
@@ -1893,7 +1953,7 @@
         },
         {
           "path": "dist/components/charts/shared/hooks.d.ts",
-          "size": 6295,
+          "size": 6317,
           "mode": 420
         },
         {
@@ -1998,7 +2058,7 @@
         },
         {
           "path": "dist/components/charts/shared/streamPropsHelpers.d.ts",
-          "size": 6014,
+          "size": 6104,
           "mode": 420
         },
         {
@@ -2033,7 +2093,7 @@
         },
         {
           "path": "dist/components/charts/shared/types.d.ts",
-          "size": 12645,
+          "size": 12804,
           "mode": 420
         },
         {
@@ -2043,17 +2103,17 @@
         },
         {
           "path": "dist/components/charts/shared/useChartLegend.d.ts",
-          "size": 3828,
+          "size": 5346,
           "mode": 420
         },
         {
           "path": "dist/components/charts/shared/useChartSetup.d.ts",
-          "size": 7653,
+          "size": 7797,
           "mode": 420
         },
         {
           "path": "dist/components/charts/shared/useCustomChartSetup.d.ts",
-          "size": 5094,
+          "size": 5328,
           "mode": 420
         },
         {
@@ -2073,7 +2133,7 @@
         },
         {
           "path": "dist/components/charts/shared/useNetworkChartSetup.d.ts",
-          "size": 7022,
+          "size": 7296,
           "mode": 420
         },
         {
@@ -2208,12 +2268,32 @@
         },
         {
           "path": "dist/components/charts/xy/BumpChart.capability.d.ts",
-          "size": 597,
+          "size": 1124,
           "mode": 420
         },
         {
           "path": "dist/components/charts/xy/BumpChart.d.ts",
-          "size": 6926,
+          "size": 4990,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/xy/BumpChart.semanticViability.d.ts",
+          "size": 430,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/xy/bumpData.d.ts",
+          "size": 1744,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/xy/bumpIdentity.d.ts",
+          "size": 129,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/charts/xy/bumpLayout.d.ts",
+          "size": 1742,
           "mode": 420
         },
         {
@@ -2543,7 +2623,7 @@
         },
         {
           "path": "dist/components/legendLayout.d.ts",
-          "size": 5773,
+          "size": 10193,
           "mode": 420
         },
         {
@@ -2938,7 +3018,7 @@
         },
         {
           "path": "dist/components/semiotic-ai-core.d.ts",
-          "size": 4558,
+          "size": 5857,
           "mode": 420
         },
         {
@@ -2953,7 +3033,7 @@
         },
         {
           "path": "dist/components/semiotic-ai.d.ts",
-          "size": 20137,
+          "size": 20991,
           "mode": 420
         },
         {
@@ -2983,17 +3063,17 @@
         },
         {
           "path": "dist/components/semiotic-geo.d.ts",
-          "size": 3840,
+          "size": 3940,
           "mode": 420
         },
         {
           "path": "dist/components/semiotic-network.d.ts",
-          "size": 4498,
+          "size": 4598,
           "mode": 420
         },
         {
           "path": "dist/components/semiotic-ordinal.d.ts",
-          "size": 4528,
+          "size": 4628,
           "mode": 420
         },
         {
@@ -3008,12 +3088,12 @@
         },
         {
           "path": "dist/components/semiotic-physics.d.ts",
-          "size": 14182,
+          "size": 14281,
           "mode": 420
         },
         {
           "path": "dist/components/semiotic-realtime-core.d.ts",
-          "size": 4010,
+          "size": 4110,
           "mode": 420
         },
         {
@@ -3048,7 +3128,7 @@
         },
         {
           "path": "dist/components/semiotic-server-edge.d.ts",
-          "size": 889,
+          "size": 1024,
           "mode": 420
         },
         {
@@ -3058,7 +3138,7 @@
         },
         {
           "path": "dist/components/semiotic-server.d.ts",
-          "size": 974,
+          "size": 1109,
           "mode": 420
         },
         {
@@ -3078,7 +3158,7 @@
         },
         {
           "path": "dist/components/semiotic-utils-core.d.ts",
-          "size": 5834,
+          "size": 6138,
           "mode": 420
         },
         {
@@ -3098,12 +3178,12 @@
         },
         {
           "path": "dist/components/semiotic-xy.d.ts",
-          "size": 4311,
+          "size": 4411,
           "mode": 420
         },
         {
           "path": "dist/components/semiotic.d.ts",
-          "size": 17351,
+          "size": 17391,
           "mode": 420
         },
         {
@@ -3118,12 +3198,12 @@
         },
         {
           "path": "dist/components/server/renderEvidence.d.ts",
-          "size": 4737,
+          "size": 5939,
           "mode": 420
         },
         {
           "path": "dist/components/server/renderToStaticSVG.d.ts",
-          "size": 3948,
+          "size": 4460,
           "mode": 420
         },
         {
@@ -3153,7 +3233,7 @@
         },
         {
           "path": "dist/components/server/serverChartConfigShared.d.ts",
-          "size": 3295,
+          "size": 3683,
           "mode": 420
         },
         {
@@ -3188,12 +3268,17 @@
         },
         {
           "path": "dist/components/server/serverChartConfigsXY.d.ts",
-          "size": 761,
+          "size": 772,
           "mode": 420
         },
         {
           "path": "dist/components/server/serverChartConfigsXYBubble.d.ts",
           "size": 428,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/serverChartConfigsXYBump.d.ts",
+          "size": 341,
           "mode": 420
         },
         {
@@ -3207,8 +3292,18 @@
           "mode": 420
         },
         {
+          "path": "dist/components/server/staticAnnotationFallbacks.d.ts",
+          "size": 585,
+          "mode": 420
+        },
+        {
           "path": "dist/components/server/staticAnnotations.d.ts",
-          "size": 2551,
+          "size": 3866,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticAxisTickLabel.d.ts",
+          "size": 530,
           "mode": 420
         },
         {
@@ -3222,23 +3317,38 @@
           "mode": 420
         },
         {
+          "path": "dist/components/server/staticLegendMargin.d.ts",
+          "size": 1333,
+          "mode": 420
+        },
+        {
           "path": "dist/components/server/staticNetwork.d.ts",
           "size": 797,
           "mode": 420
         },
         {
           "path": "dist/components/server/staticOrdinal.d.ts",
-          "size": 685,
+          "size": 888,
           "mode": 420
         },
         {
           "path": "dist/components/server/staticPhysics.d.ts",
-          "size": 1002,
+          "size": 983,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticPhysicsChrome.d.ts",
+          "size": 1462,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticRawLegend.d.ts",
+          "size": 720,
           "mode": 420
         },
         {
           "path": "dist/components/server/staticSVGChrome.d.ts",
-          "size": 7239,
+          "size": 6093,
           "mode": 420
         },
         {
@@ -3252,13 +3362,28 @@
           "mode": 420
         },
         {
+          "path": "dist/components/server/staticXYAxes.d.ts",
+          "size": 1055,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticXYAxisTicks.d.ts",
+          "size": 1596,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticXYGrid.d.ts",
+          "size": 832,
+          "mode": 420
+        },
+        {
           "path": "dist/components/server/svgHatchPattern.d.ts",
           "size": 852,
           "mode": 420
         },
         {
           "path": "dist/components/server/themeResolver.d.ts",
-          "size": 1558,
+          "size": 1706,
           "mode": 420
         },
         {
@@ -3293,7 +3418,7 @@
         },
         {
           "path": "dist/components/store/themeCore.d.ts",
-          "size": 3716,
+          "size": 4213,
           "mode": 420
         },
         {
@@ -3348,12 +3473,22 @@
         },
         {
           "path": "dist/components/stream/AccessibleDataTable.d.ts",
-          "size": 2386,
+          "size": 3216,
           "mode": 420
         },
         {
           "path": "dist/components/stream/accessibleDataTableModel.d.ts",
           "size": 1378,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/AccessibleTablePortalImpl.d.ts",
+          "size": 300,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/accessibleTableTypes.d.ts",
+          "size": 703,
           "mode": 420
         },
         {
@@ -3369,6 +3504,11 @@
         {
           "path": "dist/components/stream/AriaLiveTooltip.d.ts",
           "size": 388,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/axisTickUtils.d.ts",
+          "size": 963,
           "mode": 420
         },
         {
@@ -3447,6 +3587,11 @@
           "mode": 420
         },
         {
+          "path": "dist/components/stream/frameDefaultMargins.d.ts",
+          "size": 1083,
+          "mode": 420
+        },
+        {
           "path": "dist/components/stream/frameGraphics.d.ts",
           "size": 1204,
           "mode": 420
@@ -3459,6 +3604,11 @@
         {
           "path": "dist/components/stream/frameKeyboardNavigation.d.ts",
           "size": 2449,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/frameLegendOptions.d.ts",
+          "size": 893,
           "mode": 420
         },
         {
@@ -3548,7 +3698,7 @@
         },
         {
           "path": "dist/components/stream/geoTypes.d.ts",
-          "size": 16652,
+          "size": 16731,
           "mode": 420
         },
         {
@@ -3634,6 +3784,11 @@
         {
           "path": "dist/components/stream/moduleWorkerSession.d.ts",
           "size": 2598,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/networkAnnotationAnchors.d.ts",
+          "size": 1444,
           "mode": 420
         },
         {
@@ -3743,12 +3898,12 @@
         },
         {
           "path": "dist/components/stream/NetworkSVGOverlay.d.ts",
-          "size": 3480,
+          "size": 2568,
           "mode": 420
         },
         {
           "path": "dist/components/stream/networkTypes.d.ts",
-          "size": 27619,
+          "size": 27698,
           "mode": 420
         },
         {
@@ -3903,7 +4058,7 @@
         },
         {
           "path": "dist/components/stream/ordinalTypes.d.ts",
-          "size": 24651,
+          "size": 25002,
           "mode": 420
         },
         {
@@ -3934,6 +4089,11 @@
         {
           "path": "dist/components/stream/physics/PhysicsAccessibility.d.ts",
           "size": 1882,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/physics/physicsAnnotationContext.d.ts",
+          "size": 856,
           "mode": 420
         },
         {
@@ -4078,12 +4238,17 @@
         },
         {
           "path": "dist/components/stream/physics/PhysicsSettledSVG.d.ts",
-          "size": 1570,
+          "size": 787,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/physics/PhysicsSettledSVGElement.d.ts",
+          "size": 1814,
           "mode": 420
         },
         {
           "path": "dist/components/stream/physics/PhysicsSVGOverlay.d.ts",
-          "size": 3020,
+          "size": 2345,
           "mode": 420
         },
         {
@@ -4123,7 +4288,7 @@
         },
         {
           "path": "dist/components/stream/physics/StreamPhysicsTypes.d.ts",
-          "size": 14954,
+          "size": 15034,
           "mode": 420
         },
         {
@@ -4148,7 +4313,7 @@
         },
         {
           "path": "dist/components/stream/pipelineConfig.d.ts",
-          "size": 8837,
+          "size": 8863,
           "mode": 420
         },
         {
@@ -4492,13 +4657,23 @@
           "mode": 420
         },
         {
+          "path": "dist/components/stream/SVGChartTitle.d.ts",
+          "size": 372,
+          "mode": 420
+        },
+        {
           "path": "dist/components/stream/SVGOverlay.d.ts",
-          "size": 4889,
+          "size": 4261,
           "mode": 420
         },
         {
           "path": "dist/components/stream/svgOverlayUtils.d.ts",
-          "size": 697,
+          "size": 1320,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/stream/SVGUnderlay.d.ts",
+          "size": 928,
           "mode": 420
         },
         {
@@ -4513,7 +4688,7 @@
         },
         {
           "path": "dist/components/stream/types.d.ts",
-          "size": 41517,
+          "size": 41648,
           "mode": 420
         },
         {
@@ -4523,7 +4698,7 @@
         },
         {
           "path": "dist/components/stream/useFrame.d.ts",
-          "size": 8496,
+          "size": 8926,
           "mode": 420
         },
         {
@@ -4608,7 +4783,7 @@
         },
         {
           "path": "dist/components/stream/xyFrameAxisTypes.d.ts",
-          "size": 3191,
+          "size": 3625,
           "mode": 420
         },
         {
@@ -4673,7 +4848,7 @@
         },
         {
           "path": "dist/components/stream/xySceneBuilders/types.d.ts",
-          "size": 4661,
+          "size": 4687,
           "mode": 420
         },
         {
@@ -4703,12 +4878,12 @@
         },
         {
           "path": "dist/components/types/legendTypes.d.ts",
-          "size": 4572,
+          "size": 4805,
           "mode": 420
         },
         {
           "path": "dist/components/types/marginType.d.ts",
-          "size": 1428,
+          "size": 1437,
           "mode": 420
         },
         {
@@ -4733,12 +4908,12 @@
         },
         {
           "path": "dist/geo.min.js",
-          "size": 81,
+          "size": 286011,
           "mode": 420
         },
         {
           "path": "dist/geo.module.min.js",
-          "size": 40071,
+          "size": 40213,
           "mode": 420
         },
         {
@@ -4823,22 +4998,22 @@
         },
         {
           "path": "dist/semiotic-ai-core.d.ts",
-          "size": 5020,
+          "size": 6418,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ai-core.min.js",
-          "size": 273974,
+          "size": 298384,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ai-core.module.min.js",
-          "size": 269539,
+          "size": 293872,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ai.d.ts",
-          "size": 22161,
+          "size": 23081,
           "mode": 420
         },
         {
@@ -4848,12 +5023,12 @@
         },
         {
           "path": "dist/semiotic-ai.module.min.js",
-          "size": 263864,
+          "size": 279285,
           "mode": 420
         },
         {
           "path": "dist/semiotic-client-cjs-shared.min.js",
-          "size": 2211383,
+          "size": 2113869,
           "mode": 420
         },
         {
@@ -4877,6 +5052,11 @@
           "mode": 420
         },
         {
+          "path": "dist/semiotic-custom-layout-selection-cjs-shared.min.js",
+          "size": 1025,
+          "mode": 420
+        },
+        {
           "path": "dist/semiotic-data.d.ts",
           "size": 551,
           "mode": 420
@@ -4893,7 +5073,17 @@
         },
         {
           "path": "dist/semiotic-experimental-auxiliary.module.min.js",
-          "size": 404169,
+          "size": 404980,
+          "mode": 420
+        },
+        {
+          "path": "dist/semiotic-experimental-node-auxiliary.module.min.js",
+          "size": 451974,
+          "mode": 420
+        },
+        {
+          "path": "dist/semiotic-experimental-node.module.min.js",
+          "size": 772,
           "mode": 420
         },
         {
@@ -4908,7 +5098,7 @@
         },
         {
           "path": "dist/semiotic-experimental-vacp.min.js",
-          "size": 66230,
+          "size": 73022,
           "mode": 420
         },
         {
@@ -4933,17 +5123,17 @@
         },
         {
           "path": "dist/semiotic-geo.d.ts",
-          "size": 4247,
+          "size": 4358,
           "mode": 420
         },
         {
           "path": "dist/semiotic-network.d.ts",
-          "size": 4971,
+          "size": 5082,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ordinal.d.ts",
-          "size": 5089,
+          "size": 5200,
           "mode": 420
         },
         {
@@ -4958,12 +5148,12 @@
         },
         {
           "path": "dist/semiotic-physics.d.ts",
-          "size": 14897,
+          "size": 15007,
           "mode": 420
         },
         {
           "path": "dist/semiotic-realtime-core.d.ts",
-          "size": 4362,
+          "size": 4473,
           "mode": 420
         },
         {
@@ -4997,18 +5187,28 @@
           "mode": 420
         },
         {
+          "path": "dist/semiotic-recipes-core-cjs-base.min.js",
+          "size": 203905,
+          "mode": 420
+        },
+        {
           "path": "dist/semiotic-recipes-core.d.ts",
           "size": 15593,
           "mode": 420
         },
         {
           "path": "dist/semiotic-recipes-core.min.js",
-          "size": 203809,
+          "size": 507,
           "mode": 420
         },
         {
           "path": "dist/semiotic-recipes-core.module.min.js",
           "size": 158960,
+          "mode": 420
+        },
+        {
+          "path": "dist/semiotic-recipes-geo-cjs.min.js",
+          "size": 5915,
           "mode": 420
         },
         {
@@ -5018,7 +5218,7 @@
         },
         {
           "path": "dist/semiotic-recipes-react.min.js",
-          "size": 90,
+          "size": 2312,
           "mode": 420
         },
         {
@@ -5033,7 +5233,7 @@
         },
         {
           "path": "dist/semiotic-recipes.min.js",
-          "size": 85,
+          "size": 297,
           "mode": 420
         },
         {
@@ -5047,18 +5247,23 @@
           "mode": 420
         },
         {
+          "path": "dist/semiotic-server-edge-node.module.min.js",
+          "size": 684607,
+          "mode": 420
+        },
+        {
           "path": "dist/semiotic-server-edge.d.ts",
-          "size": 977,
+          "size": 1123,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server-edge.min.js",
-          "size": 835664,
+          "size": 689459,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server-edge.module.min.js",
-          "size": 709427,
+          "size": 586714,
           "mode": 420
         },
         {
@@ -5068,17 +5273,17 @@
         },
         {
           "path": "dist/semiotic-server-node.min.js",
-          "size": 837883,
+          "size": 691678,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server-node.module.min.js",
-          "size": 853,
+          "size": 907,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server.d.ts",
-          "size": 1062,
+          "size": 1208,
           "mode": 420
         },
         {
@@ -5088,7 +5293,7 @@
         },
         {
           "path": "dist/semiotic-themes-core.min.js",
-          "size": 20373,
+          "size": 20810,
           "mode": 420
         },
         {
@@ -5118,7 +5323,7 @@
         },
         {
           "path": "dist/semiotic-themes.min.js",
-          "size": 20373,
+          "size": 20810,
           "mode": 420
         },
         {
@@ -5128,17 +5333,17 @@
         },
         {
           "path": "dist/semiotic-utils-core.d.ts",
-          "size": 6373,
+          "size": 6699,
           "mode": 420
         },
         {
           "path": "dist/semiotic-utils-core.min.js",
-          "size": 232284,
+          "size": 244981,
           "mode": 420
         },
         {
           "path": "dist/semiotic-utils-core.module.min.js",
-          "size": 146418,
+          "size": 161678,
           "mode": 420
         },
         {
@@ -5188,12 +5393,12 @@
         },
         {
           "path": "dist/semiotic-xy.d.ts",
-          "size": 4850,
+          "size": 4961,
           "mode": 420
         },
         {
           "path": "dist/semiotic.d.ts",
-          "size": 19056,
+          "size": 19096,
           "mode": 420
         },
         {
@@ -5208,12 +5413,12 @@
         },
         {
           "path": "dist/server.min.js",
-          "size": 837883,
+          "size": 691678,
           "mode": 420
         },
         {
           "path": "dist/server.module.min.js",
-          "size": 853,
+          "size": 907,
           "mode": 420
         },
         {
@@ -5233,12 +5438,12 @@
         },
         {
           "path": "package.json",
-          "size": 28611,
+          "size": 29545,
           "mode": 420
         },
         {
           "path": "README.md",
-          "size": 38531,
+          "size": 39029,
           "mode": 420
         },
         {
@@ -5310,88 +5515,88 @@
         "sourceBytes": 2196,
         "timing": {
           "samplesMs": [
-            0.341,
+            0.403,
+            0.069,
+            0.061,
+            0.058,
             0.055,
-            0.046,
-            0.047,
-            0.044,
-            0.041,
-            0.083,
-            0.044,
-            0.102,
-            0.058,
-            0.058,
-            0.041,
-            0.04,
-            0.038,
-            0.038
+            0.054,
+            0.106,
+            0.052,
+            0.119,
+            0.067,
+            0.067,
+            0.05,
+            0.048,
+            0.045,
+            0.048
           ],
-          "minMs": 0.038,
-          "p50Ms": 0.046,
-          "p95Ms": 0.174,
-          "p99Ms": 0.308,
-          "maxMs": 0.341,
-          "meanMs": 0.072
+          "minMs": 0.045,
+          "p50Ms": 0.058,
+          "p95Ms": 0.204,
+          "p99Ms": 0.363,
+          "maxMs": 0.403,
+          "meanMs": 0.087
         }
       },
       {
         "id": "server-edge",
         "path": "dist/semiotic-server-edge.module.min.js",
-        "sourceBytes": 709427,
+        "sourceBytes": 586714,
         "timing": {
           "samplesMs": [
-            9.683,
-            9.621,
-            9.035,
-            10.501,
-            10.323,
-            9.455,
-            11.957,
-            8.88,
-            9.18,
-            8.635,
-            8.575,
-            8.45,
-            9.119,
-            11.752,
-            13.157
+            9.625,
+            8.96,
+            8.98,
+            8.882,
+            8.852,
+            8.85,
+            8.947,
+            8.876,
+            8.936,
+            8.912,
+            8.853,
+            8.855,
+            8.89,
+            8.878,
+            8.839
           ],
-          "minMs": 8.45,
-          "p50Ms": 9.455,
-          "p95Ms": 12.317,
-          "p99Ms": 12.989,
-          "maxMs": 13.157,
-          "meanMs": 9.888
+          "minMs": 8.839,
+          "p50Ms": 8.882,
+          "p95Ms": 9.173,
+          "p99Ms": 9.535,
+          "maxMs": 9.625,
+          "meanMs": 8.942
         }
       },
       {
         "id": "ai-core",
         "path": "dist/semiotic-ai-core.module.min.js",
-        "sourceBytes": 269539,
+        "sourceBytes": 293872,
         "timing": {
           "samplesMs": [
-            3.471,
-            2.937,
-            2.943,
-            2.977,
-            2.73,
-            2.601,
-            2.566,
-            2.411,
-            2.459,
-            2.396,
-            2.397,
-            2.361,
-            2.377,
-            2.373,
-            2.375
+            4.409,
+            3.736,
+            3.623,
+            3.583,
+            3.557,
+            3.52,
+            3.564,
+            3.516,
+            3.576,
+            3.498,
+            3.484,
+            3.489,
+            3.492,
+            3.506,
+            3.474
           ],
-          "minMs": 2.361,
-          "p50Ms": 2.459,
-          "p95Ms": 3.125,
-          "p99Ms": 3.402,
-          "maxMs": 3.471,
-          "meanMs": 2.625
+          "minMs": 3.474,
+          "p50Ms": 3.52,
+          "p95Ms": 3.938,
+          "p99Ms": 4.315,
+          "maxMs": 4.409,
+          "meanMs": 3.602
         }
       }
     ],
@@ -5402,64 +5607,64 @@
         "exportCount": 40,
         "timing": {
           "samplesMs": [
-            84.18,
-            46.584,
-            46.186,
-            45.804,
-            45.607,
-            49.703,
-            46.323
+            99.799,
+            61.174,
+            61.616,
+            61.509,
+            62.452,
+            60.229,
+            60.428
           ],
-          "minMs": 45.607,
-          "p50Ms": 46.323,
-          "p95Ms": 73.837,
-          "p99Ms": 82.111,
-          "maxMs": 84.18,
-          "meanMs": 52.055
+          "minMs": 60.229,
+          "p50Ms": 61.509,
+          "p95Ms": 88.595,
+          "p99Ms": 97.558,
+          "maxMs": 99.799,
+          "meanMs": 66.744
         }
       },
       {
         "id": "server-edge",
         "specifier": "semiotic/server/edge",
-        "exportCount": 13,
+        "exportCount": 14,
         "timing": {
           "samplesMs": [
-            79.754,
-            99.685,
-            65.241,
-            66.342,
-            65.981,
-            64.979,
-            71.462
+            95.578,
+            79.871,
+            81.587,
+            82.789,
+            111.095,
+            83.341,
+            80.456
           ],
-          "minMs": 64.979,
-          "p50Ms": 66.342,
-          "p95Ms": 93.706,
-          "p99Ms": 98.49,
-          "maxMs": 99.685,
-          "meanMs": 73.349
+          "minMs": 79.871,
+          "p50Ms": 82.789,
+          "p95Ms": 106.44,
+          "p99Ms": 110.164,
+          "maxMs": 111.095,
+          "meanMs": 87.817
         }
       },
       {
         "id": "ai-core",
         "specifier": "semiotic/ai/core",
-        "exportCount": 45,
+        "exportCount": 56,
         "timing": {
           "samplesMs": [
-            14.592,
-            13.213,
-            13.34,
-            13.218,
-            14.556,
-            13.643,
-            20.608
+            18.023,
+            18.41,
+            18.299,
+            18.289,
+            18.819,
+            17.97,
+            18.07
           ],
-          "minMs": 13.213,
-          "p50Ms": 13.643,
-          "p95Ms": 18.803,
-          "p99Ms": 20.247,
-          "maxMs": 20.608,
-          "meanMs": 14.738
+          "minMs": 17.97,
+          "p50Ms": 18.289,
+          "p95Ms": 18.697,
+          "p99Ms": 18.795,
+          "maxMs": 18.819,
+          "meanMs": 18.269
         }
       }
     ],
@@ -5473,32 +5678,32 @@
         ],
         "renderer": "semiotic/server/edge renderChart"
       },
-      "svgBytes": 22345,
-      "svgSha256": "6589139744f7bb55525efd11c4831450223acb8e80631803bc14dcb5e1817cb9",
+      "svgBytes": 22496,
+      "svgSha256": "7c54e9211e9660e974e56782b70df93e024fa855053224ec30f146a8d8f5245a",
       "timing": {
         "samplesMs": [
-          1.473,
-          1.131,
-          2.245,
-          2.004,
-          1.139,
-          0.884,
-          2.146,
-          1.407,
-          1.144,
-          1.087,
-          1.071,
-          1.098,
-          1.027,
-          1.022,
-          1.318
+          1.955,
+          1.578,
+          2.021,
+          2.42,
+          2.532,
+          4.624,
+          5.008,
+          2.618,
+          1.699,
+          2.021,
+          2.335,
+          1.743,
+          1.855,
+          2.568,
+          1.951
         ],
-        "minMs": 0.884,
-        "p50Ms": 1.139,
-        "p95Ms": 2.176,
-        "p99Ms": 2.231,
-        "maxMs": 2.245,
-        "meanMs": 1.346
+        "minMs": 1.578,
+        "p50Ms": 2.021,
+        "p95Ms": 4.739,
+        "p99Ms": 4.954,
+        "maxMs": 5.008,
+        "meanMs": 2.462
       }
     },
     "workers": [
@@ -5508,20 +5713,20 @@
         "sourceBytes": 11406,
         "timing": {
           "samplesMs": [
-            37.585,
-            35.107,
-            35.375,
-            35.522,
-            35.232,
-            35.807,
-            35.58
+            58.389,
+            50.941,
+            51.118,
+            98.993,
+            93.985,
+            59.191,
+            50.402
           ],
-          "minMs": 35.107,
-          "p50Ms": 35.522,
-          "p95Ms": 37.051,
-          "p99Ms": 37.478,
-          "maxMs": 37.585,
-          "meanMs": 35.744
+          "minMs": 50.402,
+          "p50Ms": 58.389,
+          "p95Ms": 97.491,
+          "p99Ms": 98.693,
+          "maxMs": 98.993,
+          "meanMs": 66.146
         }
       },
       {
@@ -5530,20 +5735,20 @@
         "sourceBytes": 41694,
         "timing": {
           "samplesMs": [
-            19.714,
-            17.852,
-            17.97,
-            18.668,
-            20.007,
-            18.873,
-            17.742
+            25.689,
+            24.362,
+            23.819,
+            23.524,
+            24.187,
+            24.397,
+            27.907
           ],
-          "minMs": 17.742,
-          "p50Ms": 18.668,
-          "p95Ms": 19.919,
-          "p99Ms": 19.989,
-          "maxMs": 20.007,
-          "meanMs": 18.689
+          "minMs": 23.524,
+          "p50Ms": 24.362,
+          "p95Ms": 27.242,
+          "p99Ms": 27.774,
+          "maxMs": 27.907,
+          "meanMs": 24.841
         }
       }
     ],
@@ -5551,15 +5756,15 @@
       "root": "docs/build",
       "compression": "gzip level 9 applied independently to each emitted file",
       "total": {
-        "fileCount": 1392,
-        "rawBytes": 76507798,
-        "gzipBytes": 31199943
+        "fileCount": 1399,
+        "rawBytes": 76933794,
+        "gzipBytes": 31255664
       },
       "groups": {
         "javascript": {
-          "fileCount": 764,
-          "rawBytes": 18074627,
-          "gzipBytes": 4998054
+          "fileCount": 771,
+          "rawBytes": 18129703,
+          "gzipBytes": 5017087
         },
         "stylesheet": {
           "fileCount": 68,
@@ -5568,20 +5773,20 @@
         },
         "html": {
           "fileCount": 324,
-          "rawBytes": 8262104,
-          "gzipBytes": 1978083
+          "rawBytes": 8284987,
+          "gzipBytes": 1982405
         },
         "other": {
           "fileCount": 236,
-          "rawBytes": 49285382,
-          "gzipBytes": 24023914
+          "rawBytes": 49633419,
+          "gzipBytes": 24056280
         }
       }
     },
     "mcp": {
       "entry": {
         "path": "ai/dist/mcp-server.js",
-        "sourceBytes": 1363393
+        "sourceBytes": 1370519
       },
       "profile": "public",
       "protocolVersion": "2025-06-18",
@@ -5589,35 +5794,35 @@
       "initialize": {
         "timing": {
           "samplesMs": [
-            468.98,
-            472.488,
-            440.28,
-            470.309,
-            448.339
+            622.101,
+            624.606,
+            585.814,
+            582.076,
+            585.235
           ],
-          "minMs": 440.28,
-          "p50Ms": 468.98,
-          "p95Ms": 472.052,
-          "p99Ms": 472.401,
-          "maxMs": 472.488,
-          "meanMs": 460.079
+          "minMs": 582.076,
+          "p50Ms": 585.814,
+          "p95Ms": 624.105,
+          "p99Ms": 624.506,
+          "maxMs": 624.606,
+          "meanMs": 599.966
         }
       },
       "toolsList": {
         "timing": {
           "samplesMs": [
-            3.286,
-            2.616,
-            2.622,
-            4.642,
-            4.175
+            3.666,
+            3.367,
+            3.489,
+            3.647,
+            3.882
           ],
-          "minMs": 2.616,
-          "p50Ms": 3.286,
-          "p95Ms": 4.549,
-          "p99Ms": 4.624,
-          "maxMs": 4.642,
-          "meanMs": 3.468
+          "minMs": 3.367,
+          "p50Ms": 3.647,
+          "p95Ms": 3.839,
+          "p99Ms": 3.874,
+          "maxMs": 3.882,
+          "meanMs": 3.61
         }
       }
     }

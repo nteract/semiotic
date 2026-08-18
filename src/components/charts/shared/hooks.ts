@@ -642,6 +642,7 @@ export {
   distinctCategories
 } from "./useChartLegend"
 export type {
+  FrameLegendOverrides,
   LegendPosition,
   LegendInteractionMode,
   LegendInteractionState

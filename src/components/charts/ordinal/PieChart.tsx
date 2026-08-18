@@ -173,6 +173,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],

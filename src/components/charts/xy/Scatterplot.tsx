@@ -20,7 +20,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
@@ -298,6 +298,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
@@ -318,7 +319,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
   // ── Brush (Scatterplot-specific) ───────────────────────────────────────

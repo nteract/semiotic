@@ -73,9 +73,10 @@ export function themeToCSSVariables(
   if (theme.borderRadius) {
     variables["--semiotic-border-radius"] = theme.borderRadius
   }
-  if (theme.typography.legendSize != null) {
+  const legendFontSize = theme.typography.legendSize ?? theme.typography.labelSize
+  if (legendFontSize != null) {
     variables["--semiotic-legend-font-size"] =
-      `${theme.typography.legendSize}px`
+      `${legendFontSize}px`
   }
   if (theme.typography.legendFontFamily != null) {
     variables["--semiotic-legend-font-family"] = theme.typography.legendFontFamily
@@ -83,9 +84,10 @@ export function themeToCSSVariables(
   if (theme.typography.legendFontWeight != null) {
     variables["--semiotic-legend-font-weight"] = String(theme.typography.legendFontWeight)
   }
-  if (theme.typography.titleFontSize != null) {
+  const titleFontSize = theme.typography.titleFontSize ?? theme.typography.titleSize
+  if (titleFontSize != null) {
     variables["--semiotic-title-font-size"] =
-      `${theme.typography.titleFontSize}px`
+      `${titleFontSize}px`
   }
   if (theme.typography.titleFontFamily != null) {
     variables["--semiotic-title-font-family"] = theme.typography.titleFontFamily

@@ -326,6 +326,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     showLegend,
     legendPosition: legendPositionProp,
     legendInteraction,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -454,6 +455,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       responsiveHeight={props.responsiveHeight}
       maxDevicePixelRatio={props.maxDevicePixelRatio}
       margin={setup.margin}
+      {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIDAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}

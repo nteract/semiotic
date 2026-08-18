@@ -44,8 +44,62 @@ jobs:
       - name: Verify every committed visual baseline without updates
         run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
 
+  docs-examples:
+    name: Docs examples (Chromium)
+    runs-on: ubuntu-latest
+    # The suite is serial to keep source-route behavior deterministic. Give
+    # legitimate cold transforms room to finish, but bound a stalled Vite or
+    # browser worker so publication cannot wait indefinitely.
+    timeout-minutes: 25
+    # Authored example routes use their own Vite/source-alias server and are
+    # intentionally excluded from the package visual matrix above. Re-run
+    # them independently on the tagged source so a green PR requirement is
+    # not the only protection before publication.
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    env:
+      HOME: /root
+      DOCKER_CONFIG: /tmp/semiotic-docker-config
+
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run docs example source tests
+        run: npm run test:examples:source
+
+      - name: Upload local docs example contract evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-docs-example-local-contract-evidence
+          path: test-results/**/docs-example-local-contract-evidence.v2.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload docs example test artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-playwright-report-docs-examples
+          path: |
+            test-results/
+            integration-tests/test-results/
+          retention-days: 7
+
   publish:
-    needs: visual-contracts
+    needs: [visual-contracts, docs-examples]
     runs-on: ubuntu-latest
     outputs:
       dist_tag: ${{ steps.dist-tag.outputs.tag }}

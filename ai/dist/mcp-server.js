@@ -7104,6 +7104,9 @@ var require_componentMetadata = __commonJS({
         COMPONENT_TO_CATEGORY.set(name, category);
       }
     }
+    var AI_EXPORT_ONLY_CATEGORIES = {
+      PhysicsCustomChart: "physics"
+    };
     function schemaEntries(schema2) {
       return schema2.tools.map((tool) => tool.function);
     }
@@ -7113,6 +7116,9 @@ var require_componentMetadata = __commonJS({
         throw new Error(`No AI component metadata category for "${name}"`);
       }
       return category;
+    }
+    function categoryForAIExport(name) {
+      return COMPONENT_TO_CATEGORY.get(name) ?? AI_EXPORT_ONLY_CATEGORIES[name];
     }
     function importPathForCategory(category) {
       if (category === "physics") return "semiotic/physics";
@@ -7127,6 +7133,7 @@ var require_componentMetadata = __commonJS({
         category,
         importPath: importPathForCategory(category),
         renderable: !isPushOnly,
+        requiresLiveData: isPushOnly,
         description: typeof entryOrName === "string" ? void 0 : entryOrName.description
       };
     }
@@ -7154,6 +7161,7 @@ var require_componentMetadata = __commonJS({
         totalComponents: components.length,
         renderableComponents: components.filter((component) => component.renderable).length,
         browserOnlyComponents: components.filter((component) => !component.renderable).length,
+        requiresLiveDataComponents: components.filter((component) => component.requiresLiveData).length,
         categories,
         components
       };
@@ -7162,6 +7170,7 @@ var require_componentMetadata = __commonJS({
       CATEGORY_ORDER,
       COMPONENTS_BY_CATEGORY,
       categoryForComponent,
+      categoryForAIExport,
       componentIndexFromSchema: componentIndexFromSchema2,
       findComponent,
       importPathForCategory,
@@ -33971,6 +33980,42 @@ var import_ai3 = require("semiotic/ai");
 var import_componentMetadata = __toESM(require_componentMetadata());
 var import_chartSuggestions = __toESM(require_chartSuggestions());
 var import_behaviorContracts = __toESM(require_behaviorContracts());
+var MCP_PROFILE_HINT_INPUT = {
+  identifiers: external_exports3.array(external_exports3.string()).optional().describe("Fields that identify records and must not be used as visual encodings or measures."),
+  fieldRoles: external_exports3.record(
+    external_exports3.string(),
+    external_exports3.union([
+      external_exports3.enum([
+        "identifier",
+        "measure",
+        "dimension",
+        "temporal",
+        "x",
+        "y",
+        "size",
+        "category",
+        "series",
+        "time",
+        "ignore"
+      ]),
+      external_exports3.array(
+        external_exports3.enum([
+          "identifier",
+          "measure",
+          "dimension",
+          "temporal",
+          "x",
+          "y",
+          "size",
+          "category",
+          "series",
+          "time",
+          "ignore"
+        ])
+      )
+    ])
+  ).optional().describe("Per-field semantic or exact encoding-role hints used before chart ranking.")
+};
 var {
   componentIndexFromSchema,
   metadataForComponent
@@ -34691,7 +34736,8 @@ async function getSchemaHandler(args) {
   const component = args.component;
   const availableComponents = allComponentNames.map((name) => ({
     name,
-    renderable: metadataForComponent(name).renderable
+    renderable: metadataForComponent(name).renderable,
+    requiresLiveData: metadataForComponent(name).requiresLiveData
   }));
   if (!component) {
     const list = availableComponents.map(
@@ -34734,6 +34780,7 @@ Pass { component: '<name>' } to get the prop schema for a specific component.`
     };
   }
   const renderable = metadataForComponent(component).renderable;
+  const requiresLiveData = metadataForComponent(component).requiresLiveData;
   const renderableNote = renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
   const contracts = behaviorContractsFor({
     component,
@@ -34754,6 +34801,7 @@ ${JSON.stringify(entry, null, 2)}${contractText}`
       status: "component-schema",
       component,
       renderable,
+      requiresLiveData,
       schema: entry,
       accessibility: schemaAccessibilityGuidance(entry),
       behaviorContracts: contracts
@@ -34798,8 +34846,10 @@ async function renderChartHandler(args, context = {}) {
   }
   if (!COMPONENT_REGISTRY[component]) {
     if (schemaByComponent[component]) {
+      const metadata = metadataForComponent(component);
+      const environment = metadata.requiresLiveData ? "live-data browser" : "browser";
       return capRenderChartResult({
-        content: [{ type: "text", text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
+        content: [{ type: "text", text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a ${environment} environment. Renderable components: ${componentNames.join(", ")}` }],
         isError: true
       });
     }
@@ -35218,6 +35268,33 @@ function buildVariantProposalProps(proposal, profile, audience) {
   const variant = proposal.variantKey ? capability?.variants?.find((v) => v.key === proposal.variantKey) : void 0;
   return capability ? capability.buildProps(profile, variant) : {};
 }
+function rankVariantProposals(component, profile, options = {}) {
+  const capability = (0, import_ai3.getCapability)(component);
+  if (!capability) return { fitReason: void 0, proposals: [] };
+  const proposals = (0, import_ai3.proposeVariant)(component, capability, {
+    profile,
+    audience: options.audience,
+    intent: options.intent,
+    existingVariants: capability.variants
+  });
+  const ranked = proposals.map((proposal) => {
+    const score = (0, import_ai3.evaluateVariantProposal)(proposal, profile, options.audience, {
+      intent: options.intent,
+      baselineComponent: component
+    });
+    const { buildProps: _buildProps, ...proposalMeta } = proposal;
+    return {
+      proposal: proposalMeta,
+      score,
+      props: buildVariantProposalProps(proposal, profile, options.audience)
+    };
+  }).filter((entry) => !entry.score.rejected).sort((a, b) => {
+    if (b.score.fit !== a.score.fit) return b.score.fit - a.score.fit;
+    if (a.score.risk !== b.score.risk) return a.score.risk - b.score.risk;
+    return b.score.novelty - a.score.novelty;
+  }).slice(0, options.maxResults ?? 8);
+  return { fitReason: capability.fits(profile), proposals: ranked };
+}
 async function proposeChartVariantsHandler(args) {
   const { component, intent, maxResults, audience } = args;
   const capability = (0, import_ai3.getCapability)(component);
@@ -35228,31 +35305,17 @@ async function proposeChartVariantsHandler(args) {
     };
   }
   const { data, rawInput } = profileInputFromVariantArgs(args);
-  const profile = (0, import_ai3.profileData)(data, { rawInput });
+  const profile = (0, import_ai3.profileData)(data, {
+    rawInput,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles
+  });
   const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
-  const fitReason = capability.fits(profile);
-  const proposals = (0, import_ai3.proposeVariant)(component, capability, {
-    profile,
+  const { fitReason, proposals: ranked } = rankVariantProposals(component, profile, {
     audience,
     intent: intentArg,
-    existingVariants: capability.variants
+    maxResults
   });
-  const ranked = proposals.map((proposal) => {
-    const score = (0, import_ai3.evaluateVariantProposal)(proposal, profile, audience, {
-      intent: intentArg,
-      baselineComponent: component
-    });
-    const { buildProps: _buildProps, ...proposalMeta } = proposal;
-    return {
-      proposal: proposalMeta,
-      score,
-      props: buildVariantProposalProps(proposal, profile, audience)
-    };
-  }).sort((a, b) => {
-    if (b.score.fit !== a.score.fit) return b.score.fit - a.score.fit;
-    if (a.score.risk !== b.score.risk) return a.score.risk - b.score.risk;
-    return b.score.novelty - a.score.novelty;
-  }).slice(0, maxResults ?? 8);
   const lines = [
     `${ranked.length} variant proposal${ranked.length === 1 ? "" : "s"} for ${component}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
     ...fitReason ? [`Base chart fit warning: ${fitReason}`] : [],
@@ -35417,12 +35480,14 @@ async function suggestStreamChartsHandler(args) {
   };
 }
 async function suggestDashboardHandler(args) {
-  const { data, intents, maxPanels, diversifyByFamily, audience } = args;
+  const { data, intents, maxPanels, diversifyByFamily, audience, identifiers, fieldRoles } = args;
   const dashboard = (0, import_ai3.suggestDashboard)(data, {
     intents,
     maxPanels: maxPanels ?? 6,
     diversifyByFamily: diversifyByFamily !== false,
-    audience
+    audience,
+    identifiers,
+    fieldRoles
   });
   const lines = [];
   lines.push(`Dashboard: ${dashboard.panels.length} panels covering ${dashboard.intentsCovered.join(", ") || "\u2014"}`);
@@ -35450,12 +35515,14 @@ async function suggestDashboardHandler(args) {
   };
 }
 async function suggestStretchChartsHandler(args) {
-  const { data, audience, intent, maxResults } = args;
+  const { data, audience, intent, maxResults, identifiers, fieldRoles } = args;
   const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
   const stretches = (0, import_ai3.suggestStretchCharts)(data, {
     audience,
     intent: intentArg,
-    maxResults: maxResults ?? 5
+    maxResults: maxResults ?? 5,
+    identifiers,
+    fieldRoles
   });
   const lines = [
     `${stretches.length} stretch pick${stretches.length === 1 ? "" : "s"} for "${audience.name ?? "audience"}":`,
@@ -35473,11 +35540,13 @@ async function suggestStretchChartsHandler(args) {
   };
 }
 async function repairChartConfigHandler(args) {
-  const { component, data, intent, maxAlternatives } = args;
+  const { component, data, intent, maxAlternatives, identifiers, fieldRoles } = args;
   const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
   const result = (0, import_ai3.repairChartConfig)(component, data, {
     intent: intentArg,
-    maxAlternatives: maxAlternatives ?? 3
+    maxAlternatives: maxAlternatives ?? 3,
+    identifiers,
+    fieldRoles
   });
   const lines = [];
   if (result.status === "ok") {
@@ -35566,7 +35635,13 @@ function compactPublicSuggestion(suggestion) {
 }
 async function createChartHandler(args, context = {}) {
   const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
-  const suggestions = (0, import_ai3.suggestCharts)(args.data, { intent, audience: args.audience, maxResults: 40 }).filter((suggestion) => metadataForComponent(suggestion.component).renderable).slice(0, 8);
+  const suggestions = (0, import_ai3.suggestCharts)(args.data, {
+    intent,
+    audience: args.audience,
+    maxResults: 40,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles
+  }).filter((suggestion) => metadataForComponent(suggestion.component).renderable).slice(0, 8);
   const selected = args.component ? suggestions.find((suggestion) => suggestion.component === args.component) : suggestions[0];
   if (!selected) {
     return {
@@ -35628,12 +35703,20 @@ async function createChartHandler(args, context = {}) {
   };
 }
 async function improveChartHandler(args) {
-  const data = args.data ?? (Array.isArray(args.props.data) ? args.props.data : []);
+  const { data, rawInput } = profileInputFromVariantArgs(args);
   const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
   const diagnosis = (0, import_ai3.diagnoseConfig)(args.component, args.props);
-  const repair = (0, import_ai3.repairChartConfig)(args.component, data, { intent });
-  const capability = (0, import_ai3.getCapability)(args.component);
-  const variants = capability ? (0, import_ai3.proposeVariant)(args.component, capability, { profile: (0, import_ai3.profileData)(data), intent }) : [];
+  const repair = (0, import_ai3.repairChartConfig)(args.component, data, {
+    intent,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles
+  });
+  const profile = (0, import_ai3.profileData)(data, {
+    rawInput,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles
+  });
+  const { proposals: variants } = rankVariantProposals(args.component, profile, { intent });
   const accessibility = accessibilityRecommendation(args.component, args.props, data);
   return {
     content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
@@ -35844,6 +35927,7 @@ function createServer2(profile = "developer", options = {}) {
         data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).min(1),
         intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
         audience: external_exports3.object({ name: external_exports3.string().optional(), receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional() }).passthrough().optional(),
+        ...MCP_PROFILE_HINT_INPUT,
         component: external_exports3.string().optional().describe("Optional chart preference; the fit-ranked result remains authoritative."),
         props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Optional props to merge over the selected chart recipe."),
         theme: external_exports3.record(external_exports3.string(), external_exports3.string()).optional()
@@ -35855,7 +35939,13 @@ function createServer2(profile = "developer", options = {}) {
     srv.registerTool("improveChart", {
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
-      inputSchema: { component: external_exports3.string(), props: external_exports3.record(external_exports3.string(), external_exports3.unknown()), data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional(), intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional() },
+      inputSchema: {
+        component: external_exports3.string(),
+        props: external_exports3.record(external_exports3.string(), external_exports3.unknown()),
+        data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional(),
+        intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
+        ...MCP_PROFILE_HINT_INPUT
+      },
       outputSchema: {
         status: external_exports3.enum(["reviewed", "repair-needed"]),
         component: external_exports3.string(),
@@ -36120,7 +36210,22 @@ function createServer2(profile = "developer", options = {}) {
       data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
       intents: external_exports3.array(external_exports3.string()).optional().describe("Intents to cover. Omit to let the engine pick based on the data shape."),
       maxPanels: external_exports3.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
-      diversifyByFamily: external_exports3.boolean().optional().describe("Prefer not to repeat chart families across panels (default true).")
+      diversifyByFamily: external_exports3.boolean().optional().describe("Prefer not to repeat chart families across panels (default true)."),
+      ...MCP_PROFILE_HINT_INPUT,
+      audience: external_exports3.object({
+        name: external_exports3.string().optional(),
+        familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
+        targets: external_exports3.record(
+          external_exports3.string(),
+          external_exports3.object({
+            direction: external_exports3.enum(["increase", "decrease"]),
+            weight: external_exports3.number().int().min(1).max(3).optional(),
+            reason: external_exports3.string().optional()
+          })
+        ).optional(),
+        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
+        receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional()
+      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestDashboardHandler
@@ -36159,7 +36264,8 @@ function createServer2(profile = "developer", options = {}) {
         receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel \u2014 see suggestCharts.")
       }).describe("Audience profile \u2014 familiarity, targets, exposure level, reception modality."),
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
-      maxResults: external_exports3.number().int().min(1).max(20).optional()
+      maxResults: external_exports3.number().int().min(1).max(20).optional(),
+      ...MCP_PROFILE_HINT_INPUT
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStretchChartsHandler
@@ -36173,7 +36279,8 @@ function createServer2(profile = "developer", options = {}) {
         component: external_exports3.string().describe("Chart component name to validate, e.g. 'PieChart'"),
         data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
         intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("User intent \u2014 informs ranking of alternatives when the chart doesn't fit."),
-        maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3).")
+        maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
+        ...MCP_PROFILE_HINT_INPUT
       },
       outputSchema: {
         status: external_exports3.enum(["ok", "alternative", "unknown"]),
@@ -36209,7 +36316,8 @@ function createServer2(profile = "developer", options = {}) {
         ).optional(),
         exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
         receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel \u2014 see suggestCharts.")
-      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
+      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality."),
+      ...MCP_PROFILE_HINT_INPUT
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     proposeChartVariantsHandler
@@ -36225,40 +36333,7 @@ function createServer2(profile = "developer", options = {}) {
         maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
         allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
         deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names."),
-        identifiers: external_exports3.array(external_exports3.string()).optional().describe("Fields that identify records and must not be used as visual encodings or measures."),
-        fieldRoles: external_exports3.record(
-          external_exports3.string(),
-          external_exports3.union([
-            external_exports3.enum([
-              "identifier",
-              "measure",
-              "dimension",
-              "temporal",
-              "x",
-              "y",
-              "size",
-              "category",
-              "series",
-              "time",
-              "ignore"
-            ]),
-            external_exports3.array(
-              external_exports3.enum([
-                "identifier",
-                "measure",
-                "dimension",
-                "temporal",
-                "x",
-                "y",
-                "size",
-                "category",
-                "series",
-                "time",
-                "ignore"
-              ])
-            )
-          ])
-        ).optional().describe("Per-field semantic or exact encoding-role hints used before chart ranking."),
+        ...MCP_PROFILE_HINT_INPUT,
         audience: external_exports3.object({
           name: external_exports3.string().optional(),
           familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),

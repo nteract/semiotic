@@ -137,6 +137,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     data,
     colorBy,
     colorScheme,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -205,6 +206,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
       : normalizedTooltip
         ? { tooltipContent: normalizedTooltip }
         : {}),
+    ...setup.legendBehaviorProps,
     // selection/linkedHover/onObservation/onClick are wired through these
     // synthesized hover/click behavior props — the bare prop names don't
     // exist on StreamOrdinalFrameProps.

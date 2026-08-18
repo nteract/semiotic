@@ -8,6 +8,7 @@ import type { ReactNode } from "react"
  */
 import { interpolateViridis } from "../charts/shared/colorPalettes"
 import type { PrimitiveStyleOverrides } from "../charts/shared/mergeShapeStyle"
+import { buildRegressionAnnotation, type RegressionProp } from "../charts/shared/regressionUtils"
 
 export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 export type ServerAccessorValue = string | number | boolean | Date | null | undefined
@@ -73,6 +74,23 @@ export function primitiveStyleOverrides(rest: Datum): PrimitiveStyleOverrides {
   if (rest.strokeWidth !== undefined) overrides.strokeWidth = rest.strokeWidth as number
   if (rest.opacity !== undefined) overrides.opacity = rest.opacity as number
   return overrides
+}
+
+/**
+ * Server chart configs receive their raw HOC props as a generic datum. Keep
+ * the regression sugar merge in one place so every chart family that exposes
+ * `regression` preserves the client ordering: the trend paints beneath
+ * caller-authored annotations.
+ */
+export function mergeServerRegressionAnnotation(
+  annotations: unknown,
+  regression: unknown,
+): Datum[] | undefined {
+  const trend = buildRegressionAnnotation(regression as RegressionProp | undefined)
+  const userAnnotations = Array.isArray(annotations)
+    ? annotations as Datum[]
+    : undefined
+  return trend ? [trend, ...(userAnnotations ?? [])] : userAnnotations
 }
 
 export function prepareConnectedScatterplotData(

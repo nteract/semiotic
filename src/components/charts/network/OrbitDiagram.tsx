@@ -208,6 +208,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     colorScheme,
     showLegend: false,             // no top-level legend
     legendInteraction: undefined,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     onObservation,
@@ -308,6 +309,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         responsiveHeight={props.responsiveHeight}
         maxDevicePixelRatio={props.maxDevicePixelRatio}
         margin={setup.margin}
+        {...setup.legendBehaviorProps}
         nodeIDAccessor={nodeIdAccessor}
         childrenAccessor={childrenAccessor as string | ((d: Datum) => Datum[])}
         nodeStyle={nodeStyleFn}

@@ -248,6 +248,30 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     return m
   }, [levels, colorScheme])
 
+  // Likert's legend is level-driven rather than inferred from its aggregated
+  // rows. Give setup the same legend that reaches the frame so it reserves
+  // the correct side and hands off the matching reservation marker.
+  const manualLegend = useMemo(() => {
+    if (showLegend === false) return undefined
+    return {
+      legendGroups: [{
+        styleFn: (item: { label: string }) => ({ fill: levelColorMap.get(item.label) || "#888" }),
+        items: levels.map((label) => ({ label })),
+        label: "",
+      }]
+    }
+  }, [showLegend, levels, levelColorMap])
+  const effectiveFrameLegend = useMemo(
+    () => Object.hasOwn(frameProps, "legend")
+      ? frameProps
+      : {
+          ...frameProps,
+          // Intentional frameProps precedence: compose Likert's level legend only when no frame legend was supplied.
+          legend: manualLegend,
+        },
+    [frameProps, manualLegend]
+  )
+
   // ── Aggregation (extracted hook) ───────────────────────────────────
   const { processedData, reAggregate, accumulatorRef } = useLikertAggregation({
     data,
@@ -312,6 +336,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: effectiveFrameLegend,
     selection,
     linkedHover,
     fallbackFields: ["__likertLevelLabel"],
@@ -432,32 +457,15 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
   }, [data, categoryAccessor, valueAccessor, levelAccessor, countAccessor, levels, isRawMode])
 
   // ── Legend ────────────────────────────────────────────────────────────
-  const legendGroups = useMemo(() => {
-    return [{
-      styleFn: (item: { label: string }) => ({ fill: levelColorMap.get(item.label) || "#888" }),
-      items: levels.map((l) => ({ label: l })),
-      label: "",
-    }]
-  }, [levels, levelColorMap])
-
-  const effectiveLegendProps = useMemo(() => {
-    if (showLegend !== false) {
-      return {
-        ...setup.legendBehaviorProps,
-        legend: { legendGroups },
-        legendPosition: legendPositionProp || setup.legendPosition || "bottom",
-      }
-    }
-    return setup.legendBehaviorProps
-  }, [setup.legendBehaviorProps, setup.legendPosition, legendPositionProp, showLegend, legendGroups])
+  const effectiveLegendProps = setup.legendBehaviorProps
 
   const effectiveMargin = useMemo(() => {
     const m = { ...setup.margin }
     // In push mode, streaming legend can't discover categories from raw data
     // (it looks for __likertLevelLabel which isn't on raw inputs). Apply fixed
     // legend margin based on position since legend is deterministic from levels.
-    if (isPushMode && showLegend !== false) {
-      const pos = legendPositionProp || "bottom"
+    if (isPushMode && setup.legend) {
+      const pos = setup.legendPosition
       if (pos === "bottom" && m.bottom < 80) m.bottom = 80
       else if (pos === "top" && m.top < 50) m.top = 50
       else if (pos === "right" && m.right < 110) m.right = 110
@@ -470,7 +478,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     }
     if (isDiverging && m.left < 100) m.left = 100
     return m
-  }, [setup.margin, streaming.streamingMarginAdjust, isDiverging, isPushMode, showLegend, legendPositionProp])
+  }, [setup.margin, setup.legend, setup.legendPosition, streaming.streamingMarginAdjust, isDiverging, isPushMode])
 
   // ── Axis format ────────────────────────────────────────────────────
   const rFormat = useMemo(() => {

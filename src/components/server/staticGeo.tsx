@@ -14,7 +14,10 @@ import { resolveTheme } from "./themeResolver"
 import {
   extractCategories
 } from "./staticLegend"
-import { renderStaticAnnotations } from "./staticAnnotations"
+import {
+  renderStaticAnnotations,
+  type StaticAnnotationRenderResult,
+} from "./staticAnnotations"
 import { resolveThemeSemanticColors } from "../store/themeCore"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
@@ -24,6 +27,7 @@ import {
   wrapSVG
 } from "./staticSVGChrome"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
+import { collectGeoAnnotationAnchors } from "../stream/geoAnnotationAnchors"
 
 export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
@@ -57,6 +61,14 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     categories: geoLegendCategories,
     theme,
     size,
+    hasTitle: hasVisibleTitle,
+  })
+  const geoLegend = renderFrameLegend({
+    props,
+    categories: geoLegendCategories,
+    theme,
+    size,
+    margin,
     hasTitle: hasVisibleTitle,
   })
   const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
@@ -125,23 +137,39 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     fallback: (node, index) => geoSceneNodeToSVG(node, index),
   })
 
-  if (sink) {
-    sink.evidence = buildEvidence({
-      frameType: "geo",
-      width: size[0], height: size[1],
-      marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      legendItems: geoLegendCategories.length > 0
-        ? geoLegendCategories.length
-        : props.legend != null
-          ? 1
-          : undefined,
-      margin,
-    })
-  }
-
   if (renderedScene.length === 0) {
+    let annotationRender: StaticAnnotationRenderResult | undefined
+    const annotationNodes = props.annotations ? renderStaticAnnotations({
+      annotations: props.annotations,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+      svgAnnotationRules: props.svgAnnotationRules,
+      scales: {
+        geoProjection: store.scales?.projectedPoint
+          ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
+          : undefined,
+      },
+      layout: { width, height },
+      theme,
+      pointNodes: collectGeoAnnotationAnchors(store.scene),
+      idPrefix: props._idPrefix,
+      onRender: result => { annotationRender = result },
+    }) : null
+    if (sink) {
+      sink.evidence = buildEvidence({
+        frameType: "geo",
+        width: size[0], height: size[1],
+        marks: renderedScene.map(entry => entry.node),
+        title: props.title, description: props.description,
+        annotations: props.annotations,
+        annotationRender,
+        legendItems: geoLegendCategories.length > 0
+          ? geoLegendCategories.length
+          : props.legend != null
+            ? 1
+            : undefined,
+        margin,
+      })
+    }
     // Even when the data scene is empty, bg/fg graphics and annotations are
     // valid surfaces a caller may have legitimately set. Pipe them through
     // so the empty-data path doesn't silently drop them.
@@ -149,19 +177,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       ? (
         <>
           {resolvedBackgroundGraphics}
-          {props.annotations ? renderStaticAnnotations({
-            annotations: props.annotations,
-            autoPlaceAnnotations: props.autoPlaceAnnotations,
-            svgAnnotationRules: props.svgAnnotationRules,
-            scales: {
-              geoProjection: store.scales?.projectedPoint
-                ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
-                : undefined,
-            },
-            layout: { width, height },
-            theme,
-            idPrefix: props._idPrefix,
-          }) : null}
+          {annotationNodes}
           {resolvedForegroundGraphics}
           {store.customLayoutOverlays}
         </>
@@ -174,6 +190,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
         innerWidth: width, innerHeight: height,
+        legend: geoLegend,
         idPrefix: props._idPrefix,
       })
     )
@@ -188,6 +205,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   // SVG, pin glyphs, etc.) survive renderChart the same way they paint on the
   // client GeoSVGOverlay. Coordinates are projected via geoProjection before
   // the custom rule runs (see renderStaticAnnotations).
+  let annotationRender: StaticAnnotationRenderResult | undefined
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
@@ -199,22 +217,27 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     },
     layout: { width, height },
     theme,
+    pointNodes: collectGeoAnnotationAnchors(store.scene),
     idPrefix: props._idPrefix,
+    onRender: result => { annotationRender = result },
   }) : null
 
-  // Geo legend: auto-build from `colorBy` on either points (proportional
-  // symbol maps) or areas (choropleth maps). `colorBy` is declared on
-  // `StreamGeoFrameProps`, so SSR can use it directly.
-  // Matches the XY/Network auto-build pattern; categories come from whichever
-  // data input is present.
-  const geoLegend = renderFrameLegend({
-    props,
-    categories: geoLegendCategories,
-    theme,
-    size,
-    margin,
-    hasTitle: hasVisibleTitle,
-  })
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "geo",
+      width: size[0], height: size[1],
+      marks: renderedScene.map(entry => entry.node),
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      annotationRender,
+      legendItems: geoLegendCategories.length > 0
+        ? geoLegendCategories.length
+        : props.legend != null
+          ? 1
+          : undefined,
+      margin,
+    })
+  }
 
   const content = (
     <>

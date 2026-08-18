@@ -27,50 +27,7 @@ import {
   type DataScaleProfile,
 } from "./dataScaleProfile"
 import { suggestionPropContractForFamily } from "./suggestionPropContracts"
-import { identifierFields } from "./fieldRoles"
-
-const CONVENTIONAL_MEASURE_ACCESSOR_PROPS = [
-  "xAccessor",
-  "yAccessor",
-  "valueAccessor",
-  "sizeAccessor",
-  "sizeBy",
-  "weightAccessor",
-  "radiusAccessor",
-  "rAccessor",
-  "amountAccessor",
-  "measureAccessor",
-] as const
-
-function identifierMeasureViolation(
-  capability: ChartCapability,
-  profile: ChartDataProfile,
-  props: Readonly<Record<string, unknown>>,
-  variant?: ChartVariant,
-): string | null {
-  const identifiers = new Set([
-    ...(profile.identifiers ?? []),
-    ...identifierFields(profile.fieldRoles ?? {}),
-  ])
-  if (identifiers.size === 0 || capability.fieldPolicy?.allowIdentifierMeasures === true) {
-    return null
-  }
-
-  const accessorProps = new Set<string>([
-    ...CONVENTIONAL_MEASURE_ACCESSOR_PROPS,
-    ...(capability.fieldPolicy?.measureAccessorProps ?? []),
-  ])
-  for (const propName of accessorProps) {
-    const field = props[propName]
-    if (typeof field === "string" && identifiers.has(field)) {
-      return `${capability.component} cannot use identifier field "${field}" as the measure in "${propName}".`
-    }
-  }
-
-  const resolvedFields = capability.fieldPolicy?.measureFields?.(profile, props, variant) ?? []
-  const identifier = resolvedFields.find((field) => identifiers.has(field))
-  return identifier ? `${capability.component} cannot use identifier field "${identifier}" as a measure.` : null
-}
+import { identifierMeasureViolation } from "./fieldPolicy"
 
 function score(scorer: IntentScorer | undefined, profile: ChartDataProfile): number {
   if (scorer === undefined) return 0
@@ -588,19 +545,36 @@ export function scoreChart(
   )
   const composite = compositeScore(intentScores, intents)
   const rubric = applyVariantToRubric(capability.rubric, variant)
-  const reasons = buildReasons(capability, profile, intentScores, intents)
   const recipeBias = recipeScoreAdjustment(capability, options)
   if (recipeBias.excluded) return { status: "rejected", reason: recipeBias.excluded }
+  const props = capability.buildProps(profile, variant)
+  const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
+  if (policyFailure) return { status: "rejected", reason: policyFailure }
+
+  // Keep single-chart evaluation aligned with the ranked suggestion path:
+  // familiarity/target policy applies to every capability, while a non-visual
+  // audience also gets the same paint-independent receivability audit.
+  const modality = options.audience?.receptionModality
+  const receivability = modality && modality !== "visual"
+    ? receivabilityBias(auditAccessibility(capability.component, props as Datum), modality)
+    : undefined
+  const biased = applyAudienceBias(
+    composite,
+    rubric,
+    capability.component,
+    options.audience,
+    receivability,
+  )
+  const reasons = buildReasons(capability, profile, intentScores, intents)
+  if (biased.appliedReason) reasons.push(biased.appliedReason)
+  if (biased.receivabilityReason) reasons.push(biased.receivabilityReason)
   reasons.push(...recipeBias.reasons)
   const caveats = [
     ...(capability.caveats ? capability.caveats(profile, variant) : []),
     ...(variant?.caveats ?? []),
+    ...(receivability?.caveats.slice(0, 3) ?? []),
     ...recipeBias.caveats,
   ]
-
-  const props = capability.buildProps(profile, variant)
-  const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
-  if (policyFailure) return { status: "rejected", reason: policyFailure }
 
   const resolvedComponent = variant?.component ?? capability.component
   return {
@@ -612,9 +586,9 @@ export function scoreChart(
     family: capability.family,
     importPath: capability.importPath,
     variant,
-    score: composite + recipeBias.delta,
+    score: biased.score + recipeBias.delta,
     intentScores,
-    rubric,
+    rubric: biased.rubric,
     reasons,
     caveats,
     props,
