@@ -1,5 +1,5 @@
 import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
@@ -20,7 +20,12 @@ function copyDocsPublicAssets() {
         const source = join(docsRoot, entry)
         const target = join(outDir, entry)
         if (statSync(source).isDirectory()) {
-          cpSync(source, target, { recursive: true })
+          cpSync(source, target, {
+            recursive: true,
+            // Finder metadata is ignored by Git but must not leak into the
+            // deployed asset tree or make local payload checks host-specific.
+            filter: (path) => basename(path) !== ".DS_Store",
+          })
         } else {
           copyFileSync(source, target)
         }
