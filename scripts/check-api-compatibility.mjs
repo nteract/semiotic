@@ -19,27 +19,33 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
-  symlinkSync,
+  symlinkSync
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   compareDeclarationLines,
-  snapshotLines,
+  snapshotLines
 } from "./lib/api-compatibility.mjs"
 import { createDeclarationAssignability } from "./lib/declaration-assignability.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const args = process.argv.slice(2)
 const verbose = args.includes("--verbose")
-const allowlistPath = join(repoRoot, "etc/api-surface/compatibility-allowlist.json")
+const allowlistPath = join(
+  repoRoot,
+  "etc/api-surface/compatibility-allowlist.json"
+)
+const registry =
+  process.env.SEMIOTIC_NPM_REGISTRY || "https://registry.npmjs.org"
 
 function argumentValue(name) {
   const index = args.indexOf(name)
   if (index === -1) return null
   const value = args[index + 1]
-  if (!value || value.startsWith("--")) throw new Error(`${name} requires a git ref`)
+  if (!value || value.startsWith("--"))
+    throw new Error(`${name} requires a git ref`)
   return value
 }
 
@@ -49,25 +55,46 @@ function git(args) {
 
 function latestReleaseTag() {
   const head = git(["rev-parse", "HEAD"])
-  const tags = git(["tag", "--merged", "HEAD", "--list", "v*", "--sort=-v:refname"])
+  const tags = git([
+    "tag",
+    "--merged",
+    "HEAD",
+    "--list",
+    "v*",
+    "--sort=-v:refname"
+  ])
     .split("\n")
     .filter(Boolean)
-  const previous = tags.find((tag) => git(["rev-list", "-n", "1", tag]) !== head)
-  if (!previous) {
-    throw new Error("No merged v* release tag is available; fetch tags or pass --against <ref>")
+  for (const tag of tags) {
+    if (git(["rev-list", "-n", "1", tag]) === head) continue
+    const version = tag.slice(1)
+    const published = spawnSync(
+      "npm",
+      ["view", `semiotic@${version}`, "version", "--registry", registry],
+      { cwd: repoRoot, encoding: "utf8", timeout: 30_000 }
+    )
+    if (published.status === 0 && published.stdout.trim() === version)
+      return tag
+    if (verbose) {
+      console.warn(`Skipping unpublished compatibility tag ${tag}`)
+    }
   }
-  return previous
+  throw new Error(
+    "No merged, published v* release tag is available; fetch tags or pass --against <ref>"
+  )
 }
 
 function loadAllowlist() {
   const parsed = JSON.parse(readFileSync(allowlistPath, "utf8"))
   if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.changes)) {
-    throw new Error("compatibility-allowlist.json must use schemaVersion 1 and a changes array")
+    throw new Error(
+      "compatibility-allowlist.json must use schemaVersion 1 and a changes array"
+    )
   }
   for (const change of parsed.changes) {
     if (typeof change.reason !== "string" || change.reason.trim().length < 12) {
       throw new Error(
-        `Compatibility allowlist entry ${change.entry}.${change.symbol} needs a substantive reason`,
+        `Compatibility allowlist entry ${change.entry}.${change.symbol} needs a substantive reason`
       )
     }
   }
@@ -75,8 +102,10 @@ function loadAllowlist() {
 }
 
 function changeId(change) {
-  return `${change.against}\u0000${change.entry}\u0000${change.symbol}\u0000` +
+  return (
+    `${change.against}\u0000${change.entry}\u0000${change.symbol}\u0000` +
     `${JSON.stringify(change.previous)}\u0000${JSON.stringify(change.current)}`
+  )
 }
 
 const against = argumentValue("--against") ?? latestReleaseTag()
@@ -87,7 +116,7 @@ try {
   const versionMatch = /^v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/.exec(against)
   if (!versionMatch) {
     throw new Error(
-      `API compatibility requires a published semver tag, received ${against}`,
+      `API compatibility requires a published semver tag, received ${against}`
     )
   }
   const previousVersion = versionMatch[1]
@@ -98,7 +127,6 @@ try {
   mkdirSync(archiveDir, { recursive: true })
   mkdirSync(extractionDir, { recursive: true })
 
-  const registry = process.env.SEMIOTIC_NPM_REGISTRY || "https://registry.npmjs.org"
   const packed = spawnSync(
     "npm",
     [
@@ -109,13 +137,20 @@ try {
       "--pack-destination",
       archiveDir,
       "--registry",
-      registry,
+      registry
     ],
-    { cwd: repoRoot, encoding: "utf8", timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      timeout: 120_000,
+      maxBuffer: 16 * 1024 * 1024
+    }
   )
   if (packed.status !== 0) {
     process.stderr.write(packed.stderr || packed.stdout)
-    throw new Error(`Could not download authoritative semiotic@${previousVersion} package`)
+    throw new Error(
+      `Could not download authoritative semiotic@${previousVersion} package`
+    )
   }
   let packResult
   try {
@@ -129,31 +164,47 @@ try {
     .sort()
   if (archiveNames.length !== 1) {
     throw new Error(
-      `npm pack expected one .tgz archive in ${archiveDir}; found ${archiveNames.length}`,
+      `npm pack expected one .tgz archive in ${archiveDir}; found ${archiveNames.length}`
     )
   }
   if (reportedFilename && reportedFilename !== archiveNames[0]) {
     throw new Error(
-      `npm pack reported ${reportedFilename}, but wrote ${archiveNames[0]}`,
+      `npm pack reported ${reportedFilename}, but wrote ${archiveNames[0]}`
     )
   }
-  execFileSync("tar", ["-xzf", join(archiveDir, archiveNames[0]), "-C", extractionDir])
+  execFileSync("tar", [
+    "-xzf",
+    join(archiveDir, archiveNames[0]),
+    "-C",
+    extractionDir
+  ])
   const previousPackageRoot = join(extractionDir, "package")
-  const previousManifest = JSON.parse(readFileSync(join(previousPackageRoot, "package.json"), "utf8"))
-  if (previousManifest.name !== "semiotic" || previousManifest.version !== previousVersion) {
+  const previousManifest = JSON.parse(
+    readFileSync(join(previousPackageRoot, "package.json"), "utf8")
+  )
+  if (
+    previousManifest.name !== "semiotic" ||
+    previousManifest.version !== previousVersion
+  ) {
     throw new Error(
       `Packed comparison target was ${previousManifest.name}@${previousManifest.version}; ` +
-        `expected semiotic@${previousVersion}`,
+        `expected semiotic@${previousVersion}`
     )
   }
   if (!existsSync(join(previousPackageRoot, "dist"))) {
-    throw new Error(`Published semiotic@${previousVersion} has no dist directory`)
+    throw new Error(
+      `Published semiotic@${previousVersion} has no dist directory`
+    )
   }
   // TypeScript resolves peer declaration packages by walking from the unpacked
   // .d.ts files. Link the lockfile-installed dependency tree into this private
   // temp package rather than changing compiler resolution (a wildcard `paths`
   // mapping can silently reduce generic React signatures to `any`).
-  symlinkSync(join(repoRoot, "node_modules"), join(previousPackageRoot, "node_modules"), "dir")
+  symlinkSync(
+    join(repoRoot, "node_modules"),
+    join(previousPackageRoot, "node_modules"),
+    "dir"
+  )
 
   const previousGenerated = spawnSync(
     process.execPath,
@@ -162,9 +213,9 @@ try {
       "--dist-dir",
       join(previousPackageRoot, "dist"),
       "--out-dir",
-      previousSnapshots,
+      previousSnapshots
     ],
-    { cwd: repoRoot, encoding: "utf8" },
+    { cwd: repoRoot, encoding: "utf8" }
   )
   if (previousGenerated.status !== 0) {
     process.stderr.write(previousGenerated.stderr || previousGenerated.stdout)
@@ -174,7 +225,7 @@ try {
   const currentGenerated = spawnSync(
     process.execPath,
     ["scripts/generate-api-surface.mjs", "--out-dir", currentSnapshots],
-    { cwd: repoRoot, encoding: "utf8" },
+    { cwd: repoRoot, encoding: "utf8" }
   )
   if (currentGenerated.status !== 0) {
     process.stderr.write(currentGenerated.stderr || currentGenerated.stdout)
@@ -185,7 +236,9 @@ try {
     .filter((path) => path.endsWith(".api.md"))
     .sort()
   if (previousFiles.length === 0) {
-    throw new Error(`semiotic@${previousVersion} produced no public API snapshots`)
+    throw new Error(
+      `semiotic@${previousVersion} produced no public API snapshots`
+    )
   }
 
   const allowlist = loadAllowlist()
@@ -194,7 +247,7 @@ try {
   const failures = []
   const semanticCompatibility = createDeclarationAssignability({
     previousDist: join(previousPackageRoot, "dist"),
-    currentDist: join(repoRoot, "dist"),
+    currentDist: join(repoRoot, "dist")
   })
   const semanticallyCompatible = []
 
@@ -212,7 +265,7 @@ try {
     const previousMarkdown = readFileSync(join(previousSnapshots, file), "utf8")
     const changes = compareDeclarationLines(
       snapshotLines(previousMarkdown),
-      snapshotLines(currentMarkdown),
+      snapshotLines(currentMarkdown)
     )
     for (const change of changes) {
       const candidate = {
@@ -220,7 +273,7 @@ try {
         entry,
         symbol: change.symbol,
         previous: change.previous,
-        current: change.current,
+        current: change.current
       }
       if (semanticCompatibility.isCompatible(entry, change)) {
         semanticallyCompatible.push(`${entry}.${change.symbol}`)
@@ -231,23 +284,26 @@ try {
         used.add(id)
         continue
       }
-      const label = change.kind === "removed"
-        ? "declaration was removed"
-        : change.kind === "required-added"
-          ? "required interface member was added"
-          : "declaration changed"
+      const label =
+        change.kind === "removed"
+          ? "declaration was removed"
+          : change.kind === "required-added"
+            ? "required interface member was added"
+            : "declaration changed"
       failures.push(
         `${entry}.${change.symbol}: ${label}\n` +
           `    previous: ${change.previous.join(" | ") || "<absent>"}\n` +
-          `    current:  ${change.current.join(" | ") || "<absent>"}`,
+          `    current:  ${change.current.join(" | ") || "<absent>"}`
       )
     }
   }
 
-  const stale = allowlist.filter((change) => change.against === against && !used.has(changeId(change)))
+  const stale = allowlist.filter(
+    (change) => change.against === against && !used.has(changeId(change))
+  )
   for (const change of stale) {
     failures.push(
-      `${change.entry}.${change.symbol}: compatibility allowlist entry for ${against} is stale`,
+      `${change.entry}.${change.symbol}: compatibility allowlist entry for ${against} is stale`
     )
   }
 
@@ -256,7 +312,7 @@ try {
     for (const failure of failures) console.error(`  - ${failure}`)
     console.error(
       "\nPreserve the released declaration, or add an exact reviewed entry with a reason to " +
-        "etc/api-surface/compatibility-allowlist.json.",
+        "etc/api-surface/compatibility-allowlist.json."
     )
     process.exitCode = 1
   } else {
@@ -264,7 +320,7 @@ try {
       `✅ public API is backward-compatible with ${against} ` +
         `(${previousFiles.length} released entry-point snapshots; ` +
         `${semanticallyCompatible.length} assignability-proven changes; ${used.size} reviewed ` +
-        `${used.size === 1 ? "change" : "changes"})`,
+        `${used.size === 1 ? "change" : "changes"})`
     )
     if (verbose && semanticallyCompatible.length > 0) {
       console.log("Assignability-proven changes:")
