@@ -239,6 +239,7 @@
     "build:analyze": "node scripts/build.mjs --analyze",
     "build:prod": "node scripts/build.mjs --production",
     "test": "vitest run",
+    "pretest:coverage": "npm run dist:prod",
     "test:coverage": "vitest run --coverage && node scripts/check-risk-weighted-coverage.mjs",
     "check:coverage-risk": "node scripts/check-risk-weighted-coverage.mjs",
     "test:coverage-risk": "node --test scripts/risk-weighted-coverage.test.mjs",
