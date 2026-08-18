@@ -85,6 +85,7 @@ export function validateNightlyCloudRunDeployment({
       "scripts/build.mjs",
       "scripts/build-mcp.mjs",
       "scripts/generate-ai-surface-manifest.mjs",
+      "COPY scripts/lib ./scripts/lib",
       "COPY tsconfig.json tsconfig.declarations.json ./"
     ]) {
       requireFragment(

@@ -91,6 +91,43 @@ describe("StreamOrdinalFrame", () => {
       const frame = container.querySelector(".stream-ordinal-frame")
       expect(frame?.getAttribute("tabindex")).toBe("0")
     })
+
+    it("renders a rounded swimlane track through the canvas path renderer", async () => {
+      const ctx = HTMLCanvasElement.prototype.getContext.call(
+        document.createElement("canvas"),
+        "2d"
+      ) as unknown as CanvasContextMock
+      const originalArcTo = ctx.arcTo as ((...args: unknown[]) => unknown) | undefined
+      const arcFillStyles: string[] = []
+      ctx.arcTo = (...args: unknown[]) => {
+        arcFillStyles.push(String(ctx.fillStyle))
+        return originalArcTo?.apply(ctx, args)
+      }
+
+      try {
+        render(
+          <StreamOrdinalFrame
+            chartType="swimlane"
+            data={[{ lane: "Roadmap", phase: "implemented", value: 40 }]}
+            oAccessor="lane"
+            rAccessor="value"
+            stackBy="phase"
+            projection="horizontal"
+            rExtent={[0, 100]}
+            trackFill="#d4dce8"
+            roundedTop={(laneWidth) => laneWidth / 10}
+            showAxes={false}
+            size={[400, 120]}
+          />
+        )
+
+        await waitFor(() => {
+          expect(arcFillStyles.filter((fill) => fill === "#d4dce8").length).toBeGreaterThanOrEqual(4)
+        })
+      } finally {
+        ctx.arcTo = originalArcTo
+      }
+    })
   })
 
   // ── Controlled data ───────────────────────────────────────────────────

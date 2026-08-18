@@ -21,6 +21,13 @@ if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(v
   throw new Error(`package.json contains an invalid release version: ${JSON.stringify(version)}`)
 }
 
+const stableTypeDocRevision = 'typedoc --gitRevision "v$npm_package_version"'
+for (const scriptName of ["docs:api", "docs:api:json"]) {
+  if (!pkg.scripts?.[scriptName]?.startsWith(stableTypeDocRevision)) {
+    errors.push(`${scriptName} must pin TypeDoc source links to the versioned release tag`)
+  }
+}
+
 const lock = readJson("package-lock.json")
 expectEqual("package-lock.json#version", lock.version, version)
 expectEqual('package-lock.json#packages[""]#version', lock.packages?.[""]?.version, version)

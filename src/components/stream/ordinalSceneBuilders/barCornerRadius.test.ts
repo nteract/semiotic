@@ -85,17 +85,32 @@ describe("adaptive ordinal bar corner radii", () => {
     }
   })
 
-  it("derives the lane radius from its rendered width", () => {
+  it("derives the lane and its track radius from the rendered width", () => {
     const scales = makeScales("horizontal")
+    const requestedWidths: number[] = []
     const ctx = makeContext({
       scales,
-      config: { chartType: "swimlane", projection: "horizontal", roundedTop: (barWidth) => barWidth / 10 },
+      config: {
+        chartType: "swimlane",
+        projection: "horizontal",
+        trackFill: "#d4dce8",
+        roundedTop: (barWidth) => {
+          requestedWidths.push(barWidth)
+          return barWidth / 10
+        }
+      },
       getStack: (d) => d.sub,
       columns: { Lane: makeColumn("Lane", [{ value: 50, sub: "only" }]) }
     })
 
-    const [node] = buildSwimlaneScene(ctx, layout)
+    const [track, node] = buildSwimlaneScene(ctx, layout)
+    expect(track?.type).toBe("rect")
+    if (track?.type === "rect") {
+      expect(track.datum).toBeNull()
+      expect(track.cornerRadii).toEqual({ tl: 8, tr: 8, br: 8, bl: 8 })
+    }
     expect(node?.type).toBe("rect")
     if (node?.type === "rect") expect(node.cornerRadii).toEqual({ tl: 8, tr: 8, br: 8, bl: 8 })
+    expect(requestedWidths).toEqual([80])
   })
 })
