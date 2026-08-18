@@ -8,8 +8,7 @@
  */
 
 import { execFileSync } from "node:child_process"
-import { constants as zlibConstants, gzipSync } from "node:zlib"
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { renderChart } from "semiotic/server/node"
@@ -22,6 +21,10 @@ const README_PATH = resolve(repoRoot, "README.md")
 const OUTPUT_PATH = resolve(
   repoRoot,
   "docs/public/assets/img/semiotic-release-dashboard.svg"
+)
+const COLD_CONSUMER_BASELINE_PATH = resolve(
+  repoRoot,
+  "benchmarks/setup/cold-consumer-imports.json"
 )
 const MARKER_START = "<!-- semiotic-readme-dashboard:start -->"
 const MARKER_END = "<!-- semiotic-readme-dashboard:end -->"
@@ -270,10 +273,7 @@ const SERVER_RENDERING_PAGES = new Set([
   "UsingSSRPage"
 ])
 
-const API_REFERENCE_PAGES = new Set([
-  "ApiReferencePage",
-  "ChartsApiPage"
-])
+const API_REFERENCE_PAGES = new Set(["ApiReferencePage", "ChartsApiPage"])
 
 function fetchTagsOnce() {
   if (attemptedTagFetch) return
@@ -399,67 +399,32 @@ function subpathToImportPath(subpath: string): string {
   return subpath
 }
 
-function resolveBundleFile(exportValue: unknown): string | null {
-  if (typeof exportValue === "string") return exportValue
-  if (exportValue && typeof exportValue === "object") {
-    const value = exportValue as Record<string, string>
-    return value.import ?? value.module ?? value.default ?? null
-  }
-  return null
-}
-
-function localModuleSpecifiers(text: string): string[] {
-  const specs = new Set<string>()
-  const patterns = [
-    /\b(?:import|export)\s*[^"'()]*?\s*from\s*["'](\.\/[^"']+)["']/g,
-    /\bimport\s*["'](\.\/[^"']+)["']/g,
-    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g
-  ]
-  for (const re of patterns) {
-    let match: RegExpExecArray | null
-    while ((match = re.exec(text)) !== null) specs.add(match[1])
-  }
-  return [...specs]
-}
-
-function resolveBundleFiles(entryAbs: string): string[] {
-  const seen = new Set<string>()
-  const files: string[] = []
-  const visit = (file: string) => {
-    if (seen.has(file)) return
-    seen.add(file)
-    if (!existsSync(file)) throw new Error(`Missing bundle file: ${file}`)
-    const text = readFileSync(file, "utf8")
-    files.push(file)
-    for (const spec of localModuleSpecifiers(text))
-      visit(resolve(dirname(file), spec))
-  }
-  visit(entryAbs)
-  return files
-}
-
-function gzipSize(files: string[]): number {
-  return files.reduce((sum, file) => {
-    const raw = readFileSync(file)
-    return (
-      sum + gzipSync(raw, { level: zlibConstants.Z_BEST_COMPRESSION }).length
-    )
-  }, 0)
-}
-
 function currentBundleRows() {
-  const pkg = JSON.parse(
-    readFileSync(resolve(repoRoot, "package.json"), "utf8")
+  const baseline = JSON.parse(
+    readFileSync(COLD_CONSUMER_BASELINE_PATH, "utf8")
+  ) as {
+    measurements?: Array<{ importPath?: string; gzipBytes?: number }>
+  }
+  const measurements = new Map(
+    (baseline.measurements ?? [])
+      .filter(
+        (
+          measurement
+        ): measurement is { importPath: string; gzipBytes: number } =>
+          typeof measurement.importPath === "string" &&
+          typeof measurement.gzipBytes === "number"
+      )
+      .map((measurement) => [measurement.importPath, measurement.gzipBytes])
   )
   return ORDER.map((subpath) => {
-    const bundleRel = resolveBundleFile(pkg.exports?.[subpath])
-    if (!bundleRel) throw new Error(`Could not resolve bundle for ${subpath}`)
-    const bundleAbs = resolve(repoRoot, bundleRel)
-    statSync(bundleAbs)
+    const importPath = subpathToImportPath(subpath)
+    const gzipBytes = measurements.get(importPath)
+    if (gzipBytes === undefined)
+      throw new Error(`Missing cold-consumer measurement: ${importPath}`)
     return {
       subpath,
-      importPath: subpathToImportPath(subpath),
-      kb: Math.round(gzipSize(resolveBundleFiles(bundleAbs)) / 1024),
+      importPath,
+      kb: Math.round(gzipBytes / 1024),
       blurb: BLURBS[subpath]
     }
   })
@@ -474,7 +439,10 @@ function chartDocCategory(component: string): string | null {
   return null
 }
 
-function docsCategoryForRoute(fullPath: string, component: string): string | null {
+function docsCategoryForRoute(
+  fullPath: string,
+  component: string
+): string | null {
   const top = fullPath.split("/")[0]
   if (top === "charts") return chartDocCategory(component)
   if (CUSTOM_CHART_PAGES.has(component)) return "Custom Charts"
@@ -506,8 +474,13 @@ function docsCategoryForRoute(fullPath: string, component: string): string | nul
   return null
 }
 
-function routeEntriesForVersion(version: string): Array<{ category: string; component: string }> {
-  const text = readTextAtVersionFallback(version, ["docs/src/App.jsx", "docs/src/App.js"])
+function routeEntriesForVersion(
+  version: string
+): Array<{ category: string; component: string }> {
+  const text = readTextAtVersionFallback(version, [
+    "docs/src/App.jsx",
+    "docs/src/App.js"
+  ])
   const entries: Array<{ category: string; component: string }> = []
   const stack: string[] = []
   const seen = new Set<string>()
@@ -517,15 +490,24 @@ function routeEntriesForVersion(version: string): Array<{ category: string; comp
       const closeCount = (line.match(/<\/Route>/g) ?? []).length
       for (let i = 0; i < closeCount; i += 1) stack.pop()
     }
-    const outlet = line.match(/<Route\s+path="([^"]+)"\s+element=\{<Outlet\s*\/>\}>/)
+    const outlet = line.match(
+      /<Route\s+path="([^"]+)"\s+element=\{<Outlet\s*\/>\}>/
+    )
     if (outlet) {
       stack.push(outlet[1])
       continue
     }
-    const route = line.match(/<Route(?:\s+index)?(?:\s+path="([^"]+)")?\s+element=\{<([A-Z][A-Za-z0-9]*)/)
+    const route = line.match(
+      /<Route(?:\s+index)?(?:\s+path="([^"]+)")?\s+element=\{<([A-Z][A-Za-z0-9]*)/
+    )
     if (!route) continue
     const component = route[2]
-    if (component === "Navigate" || component === "Outlet" || component === "NotFoundPage") continue
+    if (
+      component === "Navigate" ||
+      component === "Outlet" ||
+      component === "NotFoundPage"
+    )
+      continue
     const path = route[1] ?? ""
     const fullPath = [...stack, path].filter(Boolean).join("/")
     const category = docsCategoryForRoute(fullPath, component)
@@ -539,7 +521,9 @@ function routeEntriesForVersion(version: string): Array<{ category: string; comp
 }
 
 function docsCategoryCounts(version: string): Record<string, number> {
-  const counts = Object.fromEntries(DOC_CATEGORIES.map((category) => [category, 0]))
+  const counts = Object.fromEntries(
+    DOC_CATEGORIES.map((category) => [category, 0])
+  )
   for (const entry of routeEntriesForVersion(version)) {
     counts[entry.category] = (counts[entry.category] ?? 0) + 1
   }
@@ -766,7 +750,7 @@ function buildDashboard() {
     height: 230,
     margin: { top: 10, right: 20, bottom: 34, left: 104 },
     description:
-      "Current production bundle sizes generated from dist artifacts."
+      "Current packed cold-consumer bundle sizes from the release baseline."
   })
 
   const capabilityChart = chartSvg("LineChart", "capability-surface", {
@@ -819,7 +803,9 @@ function buildDashboard() {
     yAccessor: "count",
     areaBy: "category",
     colorBy: "category",
-    colorScheme: DOC_CATEGORIES.map((category) => DOC_CATEGORY_COLORS[category]),
+    colorScheme: DOC_CATEGORIES.map(
+      (category) => DOC_CATEGORY_COLORS[category]
+    ),
     areaOpacity: 1,
     stackOrder: "input",
     width: 544,
