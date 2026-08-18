@@ -1,5 +1,5 @@
 import { buildRectNode } from "../SceneGraph"
-import type { OrdinalSceneNode, OrdinalLayout, RectSceneNode } from "../ordinalTypes"
+import type { OrdinalColumn, OrdinalSceneNode, OrdinalLayout, RectSceneNode } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
 /**
@@ -22,6 +22,19 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
   // lanes grow bottom→top, pivoting on "bottom". roundedEdge alone doesn't
   // round corners (the canvas renderer only rounds when roundedTop > 0).
   const gradientEdge: RectSceneNode["roundedEdge"] = isHorizontal ? "left" : "bottom"
+  const laneCornerRadii = new Map<OrdinalColumn, number>()
+  const laneCornerRadius = (column: OrdinalColumn) => {
+    const cached = laneCornerRadii.get(column)
+    if (cached !== undefined) return cached
+    const requestedRadius = typeof ctx.config.roundedTop === "function"
+      ? ctx.config.roundedTop(column.width)
+      : ctx.config.roundedTop
+    const radius = typeof requestedRadius === "number" && Number.isFinite(requestedRadius)
+      ? Math.max(0, requestedRadius)
+      : 0
+    laneCornerRadii.set(column, radius)
+    return radius
+  }
 
   // ── Track ────────────────────────────────────────────────────────────
   // Optional rect drawn behind each lane spanning the full value-axis
@@ -42,6 +55,13 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
       const node = isHorizontal
         ? buildRectNode(trackStart, col.x, trackLen, col.width, trackStyle, null, "__track__")
         : buildRectNode(col.x, trackStart, col.width, trackLen, trackStyle, null, "__track__")
+      // A track spans the entire lane, so every one of its corners is an
+      // outer lane corner. Match the pieces' radius (including functional
+      // roundedTop) so the track cannot show through their curved end caps.
+      const cornerR = laneCornerRadius(col)
+      if (cornerR > 0) {
+        node.cornerRadii = { tl: cornerR, tr: cornerR, br: cornerR, bl: cornerR }
+      }
       nodes.push(node)
     }
   }
@@ -53,12 +73,7 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     const laneStartIndex = nodes.length
     // The lane bandwidth is the public bar-width argument in either
     // projection (horizontal uses its height; vertical uses its width).
-    const requestedRadius = typeof ctx.config.roundedTop === "function"
-      ? ctx.config.roundedTop(col.width)
-      : ctx.config.roundedTop
-    const cornerR = typeof requestedRadius === "number" && Number.isFinite(requestedRadius)
-      ? Math.max(0, requestedRadius)
-      : 0
+    const cornerR = laneCornerRadius(col)
 
     for (const d of col.pieceData) {
       const val = Math.abs(getR(d))

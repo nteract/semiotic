@@ -388,6 +388,22 @@ describe("HOC prop → SSR frame parity", () => {
     expect(track).not.toBe(dflt)
     expect(track).toContain("#eeeeee")
   })
+
+  it("SwimlaneChart: rounded trackFill serializes through the rounded SVG path", () => {
+    const data = [{ lane: "Roadmap", phase: "implemented", value: 40 }]
+    const svg = renderChart("SwimlaneChart", {
+      data,
+      categoryAccessor: "lane",
+      subcategoryAccessor: "phase",
+      valueAccessor: "value",
+      valueExtent: [0, 100],
+      trackFill: "#d4dce8",
+      roundedTop: (laneWidth: number) => laneWidth / 10,
+    })
+
+    expect(svg).toMatch(/<path[^>]*fill="#d4dce8"/)
+    expect(svg).not.toMatch(/<rect[^>]*fill="#d4dce8"/)
+  })
 })
 
 // Semiotic auto-reserves/adjusts margin (e.g. to fit a legend), so a caller

@@ -46,6 +46,18 @@ describe("nightly Cloud Run deployment configuration", () => {
     )
   })
 
+  it("rejects a Dockerfile that omits transitive build helpers", () => {
+    const dockerfile = deployment().dockerfile.replace(
+      "COPY scripts/lib ./scripts/lib\n",
+      ""
+    )
+    const report = validateNightlyCloudRunDeployment(deployment({ dockerfile }))
+    assert.equal(
+      report.errors.some((error) => error.includes("scripts/lib")),
+      true
+    )
+  })
+
   it("rejects a deployment that would overwrite Cloud Run environment settings", () => {
     const cloudbuild = deployment().cloudbuild.replace(
       '--update-labels="$$labels"',

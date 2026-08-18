@@ -18,6 +18,10 @@ RUN npm ci --include=dev
 COPY src ./src
 COPY ai ./ai
 COPY scripts/build.mjs scripts/build-mcp.mjs scripts/generate-ai-surface-manifest.mjs ./scripts/
+# Build/check entry scripts share small transitive helpers here. Copy the
+# helper directory as one allowlisted build input so a new helper import
+# cannot make the repository-built image differ from CI or local builds.
+COPY scripts/lib ./scripts/lib
 COPY tsconfig.json tsconfig.declarations.json ./
 COPY deploy/cloud-run-nightly ./deploy/cloud-run-nightly
 
