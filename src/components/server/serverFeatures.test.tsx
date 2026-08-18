@@ -257,6 +257,41 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
     expect(svg).toMatch(/<line(?=[^>]*\by1="0")(?=[^>]*\by2="0")(?=[^>]*\bstroke="#dc2626")/)
     expect(svg).toMatch(/<line(?=[^>]*\bx1="290")(?=[^>]*\bx2="290")(?=[^>]*\bstroke="#2563eb")/)
   })
+
+  it("renders both configured vertical axes", () => {
+    const svg = renderChart("LineChart", {
+      data: [{ x: 0, y: 10 }, { x: 1, y: 40 }, { x: 2, y: 25 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 400,
+      height: 240,
+      frameProps: {
+        axes: [
+          { orient: "bottom", tickValues: [0, 2] },
+          {
+            orient: "left",
+            tickValues: [10, 40],
+            tickFormat: (value: number) => `left-${value}`,
+            label: "Left value",
+          },
+          {
+            orient: "right",
+            tickValues: [10, 40],
+            tickFormat: (value: number) => `right-${value}`,
+            label: "Right value",
+            axisStyle: { stroke: "#2563eb", strokeWidth: 3 },
+          },
+        ],
+      },
+    })
+
+    expect(svg).toContain(">left-40<")
+    expect(svg).toContain(">right-40<")
+    expect(svg).toContain(">Left value<")
+    expect(svg).toContain(">Right value<")
+    expect(svg).toContain('data-orient="right"')
+    expect(svg).toMatch(/<line(?=[^>]*\bx1="290")(?=[^>]*\bx2="290")(?=[^>]*\bstroke="#2563eb")/)
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -803,7 +838,7 @@ describe("Legend rendering", () => {
     } as StaticXYProps)
 
     const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
-    expect(svg).toContain('transform="translate(40,0)"')
+    expect(svg).toContain('transform="translate(70,0)"')
     expect(dataAreaTop).toBeGreaterThan(40)
   })
 })

@@ -98,6 +98,20 @@ function referencedTokens(): Map<string, string[]> {
 }
 
 describe("theme token vocabulary", () => {
+  it("projects title and legend fallback typography", () => {
+    const variables = themeToCSSVariables({
+      ...LIGHT_THEME,
+      typography: {
+        ...LIGHT_THEME.typography,
+        titleSize: 22,
+        labelSize: 19,
+      },
+    })
+
+    expect(variables["--semiotic-title-font-size"]).toBe("22px")
+    expect(variables["--semiotic-legend-font-size"]).toBe("19px")
+  })
+
   it("emits the core color roles", () => {
     const emitted = emittedTokens()
     for (const token of [

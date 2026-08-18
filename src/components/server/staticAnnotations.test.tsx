@@ -6,7 +6,7 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { renderStaticAnnotations, type StaticAnnotationConfig } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
-import { scaleLinear } from "d3-scale"
+import { scaleBand, scaleLinear } from "d3-scale"
 
 function renderAnnotationsString(config: Parameters<typeof renderStaticAnnotations>[0]): string {
   const node = renderStaticAnnotations(config)
@@ -52,6 +52,14 @@ describe("renderStaticAnnotations", () => {
     expect(svg).toContain('text-anchor="end"')
     expect(svg).toContain('fill="#2457C5"')
     expect(svg).not.toContain("foreignObject")
+  })
+
+  it("uses the same default frame-text size as the live SVG rule", () => {
+    const svg = renderAnnotationsString({
+      ...baseConfig,
+      annotations: [{ type: "frame-text", text: "Default size" }],
+    })
+    expect(svg).toContain('font-size="11"')
   })
 
   it("honors svgAnnotationRules for custom annotation types and falls through on null", () => {
@@ -483,6 +491,89 @@ describe("renderStaticAnnotations", () => {
         annotations: [{ type: "category-highlight", category: "A" }],
       })
       expect(svg).toBe("")
+    })
+  })
+
+  describe("shared static fallback types", () => {
+    const annotationData = [
+      { x: 0, y: 10, upper: 14, lower: 6, flagged: false },
+      { x: 25, y: 16, upper: 20, lower: 12, flagged: false },
+      { x: 50, y: 24, upper: 29, lower: 19, flagged: true },
+      { x: 75, y: 31, upper: 37, lower: 25, flagged: false },
+      { x: 100, y: 40, upper: 47, lower: 33, flagged: false },
+    ]
+
+    it("renders documented statistical and enclosure annotations through the shared rule path", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotationData,
+        annotations: [
+          { type: "trend", method: "linear", label: "Trend" },
+          { type: "enclose", coordinates: annotationData.slice(0, 3), label: "Cluster" },
+          { type: "rect-enclose", coordinates: annotationData.slice(2), label: "Window" },
+          { type: "highlight", field: "flagged", value: true, color: "#d7263d" },
+          { type: "envelope", upperAccessor: "upper", lowerAccessor: "lower", label: "Range" },
+          { type: "anomaly-band", threshold: 1, label: "Anomaly" },
+          { type: "forecast", steps: 2, label: "Forecast" },
+          { type: "bracket", x: 50, y: 24, width: 24, height: 16, label: "Bracket" },
+          { type: "widget", x: 50, y: 24, content: <span>Widget</span> },
+        ],
+      })
+
+      expect(svg).toContain("Trend")
+      expect(svg).toContain("Cluster")
+      expect(svg).toContain("Window")
+      expect(svg).toContain("#d7263d")
+      expect(svg).toContain("Range")
+      expect(svg).toContain("Anomaly")
+      expect(svg).toContain("Forecast")
+      expect(svg).toContain("Bracket")
+      expect(svg).toContain("Widget")
+      expect(svg).toContain("foreignObject")
+    })
+
+    it("keeps ordinal trend annotations renderable with category/value scales", () => {
+      const ordinalData = [
+        { category: "A", value: 10 },
+        { category: "B", value: 20 },
+        { category: "C", value: 30 },
+      ]
+      const svg = renderAnnotationsString({
+        scales: {
+          o: scaleBand<string>().domain(["A", "B", "C"]).range([0, 300]),
+          r: scaleLinear().domain([0, 40]).range([240, 0]),
+        },
+        layout: { width: 300, height: 240 },
+        theme: LIGHT_THEME,
+        projection: "vertical",
+        xAccessor: "category",
+        yAccessor: "value",
+        annotationData: ordinalData,
+        annotations: [{ type: "trend", method: "linear", label: "Ordinal trend" }],
+      })
+      expect(svg).toContain("Ordinal trend")
+      expect(svg).toContain("<polyline")
+    })
+
+    it("reports annotations that could not produce SVG instead of counting them as rendered", () => {
+      let result: import("./staticAnnotations").StaticAnnotationRenderResult | undefined
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotationData,
+        annotations: [
+          { type: "trend", method: "linear" },
+          { type: "not-a-static-annotation" },
+        ],
+        onRender: next => { result = next },
+      })
+      expect(svg).toContain("<polyline")
+      expect(result).toMatchObject({
+        inputCount: 2,
+        eligibleCount: 2,
+        renderedCount: 1,
+        unrenderedCount: 1,
+        unrenderedTypes: ["not-a-static-annotation"],
+      })
     })
   })
 

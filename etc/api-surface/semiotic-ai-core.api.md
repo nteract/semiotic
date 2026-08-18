@@ -563,6 +563,7 @@ interface-member VariantScore::property::fit = required fit: number
 interface-member VariantScore::property::novelty = required novelty: number
 interface-member VariantScore::property::proposalId = required proposalId: string
 interface-member VariantScore::property::reasons = required reasons: readonly string[]
+interface-member VariantScore::property::rejected = optional rejected: boolean | undefined
 interface-member VariantScore::property::risk = required risk: number
 type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
 type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"

@@ -2013,6 +2013,7 @@ interface-member VariantScore::property::fit = required fit: number
 interface-member VariantScore::property::novelty = required novelty: number
 interface-member VariantScore::property::proposalId = required proposalId: string
 interface-member VariantScore::property::reasons = required reasons: readonly string[]
+interface-member VariantScore::property::rejected = optional rejected: boolean | undefined
 interface-member VariantScore::property::risk = required risk: number
 interface-member VegaLiteEncoding::property::aggregate = optional aggregate: string | undefined
 interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}

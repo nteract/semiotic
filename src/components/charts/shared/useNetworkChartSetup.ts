@@ -48,7 +48,12 @@ import {
   resolveMobileInteraction,
   distinctCategories,
 } from "./hooks"
-import type { LegendInteractionMode, LegendPosition, LegendInteractionState } from "./hooks"
+import type {
+  FrameLegendOverrides,
+  LegendInteractionMode,
+  LegendPosition,
+  LegendInteractionState
+} from "./hooks"
 import { DEFAULT_COLORS, resolveCategoricalPalette } from "./colorUtils"
 import { inferNodesFromEdges } from "./networkUtils"
 import { filterSparseArray } from "./sparseArray"
@@ -81,6 +86,8 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   showLegend?: boolean
   legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
+  /** Frame-level legend fields which take precedence in the rendered frame. */
+  frameLegend?: FrameLegendOverrides
 
   // ── Interaction ──────────────────────────────────────────────────
   selection?: SelectionConfig
@@ -158,6 +165,8 @@ export interface NetworkChartSetupResult {
   legend: ReturnType<typeof useChartLegendAndMargin>["legend"]
   margin: MarginType
   legendPosition: LegendPosition
+  /** Internal hand-off which prevents duplicate Stream-frame reservation. */
+  legendBehaviorProps: Record<string, unknown>
 
   // ── Interaction ──────────────────────────────────────────────────
   mobileInteraction: ResolvedMobileInteractionConfig
@@ -231,6 +240,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     showLegend,
     legendPosition: legendPositionProp,
     legendInteraction,
+    frameLegend,
     selection,
     linkedHover,
     onObservation,
@@ -309,7 +319,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
   // ── Legend + margin ─────────────────────────────────────────────
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition, legendMarginReserved } = useChartLegendAndMargin({
     data: safeNodes,
     colorBy,
     colorScale,
@@ -320,8 +330,15 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     categories: allCategories,
     chartWidth: width,
     chartHeight: height,
+    frameLegend,
     hasTitle,
   })
+  const legendBehaviorProps = useMemo<Record<string, unknown>>(
+    () => legend && legendMarginReserved
+      ? { __legendMarginReservedFor: legend }
+      : {},
+    [legend, legendMarginReserved]
+  )
   const resolvedMobileInteraction = useMemo(
     () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
     [mobileInteraction, width, mobileSemantics],
@@ -356,6 +373,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     legend,
     margin,
     legendPosition,
+    legendBehaviorProps,
     mobileInteraction: resolvedMobileInteraction,
     customHoverBehavior,
     customClickBehavior,

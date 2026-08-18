@@ -37,6 +37,21 @@ describe("default callout annotation rules", () => {
     expect(html).toContain('font-weight="600"')
   })
 
+  it("preserves an explicit zero fillOpacity for shaded annotations", () => {
+    const html = render({ type: "band", y0: 2, y1: 8, fillOpacity: 0 })
+    expect(html).toContain('fill-opacity="0"')
+  })
+
+  it("preserves an explicit zero fillOpacity for enclosure annotations", () => {
+    const html = render({
+      type: "enclose",
+      fill: "#f00",
+      fillOpacity: 0,
+      coordinates: [{ x: 2, y: 2 }, { x: 8, y: 8 }],
+    })
+    expect(html).toContain('fill-opacity="0"')
+  })
+
   it("renders the public callout-circle type with its subject radius", () => {
     const html = render({ type: "callout-circle", x: 5, y: 5, label: "Peak", radius: 18 })
     expect(html).toContain("annotation-subject")

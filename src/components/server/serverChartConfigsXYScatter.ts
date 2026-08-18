@@ -11,7 +11,9 @@ import {
   resolveStyleRules,
   type StyleRule
 } from "../charts/shared/styleRules"
-import type { ChartConfig } from "./serverChartConfigShared"
+import { prepareLineSeriesForSsr } from "../charts/shared/lineSeriesSsr"
+import type { AnomalyConfig, ForecastConfig } from "../charts/shared/statisticalOverlays"
+import { mergeServerRegressionAnnotation, type ChartConfig } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
 
 /** Resolve Scatterplot/QuadrantChart's HOC-level point encoding for SSR. */
@@ -91,21 +93,40 @@ export function buildScatterPointStyle(
 
 export const scatterplot: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "scatter",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    colorAccessor: colorBy,
-    sizeAccessor: rest.sizeBy,
-    ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
-    ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
-    colorScheme,
-    ...common,
-    sizeRange: rest.sizeRange || [3, 15],
-    pointStyle:
-      common.pointStyle ||
-      buildScatterPointStyle(data, colorBy, colorScheme, common, rest),
-    showLegend: common.showLegend ?? Boolean(colorBy)
-  })
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const series = prepareLineSeriesForSsr({
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      forecast: rest.forecast as ForecastConfig | undefined,
+      anomaly: rest.anomaly as AnomalyConfig | undefined,
+      annotations: common.annotations as Datum[] | undefined,
+      themeCategorical: resolveTheme(
+        common.theme as Parameters<typeof resolveTheme>[0],
+      ).colors.categorical,
+    })
+    const annotations = mergeServerRegressionAnnotation(
+      series.annotations,
+      rest.regression,
+    )
+    return {
+      chartType: "scatter",
+      data: series.data,
+      xAccessor: series.xAccessor,
+      yAccessor: series.yAccessor,
+      colorAccessor: colorBy,
+      sizeAccessor: rest.sizeBy,
+      ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
+      ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
+      colorScheme,
+      ...common,
+      ...(annotations && annotations.length > 0 && { annotations }),
+      ...(series.yExtent && !common.yExtent && { yExtent: series.yExtent }),
+      sizeRange: rest.sizeRange || [3, 15],
+      pointStyle:
+        common.pointStyle ||
+        buildScatterPointStyle(data, colorBy, colorScheme, common, rest),
+      showLegend: common.showLegend ?? Boolean(colorBy),
+    }
+  },
 }

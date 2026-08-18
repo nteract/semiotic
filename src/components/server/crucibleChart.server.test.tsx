@@ -98,12 +98,14 @@ describe("CrucibleChart static rendering", () => {
       mode: "sparkline"
     })
 
-    expect(primary).toMatch(/<g id="[^"]*-data-area">/)
+    expect(primary).toMatch(
+      /<g id="[^"]*-data-area" clip-path="url\(#(?:[^"]*-)?plot-clip\)">/
+    )
     expect(context).toMatch(
-      /<g id="[^"]*-data-area" transform="translate\(8,8\)">/
+      /<g id="[^"]*-data-area" transform="translate\(8,8\)" clip-path="url\(#(?:[^"]*-)?plot-clip\)">/
     )
     expect(sparkline).toMatch(
-      /<g id="[^"]*-data-area" transform="translate\(2,2\)">/
+      /<g id="[^"]*-data-area" transform="translate\(2,2\)" clip-path="url\(#(?:[^"]*-)?plot-clip\)">/
     )
   })
 

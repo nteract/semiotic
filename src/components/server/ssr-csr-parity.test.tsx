@@ -364,4 +364,34 @@ describe("BumpChart shared styling in static SVG", () => {
       expect(svg).not.toContain('fill="#abcdef"')
     }
   })
+
+  it("honors automatic label priority and caps in static SVG", () => {
+    const props = {
+      data: [
+        { year: 2023, series: "A", value: 10, priority: 1 },
+        { year: 2023, series: "B", value: 8, priority: 3 },
+        { year: 2023, series: "C", value: 6, priority: 2 },
+        { year: 2024, series: "A", value: 8, priority: 1 },
+        { year: 2024, series: "B", value: 10, priority: 3 },
+        { year: 2024, series: "C", value: 6, priority: 2 },
+      ],
+      xAccessor: "year",
+      yAccessor: "value",
+      lineBy: "series",
+      showLabels: "auto" as const,
+      labelPriorityAccessor: "priority",
+      maxLabels: 1,
+      width: 400,
+      height: 220,
+    }
+    const svg = renderChart("BumpChart", props)
+    const cappedAtZero = renderChart("BumpChart", { ...props, maxLabels: 0 })
+
+    expect(svg).toContain(">B<")
+    expect(svg).not.toContain(">A<")
+    expect(svg).not.toContain(">C<")
+    expect(cappedAtZero).not.toContain(">A<")
+    expect(cappedAtZero).not.toContain(">B<")
+    expect(cappedAtZero).not.toContain(">C<")
+  })
 })

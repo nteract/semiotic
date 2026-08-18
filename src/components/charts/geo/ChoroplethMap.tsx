@@ -372,7 +372,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     }
     return { gradient: config }
   }, [colorScale, resolved.showLegend, valueAccessor, valueDomain])
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition, legendMarginReserved } = useChartLegendAndMargin({
     data: [],
     colorBy: undefined,
     colorScale: undefined,
@@ -384,6 +384,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     chartWidth: resolved.width,
     chartHeight: resolved.height,
     legendLayout: frameProps.legendLayout,
+    frameLegend: frameProps,
     hasTitle: !!resolved.title,
     // Geo frames draw no horizontal axis, so a bottom legend only needs its
     // own content box and plot-edge distance.
@@ -420,6 +421,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     margin,
     enableHover: resolved.enableHover,
     ...(legend && { legend, legendPosition }),
+    ...(legendMarginReserved && { __legendMarginReservedFor: legend }),
     legendHoverBehavior: gradientLegendState.onLegendHover,
     legendClickBehavior: gradientLegendState.onLegendClick,
     legendHighlightedCategory: gradientLegendState.highlightedCategory,

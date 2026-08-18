@@ -39,7 +39,11 @@ import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
 import type { LegendValue } from "../../types/legendTypes"
-import type { LegendInteractionMode, LegendPosition } from "./useChartLegend"
+import type {
+  FrameLegendOverrides,
+  LegendInteractionMode,
+  LegendPosition
+} from "./useChartLegend"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
 /**
@@ -141,6 +145,8 @@ interface DataSetupOptions extends ScaffoldOptions {
   legend?: LegendValue
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
+  /** Frame-level legend fields which take precedence in the rendered frame. */
+  frameLegend?: FrameLegendOverrides
   /** Pass-through chart-setup inputs. */
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -190,6 +196,7 @@ export function useCustomChartSetup<TFrameHandle>(
     colorScheme: options.colorScheme,
     legendInteraction: options.legendInteraction,
     legendPosition: options.legendPosition,
+    frameLegend: options.frameLegend,
     selection: options.selection,
     linkedHover: options.linkedHover,
     hoverHighlight: options.hoverHighlight,

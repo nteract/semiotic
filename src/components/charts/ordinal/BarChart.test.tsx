@@ -14,6 +14,7 @@ import {
 } from "../../../test-utils/ordinalFixtures"
 import type { Datum } from "../shared/datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { CategoricalLegendConfig } from "../../types/legendTypes"
 
 const sampleData = [...BAR_SAMPLE]
 const initialData = [...BAR_INITIAL]
@@ -415,6 +416,34 @@ describe("BarChart", () => {
       // Right margin should be at least 110 when legend is present
       expect(frameProps().margin.right).toBeGreaterThanOrEqual(110)
       expect(frameProps().legend).toBeDefined()
+    })
+
+    it("uses a raw frameProps legend and its position for the measured margin", () => {
+      const rawLegend: CategoricalLegendConfig = {
+        legendGroups: [{
+          label: "Override",
+          type: "fill" as const,
+          styleFn: () => ({ fill: "#246" }),
+          items: [{ label: "Only this legend", color: "#246" }],
+        }],
+      }
+      render(
+        <TooltipProvider>
+          <BarChart
+            data={coloredData}
+            colorBy="type"
+            frameProps={{ legend: rawLegend, legendPosition: "left" }}
+          />
+        </TooltipProvider>
+      )
+
+      const props = frameProps()
+      expect(props.legend).toBe(rawLegend)
+      expect(props.legendPosition).toBe("left")
+      expect(props.margin).toBeDefined()
+      expect(props.margin!.left!).toBeGreaterThan(props.margin!.right!)
+      expect((props as Record<string, unknown>).__legendMarginReservedFor)
+        .toBe(rawLegend)
     })
 
     it("suppresses an empty legend when data is omitted (push API) so no margin is reserved", () => {

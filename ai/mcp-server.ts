@@ -121,6 +121,49 @@ type McpProfileFieldRoleHints = Record<
   string,
   McpProfileFieldRole | McpProfileFieldRole[]
 >
+
+const MCP_PROFILE_HINT_INPUT = {
+  identifiers: z
+    .array(z.string())
+    .optional()
+    .describe("Fields that identify records and must not be used as visual encodings or measures."),
+  fieldRoles: z
+    .record(
+      z.string(),
+      z.union([
+        z.enum([
+          "identifier",
+          "measure",
+          "dimension",
+          "temporal",
+          "x",
+          "y",
+          "size",
+          "category",
+          "series",
+          "time",
+          "ignore",
+        ]),
+        z.array(
+          z.enum([
+            "identifier",
+            "measure",
+            "dimension",
+            "temporal",
+            "x",
+            "y",
+            "size",
+            "category",
+            "series",
+            "time",
+            "ignore",
+          ]),
+        ),
+      ]),
+    )
+    .optional()
+    .describe("Per-field semantic or exact encoding-role hints used before chart ranking."),
+}
 // Sibling .cjs modules (authored as CommonJS, also consumed by the CLI/doctor).
 // esModuleInterop maps each module.exports object to the default import.
 import componentMetadataModule from "./componentMetadata.cjs"
@@ -1700,6 +1743,52 @@ function buildVariantProposalProps(
   return capability ? capability.buildProps(profile, variant) : {}
 }
 
+/**
+ * Produce the JSON-safe, policy-filtered variant shape used by every MCP
+ * proposal surface. Keeping this here prevents improveChart from returning
+ * raw build callbacks or bypassing the same fit and identifier safeguards as
+ * proposeChartVariants.
+ */
+function rankVariantProposals(
+  component: string,
+  profile: ChartDataProfile,
+  options: {
+    audience?: AudienceProfile
+    intent?: IntentId[]
+    maxResults?: number
+  } = {},
+) {
+  const capability = getCapability(component)
+  if (!capability) return { fitReason: undefined, proposals: [] }
+  const proposals = proposeVariant(component, capability, {
+    profile,
+    audience: options.audience,
+    intent: options.intent,
+    existingVariants: capability.variants,
+  })
+  const ranked = proposals
+    .map((proposal) => {
+      const score = evaluateVariantProposal(proposal, profile, options.audience, {
+        intent: options.intent,
+        baselineComponent: component,
+      })
+      const { buildProps: _buildProps, ...proposalMeta } = proposal
+      return {
+        proposal: proposalMeta,
+        score,
+        props: buildVariantProposalProps(proposal, profile, options.audience),
+      }
+    })
+    .filter((entry) => !(entry.score as { rejected?: boolean }).rejected)
+    .sort((a, b) => {
+      if (b.score.fit !== a.score.fit) return b.score.fit - a.score.fit
+      if (a.score.risk !== b.score.risk) return a.score.risk - b.score.risk
+      return b.score.novelty - a.score.novelty
+    })
+    .slice(0, options.maxResults ?? 8)
+  return { fitReason: capability.fits(profile), proposals: ranked }
+}
+
 async function proposeChartVariantsHandler(args: {
   component: string
   props?: Record<string, unknown>
@@ -1707,6 +1796,8 @@ async function proposeChartVariantsHandler(args: {
   intent?: string | string[]
   maxResults?: number
   audience?: AudienceProfile
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
   const { component, intent, maxResults, audience } = args
   const capability = getCapability(component)
@@ -1718,40 +1809,19 @@ async function proposeChartVariantsHandler(args: {
   }
 
   const { data, rawInput } = profileInputFromVariantArgs(args)
-  const profile = profileData(data, { rawInput })
+  const profile = profileData(data, {
+    rawInput,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles,
+  })
   const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
     | IntentId[]
     | undefined
-  const fitReason = capability.fits(profile)
-  const proposals = proposeVariant(component, capability, {
-    profile,
+  const { fitReason, proposals: ranked } = rankVariantProposals(component, profile, {
     audience,
     intent: intentArg,
-    existingVariants: capability.variants,
+    maxResults,
   })
-
-  const ranked = proposals
-    .map((proposal) => {
-      const score = evaluateVariantProposal(proposal, profile, audience, {
-        intent: intentArg,
-        baselineComponent: component,
-      })
-      // `proposal.buildProps` is a function; MCP structuredContent must be
-      // JSON-serializable, so strip it (and any future non-serializable
-      // fields) here. The executable output lives in the computed `props`.
-      const { buildProps: _buildProps, ...proposalMeta } = proposal
-      return {
-        proposal: proposalMeta,
-        score,
-        props: buildVariantProposalProps(proposal, profile, audience),
-      }
-    })
-    .sort((a, b) => {
-      if (b.score.fit !== a.score.fit) return b.score.fit - a.score.fit
-      if (a.score.risk !== b.score.risk) return a.score.risk - b.score.risk
-      return b.score.novelty - a.score.novelty
-    })
-    .slice(0, maxResults ?? 8)
 
   const lines: string[] = [
     `${ranked.length} variant proposal${ranked.length === 1 ? "" : "s"} for ${component}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
@@ -1958,13 +2028,17 @@ async function suggestDashboardHandler(args: {
   maxPanels?: number
   diversifyByFamily?: boolean
   audience?: AudienceProfile
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, intents, maxPanels, diversifyByFamily, audience } = args
+  const { data, intents, maxPanels, diversifyByFamily, audience, identifiers, fieldRoles } = args
   const dashboard = suggestDashboardFromCapabilities(data as Record<string, unknown>[], {
     intents: intents as IntentId[] | undefined,
     maxPanels: maxPanels ?? 6,
     diversifyByFamily: diversifyByFamily !== false,
     audience,
+    identifiers,
+    fieldRoles,
   })
 
   const lines: string[] = []
@@ -1999,8 +2073,10 @@ async function suggestStretchChartsHandler(args: {
   audience: AudienceProfile
   intent?: string | string[]
   maxResults?: number
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, audience, intent, maxResults } = args
+  const { data, audience, intent, maxResults, identifiers, fieldRoles } = args
   const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
     | IntentId[]
     | undefined
@@ -2009,6 +2085,8 @@ async function suggestStretchChartsHandler(args: {
     audience,
     intent: intentArg,
     maxResults: maxResults ?? 5,
+    identifiers,
+    fieldRoles,
   })
 
   const lines: string[] = [
@@ -2032,8 +2110,10 @@ async function repairChartConfigHandler(args: {
   data: unknown[]
   intent?: string | string[]
   maxAlternatives?: number
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { component, data, intent, maxAlternatives } = args
+  const { component, data, intent, maxAlternatives, identifiers, fieldRoles } = args
   const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
     | IntentId[]
     | undefined
@@ -2041,6 +2121,8 @@ async function repairChartConfigHandler(args: {
   const result = repairChartConfigFromCapabilities(component, data as Record<string, unknown>[], {
     intent: intentArg,
     maxAlternatives: maxAlternatives ?? 3,
+    identifiers,
+    fieldRoles,
   })
 
   const lines: string[] = []
@@ -2154,11 +2236,19 @@ async function createChartHandler(
     component?: string
     props?: Record<string, unknown>
     theme?: Record<string, string>
+    identifiers?: string[]
+    fieldRoles?: McpProfileFieldRoleHints
   },
   context: RenderContext = {},
 ): Promise<ToolResult> {
   const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
-  const suggestions = suggestChartsFromCapabilities(args.data, { intent, audience: args.audience, maxResults: 40 })
+  const suggestions = suggestChartsFromCapabilities(args.data, {
+    intent,
+    audience: args.audience,
+    maxResults: 40,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles,
+  })
     .filter((suggestion) => metadataForComponent(suggestion.component).renderable)
     .slice(0, 8)
   const selected = args.component
@@ -2232,13 +2322,23 @@ async function improveChartHandler(args: {
   props: Record<string, unknown>
   data?: Record<string, unknown>[]
   intent?: string | string[]
+  identifiers?: string[]
+  fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const data = args.data ?? (Array.isArray(args.props.data) ? args.props.data as Record<string, unknown>[] : [])
+  const { data, rawInput } = profileInputFromVariantArgs(args)
   const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
   const diagnosis = diagnoseConfig(args.component, args.props)
-  const repair = repairChartConfigFromCapabilities(args.component, data, { intent })
-  const capability = getCapability(args.component)
-  const variants = capability ? proposeVariant(args.component, capability, { profile: profileData(data), intent }) : []
+  const repair = repairChartConfigFromCapabilities(args.component, data, {
+    intent,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles,
+  })
+  const profile = profileData(data, {
+    rawInput,
+    identifiers: args.identifiers,
+    fieldRoles: args.fieldRoles,
+  })
+  const { proposals: variants } = rankVariantProposals(args.component, profile, { intent })
   const accessibility = accessibilityRecommendation(args.component, args.props, data)
   return {
     content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
@@ -2489,6 +2589,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         data: z.array(z.record(z.string(), z.unknown())).min(1),
         intent: z.union([z.string(), z.array(z.string())]).optional(),
         audience: z.object({ name: z.string().optional(), receptionModality: z.enum(["visual", "screen-reader", "sonified", "agent"]).optional() }).passthrough().optional(),
+        ...MCP_PROFILE_HINT_INPUT,
         component: z.string().optional().describe("Optional chart preference; the fit-ranked result remains authoritative."),
         props: z.record(z.string(), z.unknown()).optional().describe("Optional props to merge over the selected chart recipe."),
         theme: z.record(z.string(), z.string()).optional(),
@@ -2500,7 +2601,13 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
     srv.registerTool("improveChart", {
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
-      inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()), data: z.array(z.record(z.string(), z.unknown())).optional(), intent: z.union([z.string(), z.array(z.string())]).optional() },
+      inputSchema: {
+        component: z.string(),
+        props: z.record(z.string(), z.unknown()),
+        data: z.array(z.record(z.string(), z.unknown())).optional(),
+        intent: z.union([z.string(), z.array(z.string())]).optional(),
+        ...MCP_PROFILE_HINT_INPUT,
+      },
       outputSchema: {
         status: z.enum(["reviewed", "repair-needed"]),
         component: z.string(),
@@ -2785,6 +2892,26 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
       intents: z.array(z.string()).optional().describe("Intents to cover. Omit to let the engine pick based on the data shape."),
       maxPanels: z.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
       diversifyByFamily: z.boolean().optional().describe("Prefer not to repeat chart families across panels (default true)."),
+      ...MCP_PROFILE_HINT_INPUT,
+      audience: z
+        .object({
+          name: z.string().optional(),
+          familiarity: z.record(z.string(), z.number()).optional(),
+          targets: z
+            .record(
+              z.string(),
+              z.object({
+                direction: z.enum(["increase", "decrease"]),
+                weight: z.number().int().min(1).max(3).optional(),
+                reason: z.string().optional(),
+              }),
+            )
+            .optional(),
+          exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+          receptionModality: z.enum(["visual", "screen-reader", "sonified", "agent"]).optional(),
+        })
+        .optional()
+        .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestDashboardHandler
@@ -2833,6 +2960,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         .describe("Audience profile — familiarity, targets, exposure level, reception modality."),
       intent: z.union([z.string(), z.array(z.string())]).optional(),
       maxResults: z.number().int().min(1).max(20).optional(),
+      ...MCP_PROFILE_HINT_INPUT,
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStretchChartsHandler
@@ -2851,6 +2979,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
           .optional()
           .describe("User intent — informs ranking of alternatives when the chart doesn't fit."),
         maxAlternatives: z.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
+        ...MCP_PROFILE_HINT_INPUT,
       },
       outputSchema: {
         status: z.enum(["ok", "alternative", "unknown"]),
@@ -2899,6 +3028,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         })
         .optional()
         .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
+      ...MCP_PROFILE_HINT_INPUT,
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     proposeChartVariantsHandler
@@ -2918,46 +3048,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
         allow: z.array(z.string()).optional().describe("Restrict to these component names."),
         deny: z.array(z.string()).optional().describe("Exclude these component names."),
-        identifiers: z
-          .array(z.string())
-          .optional()
-          .describe("Fields that identify records and must not be used as visual encodings or measures."),
-        fieldRoles: z
-          .record(
-            z.string(),
-            z.union([
-              z.enum([
-                "identifier",
-                "measure",
-                "dimension",
-                "temporal",
-                "x",
-                "y",
-                "size",
-                "category",
-                "series",
-                "time",
-                "ignore",
-              ]),
-              z.array(
-                z.enum([
-                  "identifier",
-                  "measure",
-                  "dimension",
-                  "temporal",
-                  "x",
-                  "y",
-                  "size",
-                  "category",
-                  "series",
-                  "time",
-                  "ignore",
-                ]),
-              ),
-            ]),
-          )
-          .optional()
-          .describe("Per-field semantic or exact encoding-role hints used before chart ranking."),
+        ...MCP_PROFILE_HINT_INPUT,
         audience: z
           .object({
             name: z.string().optional(),

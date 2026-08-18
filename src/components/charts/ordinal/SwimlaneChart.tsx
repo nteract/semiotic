@@ -220,6 +220,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: frameProps,
     selection,
     linkedHover,
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],

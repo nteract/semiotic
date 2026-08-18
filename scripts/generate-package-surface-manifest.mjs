@@ -44,6 +44,37 @@ function isPrunedDeclarationPath(value) {
   return /(?:^|\/)(?:__tests__|test-utils|internal)(?:\/|$)/.test(value)
 }
 
+function collectConditionalArtifacts(value, prefix = "") {
+  if (!value || typeof value !== "object") return []
+  const artifacts = []
+  const directConditions = ["import", "default", "require", "types"]
+  for (const condition of directConditions) {
+    const target = value[condition]
+    if (typeof target !== "string") continue
+    const kind = prefix ? `${prefix}.${condition}` : condition
+    artifacts.push({
+      kind,
+      path: normalizeExportTarget(target),
+      sourceMap: PUBLISHED_SOURCE_MAP,
+    })
+  }
+  for (const [condition, target] of Object.entries(value)) {
+    if (directConditions.includes(condition) || typeof target !== "object" || !target) continue
+    const kind = prefix ? `${prefix}.${condition}` : condition
+    artifacts.push(...collectConditionalArtifacts(target, kind))
+  }
+  return artifacts
+}
+
+function terminalCondition(kind) {
+  return kind.split(".").at(-1)
+}
+
+function preferredArtifact(artifacts, condition) {
+  return artifacts.find(({ kind }) => kind === condition) ??
+    artifacts.find(({ kind }) => terminalCondition(kind) === condition)
+}
+
 /**
  * @typedef {"javascript-module"|"metadata"|"json-schema-resource"|"worker-asset"|"blocked-deep-path"} SurfaceKind
  */
@@ -134,35 +165,34 @@ function classifySubpath(subpath, value) {
     }
   }
 
-  const artifacts = []
+  const artifacts = collectConditionalArtifacts(value)
   let esm = false
   let cjs = false
 
-  for (const key of ["import", "default", "require", "types"]) {
-    if (typeof value[key] !== "string") continue
-    const normalized = normalizeExportTarget(value[key])
-    if (key === "require") cjs = true
-    if (key === "import" || key === "default") esm = true
-    artifacts.push({
-      kind: key,
-      path: normalized,
-      sourceMap: PUBLISHED_SOURCE_MAP,
-    })
+  for (const artifact of artifacts) {
+    const condition = terminalCondition(artifact.kind)
+    if (condition === "require") cjs = true
+    if (condition === "import" || condition === "default") esm = true
   }
 
   const jsLike = artifacts.some(({ path }) => path.endsWith(".js") || path.endsWith(".mjs"))
-  const hasTypes = artifacts.some(({ kind }) => kind === "types")
+  const primaryArtifact =
+    preferredArtifact(artifacts, "import") ??
+    preferredArtifact(artifacts, "default") ??
+    preferredArtifact(artifacts, "require") ??
+    artifacts.find(({ path }) => path.endsWith(".js") || path.endsWith(".mjs"))
+  const typesArtifact = preferredArtifact(artifacts, "types")
   return {
     kind: jsLike ? "javascript-module" : "metadata",
     subpath,
-    path: normalizeExportTarget(value.import || value.default || value.require || value.types || ""),
+    path: primaryArtifact?.path ?? typesArtifact?.path ?? "",
     reason: jsLike
       ? "Object export with ESM/CJS/module entries"
       : "Object-shaped metadata export",
     artifacts,
     esm,
     cjs,
-    types: hasTypes ? normalizeExportTarget(value.types) : undefined,
+    types: typesArtifact?.path,
   }
 }
 
@@ -190,9 +220,13 @@ function collectPublicDeclarations(exports) {
   for (const [subpath, value] of Object.entries(exports)) {
     if (subpath === "./package.json" || subpath === "./spec/*") continue
     if (typeof value !== "object" || value === null) continue
-    if (typeof value.types !== "string") continue
+    const typesArtifact = preferredArtifact(
+      collectConditionalArtifacts(value),
+      "types"
+    )
+    if (!typesArtifact) continue
 
-    const typesPath = normalizeExportTarget(value.types)
+    const typesPath = typesArtifact.path
     if (isPrunedDeclarationPath(typesPath)) {
       prunedDeclarations.add(typesPath)
       continue

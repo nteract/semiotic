@@ -15,11 +15,8 @@ import type {
 } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import {
-  resolveAxisChromeGutter,
   clampLegendReservation,
-  resolveHorizontalLegendHeight,
-  resolveLegendDistance,
-  resolveSideLegendMargin,
+  reserveLegendMargin,
   type AxisChromeInput
 } from "../../legendLayout"
 import type { Datum } from "./datumTypes"
@@ -49,12 +46,56 @@ export function distinctCategories(
  */
 export type LegendPosition = "right" | "left" | "top" | "bottom"
 
+/**
+ * Legend-related frame overrides. High-level chart wrappers spread
+ * `frameProps` last, so legend measurement must resolve these fields with the
+ * same precedence as the rendered Stream frame.
+ */
+export interface FrameLegendOverrides {
+  legend?: LegendValue
+  legendPosition?: LegendPosition
+  legendLayout?: LegendLayout
+  /** Any explicit frame margin replaces the HOC-measured margin. */
+  margin?: unknown
+}
+
+function hasFrameLegendField(
+  frameLegend: FrameLegendOverrides | undefined,
+  field: keyof FrameLegendOverrides
+): boolean {
+  return frameLegend != null && Object.hasOwn(frameLegend, field)
+}
+
+/**
+ * Resolve the legend values consumed by layout before a wrapper forwards its
+ * `frameProps`. Keeping this at the shared margin boundary prevents a
+ * frame-level position/layout override from moving the legend after the plot
+ * margin has already been measured for a different side.
+ */
+export function resolveFrameLegendOverrides(
+  legendPosition: LegendPosition | undefined,
+  legendLayout: LegendLayout | undefined,
+  frameLegend: FrameLegendOverrides | undefined
+): { legendPosition: LegendPosition; legendLayout: LegendLayout | undefined } {
+  const hasPosition = hasFrameLegendField(frameLegend, "legendPosition")
+  const hasLayout = hasFrameLegendField(frameLegend, "legendLayout")
+  return {
+    // A present-but-undefined frame prop is still forwarded last. Stream
+    // frames resolve that to their public right-side default, rather than the
+    // high-level position that has just been overwritten.
+    legendPosition: hasPosition
+      ? frameLegend?.legendPosition ?? "right"
+      : legendPosition ?? "right",
+    legendLayout: hasLayout ? frameLegend?.legendLayout : legendLayout
+  }
+}
+
 export function useChartLegendAndMargin({
   data,
   colorBy,
   colorScale,
   showLegend,
-  legendPosition = "right",
+  legendPosition: legendPositionProp,
   userMargin,
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
   categories,
@@ -62,6 +103,7 @@ export function useChartLegendAndMargin({
   chartWidth,
   chartHeight,
   legendLayout,
+  frameLegend,
   hasTitle = false,
   axisChrome
 }: {
@@ -82,6 +124,9 @@ export function useChartLegendAndMargin({
   chartHeight?: number
   /** Legend metrics shared with the renderer. */
   legendLayout?: LegendLayout
+  /** Frame-level legend fields, which take precedence just as `frameProps`
+   * does when the wrapper renders the Stream frame. */
+  frameLegend?: FrameLegendOverrides
   /** Reserve the chart-title band above a top legend. */
   hasTitle?: boolean
   /**
@@ -94,8 +139,16 @@ export function useChartLegendAndMargin({
   legend: LegendValue | undefined
   margin: MarginType
   legendPosition: LegendPosition
+  legendLayout: LegendLayout | undefined
+  /** Whether this hook's margin still reaches the rendered Stream frame. */
+  legendMarginReserved: boolean
   hasAutomaticLegend: boolean
 } {
+  const {
+    legendPosition,
+    legendLayout: resolvedLegendLayout
+  } = resolveFrameLegendOverrides(legendPositionProp, legendLayout, frameLegend)
+  const hasFrameLegend = hasFrameLegendField(frameLegend, "legend")
   const linkedLegendActive = useLinkedLegendSuppression()
   const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
   // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
@@ -140,13 +193,20 @@ export function useChartLegendAndMargin({
   }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const legend = useMemo(
-    () => composeLegendConfigs(automaticLegend, additionalLegend),
-    [automaticLegend, additionalLegend]
+    () => hasFrameLegend
+      ? frameLegend?.legend
+      : composeLegendConfigs(automaticLegend, additionalLegend),
+    [automaticLegend, additionalLegend, frameLegend?.legend, hasFrameLegend]
   )
 
-  // Depend on the fields, not the object: callers pass an inline literal, so
-  // keying the memo on its identity would recompute the margin every render.
-  const { hasAxis, hasAxisLabel, rotatedTicks } = axisChrome ?? {}
+  // Depend on chrome fields, not the object: callers pass inline literals.
+  const { hasAxis, hasAxisLabel, rotatedTicks, topAxis, leftAxis, rightAxis } = axisChrome ?? {}
+  const hasTopAxisInput = topAxis !== undefined
+  const hasLeftAxisInput = leftAxis !== undefined
+  const hasRightAxisInput = rightAxis !== undefined
+  const { hasAxis: topHasAxis, hasAxisLabel: topHasAxisLabel, rotatedTicks: topRotatedTicks } = topAxis ?? {}
+  const { hasAxis: leftHasAxis, hasAxisLabel: leftHasAxisLabel } = leftAxis ?? {}
+  const { hasAxis: rightHasAxis, hasAxisLabel: rightHasAxisLabel } = rightAxis ?? {}
 
   const margin = useMemo<MarginType>(() => {
     const userSides =
@@ -175,59 +235,36 @@ export function useChartLegendAndMargin({
     // requirement. `"auto"`, null, and omitted sides still begin at the
     // chart-mode default.
     if (legend) {
-      const sideLegendMargin = resolveSideLegendMargin(legend, legendLayout)
-      const plotWidth = Math.max(
-        1,
-        (chartWidth ?? 600) - finalMargin.left - finalMargin.right
-      )
-      // The axis gutter is part of the reservation, not just the placement:
-      // the legend now sits below the tick labels, so the band has to hold
-      // both or the legend is pushed off the canvas.
-      //
-      // `axisChrome` describes the *bottom* axis, so only a bottom legend
-      // reserves the measured band. A top axis is opt-in, so a top legend
-      // shifts only for an explicit `legendLayout.axisGutter` — passing
-      // `undefined` here keeps that override while dropping the measurement,
-      // exactly matching the placement split in `renderLegendFromConfig` and
-      // the server's `bottomRequirement`. Reserving it for both would push the
-      // plot down by 22–46px that nothing draws into.
-      //
-      // When the caller did not describe its axis, assume the widest ordinary
-      // band rather than none. Placement always knows the real chrome (the SVG
-      // overlay measures it), so an under-reservation does not shrink the
-      // gutter — it makes the renderer clamp the legend back *up* into the
-      // axis labels, which is the exact overlap this gutter exists to prevent.
-      // The 80px bottom-legend floor already absorbs this whenever the legend
-      // plus its distance stays under it — the common single-row case — so
-      // those charts keep their current margins. Only a legend that already
-      // exceeds the floor (wrapped onto extra rows, or a large
-      // `legendDistance`) grows, and there an axis-less chart such as
-      // pie/donut over-reserves slightly rather than colliding. Charts that
-      // pass `axisChrome` are exact either way.
-      const bottomAxisChrome: AxisChromeInput =
+      // When callers do not describe their axes, retain the historic
+      // conservative bottom-axis fallback. Otherwise hand all four sides to
+      // the same reservation routine used by direct Stream frames and static
+      // SVG, avoiding a hydration-time plot-width jump.
+      const measuredAxisChrome: AxisChromeInput =
         hasAxis === undefined
           ? { hasAxis: true, hasAxisLabel: true }
-          : { hasAxis, hasAxisLabel, rotatedTicks }
-      const horizontalLegendMargin =
-        resolveHorizontalLegendHeight(legend, plotWidth, legendLayout) +
-        resolveLegendDistance(legend) +
-        resolveAxisChromeGutter(
-          legendPosition === "bottom" ? bottomAxisChrome : undefined,
-          legendLayout
-        ) +
-        (legendPosition === "top" && hasTitle ? 24 : 0)
-      if (legendPosition === "right" && finalMargin.right < sideLegendMargin)
-        finalMargin.right = sideLegendMargin
-      else if (legendPosition === "left" && finalMargin.left < sideLegendMargin)
-        finalMargin.left = sideLegendMargin
-      else if (legendPosition === "top")
-        finalMargin.top = Math.max(finalMargin.top, 50, horizontalLegendMargin)
-      else if (legendPosition === "bottom")
-        finalMargin.bottom = Math.max(
-          finalMargin.bottom,
-          80,
-          horizontalLegendMargin
-        )
+          : {
+              hasAxis,
+              hasAxisLabel,
+              rotatedTicks,
+              topAxis: hasTopAxisInput
+                ? { hasAxis: topHasAxis, hasAxisLabel: topHasAxisLabel, rotatedTicks: topRotatedTicks }
+                : undefined,
+              leftAxis: hasLeftAxisInput
+                ? { hasAxis: leftHasAxis, hasAxisLabel: leftHasAxisLabel }
+                : undefined,
+              rightAxis: hasRightAxisInput
+                ? { hasAxis: rightHasAxis, hasAxisLabel: rightHasAxisLabel }
+                : undefined,
+            }
+      reserveLegendMargin(finalMargin, {
+        legend,
+        position: legendPosition,
+        size: [chartWidth ?? 600, chartHeight ?? 400],
+        hasTitle,
+        legendLayout: resolvedLegendLayout,
+        minimumMargin: legendPosition === "bottom" ? 80 : legendPosition === "top" ? 50 : 0,
+        axisChrome: measuredAxisChrome,
+      })
       if (chartWidth != null && chartHeight != null) {
         clampLegendReservation(
           finalMargin,
@@ -245,17 +282,30 @@ export function useChartLegendAndMargin({
     legendPosition,
     chartWidth,
     chartHeight,
-    legendLayout,
+    resolvedLegendLayout,
     hasTitle,
     hasAxis,
     hasAxisLabel,
-    rotatedTicks
+    rotatedTicks,
+    hasTopAxisInput,
+    topHasAxis,
+    topHasAxisLabel,
+    topRotatedTicks,
+    hasLeftAxisInput,
+    leftHasAxis,
+    leftHasAxisLabel,
+    hasRightAxisInput,
+    rightHasAxis,
+    rightHasAxisLabel,
   ])
 
   return {
     legend,
     margin,
     legendPosition,
+    legendLayout: resolvedLegendLayout,
+    legendMarginReserved:
+      legend !== undefined && !hasFrameLegendField(frameLegend, "margin"),
     hasAutomaticLegend: automaticLegend !== undefined
   }
 }

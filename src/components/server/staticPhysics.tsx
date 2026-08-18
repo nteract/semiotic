@@ -10,10 +10,14 @@ import { buildEvidence, type EvidenceSink } from "./renderEvidence"
 import { themeToCSSVariables } from "../store/themeCSSVariables"
 import { resolveTheme } from "./themeResolver"
 import { resolvePhysicsFramePipelineConfig } from "../stream/physics/physicsFramePipelineConfig"
+import { reserveFrameChromeMargin } from "../stream/titleLayout"
+import { clampLegendReservation, reserveLegendMargin } from "../legendLayout"
+import type { LegendValue } from "../types/legendTypes"
 import {
-  renderPhysicsSettledChrome,
-  type PhysicsSettledChromeProps
-} from "../stream/physics/physicsSettledChrome"
+  renderStaticPhysicsChrome,
+  type StaticPhysicsChromeProps
+} from "./staticPhysicsChrome"
+import type { StaticAnnotationRenderResult } from "./staticAnnotations"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
 
 export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
@@ -23,7 +27,7 @@ export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   size?: [number, number]
   theme?: Parameters<typeof resolveTheme>[0]
   _idPrefix?: string
-} & PhysicsSettledChromeProps &
+} & StaticPhysicsChromeProps &
   Pick<StreamPhysicsFrameProps, "regionEffects" | "seed">
 
 const DEFAULT_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -37,7 +41,31 @@ export function renderPhysicsFrame(
   const themeVariables =
     props.theme === undefined ? {} : themeToCSSVariables(theme)
   const authoredBodyStyle = props.bodyStyle
-  const margin = { ...DEFAULT_MARGIN, ...props.margin }
+  // Physics chrome overlays titles by design. Reserve only the legend's plot
+  // box here; title placement remains owned by the physics-specific chrome.
+  const hasTitle = false
+  const legendPosition = props.legendPosition ?? "right"
+  const margin = reserveFrameChromeMargin(
+    { ...DEFAULT_MARGIN, ...props.margin },
+    hasTitle,
+    Boolean(props.legend) && legendPosition === "top"
+  )
+  if (props.legend) {
+    const baseline = { ...margin }
+    reserveLegendMargin(margin, {
+      legend: props.legend as LegendValue,
+      position: legendPosition,
+      size,
+      hasTitle,
+      legendLayout: props.legendLayout
+    })
+    clampLegendReservation(margin, baseline, size, legendPosition)
+  }
+  const plotSize: [number, number] = [
+    Math.max(1, size[0] - margin.left - margin.right),
+    Math.max(1, size[1] - margin.top - margin.bottom)
+  ]
+  let annotationRender: StaticAnnotationRenderResult | undefined
   const config = resolvePhysicsFramePipelineConfig({
     annotations: props.annotations,
     chartId: props.chartId,
@@ -46,7 +74,7 @@ export function renderPhysicsFrame(
     onRegionObservation: () => {},
     regionEffects: props.regionEffects ?? [],
     seed: props.seed,
-    size
+    size: plotSize
   })
   const store = new PhysicsPipelineStore(config)
   if (Array.isArray(props.initialSpawns) && props.initialSpawns.length > 0) {
@@ -78,8 +106,17 @@ export function renderPhysicsFrame(
     charge: props.charge,
     idPrefix: props.idPrefix ?? props._idPrefix ?? "physics",
     margin,
-    renderChrome: (scene) =>
-      renderPhysicsSettledChrome(scene, props, size, margin)
+    renderChrome: (scene) => {
+      const chrome = renderStaticPhysicsChrome(
+        scene,
+        props,
+        size,
+        margin,
+        theme
+      )
+      annotationRender = chrome.annotationRender
+      return chrome.node
+    }
   })
   if (sink) {
     sink.evidence = buildEvidence({
@@ -90,6 +127,7 @@ export function renderPhysicsFrame(
       title: props.title,
       description: props.description,
       annotations: props.annotations,
+      annotationRender,
       extraWarnings: [
         ...(result.scene.sceneNodes.length === 0
           ? ["PHYSICS_EMPTY_SCENE"]

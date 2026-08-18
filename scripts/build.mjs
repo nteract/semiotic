@@ -8,6 +8,7 @@ import {
   writeFileSync
 } from "fs"
 import { build as tsupBuild } from "tsup"
+import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
@@ -786,39 +787,7 @@ function buildDeclarations() {
   // include the missing `components/` segment so consumers using Node-style
   // module resolution (TypeScript with `moduleResolution: "node"`) can follow
   // the re-export graph through the leaf declaration files.
-  const entryPoints = [
-    "semiotic",
-    "semiotic-ai",
-    "semiotic-ai-core",
-    "semiotic-data",
-    "semiotic-xy",
-    "semiotic-ordinal",
-    "semiotic-network",
-    "semiotic-realtime",
-    "semiotic-realtime-core",
-    "semiotic-realtime-react",
-    "semiotic-server",
-    "semiotic-server-node",
-    "semiotic-server-edge",
-    "semiotic-geo",
-    "semiotic-rough",
-    "semiotic-controls",
-    "semiotic-physics",
-    "semiotic-physics-matter",
-    "semiotic-physics-rapier",
-    "semiotic-themes",
-    "semiotic-themes-core",
-    "semiotic-themes-react",
-    "semiotic-utils",
-    "semiotic-utils-core",
-    "semiotic-utils-react",
-    "semiotic-recipes",
-    "semiotic-recipes-core",
-    "semiotic-recipes-react",
-    "semiotic-experimental",
-    "semiotic-experimental-vacp",
-    "semiotic-value"
-  ]
+  const entryPoints = publicJavaScriptEntrypoints(pkg).map((entry) => entry.sourceName)
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
     const dst = `dist/${name}.d.ts`
@@ -845,6 +814,58 @@ function buildDeclarations() {
     writeFileSync(dst, rewritten)
   }
   console.log("\u2705 declarations emitted")
+}
+
+function assertPublicBuildEntryParity(bundles) {
+  const expected = new Map(
+    publicJavaScriptEntrypoints(pkg).map((entry) => [entry.bundleName, entry])
+  )
+  const actual = new Map(bundles.map((bundle) => [bundle.name, bundle]))
+  const problems = []
+
+  for (const [name, entry] of expected) {
+    const bundle = actual.get(name)
+    if (!bundle) {
+      problems.push(`missing build entry ${name} for ${entry.specifier}`)
+    } else if (bundle.input !== entry.sourcePath) {
+      problems.push(
+        `${name} builds ${bundle.input}, expected ${entry.sourcePath} for ${entry.specifier}`
+      )
+    }
+  }
+  for (const name of actual.keys()) {
+    if (!expected.has(name)) problems.push(`build entry ${name} has no package export`)
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      "Public entry-point inventory drift:\n" + problems.map((problem) => `  - ${problem}`).join("\n")
+    )
+  }
+  console.log(`✅ public entry points aligned (${expected.size} package exports)`)
+}
+
+function assertPublicExportArtifacts() {
+  const required = new Map()
+  for (const entry of publicJavaScriptEntrypoints(pkg)) {
+    for (const artifact of entry.artifactTargets) {
+      if (!required.has(artifact.path)) {
+        required.set(artifact.path, [])
+      }
+      required.get(artifact.path).push(`${entry.specifier} (${artifact.condition})`)
+    }
+  }
+
+  const missing = [...required]
+    .filter(([path]) => !existsSync(path))
+    .map(([path, owners]) => `${path} required by ${owners.join(", ")}`)
+  if (missing.length > 0) {
+    throw new Error(
+      "Published JavaScript export artifacts are missing:\n" +
+        missing.map((entry) => `  - ${entry}`).join("\n")
+    )
+  }
+  console.log(`✅ public export artifacts verified (${required.size} files)`)
 }
 
 function cleanDist() {
@@ -1171,6 +1192,8 @@ async function build() {
     }
   ]
 
+  assertPublicBuildEntryParity(bundles)
+
   const bundledEntries = bundles.map(applyGeneratedMetadata)
 
   buildDeclarations()
@@ -1370,6 +1393,7 @@ async function build() {
   await createPhysicsWorkerBundle({ minify })
   await createProcessSankeyLayoutWorkerBundle({ minify })
 
+  assertPublicExportArtifacts()
   assertNoEmptyJavaScriptArtifacts()
   assertDirectivePlacement(bundledEntries)
   assertBrowserCompatibleStaticMarkupImports()

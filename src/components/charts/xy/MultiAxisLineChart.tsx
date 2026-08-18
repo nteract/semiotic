@@ -21,7 +21,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 
@@ -415,6 +415,11 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     colorScheme: seriesColors,
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: {
+      ...frameProps,
+      // Intentional frameProps override: use the derived layout so setup reserves dual-axis chrome.
+      legendLayout,
+    },
     selection,
     linkedHover,
     fallbackFields: [SERIES_FIELD],
@@ -438,7 +443,13 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, {
+      showAxes: resolved.showAxes,
+      xLabel,
+      yLabel: seriesLabels[0],
+      yLabelRight: seriesLabels[1],
+      axes: axesConfig,
+    }),
   })
 
   // ── Line style ────────────────────────────────────────────────────────

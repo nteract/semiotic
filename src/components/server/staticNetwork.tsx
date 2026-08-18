@@ -30,7 +30,10 @@ import { resolveTheme, themeStyles } from "./themeResolver"
 import {
   extractCategories
 } from "./staticLegend"
-import { renderStaticAnnotations } from "./staticAnnotations"
+import {
+  renderStaticAnnotations,
+  type StaticAnnotationRenderResult,
+} from "./staticAnnotations"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
@@ -41,6 +44,8 @@ import {
   edgeEndpointId
 } from "./staticSVGChrome"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
+import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
+import { collectNetworkAnnotationAnchors } from "../stream/networkAnnotationAnchors"
 
 export function resolveAccessor(
   accessor: string | ((d: Datum) => DatumValue) | undefined,
@@ -89,21 +94,44 @@ const HIERARCHICAL_TYPES: Set<string> = new Set([
   "tree", "cluster", "treemap", "circlepack", "partition", "orbit"
 ])
 
+/** Give shared annotation rules the same projected node data that the live
+ * network overlay receives. Raw network annotations use pixel coordinates,
+ * so identity scales make generic highlight/widget/bracket rules usable too. */
+function networkAnnotationData(nodes: NetworkSceneNode[]): Datum[] {
+  return nodes.map((node) => {
+    const source = node.datum && typeof node.datum === "object"
+      ? node.datum as Datum
+      : {}
+    const data = source.data && typeof source.data === "object"
+      ? source.data as Datum
+      : source
+    const x = "cx" in node ? node.cx : node.x + node.w / 2
+    const y = "cy" in node ? node.cy : node.y + node.h / 2
+    return {
+      ...data,
+      ...(data.id == null && node.id != null ? { id: node.id } : {}),
+      x,
+      y,
+    }
+  })
+}
+
 export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const chartType: NetworkChartType = props.chartType || "force"
-  const emptyNetworkEvidence = () =>
+  const emptyNetworkEvidence = (annotationRender?: StaticAnnotationRenderResult) =>
     buildEvidence({
       frameType: "network",
       width: size[0], height: size[1],
       marks: [],
       title: props.title, description: props.description,
       annotations: props.annotations,
+      annotationRender,
       nodeCount: 0, edgeCount: 0,
       margin,
     })
   const size: [number, number] = props.size || [500, 500]
-  const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
+  const defaultMargin = networkFrameDefaultMargin(chartType)
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
   const hasVisibleTitle = hasTextTitle(props.title)
   const networkLegendCategories = props.showLegend ? (() => {
@@ -138,6 +166,14 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     size,
     hasTitle: hasVisibleTitle,
   })
+  const networkLegendOut = renderFrameLegend({
+    props,
+    categories: networkLegendCategories,
+    theme,
+    size,
+    margin,
+    hasTitle: hasVisibleTitle,
+  })
   const innerWidth = size[0] - margin.left - margin.right
   const innerHeight = size[1] - margin.top - margin.bottom
   const resolvedBackgroundGraphics = resolveFrameGraphics(
@@ -154,20 +190,25 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   )
 
   const renderEmptyNetwork = () => {
-    if (sink) sink.evidence = emptyNetworkEvidence()
+    let annotationRender: StaticAnnotationRenderResult | undefined
+    const identityScale = (value: DatumValue) => Number(value)
+    const annotationNodes = props.annotations ? renderStaticAnnotations({
+      annotations: props.annotations,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+      svgAnnotationRules: props.svgAnnotationRules,
+      scales: { x: identityScale, y: identityScale },
+      layout: { width: innerWidth, height: innerHeight },
+      theme,
+      frameType: "network",
+      idPrefix: props._idPrefix,
+      onRender: result => { annotationRender = result },
+    }) : null
+    if (sink) sink.evidence = emptyNetworkEvidence(annotationRender)
     const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
       ? (
         <>
           {resolvedBackgroundGraphics}
-          {props.annotations ? renderStaticAnnotations({
-            annotations: props.annotations,
-            autoPlaceAnnotations: props.autoPlaceAnnotations,
-            svgAnnotationRules: props.svgAnnotationRules,
-            scales: {},
-            layout: { width: innerWidth, height: innerHeight },
-            theme,
-            idPrefix: props._idPrefix,
-          }) : null}
+          {annotationNodes}
           {resolvedForegroundGraphics}
         </>
       )
@@ -179,6 +220,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth, innerHeight,
+        legend: networkLegendOut,
         idPrefix: props._idPrefix,
       })
     )
@@ -373,22 +415,6 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     fallback: (node, index) => networkSceneNodeToSVG(node, index),
   })
 
-  if (sink) {
-    sink.evidence = buildEvidence({
-      frameType: "network",
-      width: size[0], height: size[1],
-      marks: [
-        ...renderedNodes.map(({ node }) => ({ type: `node:${(node as { type?: string }).type ?? "node"}` })),
-        ...renderedEdges.map(({ node }) => ({ type: `edge:${(node as { type?: string }).type ?? "edge"}` })),
-      ],
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      nodeCount: renderedNodes.length,
-      edgeCount: renderedEdges.length,
-      margin,
-    })
-  }
-
   const edgeElements = renderedEdges.map(entry => entry.element)
   const nodeElements = renderedNodes.map(entry => entry.element)
 
@@ -400,35 +426,38 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // overlay annotations use raw `x`/`y` numbers directly. `staticAnnotations`
   // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
   // Custom `svgAnnotationRules` still runs first for bespoke note types.
+  let annotationRender: StaticAnnotationRenderResult | undefined
+  const identityScale = (value: DatumValue) => Number(value)
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
     svgAnnotationRules: props.svgAnnotationRules,
-    scales: {},
+    scales: { x: identityScale, y: identityScale },
     layout: { width: innerWidth, height: innerHeight },
     theme,
+    frameType: "network",
+    annotationData: networkAnnotationData(sceneNodes),
+    pointNodes: collectNetworkAnnotationAnchors(sceneNodes),
     idPrefix: props._idPrefix,
+    onRender: result => { annotationRender = result },
   }) : null
 
-  // Network legend: parity with the XY/Ordinal auto-build. Source is the
-  // node list (one entry per unique colorBy/nodeIDAccessor value); layout-
-  // produced node positions are irrelevant here, only the categorical set
-  // matters. When nodes weren't supplied directly, fall back to the
-  // ALREADY-RESOLVED `edges` array — that's the output of
-  // `buildRealtimeEdges` which applied `sourceAccessor` / `targetAccessor`,
-  // so source/target are always normalized strings regardless of input shape.
-  //
-  // Both string and function accessors are honored — `extractCategories`
-  // accepts either form, and stripping functions to undefined would silently
-  // drop the legend for any caller using a typed accessor function.
-  const networkLegendOut = renderFrameLegend({
-    props,
-    categories: networkLegendCategories,
-    theme,
-    size,
-    margin,
-    hasTitle: hasVisibleTitle,
-  })
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "network",
+      width: size[0], height: size[1],
+      marks: [
+        ...renderedNodes.map(({ node }) => ({ type: `node:${(node as { type?: string }).type ?? "node"}` })),
+        ...renderedEdges.map(({ node }) => ({ type: `edge:${(node as { type?: string }).type ?? "edge"}` })),
+      ],
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      annotationRender,
+      nodeCount: renderedNodes.length,
+      edgeCount: renderedEdges.length,
+      margin,
+    })
+  }
 
   const content = (
     <>

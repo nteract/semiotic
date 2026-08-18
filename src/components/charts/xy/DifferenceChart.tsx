@@ -1,19 +1,36 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
-import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  buildBaseMetadataProps,
+  buildCustomBehaviorProps
+} from "../shared/streamPropsHelpers"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useState, useImperativeHandle, useCallback } from "react"
+import {
+  useMemo,
+  forwardRef,
+  useRef,
+  useState,
+  useImperativeHandle,
+  useCallback
+} from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type {
+  StreamXYFrameProps,
+  StreamXYFrameHandle
+} from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { type TooltipProp, resolveMultiCapableTooltip, defaultTooltipStyle } from "../../Tooltip/Tooltip"
+import {
+  type TooltipProp,
+  resolveMultiCapableTooltip,
+  defaultTooltipStyle
+} from "../../Tooltip/Tooltip"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSetup } from "../shared/useChartSetup"
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
 import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
@@ -25,7 +42,8 @@ export { computeDifferenceSegments } from "./differenceSegments"
 /**
  * DifferenceChart props
  */
-export interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
+export interface DifferenceChartProps<TDatum extends Datum = Datum>
+  extends BaseChartProps, AxisConfig {
   /** Array of `{x, a, b}` data points. Omit for push API mode. */
   data?: TDatum[]
   /** Accessor for the x value. Default `"x"`. */
@@ -51,7 +69,16 @@ export interface DifferenceChartProps<TDatum extends Datum = Datum> extends Base
   /** Point radius when `showPoints` is true. Default `3`. */
   pointRadius?: number
   /** Curve interpolation for both the area boundary and overlay lines. Default `"linear"`. */
-  curve?: "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom"
+  curve?:
+    | "linear"
+    | "monotoneX"
+    | "monotoneY"
+    | "step"
+    | "stepAfter"
+    | "stepBefore"
+    | "basis"
+    | "cardinal"
+    | "catmullRom"
   /** Fill opacity for the difference region. Default `0.6`. */
   areaOpacity?: number
   /** Gradient fill from each segment's tip (offset 0) to its base (offset 1). */
@@ -131,20 +158,24 @@ function buildOverlayLineRows<TDatum extends Datum>(
   raw: TDatum[],
   getX: (d: TDatum) => number,
   getA: (d: TDatum) => number,
-  getB: (d: TDatum) => number,
+  getB: (d: TDatum) => number
 ): LineRow[] {
   if (!raw.length) return []
   // Filter non-finite-x rows BEFORE sorting (see segment-builder
   // comment for rationale — `Array.sort` treats NaN-comparator
   // returns as 0, leaving finite rows out of order).
   const sorted = raw
-    .filter(d => Number.isFinite(getX(d)))
+    .filter((d) => Number.isFinite(getX(d)))
     .sort((p, q) => getX(p) - getX(q))
   const out: LineRow[] = []
   for (const d of sorted) {
-    const x = getX(d), a = getA(d), b = getB(d)
-    if (Number.isFinite(a)) out.push({ __x: x, __y: a, __diffSegment: "line-A" })
-    if (Number.isFinite(b)) out.push({ __x: x, __y: b, __diffSegment: "line-B" })
+    const x = getX(d),
+      a = getA(d),
+      b = getB(d)
+    if (Number.isFinite(a))
+      out.push({ __x: x, __y: a, __diffSegment: "line-A" })
+    if (Number.isFinite(b))
+      out.push({ __x: x, __y: b, __diffSegment: "line-B" })
   }
   return out
 }
@@ -188,10 +219,9 @@ function buildOverlayLineRows<TDatum extends Datum>(
  * return <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
  * ```
  */
-export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extends Datum = Datum>(
-  props: DifferenceChartProps<TDatum>,
-  ref: React.Ref<RealtimeFrameHandle>,
-) {
+export const DifferenceChart = forwardRef(function DifferenceChart<
+  TDatum extends Datum = Datum
+>(props: DifferenceChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -203,16 +233,17 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     title: props.title,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
-      mobileInteraction: props.mobileInteraction,
+    mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
-    responsiveRules: props.responsiveRules,
-})
+    responsiveRules: props.responsiveRules
+  })
 
   const {
     data,
     margin: userMargin,
     className,
-    xFormat, yFormat,
+    xFormat,
+    yFormat,
     xAccessor = "x" as ChartAccessor<TDatum, number>,
     seriesAAccessor = "a" as ChartAccessor<TDatum, number>,
     seriesBAccessor = "b" as ChartAccessor<TDatum, number>,
@@ -229,18 +260,37 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     gradientFill,
     tooltip,
     annotations,
-    xExtent, yExtent,
+    xExtent,
+    yExtent,
     frameProps = {},
-    selection, linkedHover,
-    onObservation, onClick, hoverHighlight, chartId,
-    loading, loadingContent, emptyContent,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     pointIdAccessor,
-    windowSize,
+    windowSize
   } = props
 
-  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
+  const {
+    width,
+    height,
+    enableHover,
+    showGrid,
+    showLegend,
+    title,
+    description,
+    summary,
+    accessibleTable,
+    xLabel,
+    yLabel
+  } = resolved
 
   // ── Resolve string accessors once ────────────────────────────────────
   // Every accessor result flows through `toNumber` so `Date` (common for
@@ -249,22 +299,25 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
   // segment computation. The raw-field cast still trips on object types
   // it can't coerce — those produce `NaN` and the row is dropped cleanly.
   const getX = useMemo(
-    () => typeof xAccessor === "function"
-      ? (d: TDatum) => toNumber(xAccessor(d))
-      : (d: TDatum) => toNumber(d[xAccessor as string]),
-    [xAccessor],
+    () =>
+      typeof xAccessor === "function"
+        ? (d: TDatum) => toNumber(xAccessor(d))
+        : (d: TDatum) => toNumber(d[xAccessor as string]),
+    [xAccessor]
   )
   const getA = useMemo(
-    () => typeof seriesAAccessor === "function"
-      ? (d: TDatum) => toNumber(seriesAAccessor(d))
-      : (d: TDatum) => toNumber(d[seriesAAccessor as string]),
-    [seriesAAccessor],
+    () =>
+      typeof seriesAAccessor === "function"
+        ? (d: TDatum) => toNumber(seriesAAccessor(d))
+        : (d: TDatum) => toNumber(d[seriesAAccessor as string]),
+    [seriesAAccessor]
   )
   const getB = useMemo(
-    () => typeof seriesBAccessor === "function"
-      ? (d: TDatum) => toNumber(seriesBAccessor(d))
-      : (d: TDatum) => toNumber(d[seriesBAccessor as string]),
-    [seriesBAccessor],
+    () =>
+      typeof seriesBAccessor === "function"
+        ? (d: TDatum) => toNumber(seriesBAccessor(d))
+        : (d: TDatum) => toNumber(d[seriesBAccessor as string]),
+    [seriesBAccessor]
   )
 
   // ── Push-mode raw data state ────────────────────────────────────────
@@ -287,24 +340,24 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
 
   const safeData = useMemo(
     () => filterSparseArray(isPushMode ? pushRows : data) as TDatum[],
-    [isPushMode, pushRows, data],
+    [isPushMode, pushRows, data]
   )
 
   // ── Compute segmented + overlay rows ────────────────────────────────
   const segmented = useMemo(
     () => computeDifferenceSegments(safeData, getX, getA, getB),
-    [safeData, getX, getA, getB],
+    [safeData, getX, getA, getB]
   )
   const overlayLines = useMemo(
-    () => showLines ? buildOverlayLineRows(safeData, getX, getA, getB) : [],
-    [showLines, safeData, getX, getA, getB],
+    () => (showLines ? buildOverlayLineRows(safeData, getX, getA, getB) : []),
+    [showLines, safeData, getX, getA, getB]
   )
 
   // Combined data — areas + lines in the same flat array. The mixed
   // scene builder partitions them by group key via `areaGroups`.
   const combined = useMemo(
     () => [...segmented, ...overlayLines] as Datum[],
-    [segmented, overlayLines],
+    [segmented, overlayLines]
   )
 
   // Array of area-group keys (each `seg-N-A`/`seg-N-B`). Line groups
@@ -331,20 +384,22 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
       // the segment recomputation cost on each render stays bounded.
       // Without this, push streams accumulate forever even when the
       // user has indicated a maximum buffer size via prop.
-      const trimmed = windowSize && next.length > windowSize
-        ? next.slice(next.length - windowSize)
-        : next
+      const trimmed =
+        windowSize && next.length > windowSize
+          ? next.slice(next.length - windowSize)
+          : next
       pushRowsRef.current = trimmed
       setPushRows(trimmed)
     }
     const resolveId = pointIdAccessor
-      ? (typeof pointIdAccessor === "function"
+      ? typeof pointIdAccessor === "function"
         ? pointIdAccessor
-        : (d: Datum) => d[pointIdAccessor as string] as string)
+        : (d: Datum) => d[pointIdAccessor as string] as string
       : null
     return {
       push: (point) => sync([...pushRowsRef.current, point as TDatum]),
-      pushMany: (points) => sync([...pushRowsRef.current, ...points as TDatum[]]),
+      pushMany: (points) =>
+        sync([...pushRowsRef.current, ...(points as TDatum[])]),
       remove: (id) => {
         if (!resolveId) return []
         const ids = Array.isArray(id) ? id : [id]
@@ -361,7 +416,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
         if (!resolveId) return []
         const ids = Array.isArray(id) ? id : [id]
         const updated: TDatum[] = []
-        const next: TDatum[] = pushRowsRef.current.map(d => {
+        const next: TDatum[] = pushRowsRef.current.map((d) => {
           if (ids.includes(resolveId(d))) {
             const newD = updater(d) as TDatum
             updated.push(newD)
@@ -374,15 +429,47 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
       },
       clear: () => sync([]),
       getData: () => (isPushMode ? pushRowsRef.current : safeData) as Datum[],
-      getScales: () => frameRef.current?.getScales() ?? null,
+      getScales: () => frameRef.current?.getScales() ?? null
     }
   }, [isPushMode, safeData, pointIdAccessor, windowSize])
 
-  // ── Setup (margin, selection, hover behavior; legend custom below) ──
-  // colorBy is set to `__diffWinner` so the hover/selection wiring has
-  // a categorical field to use, but we render with our own per-group
-  // styleFns below — the auto-built legend is replaced with a custom
-  // two-item legend (seriesALabel + seriesBLabel).
+  // Custom two-item legend keyed to series labels, not the internal
+  // segment keys. Defaults to ON (two series always merits a legend);
+  // skipped entirely when the user explicitly passes `showLegend={false}`.
+  //
+  // The legend renderer takes the swatch color from `styleFn(item).fill`,
+  // not from `item.color` — `item.color` is just metadata for downstream
+  // consumers like custom hover handlers. Read each item's color back out
+  // of the styleFn so the swatch matches the series fill.
+  const customLegend = useMemo(() => {
+    if (showLegend === false) return undefined
+    const groups: LegendGroup[] = [
+      {
+        label: "",
+        type: "fill",
+        styleFn: (item) => ({ fill: (item.color as string) || "currentColor" }),
+        items: [
+          { label: seriesALabel, color: seriesAColor },
+          { label: seriesBLabel, color: seriesBColor }
+        ]
+      }
+    ]
+    return { legendGroups: groups }
+  }, [showLegend, seriesALabel, seriesBLabel, seriesAColor, seriesBColor])
+
+  // ── Setup (margin, selection, hover behavior) ────────────────────────
+  // colorBy is set to `__diffWinner` so hover/selection retain a categorical
+  // field, while this custom two-series legend remains the exact legend that
+  // shared setup measures and hands to StreamXYFrame. `frameProps.legend`
+  // still owns the final escape hatch.
+  const effectiveFrameLegend = Object.hasOwn(frameProps, "legend")
+    ? frameProps
+    : {
+        ...frameProps,
+        /* Frame props take precedence; this fallback composes after the spread
+         * only when the caller did not provide a legend. */
+        legend: customLegend
+      }
   const setup = useChartSetup({
     data: safeData,
     rawData: data,
@@ -390,6 +477,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     colorScheme: [seriesAColor, seriesBColor],
     legendInteraction,
     legendPosition: legendPositionProp,
+    frameLegend: effectiveFrameLegend,
     selection,
     linkedHover,
     fallbackFields: ["__diffWinner"],
@@ -410,134 +498,174 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYAxisChrome({ showAxes: resolved.showAxes, xLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, {
+      showAxes: resolved.showAxes,
+      xLabel,
+      yLabel
+    })
   })
-
-  // Custom two-item legend keyed to series labels, not the internal
-  // segment keys. Defaults to ON (two series always merits a legend);
-  // skipped entirely when the user explicitly passes `showLegend={false}`.
-  //
-  // The legend renderer takes the swatch color from `styleFn(item).fill`,
-  // not from `item.color` — `item.color` is just metadata for downstream
-  // consumers like custom hover handlers. Read each item's color back out
-  // of the styleFn so the swatch matches the series fill.
-  const customLegend = useMemo(() => {
-    if (showLegend === false) return undefined
-    const groups: LegendGroup[] = [{
-      label: "",
-      type: "fill",
-      styleFn: (item) => ({ fill: (item.color as string) || "currentColor" }),
-      items: [
-        { label: seriesALabel, color: seriesAColor },
-        { label: seriesBLabel, color: seriesBColor },
-      ],
-    }]
-    return { legendGroups: groups }
-  }, [showLegend, seriesALabel, seriesBLabel, seriesAColor, seriesBColor])
-
   // ── Style resolvers ─────────────────────────────────────────────────
   // areaStyle gets called per segment-group. The group key is
   // `seg-<i>-A` or `seg-<i>-B`; the trailing letter picks the color.
-  const areaStyle = useCallback((d: Datum) => {
-    const segKey = (d as SegmentRow).__diffSegment
-    const winner = segKey?.endsWith("-A") ? "A" : "B"
-    return {
-      fill: winner === "A" ? seriesAColor : seriesBColor,
-      stroke: "none",
-      fillOpacity: areaOpacity,
-    }
-  }, [seriesAColor, seriesBColor, areaOpacity])
+  const areaStyle = useCallback(
+    (d: Datum) => {
+      const segKey = (d as SegmentRow).__diffSegment
+      const winner = segKey?.endsWith("-A") ? "A" : "B"
+      return {
+        fill: winner === "A" ? seriesAColor : seriesBColor,
+        stroke: "none",
+        fillOpacity: areaOpacity
+      }
+    },
+    [seriesAColor, seriesBColor, areaOpacity]
+  )
 
   // lineStyle for the overlay lines — `line-A` / `line-B` keys.
-  const lineStyle = useCallback((d: Datum) => {
-    const key = (d as LineRow).__diffSegment
-    const winner = key === "line-A" ? "A" : "B"
-    return {
-      stroke: winner === "A" ? seriesAColor : seriesBColor,
-      strokeWidth: lineWidth,
-      fill: "none",
-    }
-  }, [seriesAColor, seriesBColor, lineWidth])
+  const lineStyle = useCallback(
+    (d: Datum) => {
+      const key = (d as LineRow).__diffSegment
+      const winner = key === "line-A" ? "A" : "B"
+      return {
+        stroke: winner === "A" ? seriesAColor : seriesBColor,
+        strokeWidth: lineWidth,
+        fill: "none"
+      }
+    },
+    [seriesAColor, seriesBColor, lineWidth]
+  )
 
-  const pointStyle = useCallback((d: Datum) => {
-    const key = (d as LineRow).__diffSegment
-    const winner = key === "line-A" ? "A" : "B"
-    return {
-      fill: winner === "A" ? seriesAColor : seriesBColor,
-      r: pointRadius,
-    }
-  }, [seriesAColor, seriesBColor, pointRadius])
+  const pointStyle = useCallback(
+    (d: Datum) => {
+      const key = (d as LineRow).__diffSegment
+      const winner = key === "line-A" ? "A" : "B"
+      return {
+        fill: winner === "A" ? seriesAColor : seriesBColor,
+        r: pointRadius
+      }
+    },
+    [seriesAColor, seriesBColor, pointRadius]
+  )
 
   // ── Tooltip ─────────────────────────────────────────────────────────
-  const defaultTooltipContent = useCallback((hover: HoverData) => {
-    // Three hover shapes feed this tooltip:
-    //   1. Area hover — `hover.data` is a SegmentRow with `__valA` /
-    //      `__valB` baked in.
-    //   2. Line hover — `hover.data` is a LineRow (no `__valA`/`__valB`);
-    //      we look up the source row by x to recover both values.
-    //   3. Multi-tooltip hover (tooltip="multi") — the cursor sits on
-    //      an interpolated x, so `hover.allSeries` carries the
-    //      interpolated `line-A` / `line-B` values and `hover.xValue`
-    //      carries the data-space x. Prefer those when present; the
-    //      interpolated x rarely matches a raw data row by `===`.
-    const hd = hover.data as Datum | undefined
-    const allSeries = hover.allSeries as Array<{ group?: string; value?: number }> | undefined
-    const xVal: number | undefined = (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
-    let aVal: number | undefined = hd?.__valA as number | undefined
-    let bVal: number | undefined = hd?.__valB as number | undefined
-    if (allSeries && allSeries.length > 0) {
-      const aSeries = allSeries.find(s => s.group === "line-A")
-      const bSeries = allSeries.find(s => s.group === "line-B")
-      if (aSeries?.value != null && Number.isFinite(aSeries.value)) aVal = aSeries.value
-      if (bSeries?.value != null && Number.isFinite(bSeries.value)) bVal = bSeries.value
-    }
-    if (xVal != null && (aVal == null || bVal == null)) {
-      const source = safeData.find(d => getX(d) === xVal)
-      if (source) {
-        if (aVal == null) aVal = getA(source)
-        if (bVal == null) bVal = getB(source)
+  const defaultTooltipContent = useCallback(
+    (hover: HoverData) => {
+      // Three hover shapes feed this tooltip:
+      //   1. Area hover — `hover.data` is a SegmentRow with `__valA` /
+      //      `__valB` baked in.
+      //   2. Line hover — `hover.data` is a LineRow (no `__valA`/`__valB`);
+      //      we look up the source row by x to recover both values.
+      //   3. Multi-tooltip hover (tooltip="multi") — the cursor sits on
+      //      an interpolated x, so `hover.allSeries` carries the
+      //      interpolated `line-A` / `line-B` values and `hover.xValue`
+      //      carries the data-space x. Prefer those when present; the
+      //      interpolated x rarely matches a raw data row by `===`.
+      const hd = hover.data as Datum | undefined
+      const allSeries = hover.allSeries as
+        Array<{ group?: string; value?: number }> | undefined
+      const xVal: number | undefined =
+        (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
+      let aVal: number | undefined = hd?.__valA as number | undefined
+      let bVal: number | undefined = hd?.__valB as number | undefined
+      if (allSeries && allSeries.length > 0) {
+        const aSeries = allSeries.find((s) => s.group === "line-A")
+        const bSeries = allSeries.find((s) => s.group === "line-B")
+        if (aSeries?.value != null && Number.isFinite(aSeries.value))
+          aVal = aSeries.value
+        if (bSeries?.value != null && Number.isFinite(bSeries.value))
+          bVal = bSeries.value
       }
-    }
-    const fmt = (v: number | undefined) =>
-      v == null || !Number.isFinite(v) ? "—" : (Math.round(v * 100) / 100).toString()
-    const fmtX = xFormat && xVal != null ? xFormat(xVal) : (xVal != null ? String(xVal) : "")
-    // Use `defaultTooltipStyle` + the `semiotic-tooltip` className so the
-    // tooltip picks up the standard chrome (background, padding, shadow,
-    // theme-aware text color) instead of rendering as a transparent
-    // floating div. Same pattern `buildDefaultTooltip` and other shared
-    // tooltip helpers use — keeps the chart consistent with the rest of
-    // the library.
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {fmtX && <div style={{ fontWeight: 600, marginBottom: 4 }}>{fmtX}</div>}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 10, height: 10, background: seriesAColor, display: "inline-block", borderRadius: 2 }} />
-          <span>{seriesALabel}: {fmt(aVal)}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 10, height: 10, background: seriesBColor, display: "inline-block", borderRadius: 2 }} />
-          <span>{seriesBLabel}: {fmt(bVal)}</span>
-        </div>
-        {aVal != null && bVal != null && Number.isFinite(aVal) && Number.isFinite(bVal) && (
-          <div style={{ marginTop: 4, opacity: 0.7 }}>
-            Δ = {fmt(aVal - bVal)}
+      if (xVal != null && (aVal == null || bVal == null)) {
+        const source = safeData.find((d) => getX(d) === xVal)
+        if (source) {
+          if (aVal == null) aVal = getA(source)
+          if (bVal == null) bVal = getB(source)
+        }
+      }
+      const fmt = (v: number | undefined) =>
+        v == null || !Number.isFinite(v)
+          ? "—"
+          : (Math.round(v * 100) / 100).toString()
+      const fmtX =
+        xFormat && xVal != null
+          ? xFormat(xVal)
+          : xVal != null
+            ? String(xVal)
+            : ""
+      // Use `defaultTooltipStyle` + the `semiotic-tooltip` className so the
+      // tooltip picks up the standard chrome (background, padding, shadow,
+      // theme-aware text color) instead of rendering as a transparent
+      // floating div. Same pattern `buildDefaultTooltip` and other shared
+      // tooltip helpers use — keeps the chart consistent with the rest of
+      // the library.
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          {fmtX && (
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{fmtX}</div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                background: seriesAColor,
+                display: "inline-block",
+                borderRadius: 2
+              }}
+            />
+            <span>
+              {seriesALabel}: {fmt(aVal)}
+            </span>
           </div>
-        )}
-      </div>
-    )
-  }, [safeData, getX, getA, getB, xFormat, seriesAColor, seriesBColor, seriesALabel, seriesBLabel])
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                background: seriesBColor,
+                display: "inline-block",
+                borderRadius: 2
+              }}
+            />
+            <span>
+              {seriesBLabel}: {fmt(bVal)}
+            </span>
+          </div>
+          {aVal != null &&
+            bVal != null &&
+            Number.isFinite(aVal) &&
+            Number.isFinite(bVal) && (
+              <div style={{ marginTop: 4, opacity: 0.7 }}>
+                Δ = {fmt(aVal - bVal)}
+              </div>
+            )}
+        </div>
+      )
+    },
+    [
+      safeData,
+      getX,
+      getA,
+      getB,
+      xFormat,
+      seriesAColor,
+      seriesBColor,
+      seriesALabel,
+      seriesBLabel
+    ]
+  )
 
   // `tooltip="multi"` / `{ mode: "multi", content? }` opts into hover-anywhere
   // along the x-axis with interpolated series values — same shape
   // LineChart/AreaChart use. The difference-aware default handles both
   // single-point and multi shapes (it reads `hover.allSeries` when present).
   const { tooltipContent, tooltipMode } = useMemo(
-    () => resolveMultiCapableTooltip({
-      tooltip,
-      defaultTooltipContent,
-      multiDefaultContent: defaultTooltipContent,
-    }),
-    [tooltip, defaultTooltipContent],
+    () =>
+      resolveMultiCapableTooltip({
+        tooltip,
+        defaultTooltipContent,
+        multiDefaultContent: defaultTooltipContent
+      }),
+    [tooltip, defaultTooltipContent]
   )
 
   // Loading / empty state — returned only after every hook above has run, so
@@ -549,13 +677,14 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
   // (rules-of-hooks). Default is an opaque-top → faint-bottom fill; the memo
   // keeps a stable identity so a `true`/legacy input can't force a rebuild.
   const normalizedGradientFill = useMemo(
-    () => normalizeGradient(gradientFill, {
-      stops: [
-        { offset: 0, opacity: 0.85 },
-        { offset: 1, opacity: 0.15 },
-      ],
-    }),
-    [gradientFill],
+    () =>
+      normalizeGradient(gradientFill, {
+        stops: [
+          { offset: 0, opacity: 0.85 },
+          { offset: 1, opacity: 0.15 }
+        ]
+      }),
+    [gradientFill]
   )
 
   if (setup.earlyReturn) return setup.earlyReturn
@@ -589,22 +718,36 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     enableHover,
     showGrid,
     ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
-    ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...setup.legendBehaviorProps,
+    ...buildBaseMetadataProps({
+      title,
+      description,
+      summary,
+      accessibleTable,
+      className,
+      animate: props.animate,
+      maxDevicePixelRatio: props.maxDevicePixelRatio,
+      axisExtent: props.axisExtent,
+      autoPlaceAnnotations: props.autoPlaceAnnotations
+    }),
     tooltipContent,
     ...(tooltipMode === "multi" && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({
-      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
       hoverRadius: props.hoverRadius,
       mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
-      customClickBehavior: setup.customClickBehavior,
+      customClickBehavior: setup.customClickBehavior
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
-    ...frameProps,
+    ...frameProps
   }
 
   return (
@@ -613,10 +756,13 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(
+    props: DifferenceChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
   displayName?: string
 }
 
 if (typeof DifferenceChart === "function") {
-  (DifferenceChart as { displayName?: string }).displayName = "DifferenceChart"
+  ;(DifferenceChart as { displayName?: string }).displayName = "DifferenceChart"
 }
