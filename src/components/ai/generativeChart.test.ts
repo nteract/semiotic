@@ -124,6 +124,31 @@ describe("prepareChart", () => {
     expect(render).toHaveBeenCalledTimes(3)
   })
 
+  it("memoizes network inputs and scalar value-component configurations", () => {
+    const render = vi.fn((_component: string, _props: Record<string, unknown>) => ({
+      svg: "<svg />",
+      evidence: evidence({}),
+    }))
+    const memo = createRenderEvidenceMemo(render)
+    const nodes = [{ id: "a" }, { id: "b" }]
+    const edges = [{ source: "a", target: "b", value: 3 }]
+
+    memo.render("ForceDirectedGraph", { nodes, edges })
+    memo.render("ForceDirectedGraph", { nodes, edges })
+    expect(render).toHaveBeenCalledTimes(1)
+
+    memo.render("ForceDirectedGraph", { nodes, edges: [...edges] })
+    memo.render("ForceDirectedGraph", { nodes: [...nodes], edges })
+    expect(render).toHaveBeenCalledTimes(3)
+
+    // BigNumber has no `data`/`nodes`/`edges` identity. Equivalent primitive
+    // configurations still share the small bounded value-config cache.
+    memo.render("BigNumber", { value: 42, label: "Revenue", format: "currency" })
+    memo.render("BigNumber", { value: 42, label: "Revenue", format: "currency" })
+    memo.render("BigNumber", { value: 43, label: "Revenue", format: "currency" })
+    expect(render).toHaveBeenCalledTimes(5)
+  })
+
   it("does not collide prop bags containing the legacy cache delimiters", () => {
     const render = vi.fn((_component: string, props: Record<string, unknown>) => ({
       svg: `<svg data-props="${Object.keys(props).join(",")}" />`,

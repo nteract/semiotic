@@ -135,8 +135,8 @@ suggestCharts(data, { intent: "forecast-vs-actual" })`}</CodeBlock>
 })
 // → { intent: "forecast-vs-actual", source: "field-name", ... }
 
-// With no fields array, schema mode treats whitespace-delimited input as
-// field names — useful for compact catalog/schema summaries.
+// With no fields array, schema mode treats the complete query as one unknown
+// field boundary, so compound signals can still match compact summaries.
 inferIntent("cloud region phase throughput partitions", { mode: "schema" })`}</CodeBlock>
 
       <h2 id="semantic-viability">Post-render semantic viability</h2>

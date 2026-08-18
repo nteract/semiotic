@@ -545,19 +545,36 @@ export function scoreChart(
   )
   const composite = compositeScore(intentScores, intents)
   const rubric = applyVariantToRubric(capability.rubric, variant)
-  const reasons = buildReasons(capability, profile, intentScores, intents)
   const recipeBias = recipeScoreAdjustment(capability, options)
   if (recipeBias.excluded) return { status: "rejected", reason: recipeBias.excluded }
+  const props = capability.buildProps(profile, variant)
+  const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
+  if (policyFailure) return { status: "rejected", reason: policyFailure }
+
+  // Keep single-chart evaluation aligned with the ranked suggestion path:
+  // familiarity/target policy applies to every capability, while a non-visual
+  // audience also gets the same paint-independent receivability audit.
+  const modality = options.audience?.receptionModality
+  const receivability = modality && modality !== "visual"
+    ? receivabilityBias(auditAccessibility(capability.component, props as Datum), modality)
+    : undefined
+  const biased = applyAudienceBias(
+    composite,
+    rubric,
+    capability.component,
+    options.audience,
+    receivability,
+  )
+  const reasons = buildReasons(capability, profile, intentScores, intents)
+  if (biased.appliedReason) reasons.push(biased.appliedReason)
+  if (biased.receivabilityReason) reasons.push(biased.receivabilityReason)
   reasons.push(...recipeBias.reasons)
   const caveats = [
     ...(capability.caveats ? capability.caveats(profile, variant) : []),
     ...(variant?.caveats ?? []),
+    ...(receivability?.caveats.slice(0, 3) ?? []),
     ...recipeBias.caveats,
   ]
-
-  const props = capability.buildProps(profile, variant)
-  const policyFailure = identifierMeasureViolation(capability, profile, props, variant)
-  if (policyFailure) return { status: "rejected", reason: policyFailure }
 
   const resolvedComponent = variant?.component ?? capability.component
   return {
@@ -569,9 +586,9 @@ export function scoreChart(
     family: capability.family,
     importPath: capability.importPath,
     variant,
-    score: composite + recipeBias.delta,
+    score: biased.score + recipeBias.delta,
     intentScores,
-    rubric,
+    rubric: biased.rubric,
     reasons,
     caveats,
     props,

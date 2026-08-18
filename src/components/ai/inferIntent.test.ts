@@ -81,6 +81,34 @@ describe("inferIntent", () => {
     expect(result?.confidence).toBeGreaterThan(3)
   })
 
+  it("requires multi-token field signals to occur within one field", () => {
+    registerIntent({
+      id: "operating-margin-test",
+      label: "Operating margin",
+      description: "Test-only compound field signal.",
+      signals: {
+        fieldNames: ["operating margin"],
+        minimumFieldMatches: 1,
+      },
+    })
+
+    expect(inferIntent("", {
+      mode: "schema",
+      fields: [{ name: "operating" }, { name: "margin" }],
+    })).toBeNull()
+
+    expect(inferIntent("", {
+      mode: "schema",
+      fields: [{ name: "operating_margin" }],
+    })?.intent).toBe("operating-margin-test")
+
+    // Schema-mode's query shorthand has no real field boundary, so preserve
+    // phrase matching there while the explicit-fields path stays strict.
+    expect(inferIntent("operating margin", {
+      mode: "schema",
+    })?.intent).toBe("operating-margin-test")
+  })
+
   it("uses typed data shape only in schema mode", () => {
     const result = inferIntent("", {
       mode: "schema",
@@ -93,6 +121,24 @@ describe("inferIntent", () => {
       intent: "trend",
       source: "data-shape",
     })
+  })
+
+  it("does not classify arbitrary temp-prefixed kinds as temporal", () => {
+    expect(inferIntent("", {
+      mode: "schema",
+      fields: [
+        { name: "recorded_at", kind: "temporal" },
+        { name: "throughput", kind: "number" },
+      ],
+    })?.intent).toBe("trend")
+
+    expect(inferIntent("", {
+      mode: "schema",
+      fields: [
+        { name: "temperature", kind: "temperature" },
+        { name: "throughput", kind: "number" },
+      ],
+    })).toBeNull()
   })
 
   it("honors a caller confidence floor for ambiguous schemas", () => {
