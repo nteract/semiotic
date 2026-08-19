@@ -17,54 +17,12 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.9.0
+## What's New in 3.9.1
 
-3.9.0 closes renderer and API gaps while making chart interaction easier to express:
-
-- Retained mark styles accept datum-specific CSS cursors across canvas, SVG, and static rendering;
-  realtime chart HOCs also accept a top-level cursor default, including `TemporalHistogram`.
-  Cursor presentation stays separate from click and keyboard behavior so applications keep control
-  of interaction semantics.
-- Realtime charts now share the generic typing, accessibility metadata, loading/empty states,
-  legends, selection, linked-hover, and observation contracts of the high-level chart families;
-  RealtimeLineChart also supports bounded event-time reordering, window aggregation, and explicit
-  end-of-stream flushing.
-- Static rendering gains OrbitDiagram plus broad client-parity fixes for grouped XY data, custom
-  layouts, geo flows, gradients, background layers, empty scenes, and zero-valued network edges.
-- New observation, tooltip, snapshot-flow, network hit-target, responsive, and theme-CSS helpers
-  are public, while stricter package, API, performance, docs, npm, Cloud Run, and MCP Registry
-  gates protect the release artifact end to end.
-- `evaluateChart` now combines data-contract, representation, accessibility, and optional
-  render-evidence findings for the AI API, CLI, and MCP server. AI descriptions also distinguish
-  value components such as `BigNumber` from chart HOCs, and CommonJS recipe imports keep their
-  geographic dependencies lazy.
-- Side legends reserve their focus-ring clearance consistently in browser and static output; use
-  the typed `frameProps.legendLayout.edgeGutter` to tune that clearance when necessary.
-
-```jsx
-import { ForceDirectedGraph } from "semiotic/network"
-
-<ForceDirectedGraph
-  nodes={nodes}
-  edges={edges}
-  styleRules={[
-    { when: node => Boolean(node.url), style: { cursor: "pointer" } }
-  ]}
-  onClick={node => node?.url && openNode(node.url)}
-/>
-```
-
-Simple charts stay five lines:
-
-```jsx
-import { LineChart } from "semiotic/xy"
-
-<LineChart
-  data={salesData}
-  xAccessor="month"
-  yAccessor="revenue"
-/>
-```
+3.9.1 is a focused patch release. It removes the webpack “conflicting star
+exports” warning emitted by `semiotic/utils`, while keeping every existing
+utility—including `resolveResponsiveDimension` and `useResponsiveSize`—available
+from the same public entry point.
 
 ## Why Semiotic
 

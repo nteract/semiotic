@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.9.1] - 2026-08-19
+
+### Fixed
+
+- **Utils ESM barrel no longer produces a webpack warning** — `semiotic/utils`
+  now exports `resolveResponsiveDimension` only from its React-free core entry
+  and explicitly forwards the remaining React helpers. Consumers retain the
+  complete public API without conflicting star exports.
+
 ## [3.9.0] - 2026-08-16
 
 ### Added

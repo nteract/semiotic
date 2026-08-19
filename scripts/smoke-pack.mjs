@@ -321,6 +321,40 @@ function checkClientBoundaryDirectives(packageRoot, exportsMap, failures) {
 }
 
 /**
+ * `semiotic/utils` combines the React-free core entry with selected browser
+ * helpers. Both sub-entries intentionally expose `resolveResponsiveDimension`
+ * for direct consumers, but the combined ESM facade must select the core copy
+ * rather than forwarding two `export *` declarations. Bundlers such as webpack
+ * otherwise warn about the ambiguous star export and omit it from the barrel.
+ */
+function checkUtilsFacadeExportContract(packageRoot, exportsMap, failures) {
+  const exportEntry = exportsMap["./utils"]
+  const target = exportEntry && typeof exportEntry === "object"
+    ? exportEntry.import
+    : null
+  if (typeof target !== "string") {
+    failures.push("./utils: missing ESM export for facade contract check")
+    return
+  }
+
+  const code = readFileSync(
+    join(packageRoot, target.replace(/^\.\//, "")),
+    "utf8"
+  )
+  const exportsCore = /export\*from["']\.\/semiotic-utils-core\.module\.min\.js["']/.test(code)
+  const reexportsReactHelpers = /export\{[^}]*useResponsiveSize[^}]*\}from["']\.\/semiotic-utils-react\.module\.min\.js["']/.test(code)
+  const starsReact = /export\*from["']\.\/semiotic-utils-react\.module\.min\.js["']/.test(code)
+
+  if (!exportsCore || !reexportsReactHelpers || starsReact) {
+    failures.push(
+      "./utils ESM facade must star-export core and explicitly re-export React helpers to avoid conflicting star exports"
+    )
+    return
+  }
+  console.log("  ✓ utils facade has no conflicting core/react star exports")
+}
+
+/**
  * `semiotic/themes/core` is a data/serialization entry and must remain usable
  * in RSC and edge code that does not install or initialize a React runtime.
  * Inspect the packed artifact's complete local import graph rather than only
@@ -981,6 +1015,7 @@ try {
   checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures)
   checkPrivateDeclarations(packageRoot, failures)
   checkClientBoundaryDirectives(packageRoot, pkg.exports, failures)
+  checkUtilsFacadeExportContract(packageRoot, pkg.exports, failures)
   checkThemeCoreReactFree(packageRoot, pkg.exports, failures)
   checkReactServerCoreImports(proj, failures)
   checkExperimentalBridgeStoreAnchor(packageRoot, failures)
