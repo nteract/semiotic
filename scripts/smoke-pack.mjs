@@ -342,7 +342,16 @@ function checkUtilsFacadeExportContract(packageRoot, exportsMap, failures) {
     "utf8"
   )
   const exportsCore = /export\*from["']\.\/semiotic-utils-core\.module\.min\.js["']/.test(code)
-  const reexportsReactHelpers = /export\{[^}]*useResponsiveSize[^}]*\}from["']\.\/semiotic-utils-react\.module\.min\.js["']/.test(code)
+  const reactHelperExport =
+    /export\{([^}]*)\}from["']\.\/semiotic-utils-react\.module\.min\.js["']/.exec(code)?.[1] ?? ""
+  const reactHelperNames = new Set(reactHelperExport.split(","))
+  const reexportsReactHelpers = [
+    "ThemeProvider",
+    "useTheme",
+    "useReducedMotion",
+    "useHighContrast",
+    "useResponsiveSize",
+  ].every((helper) => reactHelperNames.has(helper))
   const starsReact = /export\*from["']\.\/semiotic-utils-react\.module\.min\.js["']/.test(code)
 
   if (!exportsCore || !reexportsReactHelpers || starsReact) {
