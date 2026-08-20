@@ -26,12 +26,22 @@ const round = (value, places = 4) => Number(value.toFixed(places))
 
 function mergedProposal(fixture, proposal) {
   if (fixture.mode !== "push" || !fixture.push?.rows?.length) return proposal
-  if (!Array.isArray(proposal?.props?.data)) return proposal
+  const data = proposal?.props?.data
+  if (fixture.push.requireOmitData === true && data === undefined) {
+    return {
+      ...proposal,
+      props: {
+        ...proposal.props,
+        data: fixture.push.rows,
+      },
+    }
+  }
+  if (!Array.isArray(data)) return proposal
   return {
     ...proposal,
     props: {
       ...proposal.props,
-      data: [...proposal.props.data, ...fixture.push.rows],
+      data: [...data, ...fixture.push.rows],
     },
   }
 }
@@ -55,13 +65,21 @@ export function scoreFirstTryProposal(fixture, proposal) {
       noErrorDiagnostics: !result.diagnostics.some(
         ({ severity }) => severity === "error"
       ),
+      pushDataOmitted:
+        fixture.mode === "push" && fixture.push?.requireOmitData === true
+          ? proposal?.props?.data === undefined
+          : undefined,
     }
     return {
       ...checks,
       markCount: result.evidence?.markCount ?? 0,
       passed: Object.entries(fixture.expect)
-        .filter(([key]) => key in checks)
-        .every(([key, expected]) => checks[key] === expected),
+        .filter(([key]) => key in checks || key === "pushDataOmitted")
+        .every(([key, expected]) =>
+          (key === "pushDataOmitted"
+            ? proposal?.props?.data === undefined
+            : checks[key]) === expected
+        ),
     }
   } catch (error) {
     return {

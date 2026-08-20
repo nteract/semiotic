@@ -607,7 +607,9 @@ function validationFix(componentName: string, error: string): string {
   if (unknownProp) {
     return `Remove \`${unknownProp[1]}\` or replace it with a documented ${componentName} prop.`
   }
-  const missingProp = error.match(/(?:Missing|required) prop "?([^". ]+)/i)
+  const missingProp =
+    error.match(/^"([^"]+)" is required for .+\.$/i) ??
+    error.match(/(?:Missing|required) prop "?([^". ]+)/i)
   if (missingProp) {
     return `Add the required \`${missingProp[1]}\` prop using the ${componentName} schema and example.`
   }

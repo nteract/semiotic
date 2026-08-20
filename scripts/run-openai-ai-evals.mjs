@@ -593,7 +593,7 @@ async function main() {
     const firstTrySubmission = await existingJson(firstTryPath, {
       metadata: {
         ...submissionMetadata(model, firstTryJobs.fixtureRevision),
-        context: firstTryJobs.jobs[0].context,
+        context: firstTryContextPaths[firstTryContext],
       },
       results: [],
     })

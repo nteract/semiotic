@@ -65,6 +65,9 @@ describe("diagnoseConfig", () => {
     expect(result.diagnoses.map((d) => d.message)).toContain(
       '"data" is required for CandlestickChart.'
     )
+    expect(result.diagnoses.find((d) => d.code === "VALIDATION")?.fix).toBe(
+      "Add the required `data` prop using the CandlestickChart schema and example."
+    )
   })
 
   it("warns on an unrecognized colorScheme name but not a known scheme or an array", () => {

@@ -40,3 +40,35 @@ test("scoreFirstTryProposal rejects GaugeChart thresholds from BigNumber", () =>
   assert.equal(result.renderProven, false)
   assert.equal(result.passed, false)
 })
+
+const pushFixture = {
+  mode: "push",
+  push: {
+    requireOmitData: true,
+    rows: [{ week: 4, users: 165 }],
+  },
+  expect: {
+    validated: true,
+    renderProven: true,
+    noErrorDiagnostics: true,
+    pushDataOmitted: true,
+  },
+}
+
+test("scoreFirstTryProposal requires true push proposals to omit data", () => {
+  const baseProposal = {
+    component: "LineChart",
+    props: {
+      xAccessor: "week",
+      yAccessor: "users",
+      title: "Weekly active users",
+    },
+  }
+  assert.equal(scoreFirstTryProposal(pushFixture, baseProposal).passed, true)
+  const result = scoreFirstTryProposal(pushFixture, {
+    ...baseProposal,
+    props: { ...baseProposal.props, data: [{ week: 1, users: 120 }] },
+  })
+  assert.equal(result.pushDataOmitted, false)
+  assert.equal(result.passed, false)
+})

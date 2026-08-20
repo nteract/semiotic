@@ -171,7 +171,12 @@ function scoreProposal(fixture, proposal) {
     }
     const checks = Object.entries(fixture.expect)
       .filter(([key]) =>
-        ["validated", "renderProven", "noErrorDiagnostics"].includes(key)
+        [
+          "validated",
+          "renderProven",
+          "noErrorDiagnostics",
+          "pushDataOmitted"
+        ].includes(key)
       )
       .map(([key, expected]) => actual[key] === expected)
     return { ...actual, passed: checks.every(Boolean) }

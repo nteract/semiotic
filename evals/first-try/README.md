@@ -11,18 +11,18 @@ confirmation; it never starts a paid run by default.
 
 ```sh
 npm run eval:ai:openai -- \
-  --suites first-try \
-  --first-try-context llms \
-  --trial-id llms \
-  --output-dir evals/reports/first-try-llms \
-  --max-usd 10 --confirm-spend
+  --suites=first-try \
+  --first-try-context=llms \
+  --trial-id=llms \
+  --output-dir=evals/reports/first-try-llms \
+  --max-usd=10 --confirm-spend
 
 npm run eval:ai:openai -- \
-  --suites first-try \
-  --first-try-context skill \
-  --trial-id skill \
-  --output-dir evals/reports/first-try-skill \
-  --max-usd 10 --confirm-spend
+  --suites=first-try \
+  --first-try-context=skill \
+  --trial-id=skill \
+  --output-dir=evals/reports/first-try-skill \
+  --max-usd=10 --confirm-spend
 ```
 
 Compare only matching model and fixture results. The `line-push` fixture is the
