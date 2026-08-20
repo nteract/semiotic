@@ -542,10 +542,15 @@ jobs:
             --project "$CLOUD_RUN_PROJECT" \
             --region "$CLOUD_RUN_REGION" \
             --format='value(status.url)')
-          test "$DEPLOYED_URL" = "https://${CLOUD_RUN_HOST}" || {
-            echo "Cloud Run returned unexpected stable URL: $DEPLOYED_URL"
+          test -n "$DEPLOYED_URL" || {
+            echo "Cloud Run did not report a service URL"
             exit 1
           }
+          # Cloud Run can report its canonical a.run.app URL here while the
+          # configured legacy run.app hostname remains the public stable URL.
+          # The following job verifies that public hostname and the release
+          # identity after the deployment is complete.
+          echo "Cloud Run service URL: $DEPLOYED_URL"
 
   verify-stable-mcp:
     name: Verify stable MCP release identity
