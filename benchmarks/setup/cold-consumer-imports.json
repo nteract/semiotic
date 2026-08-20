@@ -44,8 +44,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 527549,
-      "gzipBytes": 168994,
+      "rawBytes": 527985,
+      "gzipBytes": 169202,
       "packedPackageInputFiles": 47
     },
     {
@@ -53,8 +53,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 526022,
-      "gzipBytes": 168235,
+      "rawBytes": 526458,
+      "gzipBytes": 168456,
       "packedPackageInputFiles": 31
     },
     {
@@ -80,8 +80,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 430779,
-      "gzipBytes": 139804,
+      "rawBytes": 431215,
+      "gzipBytes": 139976,
       "packedPackageInputFiles": 32
     },
     {
@@ -161,8 +161,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 787049,
-      "gzipBytes": 247878,
+      "rawBytes": 787993,
+      "gzipBytes": 248218,
       "packedPackageInputFiles": 48
     },
     {
@@ -170,8 +170,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 137601,
-      "gzipBytes": 39390,
+      "rawBytes": 138115,
+      "gzipBytes": 39544,
       "packedPackageInputFiles": 2
     },
     {
