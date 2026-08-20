@@ -6,6 +6,10 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import { MarginalGraphics } from "../../stream/MarginalGraphics"
+import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
+
+provideMarginalGraphics(MarginalGraphics)
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getSize } from "../shared/colorUtils"
 import { useChartMode } from "../shared/hooks"

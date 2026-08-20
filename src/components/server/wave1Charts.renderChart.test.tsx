@@ -60,6 +60,25 @@ describe("Wave 1 renderChart registry", () => {
     expect(svg).toContain("Start")
   })
 
+  it("honors MultiAxisLineChart per-series axis formatters", () => {
+    const { svg } = renderChartWithEvidence("MultiAxisLineChart", {
+      data: [
+        { x: 0, temp: 20, humidity: 40 },
+        { x: 1, temp: 22, humidity: 55 },
+        { x: 2, temp: 18, humidity: 60 },
+      ],
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp", format: (v: number) => `${v.toFixed(0)}°` },
+        { yAccessor: "humidity", label: "Humidity", format: (v: number) => `${v.toFixed(0)}%` },
+      ],
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toMatch(/\d°/)
+    expect(svg).toMatch(/\d%/)
+  })
+
   it("honors MultiAxisLineChart per-series colors", () => {
     const { svg } = renderChartWithEvidence("MultiAxisLineChart", {
       data: [
@@ -140,5 +159,19 @@ describe("Wave 1 renderChart registry", () => {
     )
     // Cost layout puts the named center on the plot origin, not its raw lon/lat.
     expect(nearestToCenter).toBeLessThan(40)
+  })
+
+  it("defaults DistanceCartogram sparkline mode to the strip layout", () => {
+    const { svg } = renderChartWithEvidence("DistanceCartogram", {
+      points: cartogramPoints,
+      center: "London",
+      costAccessor: "flightHours",
+      mode: "sparkline",
+      width: 400,
+      height: 80,
+    })
+    const ys = [...svg.matchAll(/<circle[^>]*cy="([^"]+)"/g)].map((match) => Number(match[1]))
+    expect(ys.length).toBeGreaterThanOrEqual(3)
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(40)
   })
 })

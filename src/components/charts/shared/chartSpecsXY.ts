@@ -339,7 +339,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       xExtent: { type: "array", description: "Fixed x domain `[min, max]`; either bound may be omitted." },
       yExtent: { type: "array", description: "Fixed y domain `[min, max]`; either bound may be omitted." },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM, default: "right", description: "Position of the gradient legend" },
-      heatmapAggregation: { type: "string", enum: ["count", "sum", "mean"] as const, description: "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 distinct cells) auto-bin even when this is omitted." },
+      heatmapAggregation: { type: "string", enum: ["count", "sum", "mean"] as const, description: "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 occupied cells) auto-bin even when this is omitted." },
       heatmapXBins: { type: "number", default: 20, description: "Number of x bins when aggregating." },
       heatmapYBins: { type: "number", default: 20, description: "Number of y bins when aggregating." },
     },

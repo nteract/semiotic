@@ -32,6 +32,7 @@ export const multiAxisLineChart: ChartConfig = {
       yAccessor?: string | ((d: Datum) => number)
       label?: string
       color?: string
+      format?: (d: number) => string
       extent?: [number, number]
     }> : []
     const palette = Array.isArray(colorScheme) ? colorScheme as string[] : [...DEFAULT_COLORS]
@@ -56,23 +57,23 @@ export const multiAxisLineChart: ChartConfig = {
         })
       })
     }
+    const formatAxisTick = (extent: [number, number], format?: (d: number) => string) =>
+      (v: number) => {
+        const orig = extent[0] + v * (extent[1] - extent[0])
+        if (typeof format === "function") return format(orig)
+        return Number.isInteger(orig) ? String(orig) : orig.toFixed(1)
+      }
     const axes = isDual
       ? [
           {
             orient: "left" as const,
             label: series[0].label,
-            tickFormat: (v: number) => {
-              const orig = extents[0][0] + v * (extents[0][1] - extents[0][0])
-              return Number.isInteger(orig) ? String(orig) : orig.toFixed(1)
-            },
+            tickFormat: formatAxisTick(extents[0], series[0].format),
           },
           {
             orient: "right" as const,
             label: series[1].label,
-            tickFormat: (v: number) => {
-              const orig = extents[1][0] + v * (extents[1][1] - extents[1][0])
-              return Number.isInteger(orig) ? String(orig) : orig.toFixed(1)
-            },
+            tickFormat: formatAxisTick(extents[1], series[1].format),
           },
           { orient: "bottom" as const },
         ]

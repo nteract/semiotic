@@ -89,24 +89,32 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const xNumeric = xKeys.every(v => typeof v === "number" && !isNaN(v))
   const yNumeric = yKeys.every(v => typeof v === "number" && !isNaN(v))
 
-  // Dense numeric grids (50k distinct x×y) miss frame budget on the
-  // per-cell static path. The streaming aggregator already bins; reuse it
-  // when the cartesian product exceeds ~4k cells unless the caller set bins.
+  // Dense numeric grids miss frame budget on the per-cell static path.
+  // Gate on occupied cells, not the cartesian product: a 65-point diagonal
+  // has 65×65 > 4096 but only 65 marks to paint.
   const DENSE_HEATMAP_CELL_THRESHOLD = 4096
   if (
     xNumeric &&
     yNumeric &&
-    xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD
+    xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD &&
+    data.length > DENSE_HEATMAP_CELL_THRESHOLD
   ) {
-    // Streaming defaults to count. Auto-bin of a value grid must keep the
-    // value channel (mean) or a dense ramp collapses to near-uniform occupancy.
-    return buildStreamingHeatmapScene({
-      ...ctx,
-      config: {
-        ...ctx.config,
-        heatmapAggregation: ctx.config.valueAccessor ? "mean" as const : "count" as const,
-      },
-    }, data, layout)
+    const occupied = new Set<number>()
+    for (let i = 0; i < data.length; i++) {
+      const xi = xIndex.get(rawXs[i])
+      const yi = yIndex.get(rawYs[i])
+      if (xi === undefined || yi === undefined) continue
+      occupied.add(yi * xCount + xi)
+      if (occupied.size > DENSE_HEATMAP_CELL_THRESHOLD) {
+        return buildStreamingHeatmapScene({
+          ...ctx,
+          config: {
+            ...ctx.config,
+            heatmapAggregation: ctx.config.valueAccessor ? "mean" as const : "count" as const,
+          },
+        }, data, layout)
+      }
+    }
   }
 
   if (xNumeric) {

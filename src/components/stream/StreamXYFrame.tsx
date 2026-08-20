@@ -24,6 +24,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
+import { collectMarginalValues } from "./MarginalGraphicsLazy"
 import { xySceneNodeToSVG } from "./SceneToSVG"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
@@ -1109,17 +1110,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           setCurrentScales(store.scales)
         }
 
-        // Extract x/y values for marginal graphics
         if (marginalGraphics) {
-          const rawData = store.getData()
-          const getX = typeof xAccessor === "function"
-            ? xAccessor
-            : (d: Datum) => d[xAccessor || "x"]
-          const getY = typeof yAccessor === "function"
-            ? yAccessor
-            : (d: Datum) => d[yAccessor || "y"]
-          setMarginalXValues(rawData.map(d => getX(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
-          setMarginalYValues(rawData.map(d => getY(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
+          const next = collectMarginalValues(store.getData(), xAccessor, yAccessor)
+          setMarginalXValues(next.xValues)
+          setMarginalYValues(next.yValues)
         }
       }
 
@@ -1262,6 +1256,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       })()
 
       const chartAriaLabel = description || (typeof title === "string" ? title : "XY chart")
+      const ssrMarginal = marginalGraphics && store
+        ? collectMarginalValues(store.getData(), xAccessor, yAccessor)
+        : { xValues: [] as number[], yValues: [] as number[] }
 
       return (
         <div
@@ -1334,8 +1331,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
             marginalGraphics={marginalGraphics}
-            xValues={[]}
-            yValues={[]}
+            xValues={ssrMarginal.xValues}
+            yValues={ssrMarginal.yValues}
             annotations={annotations}
             onAnnotationActivate={onAnnotationActivate}
             onObservation={annotationObservationCallback ?? onObservation}

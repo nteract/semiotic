@@ -88,6 +88,45 @@ describe("RadarChart", () => {
     expect(lastOrdinalFrameProps.connectorAccessor).toBe(colorBy)
   })
 
+  it("forwards categoryFormat as oFormat", () => {
+    const categoryFormat = (label: string) => `axis:${label}`
+    render(
+      <TooltipProvider>
+        <RadarChart
+          data={sample}
+          seriesAccessor="name"
+          categoryFormat={categoryFormat}
+          width={400}
+          height={400}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.oFormat).toBe(categoryFormat)
+  })
+
+  it("colors polygons by a function seriesAccessor when colorBy is omitted", () => {
+    const seriesAccessor = (d: { name: string }) => d.name
+    render(
+      <TooltipProvider>
+        <RadarChart
+          data={sample}
+          categoryAccessor="attribute"
+          valueAccessor="value"
+          seriesAccessor={seriesAccessor}
+          width={400}
+          height={400}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.connectorAccessor).toBe(seriesAccessor)
+    const pieceStyle = lastOrdinalFrameProps.pieceStyle as (d: (typeof sample)[number]) => { fill?: string }
+    const fillA = pieceStyle(sample[0]).fill
+    const fillB = pieceStyle(sample[2]).fill
+    expect(fillA).toBeTruthy()
+    expect(fillB).toBeTruthy()
+    expect(fillA).not.toBe(fillB)
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

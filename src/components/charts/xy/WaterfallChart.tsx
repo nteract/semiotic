@@ -120,11 +120,21 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
   const safeData = useMemo(() => filterSparseArray(data), [data])
-  const pushXRef = useRef({ next: 0, indexOf: new WeakMap<object, number>(), labels: new Map<number, unknown>() })
+  const pushXRef = useRef({
+    next: 0,
+    indexOf: new WeakMap<object, number>(),
+    idOf: new Map<string, number>(),
+    labels: new Map<number, unknown>(),
+  })
   const { plotData, plotXAccessor, plotXFormat, usesIndex } = useMemo(() => {
     const readX = typeof xAccessor === "function"
       ? xAccessor
       : (d: Datum) => d[xAccessor as string]
+    const readId = pointIdAccessor
+      ? typeof pointIdAccessor === "function"
+        ? pointIdAccessor
+        : (d: Datum) => d[pointIdAccessor as string]
+      : undefined
     const isNumericOrDate = (raw: unknown): raw is number | Date =>
       (typeof raw === "number" && Number.isFinite(raw)) || raw instanceof Date
     const formatTick = (original: unknown, v: number | Date | string) => {
@@ -145,26 +155,42 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
       }
     }
     const state = pushXRef.current
+    const remember = (d: Datum, idx: number, id: string, raw: unknown) => {
+      if (d && typeof d === "object") {
+        state.indexOf.set(d, idx)
+        if (!Object.isFrozen(d) && !Object.isSealed(d)) {
+          (d as Datum & { __waterfallX?: number }).__waterfallX = idx
+        }
+      }
+      if (id) state.idOf.set(id, idx)
+      state.labels.set(idx, raw)
+    }
     return {
       plotData: safeData,
       plotXAccessor: (d: Datum, i?: number) => {
         const raw = readX(d, i)
         if (isNumericOrDate(raw)) return raw
-        if (d && typeof d === "object" && state.indexOf.has(d)) {
-          const idx = state.indexOf.get(d)!
-          state.labels.set(idx, raw)
-          return idx
+        const id = readId ? String(readId(d, i) ?? "") : ""
+        const stamped = d && typeof d === "object"
+          ? (d as Datum & { __waterfallX?: number }).__waterfallX
+          : undefined
+        const existing = (typeof stamped === "number" && Number.isFinite(stamped))
+          ? stamped
+          : (d && typeof d === "object" ? state.indexOf.get(d) : undefined)
+            ?? (id ? state.idOf.get(id) : undefined)
+        if (typeof existing === "number") {
+          remember(d, existing, id, raw)
+          return existing
         }
         const idx = typeof i === "number" ? i : state.next
         state.next = Math.max(state.next, idx + 1)
-        if (d && typeof d === "object") state.indexOf.set(d, idx)
-        state.labels.set(idx, raw)
+        remember(d, idx, id, raw)
         return idx
       },
       plotXFormat: (v: number | Date | string) => formatTick(state.labels.get(Number(v)), v),
       usesIndex: true,
     }
-  }, [data, safeData, xAccessor, xFormat])
+  }, [data, safeData, xAccessor, xFormat, pointIdAccessor])
 
   const setup = useChartSetup({
     data: plotData,

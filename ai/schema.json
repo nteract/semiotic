@@ -4758,7 +4758,7 @@
                 "sum",
                 "mean"
               ],
-              "description": "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 distinct cells) auto-bin even when this is omitted."
+              "description": "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 occupied cells) auto-bin even when this is omitted."
             },
             "heatmapXBins": {
               "type": "number",

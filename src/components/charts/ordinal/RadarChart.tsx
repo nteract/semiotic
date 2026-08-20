@@ -97,6 +97,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     valueAccessor = "value",
     seriesAccessor,
     colorBy,
+    categoryFormat,
     colorScheme,
     pointRadius = 4,
     valueExtent,
@@ -126,7 +127,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     || (typeof colorBy === "string" ? colorBy : undefined)
     || (typeof colorBy === "function" ? colorBy : undefined)
   const connectorAccessor = seriesKey ?? "__radar"
-  const colorByResolved = colorBy || (typeof seriesKey === "string" ? seriesKey : undefined)
+  const colorByResolved = colorBy || seriesKey
 
   const setup = useChartSetup({
     data: safeData,
@@ -225,6 +226,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     connectorAccessor,
     connectorStyle,
     pieceStyle,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     rExtent: valueExtent ?? [0],
     oLabel: "",
     size: [width, height],

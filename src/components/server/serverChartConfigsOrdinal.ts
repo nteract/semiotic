@@ -473,6 +473,7 @@ export const radarChart: ChartConfig = {
       rExtent: rest.valueExtent || [0],
       oLabel: "",
       ...common,
+      ...(rest.categoryFormat && { oFormat: rest.categoryFormat }),
       showLegend: common.showLegend ?? Boolean(colorKey),
     }
   },

@@ -83,6 +83,25 @@ describe("WaterfallChart", () => {
     expect((xAcc as (d: { step: string; value: number }) => number)({ step: "Costs", value: -25 })).toBe(1)
   })
 
+  it("keeps the same categorical index across an immutable update()", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart
+          xAccessor="step"
+          yAccessor="value"
+          pointIdAccessor="step"
+          width={400}
+          height={300}
+        />
+      </TooltipProvider>
+    )
+    const xAcc = lastXYFrameProps.xAccessor as (d: { step: string; value: number }) => number
+    const row = { step: "Sales", value: 40 }
+    expect(xAcc(row)).toBe(0)
+    expect(xAcc({ ...row, value: 42 })).toBe(0)
+    expect(xAcc({ step: "Sales", value: 99 })).toBe(0)
+  })
+
   it("forwards pointIdAccessor", () => {
     render(
       <TooltipProvider>

@@ -377,35 +377,35 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **154 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **129 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **150 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/xy` | **156 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **126 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **153 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **110 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **165 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **164 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime` | **153 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **152 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **197 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **197 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **202 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/server` | **199 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **199 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **203 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
 | `semiotic/utils` | **93 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **86 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **94 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **86 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **90 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **82 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/react` | **7 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **7 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **7 KB** | Theme presets and token helpers |
 | `semiotic/themes/react` | **6 KB** | ThemeProvider/useTheme and hooks |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/physics` | **165 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
+| `semiotic/physics` | **166 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **522 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **530 KB** | All schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic/ai/core` | **88 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **11 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
-| `semiotic` | **335 KB** | Everything below (full bundle) |
+| `semiotic` | **342 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 

@@ -166,6 +166,20 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(fills.size).toBeGreaterThan(1)
   })
 
+  it("does not auto-bin a sparse diagonal whose cartesian product exceeds the threshold", () => {
+    const data = []
+    for (let i = 0; i < 65; i++) data.push({ x: i, y: i, value: i })
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(65)
+    expect(nodes.every((n) => n.type === "heatcell")).toBe(true)
+    expect(nodes.some((n) => (n.datum as { agg?: string }).agg === "mean")).toBe(false)
+  })
+
   it("empty data produces no nodes", () => {
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, [], defaultLayout)

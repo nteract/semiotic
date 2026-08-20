@@ -226,6 +226,10 @@ export const distanceCartogram: ChartConfig = {
         strokeWidth: 1,
       })
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
+    const cartogramLayout = rest.cartogramLayout
+      || (rest.mode === "sparkline" ? "strip" : "radial")
+    const isSparkline = rest.mode === "sparkline"
+    const isStrip = cartogramLayout === "strip"
     const ruledStyle = rest.styleRules
       ? composeStyleRules(
           basePointStyle,
@@ -265,13 +269,13 @@ export const distanceCartogram: ChartConfig = {
         costAccessor: rest.costAccessor,
         strength: rest.strength ?? 1,
         lineMode: rest.lineMode || "straight",
-        layout: rest.cartogramLayout || "radial",
+        layout: cartogramLayout,
       },
       ...common,
       cartogramChrome: {
         showRings: rest.showRings ?? true,
-        showNorth: rest.showNorth ?? true,
-        showRingLabels: rest.showRingLabels ?? true,
+        showNorth: rest.showNorth ?? (isStrip ? false : !isSparkline),
+        showRingLabels: rest.showRingLabels ?? (isStrip ? false : true),
         costLabel: rest.costLabel,
       },
     }
