@@ -1,5 +1,7 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
+const DELTA_FIELD_HINT = /(?:delta|change|increase|decrease|impact|variance|net)/i
+
 export const WaterfallChartCapability: ChartCapability = {
   component: "WaterfallChart",
   family: "flow",
@@ -9,6 +11,19 @@ export const WaterfallChartCapability: ChartCapability = {
   fits: (profile) => {
     if (!profile.primary.y) return "needs a numeric delta field"
     if (profile.rowCount < 3) return "needs a sequence of steps"
+    if (!profile.primary.x) return "needs an ordered step field"
+    if (profile.xProvenance === "scatter" && !profile.monotonicX) {
+      return "needs an ordered step sequence, not an unordered numeric comparison"
+    }
+
+    const yValues = profile.data
+      .map((row) => Number(row[profile.primary.y!]))
+      .filter(Number.isFinite)
+    const hasSignedDeltas = yValues.some((value) => value < 0) && yValues.some((value) => value > 0)
+    const hasDeltaNamedField = Object.keys(profile.fields).some((field) => DELTA_FIELD_HINT.test(field))
+    if (!hasSignedDeltas && !hasDeltaNamedField) {
+      return "needs signed deltas or a delta/change-named measure; cumulative totals do not form a waterfall"
+    }
     return null
   },
 

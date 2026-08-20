@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import React from "react"
-import { act, fireEvent, render } from "@testing-library/react"
+import { act, fireEvent, render, waitFor } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamXYFrame from "./StreamXYFrame"
@@ -132,7 +132,7 @@ describe("dynamic-prop contract matrix — frame presentation", () => {
     }
   })
 
-  it("reflows a newly-added marginal and uses a replacement hover callback", () => {
+  it("reflows a newly-added marginal and uses a replacement hover callback", async () => {
     const data = [{ x: 0, y: 0 }, { x: 10, y: 10 }]
     const firstHover = vi.fn()
     const replacementHover = vi.fn()
@@ -169,7 +169,9 @@ describe("dynamic-prop contract matrix — frame presentation", () => {
       />,
     )
     flushFrames()
-    expect(getByTestId("marginal-histogram-top")).toBeTruthy()
+    await waitFor(() => {
+      expect(getByTestId("marginal-histogram-top")).toBeTruthy()
+    })
 
     const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     fireEvent.mouseMove(hoverTarget, { clientX: 0, clientY: 100 })

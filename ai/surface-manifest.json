@@ -9,9 +9,9 @@
   ],
   "version": "3.9.1",
   "components": {
-    "schema": 57,
-    "aiChartExports": 54,
-    "mcpRenderable": 52,
+    "schema": 59,
+    "aiChartExports": 56,
+    "mcpRenderable": 54,
     "browserOnly": 5,
     "requiresLiveData": [
       "RealtimeHeatmap",
@@ -35,7 +35,8 @@
         "QuadrantChart",
         "Scatterplot",
         "ScatterplotMatrix",
-        "StackedAreaChart"
+        "StackedAreaChart",
+        "WaterfallChart"
       ],
       "ordinal": [
         "BarChart",
@@ -48,6 +49,7 @@
         "Histogram",
         "LikertChart",
         "PieChart",
+        "RadarChart",
         "RidgelinePlot",
         "StackedBarChart",
         "SwarmPlot",
@@ -525,6 +527,17 @@
           "mobile"
         ]
       },
+      "RadarChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
+      },
       "RealtimeHeatmap": {
         "componentKind": "chart-hoc",
         "commonChartProps": "supported",
@@ -724,6 +737,17 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "WaterfallChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": [
+          "primary",
+          "context",
+          "sparkline",
+          "mobile"
+        ]
       }
     },
     "aiChartExportNames": [
@@ -763,6 +787,7 @@
       "ProcessFlowChart",
       "ProcessSankey",
       "QuadrantChart",
+      "RadarChart",
       "RealtimeHeatmap",
       "RealtimeHistogram",
       "RealtimeLineChart",
@@ -780,7 +805,8 @@
       "TreeDiagram",
       "Treemap",
       "UnitPileChart",
-      "ViolinPlot"
+      "ViolinPlot",
+      "WaterfallChart"
     ],
     "geoExcludedFromAIExports": [
       "ChoroplethMap",

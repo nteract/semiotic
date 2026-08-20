@@ -600,6 +600,30 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       adapterRef.current?.setBoundedData(normalizeXYData(safeData, lineDataAccessor))
     }, [data, safeData, lineDataAccessor])
 
+    // Marginals are React/SVG content, while the retained data lives in the
+    // imperative store. Populate their values when a marginal is enabled
+    // after mount as well as after subsequent scene recomputes below.
+    // Without this bridge, the newly enlarged margin is visible but its
+    // histogram remains empty until a later data update happens to repaint.
+    const hasMarginalGraphics = marginalGraphics != null
+    const marginalConfigKey = hasMarginalGraphics
+      ? [marginalGraphics.top, marginalGraphics.bottom, marginalGraphics.left, marginalGraphics.right].join("|")
+      : ""
+    useEffect(() => {
+      if (!hasMarginalGraphics) {
+        setMarginalXValues([])
+        setMarginalYValues([])
+        return
+      }
+      const next = collectMarginalValues(
+        storeRef.current?.getData() ?? [],
+        xAccessor,
+        yAccessor,
+      )
+      setMarginalXValues(next.xValues)
+      setMarginalYValues(next.yValues)
+    }, [hasMarginalGraphics, marginalConfigKey, safeData, xAccessor, yAccessor])
+
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       storeRef,
       dirtyRef,
