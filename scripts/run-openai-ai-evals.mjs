@@ -290,7 +290,7 @@ function firstTryRequest(model, job, contextText) {
       "You are completing a first-attempt Semiotic chart-generation benchmark.",
       "Use only the supplied documentation, request, and input data.",
       "Return JSON only: one object with exactly component and props.",
-      "props must include the supplied chart data and all accessors needed to render.",
+      "props must include supplied chart data and all accessors needed to render, unless the push requirement explicitly says to omit data.",
       "Do not include markdown, JavaScript functions, commentary, or alternatives.",
       "",
       contextText,
@@ -475,6 +475,7 @@ async function main() {
   const maxUsd = Number(argValue("max-usd") ?? 0)
   const suites = argSet("suites")
   const firstTryFixtureIds = argSet("first-try-fixtures")
+  const firstTryContext = argValue("first-try-context") ?? "llms"
   const groundingFixtureIds = argSet("grounding-fixtures")
   const groundingConditions = argSet("grounding-conditions")
   const trialId = argValue("trial-id") ?? "primary"
@@ -515,6 +516,13 @@ async function main() {
   const firstTryJobs = await readJson(
     join(root, "evals/first-try/jobs.json")
   )
+  const firstTryContextPaths = {
+    llms: ["ai/reference.md", "docs/public/llms.txt"],
+    skill: ["ai/reference.md", "agent-skill/semiotic-charts/SKILL.md"],
+  }
+  if (!firstTryContextPaths[firstTryContext]) {
+    throw new Error("--first-try-context must be llms or skill")
+  }
   const groundingJobs = await readJson(
     join(root, "evals/grounding/jobs.json")
   )
@@ -538,7 +546,7 @@ async function main() {
     groundingConditions,
     new Set(groundingJobs.jobs.map(({ condition }) => condition))
   )
-  const contextText = await loadContext(firstTryJobs.jobs[0].context)
+  const contextText = await loadContext(firstTryContextPaths[firstTryContext])
   const manifestPath = join(outputDirectory, "run-manifest.json")
   const manifest = await existingJson(manifestPath, {
     version: 1,
@@ -546,6 +554,7 @@ async function main() {
     priceRevision,
     models,
     trialId,
+    firstTryContext,
     filters: {
       suites: suites ? [...suites] : null,
       firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
@@ -562,6 +571,7 @@ async function main() {
     manifest.projectFingerprint !== digest(project).slice(0, 12) ||
     manifest.priceRevision !== priceRevision ||
     manifest.trialId !== trialId
+    || manifest.firstTryContext !== firstTryContext
   ) {
     throw new Error("Existing output directory belongs to another run")
   }
@@ -583,7 +593,7 @@ async function main() {
     const firstTrySubmission = await existingJson(firstTryPath, {
       metadata: {
         ...submissionMetadata(model, firstTryJobs.fixtureRevision),
-        context: firstTryJobs.jobs[0].context,
+        context: firstTryContextPaths[firstTryContext],
       },
       results: [],
     })

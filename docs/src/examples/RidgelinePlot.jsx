@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { RidgelinePlot as RidgelineChart } from "semiotic"
+import { RidgelinePlot as RidgelineChart } from "semiotic/ordinal"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import probablyData from "../../public/data/probably.json"

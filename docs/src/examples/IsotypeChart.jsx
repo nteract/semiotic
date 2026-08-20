@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalCustomChart } from "semiotic"
+import { OrdinalCustomChart } from "semiotic/ordinal"
 import { hitTargetRect, tokenLayer } from "semiotic/recipes"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"

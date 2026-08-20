@@ -602,6 +602,33 @@ function propsForValidation(props: Datum): Datum {
   return validationProps
 }
 
+function validationFix(componentName: string, error: string): string {
+  const unknownProp = error.match(/^Unknown prop "([^"]+)"/)
+  if (unknownProp) {
+    return `Remove \`${unknownProp[1]}\` or replace it with a documented ${componentName} prop.`
+  }
+  const missingProp =
+    error.match(/^"([^"]+)" is required for .+\.$/i) ??
+    error.match(/(?:Missing|required) prop "?([^". ]+)/i)
+  if (missingProp) {
+    return `Add the required \`${missingProp[1]}\` prop using the ${componentName} schema and example.`
+  }
+  if (error.startsWith("Unknown component")) {
+    return "Choose a component returned by getSchema() or check the component name for a typo."
+  }
+  return `Correct this ${componentName} prop configuration to match its schema: ${error}`
+}
+
+function checkBigNumberChartOnlyProps(props: Datum, out: Diagnosis[]): void {
+  if (props.accessibleTable === undefined) return
+  out.push({
+    severity: "error",
+    code: "BIGNUMBER_ACCESSIBLE_TABLE",
+    message: "BigNumber is a value component and does not support accessibleTable.",
+    fix: "Remove accessibleTable. Use label, description, and summary to provide BigNumber's accessible text.",
+  })
+}
+
 /**
  * Run anti-pattern diagnostics on a Semiotic chart configuration.
  *
@@ -616,12 +643,23 @@ export function diagnoseConfig(
 
   const validation = validateProps(componentName, propsForValidation(props))
   for (const err of validation.errors) {
+    if (
+      componentName === "BigNumber" &&
+      props.accessibleTable !== undefined &&
+      err.startsWith('Unknown prop "accessibleTable"')
+    ) {
+      continue
+    }
     diagnoses.push({
       severity: "error",
       code: "VALIDATION",
       message: err,
-      fix: "",
+      fix: validationFix(componentName, err),
     })
+  }
+
+  if (componentName === "BigNumber") {
+    checkBigNumberChartOnlyProps(props, diagnoses)
   }
 
   if (!VALIDATION_MAP[componentName]) {

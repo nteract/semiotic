@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic/ordinal"
 import { green, red, purple } from "../theme"
 import MarkdownText from "../MarkdownText"
 

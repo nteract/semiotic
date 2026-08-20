@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StreamNetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic/network"
 
 const sampleNodes = [
   { id: "Alice", label: "Alice", group: "Engineering", connections: 4 },

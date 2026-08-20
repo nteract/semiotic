@@ -14,7 +14,8 @@
  * shape (temporal pattern) couldn't be more different.
  */
 import React, { useState, useMemo } from "react"
-import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { SankeyDiagram, ProcessSankey } from "semiotic/network"
+import { ThemeProvider } from "semiotic/themes/react"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Shared ward set + carbon palette ─────────────────────────────────

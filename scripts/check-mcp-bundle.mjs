@@ -10,7 +10,7 @@ const tempDir = mkdtempSync(join(tmpdir(), "semiotic-mcp-check-"))
 const output = join(tempDir, "mcp-server.js")
 
 try {
-  await build(mcpBuildOptions({ outfile: output }))
+  await build(mcpBuildOptions({ outfile: output, production: true }))
   const generated = readFileSync(output)
   const committed = readFileSync("ai/dist/mcp-server.js")
   if (!generated.equals(committed)) {

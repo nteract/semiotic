@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { NetworkCustomChart } from "semiotic/network"
-import { AccessibleNavTree } from "semiotic"
+import { AccessibleNavTree } from "semiotic/ai"
 import { packedClusterMatrix, symbolPathString, makeShade } from "semiotic/recipes"
 import PropControls from "../../components/PropControls"
 import {

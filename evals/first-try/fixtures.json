@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "fixtureRevision": "semiotic-first-try-2026-07-27-value-boundary",
+  "fixtureRevision": "semiotic-first-try-2026-08-20-true-push",
   "context": ["ai/reference.md", "docs/public/llms.txt"],
   "fixtures": [
     {
@@ -66,14 +66,13 @@
       "proposal": {
         "component": "LineChart",
         "props": {
-          "data": [{"week": 1, "users": 120}, {"week": 2, "users": 138}, {"week": 3, "users": 151}],
           "xAccessor": "week",
           "yAccessor": "users",
           "title": "Weekly active users"
         }
       },
-      "push": {"method": "push", "rows": [{"week": 4, "users": 165}]},
-      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true}
+      "push": {"method": "push", "requireOmitData": true, "rows": [{"week": 4, "users": 165}]},
+      "expect": {"validated": true, "renderProven": true, "noErrorDiagnostics": true, "pushDataOmitted": true}
     },
     {
       "id": "area-static",

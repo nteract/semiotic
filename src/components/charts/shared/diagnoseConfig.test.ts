@@ -65,6 +65,9 @@ describe("diagnoseConfig", () => {
     expect(result.diagnoses.map((d) => d.message)).toContain(
       '"data" is required for CandlestickChart.'
     )
+    expect(result.diagnoses.find((d) => d.code === "VALIDATION")?.fix).toBe(
+      "Add the required `data` prop using the CandlestickChart schema and example."
+    )
   })
 
   it("warns on an unrecognized colorScheme name but not a known scheme or an array", () => {
@@ -243,6 +246,24 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(false)
     expect(result.diagnoses[0].code).toBe("VALIDATION")
     expect(result.diagnoses[0].message).toContain("Unknown component")
+    expect(result.diagnoses[0].fix).toContain("Choose a component")
+  })
+
+  it("names BigNumber accessibleTable misuse and explains the replacement", () => {
+    const result = diagnoseConfig("BigNumber", {
+      value: 97,
+      accessibleTable: true,
+    })
+    expect(result.diagnoses).toContainEqual(
+      expect.objectContaining({
+        severity: "error",
+        code: "BIGNUMBER_ACCESSIBLE_TABLE",
+        fix: expect.stringContaining("label, description, and summary"),
+      }),
+    )
+    expect(result.diagnoses.some((diagnosis) =>
+      diagnosis.code === "VALIDATION" && diagnosis.message.includes("accessibleTable"),
+    )).toBe(false)
   })
 
   it("warns about non-zero baseline in bar charts", () => {

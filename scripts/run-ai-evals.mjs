@@ -117,6 +117,18 @@ function uniqueSubmissionMap(entries, idFor, knownIds, label) {
 function mergedProposal(fixture, proposal) {
   if (fixture.mode !== "push" || !fixture.push?.rows?.length) return proposal
   const data = proposal?.props?.data
+  if (fixture.push.requireOmitData === true && data === undefined) {
+    // Push-mode proposals must omit data. Materialize the supplied push rows
+    // only inside the static evaluator so schema/render checks can verify the
+    // selected component without teaching the model to pass data={[]}.
+    return {
+      ...proposal,
+      props: {
+        ...proposal.props,
+        data: fixture.push.rows,
+      },
+    }
+  }
   if (!Array.isArray(data)) return proposal
   return {
     ...proposal,
@@ -145,6 +157,10 @@ function scoreProposal(fixture, proposal) {
       noErrorDiagnostics: !result.diagnostics.some(
         ({ severity }) => severity === "error"
       ),
+      pushDataOmitted:
+        fixture.mode === "push" && fixture.push?.requireOmitData === true
+          ? proposal?.props?.data === undefined
+          : undefined,
       markCount: result.evidence?.markCount ?? 0,
       empty: result.evidence?.empty ?? null,
       diagnostics: result.diagnostics.map(({ code, severity }) => ({
@@ -155,7 +171,12 @@ function scoreProposal(fixture, proposal) {
     }
     const checks = Object.entries(fixture.expect)
       .filter(([key]) =>
-        ["validated", "renderProven", "noErrorDiagnostics"].includes(key)
+        [
+          "validated",
+          "renderProven",
+          "noErrorDiagnostics",
+          "pushDataOmitted"
+        ].includes(key)
       )
       .map(([key, expected]) => actual[key] === expected)
     return { ...actual, passed: checks.every(Boolean) }

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
-import {
-  BubbleChart,
-  CategoryColorProvider,
-} from "semiotic"
+import { BubbleChart } from "semiotic/xy"
+import { CategoryColorProvider } from "semiotic/ai"
 
 // ── Synthetic Gapminder-style data ──────────────────────────────────
 // Key countries across 7 decades. GDP per capita (PPP, 2017$) and

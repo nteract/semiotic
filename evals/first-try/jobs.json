@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "fixtureRevision": "semiotic-first-try-2026-07-27-value-boundary",
+  "fixtureRevision": "semiotic-first-try-2026-08-20-true-push",
   "jobs": [
     {
       "fixtureId": "bar-static-custom-fields",
@@ -104,22 +104,7 @@
         "ai/reference.md",
         "docs/public/llms.txt"
       ],
-      "input": {
-        "data": [
-          {
-            "week": 1,
-            "users": 120
-          },
-          {
-            "week": 2,
-            "users": 138
-          },
-          {
-            "week": 3,
-            "users": 151
-          }
-        ]
-      },
+      "input": {},
       "output": "Return one JSON object with component and props.",
       "pushRows": [
         {
@@ -127,7 +112,7 @@
           "users": 165
         }
       ],
-      "pushRequirement": "Choose a chart that supports ref-based push for the supplied pushRows. Return a renderable static component/props snapshot with the supplied initial rows in the chart's real data prop; do not serialize pushRows, ref, or method as component props."
+      "pushRequirement": "Choose a chart that supports ref-based push. Return component props with data omitted; a React caller will attach a ref and call push(pushRows). Do not serialize data, pushRows, ref, or method as component props."
     },
     {
       "fixtureId": "area-static",

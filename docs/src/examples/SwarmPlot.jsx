@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic/ordinal"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import boxofficeData from "../../public/data/boxofficetotals.json"
