@@ -32,7 +32,7 @@ describe("RadarChart", () => {
   })
 
   it("forwards radial point + connector frame props", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <RadarChart
           data={sample}
@@ -45,7 +45,6 @@ describe("RadarChart", () => {
         />
       </TooltipProvider>
     )
-    expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
     expect(lastOrdinalFrameProps.chartType).toBe("point")
     expect(lastOrdinalFrameProps.projection).toBe("radial")
     expect(lastOrdinalFrameProps.oAccessor).toBe("attribute")

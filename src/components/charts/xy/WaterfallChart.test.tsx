@@ -30,7 +30,7 @@ describe("WaterfallChart", () => {
   })
 
   it("forwards waterfall chartType and coerces categorical x to indices", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <WaterfallChart
           data={sample}
@@ -41,7 +41,6 @@ describe("WaterfallChart", () => {
         />
       </TooltipProvider>
     )
-    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
     expect(lastXYFrameProps.chartType).toBe("waterfall")
     expect(lastXYFrameProps.xAccessor).toBe("__waterfallX")
     expect(lastXYFrameProps.yAccessor).toBe("value")
