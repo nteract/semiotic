@@ -1,6 +1,6 @@
 import type { PointSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
-import { renderCirclePulse } from "./renderPulse"
+import { hasPulse, renderCirclePulse } from "./renderPulse"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
@@ -8,6 +8,9 @@ import { resolveCanvasFill } from "./canvasRenderHelpers"
  * Renders PointSceneNode as circles. Used by Scatterplot, BubbleChart, SwarmChart,
  * and showPoints on LineChart, AreaChart, and StackedAreaChart.
  * Supports pulse glow effect via _pulseIntensity/_pulseColor fields.
+ *
+ * Same-style points (shared fill, stroke, radius, alpha, no pulse) share one
+ * path so a 50k scatter does not pay beginPath/fill per mark.
  */
 export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const pointNodes = nodes.filter((n): n is PointSceneNode => n.type === "point")
@@ -15,33 +18,59 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
 
   ctx.save()
   try {
-    // Preserve the incoming canvas alpha (e.g. a chart-wide staleness dim) and
-    // multiply each node's own opacity into it, rather than clobbering it to 1
-    // — otherwise only the first node honored the dim and the rest reset to
-    // full. `ctx.restore()` puts the base alpha back when we're done.
     const baseAlpha = ctx.globalAlpha
+    const batches = new Map<string, PointSceneNode[]>()
+    const unbatched: PointSceneNode[] = []
+
     for (const node of pointNodes) {
+      if (hasPulse(node)) {
+        unbatched.push(node)
+        continue
+      }
+      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      const strokeWidth = node.style.strokeWidth ?? 1
+      const stroke = node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0
+        ? String(node.style.stroke)
+        : ""
+      const fill = String(node.style.fill ?? "#4e79a7")
+      const key = `${fill}\0${stroke}\0${strokeWidth}\0${node.r}\0${alpha}`
+      const batch = batches.get(key)
+      if (batch) batch.push(node)
+      else batches.set(key, [node])
+    }
+
+    for (const group of batches.values()) {
+      const sample = group[0]
+      const alpha = sample.style.opacity ?? sample.style.fillOpacity ?? 1
+      ctx.globalAlpha = baseAlpha * alpha
+      ctx.beginPath()
+      for (const node of group) {
+        ctx.moveTo(node.x + node.r, node.y)
+        ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
+      }
+      ctx.fillStyle = resolveCanvasFill(ctx, sample.style.fill, "#4e79a7")
+      ctx.fill()
+      const strokeWidth = sample.style.strokeWidth ?? 1
+      if (sample.style.stroke && sample.style.stroke !== "none" && strokeWidth > 0) {
+        ctx.strokeStyle = resolveCanvasFill(ctx, sample.style.stroke, sample.style.stroke)
+        ctx.lineWidth = strokeWidth
+        ctx.stroke()
+      }
+    }
+
+    for (const node of unbatched) {
       ctx.beginPath()
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
-
       const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
       ctx.globalAlpha = baseAlpha * alpha
-
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
       ctx.fill()
-
-      // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
-      // "none"`, silently keeps the default black, and still strokes — drawing a
-      // black ring where SVG (stroke="none") paints nothing. Matches the
-      // `!== "none"` guard every other canvas renderer already uses.
       const strokeWidth = node.style.strokeWidth ?? 1
       if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
         ctx.strokeStyle = resolveCanvasFill(ctx, node.style.stroke, node.style.stroke)
         ctx.lineWidth = strokeWidth
         ctx.stroke()
       }
-
-      // Pulse glow ring
       renderCirclePulse(ctx, node)
     }
   } finally {

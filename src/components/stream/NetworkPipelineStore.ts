@@ -1,5 +1,5 @@
 import { ParticlePool } from "./ParticlePool"
-import { getLayoutPlugin } from "./layouts"
+import { getLayoutPlugin } from "./layouts/registry"
 import type {
   NetworkLayoutResult,
   NetworkHtmlMark

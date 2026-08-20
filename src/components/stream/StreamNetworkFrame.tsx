@@ -46,7 +46,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import { isServerEnvironment } from "./SceneToSVG"
+import { isServerEnvironment } from "./isServerEnvironment"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
 import {
   useHydration,
@@ -67,9 +67,8 @@ import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
   canUseForceWorker,
   createFrameForceWorkerRequest,
-  runForceLayoutWorker,
   shouldUseForceWorker
-} from "./layouts/forceLayoutWorkerClient"
+} from "./layouts/forceLayoutWorkerPolicy"
 
 // Canvas setup
 
@@ -1013,7 +1012,8 @@ const StreamNetworkFrame = memo(forwardRef<
 
         setLayoutPending(true)
         onLayoutStateChangeRef.current?.("pending")
-        runForceLayoutWorker(request, controller.signal)
+        import("./layouts/forceLayoutWorkerClient")
+          .then(({ runForceLayoutWorker }) => runForceLayoutWorker(request, controller.signal))
           .then(({ positions }) => {
             if (requestId !== layoutRequestRef.current) return
             store.applyForceLayoutPositions(positions, size)

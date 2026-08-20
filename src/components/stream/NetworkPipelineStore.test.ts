@@ -1,3 +1,4 @@
+import "./layouts/registerBuiltIn"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { NetworkPipelineConfig } from "./networkTypes"
 

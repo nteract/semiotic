@@ -1,0 +1,81 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
+import { vi } from "vitest"
+import React from "react"
+import { render } from "@testing-library/react"
+import { WaterfallChart } from "./WaterfallChart"
+import { TooltipProvider } from "../../store/TooltipStore"
+
+let lastXYFrameProps = {} as CapturedXYFrameProps
+vi.mock("../../stream/StreamXYFrame", () => {
+  return {
+    __esModule: true,
+    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
+      lastXYFrameProps = props
+      return <div className="stream-xy-frame"><svg /></div>
+    })
+  }
+})
+
+const sample = [
+  { step: "Start", value: 100 },
+  { step: "Sales", value: 40 },
+  { step: "Costs", value: -25 },
+  { step: "Tax", value: -10 },
+]
+
+describe("WaterfallChart", () => {
+  beforeEach(() => {
+    lastXYFrameProps = {} as CapturedXYFrameProps
+  })
+
+  it("forwards waterfall chartType and coerces categorical x to indices", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <WaterfallChart
+          data={sample}
+          xAccessor="step"
+          yAccessor="value"
+          width={400}
+          height={300}
+        />
+      </TooltipProvider>
+    )
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    expect(lastXYFrameProps.chartType).toBe("waterfall")
+    expect(lastXYFrameProps.xAccessor).toBe("__waterfallX")
+    expect(lastXYFrameProps.yAccessor).toBe("value")
+    expect(lastXYFrameProps.data).toEqual([
+      expect.objectContaining({ step: "Start", __waterfallX: 0 }),
+      expect.objectContaining({ step: "Sales", __waterfallX: 1 }),
+      expect.objectContaining({ step: "Costs", __waterfallX: 2 }),
+      expect.objectContaining({ step: "Tax", __waterfallX: 3 }),
+    ])
+    expect(lastXYFrameProps.xFormat?.(0)).toBe("Start")
+  })
+
+  it("keeps numeric x accessors without index coercion", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart
+          data={[{ x: 1, y: 10 }, { x: 2, y: -4 }]}
+          xAccessor="x"
+          yAccessor="y"
+          width={400}
+          height={300}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.xAccessor).toBe("x")
+    expect(lastXYFrameProps.data).toEqual([{ x: 1, y: 10 }, { x: 2, y: -4 }])
+  })
+
+  it("handles empty data gracefully", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <WaterfallChart data={[]} width={400} height={300} />
+      </TooltipProvider>
+    )
+    expect(container.querySelector(".stream-xy-frame")).toBeFalsy()
+  })
+})

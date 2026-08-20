@@ -22,6 +22,7 @@ import { MinimapChart } from "./charts/xy/MinimapChart"
 import { QuadrantChart } from "./charts/xy/QuadrantChart"
 import { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 import { CandlestickChart } from "./charts/xy/CandlestickChart"
+import { WaterfallChart } from "./charts/xy/WaterfallChart"
 import { BarChart } from "./charts/ordinal/BarChart"
 import { StackedBarChart } from "./charts/ordinal/StackedBarChart"
 import { LikertChart } from "./charts/ordinal/LikertChart"
@@ -36,6 +37,7 @@ import { DonutChart } from "./charts/ordinal/DonutChart"
 import { GaugeChart } from "./charts/ordinal/GaugeChart"
 import { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
 import { FunnelChart } from "./charts/ordinal/FunnelChart"
+import { RadarChart } from "./charts/ordinal/RadarChart"
 import { SwimlaneChart } from "./charts/ordinal/SwimlaneChart"
 import { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
 import { ChordDiagram } from "./charts/network/ChordDiagram"
@@ -169,6 +171,7 @@ export {
   DonutChart,
   GaugeChart,
   FunnelChart,
+  RadarChart,
   GroupedBarChart,
   SwimlaneChart,
   Treemap,
@@ -179,6 +182,7 @@ export {
   QuadrantChart,
   MultiAxisLineChart,
   CandlestickChart,
+  WaterfallChart,
   XYCustomChart,
   NetworkCustomChart,
   OrdinalCustomChart,
@@ -316,6 +320,7 @@ export type {
   GaugeChartProps,
   GaugeThreshold,
   FunnelChartProps,
+  RadarChartProps,
   GroupedBarChartProps,
   SwimlaneChartProps,
   RidgelinePlotProps,
@@ -336,6 +341,7 @@ export type {
   MultiAxisLineChartProps,
   MultiAxisSeriesConfig,
   CandlestickChartProps,
+  WaterfallChartProps,
   // Physics chart prop types: import from "semiotic/physics"
   QuadrantsConfig,
   QuadrantsConfigOverride,

@@ -26,6 +26,7 @@ import { MinimapChartCapability } from "../charts/xy/MinimapChart.capability"
 import { DifferenceChartCapability } from "../charts/xy/DifferenceChart.capability"
 import { CandlestickChartCapability } from "../charts/xy/CandlestickChart.capability"
 import { HeatmapCapability } from "../charts/xy/Heatmap.capability"
+import { WaterfallChartCapability } from "../charts/xy/WaterfallChart.capability"
 
 // Ordinal family
 import { BarChartCapability } from "../charts/ordinal/BarChart.capability"
@@ -35,6 +36,7 @@ import { DotPlotCapability } from "../charts/ordinal/DotPlot.capability"
 import { PieChartCapability } from "../charts/ordinal/PieChart.capability"
 import { DonutChartCapability } from "../charts/ordinal/DonutChart.capability"
 import { FunnelChartCapability } from "../charts/ordinal/FunnelChart.capability"
+import { RadarChartCapability } from "../charts/ordinal/RadarChart.capability"
 import { GaugeChartCapability } from "../charts/ordinal/GaugeChart.capability"
 import { LikertChartCapability } from "../charts/ordinal/LikertChart.capability"
 import { SwimlaneChartCapability } from "../charts/ordinal/SwimlaneChart.capability"
@@ -106,6 +108,7 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   DifferenceChartCapability,
   CandlestickChartCapability,
   HeatmapCapability,
+  WaterfallChartCapability,
   // Ordinal
   BarChartCapability,
   GroupedBarChartCapability,
@@ -114,6 +117,7 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   PieChartCapability,
   DonutChartCapability,
   FunnelChartCapability,
+  RadarChartCapability,
   GaugeChartCapability,
   LikertChartCapability,
   SwimlaneChartCapability,
@@ -209,6 +213,7 @@ export {
   DifferenceChartCapability,
   CandlestickChartCapability,
   HeatmapCapability,
+  WaterfallChartCapability,
   // Ordinal
   BarChartCapability,
   GroupedBarChartCapability,
@@ -217,6 +222,7 @@ export {
   PieChartCapability,
   DonutChartCapability,
   FunnelChartCapability,
+  RadarChartCapability,
   GaugeChartCapability,
   LikertChartCapability,
   SwimlaneChartCapability,

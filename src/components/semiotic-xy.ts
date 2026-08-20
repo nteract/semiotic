@@ -41,6 +41,7 @@ export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 export { CandlestickChart } from "./charts/xy/CandlestickChart"
+export { WaterfallChart } from "./charts/xy/WaterfallChart"
 export { XYCustomChart } from "./charts/custom/XYCustomChart"
 export { responsiveRuleMatches, resolveResponsiveRules } from "./charts/shared/responsiveRules"
 export type {
@@ -121,6 +122,7 @@ export type { HeatmapProps } from "./charts/xy/Heatmap"
 export type { QuadrantChartProps, QuadrantsConfig, QuadrantsConfigOverride, QuadrantConfig, CenterlineStyle } from "./charts/xy/QuadrantChart"
 export type { MultiAxisLineChartProps } from "./charts/xy/MultiAxisLineChart"
 export type { CandlestickChartProps } from "./charts/xy/CandlestickChart"
+export type { WaterfallChartProps } from "./charts/xy/WaterfallChart"
 export type { XYCustomChartProps } from "./charts/custom/XYCustomChart"
 
 // Declarative threshold-aware style rules (Scatterplot/LineChart/AreaChart… `styleRules`) + hatch fills.

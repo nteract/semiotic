@@ -24,7 +24,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
-import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { xySceneNodeToSVG } from "./SceneToSVG"
+import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
@@ -65,7 +66,6 @@ import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
 import { xyFrameLegendOptions } from "./frameLegendOptions"
 
 // ── Defaults ───────────────────────────────────────────────────────────
-
 const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // Theme colors live in frameThemeColors.ts (shared across Stream Frames).

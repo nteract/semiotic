@@ -7,7 +7,7 @@ const CHART_CATEGORIES = [
     title: "XY Charts",
     components: [
       "LineChart", "AreaChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
-      "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap",
+      "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap", "WaterfallChart",
       "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart",
     ],
   },
@@ -16,7 +16,7 @@ const CHART_CATEGORIES = [
     components: [
       "BarChart", "StackedBarChart", "LikertChart", "GroupedBarChart",
       "SwarmPlot", "BoxPlot", "Histogram", "ViolinPlot", "RidgelinePlot",
-      "DotPlot", "PieChart", "DonutChart", "GaugeChart", "FunnelChart",
+      "DotPlot", "PieChart", "DonutChart", "GaugeChart", "FunnelChart", "RadarChart",
       "SwimlaneChart",
     ],
   },

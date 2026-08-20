@@ -442,6 +442,42 @@ export const dotPlot: ChartConfig = {
   },
 }
 
+export const radarChart: ChartConfig = {
+  frameType: "ordinal",
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const seriesAccessor = rest.seriesAccessor || colorBy
+    const colorKey = colorBy || seriesAccessor
+    const pieceStyle = buildDotPlotPieceStyle(
+      data,
+      colorKey as ServerAccessor | undefined,
+      colorScheme,
+      common,
+      { ...rest, dotRadius: rest.pointRadius ?? 4 },
+    )
+    const connectorStyle = (d: Datum) => {
+      const piece = pieceStyle(d)
+      const fill = typeof piece.fill === "string" ? piece.fill : undefined
+      return { fill, fillOpacity: 0.15, stroke: fill, strokeWidth: 2, opacity: 0.7 }
+    }
+    return {
+      chartType: "point",
+      projection: "radial",
+      data,
+      oAccessor: rest.categoryAccessor || "attribute",
+      rAccessor: rest.valueAccessor || "value",
+      colorAccessor: colorKey,
+      colorScheme,
+      ...(seriesAccessor && { connectorAccessor: seriesAccessor }),
+      connectorStyle,
+      pieceStyle,
+      rExtent: rest.valueExtent || [0],
+      oLabel: "",
+      ...common,
+      showLegend: common.showLegend ?? Boolean(colorKey),
+    }
+  },
+}
+
 export const swimlaneChart: ChartConfig = {
   frameType: "ordinal",
   buildProps: (data, colorBy, colorScheme, common, rest) => {

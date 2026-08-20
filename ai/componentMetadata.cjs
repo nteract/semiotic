@@ -6,12 +6,12 @@ const COMPONENTS_BY_CATEGORY = {
   xy: [
     "LineChart", "BumpChart", "AreaChart", "DifferenceChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
     "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap",
-    "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart",
+    "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart", "WaterfallChart",
   ],
   ordinal: [
     "BarChart", "StackedBarChart", "LikertChart", "GroupedBarChart", "SwarmPlot",
     "BoxPlot", "Histogram", "ViolinPlot", "RidgelinePlot", "DotPlot", "PieChart",
-    "DonutChart", "GaugeChart", "FunnelChart", "SwimlaneChart",
+    "DonutChart", "GaugeChart", "FunnelChart", "RadarChart", "SwimlaneChart",
   ],
   network: [
     "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",

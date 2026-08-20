@@ -10,7 +10,8 @@ import type {
   NetworkSceneNode,
   NetworkSceneEdge,
 } from "../stream/networkTypes"
-import { getLayoutPlugin } from "../stream/layouts"
+import "../stream/layouts/registerBuiltIn"
+import { getLayoutPlugin } from "../stream/layouts/registry"
 import {
   resolveCustomLayoutPalette,
   buildResolveColor,

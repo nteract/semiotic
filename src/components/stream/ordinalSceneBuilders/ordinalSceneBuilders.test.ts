@@ -4,12 +4,11 @@ import { buildPieScene } from "./pieScene"
 import { buildPointScene, buildSwarmScene } from "./pointScene"
 import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./statisticalScene"
 import { buildTimelineScene } from "./timelineScene"
-import { buildConnectors } from "./connectorScene"
 import { buildFunnelScene } from "./funnelScene"
 import { buildBarFunnelScene } from "./barFunnelScene"
 import { buildSwimlaneScene } from "./swimlaneScene"
 import type { OrdinalSceneContext } from "./types"
-import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig, WedgeSceneNode } from "../ordinalTypes"
+import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig } from "../ordinalTypes"
 import type { RectSceneNode, Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
@@ -1199,150 +1198,6 @@ describe("buildTimelineScene", () => {
       columns: {}
     })
     expect(buildTimelineScene(ctx, layout)).toHaveLength(0)
-  })
-})
-
-// ── connectorScene ──────────────────────────────────────────────────────
-
-describe("buildConnectors", () => {
-  it("returns connector nodes linking pieces with same connector key", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { id: 1, category: "A", group: "g1" } },
-      { type: "point" as const, x: 100, y: 80, r: 5, style: defaultStyle, datum: { id: 2, category: "B", group: "g1" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category,
-      config: makeConfig({ connectorStyle: { stroke: "#333", strokeWidth: 2 } })
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(1)
-    expect(connectors[0].type).toBe("connector")
-    expect(connectors[0].x1).toBe(10)
-    expect(connectors[0].y1).toBe(20)
-    expect(connectors[0].x2).toBe(100)
-    expect(connectors[0].y2).toBe(80)
-  })
-
-  it("returns empty when no getConnector", () => {
-    const ctx = makeCtx({ getConnector: undefined })
-    const connectors = buildConnectors(ctx, [], layout)
-    expect(connectors).toHaveLength(0)
-  })
-
-  it("returns empty when connector key is falsy", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { id: 1, category: "A" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: () => "",
-      getO: (d: Datum) => d.category
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(0)
-  })
-
-  it("does not connect groups with only one point", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { category: "A", group: "solo" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(0)
-  })
-
-  it("connects rect nodes using their center", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "rect" as const, x: 0, y: 0, w: 20, h: 40, style: defaultStyle, datum: { category: "A", group: "g1" } },
-      { type: "rect" as const, x: 100, y: 50, w: 20, h: 40, style: defaultStyle, datum: { category: "B", group: "g1" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(1)
-    // rect center: x + w/2 for x, y + 0 for vertical projection (cy = node.y)
-    expect(connectors[0].x1).toBe(10) // 0 + 20/2
-  })
-
-  it("uses connectorStyle function when provided", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { category: "A", group: "g1", color: "red" } },
-      { type: "point" as const, x: 100, y: 80, r: 5, style: defaultStyle, datum: { category: "B", group: "g1", color: "blue" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category,
-      config: makeConfig({
-        connectorStyle: (d: Datum) => ({ stroke: d.color, strokeWidth: 3 })
-      })
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors[0].style.stroke).toBe("red")
-    expect(connectors[0].style.strokeWidth).toBe(3)
-  })
-
-  it("uses default style when no connectorStyle is set", () => {
-    const scales = makeScales()
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { category: "A", group: "g1" } },
-      { type: "point" as const, x: 100, y: 80, r: 5, style: defaultStyle, datum: { category: "B", group: "g1" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category,
-      config: makeConfig({})
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors[0].style.stroke).toBe("#999")
-    expect(connectors[0].style.opacity).toBe(0.5)
-  })
-
-  it("creates multiple connectors for chains of 3+ points", () => {
-    const scales = makeScales({ oDomain: ["A", "B", "C"] })
-    const pieceNodes = [
-      { type: "point" as const, x: 10, y: 20, r: 5, style: defaultStyle, datum: { category: "A", group: "chain" } },
-      { type: "point" as const, x: 50, y: 50, r: 5, style: defaultStyle, datum: { category: "B", group: "chain" } },
-      { type: "point" as const, x: 90, y: 80, r: 5, style: defaultStyle, datum: { category: "C", group: "chain" } }
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(2) // A->B and B->C
-    expect(connectors[0].group).toBe("chain")
-    expect(connectors[1].group).toBe("chain")
-  })
-
-  it("ignores node types other than point and rect", () => {
-    const scales = makeScales()
-    const pieceNodes: WedgeSceneNode[] = [
-      { type: "wedge" as const, cx: 0, cy: 0, innerRadius: 0, outerRadius: 50, startAngle: 0, endAngle: Math.PI, style: defaultStyle, datum: { category: "A", group: "g1" } },
-    ]
-    const ctx = makeCtx({
-      scales,
-      getConnector: (d: Datum) => d.group,
-      getO: (d: Datum) => d.category
-    })
-    const connectors = buildConnectors(ctx, pieceNodes, layout)
-    expect(connectors).toHaveLength(0)
   })
 })
 

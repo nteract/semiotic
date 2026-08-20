@@ -16,6 +16,8 @@ import {
   scatterplot,
   quadrantChart,
   connectedScatterplot,
+  waterfallChart,
+  multiAxisLineChart,
   temporalHistogram
 } from "./serverChartConfigsXY"
 import { heatmap } from "./serverChartConfigHeatmap"
@@ -34,7 +36,8 @@ import {
   ridgelinePlot,
   likertChart,
   funnelChart,
-  gaugeChart
+  gaugeChart,
+  radarChart
 } from "./serverChartConfigsOrdinal"
 import {
   forceDirectedGraph,
@@ -49,7 +52,8 @@ import {
 import {
   choroplethMap,
   proportionalSymbolMap,
-  flowMap
+  flowMap,
+  distanceCartogram
 } from "./serverChartConfigsGeo"
 import {
   xyCustomChart,
@@ -88,6 +92,8 @@ export const CHART_CONFIGS = {
   ConnectedScatterplot: connectedScatterplot,
   QuadrantChart: quadrantChart,
   Heatmap: heatmap,
+  WaterfallChart: waterfallChart,
+  MultiAxisLineChart: multiAxisLineChart,
   TemporalHistogram: temporalHistogram,
   XYCustomChart: xyCustomChart,
   BarChart: barChart,
@@ -104,6 +110,7 @@ export const CHART_CONFIGS = {
   RidgelinePlot: ridgelinePlot,
   LikertChart: likertChart,
   FunnelChart: funnelChart,
+  RadarChart: radarChart,
   GaugeChart: gaugeChart,
   OrdinalCustomChart: ordinalCustomChart,
   ForceDirectedGraph: forceDirectedGraph,
@@ -118,6 +125,7 @@ export const CHART_CONFIGS = {
   ChoroplethMap: choroplethMap,
   ProportionalSymbolMap: proportionalSymbolMap,
   FlowMap: flowMap,
+  DistanceCartogram: distanceCartogram,
   GeoCustomChart: geoCustomChart,
   GaltonBoardChart: galtonBoardChart,
   EventDropChart: eventDropChart,

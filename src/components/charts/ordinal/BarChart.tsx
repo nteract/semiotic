@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
@@ -121,6 +122,10 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /** Enable a value-axis brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ r: [min, max] }` or null when the brush clears. */
+  onBrush?: (extent: { r: [number, number] } | null) => void
   /**
    * Overlay a regression line through the bar tops. Accepts `true`
    * (linear), a method name (`"linear"` | `"polynomial"` | `"loess"`),
@@ -263,6 +268,9 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     frameProps = {},
     selection,
     linkedHover,
+    linkedBrush,
+    brush: brushProp,
+    onBrush: onBrushProp,
     onObservation,
     onClick,
     hoverHighlight,
@@ -349,6 +357,13 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   // Consolidated piece-style — base fill, style rules, user overlay,
   // primitive props, and selection wrap all happen inside the shared hook.
   // Each ordinal HOC drops ~25 lines of recipe by calling this.
+  const ordinalBrush = useOrdinalBrush({
+    brushProp,
+    onBrushProp,
+    linkedBrush,
+    valueAccessor,
+  })
+
   const pieceStyle = useOrdinalPieceStyle({
     colorBy, colorScale: setup.colorScale,
     color, themeCategorical, colorScheme, categoryIndexMap,
@@ -436,6 +451,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     }),
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(valueExtent && { rExtent: valueExtent }),
+    ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle is excluded
     // to prevent clobbering the HOC's color-resolved, selection-wrapped style.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

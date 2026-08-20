@@ -213,6 +213,49 @@ export const proportionalSymbolMap: ChartConfig = {
  * with coordinates) into the `lines` shape StreamGeoFrame expects, where
  * each line carries a `coordinates` array of two {x,y} endpoints.
  */
+export const distanceCartogram: ChartConfig = {
+  frameType: "geo",
+  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const points = data || rest.points
+    const basePointStyle =
+      rest.pointStyle ??
+      buildGeoPointBaseStyle(points, colorBy as string | ((d: Datum) => unknown) | undefined, colorScheme, {
+        pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 5,
+        fillOpacity: 0.85,
+        strokeWidth: 1,
+      })
+    const pointStyle = rest.styleRules
+      ? composeStyleRules(
+          basePointStyle,
+          rest.styleRules,
+          makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),
+        )
+      : basePointStyle
+    return {
+      points,
+      lines: rest.lines,
+      xAccessor: rest.xAccessor || "lon",
+      yAccessor: rest.yAccessor || "lat",
+      pointStyle,
+      colorBy,
+      colorScheme,
+      projection: rest.projection || "mercator",
+      graticule: rest.graticule,
+      fitPadding: rest.fitPadding,
+      projectionTransform: {
+        center: rest.center,
+        centerAccessor: rest.nodeIdAccessor || "id",
+        costAccessor: rest.costAccessor,
+        strength: rest.strength ?? 1,
+        lineMode: rest.lineMode || "straight",
+        layout: rest.cartogramLayout || "radial",
+      },
+      ...common,
+    }
+  },
+}
+
 export const flowMap: ChartConfig = {
   frameType: "geo",
   layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },

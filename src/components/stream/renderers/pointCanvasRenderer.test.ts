@@ -187,9 +187,9 @@ describe("pointCanvasRenderer", () => {
 
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
 
-    expect(ctx.beginPath).toHaveBeenCalledTimes(3)
+    expect(ctx.beginPath).toHaveBeenCalledTimes(1)
     expect(ctx.arc).toHaveBeenCalledTimes(3)
-    expect(ctx.fill).toHaveBeenCalledTimes(3)
+    expect(ctx.fill).toHaveBeenCalledTimes(1)
   })
 
   it("applies each node's alpha without clobbering between nodes (relies on save/restore)", () => {

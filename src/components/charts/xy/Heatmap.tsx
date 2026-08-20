@@ -155,6 +155,15 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
    * Annotation objects to render on the chart
    */
   annotations?: Datum[]
+  /**
+   * Bin continuous x/y into a grid (`count` / `sum` / `mean`). Dense numeric
+   * heatmaps (more than 4096 distinct cells) auto-bin even when this is omitted.
+   */
+  heatmapAggregation?: "count" | "sum" | "mean"
+  /** Number of x bins when aggregating. @default 20 */
+  heatmapXBins?: number
+  /** Number of y bins when aggregating. @default 20 */
+  heatmapYBins?: number
 
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
@@ -262,6 +271,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     cellBorderWidth = 1,
     tooltip,
     annotations,
+    heatmapAggregation,
+    heatmapXBins,
+    heatmapYBins,
     xExtent,
     yExtent,
     frameProps = {},
@@ -473,6 +485,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       customHoverBehavior, customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(heatmapAggregation && { heatmapAggregation }),
+    ...(heatmapXBins != null && { heatmapXBins }),
+    ...(heatmapYBins != null && { heatmapYBins }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...crosshairFrameProps,

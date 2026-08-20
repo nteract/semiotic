@@ -15,6 +15,7 @@ import { buildPointScene } from '../../src/components/stream/xySceneBuilders/poi
 import { buildLineScene } from '../../src/components/stream/xySceneBuilders/lineScene'
 import { buildAreaScene, buildStackedAreaScene } from '../../src/components/stream/xySceneBuilders/areaScene'
 import { buildHeatmapScene } from '../../src/components/stream/xySceneBuilders/heatmapScene'
+import { pointCanvasRenderer } from '../../src/components/stream/renderers/pointCanvasRenderer'
 import type { XYSceneContext } from '../../src/components/stream/xySceneBuilders/types'
 import { RingBuffer } from '../../src/components/realtime/RingBuffer'
 import seedrandom from 'seedrandom'
@@ -102,6 +103,28 @@ describe('Scene Builders — Scatter/Point', () => {
   bench('scatter-50k', () => {
     buildPointScene(ctx, scatter50k)
   }, { time: 3000, warmupTime: 200 })
+})
+
+describe('Canvas point paint — mock 2D context', () => {
+  const ctx = makeCtx()
+  const nodes = buildPointScene(ctx, scatter10k)
+  const mock = {
+    save() {},
+    restore() {},
+    beginPath() {},
+    moveTo() {},
+    arc() {},
+    fill() {},
+    stroke() {},
+    globalAlpha: 1,
+    fillStyle: '#000',
+    strokeStyle: '#000',
+    lineWidth: 1,
+  } as unknown as CanvasRenderingContext2D
+
+  bench('point-paint-10k-batched', () => {
+    pointCanvasRenderer(mock, nodes, ctx.scales as never, defaultLayout as never)
+  })
 })
 
 describe('Scene Builders — Line', () => {

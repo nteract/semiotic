@@ -137,6 +137,27 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(nodes).toHaveLength(3)
   })
 
+  it("auto-bins dense numeric grids instead of emitting one cell per distinct x×y", () => {
+    const data = []
+    for (let x = 0; x < 80; x++) {
+      for (let y = 0; y < 80; y++) {
+        data.push({ x, y, value: x + y })
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+      scales: {
+        x: Object.assign((v: number) => v, { domain: () => [0, 79], range: () => [0, 400] }),
+        y: Object.assign((v: number) => v, { domain: () => [0, 79], range: () => [0, 400] }),
+      } as unknown as XYSceneContext["scales"],
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes.length).toBeLessThanOrEqual(20 * 20)
+    expect(nodes.length).toBeGreaterThan(0)
+  })
+
   it("empty data produces no nodes", () => {
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, [], defaultLayout)

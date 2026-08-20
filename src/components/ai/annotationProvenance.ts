@@ -23,6 +23,9 @@
 // unchanged — the new blocks attach to whatever annotation shape the
 // chart already accepts.
 
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
+export { filterAnnotationsByStatus }
+
 // ── Provenance ────────────────────────────────────────────────────────
 
 /**
@@ -603,33 +606,6 @@ function pickStatus<V>(
 ): V | null {
   if (overrides && status in overrides) return overrides[status] as V | null
   return defaults[status]
-}
-
-/**
- * Apply the default editorial visibility contract without changing annotation
- * styling. Retracted notes and notes replaced by a present revision are hidden
- * unless explicitly requested. Shared by visual treatment, chart descriptions,
- * and navigation trees so they expose the same current set.
- */
-export function filterAnnotationsByStatus<T>(
-  annotations: ReadonlyArray<Annotated<T>>,
-  options: AnnotationStatusVisibility = {}
-): Annotated<T>[] {
-  const showRetracted = options.showRetractedAnnotations === true
-  const showSuperseded = options.showSupersededAnnotations === true
-
-  // stableIds that a present, non-retracted note supersedes.
-  const supersededIds = new Set<string>()
-  for (const a of annotations) {
-    const target = a?.lifecycle?.supersedes
-    if (target && a?.lifecycle?.status !== "retracted") supersededIds.add(target)
-  }
-
-  return annotations.filter((annotation) => {
-    if (annotation?.lifecycle?.status === "retracted" && !showRetracted) return false
-    const myId = annotation?.provenance?.stableId
-    return !(myId && supersededIds.has(myId) && !showSuperseded)
-  })
 }
 
 /**

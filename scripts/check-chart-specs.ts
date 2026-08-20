@@ -163,6 +163,13 @@ const SPEC_ONLY_PROP_EXCEPTIONS: Record<
       "showCategoryTicks"
     ])
   },
+  RadarChart: {
+    ...specOnly("server-only", STATIC_CHROME_PROP, [
+      "categoryLabel",
+      "valueLabel",
+      "showCategoryTicks"
+    ])
+  },
   LikertChart: specOnly("compatibility", SHARED_BAG_COMPAT, ["colorBy"]),
   BumpChart: specOnly("server-only", SERVER_ALIAS, ["colorBy"]),
   AreaChart: specOnly("server-only", STATIC_FRAME_PROP, [
@@ -184,6 +191,10 @@ const SPEC_ONLY_PROP_EXCEPTIONS: Record<
   Heatmap: {
     ...specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid", "colorBy"]),
     ...specOnly("server-only", STATIC_FRAME_PROP, ["xScaleType", "yScaleType"])
+  },
+  WaterfallChart: {
+    ...specOnly("compatibility", SHARED_BAG_COMPAT, ["colorBy", "colorScheme"]),
+    ...specOnly("server-only", STATIC_FRAME_PROP, ["yScaleType"])
   },
   QuadrantChart: specOnly("server-only", STATIC_FRAME_PROP, [
     "xScaleType",
@@ -411,6 +422,7 @@ const ORDINAL_CHARTS = [
   "DonutChart",
   "GaugeChart",
   "FunnelChart",
+  "RadarChart",
   "SwimlaneChart",
   "LikertChart"
 ] as const
@@ -427,7 +439,8 @@ const XY_CHARTS_WITHOUT_MINIMAP = [
   "MultiAxisLineChart",
   "CandlestickChart",
   "ConnectedScatterplot",
-  "ScatterplotMatrix"
+  "ScatterplotMatrix",
+  "WaterfallChart"
 ] as const
 const XY_CHARTS = [...XY_CHARTS_WITHOUT_MINIMAP, "MinimapChart"] as const
 const NETWORK_CHARTS = [
@@ -480,7 +493,6 @@ classifyPublicOnly(
 
 classifyPublicOnly(
   [
-    "BarChart",
     "StackedBarChart",
     "GroupedBarChart",
     "BoxPlot",
@@ -490,8 +502,9 @@ classifyPublicOnly(
     "DonutChart",
     "GaugeChart",
     "FunnelChart",
+    "RadarChart",
     "LikertChart",
-    ...XY_CHARTS,
+    ...XY_CHARTS.filter((chart) => chart !== "LineChart" && chart !== "Scatterplot"),
     ...NETWORK_CHARTS,
     ...GEO_CHARTS,
     ...PHYSICS_BASE_CHARTS,

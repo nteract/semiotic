@@ -1,0 +1,261 @@
+"use client"
+import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
+import * as React from "react"
+import { useMemo, forwardRef, useRef } from "react"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps, StreamXYFrameHandle, WaterfallStyle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
+import { useChartMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
+import { validateArrayData } from "../shared/validateChartData"
+import { useChartSetup } from "../shared/useChartSetup"
+import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+
+export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
+  data?: TDatum[]
+  xAccessor?: ChartAccessor<TDatum, number | Date | string>
+  yAccessor?: ChartAccessor<TDatum, number>
+  xScaleType?: "linear" | "log" | "time"
+  positiveColor?: string
+  negativeColor?: string
+  connectorStroke?: string
+  connectorWidth?: number
+  gap?: number
+  enableHover?: boolean
+  showGrid?: boolean
+  showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
+  tooltip?: TooltipProp
+  annotations?: Datum[]
+  xExtent?: [number | undefined, number | undefined] | [number]
+  yExtent?: [number | undefined, number | undefined] | [number]
+  frameProps?: Partial<Omit<StreamXYFrameProps, "data" | "size" | "chartType">>
+}
+
+/**
+ * WaterfallChart — cumulative signed steps as floating bars.
+ *
+ * Each row is a delta. Positive values step up from the previous cumulative
+ * total; negative values step down. Use {@link RealtimeWaterfallChart} for
+ * a push-driven window of the same geometry.
+ *
+ * @example
+ * ```tsx
+ * <WaterfallChart
+ *   data={[
+ *     { step: "Start", value: 100 },
+ *     { step: "Sales", value: 40 },
+ *     { step: "Costs", value: -25 },
+ *     { step: "Tax", value: -10 },
+ *   ]}
+ *   xAccessor="step"
+ *   yAccessor="value"
+ * />
+ * ```
+ */
+export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends Datum = Datum>(
+  props: WaterfallChartProps<TDatum>,
+  ref: React.Ref<RealtimeFrameHandle>
+) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
+
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+  })
+
+  const {
+    data,
+    margin: userMargin,
+    className,
+    xFormat,
+    yFormat,
+    xAccessor = "x",
+    yAccessor = "y",
+    xScaleType,
+    positiveColor,
+    negativeColor,
+    connectorStroke,
+    connectorWidth,
+    gap,
+    tooltip,
+    annotations,
+    xExtent,
+    yExtent,
+    frameProps = {},
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartId,
+    loading,
+    loadingContent,
+    emptyContent,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+  } = props
+
+  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
+  const safeData = useMemo(() => filterSparseArray(data), [data])
+  const { plotData, plotXAccessor, plotXFormat } = useMemo(() => {
+    const readX = typeof xAccessor === "function"
+      ? xAccessor
+      : (d: Datum) => d[xAccessor as string]
+    const needsIndex = safeData.some((d, i) => {
+      const raw = readX(d, i)
+      return !(typeof raw === "number" && Number.isFinite(raw)) && !(raw instanceof Date)
+    })
+    if (!needsIndex) {
+      return { plotData: safeData, plotXAccessor: xAccessor, plotXFormat: xFormat }
+    }
+    return {
+      plotData: safeData.map((d, i) => ({
+        ...d,
+        __waterfallX: i,
+        __waterfallTick: String(readX(d, i) ?? i),
+      })),
+      plotXAccessor: "__waterfallX",
+      plotXFormat: (v: number | Date | string) => {
+        const row = safeData[Number(v)]
+        return row ? String(readX(row, Number(v)) ?? v) : String(v)
+      },
+    }
+  }, [safeData, xAccessor, xFormat])
+
+  const setup = useChartSetup({
+    data: plotData,
+    rawData: data,
+    colorBy: undefined,
+    colorScheme: undefined,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    frameLegend: frameProps,
+    selection,
+    linkedHover,
+    fallbackFields: [typeof xAccessor === "string" ? xAccessor : "x"],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
+    chartType: "WaterfallChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    loadingContent,
+    emptyContent,
+    width,
+    height,
+    hasTitle: !!title,
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
+  })
+
+  const waterfallStyle = useMemo<WaterfallStyle>(() => ({
+    positiveColor,
+    negativeColor,
+    connectorStroke,
+    connectorWidth,
+    gap,
+    stroke: props.stroke,
+    strokeWidth: props.strokeWidth,
+    opacity: props.opacity,
+  }), [positiveColor, negativeColor, connectorStroke, connectorWidth, gap, props.stroke, props.strokeWidth, props.opacity])
+
+  const defaultTooltipContent = useMemo(
+    () => buildDefaultTooltip([
+      { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+      { label: yLabel || "Change", accessor: yAccessor, role: "y", format: yFormat },
+    ]),
+    [xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat]
+  )
+
+  if (setup.earlyReturn) return setup.earlyReturn
+
+  const error = validateArrayData({
+    componentName: "WaterfallChart",
+    data,
+    accessors: { xAccessor, yAccessor },
+  })
+  if (error) return <ChartError componentName="WaterfallChart" message={error} width={width} height={height} />
+
+  const streamProps: StreamXYFrameProps = {
+    chartType: "waterfall",
+    ...(data != null && { data: plotData }),
+    xAccessor: plotXAccessor,
+    yAccessor,
+    xScaleType: plotXAccessor === "__waterfallX" ? "linear" : xScaleType,
+    waterfallStyle,
+    size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
+    margin: setup.margin,
+    showAxes: resolved.showAxes,
+    xLabel,
+    yLabel,
+    xFormat: plotXFormat,
+    yFormat,
+    enableHover,
+    showGrid,
+    ...setup.legendBehaviorProps,
+    ...buildBaseMetadataProps({
+      title,
+      description,
+      summary,
+      accessibleTable,
+      className,
+      animate: props.animate,
+      maxDevicePixelRatio: props.maxDevicePixelRatio,
+      axisExtent: props.axisExtent,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+    }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
+      hoverRadius: props.hoverRadius,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
+    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
+    ...frameProps,
+  }
+
+  return (
+    <SafeRender componentName="WaterfallChart" width={width} height={height}>
+      <StreamXYFrame ref={frameRef} {...streamProps} />
+    </SafeRender>
+  )
+}) as unknown as {
+  <TDatum extends Datum = Datum>(props: WaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
+WaterfallChart.displayName = "WaterfallChart"

@@ -932,6 +932,36 @@ describe("LineChart", () => {
     })
   })
 
+  describe("brush support", () => {
+    it("forwards an x-axis brush overlay when brush is true", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} brush />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.brush).toEqual({ dimension: "x" })
+      expect(typeof lastXYFrameProps.onBrush).toBe("function")
+    })
+
+    it("does not pass brush when the prop is unset", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.brush).toBeUndefined()
+    })
+
+    it("enables brush when linkedBrush is set without an explicit brush prop", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} linkedBrush="range" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.brush).toEqual({ dimension: "x" })
+    })
+  })
+
   it("survives the loading→data transition without a hooks-count error", () => {
     // Mounting empty (loading skeleton, 0 lines) then re-rendering as data
     // arrives must not call a different number of hooks between renders —

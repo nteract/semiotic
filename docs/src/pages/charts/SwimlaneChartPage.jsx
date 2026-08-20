@@ -284,7 +284,7 @@ export default function SwimlaneChartPage() {
         { label: "Categorical", path: "/charts" },
         { label: "SwimlaneChart", path: "/charts/swimlane-chart" },
       ]}
-      prevPage={{ title: "Funnel Chart", path: "/charts/funnel-chart" }}
+      prevPage={{ title: "Radar Chart", path: "/charts/radar-chart" }}
       nextPage={{ title: "Force Directed Graph", path: "/charts/force-directed-graph" }}
     >
       <ComponentMeta

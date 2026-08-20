@@ -2,6 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
+import "../../stream/layouts/hierarchyLayoutPlugin"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"

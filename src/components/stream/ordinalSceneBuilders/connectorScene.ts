@@ -41,6 +41,31 @@ export function buildConnectors(
   // Draw lines connecting pieces with the same connector key, sorted by category order
   const oExtent = scales.o.domain()
   const resolveConnStyle = config.connectorStyle
+  const defaultStyle: Style = {
+    stroke: ctx.config.themeSemantic?.border || ctx.config.themeSemantic?.secondary || "#999",
+    strokeWidth: 1,
+    opacity: 0.5
+  }
+  const styleFor = (d: Datum): Style =>
+    typeof resolveConnStyle === "function"
+      ? resolveConnStyle(d)
+      : (resolveConnStyle || defaultStyle)
+  const pushSegment = (
+    from: { x: number; y: number; datum: Datum },
+    to: { x: number; y: number },
+    key: string
+  ) => {
+    connectors.push({
+      type: "connector",
+      x1: from.x,
+      y1: from.y,
+      x2: to.x,
+      y2: to.y,
+      style: styleFor(from.datum),
+      datum: from.datum,
+      group: key
+    })
+  }
 
   for (const [key, points] of groups) {
     if (points.length < 2) continue
@@ -49,27 +74,12 @@ export function buildConnectors(
     points.sort((a, b) => oExtent.indexOf(a.category) - oExtent.indexOf(b.category))
 
     for (let i = 0; i < points.length - 1; i++) {
-      const from = points[i]
-      const to = points[i + 1]
-      const style: Style = typeof resolveConnStyle === "function"
-        ? resolveConnStyle(from.datum)
-        : (resolveConnStyle || {
-          // Connector stroke: theme border > secondary > hardcoded #999 fallback.
-          stroke: ctx.config.themeSemantic?.border || ctx.config.themeSemantic?.secondary || "#999",
-          strokeWidth: 1,
-          opacity: 0.5
-        })
-
-      connectors.push({
-        type: "connector",
-        x1: from.x,
-        y1: from.y,
-        x2: to.x,
-        y2: to.y,
-        style,
-        datum: from.datum,
-        group: key
-      })
+      pushSegment(points[i], points[i + 1], key)
+    }
+    // Radial series (RadarChart) are closed polygons; close last→first so
+    // canvas/SVG stroke matches the filled path the renderer already closes.
+    if (projection === "radial" && points.length >= 3) {
+      pushSegment(points[points.length - 1], points[0], key)
     }
   }
 

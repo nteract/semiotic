@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest"
+import "./components/stream/layouts/registerBuiltIn"
 
 // jsdom doesn't implement ResizeObserver. Components that measure their
 // container (useResponsiveSize, LinkedLegend) need it to exist even if

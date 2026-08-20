@@ -89,6 +89,18 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const xNumeric = xKeys.every(v => typeof v === "number" && !isNaN(v))
   const yNumeric = yKeys.every(v => typeof v === "number" && !isNaN(v))
 
+  // Dense numeric grids (50k distinct x×y) miss frame budget on the
+  // per-cell static path. The streaming aggregator already bins; reuse it
+  // when the cartesian product exceeds ~4k cells unless the caller set bins.
+  const DENSE_HEATMAP_CELL_THRESHOLD = 4096
+  if (
+    xNumeric &&
+    yNumeric &&
+    xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD
+  ) {
+    return buildStreamingHeatmapScene(ctx, data, layout)
+  }
+
   if (xNumeric) {
     xKeys.sort((a, b) => Number(a) - Number(b))
     xIndex.clear()
