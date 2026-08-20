@@ -1,5 +1,5 @@
 import React from "react"
-import { MinimapChart } from "semiotic"
+import { MinimapChart } from "semiotic/xy"
 
 function generateTimeSeries(label, color, baseValue, volatility, points) {
   const coordinates = []

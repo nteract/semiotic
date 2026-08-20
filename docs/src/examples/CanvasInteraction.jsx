@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic/xy"
 import { csvParse } from "d3-dsv"
 
 import theme from "../theme"

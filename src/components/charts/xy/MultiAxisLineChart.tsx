@@ -645,6 +645,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     }),
     ...setup.crosshairProps,
     ...frameProps,
+    // frameProps precedence: callers own the final frame configuration; the
+    // derived legend is appended only when this HOC explicitly requested it.
     ...(legendLayout && { legendLayout }),
   }
 

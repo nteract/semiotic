@@ -25,7 +25,8 @@
  * back-arrow in the layout.
  */
 import React from "react"
-import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { SankeyDiagram, ProcessSankey } from "semiotic/network"
+import { ThemeProvider } from "semiotic/themes/react"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Five wards in the patient's path. Surgery and ICU live in the

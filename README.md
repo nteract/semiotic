@@ -470,6 +470,12 @@ import { ChoroplethMap } from "semiotic/geo"
 
 **When to use `"semiotic"`**: Fine when you want one import for mixed families. Shared chunks prevent duplicated runtime code across family subpaths; the cold-consumer table above is the better guide for a single named import.
 
+**CommonJS compatibility note:** `require("semiotic/xy")` loads the shared
+CommonJS client bundle (about 2.1 MB before compression) so React contexts stay
+singletons across family imports. Prefer ESM imports in browser builds when
+bundle size matters; splitting that CJS client without a context-identity
+contract would be unsafe.
+
 ## TypeScript
 
 Built with `strict: true`. Full type definitions ship with the package.

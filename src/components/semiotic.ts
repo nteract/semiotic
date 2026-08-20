@@ -343,6 +343,7 @@ export type {
   CenterlineStyle,
   BaseChartProps,
   AxisConfig,
+  /** @deprecated Use ChartAccessor<TDatum, TValue> for typed chart props. */
   Accessor,
   ChartAccessor,
   ChartMode,

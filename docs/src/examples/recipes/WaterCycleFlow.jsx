@@ -8,7 +8,8 @@
  * draws as curved back-arrows.
  */
 import React from "react"
-import { SankeyDiagram, ThemeProvider } from "semiotic"
+import { SankeyDiagram } from "semiotic/network"
+import { ThemeProvider } from "semiotic/themes/react"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Shared dataset ────────────────────────────────────────────────────

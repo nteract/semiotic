@@ -26,8 +26,8 @@
   "allowlist": [
     {
       "path": "src/components/charts/physics/CrucibleChart.tsx",
-      "maxLines": 1074,
-      "reason": "Cohesive public React orchestrator for the controlled Crucible runtime: imperative replay, reduced-motion/snapshot handling, semantic playback, physics reconciliation, and frame wiring share one state boundary. Keep the public component together; do not grow past this reviewed ceiling. +9 (usePhysicsSelection wiring, joining the shared selection store so physics bodies cross-highlight in LinkedCharts like every other family)."
+      "maxLines": 970,
+      "reason": "Cohesive public React orchestrator for the controlled Crucible runtime: imperative replay, reduced-motion/snapshot handling, semantic playback, physics reconciliation, and frame wiring share one state boundary. Ratcheted to the current 965-line implementation; do not grow past this reviewed ceiling."
     },
     {
       "path": "src/components/charts/physics/crucibleEffects.ts",
@@ -51,8 +51,8 @@
     },
     {
       "path": "src/components/ai/conversationArc.ts",
-      "maxLines": 1078,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 880,
+      "reason": "Grandfathered production file above hard limit (800). Ratcheted to current 878 lines; split on meaningful touch and do not grow past maxLines."
     },
     {
       "path": "src/components/ai/describeChart.ts",
@@ -171,8 +171,8 @@
     },
     {
       "path": "src/components/stream/SVGOverlay.tsx",
-      "maxLines": 1024,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +2 (2026-07-10): factored two rotated-bottom-tick offsets into named constants (bottomTickLabelY/bottomAxisLabelY) instead of repeating the ternary \u2014 net-positive readability, not worth a structural split for 2 lines."
+      "maxLines": 880,
+      "reason": "Grandfathered production file above hard limit (800). Ratcheted to current 875 lines; split on meaningful touch and do not grow past maxLines."
     },
     {
       "path": "src/components/stream/types.ts",

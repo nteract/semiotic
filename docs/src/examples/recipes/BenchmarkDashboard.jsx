@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
-import { GroupedBarChart, LineChart, BarChart, Heatmap, StackedBarChart } from "semiotic"
+import { LineChart, Heatmap } from "semiotic/xy"
+import { GroupedBarChart, BarChart, StackedBarChart } from "semiotic/ordinal"
 
 // ── Themes ──────────────────────────────────────────────────────────────
 const THEMES = {

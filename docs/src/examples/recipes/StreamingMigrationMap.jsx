@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import { CategoryColorProvider } from "semiotic"
+import { CategoryColorProvider } from "semiotic/ai"
 import { FlowMap } from "semiotic/geo"
 
 // ── Global Animal Migration Routes ──────────────────────────────────

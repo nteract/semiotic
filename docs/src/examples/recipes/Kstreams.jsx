@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { NetworkCustomChart } from "semiotic/network"
-import { LinkedCharts, useSelectionActions } from "semiotic"
+import { LinkedCharts, useSelectionActions } from "semiotic/ai"
 import { Glyph, lineageDagLayout } from "semiotic/recipes"
 import { useRafTween } from "../../components/useRafTween"
 import { topologyV1, topologyV2 } from "./data/kstreamsTopology"

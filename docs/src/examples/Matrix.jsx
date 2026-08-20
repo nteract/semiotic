@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamNetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic/network"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 

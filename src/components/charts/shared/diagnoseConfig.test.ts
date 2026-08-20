@@ -243,6 +243,24 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(false)
     expect(result.diagnoses[0].code).toBe("VALIDATION")
     expect(result.diagnoses[0].message).toContain("Unknown component")
+    expect(result.diagnoses[0].fix).toContain("Choose a component")
+  })
+
+  it("names BigNumber accessibleTable misuse and explains the replacement", () => {
+    const result = diagnoseConfig("BigNumber", {
+      value: 97,
+      accessibleTable: true,
+    })
+    expect(result.diagnoses).toContainEqual(
+      expect.objectContaining({
+        severity: "error",
+        code: "BIGNUMBER_ACCESSIBLE_TABLE",
+        fix: expect.stringContaining("label, description, and summary"),
+      }),
+    )
+    expect(result.diagnoses.some((diagnosis) =>
+      diagnosis.code === "VALIDATION" && diagnosis.message.includes("accessibleTable"),
+    )).toBe(false)
   })
 
   it("warns about non-zero baseline in bar charts", () => {

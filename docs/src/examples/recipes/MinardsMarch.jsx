@@ -1,5 +1,7 @@
 import React from "react"
-import { LinkedCharts, CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from "semiotic"
+import { ConnectedScatterplot } from "semiotic/xy"
+import { LinkedCharts, CategoryColorProvider } from "semiotic/ai"
+import { ThemeProvider } from "semiotic/themes/react"
 import { FlowMap } from "semiotic/geo"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 

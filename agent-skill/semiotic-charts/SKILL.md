@@ -78,8 +78,9 @@ them in every proposal:
 
 1. **Sub-path imports.** Import from the family entry point, not the barrel:
    `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`,
-   `semiotic/realtime`, `semiotic/ai`. The full `semiotic` is large; a family
-   entry point is a fraction of it.
+   `semiotic/realtime`, `semiotic/ai`. Family entries avoid loading other
+   families and the AI/server surfaces; they do not necessarily exclude unused
+   marks within their own family.
 2. **Static usage requires data in props.** `renderChart`, SSR snapshots, and any
    copy-paste example need `data` (or `nodes`/`edges`) present.
 3. **Push (live) mode omits `data` entirely.** Create a ref, do NOT pass

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react"
-import { StreamXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic/xy"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 

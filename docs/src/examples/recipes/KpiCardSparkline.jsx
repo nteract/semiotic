@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic/xy"
 
 const sampleData = [
   {

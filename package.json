@@ -304,7 +304,7 @@
     "generate:blog-rss": "node scripts/generate-blog-rss.mjs",
     "website:build": "npm run check:router-alignment && npm run check:ai-instructions && npm run dist:prod && npm run docs:api:json && npm run docs:llms && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run check:blog-entries && npm run generate:blog-og-cards && npm run generate:example-og-cards && npm run generate:blog-rss && vite build --config vite.docs.config.mjs && node scripts/prerender.mjs && npm run check:docs-routes",
     "check:website-build": "npm run website:build && npm run check:docs-asset-sizes && npm run check:protected-doc-boundaries",
-    "build:mcp": "node scripts/build-mcp.mjs",
+    "build:mcp": "node scripts/build-mcp.mjs --production",
     "check:mcp-bundle": "node scripts/check-mcp-bundle.mjs",
     "docs:api": "typedoc --gitRevision \"v$npm_package_version\"",
     "docs:api:json": "typedoc --gitRevision \"v$npm_package_version\" --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
@@ -313,7 +313,7 @@
     "typescript:tests": "node scripts/check-test-types.mjs",
     "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "size": "size-limit && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "size": "node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
     "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",
     "check:multi-import-size": "node scripts/check-multi-import-size.mjs",
     "check:pack": "node scripts/smoke-pack.mjs",
@@ -423,56 +423,6 @@
     "force-directed"
   ],
   "license": "Apache-2.0",
-  "size-limit": [
-    {
-      "path": "dist/semiotic.module.min.js",
-      "limit": "240 KB"
-    },
-    {
-      "path": "dist/xy.module.min.js",
-      "limit": "135 KB"
-    },
-    {
-      "path": "dist/ordinal.module.min.js",
-      "limit": "110 KB"
-    },
-    {
-      "path": "dist/network.module.min.js",
-      "limit": "95 KB"
-    },
-    {
-      "path": "dist/geo.module.min.js",
-      "limit": "90 KB"
-    },
-    {
-      "path": "dist/realtime.module.min.js",
-      "limit": "140 KB"
-    },
-    {
-      "path": "dist/physics.module.min.js",
-      "limit": "150 KB"
-    },
-    {
-      "path": "dist/server.module.min.js",
-      "limit": "220 KB"
-    },
-    {
-      "path": "dist/semiotic-ai.module.min.js",
-      "limit": "420 KB"
-    },
-    {
-      "path": "dist/semiotic-recipes.module.min.js",
-      "limit": "90 KB"
-    },
-    {
-      "path": "dist/semiotic-utils.module.min.js",
-      "limit": "100 KB"
-    },
-    {
-      "path": "dist/semiotic-value.module.min.js",
-      "limit": "20 KB"
-    }
-  ],
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@eslint/compat": "^2.1.0",

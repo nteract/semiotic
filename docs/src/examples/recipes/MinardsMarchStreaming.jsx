@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from "semiotic"
+import { ConnectedScatterplot } from "semiotic/xy"
+import { CategoryColorProvider } from "semiotic/ai"
+import { ThemeProvider } from "semiotic/themes/react"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import { StreamGeoFrame } from "semiotic/geo"
 import { scaleLinear } from "d3-scale"
@@ -409,4 +411,3 @@ export default function MinardsMarchStreaming({ width = 800 }) {
     </ThemeProvider>
   )
 }
-

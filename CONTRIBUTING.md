@@ -62,9 +62,36 @@ benchmarks/       # vitest bench suites
 - **Vitest** for unit, integration, and benchmark tests.
 - **Playwright** for browser and visual regression coverage.
 - **esbuild** (via `scripts/build-mcp.mjs`) for the bundled MCP server.
-- **size-limit** for bundle budgets.
+- **Chunk-aware cold-consumer checks** for bundle budgets; facade files are
+  intentionally tiny re-export shells and are not a useful size signal.
 
 ## Common Commands
+
+### Choose the smallest useful check
+
+Use this three-tier loop instead of beginning with the full release suite:
+
+1. **Focused:** `npx vitest run path/to/changed.test.tsx` (and targeted ESLint
+   for source edits). Run this while implementing.
+2. **Fast shared gate:** `npm run check:fast` when a change crosses component,
+   schema, or generated-surface boundaries.
+3. **Release gate:** `npm run release:check` only for a release candidate or a
+   shared/public-surface change that needs the complete contract matrix.
+
+### New-chart checklist
+
+Before calling a chart public, complete every relevant item:
+
+- Add the HOC and its focused behavior tests.
+- Add the chart spec; `scripts/check-chart-specs.ts` is the source of truth
+  for the schema/capability contract.
+- Regenerate and check schema/surface artifacts when the spec changes.
+- Add capability metadata, a documentation page/example, and one focused
+  Playwright visual snapshot.
+- Cover SSR or explicitly mark the chart HOC-SSR-only/non-renderable with a
+  reason; validate the corresponding `renderChart` path.
+- Run the focused tests plus `npm run check:chart-specs`, and use the checks
+  listed in the repository instructions for AI, docs, or package-surface work.
 
 ```bash
 # Core checks

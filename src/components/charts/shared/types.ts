@@ -273,7 +273,8 @@ export type CategoryFormatFn = (label: string, index?: number) => string | React
 
 /**
  * Accessor type - can be a property name or a function
- * @deprecated Use DataAccessor from generalTypes for generic type safety
+ * @deprecated Use `ChartAccessor<TDatum, TValue>` for typed chart props.
+ * This legacy alias remains for compatibility with existing frame code.
  */
 export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
 
