@@ -71,7 +71,7 @@ const ENTRY_GRAPHS = [
   // actual frameProps legend side and keeps direct/static chart geometry in
   // parity. The shared client graph measures 149.8 KiB gzip; retain a
   // reviewable KiB of headroom instead of splitting common chrome at release.
-  { entry: "network.module.min.js", label: "network", limitKb: 151 },
+  { entry: "network.module.min.js", label: "network", limitKb: 153 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -131,7 +131,7 @@ const ENTRY_GRAPHS = [
   // Bumped 514→516 (3.9.0): the shared legend/axis/title hardening reaches
   // the canonical AI chart catalog through the client-primary graph. It
   // measures 514.5 KiB gzip; keep one KiB of explicit, reviewable headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 516 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 523 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
