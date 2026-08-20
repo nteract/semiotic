@@ -25,6 +25,7 @@ import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { collectMarginalValues } from "./MarginalGraphicsLazy"
+import { useMarginalValues } from "./useMarginalValues"
 import { xySceneNodeToSVG } from "./SceneToSVG"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
@@ -42,7 +43,6 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveFrameGraphics } from "./frameGraphics"
 
-// Canvas setup
 import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
@@ -361,11 +361,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
 
-    // Marginal data values
-    const [marginalXValues, setMarginalXValues] = useState<number[]>([])
-    const [marginalYValues, setMarginalYValues] = useState<number[]>([])
-
-
     // renderFnRef comes from useFrame (above).
 
     // ── Pipeline ─────────────────────────────────────────────────────────
@@ -600,29 +595,13 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       adapterRef.current?.setBoundedData(normalizeXYData(safeData, lineDataAccessor))
     }, [data, safeData, lineDataAccessor])
 
-    // Marginals are React/SVG content, while the retained data lives in the
-    // imperative store. Populate their values when a marginal is enabled
-    // after mount as well as after subsequent scene recomputes below.
-    // Without this bridge, the newly enlarged margin is visible but its
-    // histogram remains empty until a later data update happens to repaint.
-    const hasMarginalGraphics = marginalGraphics != null
-    const marginalConfigKey = hasMarginalGraphics
-      ? [marginalGraphics.top, marginalGraphics.bottom, marginalGraphics.left, marginalGraphics.right].join("|")
-      : ""
-    useEffect(() => {
-      if (!hasMarginalGraphics) {
-        setMarginalXValues([])
-        setMarginalYValues([])
-        return
-      }
-      const next = collectMarginalValues(
-        storeRef.current?.getData() ?? [],
-        xAccessor,
-        yAccessor,
-      )
-      setMarginalXValues(next.xValues)
-      setMarginalYValues(next.yValues)
-    }, [hasMarginalGraphics, marginalConfigKey, safeData, xAccessor, yAccessor])
+    const { marginalXValues, marginalYValues, refreshMarginalValues } = useMarginalValues(
+      storeRef,
+      marginalGraphics,
+      safeData,
+      xAccessor,
+      yAccessor,
+    )
 
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       storeRef,
@@ -1135,9 +1114,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
 
         if (marginalGraphics) {
-          const next = collectMarginalValues(store.getData(), xAccessor, yAccessor)
-          setMarginalXValues(next.xValues)
-          setMarginalYValues(next.yValues)
+          refreshMarginalValues(store.getData())
         }
       }
 
